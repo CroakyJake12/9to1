@@ -1170,6 +1170,8 @@ public sealed partial class App
                 page.SetBoardCreationHost(BoardsBrowseAppContentFactory.CreateOriginalHomeBoardCreationHost(
                     CreateAndOpenBoardAsync, request, _windowLifetime), BoardsViewModel.CreateNewBoardDraftBytes);
             }
+            else if (BrowseOmniboxSearchRoute.TryParse(request.Address, out var searchText, out var filesOnly))
+                page.SetInitialSearch(searchText, filesOnly);
             return page;
         }
         private async Task PresentHomeLibraryReviewAsync(HomeNativeApprovalWindowOwner approvals,

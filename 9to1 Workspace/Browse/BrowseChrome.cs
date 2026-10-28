@@ -561,8 +561,11 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             ApplyHostState(tab, tab.Session.State);
         }, cancellationToken);
 
-    public Task<BrowseChromeSnapshot> ReloadAsync(CancellationToken cancellationToken = default) =>
-        RunWebNavigationAsync(async (tab, token) =>
+    public Task<BrowseChromeSnapshot> ReloadAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
+        if (!SelectedRuntime().Address.IsWeb) return ReloadSelectedAppContentAsync(cancellationToken);
+        return RunWebNavigationAsync(async (tab, token) =>
         {
             if (!EngineAvailable || tab.Host is null)
                 throw new PlatformNotSupportedException(EngineUnsupportedReason);
@@ -570,6 +573,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             ApplyHostState(tab, tab.Session.State);
             tab.Status = "Page reloaded.";
         }, cancellationToken);
+    }
 
     public async Task<BrowseChromeSnapshot> StopAsync(CancellationToken cancellationToken = default)
     {

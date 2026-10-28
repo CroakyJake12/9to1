@@ -467,6 +467,52 @@ public sealed class BoardsVisualTests
     }
 
     [Fact]
+    public async Task Colour_and_drawing_controls_show_vector_icons_instead_of_placeholder_letters()
+    {
+        var vm = MemoryModel(out var session);
+        try
+        {
+            Ui(() =>
+            {
+                var host = new StackPanel();
+                ToolbarBuilder.Rebuild(host, vm);
+                foreach (var name in new[] { "Text colour", "Highlight colour", "Draw" })
+                {
+                    var button = Assert.Single(Flatten(host).OfType<Button>().Where(candidate =>
+                        Avalonia.Automation.AutomationProperties.GetName(candidate) == name));
+                    var image = Assert.Single(Flatten(button).OfType<Image>());
+                    Assert.IsType<DrawingImage>(image.Source);
+                    Assert.Equal(18d, image.Width);
+                }
+                Assert.DoesNotContain("H", VisibleTexts(host));
+            });
+            await vm.ActivateDrawingAsync();
+            Ui(() =>
+            {
+                var host = new StackPanel();
+                ToolbarBuilder.Rebuild(host, vm);
+                foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
+                {
+                    var button = Assert.Single(Flatten(host).OfType<Avalonia.Controls.Primitives.ToggleButton>()
+                        .Where(candidate => Avalonia.Automation.AutomationProperties.GetName(candidate) == tool + " drawing tool"));
+                    var image = Assert.IsType<Image>(button.Content);
+                    var drawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(image.Source).Drawing);
+                    Assert.NotNull(drawing.Brush);
+                    Assert.Equal(18d, image.Width);
+                    Assert.True(button.MinWidth >= 32d);
+                    button.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                    Assert.Equal(tool, vm.InkTool);
+                }
+            });
+        }
+        finally
+        {
+            Ui(vm.Dispose);
+            await session.DisposeAsync();
+        }
+    }
+
+    [Fact]
     public async Task Draw_mode_is_a_first_class_page_tool_not_a_content_block()
     {
         var vm = MemoryModel(out var session);

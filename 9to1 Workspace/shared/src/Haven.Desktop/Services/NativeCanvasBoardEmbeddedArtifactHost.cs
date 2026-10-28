@@ -26,6 +26,7 @@ internal sealed partial class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmb
     private readonly CancellationToken _appLifetime, _tabLifetime;
     private readonly Func<bool> _tabIsCurrent;
     private readonly CuiThemePreferenceContext? _theme;
+    public CuiThemePreferenceContext? ThemeContext => _theme;
     private readonly object _gate = new();
     private readonly List<Task> _operations = [];
     private readonly List<CanvasEmbeddedSession> _canvasSessions = [];

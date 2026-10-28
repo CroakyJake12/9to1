@@ -79,6 +79,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
         _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
+        _omniboxMode = sharedContext?.IsEmbedded == true ? OmniboxMode.Home : OmniboxMode.Web;
+        ApplyOmniboxLocation(_snapshot.SelectedTab);
         IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
         _chrome.RetirementStarted += OnChromeRetirementStarted;
     }
@@ -151,6 +153,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "EmptyHistoryResults" => _snapshot.History.Count > 0 && _historyRows.Length == 0,
             "EmptyDownloads" => _downloadRows.Length == 0,
             "Address" => _address, "AddressDisplay" => ResolveAddressDisplay(selected), "FindQuery" => _find, "Status" => _status,
+            "SearchModeLabel" => "Search " + OmniboxModeLabel + " · choose 9to1, Files or Web",
+            "AddressHint" => "Search " + OmniboxModeLabel + " or enter a web address",
             "Security" => _snapshot.Security.Label + " · " + _snapshot.Security.Explanation,
             "Profile" => selected.Privacy == BrowserTabPrivacy.Private ? "Private tab · isolated temporary profile" : "Standard profile",
             "Engine" => selected.Engine == BrowseEngineKind.Gecko ? "Firefox" : "Chromium",
@@ -296,8 +300,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         {
             "9to1.Browse.Back" => interactive && tab.CanGoBack,
             "9to1.Browse.Forward" => interactive && tab.CanGoForward,
+            "9to1.Browse.SearchHome" or "9to1.Browse.SearchFiles" => CanSearchLocal,
+            "9to1.Browse.SearchWeb" => true,
             "9to1.Browse.Navigate" or "9to1.Browse.OpenBookmark" or "9to1.Browse.OpenHistory" => tab.EngineState != BrowseEngineState.Crashed,
-            "9to1.Browse.Reload" or "9to1.Browse.OpenFind" or "9to1.Browse.FindNext" or "9to1.Browse.FindPrevious" or
+            "9to1.Browse.Reload" => !tab.Address.IsWeb || interactive,
+            "9to1.Browse.OpenFind" or "9to1.Browse.FindNext" or "9to1.Browse.FindPrevious" or
                 "9to1.Browse.ZoomIn" or "9to1.Browse.ZoomOut" or "9to1.Browse.ZoomReset" or "9to1.Browse.DevTools" => interactive,
             "9to1.Browse.Stop" => interactive && tab.IsLoading,
             "9to1.Browse.Bookmark" or "9to1.Browse.AllowPopups" or "9to1.Browse.DenyPopups" or
@@ -355,6 +362,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
+        if (command is "9to1.Browse.SearchHome" or "9to1.Browse.SearchFiles" or "9to1.Browse.SearchWeb")
+        {
+            _omniboxMode = command == "9to1.Browse.SearchHome" ? OmniboxMode.Home :
+                command == "9to1.Browse.SearchFiles" ? OmniboxMode.Files : OmniboxMode.Web;
+            Changed(); return ValueTask.CompletedTask;
+        }
         if (IsHavenSharedCommand(command))
         {
             DismissTransientMenus();
@@ -439,7 +452,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.Downloads, token)); _addressDraft = false;
                     if (_snapshot.Downloads.IsSupported) await Operation(() => _chrome.RefreshDownloadsAsync(token)); break;
                 case "9to1.Browse.OpenSettingsPage": await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.Settings, token)); _addressDraft = false; break;
-                case "9to1.Browse.Navigate": await Operation(() => _chrome.NavigateAsync(_address, token)); _addressDraft = false; break;
+                case "9to1.Browse.Navigate": await Operation(() => NavigateOmniboxAsync(token)); _addressDraft = false; break;
                 case "9to1.Browse.Back": await Operation(() => _chrome.BackAsync(token)); break;
                 case "9to1.Browse.Forward": await Operation(() => _chrome.ForwardAsync(token)); break;
                 case "9to1.Browse.Reload": await Operation(() => _chrome.ReloadAsync(token)); break;
@@ -654,7 +667,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage)
         { _profileMenuOpen = false; _manageUsersOpen = false; }
         _snapshot = snapshot; IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
-        if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
+        if (!_addressDraft) ApplyOmniboxLocation(snapshot.SelectedTab);
         _status = snapshot.Status; Changed();
     }
     /// <summary>Resolves the unfocused, readable location for the selected tab. Web addresses keep
@@ -664,6 +677,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     /// Address port is never replaced by this presentation value.</summary>
     private string ResolveAddressDisplay(BrowseTabSnapshot tab)
     {
+        if (BrowseOmniboxSearchRoute.TryParse(tab.Address, out var searchText, out _)) return searchText;
         // Web locations keep their exact canonical address text.
         if (tab.Address.IsWeb) return tab.Address.ToString();
         // First-party surface: show the genuinely admitted content-session title when one is

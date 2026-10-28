@@ -363,6 +363,10 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
 
         private Task BeginRegistered(RegisteredPreparation attempt)
         {
+            // Native prepared-close acceptance is a finite UI operation. Return its
+            // actual original task; joining the asynchronous retirement remains external.
+            if (!Dispatcher.UIThread.CheckAccess())
+                return Dispatcher.UIThread.Invoke(() => BeginRegistered(attempt));
             lock (_gate)
             {
                 if (attempt.Accepted) return _close!;

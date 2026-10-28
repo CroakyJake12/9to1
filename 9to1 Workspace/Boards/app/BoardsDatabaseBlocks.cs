@@ -20,6 +20,8 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
     public IReadOnlyList<Exception> OpenDiagnostics { get { lock (_gate) return _openDiagnostics.ToArray(); } }
     private readonly object _gate = new();
     private bool _disposed, _prepared;
+    private Preparation? _preparation;
+    private readonly Dictionary<Border, (string Page, string Block, HavenBoardDatabaseReference Reference)> _deferredMounts = [];
 
     public BoardsDatabaseBlocks(BoardsViewModel model, IBoardsDatabaseSource? source)
     { _model = model; _source = source; }
@@ -80,11 +82,23 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
         container.Child = new TextBlock { Text = "Loading database…" };
         container.AttachedToVisualTree += (_, _) =>
         {
-            if (_disposed || _prepared) return;
-            var load = LoadAsync(container, pageID, block.Id, reference);
-            lock (_gate) { _loads.RemoveAll(task => task.IsCompleted); _loads.Add(load); }
+            QueueMount(container, pageID, block.Id, reference);
         };
+        container.DetachedFromVisualTree += (_, _) => _deferredMounts.Remove(container);
         return container;
+    }
+
+    private void QueueMount(Border container, string pageID, string blockID, HavenBoardDatabaseReference reference)
+    {
+        if (_disposed) return;
+        if (_prepared)
+        {
+            _deferredMounts[container] = (pageID, blockID, reference);
+            return;
+        }
+        _deferredMounts.Remove(container);
+        var load = LoadAsync(container, pageID, blockID, reference);
+        lock (_gate) { _loads.RemoveAll(task => task.IsCompleted); _loads.Add(load); }
     }
 
     private async Task LoadAsync(Border container, string pageID, string blockID, HavenBoardDatabaseReference reference)
@@ -95,8 +109,13 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
             ValidateReference(session, reference);
             await Dispatcher.UIThread.InvokeAsync<Task>(async () =>
             {
-                if (_disposed || _prepared || _model.SelectedPageId != pageID || container.Parent is null ||
+                if (_disposed || _model.SelectedPageId != pageID || container.Parent is null ||
                     _model.FindBlock(blockID)?.Database != reference) return;
+                if (_prepared)
+                {
+                    _deferredMounts[container] = (pageID, blockID, reference);
+                    return;
+                }
                 var key = (pageID, blockID);
                 if (_views.TryGetValue(key, out var previous) && previous.WorkbookID != reference.WorkbookID)
                 {
@@ -182,6 +201,7 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
         await Task.WhenAll(loads).WaitAsync(token).ConfigureAwait(false);
         return await Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(async () =>
         {
+            if (_preparation is { IsCurrent: true } current) return current;
             foreach (var entry in _views.Values) await entry.View.WhenIdleAsync();
             if (_views.Values.Any(entry => entry.View.HasUnsavedDrafts))
             {
@@ -190,14 +210,14 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
             }
             _prepared = true;
             foreach (var entry in _views.Values) entry.View.IsEnabled = false;
-            return new Preparation(this);
+            return _preparation = new Preparation(this);
         }).GetTask().Unwrap().ConfigureAwait(false);
     }
 
     private sealed class Preparation(BoardsDatabaseBlocks owner) : IBoardsPresentationClosePreparation
     {
         private bool _finished;
-        public bool IsCurrent => !_finished && owner._prepared && !owner._disposed;
+        public bool IsCurrent => !_finished && ReferenceEquals(owner._preparation, this) && owner._prepared && !owner._disposed;
         public async Task CommitAsync(CancellationToken token = default)
         { token.ThrowIfCancellationRequested(); if (_finished) return; await owner.DisposeAsync(); _finished = true; }
         public async Task AbortAsync()
@@ -205,8 +225,18 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
             if (_finished) return;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                if (!ReferenceEquals(owner._preparation, this)) return;
                 owner._prepared = false;
+                owner._preparation = null;
                 foreach (var entry in owner._views.Values) { entry.View.IsEnabled = true; entry.View.IsReadOnly = !owner._model.IsEditMode; }
+                // A save/close render can attach a replacement surface while preparation
+                // fences Data. Resume those exact visible mounts when close is abandoned.
+                var mounts = owner._deferredMounts.ToArray();
+                owner._deferredMounts.Clear();
+                foreach (var (container, request) in mounts)
+                    if (container.Parent is not null && owner._model.SelectedPageId == request.Page &&
+                        owner._model.FindBlock(request.Block)?.Database == request.Reference)
+                        owner.QueueMount(container, request.Page, request.Block, request.Reference);
             });
             _finished = true;
         }
@@ -225,6 +255,7 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
             if (_views.Values.Any(entry => entry.View.HasUnsavedDrafts))
                 throw new InvalidOperationException("Save or discard database field drafts before disposing this board.");
             _disposed = true;
+            _deferredMounts.Clear();
             foreach (var entry in _views.Values) await entry.View.DisposeAsync();
             _views.Clear();
         }).GetTask().Unwrap().ConfigureAwait(false);

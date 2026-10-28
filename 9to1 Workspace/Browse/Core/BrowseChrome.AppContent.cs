@@ -86,6 +86,7 @@ public sealed partial class BrowseChrome
         && address.Authority == "home" && address.ResourceSegments.Count == 0;
     private static bool IsOwnedCanvas(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
         && ((address.Authority is "home" or "newtab" && address.ResourceSegments.Count == 0)
+            || BrowseOmniboxSearchRoute.TryParse(address, out _, out _)
             || (address.Authority == "home" && address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal))
             || (address.Authority == "home" && address.ResourceSegments.Count == 1
                 && address.ResourceSegments[0] is "models" or "events" or "settings" or "library"));
@@ -185,10 +186,10 @@ public sealed partial class BrowseChrome
         {
             var tab = SelectedRuntime();
             if (tab.Address.IsWeb) throw new InvalidOperationException("Web tabs still reload through the selected engine.");
-            await ReleaseContentAsync(tab, preservePendingHosts: true).ConfigureAwait(false);
-            tab.AppOwner = null;
-            await AttachAppContentAsync(tab, tab.Address, CancellationToken.None).ConfigureAwait(false);
-            _status = tab.Status = tab.Title + " reloaded.";
+            // Reuse navigation's reversible save/preparation lease and acquire
+            // a fresh same-factory owner before retiring the current view.
+            await ReplaceAppContentAsync(tab, tab.Address, cancellationToken).ConfigureAwait(false);
+            _status = tab.Status;
             return Publish();
         }, cancellationToken);
 

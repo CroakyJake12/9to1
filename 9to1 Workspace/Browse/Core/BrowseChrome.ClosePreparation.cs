@@ -93,7 +93,7 @@ public sealed partial class BrowseChrome
         internal readonly long Generation = tab.NavigationGeneration;
         internal IBrowseAppContentClosePreparation? Lease;
         internal Task? Abort;
-        internal bool Accepted;
+        internal bool Accepted, Beginning;
     }
     private bool IsCurrent(ContentCloseAttempt attempt)
     {
@@ -174,11 +174,21 @@ public sealed partial class BrowseChrome
     }
     private void BeginContentClose(ContentCloseAttempt attempt)
     {
+        AppContentOwner owner;
         lock (_nativeSourceGate)
         {
             if (!IsCurrent(attempt)) throw new BrowseCloseVetoException();
-            if (attempt.Owner is not { } owner) { attempt.Accepted = true; return; }
+            if (attempt.Owner is not { } actualOwner) { attempt.Accepted = true; return; }
+            owner = actualOwner;
             if (owner.Close is not null) { attempt.Accepted = true; return; }
+            if (attempt.Beginning) throw new BrowseCloseVetoException();
+            attempt.Beginning = true;
+        }
+        // The exact Preparation still fences this owner against replacement. Native
+        // admission may marshal to its UI thread and read Chrome's publication state;
+        // never hold the Chrome gate across that finite external callback.
+        try
+        {
             var failures = new List<Exception>();
             try
             {
@@ -215,6 +225,7 @@ public sealed partial class BrowseChrome
             }
             ThrowCloseCauses(failures);
         }
+        finally { lock (_nativeSourceGate) attempt.Beginning = false; }
     }
     private static void RecordCloseFailure(AppContentOwner owner, Exception failure)
     {
@@ -292,6 +303,8 @@ public sealed partial class BrowseChrome
         {
             if (actual.Abort is not null) return actual.Abort;
             if (actual.Close is not null) return actual.Abort = actual.Close;
+            if (actual.Committing)
+                throw new InvalidOperationException("The window is acquiring its exact prepared close; it cannot be aborted during acceptance.");
             actual.Aborted = true;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             actual.Abort = AbortWindowPreparationAsync(start.Task, cohort);
@@ -311,18 +324,24 @@ public sealed partial class BrowseChrome
             // acquiring exact participant originals. Publishing Chrome retirement
             // first could invalidate a perfectly current subordinate host lease.
             state.Committing = true;
-            var previous = _executingWindowCommit.Value; _executingWindowCommit.Value = cohort;
-            try
+        }
+        // Keep the exact cohort/topology fence, but release the observation gate
+        // while native owners synchronously acquire UI-affine close originals.
+        var previous = _executingWindowCommit.Value; _executingWindowCommit.Value = cohort;
+        try
+        {
+            foreach (var entry in state.Entries)
             {
-                foreach (var entry in state.Entries)
-                {
-                    try { BeginContentClose(entry); }
-                    catch (Exception failure) { state.CommitFailures.Add(failure); break; }
-                }
+                try { BeginContentClose(entry); }
+                catch (Exception failure) { state.CommitFailures.Add(failure); break; }
             }
-            finally { _executingWindowCommit.Value = previous; }
+        }
+        finally { _executingWindowCommit.Value = previous; }
+        lock (_nativeSourceGate)
+        {
             if (state.CommitFailures.Count != 0 && !state.Entries.Any(entry => entry.Accepted && entry.Owner?.Close is not null))
             {
+                state.Committing = false;
                 var abort = AbortWindowClose(cohort); // Caller must join this same retained cleanup on refusal.
                 RetainAppSource(abort);
                 ThrowCloseCauses(state.CommitFailures);

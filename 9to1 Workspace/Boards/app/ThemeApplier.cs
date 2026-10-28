@@ -14,11 +14,13 @@ public static class ThemeApplier
 {
     private static readonly FontFamily ProductFont = new("Inter");
 
-    public static void ApplyChrome(Control root)
+    public static void ApplyChrome(Control root, bool applyResources = true)
     {
         ArgumentNullException.ThrowIfNull(root);
         var palette = BoardsTheme.SharedPalette;
-        CuiThemeResourceApplier.Apply(palette);
+        // Only this surface owns these resources. A borrowed Home-aware loader
+        // already applies its exact theme/custom/accessibility resources locally.
+        if (applyResources) CuiThemeResourceApplier.ApplyToResources(root.Resources, palette);
 
         Paint<Border>(root, "FooterBar", b =>
         {

@@ -1,6 +1,10 @@
 using Avalonia.Controls;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Headless;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using CakeOS.Apps.Boards.App;
 using Xunit;
 
@@ -9,6 +13,45 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class NavBuilderTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Page_hover_keeps_the_owning_row_radius_and_retains_visible_feedback(bool selected)
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        var vm = new BoardsViewModel(session);
+        var section = session.Document.Sections[0];
+        var first = section.Pages[0];
+        var other = new RichBoardPage { Title = "Other page" };
+        section.Pages.Add(other);
+        vm.SelectPage(section.Id, selected ? first.Id : other.Id);
+        TestUiThread.Run(() =>
+        {
+            var nav = new StackPanel();
+            NavBuilder.Rebuild(nav, vm);
+            var row = nav.Children.OfType<Border>().Skip(1).First();
+            var label = Assert.IsType<Grid>(row.Child).Children.OfType<Button>()
+                .Single(button => Grid.GetColumn(button) == 3);
+            var window = new Window { Content = nav, Width = 380, Height = 300 };
+            try
+            {
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                using (var capture = window.CaptureRenderedFrame()) { }
+                var point = label.TranslatePoint(new Point(label.Bounds.Width / 2, label.Bounds.Height / 2), window)!.Value;
+                window.MouseMove(point); Dispatcher.UIThread.RunJobs();
+                var hoverFrame = label.GetVisualDescendants().OfType<CuiMaterialBorder>().First();
+                Assert.True(label.IsPointerOver);
+                Assert.NotNull(hoverFrame.HoverTint);
+                Assert.Equal(new CornerRadius(selected ? 8 : 4), row.CornerRadius);
+                Assert.Equal(row.CornerRadius, label.CornerRadius);
+                Assert.Equal(row.CornerRadius, hoverFrame.CornerRadius);
+            }
+            finally { window.Close(); }
+        });
+        TestUiThread.Run(vm.Dispose);
+    }
+
     [Fact]
     public async Task Collapsed_sections_do_not_leak_into_a_different_document_with_matching_ids()
     {

@@ -8,5 +8,6 @@
     <ProjectReference Include="..\Core\HavenOS.Apps.Browse.Core.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
     <EmbeddedResource Include="UI\*.cui" LogicalName="HavenOS.Apps.Browse.NativeUI.UI.%(Filename)%(Extension)" />
+    <AvaloniaResource Include="Assets\*.svg" />
   </ItemGroup>
 </Project>

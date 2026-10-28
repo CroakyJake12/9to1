@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -55,9 +56,15 @@ internal sealed class BlockReorderPointer
         _handle = handle;
         _grip.AttachedToVisualTree -= OnGripAttached;
         _grip.LayoutUpdated -= OnGripLayoutUpdated;
-        handle.PointerPressed += OnPressed;
+        // Button handles a press in its class handler before ordinary instance
+        // handlers run. Observe that press without stealing its normal click.
+        handle.AddHandler(InputElement.PointerPressedEvent, OnPressed,
+            RoutingStrategies.Bubble, handledEventsToo: true);
         handle.PointerMoved += OnMoved;
-        handle.PointerReleased += OnReleased;
+        // Consume a drag before Button can turn its release into a click. A
+        // plain click is cleaned up afterwards, including handled releases.
+        handle.AddHandler(InputElement.PointerReleasedEvent, OnReleased,
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
         handle.PointerCaptureLost += OnCaptureLost;
         handle.KeyDown += OnKeyDown;
         handle.DetachedFromVisualTree += OnDetached;
@@ -109,6 +116,7 @@ internal sealed class BlockReorderPointer
     private void OnReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (!_pressed || !ReferenceEquals(_pointer, e.Pointer)) return;
+        if (e.Route == RoutingStrategies.Tunnel && !_dragging) return;
         try
         {
             var wasDrag = _dragging;
@@ -270,7 +278,10 @@ internal sealed class BlockReorderPointer
         _target = null;
         if (_handle is not null) ToolTip.SetTip(_handle, "Open block actions");
         ClearMarker();
-        pointer?.Capture(null);
+        // CaptureLost can be raised after another control has taken ownership.
+        // Never release that new owner's capture while cancelling this gesture.
+        if (pointer is not null && ReferenceEquals(pointer.Captured, _handle))
+            pointer.Capture(null);
     }
 
     private void ClearMarker()

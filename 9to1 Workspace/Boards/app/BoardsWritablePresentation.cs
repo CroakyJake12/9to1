@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -48,6 +49,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);
     private readonly ContractSessionAdapter _session;
     private readonly CuiControlLoader _loader;
+    private readonly CuiThemePreferenceContext? _themeContext;
     private readonly BoardsEmbeddedArtifactSurface _embeddedArtifacts;
     private readonly byte[] _initialDocumentBytes;
     private BoardsPresentationRenderQueue? _renderQueue;
@@ -76,6 +78,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         _session = session;
         ViewModel = viewModel;
         _loader = loader;
+        _themeContext = embeddedArtifactHost?.ThemeContext;
         Content = content;
         _embeddedArtifacts = new BoardsEmbeddedArtifactSurface(embeddedArtifactHost, viewModel, content);
     }
@@ -212,6 +215,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             return await Dispatcher.UIThread.InvokeAsync<BoardsWritablePresentation>(() =>
             {
                 ct.ThrowIfCancellationRequested();
+                var themeContext = embeddedArtifactHost?.ThemeContext;
+                if (themeContext is not null) BoardsTheme.ApplyOwnerPreference(themeContext.Current);
                 var viewModel = new BoardsViewModel(session, embeddedArtifactHost, homeBoardCreationHost,
                     sectionIconGenerationHost);
                 viewModel.SetLanding(false);
@@ -219,6 +224,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 viewModel.Set("StatusText", "Ready to edit");
                 viewModel.Set("SaveStateText", "Saved source revision");
                 loader = BoardsCuiDocuments.CreateLoader();
+                if (themeContext is not null) loader.SetThemePreferenceContext(themeContext);
                 loader.SetBindingContext(viewModel);
                 loader.SetActionDispatcher(viewModel);
                 var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
@@ -228,7 +234,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
 
                 loader.WireBindings(root);
                 viewModel.Attach(root);
-                ThemeApplier.ApplyChrome(root);
+                ThemeApplier.ApplyChrome(root, applyResources: themeContext is null);
                 embeddedArtifactHost?.BindOwningControl(root);
                 host = new BoardsWritablePresentation(parsed, sourceId, expectedRevision, session,
                     viewModel, loader, root, embeddedArtifactHost);
@@ -341,6 +347,19 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         ViewModel.NavRebuildRequested += QueueRender;
         ViewModel.SelectionChanged += QueueRender;
         _surfaceLifecycle = new BoardsEmbeddedSurfaceLifecycle(root, ViewModel, QueueRender);
+        if (_themeContext is not null) _themeContext.Changed += OnOwnerThemeChanged;
+    }
+
+    private void OnOwnerThemeChanged(object? sender, EventArgs args)
+    {
+        void Refresh()
+        {
+            if (_disposed || _themeContext is null) return;
+            BoardsTheme.ApplyOwnerPreference(_themeContext.Current);
+            ThemeApplier.ApplyChrome(Content, applyResources: false);
+            QueueRender();
+        }
+        if (Dispatcher.UIThread.CheckAccess()) Refresh(); else Dispatcher.UIThread.Invoke(Refresh);
     }
 
     private void QueueRender()
@@ -376,6 +395,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         if (!await TryPrepareToCloseAsync().ConfigureAwait(false))
             throw new InvalidOperationException("The embedded Write page refused to close; its draft remains open.");
         _disposed = true;
+        if (_themeContext is not null) _themeContext.Changed -= OnOwnerThemeChanged;
         ViewModel.CancelSectionIconSuggestionForClose();
         ViewModel.RebuildRequested -= QueueRender;
         ViewModel.NavRebuildRequested -= QueueRender;

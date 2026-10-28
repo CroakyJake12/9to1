@@ -6,6 +6,8 @@ using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
+using Avalonia.Media;
 using Haven.Application;
 using Xunit;
 
@@ -14,6 +16,86 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class EmbeddedPresentationLifecycleTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Embedded_board_borrows_live_Home_theme_without_changing_application_resources(bool writable)
+    {
+        TestUiThread.Run(() => { });
+        var priorMode = BoardsTheme.Mode;
+        var source = new ThemeSource();
+        using var context = new CuiThemePreferenceContext(source);
+        var owner = new ThemeHost(context);
+        var sentinel = new SolidColorBrush(Colors.Magenta);
+        var previous = TestUiThread.Run(() =>
+        {
+            var prior = Application.Current!.Resources["CuiPanelBrush"];
+            Application.Current.Resources["CuiPanelBrush"] = sentinel;
+            return prior;
+        });
+        IAsyncDisposable? presentation = null;
+        try
+        {
+            Control content;
+            if (writable)
+            {
+                var board = PumpUi(BoardsWritablePresentation.OpenWritableDocumentAsync(MakeBoardBytes(),
+                    "files:theme", "revision-1", (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(true, "revision-2")),
+                    embeddedArtifactHost: owner));
+                presentation = board; content = board.Content;
+            }
+            else
+            {
+                var board = PumpUi(BoardsReadOnlyPresentation.OpenReadOnlyDocumentAsync(MakeBoardBytes(), embeddedArtifactHost: owner));
+                presentation = board; content = board.Content;
+            }
+            TestUiThread.Run(() =>
+            {
+                Assert.Equal(BoardsThemeMode.Dark, BoardsTheme.Mode);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Dark, CuiTheme.Professional,
+                    "#F97316", "app.boards").Accent, BoardsTheme.SharedPalette.Accent);
+                Assert.Equal(BoardsTheme.SharedPalette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(content.Resources["CuiPanelBrush"]).Color);
+                Assert.Same(sentinel, Application.Current!.Resources["CuiPanelBrush"]);
+                source.Publish(CuiAppearance.Bright, "#318CE7");
+                Assert.Equal(BoardsThemeMode.Light, BoardsTheme.Mode);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Boards", CuiAppearance.Bright, CuiTheme.Professional,
+                    "#318CE7", "app.boards").Accent, BoardsTheme.SharedPalette.Accent);
+                Assert.Equal(BoardsTheme.SharedPalette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(content.Resources["CuiPanelBrush"]).Color);
+                Assert.Same(sentinel, Application.Current.Resources["CuiPanelBrush"]);
+            });
+            await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
+            presentation = null;
+            TestUiThread.Run(() => source.Publish(CuiAppearance.Dark, "#F97316"));
+            Assert.Equal(BoardsThemeMode.Light, BoardsTheme.Mode); // Disposed Boards no longer observes Home.
+        }
+        finally
+        {
+            if (presentation is not null) await DrainAndDisposeAsync(presentation.DisposeAsync().AsTask());
+            TestUiThread.Run(() => { Application.Current!.Resources["CuiPanelBrush"] = previous; BoardsTheme.SetMode(priorMode); });
+        }
+    }
+
+    private sealed class ThemeSource : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; private set; } = new("Professional", 0, "boards-theme-test", false,
+            CuiAccessibilitySettings.Default, CuiAppearance.Dark, new(CuiAccentOverrideMode.AllApps, "#F97316"));
+        public event EventHandler? Changed;
+        public void Publish(CuiAppearance appearance, string accent)
+        {
+            Current = Current with { Revision = Current.Revision + 1, Appearance = appearance,
+                Accent = new(CuiAccentOverrideMode.AllApps, accent) };
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+    private sealed class ThemeHost(CuiThemePreferenceContext context) : IBoardsEmbeddedArtifactHost
+    {
+        public CuiThemePreferenceContext? ThemeContext => context;
+        public void BindOwningControl(Control control) { }
+        public Task<IBoardsEmbeddedArtifactSession> OpenAsync(BoardEmbeddedArtifactReference reference, BoardEmbeddedArtifactMode mode, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<BoardEmbeddedArtifactReference?> SelectAsync(string app, CancellationToken ct = default) => Task.FromResult<BoardEmbeddedArtifactReference?>(null);
+        public Task<BoardEmbeddedArtifactReference?> CreateAsync(string app, CancellationToken ct = default) => Task.FromResult<BoardEmbeddedArtifactReference?>(null);
+    }
+
     [Fact]
     public async Task Readonly_and_writable_presentations_render_real_blocks_after_host_mount()
     {

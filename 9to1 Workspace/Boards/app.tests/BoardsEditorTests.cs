@@ -142,6 +142,38 @@ public sealed class BoardsEditorTests
     }
 
     [Fact]
+    public async Task Authored_formatting_uses_vector_symbols_and_the_board_selector_uses_the_owner_brand()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync(null);
+        TestUiThread.Run(() =>
+        {
+            using var vm = new BoardsViewModel(session);
+            using var loader = BoardsCuiDocuments.CreateLoader();
+            loader.SetBindingContext(vm);
+            loader.SetActionDispatcher(vm);
+            var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
+            Assert.DoesNotContain(diagnostics, item => item.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
+            var control = Assert.IsAssignableFrom<Control>(root);
+            loader.WireBindings(control);
+            vm.Attach(control);
+            foreach (var id in new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" })
+            {
+                var button = Assert.IsType<Button>(BoardsCuiControlFinder.FindByAutomationId<Button>(control, id));
+                var image = Assert.IsType<Image>(button.Content);
+                Assert.IsType<DrawingImage>(image.Source);
+                Assert.Equal(18d, image.Width);
+                Assert.Equal(18d, image.Height);
+                Assert.Equal(32d, button.MinWidth);
+            }
+            var boardIcon = BoardsCuiControlFinder.FindByAutomationId<Image>(control, "BoardSwitcherIcon");
+            Assert.NotNull(boardIcon);
+            Assert.IsType<Avalonia.Media.Imaging.Bitmap>(boardIcon!.Source);
+            vm.Detach();
+        });
+    }
+
+    [Fact]
     public async Task Range_formatting_controls_expose_live_active_formatting_state()
     {
         await using var session = new InMemoryRichBoardSession();

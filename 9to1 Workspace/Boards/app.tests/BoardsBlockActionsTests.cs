@@ -1,4 +1,10 @@
 using System.Text.Json;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -7,6 +13,112 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsBlockActionsTests
 {
+    [Theory]
+    [InlineData("move", false)]
+    [InlineData("click", false)]
+    [InlineData("escape", false)]
+    [InlineData("stale", false)]
+    [InlineData("return-to-grip", false)]
+    [InlineData("move", true)]
+    [InlineData("click", true)]
+    [InlineData("escape", true)]
+    public async Task Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(string gesture, bool freePlacement)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-actual-grip-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "pointer.9to1board");
+            await SeedAsync(store, path, freePlacement);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var vm = new BoardsViewModel(adapter);
+            if (!vm.IsEditMode) await vm.DispatchAsync("ToggleEditView", null);
+            var original = adapter.Snapshot;
+            var fixture = TestUiThread.Run(() =>
+            {
+                var host = new StackPanel { Width = 600, Margin = new Thickness(76, 0, 0, 0),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top };
+                var absoluteHost = new Canvas();
+                var surface = new Grid();
+                surface.Children.Add(absoluteHost); surface.Children.Add(host);
+                BlockRenderer.Rebuild(host, vm, [], absoluteHost);
+                var window = new Window { Width = 760, Height = 600, Content = surface };
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var row = Assert.Single(host.Children.OfType<Border>(), value =>
+                    value.Tag is BlockReorderRow { BlockId: "block-a" });
+                var grip = Assert.Single(row.GetVisualDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
+                var actions = Assert.Single(row.GetVisualDescendants().OfType<Button>(), button => button.Name == "BlockDuplicate");
+                var start = grip.TranslatePoint(new Point(grip.Bounds.Width / 2, grip.Bounds.Height / 2), window)!.Value;
+                var end = host.TranslatePoint(new Point(start.X, host.Bounds.Height + 12), window)!.Value;
+                return (Window: window, Host: host, Row: row, Grip: grip, Actions: actions, Start: start, End: end);
+            });
+            try
+            {
+                TestUiThread.Run(() =>
+                {
+                    fixture.Window.MouseMove(fixture.Start);
+                    fixture.Window.MouseDown(fixture.Start, MouseButton.Left);
+                    Assert.True(fixture.Grip.IsPressed);
+                    if (gesture != "click")
+                    {
+                        fixture.Window.MouseMove(fixture.End);
+                        Dispatcher.UIThread.RunJobs();
+                        if (freePlacement) Assert.IsType<Avalonia.Media.TranslateTransform>(fixture.Row.RenderTransform);
+                        else Assert.Contains(fixture.Host.Children.OfType<Border>(), row => row.BorderThickness.Top == 3);
+                        if (gesture == "escape")
+                            fixture.Grip.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
+                        if (gesture == "stale") vm.EditText("t_block-b", "Changed during drag");
+                        if (gesture is "return-to-grip" or "escape") fixture.Window.MouseMove(fixture.Start);
+                    }
+                    fixture.Window.MouseUp(gesture is "click" or "return-to-grip" or "escape" ? fixture.Start : fixture.End, MouseButton.Left);
+                    Dispatcher.UIThread.RunJobs();
+                });
+                if (gesture is "move" or "stale")
+                {
+                    for (var attempt = 0; attempt < 100; attempt++)
+                    {
+                        if (TestUiThread.Run(() => gesture == "move" ?
+                            (freePlacement ? Blocks(adapter)[0].Layout == HavenRichBlockLayouts.Absolute : Blocks(adapter)[0].Id == "block-b") :
+                            vm.TryGetValue("StatusText", out var status) && status?.ToString()?.Contains("Block move refused", StringComparison.Ordinal) == true)) break;
+                        await Task.Delay(10);
+                    }
+                }
+                TestUiThread.Run(() =>
+                {
+                    Assert.False(fixture.Grip.IsPressed);
+                    Assert.Equal(gesture == "click", fixture.Actions.IsEffectivelyVisible);
+                    Assert.DoesNotContain(fixture.Host.Children.OfType<Border>(), row => row.BorderThickness.Top == 3);
+                    Assert.Null(fixture.Row.RenderTransform);
+                    Assert.Equal(gesture == "move" && !freePlacement ? new[] { "block-b", "block-c", "block-a" } :
+                        new[] { "block-a", "block-b", "block-c" }, Blocks(adapter).Select(block => block.Id));
+                    if (freePlacement)
+                        Assert.Equal(gesture == "move" ? HavenRichBlockLayouts.Absolute : HavenRichBlockLayouts.Flow,
+                            Blocks(adapter)[0].Layout);
+                    if (gesture == "stale")
+                    {
+                        Assert.Equal("Changed during drag", Blocks(adapter)[1].Text);
+                        Assert.True(vm.TryGetValue("StatusText", out var status));
+                        Assert.Contains("Block move refused", status?.ToString() ?? string.Empty);
+                    }
+                });
+                if (gesture == "move")
+                {
+                    Assert.True(await adapter.UndoAsync());
+                    Assert.Equal(original, adapter.Snapshot);
+                    Assert.False(adapter.CanUndo);
+                }
+                else if (gesture != "stale")
+                {
+                    Assert.Equal(original, adapter.Snapshot);
+                    Assert.False(adapter.CanUndo);
+                }
+            }
+            finally { TestUiThread.Run(() => fixture.Window.Close()); }
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
     [Fact]
     public async Task Grip_refreshes_after_typing_but_an_open_menu_cannot_apply_a_stale_ticket()
     {
@@ -264,12 +376,13 @@ public sealed class BoardsBlockActionsTests
 
     private static bool Flag(BoardsViewModel model, string name) => model.TryGetValue(name, out var value) && value is true;
     private static List<RichBoardBlock> Blocks(ContractSessionAdapter adapter) => adapter.Document.Sections.Single().Pages.Single().Blocks;
-    private static async Task SeedAsync(JsonFileHavenBoardStore store, string path)
+    private static async Task SeedAsync(JsonFileHavenBoardStore store, string path, bool freePlacement = false)
     {
         await using var owner = await RichBoardSession.CreateNewAsync(store, "Same block owner");
         await owner.MutateAsync(rich =>
         {
             var page = rich.Sections.Single().Pages.Single(); page.Blocks.Clear();
+            if (freePlacement) page.LayoutMode = HavenRichPageLayoutModes.Unlocked;
             page.Blocks.Add(new() { Id = "block-a", PlainText = "first", Order = 0 });
             page.Blocks.Add(new() { Id = "block-b", PlainText = "AlphaBeta", Order = 1, Runs =
                 [new() { Text = "Alpha" }, new() { Text = "Beta", Bold = true, Baseline = HavenRichBaseline.Superscript, FontFamily = "Georgia" }] });

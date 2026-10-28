@@ -74,8 +74,8 @@ public static class ToolbarBuilder
                 selected?.Baseline == "superscript", async () => await vm.DispatchAsync("ToggleSup", null), iconSize: 18),
             Separator()));
         host.Children.Add(Group(
-            ColorPopupButton(vm, "A", "Text colour", isHighlight: false),
-            ColorPopupButton(vm, "H", "Highlight colour", isHighlight: true),
+            ColorPopupButton(vm, BoardsIcons.TextColor, "Text colour", isHighlight: false),
+            ColorPopupButton(vm, BoardsIcons.HighlightColor, "Highlight colour", isHighlight: true),
             Separator()));
         host.Children.Add(Group(
             Toggle(vm, BoardsIcons.BulletedList, "Bulleted list", "Toggle bulleted list",
@@ -233,7 +233,7 @@ public static class ToolbarBuilder
         return combo;
     }
 
-    private static Control ColorPopupButton(BoardsViewModel vm, string label, string tip, bool isHighlight)
+    private static Control ColorPopupButton(BoardsViewModel vm, string glyph, string tip, bool isHighlight)
     {
         var selectedBlock = vm.FindBlock(vm.SelectedBlockId);
         var previewColor = isHighlight ? selectedBlock?.Background : selectedBlock?.Foreground;
@@ -250,14 +250,7 @@ public static class ToolbarBuilder
         CuiPropertyPresentation.Set(preview, "Background", previewBrush, CuiPropertyLevel.Instance,
             "Boards selected text colour preview");
         var content = new StackPanel { Orientation = Orientation.Vertical, Spacing = 2 };
-        content.Children.Add(new TextBlock
-        {
-            Text = label,
-            FontSize = 13,
-            FontWeight = FontWeight.SemiBold,
-            VerticalAlignment = VerticalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-        });
+        content.Children.Add(BoardsIcons.Glyph(glyph, 18, tip));
         content.Children.Add(preview);
         var button = new Button
         {
@@ -376,7 +369,7 @@ public static class ToolbarBuilder
     {
         var button = new ToggleButton
         {
-            Content = BoardsIcons.Glyph(BoardsIcons.Ink, 16, "Draw"),
+            Content = BoardsIcons.Glyph(BoardsIcons.Ink, 18, "Draw"),
             IsChecked = vm.IsDrawMode,
             Padding = new Thickness(8, 6),
             Background = Brushes.Transparent,
@@ -537,9 +530,8 @@ public static class ToolbarBuilder
     {
         bar.Children.Add(Group(DrawButton(vm), Separator()));
         var tools = Group();
-        // UX27 icon requirement: Pen, Highlighter, Eraser and Select must read as
-        // filled rounded icons, not text labels; a squeezed text row is what made
-        // the pen control render as an arrow-like sliver for the owner.
+        // Keep the drawing silhouettes optically consistent with the writing toolbar.
+        // Tooltips describe each action; the control exposes its stable tool name.
         foreach (var tool in new[]
         {
             (Value: "Pen", Icon: BoardsIcons.Ink, Tip: "Pen — draw freehand ink"),
@@ -550,7 +542,8 @@ public static class ToolbarBuilder
         {
             var button = new ToggleButton
             {
-                Content = BoardsIcons.Glyph(tool.Icon, 15, tool.Value),
+                Content = BoardsIcons.Glyph(tool.Icon, 18, tool.Value),
+                MinWidth = 32, MinHeight = 32,
                 IsChecked = string.Equals(vm.InkTool, tool.Value, StringComparison.OrdinalIgnoreCase),
                 Padding = new Thickness(8, 6),
                 Margin = new Thickness(1, 0),
@@ -559,7 +552,7 @@ public static class ToolbarBuilder
             };
             SetQuietToolbarControl(button, button.IsChecked == true, "Boards drawing tool selection");
             ToolTip.SetTip(button, tool.Tip);
-            Avalonia.Automation.AutomationProperties.SetName(button, tool.Tip);
+            Avalonia.Automation.AutomationProperties.SetName(button, tool.Value + " drawing tool");
             button.Click += (_, _) => vm.SetInkTool(tool.Value);
             tools.Children.Add(button);
         }

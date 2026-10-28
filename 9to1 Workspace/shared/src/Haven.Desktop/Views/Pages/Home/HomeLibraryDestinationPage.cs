@@ -143,6 +143,18 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiWritableBind
         _ownerFilter.Text = ownerApp;
         _typeFilter.Text = artifactType;
     }
+    internal void SetInitialSearch(string text, bool filesOnly)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+        if (text.Length > 256 || text.Any(char.IsControl))
+            throw new ArgumentException("Use a search of at most 256 characters without control characters.", nameof(text));
+        if (_active || _initialization is not null || _page is not null)
+            throw new InvalidOperationException("Set the initial Library search before its first activation.");
+        _search.Text = text;
+        _ownerFilter.Text = filesOnly ? "files" : string.Empty;
+        _typeFilter.Text = string.Empty;
+    }
     internal void SetFolderSelectionMode(Func<HomeDeepLink, CancellationToken, Task<HomeDeepLink?>> selectCurrentFolder)
     {
         Dispatcher.UIThread.VerifyAccess();

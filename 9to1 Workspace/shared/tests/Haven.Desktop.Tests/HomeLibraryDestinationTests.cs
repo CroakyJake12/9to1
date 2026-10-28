@@ -23,6 +23,25 @@ namespace Haven.Desktop.Tests;
 /// These verify real canonical CUI and domain routing, not production Notes/Home/native acceptance.</summary>
 public sealed class HomeLibraryDestinationTests
 {
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Omnibox_search_activates_the_actual_Library_query_and_scopes_Files_without_replacing_authorization(bool filesOnly)
+    {
+        var index = new Index(Array.Empty<HomeArtifactReference>());
+        var page = Page(index, new(), (_, _) => true);
+        page.SetInitialSearch("Résumé / quarterly notes", filesOnly);
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            Assert.Equal("Résumé / quarterly notes", index.LastQuery!.Text);
+            Assert.Equal(filesOnly ? "files" : null, index.LastQuery.OwnerApp);
+            Assert.Null(index.LastQuery.ArtifactType);
+            Assert.Throws<InvalidOperationException>(() => page.SetInitialSearch("changed", false));
+        }
+        finally { await page.CloseAndDrainAsync(); }
+    }
+
     [AvaloniaFact]
     public async Task Empty_filtered_Boards_Library_uses_the_existing_create_and_audit_retry_host()
     {
@@ -311,6 +330,9 @@ public sealed class HomeLibraryDestinationTests
         Assert.Throws<NotSupportedException>(() => Factory(true).CreateSession(Request("browse://newtab/library")));
         Assert.Throws<NotSupportedException>(() => Factory(true).CreateSession(Request("browse://home/library/nested")));
         Assert.Throws<NotSupportedException>(() => Factory(true).CreateSession(Request("browse://home/library") with { Privacy = BrowserTabPrivacy.Private }));
+        var searchRoute = BrowseOmniboxSearchRoute.Create("quarterly notes", true).Value;
+        Assert.Throws<NotSupportedException>(() => Factory(false).CreateSession(Request(searchRoute)));
+        Assert.Throws<NotSupportedException>(() => Factory(true).CreateSession(Request(searchRoute) with { Privacy = BrowserTabPrivacy.Private }));
         var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(true).CreateSession(Request("browse://home/library")));
         Window? window = null;
         try
@@ -319,6 +341,14 @@ public sealed class HomeLibraryDestinationTests
             Assert.Single(session.OriginalNativeView.GetVisualDescendants().OfType<HomeLibraryDestinationPage>());
         }
         finally { try { await session.CloseAndDrainAsync(); } finally { window?.Close(); } }
+        var search = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(true).CreateSession(Request(searchRoute)));
+        try
+        {
+            await search.InitializeAsync();
+            Assert.Single(search.OriginalNativeView.GetVisualDescendants().OfType<HomeLibraryDestinationPage>());
+            Assert.Equal(searchRoute, search.Address.Value);
+        }
+        finally { await search.CloseAndDrainAsync(); }
     }
     [AvaloniaFact]
     public async Task Folder_picker_cancel_completes_without_a_folder_or_name()

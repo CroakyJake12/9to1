@@ -68,6 +68,43 @@ public sealed class DataRecordViewControlTests
         finally { await view.DisposeAsync(); window.Close(); }
     }
 
+    [AvaloniaFact]
+    public async Task Native_record_headers_and_inputs_follow_their_own_theme_scope()
+    {
+        using var paths = new ViewPaths(); var actors = new ViewActors();
+        var factory = new Haven.Infrastructure.DataLocalRecordSessionFactory(new Haven.Infrastructure.DataWorkbookRepository(paths), actors);
+        await using var session = await factory.CreateAsync("profile-a", "Theme fixture");
+        var table = session.Snapshot.Tables.Single();
+        var field = table.RelationalSchema!.Fields.Single(value => value.Name == "Name").FieldID;
+        await session.CreateRecordAsync(table.Id, new Dictionary<Guid, DataScalarRecordValue>
+        { [field] = new(DataCellKind.Text, System.Text.Json.JsonSerializer.SerializeToElement("Theme record")) });
+        foreach (var appearance in new[] { CakeOS.Cui.Themes.CuiAppearance.Dark, CakeOS.Cui.Themes.CuiAppearance.Bright })
+        {
+            using var theme = new CakeOS.Cui.Themes.CuiThemePreferenceContext(new ContrastThemeSource(appearance));
+            var view = new DataRecordViewControl(session, theme: theme);
+            var window = new Avalonia.Controls.Window { Content = view, Width = 1100, Height = 700 };
+            try
+            {
+                window.Show(); window.UpdateLayout(); Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var header = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(view).OfType<Avalonia.Controls.TextBlock>()
+                    .Single(label => label.Text == "Name" && label.FontWeight == Avalonia.Media.FontWeight.Bold);
+                var input = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(view).OfType<Avalonia.Controls.TextBox>()
+                    .Single(box => box.Text == "Theme record");
+                var expected = Avalonia.Media.Color.Parse(CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For("data", appearance,
+                    CakeOS.Cui.Themes.CuiTheme.Professional).Text);
+                Assert.Equal(expected, Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(header.Foreground).Color);
+                Assert.Equal(expected, Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(input.Foreground).Color);
+            }
+            finally { await view.DisposeAsync(); window.Close(); }
+        }
+    }
+    private sealed class ContrastThemeSource(CakeOS.Cui.Themes.CuiAppearance appearance) : CakeOS.Cui.Themes.ICuiThemePreferenceSource
+    {
+        public CakeOS.Cui.Themes.CuiThemePreferenceSnapshot Current { get; } = new("Professional", 1, "data-theme-fixture", false,
+            CakeOS.Cui.Themes.CuiAccessibilitySettings.Default, appearance);
+        public event EventHandler? Changed { add { } remove { } }
+    }
+
     private sealed class ViewActors : IAuthenticatedResourceActorSource
     {
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) =>

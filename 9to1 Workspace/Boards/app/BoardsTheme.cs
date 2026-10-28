@@ -39,8 +39,11 @@ public static class BoardsTheme
     {
         get
         {
-            var appearance = Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright;
-            return CuiSurfacePaletteCatalog.For("Boards", appearance, ResolvedPreference);
+            var appearance = _ownerPreference?.Appearance ?? (Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright);
+            return _ownerPreference is { } owner
+                ? CuiSurfacePaletteCatalog.For("Boards", appearance, owner.Theme.BaseTheme,
+                    owner.EffectiveAccent.ResolveColour("app.boards"), "app.boards")
+                : CuiSurfacePaletteCatalog.For("Boards", appearance, ResolvedPreference);
         }
     }
 
@@ -52,14 +55,30 @@ public static class BoardsTheme
     /// host catalog: the owner-corrected theme contract requires child apps to read the
     /// user's preference and keep unrelated surfaces unchanged (owner UX03 report).</summary>
     private static CuiTheme? _resolvedPreference;
+    private static CuiThemeResolution? _ownerPreference;
+
+    /// <summary>Borrow the actual Home observation; Boards never persists or changes it.</summary>
+    public static void ApplyOwnerPreference(CuiThemeResolution preference)
+    {
+        ArgumentNullException.ThrowIfNull(preference);
+        if (_ownerPreference == preference) return;
+        _ownerPreference = preference;
+        _resolvedPreference = preference.Theme.BaseTheme;
+        if (preference.Appearance is { } appearance)
+            Mode = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark ? BoardsThemeMode.Dark : BoardsThemeMode.Light;
+        Changed?.Invoke();
+    }
 
     public static CuiTheme ResolvedPreference => _resolvedPreference ?? CuiTheme.Professional;
 
     /// <summary>Read the shared Haven theme choice into Boards' local resolver before the
     /// Boards CUI tree is built. This deliberately does NOT write the shared
     /// CuiSurfacePaletteCatalog: unrelated surfaces keep their host-owned theme.</summary>
-    public static void LoadGlobalThemePreference(string? dataDirectory = null) =>
+    public static void LoadGlobalThemePreference(string? dataDirectory = null)
+    {
+        _ownerPreference = null;
         _resolvedPreference = CuiThemePreferenceReader.Read(dataDirectory);
+    }
 
     /// <summary>Seed Boards' Light/Dark mode from the Home appearance preference. A fresh
     /// development profile has no board-local settings file at all, and the previous default
@@ -89,8 +108,9 @@ public static class BoardsTheme
 
     public static void SetMode(BoardsThemeMode mode)
     {
-        if (Mode == mode)
+        if (Mode == mode && _ownerPreference is null)
             return;
+        _ownerPreference = null;
         Mode = mode;
         Changed?.Invoke();
     }
@@ -108,18 +128,7 @@ public static class BoardsTheme
     public static IBrush TextBrush => Brush(Current.Text);
     public static IBrush SecondaryTextBrush => Brush(Current.SecondaryText);
     public static IBrush BorderBrush => Brush(Current.Border);
-    public static IBrush AccentBrush
-    {
-        get
-        {
-            // The canonical applier supplies a three-stop theme gradient. Keep
-            // a semantic solid fallback for isolated controls before startup.
-            if (Application.Current?.TryGetResource("CuiAccentBrush", null, out var accent) == true
-                && accent is IBrush accentBrush)
-                return accentBrush;
-            return Brush(Current.Accent);
-        }
-    }
+    public static IBrush AccentBrush => Brush(Current.Accent);
     public static IBrush AccentContrastBrush => Brush(Current.AccentContrast);
     public static IBrush ErrorBrush => Brush(Current.Error);
     public static IBrush SuccessBrush => Brush(Current.Success);

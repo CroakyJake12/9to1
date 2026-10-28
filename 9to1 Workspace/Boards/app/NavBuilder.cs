@@ -148,7 +148,7 @@ public static class NavBuilder
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        SetNavigationButtonPresentation(chevron, "Boards section disclosure");
+        SetNavigationButtonPresentation(chevron, "Boards section disclosure", new CornerRadius(6));
         ToolTip.SetTip(chevron, collapsed ? "Expand section" : "Collapse section");
         Avalonia.Automation.AutomationProperties.SetName(chevron, (collapsed ? "Expand " : "Collapse ") + section.Title);
         chevron.Click += (_, _) =>
@@ -213,7 +213,7 @@ public static class NavBuilder
             VerticalContentAlignment = VerticalAlignment.Center,
             Padding = new Thickness(4, 0),
         };
-        SetNavigationButtonPresentation(title, "Boards section row label");
+        SetNavigationButtonPresentation(title, "Boards section row label", new CornerRadius(6));
         Grid.SetColumn(title, 2);
         ToolTip.SetTip(title, "Open first page of " + section.Title);
         Avalonia.Automation.AutomationProperties.SetName(title, "Section " + section.Title);
@@ -268,6 +268,7 @@ public static class NavBuilder
         int depth, bool hasChildren, bool collapsed)
     {
         var selected = vm.SelectedPageId == page.Id && vm.SelectedSectionId == section.Id;
+        var rowRadius = new CornerRadius(selected ? 8 : 4);
         var row = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("3,24,20,*,Auto"),
@@ -283,7 +284,7 @@ public static class NavBuilder
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        SetNavigationButtonPresentation(disclosure, "Boards page disclosure");
+        SetNavigationButtonPresentation(disclosure, "Boards page disclosure", rowRadius);
         if (hasChildren)
         {
             disclosure.Content = BoardsIcons.Glyph(collapsed ? BoardsIcons.ChevronRight : BoardsIcons.ChevronDown, 10);
@@ -341,7 +342,7 @@ public static class NavBuilder
             VerticalContentAlignment = VerticalAlignment.Center,
             Padding = new Thickness(4, 0),
         };
-        SetNavigationButtonPresentation(button, "Boards page row label");
+        SetNavigationButtonPresentation(button, "Boards page row label", rowRadius);
         var pageTitle = new TextBlock
         {
             Text = page.Title,
@@ -397,24 +398,26 @@ public static class NavBuilder
         {
             Child = row,
             Margin = new Thickness((depth + 1) * 16, 1, 0, 1),
-            CornerRadius = new CornerRadius(selected ? 8 : 4),
+            CornerRadius = rowRadius,
             Background = selected ? BoardsTheme.CardBrush : Brushes.Transparent,
         };
         CuiPropertyPresentation.Set(pageRow, "Background",
             selected ? BoardsTheme.CardBrush : Brushes.Transparent,
             CuiPropertyLevel.Instance, "Boards page row surface");
-        CuiPropertyPresentation.Set(pageRow, "CornerRadius", new CornerRadius(selected ? 8 : 4),
+        CuiPropertyPresentation.Set(pageRow, "CornerRadius", rowRadius,
             CuiPropertyLevel.Instance, "Boards page row shape");
         return pageRow;
     }
 
-    private static void SetNavigationButtonPresentation(Button button, string source)
+    private static void SetNavigationButtonPresentation(Button button, string source, CornerRadius rowRadius)
     {
         CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
             CuiPropertyLevel.Instance, source + " surface");
         CuiPropertyPresentation.Set(button, "BorderWidth", new Thickness(0),
             CuiPropertyLevel.Instance, source + " border");
-        CuiPropertyPresentation.Set(button, "CornerRadius", new CornerRadius(0),
+        // The canonical button template binds its hover frame to this property.
+        // Share the owning row's geometry rather than painting square interaction states.
+        CuiPropertyPresentation.Set(button, "CornerRadius", rowRadius,
             CuiPropertyLevel.Instance, source + " shape");
         CuiPropertyPresentation.Set(button, "HorizontalAlignment", HorizontalAlignment.Stretch,
             CuiPropertyLevel.Instance, source + " width");

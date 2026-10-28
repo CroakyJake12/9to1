@@ -57,6 +57,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         // Feature routes belong to Home only, and each requires its genuine composed owner.
         var isHome = request.Address.Authority == "home";
         var admissibleSegments = segments.Count == 0 ||
+            (isHome && _library is not null && BrowseOmniboxSearchRoute.TryParse(request.Address, out _, out _)) ||
             (isHome && _library is not null && segments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal)) ||
             (isHome && segments.Count == 1 && (segments[0].Equals("models", StringComparison.Ordinal) ||
                 _events is not null && segments[0].Equals("events", StringComparison.Ordinal) ||
@@ -126,7 +127,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         DemandCurrent(); linked.Token.ThrowIfCancellationRequested();
                         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
                             _page = new UnifiedHomePage(
-                                _request.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal)
+                                (_request.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal) ||
+                                    BrowseOmniboxSearchRoute.TryParse(_request.Address, out _, out _))
                                     ? _request with { Address = AppContentAddress.Parse("browse://home/library") } : _request, _owner._modes, _owner._dashboard,
                                 _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable,
                                 _owner._events is null ? null : () => _owner._events(_request),

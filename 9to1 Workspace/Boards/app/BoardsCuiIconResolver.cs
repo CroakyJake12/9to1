@@ -156,13 +156,13 @@ public static class BoardsCuiIconResolver
         var role = normalized switch
         {
             "plus" or "add" or "save" or "check" or "insert" => "CuiSuccessBrush",
-            "pen" or "edit" or "bold" or "italic" or "underline" or "strikethrough" or
+            "pen" or "edit" or "bold" or "italic" or "underline" or "strikethrough" or "text-color" or
                 "undo" or "redo" or "subscript" or "superscript" => "CuiAccentSecondaryBrush",
-            "file" or "notes" or "section" or "paperclip" or "image" or "folder" => "CuiAccentTertiaryBrush",
+            "file" or "notes" or "section" or "paperclip" or "image" or "folder" or "highlighter" => "CuiAccentTertiaryBrush",
             "lock" or "unlock" => "HavenAttentionBrush",
             "table" or "chart" or "bulleted-list" or "numbered-list" or "align-left" or
                 "align-center" or "align-right" or "indent-increase" or "indent-decrease" or
-                "search" or "info" or "chevron-left" or "chevron-right" => "CuiInformationBrush",
+                "search" or "info" or "chevron-left" or "chevron-right" or "select" => "CuiInformationBrush",
             "more" or "ellipsis" or "grip" or "chevron-down" or "chevron-up" => "CuiTextSoftBrush",
             "delete" or "trash" or "remove" => "BoardsDangerIconBrush",
             _ => "CuiTextBrush",
@@ -603,6 +603,22 @@ public static class BoardsCuiIconResolver
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentNullException.ThrowIfNull(brush);
+        // These drawing tools need complete, distinct silhouettes at toolbar size.
+        // SVG path geometry keeps the pen barrel/nib, marker chisel, eraser faces
+        // and pointer recognizable without a font or a borrowed navigation glyph.
+        var toolPath = key.Trim().ToLowerInvariant() switch
+        {
+            "pen" => "M4 20 L5.5 14.5 L9.5 18.5 Z M6.5 13.5 L14.5 5.5 L18.5 9.5 L10.5 17.5 Z M15.5 4.5 L16.5 3.5 Q18 2 19.5 3.5 L20.5 4.5 Q22 6 20.5 7.5 L19.5 8.5 Z",
+            "highlighter" => "M4 13 L13 4 Q14 3 15 4 L20 9 Q21 10 20 11 L11 20 Z M3 15 L9 21 L7 23 L2 23 L2 18 Z",
+            "eraser" => "M8 8 L11 5 Q12 4 13 5 L20 12 Q21 13 20 14 L17 17 Z M7 9 L16 18 L14 20 H8 L3 15 Q2 14 3 13 Z",
+            "select" => "M5 3 L20 13 L13 14.5 L17 21 L13.5 23 L9.5 16 L5 20 Z",
+            _ => null,
+        };
+        if (toolPath is not null)
+            return new DrawingImage(new GeometryDrawing { Geometry = Geometry.Parse(toolPath), Brush = brush })
+            {
+                Viewbox = new Rect(0, 0, 24, 24),
+            };
         var filledSilhouette = FilledSilhouetteKeys.Contains(key.Trim());
         var source = HavenIconCatalog.Resolve(key);
         var geometry = new StreamGeometry();

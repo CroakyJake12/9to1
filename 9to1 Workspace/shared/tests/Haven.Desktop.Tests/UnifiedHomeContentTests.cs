@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using HavenOS.Home.Core;
+using HavenOS.Files.NativeHost;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -263,23 +264,46 @@ public sealed class UnifiedHomeContentTests
         internal string PreferencePath => Path.Combine(Paths.DataDirectory, "preferences.json");
         private readonly HashSet<Exception> _expectedFailures = new(ReferenceEqualityComparer.Instance);
 
-        private HomeAppearanceAuthorityRig()
+        private HomeAppearanceAuthorityRig(bool includeFiles)
         {
             if (OperatingSystem.IsLinux()) File.SetUnixFileMode(Paths.DataDirectory,
                 UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            NativeFilesWorkspaceService? files = null;
+            NativeFilesWorkspaceAuthority? authority = null;
+            FilesArtifactResourceResolver? resolver = null;
             Home = new(new FileHomeCoreStateStore(Path.Combine(Paths.DataDirectory, "home-appearance-state.json")),
-                Principal, Paths, new("9to1.home.appearance.fixture." + Guid.NewGuid().ToString("N")));
+                Principal, Paths, new("9to1.home.appearance.fixture." + Guid.NewGuid().ToString("N")),
+                configureOriginalStores: includeFiles ? identity =>
+                {
+                    files = new(identity.StateStore, identity.Profiles);
+                    return new([files], new Dictionary<Type, object> { [typeof(NativeFilesWorkspaceService)] = files });
+                } : null,
+                configureOriginalResolvers: includeFiles ? ownership =>
+                {
+                    authority = new(files!, ownership.Identity.Profiles, ownership.Ownership);
+                    resolver = new(authority);
+                    return new([resolver], new Dictionary<Type, object>
+                    {
+                        [typeof(NativeFilesWorkspaceAuthority)] = authority,
+                        [typeof(FilesArtifactResourceResolver)] = resolver,
+                    });
+                } : null);
             var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
             // Preserve the real uninstantiated production descriptor checks, including the
             // Linux secret-store wiring, then bind the SAME protected local Home tuple.
             services.AddHavenInfrastructure();
             services.AddHavenOwnedWindowsHomeDomain(Home, Paths, Principal);
+            if (includeFiles)
+            {
+                services.AddSingleton(files!); services.AddSingleton(authority!); services.AddSingleton(resolver!);
+                services.AddFilesNativeHost();
+            }
             Provider = services.BuildServiceProvider();
         }
 
-        internal static async Task<HomeAppearanceAuthorityRig> CreateAsync()
+        internal static async Task<HomeAppearanceAuthorityRig> CreateAsync(bool includeFiles = false)
         {
-            var rig = new HomeAppearanceAuthorityRig();
+            var rig = new HomeAppearanceAuthorityRig(includeFiles);
             try
             {
                 await File.WriteAllTextAsync(rig.PreferencePath,
@@ -1619,6 +1643,107 @@ public sealed class UnifiedHomeContentTests
         window.Close();
     }
 
+    [AvaloniaTheory(SkipUnless = nameof(LinuxHomeAppearanceAuthoritySupported),
+        Skip = "Linux actual local Home/Files component fixture; installed acceptance is separate.")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actual_Files_tile_double_click_settles_its_Apps_loader_and_opens_the_real_Files_owner(bool fromNewTab)
+    {
+        await using var rig = await HomeAppearanceAuthorityRig.CreateAsync(includeFiles: true);
+        var limit = TimeSpan.FromSeconds(20);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        BrowseNativeWorkspace? workspace = null;
+        UnifiedHomePage? sourcePage = null;
+        Task? navigation = null;
+        var accepted = 0; var refused = 0; var actualTileWasPending = false;
+        var files = FilesBrowseAppContentFactory.BindOriginalSameProcess(rig.Provider, rig.Home,
+            rig.AppLifetime.Token, rig.WindowLifetime.Token);
+        var home = Factory(new(), rig.AppLifetime.Token, navigation: (intent, settlement) =>
+        {
+            actualTileWasPending |= sourcePage?.WhenActionsIdleAsync().IsCompleted == false;
+            var admitted = workspace!.TryQueueNavigationOriginal(intent, Task.WhenAll(settlement, release.Task), out var original);
+            if (admitted) { accepted++; navigation = original; }
+            else refused++;
+            return admitted;
+        }, admission: async (_, token) => { Assert.True(await rig.ObserveAsync(token)); });
+        var chrome = await BrowseChrome.CreateAsync(rig.Paths, appContentFactory: files,
+            internalContentFactory: home, homeProfileId: rig.Actor.ProfileId);
+        if (fromNewTab) await chrome.NewTabAsync(false);
+        var sourceId = chrome.State.SelectedTabId;
+        var source = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(chrome.ObserveOriginalAppContent(sourceId));
+        workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        try
+        {
+            RegisterProductionImageResolver(window);
+            window.Show(); await window.InitializeAsync().WaitAsync(limit);
+            sourcePage = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(source.OriginalNativeView).OriginalContent);
+            if (fromNewTab)
+            {
+                HomeRailButton(sourcePage, "home-apps", "Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await sourcePage.WhenActionsIdleAsync().WaitAsync(limit);
+            }
+            SettleFixtureLayout(window);
+            var tile = Assert.Single(sourcePage.GetVisualDescendants().OfType<Button>(),
+                item => item.Name == "home-app-tile" && AutomationProperties.GetName(item) == "Open Files");
+            tile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            tile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await sourcePage.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(1, accepted); Assert.Equal(1, refused);
+            Assert.True(actualTileWasPending, "The sender settlement must include the actual Apps CUI action.");
+            Assert.Contains(sourcePage.GetVisualDescendants().OfType<TextBlock>(),
+                item => item.Text?.Contains("Finish the current browser action", StringComparison.Ordinal) == true);
+            Assert.Equal(sourceId, chrome.State.SelectedTabId);
+            Assert.True(source.IsPublicationCurrent);
+            release.TrySetResult();
+            Assert.NotNull(navigation); await navigation!.WaitAsync(limit);
+            await Task.WhenAll(workspace.OriginalNotifications).WaitAsync(limit);
+            SettleFixtureLayout(window);
+            Assert.Equal("files", chrome.State.SelectedTab.Address.Authority);
+            Assert.Equal("Files", chrome.State.SelectedTab.Title);
+            Assert.Equal(BrowseEngineState.NativeApp, chrome.State.SelectedTab.EngineState);
+            var actualFiles = Assert.IsType<FilesBrowseAppContentSession>(chrome.ObserveOriginalAppContent(chrome.State.SelectedTabId));
+            Assert.IsType<Haven.Desktop.Views.Pages.Files.FilesWorkspaceSetupPage>(actualFiles.OriginalNativeView);
+            Assert.True(actualFiles.IsPublicationCurrent);
+            if (fromNewTab) { Assert.Equal(sourceId, chrome.State.SelectedTabId); Assert.True(source.CanRetireOriginalView); }
+            else { Assert.NotEqual(sourceId, chrome.State.SelectedTabId); Assert.True(source.IsPublicationCurrent); }
+        }
+        finally
+        {
+            release.TrySetResult();
+            if (navigation is not null) await navigation.WaitAsync(limit);
+            window.Close();
+            if (window.OriginalClosePreparation is { } preparation) Assert.True(await preparation.WaitAsync(limit));
+            Dispatcher.UIThread.RunJobs();
+            Assert.NotNull(window.OriginalClose); await window.OriginalClose!.WaitAsync(limit);
+        }
+        Assert.Null(rig.Home.OriginalCloseTask);
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_App_tile_callback_exception_stays_a_retained_failure_instead_of_a_retryable_refusal()
+    {
+        using var lifetime = new CancellationTokenSource();
+        var expected = new IOException("The actual host navigation callback failed.");
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            navigation: (_, _) => throw expected).CreateSession(Request()));
+        await session.InitializeAsync();
+        var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+        var window = Show(session.OriginalNativeView);
+        try
+        {
+            var tile = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+                item => item.Name == "home-app-tile" && AutomationProperties.GetName(item) == "Open Files");
+            tile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var failure = await Record.ExceptionAsync(() => page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20)));
+            Assert.NotNull(failure); Assert.True(HomeAppearanceAuthorityRig.HasExactCause(failure!, expected));
+            var close = await Record.ExceptionAsync(() => session.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(20)));
+            Assert.NotNull(close); Assert.True(HomeAppearanceAuthorityRig.HasExactCause(close!, expected));
+            Assert.False(session.CanRetireOriginalView);
+        }
+        finally { window.Content = null; window.Close(); }
+    }
+
     [AvaloniaFact]
     public async Task Authored_Apps_sidebar_button_dispatches_through_its_actual_CUI_loader()
     {
@@ -1752,8 +1877,7 @@ public sealed class UnifiedHomeContentTests
                 AssertSearchGeometry();
                 Assert.True(search.Focus(), "The narrow app search must remain keyboard-focusable.");
                 search.Text = "Boards";
-                // Query/Clear projection is synchronous today. This outer Home drain is not an Apps-loader settlement proof;
-                // the original session close below joins both loaders and retains their failures.
+                // Home's action drain includes the nested Apps loader as well as the rail loader.
                 searchActions = home.WhenActionsIdleAsync(); await searchActions;
                 SearchLayout();
                 Assert.Equal("Boards", search.Text);

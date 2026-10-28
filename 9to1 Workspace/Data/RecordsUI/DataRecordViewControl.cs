@@ -100,13 +100,18 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
             foreach (var group in categories.Concat(projection.Rows.Select(r => r.Group)).Append("").Distinct(StringComparer.Ordinal))
             {
                 var column = new StackPanel { Width = 250, Spacing = 8 };
-                column.Children.Add(new TextBlock { Text = group.Length == 0 ? "Unassigned" : group, FontWeight = Avalonia.Media.FontWeight.Bold });
+                column.Children.Add(TextLabel(group.Length == 0 ? "Unassigned" : group, bold: true));
                 foreach (var row in projection.Rows.Where(r => r.Group == group))
                 {
                     var card = BuildRecordEditor(table, selected, row, Name);
                     var move = new ComboBox { ItemsSource = categories.Append("").Distinct().ToArray(), SelectedItem = row.Group, IsEnabled = !_readOnly };
                     move.SelectionChanged += (_, _) => { if (!_busy && move.SelectedItem is string target && target != row.Group) Run(() => _session.MoveCardAsync(selected.ViewID, row.RecordID, target)); };
-                    card.Children.Add(move); column.Children.Add(new Border { Child = card, BorderThickness = new Thickness(1), Padding = new Thickness(8) });
+                    CuiPropertyPresentation.Attach(move);
+                    card.Children.Add(move);
+                    var frame = new Border { Child = card, BorderThickness = new Thickness(1), Padding = new Thickness(8), CornerRadius = new CornerRadius(8) };
+                    frame.Bind(Border.BorderBrushProperty, _rows.GetResourceObservable("CuiControlBorderBrush"));
+                    frame.Bind(Border.BackgroundProperty, _rows.GetResourceObservable("CuiPanelBrush"));
+                    column.Children.Add(frame);
                 }
                 columns.Children.Add(column);
             }
@@ -116,7 +121,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
         {
             var dated = projection.Rows.Where(r => r.Start is not null && r.TimelineIssue is null).ToArray();
             var origin = dated.Length == 0 ? DateTimeOffset.UtcNow.Date : dated.Min(r => r.Start!.Value).Date;
-            _rows.Children.Add(new TextBlock { Text = "Timeline · daily scale · UTC · " + origin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) });
+            _rows.Children.Add(TextLabel("Timeline · daily scale · UTC · " + origin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
             foreach (var row in projection.Rows)
             {
                 if (row.Start is { } start && row.TimelineIssue is null)
@@ -127,14 +132,14 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
                         Margin = new Thickness(Math.Clamp((start.Date - origin).TotalDays * 24, 0, 4000), 0, 0, 0),
                         Background = this.TryFindResource("CuiAccentBrush", out var accent) ? accent as Avalonia.Media.IBrush : Avalonia.Media.Brushes.Transparent });
                 }
-                else _rows.Children.Add(new TextBlock { Text = row.TimelineIssue ?? "Undated" });
+                else _rows.Children.Add(TextLabel(row.TimelineIssue ?? "Undated"));
                 _rows.Children.Add(BuildRecordEditor(table, selected, row, Name));
             }
         }
         else
         {
             var header = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 6 };
-            foreach (var field in selected.FieldIDs) header.Children.Add(new TextBlock { Text = Name(field), Width = 150, FontWeight = Avalonia.Media.FontWeight.Bold });
+            foreach (var field in selected.FieldIDs) header.Children.Add(TextLabel(Name(field), bold: true, width: 150));
             _rows.Children.Add(header);
             foreach (var row in projection.Rows) _rows.Children.Add(BuildRecordEditor(table, selected, row, Name));
         }
@@ -152,7 +157,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
                 IsReadOnly = _readOnly || cell?.Kind == DataCellKind.Formula || !string.IsNullOrWhiteSpace(cell?.Formula) };
             Avalonia.Automation.AutomationProperties.SetName(input, name(field));
             if (view.Kind == DataRecordViewKind.Table) input.Width = 150;
-            else panel.Children.Add(new TextBlock { Text = name(field), FontSize = 12 });
+            else panel.Children.Add(TextLabel(name(field)));
             if (!input.IsReadOnly) input.TextChanged += (_, _) =>
             {
                 var value = input.Text ?? "";
@@ -160,6 +165,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
                 else _drafts[(row.RecordID, field)] = value;
                 UpdateDraftState();
             };
+            CuiPropertyPresentation.Attach(input);
             inputs.Add(field, input); panel.Children.Add(input);
         }
         panel.Children.Add(Button("Save record", async () =>
@@ -174,6 +180,16 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
         }));
         return panel;
     }
+    private TextBlock TextLabel(string text, bool bold = false, double width = double.NaN)
+    {
+        var label = new TextBlock { Text = text, Width = width,
+            FontWeight = bold ? Avalonia.Media.FontWeight.Bold : Avalonia.Media.FontWeight.Normal };
+        // Native record cells live inside the authored Data scope. Bind to that
+        // scope, rather than inherit an unrelated host's default text colour.
+        label.Bind(TextBlock.ForegroundProperty, _rows.GetResourceObservable("CuiTextBrush"));
+        return label;
+    }
+
     private void Status(string text) => _model.Set("Status", text);
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default)
     {
@@ -208,7 +224,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
     }
     private Button Button(string text, Func<Task> action)
     {
-        var button = new Button { Content = text, IsEnabled = !_readOnly }; button.Click += (_, _) => Run(action); return button;
+        var button = new Button { Content = text, IsEnabled = !_readOnly }; CuiPropertyPresentation.Attach(button); button.Click += (_, _) => Run(action); return button;
     }
     private Task Run(Func<Task> action)
     {

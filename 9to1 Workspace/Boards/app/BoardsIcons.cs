@@ -22,6 +22,8 @@ public static class BoardsIcons
     public const string ChevronDown = "chevron-down";
     public const string ChevronRight = "chevron-right";
     public const string ChevronLeft = "chevron-left";
+    public const string TextColor = "text-color";
+    public const string HighlightColor = "highlighter";
     public const string Bold = "bold";
     public const string Italic = "italic";
     public const string Underline = "underline";

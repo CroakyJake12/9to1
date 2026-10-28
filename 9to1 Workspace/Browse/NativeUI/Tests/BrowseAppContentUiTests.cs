@@ -14,6 +14,68 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeUiTests
 {
     [AvaloniaFact]
+    public async Task Omnibox_selects_Files_and_9to1_search_with_real_canonical_query_routes()
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), internalContentFactory: new TabSurfaceInternalFixtureFactory(), homeProfileId: "fixture-profile");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: new SharedControlsFakeContext(null));
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            var selector = Assert.Single(window.GetLogicalDescendants().OfType<CuiMenuItem>(), item => item.Name == "BrowseSearchModeButton");
+            Assert.True(selector.IsEnabled);
+            foreach (var filesOnly in new[] { true, false })
+            {
+                await workspace.DispatchAsync(filesOnly ? "9to1.Browse.SearchFiles" : "9to1.Browse.SearchHome", null);
+                Assert.True(workspace.TrySetValue("Address", "Résumé / quarterly notes"));
+                await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+                Assert.True(BrowseOmniboxSearchRoute.TryParse(chrome.State.SelectedTab.Address, out var text, out var files));
+                Assert.Equal("Résumé / quarterly notes", text); Assert.Equal(filesOnly, files);
+                Assert.True(workspace.TryGetValue("Address", out var displayed)); Assert.Equal(text, displayed);
+            }
+            await chrome.NewTabAsync(true); await Task.WhenAll(workspace.OriginalNotifications);
+            Assert.False(workspace.IsActionAvailable("9to1.Browse.SearchFiles"));
+            Assert.False(workspace.IsActionAvailable("9to1.Browse.SearchHome"));
+            Assert.True(workspace.IsActionAvailable("9to1.Browse.SearchWeb"));
+            await CloseAppWindow(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_reload_preserves_unsaved_view_then_recreates_same_route_after_preflight()
+    {
+        var factory = new AppUiFixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), appContentFactory: factory, homeProfileId: "fixture-profile");
+        await chrome.NavigateAsync("9to1://write/document");
+        var route = chrome.State.SelectedTab.Address;
+        var owner = Assert.Single(factory.Sessions);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            var parent = owner.OriginalNativeView.Parent;
+            var reload = Find(window, "BrowseReloadButton");
+            Assert.True(reload.IsEnabled);
+            owner.Unsaved = true;
+            await Click(window, workspace, reload);
+            Assert.Single(factory.Sessions); Assert.Null(owner.OriginalClose);
+            Assert.Same(owner, chrome.ObserveOriginalAppContent(chrome.State.SelectedTabId));
+            Assert.Same(parent, owner.OriginalNativeView.Parent);
+            Assert.Equal(route, chrome.State.SelectedTab.Address);
+            owner.Unsaved = false;
+            await Click(window, workspace, reload);
+            Assert.Equal(2, factory.Sessions.Count);
+            Assert.True(owner.CanRetireOriginalView);
+            Assert.Same(factory.Sessions[1], chrome.ObserveOriginalAppContent(chrome.State.SelectedTabId));
+            Assert.Equal(route, chrome.State.SelectedTab.Address);
+            await CloseAppWindow(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
     public async Task Real_native_app_view_stays_mounted_across_tab_selection_and_web_controls_are_disabled()
     {
         var factory = new AppUiFixtureFactory();

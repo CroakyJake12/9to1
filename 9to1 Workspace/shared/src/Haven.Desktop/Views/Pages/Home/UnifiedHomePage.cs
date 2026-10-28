@@ -113,7 +113,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal bool IsAlive => !_work.IsRetiring && !_stopping;
-    internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
+    internal Task WhenActionsIdleAsync() => Task.WhenAll(
+        _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync());
 
     internal Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -433,12 +434,21 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private void Queue(AppContentAddress address, DesktopOriginalWorkLifetime.Original original, bool? newTab = null)
     {
         original.Token.ThrowIfCancellationRequested();
-        var settlement = Task.WhenAll(original.Task, _loader.WhenActionsIdleAsync());
+        // App tiles belong to the nested Apps loader, while rail/search actions
+        // belong to the outer loader. Retire neither until the actual sender has settled.
+        var settlement = Task.WhenAll(original.Task, WhenActionsIdleAsync());
         var accepted = false;
         original.RunAcceptedPublicationCallback(() => accepted = _queue(
             new(_request.TabId, address, newTab ?? _request.Address.Authority == "home"), settlement));
         if (!accepted && original.IsAcceptedPublicationCurrent)
-            throw new InvalidOperationException("The original tab no longer accepts navigation.");
+        {
+            // A false receipt acquired no navigation work (for example a second
+            // click while Browse is busy). Keep this page usable for retry; real
+            // callback exceptions still propagate through the retained work owner.
+            const string retry = "The browser cannot open this destination right now. Finish the current browser action, then try again.";
+            Set(_status, "Text", retry);
+            if (_section == "apps") UpdateAppsState(retry);
+        }
     }
 
     internal Task<bool> TryPrepareToCloseAsync(CancellationToken token)

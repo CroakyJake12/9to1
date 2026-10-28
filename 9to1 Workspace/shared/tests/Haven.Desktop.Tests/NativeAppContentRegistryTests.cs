@@ -17,6 +17,47 @@ public sealed class NativeAppContentRegistryTests
     private static NativeAppContentRegistry Registry(RegistrySource source, Factory factory, Func<bool>? current = null) =>
         new(source, [new(Files.Id, Files.Key, HavenAppRouteKind.Files, factory)], current ?? (() => true));
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Worker_close_acquires_the_actual_native_preparation_on_ui_without_holding_chrome_gate(bool window)
+    {
+        var owner = new StrongOwner(AppContentAddress.Parse("9to1://files"));
+        BrowseChrome? chrome = null;
+        owner.OnBegin = () =>
+        {
+            Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
+            // Production native host admission reads this SAME Chrome property.
+            Assert.Null(chrome!.OriginalClose);
+        };
+        var paths = new StrongPaths();
+        chrome = await BrowseChrome.CreateAsync(paths, appContentFactory: Registry(new(), new(_ => owner)),
+            homeProfileId: "original-profile");
+        try
+        {
+            await chrome.OpenContentAsync(owner.Address);
+            var tab = chrome.State.SelectedTabId;
+            if (window)
+            {
+                var preparation = (await chrome.PrepareCloseAsync())!;
+                await Task.Run(preparation.BeginClose).WaitAsync(StrongBound);
+                Assert.True(chrome.OriginalClose!.IsCompletedSuccessfully);
+            }
+            else
+            {
+                await Task.Run(() => chrome.CloseTabAsync(tab)).WaitAsync(StrongBound);
+                Assert.DoesNotContain(chrome.State.Tabs, item => item.Id == tab);
+            }
+            Assert.Equal(1, owner.Begins);
+            Assert.True(owner.CanRetireOriginalView);
+        }
+        finally
+        {
+            try { await chrome.DisposeAsync().AsTask().WaitAsync(StrongBound); }
+            finally { Directory.Delete(paths.DataDirectory, true); }
+        }
+    }
+
     [AvaloniaFact]
     public async Task Production_Write_and_Mesh_registrations_keep_their_actual_page_factory_identity()
     {

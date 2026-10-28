@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Haven.Application;
+using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -16,6 +17,7 @@ public enum BoardEmbeddedArtifactMode
 /// </summary>
 public interface IBoardsEmbeddedArtifactHost
 {
+    CuiThemePreferenceContext? ThemeContext => null;
     /// <summary>Supplies the real composed Boards surface for correctly parenting owner UI.</summary>
     void BindOwningControl(Control control);
 

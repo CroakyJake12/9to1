@@ -1961,9 +1961,12 @@ public static class BlockRenderer
             _handle = handle;
             _grip.AttachedToVisualTree -= OnGripAttached;
             _grip.LayoutUpdated -= OnGripLayoutUpdated;
-            handle.PointerPressed += OnPressed;
+            // Button marks its press handled before instance bubble handlers.
+            handle.AddHandler(InputElement.PointerPressedEvent, OnPressed,
+                RoutingStrategies.Bubble, handledEventsToo: true);
             handle.PointerMoved += OnMoved;
-            handle.PointerReleased += OnReleased;
+            handle.AddHandler(InputElement.PointerReleasedEvent, OnReleased,
+                RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
             handle.PointerCaptureLost += OnCaptureLost;
             handle.KeyDown += OnKeyDown;
             handle.DetachedFromVisualTree += OnDetached;
@@ -2018,6 +2021,8 @@ public static class BlockRenderer
         private void OnReleased(object? sender, PointerReleasedEventArgs e)
         {
             if (!_pressed || !ReferenceEquals(_pointer, e.Pointer)) return;
+            // A click must reach Button; an actual drag must stop before it.
+            if (e.Route == RoutingStrategies.Tunnel && !_dragging) return;
             var wasDrag = _dragging;
             var position = e.GetPosition(_absoluteHost);
             var x = Math.Clamp(position.X - _anchorX, 0, HavenRichBlockLayoutGeometry.CoordinateLimit);
