@@ -15,6 +15,7 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsBlockGeometryTests
 {
+    [Fact]
     public async Task Block_gutter_targets_stay_compact_and_top_aligned_beside_a_tall_table()
     {
         await using var session = new InMemoryRichBoardSession();
@@ -87,8 +88,6 @@ public sealed class BoardsBlockGeometryTests
         Assert.Equal(1, actual.tallRow.Opacity);
         Assert.Equal(1, actual.focusedOpacity);
     }
-
-    [Fact]
 
     [Fact]
     public async Task Checklist_label_wraps_in_its_own_column_with_a_compact_touchable_checkbox_gap()

@@ -1400,7 +1400,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         var text = block.Text ?? string.Empty;
         var index = page.Blocks.IndexOf(block);
-        var caret = Math.Clamp(caretIndex, 0, text.Length);
+        var caret = HavenRichNotesOps.NormalizeTextRange(text, Math.Clamp(caretIndex, 0, text.Length),
+            Math.Clamp(caretIndex, 0, text.Length)).Start;
         // A projected list row carries a "{list block}:{item}" id. Reusing the block part and
         // allocating a fresh item id tells the merge which list the new row belongs to, and the
         // position below keeps it directly after the row it was split from.
@@ -1409,32 +1410,19 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             ? block.Id[..separator] + ":item-" + Guid.NewGuid().ToString("N")[..12]
             : string.Empty;
 
-        if (caret <= 0 || caret >= text.Length)
-        {
-            // Enter at the end (or start of an empty row) adds the next row after this one.
-            var next = new RichBoardBlock
-            {
-                Kind = block.Kind,
-                Text = string.Empty,
-                Level = block.Level,
-                StyleId = block.StyleId,
-                Layout = block.Layout,
-            };
-            if (newId.Length > 0)
-                next.Id = newId;
-            page.Blocks.Insert(index + 1, next);
-            _selectedBlockId = next.Id;
-            PushDocumentToBindings();
-            _session.MarkDirty();
-            RequestRebuild();
-            return;
-        }
         var tail = text[caret..];
+        var (leftRuns, rightRuns) = BoardTextRanges.SplitAt(block.Runs, text, caret);
         BoardTextRanges.ReplaceText(block, text[..caret]);
+        block.Runs = leftRuns;
         var sibling = new RichBoardBlock
         {
             Kind = block.Kind,
             Text = tail,
+            Runs = rightRuns,
+            Bold = block.Bold,
+            Italic = block.Italic,
+            Underline = block.Underline,
+            Strike = block.Strike,
             Level = block.Level,
             StyleId = block.StyleId,
             Layout = block.Layout,
@@ -1443,6 +1431,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             sibling.Id = newId;
         page.Blocks.Insert(index + 1, sibling);
         _selectedBlockId = sibling.Id;
+        _pendingTextFocus = (page.Id, sibling.Id, 0);
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();
@@ -1450,17 +1439,26 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task<bool> SplitTextBlockAtAsync(string blockId, int caretIndex,
         CancellationToken cancellationToken = default)
+        => await SplitTextBlockRangeAsync(blockId, caretIndex, caretIndex, cancellationToken);
+
+    public async Task<bool> SplitTextBlockRangeAsync(string blockId, int anchor, int caret,
+        CancellationToken cancellationToken = default)
     {
         if (!RequireEditMode()) return false;
         var page = CurrentPage();
         var block = page.Blocks.FirstOrDefault(item => item.Id == blockId);
         if (block is null) return false;
+        cancellationToken.ThrowIfCancellationRequested();
+        if (anchor < 0 || anchor > block.Text.Length || caret < 0 || caret > block.Text.Length) return false;
         // UX27-BOARD-016/017: Enter inside a list row splits that row into a same-kind
         // sibling immediately after it. The renderer draws checklist, bulleted and
         // numbered rows through one row builder, so all three share this behaviour.
         if (IsListKind(block.Kind))
         {
-            SplitListItemAt(page, block, caretIndex);
+            var range = HavenRichNotesOps.NormalizeTextRange(block.Text, anchor, caret);
+            if (range.End != range.Start)
+                BoardTextRanges.ReplaceText(block, block.Text.Remove(range.Start, range.End - range.Start));
+            SplitListItemAt(page, block, range.Start);
             return true;
         }
         if (block.Kind is not ("paragraph" or "heading"))
@@ -1468,7 +1466,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("StatusText", $"A {block.Kind} block is not split by Enter. Use its own editor controls.");
             return false;
         }
-        if (caretIndex < 0 || caretIndex > block.Text.Length) return false;
+        var (start, end) = HavenRichNotesOps.NormalizeTextRange(block.Text, anchor, caret);
         if (block.Runs.Count > 0 && !string.Equals(string.Concat(block.Runs.Select(run => run.Text)), block.Text, StringComparison.Ordinal))
         {
             Set("StatusText", "Text block formatting ranges do not match its text; the block was left unchanged.");
@@ -1478,7 +1476,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         string createdId;
         if (_session is ContractSessionAdapter adapter)
         {
-            try { createdId = await adapter.SplitTextBlockAtAsync(page.Id, blockId, caretIndex, cancellationToken); }
+            try { createdId = await adapter.SplitTextBlockRangeAsync(page.Id, blockId, start, end, cancellationToken); }
             catch (Exception error) when (error is InvalidOperationException or ArgumentOutOfRangeException or KeyNotFoundException)
             {
                 Set("StatusText", "Text block could not be split: " + FirstLine(error.Message));
@@ -1488,14 +1486,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         else
         {
             var text = block.Text;
-            var (leftRuns, rightRuns) = BoardTextRanges.SplitAt(block.Runs, text, caretIndex);
-            block.Text = text[..caretIndex];
+            var (leftRuns, afterStart) = BoardTextRanges.SplitAt(block.Runs, text, start);
+            var (_, rightRuns) = BoardTextRanges.SplitAt(afterStart, text[start..], end - start);
+            block.Text = text[..start];
             block.Runs = leftRuns;
             var following = new RichBoardBlock
             {
-                Kind = block.Kind,
-                StyleId = block.StyleId,
-                Text = text[caretIndex..],
+                Kind = "paragraph",
+                StyleId = block.Kind == "heading" ? "normal" : block.StyleId,
+                Text = text[end..],
                 Runs = rightRuns,
                 Alignment = block.Alignment,
                 LineSpacing = block.LineSpacing,

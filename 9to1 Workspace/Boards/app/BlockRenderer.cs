@@ -65,7 +65,7 @@ public static class BlockRenderer
         absoluteBlocksHost?.Children.Clear();
 
         var blocks = vm.PageBlocks;
-        if (blocks.Any(block => block.Layout == HavenRichBlockLayouts.Absolute) && absoluteBlocksHost is null)
+        if ((blocks.Any(block => block.Layout == HavenRichBlockLayouts.Absolute) || canvasBoxes.Count > 0) && absoluteBlocksHost is null)
             throw new InvalidOperationException("The authored AbsoluteBlocksHost is required to render saved free-positioned blocks.");
         if (blocks.Count == 0)
         {
@@ -131,14 +131,102 @@ public static class BlockRenderer
         }
 
         if (absoluteBlocksHost is not null)
+        {
+            foreach (var box in canvasBoxes) RenderCanvasObject(absoluteBlocksHost, vm, box);
             RenderAbsoluteBlocksHostExtent(absoluteBlocksHost, blocks);
+            if (canvasBoxes.Count > 0)
+            {
+                absoluteBlocksHost.Height = Math.Max(double.IsNaN(absoluteBlocksHost.Height) ? 0 : absoluteBlocksHost.Height,
+                    canvasBoxes.Max(box => box.Y + box.Height + 24));
+                absoluteBlocksHost.MinWidth = canvasBoxes.Max(box => box.X + box.Width + 24);
+            }
+            else absoluteBlocksHost.MinWidth = 0;
+        }
         // UX27-TEST-032: a Native page is one seamless editing surface. The old automatically
         // appended "Freeform canvas" section, its empty-state text and its "+ Box" region made
         // every page look like a second editor was bolted underneath it. Absolute content is
         // already rendered through the authored AbsoluteBlocksHost, and pen ink through the
-        // page InkOverlayLayer, so nothing is appended here. Canvas PageType content is hosted
-        // by EmbeddedArtifactHost, which is why canvasBoxes stays part of this entry point.
+        // page InkOverlayLayer. Previously saved canvas objects join that same spatial layer,
+        // without creating a second scrollbox or injecting empty-state controls.
         vm.ApplyAuthoringState(host);
+    }
+
+    private static void RenderCanvasObject(Panel layer, BoardsViewModel vm, CanvasBoxView box)
+    {
+        var pageId = vm.SelectedPageId;
+        var width = Math.Clamp(box.Width, 24, 5000);
+        var height = Math.Clamp(box.Height, 24, 5000);
+        var border = new Border
+        {
+            Name = "canvas_" + box.Id, Width = width, Height = height,
+            HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+            Background = BoardsTheme.CardBrush, BorderBrush = BoardsTheme.BorderBrush,
+            BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8), Padding = new Thickness(10),
+            Focusable = vm.IsEditMode && !vm.IsCanvasLocked,
+            Child = new TextBlock { Text = string.IsNullOrEmpty(box.Text) ? box.Kind : box.Text,
+                FontSize = 13, Foreground = BoardsTheme.TextBrush, TextWrapping = TextWrapping.Wrap },
+        };
+        AutomationProperties.SetName(border, "Canvas object " + (string.IsNullOrEmpty(box.Text) ? box.Kind : box.Text));
+        layer.Children.Add(border);
+        var placement = AbsolutePlacements.GetValue(layer, panel => new(panel));
+        void Place(double x, double y) => placement.Add(border, border, x, y, width, height);
+        Place(box.X, box.Y);
+        Point? pressed = null;
+        IPointer? pointer = null;
+        var position = new Point(box.X, box.Y);
+        bool CanMove() => vm.IsEditMode && !vm.IsCanvasLocked && vm.SelectedPageId == pageId;
+        border.PointerPressed += (_, e) =>
+        {
+            if (!CanMove() || !e.GetCurrentPoint(border).Properties.IsLeftButtonPressed) return;
+            pressed = e.GetPosition(layer);
+            position = new Point(box.X, box.Y);
+            border.Focus();
+            pointer = e.Pointer;
+            e.Pointer.Capture(border);
+            e.Handled = true;
+        };
+        border.PointerMoved += (_, e) =>
+        {
+            if (pressed is not { } start || !CanMove()) return;
+            var current = e.GetPosition(layer);
+            position = new Point(Math.Max(0, box.X + current.X - start.X), Math.Max(0, box.Y + current.Y - start.Y));
+            Place(position.X, position.Y);
+            e.Handled = true;
+        };
+        border.PointerReleased += async (_, e) =>
+        {
+            if (pressed is null) return;
+            pressed = null;
+            pointer = null;
+            e.Pointer.Capture(null);
+            if (CanMove()) await vm.MoveCanvasBoxAsync(box.Id, position.X, position.Y);
+            else Place(box.X, box.Y);
+            e.Handled = true;
+        };
+        border.PointerCaptureLost += (_, _) =>
+        {
+            if (pressed is null) return;
+            pressed = null;
+            pointer = null;
+            Place(box.X, box.Y);
+        };
+        border.KeyDown += async (_, e) =>
+        {
+            if (!CanMove()) return;
+            if (e.Key == Key.Escape && pressed is not null)
+            {
+                pressed = null;
+                pointer?.Capture(null);
+                pointer = null;
+                Place(box.X, box.Y); e.Handled = true; return;
+            }
+            var step = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 1 : 8;
+            var (dx, dy) = e.Key switch { Key.Left => (-step, 0), Key.Right => (step, 0),
+                Key.Up => (0, -step), Key.Down => (0, step), _ => (0, 0) };
+            if (dx == 0 && dy == 0) return;
+            e.Handled = true;
+            await vm.MoveCanvasBoxAsync(box.Id, box.X + dx, box.Y + dy);
+        };
     }
 
     private static Panel? FindAbsoluteBlocksHost(StackPanel blocksHost)
@@ -250,8 +338,11 @@ public static class BlockRenderer
                 Canvas.SetTop(cell, top);
                 return;
             }
-            _placements.Add(new Placement(cell, coordinateTarget, left, top, width, height));
-            Apply(_placements[^1]);
+            var placement = new Placement(cell, coordinateTarget, left, top, width, height);
+            var index = _placements.FindIndex(value => ReferenceEquals(value.Cell, cell));
+            if (index < 0) _placements.Add(placement);
+            else _placements[index] = placement;
+            Apply(placement);
         }
 
         private void OnSizeChanged(object? sender, SizeChangedEventArgs e)
@@ -534,7 +625,7 @@ public static class BlockRenderer
             FontSize = ResolveFontSize(block, style, isHeading ? 26 : 14),
             FontWeight = block.Bold || (style?.Bold == true) || isHeading ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = block.Italic || (style?.Italic == true) ? FontStyle.Italic : FontStyle.Normal,
-            AcceptsReturn = !isHeading,
+            AcceptsReturn = true,
             IsReadOnly = !vm.IsEditMode,
             TextWrapping = TextWrapping.Wrap,
             Background = Brushes.Transparent,
@@ -583,7 +674,7 @@ public static class BlockRenderer
             vm.EditText("t_" + captured, box.Text ?? string.Empty);
         };
         box.GotFocus += (_, _) => vm.FocusBlock(captured);
-        box.KeyDown += async (_, args) =>
+        box.AddHandler(InputElement.KeyDownEvent, async (_, args) =>
         {
             if (!vm.IsEditMode) return;
             if (args.Key == Key.Enter)
@@ -592,31 +683,17 @@ public static class BlockRenderer
                 // next one; Shift+Enter adds a line break inside the same BlockID.
                 if (args.KeyModifiers.HasFlag(KeyModifiers.Shift))
                 {
-                    if (isHeading)
-                    {
-                        args.Handled = true;
-                        vm.Set("StatusText", "A heading stays on one line. Enter starts the next block.");
-                    }
                     return;
                 }
-                if (args.KeyModifiers.HasFlag(KeyModifiers.Control) ||
-                    box.SelectionStart == box.SelectionEnd)
-                {
-                    args.Handled = true;
-                    if (box.SelectionStart != box.SelectionEnd)
-                    {
-                        vm.Set("StatusText", "Collapse the selection before splitting this text block.");
-                        return;
-                    }
-                    await vm.SplitTextBlockAtAsync(captured, box.CaretIndex);
-                }
+                args.Handled = true;
+                await vm.SplitTextBlockRangeAsync(captured, box.SelectionStart, box.SelectionEnd);
             }
             else if (args.Key == Key.Back && box.SelectionStart == box.SelectionEnd && box.CaretIndex == 0)
             {
                 if (await vm.MergeTextBlockWithPreviousAsync(captured))
                     args.Handled = true;
             }
-        };
+        }, RoutingStrategies.Tunnel);
         box.AttachedToVisualTree += (_, _) =>
         {
             if (!vm.TryConsumePendingTextFocus(vm.SelectedPageId, captured, out var caretIndex)) return;
@@ -767,7 +844,7 @@ public static class BlockRenderer
             if (!text.IsFocused)
                 erase.Opacity = 0;
         };
-        text.KeyDown += async (_, e) =>
+        text.AddHandler(InputElement.KeyDownEvent, async (_, e) =>
         {
             if (e.Key == Key.Enter)
             {
@@ -776,14 +853,15 @@ public static class BlockRenderer
                 // same-kind row at the end); Shift+Enter stays inside the row as a soft break.
                 if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
                 {
-                    var caret = Math.Clamp(text.CaretIndex, 0, text.Text?.Length ?? 0);
-                    var soft = (text.Text ?? string.Empty).Insert(caret, "\n");
+                    var current = text.Text ?? string.Empty;
+                    var (start, end) = HavenRichNotesOps.NormalizeTextRange(current, text.SelectionStart, text.SelectionEnd);
+                    var soft = current.Remove(start, end - start).Insert(start, "\n");
                     text.Text = soft;
-                    text.CaretIndex = caret + 1;
+                    text.CaretIndex = start + 1;
                     vm.CommitListSoftBreak(viewId, soft);
                 }
                 else
-                    await vm.ListEnterAsync(viewId, text.CaretIndex);
+                    await vm.SplitTextBlockRangeAsync(viewId, text.SelectionStart, text.SelectionEnd);
             }
             else if (e.Key == Key.Back && string.IsNullOrEmpty(text.Text))
             {
@@ -795,6 +873,12 @@ public static class BlockRenderer
                 e.Handled = true;
                 vm.ChecklistIndent(viewId, e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1);
             }
+        }, RoutingStrategies.Tunnel);
+        text.AttachedToVisualTree += (_, _) =>
+        {
+            if (!vm.TryConsumePendingTextFocus(vm.SelectedPageId, viewId, out var caret)) return;
+            text.Focus();
+            text.CaretIndex = Math.Clamp(caret, 0, (text.Text ?? string.Empty).Length);
         };
         erase.Click += async (_, _) => await vm.DeleteBlockAsync(viewId);
         Grid.SetColumn(check, 0);

@@ -8,6 +8,53 @@ namespace CakeOS.Apps.Boards.App.Tests;
 public sealed class BoardsBlockActionsTests
 {
     [Fact]
+    public async Task Grip_refreshes_after_typing_but_an_open_menu_cannot_apply_a_stale_ticket()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-grip-edit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "grip.9to1board");
+            await SeedAsync(store, path);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var vm = new BoardsViewModel(adapter);
+            var grip = new BlockGripCui.BlockGripContext(vm, "block-b");
+            vm.EditText("t_block-b", "Typed before opening");
+            await grip.DispatchAsync("ToggleActions", null);
+            Assert.True(grip.TryGetValue("DuplicateRequest", out var request));
+            await grip.DispatchAsync("ApplyBlockAction", request);
+            Assert.Equal(4, Blocks(adapter).Count);
+            Assert.Equal(2, Blocks(adapter).Count(block => block.Text == "Typed before opening"));
+
+            var guarded = new BlockGripCui.BlockGripContext(vm, "block-a");
+            await guarded.DispatchAsync("ToggleActions", null);
+            Assert.True(guarded.TryGetValue("DeleteRequest", out var stale));
+            vm.EditText("t_block-a", "Changed with menu open");
+            await guarded.DispatchAsync("ApplyBlockAction", stale);
+            Assert.Contains(Blocks(adapter), block => block.Id == "block-a");
+            Assert.Equal(4, Blocks(adapter).Count);
+            await guarded.DispatchAsync("ToggleActions", null);
+            Assert.True(guarded.TryGetValue("DeleteRequest", out var fresh));
+            await guarded.DispatchAsync("ApplyBlockAction", fresh);
+            Assert.DoesNotContain(Blocks(adapter), block => block.Id == "block-a");
+
+            var oldPageGrip = new BlockGripCui.BlockGripContext(vm, "block-b");
+            var section = adapter.Document.Sections.Single();
+            var otherPage = new RichBoardPage { Id = "other-page",
+                Blocks = [new RichBoardBlock { Id = "other-block", Text = "Other page" }] };
+            section.Pages.Add(otherPage);
+            vm.SelectPage(section.Id, otherPage.Id);
+            await oldPageGrip.DispatchAsync("ToggleActions", null);
+            Assert.True(oldPageGrip.TryGetValue("CanManage", out var canManage));
+            Assert.Equal(false, canManage);
+            Assert.True(oldPageGrip.TryGetValue("DeleteRequest", out var refused));
+            Assert.Null(refused);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
     public async Task Canonical_commands_move_duplicate_delete_with_same_history_and_save_reopen()
     {
         var root = Path.Combine(Path.GetTempPath(), "boards-block-actions-" + Guid.NewGuid().ToString("N"));

@@ -1139,6 +1139,10 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
 
     public async ValueTask<string> SplitTextBlockAtAsync(string pageId, string blockId, int caretIndex,
         CancellationToken cancellationToken = default)
+        => await SplitTextBlockRangeAsync(pageId, blockId, caretIndex, caretIndex, cancellationToken).ConfigureAwait(false);
+
+    public async ValueTask<string> SplitTextBlockRangeAsync(string pageId, string blockId, int anchor, int caret,
+        CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -1147,7 +1151,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
             string createdId = string.Empty;
             await _real.MutateAsync(rich =>
-                createdId = HavenRichNotesOps.SplitTextBlockAt(rich, pageId, blockId, caretIndex).Id,
+                createdId = HavenRichNotesOps.SplitTextBlockRange(rich, pageId, blockId, anchor, caret).Id,
                 cancellationToken).ConfigureAwait(false);
             RefreshView();
             return createdId;

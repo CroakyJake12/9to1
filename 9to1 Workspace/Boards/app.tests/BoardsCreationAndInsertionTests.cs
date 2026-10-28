@@ -61,7 +61,7 @@ public sealed class BoardsCreationAndInsertionTests
     }
 
     [Fact]
-    public async Task Freeform_viewport_reaches_saved_objects_beyond_the_initial_canvas_bounds()
+    public async Task Saved_canvas_objects_use_the_native_spatial_layer_without_a_second_viewport()
     {
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync("memory://boards/freeform-viewport-bounds");
@@ -69,6 +69,7 @@ public sealed class BoardsCreationAndInsertionTests
         var dimensions = TestUiThread.Run(() =>
         {
             var host = new StackPanel();
+            var layer = new Canvas();
             BlockRenderer.Rebuild(host, viewModel,
             [
                 new CanvasBoxView
@@ -76,19 +77,40 @@ public sealed class BoardsCreationAndInsertionTests
                     Id = "far-object", Kind = "Text", Text = "Saved offscreen",
                     X = 1480, Y = 1080, Width = 220, Height = 140,
                 }
-            ]);
-            var viewport = Assert.Single(host.GetLogicalDescendants().OfType<ScrollViewer>(),
-                control => AutomationProperties.GetName(control) == "Freeform canvas viewport");
-            var canvas = Assert.IsType<Canvas>(viewport.Content);
-            return (CanvasWidth: canvas.Width, CanvasHeight: canvas.Height, ViewportHeight: viewport.Height,
-                Horizontal: viewport.HorizontalScrollBarVisibility, Vertical: viewport.VerticalScrollBarVisibility);
+            ], layer);
+            var saved = Assert.Single(layer.Children.OfType<Border>());
+            Assert.Equal("Saved offscreen", Assert.IsType<TextBlock>(saved.Child).Text);
+            Assert.Equal("canvas_far-object", saved.Name);
+            Assert.Equal(1480, Canvas.GetLeft(saved));
+            Assert.Equal(1080, Canvas.GetTop(saved));
+            Assert.Empty(host.GetLogicalDescendants().OfType<ScrollViewer>());
+            Assert.DoesNotContain(host.GetLogicalDescendants().OfType<TextBlock>(),
+                text => (text.Text ?? "").Contains("Freeform canvas"));
+            return (Width: layer.MinWidth, Height: layer.Height);
         });
 
-        Assert.Equal(1740, dimensions.CanvasWidth);
-        Assert.Equal(1260, dimensions.CanvasHeight);
-        Assert.Equal(360, dimensions.ViewportHeight);
-        Assert.Equal(ScrollBarVisibility.Auto, dimensions.Horizontal);
-        Assert.Equal(ScrollBarVisibility.Auto, dimensions.Vertical);
+        Assert.True(dimensions.Width >= 1700);
+        Assert.True(dimensions.Height >= 1220);
+    }
+
+    [Fact]
+    public async Task Empty_native_page_has_no_extra_canvas_controls_or_spatial_extent()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/empty-native");
+        var vm = new BoardsViewModel(session);
+        TestUiThread.Run(() =>
+        {
+            var host = new StackPanel();
+            var layer = new Canvas();
+            BlockRenderer.Rebuild(host, vm, [], layer);
+            Assert.Empty(layer.Children);
+            Assert.Equal(0, layer.MinWidth);
+            Assert.True(double.IsNaN(layer.Height));
+            Assert.DoesNotContain(host.GetLogicalDescendants().OfType<TextBlock>(),
+                text => (text.Text ?? "").Contains("Freeform"));
+            Assert.DoesNotContain(host.GetLogicalDescendants().OfType<Button>(), button => button.Content?.ToString() == "+ Box");
+        });
     }
 
     [Fact]

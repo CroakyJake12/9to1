@@ -44,13 +44,14 @@ internal static class BlockGripCui
         return text;
     }
 
-    private sealed class BlockGripContext : ICuiWritableBindingContext, ICuiActionDispatcher
+    internal sealed class BlockGripContext : ICuiWritableBindingContext, ICuiActionDispatcher
     {
         private readonly BoardsViewModel _viewModel;
         private readonly string _pageId;
         private readonly string _blockId;
+        private readonly IRichBoardSession _session;
         private readonly Dictionary<string, object?> _values = new(StringComparer.OrdinalIgnoreCase);
-        private readonly BoardBlockActionTarget? _target;
+        private BoardBlockActionTarget? _target;
         private bool _isExpanded;
 
         public BlockGripContext(BoardsViewModel viewModel, string blockId)
@@ -58,6 +59,14 @@ internal static class BlockGripCui
             _viewModel = viewModel;
             _pageId = viewModel.SelectedPageId;
             _blockId = blockId;
+            _session = viewModel.Session;
+            RefreshTarget();
+        }
+
+        private void RefreshTarget()
+        {
+            var viewModel = _viewModel;
+            var blockId = _blockId;
             var blocks = viewModel.PageBlocks;
             var index = -1;
             for (var blockIndex = 0; blockIndex < blocks.Count; blockIndex++)
@@ -65,7 +74,8 @@ internal static class BlockGripCui
             var eligible = index >= 0 && !blockId.Contains(':') &&
                 blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
                     "checklist" or "bulleted" or "numbered";
-            var target = eligible && viewModel.Session is ContractSessionAdapter adapter
+            var target = eligible && viewModel.SelectedPageId == _pageId &&
+                ReferenceEquals(_session, viewModel.Session) && viewModel.Session is ContractSessionAdapter adapter
                 ? adapter.CaptureBlockAction(_pageId, _blockId)
                 : null;
             var canManage = viewModel.IsEditMode && target is not null;
@@ -81,6 +91,13 @@ internal static class BlockGripCui
                 _values["DuplicateRequest"] = new BoardBlockActionRequest(target, BoardBlockAction.Duplicate);
                 _values["DeleteRequest"] = new BoardBlockActionRequest(target, BoardBlockAction.Delete);
             }
+            else
+            {
+                foreach (var key in new[] { "MoveUpRequest", "MoveDownRequest", "DuplicateRequest", "DeleteRequest" })
+                    _values[key] = null;
+            }
+            foreach (var key in _values.Keys)
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(key));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -103,6 +120,10 @@ internal static class BlockGripCui
         {
             if (command == "ToggleActions")
             {
+                // Ordinary typing updates the existing editor without rebuilding its grip.
+                // Capture the same block's current ticket only when opening the menu; an
+                // already open menu retains its revision fence until it is closed.
+                if (!_isExpanded) RefreshTarget();
                 _isExpanded = !_isExpanded;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
                 return;

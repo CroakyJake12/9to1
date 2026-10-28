@@ -1,4 +1,5 @@
 using Haven.Application;
+using System.Globalization;
 
 namespace CakeOS.Apps.Boards.Contract;
 
@@ -991,31 +992,49 @@ public static partial class HavenRichNotesOps
     }
 
     public static HavenRichBlock SplitTextBlockAt(HavenRichNotes notes, string pageId, string blockId, int caretIndex)
+        => SplitTextBlockRange(notes, pageId, blockId, caretIndex, caretIndex);
+
+    public static (int Start, int End) NormalizeTextRange(string text, int anchor, int caret)
+    {
+        if (anchor < 0 || anchor > text.Length || caret < 0 || caret > text.Length)
+            throw new ArgumentOutOfRangeException(nameof(caret));
+        var boundaries = StringInfo.ParseCombiningCharacters(text).Append(text.Length).ToArray();
+        var start = Math.Min(anchor, caret);
+        var end = Math.Max(anchor, caret);
+        var safeStart = boundaries.Last(value => value <= start);
+        var safeEnd = start == end ? safeStart : boundaries.First(value => value >= end);
+        return (safeStart, safeEnd);
+    }
+
+    /// <summary>Deletes the selected range and splits in one document mutation.</summary>
+    public static HavenRichBlock SplitTextBlockRange(HavenRichNotes notes, string pageId, string blockId,
+        int anchor, int caret)
     {
         var page = RequirePage(notes, pageId);
         var block = RequireBlock(notes, pageId, blockId);
         if (block.Kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading))
             throw new InvalidOperationException("Only paragraph and heading text blocks can be split.");
         var text = block.PlainText ?? string.Empty;
-        if (caretIndex < 0 || caretIndex > text.Length)
-            throw new ArgumentOutOfRangeException(nameof(caretIndex), "The split point is outside the text block.");
-
-        var leftText = text[..caretIndex];
-        var rightText = text[caretIndex..];
+        var (start, end) = NormalizeTextRange(text, anchor, caret);
+        var leftText = text[..start];
+        var rightText = text[end..];
         List<HavenRichTextRun> leftRuns = [];
         List<HavenRichTextRun> rightRuns = [];
         if (block.Runs.Count > 0)
         {
             if (!string.Equals(string.Concat(block.Runs.Select(run => run.Text)), text, StringComparison.Ordinal))
                 throw new InvalidOperationException("Text formatting ranges do not match the block text.");
-            SplitRuns(block.Runs, caretIndex, leftRuns, rightRuns);
+            List<HavenRichTextRun> afterStart = [];
+            List<HavenRichTextRun> removed = [];
+            SplitRuns(block.Runs, start, leftRuns, afterStart);
+            SplitRuns(afterStart, end - start, removed, rightRuns);
         }
         block.PlainText = leftText;
         block.Runs = leftRuns;
         var following = new HavenRichBlock
         {
-            Kind = block.Kind,
-            StyleId = block.StyleId,
+            Kind = HavenRichBlockKind.Paragraph,
+            StyleId = block.Kind == HavenRichBlockKind.Heading ? "normal" : block.StyleId,
             PlainText = rightText,
             Runs = rightRuns,
             Alignment = block.Alignment,
