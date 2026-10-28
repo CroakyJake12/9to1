@@ -4,7 +4,7 @@ Fix the [reported bugs](docs/specification/owner-references/2026-10-28-reported-
 
 All new source changes and integrations occur on **main** in `/home/jacob/Documents/GitHub/9to1`. Do not create implementation branches or worktrees. Preserve existing history in a verified archive before retiring redundant branch refs. Earlier branch-isolation instructions are superseded by this explicit owner request. Concurrent workers may own disjoint files on the same main checkout; SDK execution remains serial and guarded.
 
-Stop Codex development when actual usage reaches **5% remaining**, preserving a precise handoff. Existing user data, source, failed evidence and protected model workloads remain preserved. Full independent acceptance stays paused; compilation, focused genuine tests and native bug retests continue.
+At **10% remaining**, checkpoint and reload the testing copy with the latest successfully built and checked candidate, preserving its profile and using the normal reviewed lifecycle. Stop Codex development when actual usage reaches **5% remaining**, preserving a precise handoff. Existing user data, source, failed evidence and protected model workloads remain preserved. Full independent acceptance stays paused; compilation, focused genuine tests and native bug retests continue.
 
 ## Expanded behaviour specification — 27 October 2026, latest owner direction
 

@@ -74,10 +74,17 @@ public sealed partial class DataWorkbookRepository
         }, token).ConfigureAwait(false);
     }
 
-    internal Task<string?> FingerprintAsync(Guid workbookID, CancellationToken token)
+    internal async Task<string?> FingerprintAsync(Guid workbookID, CancellationToken token)
     {
         DemandOrdinaryDirectory(_root); DemandOrdinaryDirectory(WorkbookDirectory(workbookID));
-        return FingerprintAsync(Paths(workbookID).CurrentPath, token);
+        var (current, backup) = Paths(workbookID);
+        var currentHash = await FingerprintAsync(current, token).ConfigureAwait(false);
+        var backupHash = await FingerprintAsync(backup, token).ConfigureAwait(false);
+        if (currentHash is null && backupHash is null) return null;
+        // A backup can be the actual source of a recovered read. Bind both heads:
+        // pinning only a corrupt/missing primary would miss replacement of that source.
+        return Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+            "current:" + (currentHash ?? "missing") + "\nbackup:" + (backupHash ?? "missing"))));
     }
     private static async Task<string?> FingerprintAsync(string path, CancellationToken token)
     {
@@ -103,7 +110,7 @@ public sealed partial class DataWorkbookRepository
             var (current, backup) = Paths(detached.Id); DemandOrdinaryFile(current); DemandOrdinaryFile(backup);
             var beforeHash = await FingerprintAsync(current, token).ConfigureAwait(false);
             var existing = await TryLoadAsync(current, detached.Id, token).ConfigureAwait(false);
-            if (existing is null && beforeHash is not null && detached.Recovery.RecoveredFromBackup)
+            if (existing is null && detached.Recovery.RecoveredFromBackup)
                 existing = await TryLoadAsync(backup, detached.Id, token).ConfigureAwait(false);
             if (existing is null ? detached.Version != 0 || beforeHash is not null && !detached.Recovery.RecoveredFromBackup :
                 existing.Version != detached.Version || existing.RevisionId != detached.RevisionId)

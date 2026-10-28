@@ -89,6 +89,7 @@ public sealed class RichBoardBlock
     public RichImageView? Image { get; set; }
     public RichDividerView? Divider { get; set; }
     public RichGraphView? Graph { get; set; }
+    public HavenBoardDatabaseReference? Database { get; set; }
     public string? AttachmentId { get; set; }
     public string? AttachmentName { get; set; }
     public long AttachmentSize { get; set; }

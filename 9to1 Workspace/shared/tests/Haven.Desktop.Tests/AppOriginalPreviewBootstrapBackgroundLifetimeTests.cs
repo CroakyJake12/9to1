@@ -12,6 +12,51 @@ namespace Haven.Desktop.Tests;
 /// These claim no native app/engine/model acceptance.</summary>
 public sealed class AppOriginalPreviewBootstrapBackgroundLifetimeTests
 {
+    [Fact]
+    public async Task Failed_initialization_has_opt_in_retirement_witness_only_after_actual_clean_stop_and_cleanup()
+    {
+        var stopped = false; var cleaned = false;
+        var lifetime = new DesktopOriginalWorkLifetime(() => { stopped = true; return Task.CompletedTask; },
+            () => { cleaned = true; return Task.CompletedTask; });
+        var originalFailure = new IOException("initial read failed");
+        var initialization = lifetime.RunAsync(_ => Task.FromException(originalFailure));
+        await Assert.ThrowsAsync<IOException>(() => initialization);
+        var close = lifetime.CloseAndDrainAsync();
+        await Assert.ThrowsAnyAsync<Exception>(() => close);
+        Assert.True(stopped); Assert.True(cleaned);
+        Assert.True(lifetime.CanRetireAfterFailedInitialization(initialization, close));
+        Assert.False(lifetime.CanRetireAfterFailedInitialization(Task.CompletedTask, close));
+        Assert.False(lifetime.CanRetireAfterFailedInitialization(initialization, Task.CompletedTask));
+        Assert.True(initialization.IsFaulted); Assert.True(close.IsFaulted);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Failed_stop_or_cleanup_never_qualifies_historical_initialization_retirement(bool failStop)
+    {
+        var cleanupFailure = new IOException("resource cleanup failed");
+        var lifetime = new DesktopOriginalWorkLifetime(
+            () => failStop ? Task.FromException(cleanupFailure) : Task.CompletedTask,
+            () => failStop ? Task.CompletedTask : Task.FromException(cleanupFailure));
+        var initialization = lifetime.RunAsync(_ => Task.FromException(new IOException("startup")));
+        await Assert.ThrowsAsync<IOException>(() => initialization);
+        var close = lifetime.CloseAndDrainAsync(); await Assert.ThrowsAnyAsync<Exception>(() => close);
+        Assert.False(lifetime.CanRetireAfterFailedInitialization(initialization, close));
+    }
+
+    [Fact]
+    public async Task Independent_failed_operation_is_not_reclassified_as_initialization_diagnostics()
+    {
+        var lifetime = new DesktopOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        var initialization = lifetime.RunAsync(_ => Task.FromException(new IOException("startup")));
+        await Assert.ThrowsAsync<IOException>(() => initialization);
+        var other = lifetime.RunAsync(_ => Task.FromException(new IOException("independent write")));
+        await Assert.ThrowsAsync<IOException>(() => other);
+        var close = lifetime.CloseAndDrainAsync(); await Assert.ThrowsAnyAsync<Exception>(() => close);
+        Assert.False(lifetime.CanRetireAfterFailedInitialization(initialization, close));
+    }
+
     // SAME production wiring as BeginPreviewModelBootstrapBackground: background original + AwaitAsync + retain.
     private static Task RunBootstrapOriginalAsync(DesktopOriginalWorkLifetime owner, Func<CancellationToken, Task> start)
     {

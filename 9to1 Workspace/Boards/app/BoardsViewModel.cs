@@ -85,12 +85,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public BoardsViewModel(IRichBoardSession session, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
         IBoardsHomeBoardCreationHost? homeBoardCreationHost = null,
-        IBoardsSectionIconGenerationHost? sectionIconGenerationHost = null)
+        IBoardsSectionIconGenerationHost? sectionIconGenerationHost = null,
+        IBoardsDatabaseSource? databaseSource = null)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _embeddedArtifactHost = embeddedArtifactHost;
         _homeBoardCreationHost = homeBoardCreationHost;
         _sectionIconGenerationHost = sectionIconGenerationHost;
+        if (databaseSource is not null) _databaseBlocks = new BoardsDatabaseBlocks(this, databaseSource);
         Set(nameof(IsStandalonePresentation), true);
         Set(nameof(IsEmbeddedPresentation), false);
         if (!CanEdit) _isEditMode = false;
@@ -616,6 +618,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "IndentInc": ShiftSelectedIndent(1); break;
             case "IndentDec": ShiftSelectedIndent(-1); break;
             case "Undo":
+                if (!AllowDatabaseStructureChange()) break;
                 if (await _session.UndoAsync(cancellationToken))
                     Set("StatusText", _session.Status);
                 else
@@ -624,6 +627,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 RefreshAfterEdit();
                 break;
             case "Redo":
+                if (!AllowDatabaseStructureChange()) break;
                 if (await _session.RedoAsync(cancellationToken))
                     Set("StatusText", _session.Status);
                 else
@@ -1468,6 +1472,22 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var range = HavenRichNotesOps.NormalizeTextRange(block.Text, anchor, caret);
             if (range.End != range.Start)
                 BoardTextRanges.ReplaceText(block, block.Text.Remove(range.Start, range.End - range.Start));
+            if (block.Text.Length == 0)
+            {
+                if (_session is ContractSessionAdapter listAdapter && block.Id.Contains(':'))
+                {
+                    var pageId = page.Id;
+                    var selected = await listAdapter.ExitEmptyListItemAsync(pageId, block.Id,
+                        () => _isEditMode && SelectedPageId == pageId, cancellationToken);
+                    if (selected is null) return false;
+                    _selectedBlockId = selected; _pendingTextFocus = (pageId, selected, 0);
+                    RefreshAfterEdit(); return true;
+                }
+                if (block.Level > 0) block.Level--;
+                else { block.Kind = "paragraph"; block.Level = 0; }
+                _selectedBlockId = block.Id; _pendingTextFocus = (page.Id, block.Id, 0);
+                PushDocumentToBindings(); _session.MarkDirty(); RequestRebuild(); return true;
+            }
             SplitListItemAt(page, block, range.Start);
             return true;
         }
@@ -2507,7 +2527,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DeleteSectionAsync(string sectionId)
     {
-        if (!RequireEditMode()) return;
+        if (!RequireEditMode() || !AllowDatabaseStructureChange()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             if (!await adapter.DeleteSectionAsync(sectionId))
@@ -2536,7 +2556,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DeletePageAsync(string sectionId, string pageId)
     {
-        if (!RequireEditMode()) return;
+        if (!RequireEditMode() || !AllowDatabaseStructureChange()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             if (!await adapter.DeletePageAsync(pageId))
@@ -2690,6 +2710,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = SelectedBlockOrNull();
         if (block is null)
             return;
+        if (block.Database is not null)
+        { Set("StatusText", "Database views keep their Data reference. Use Delete to remove this reference, or choose another database view."); return; }
         var contractKind = kind switch
         {
             "heading" => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.Heading,
@@ -2852,6 +2874,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         string? initialText = null, bool focusEditor = false)
     {
         if (!RequireEditMode()) return;
+        if (kindTag is "database" or "database-tabs" or "database-timeline" or "database-retry")
+        { await InsertDatabaseAsync(kindTag, insertAfterBlockId); return; }
         // Drawing is a page capability, not a hidden placeholder block. The
         // renderer provides its surface only while drawing is active or real
         // strokes already exist, so an empty page does not acquire dead space.
@@ -2994,7 +3018,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public async Task DeleteBlockAsync(string viewBlockId)
     {
-        if (!RequireEditMode()) return;
+        if (!RequireEditMode() || !AllowDatabaseStructureChange()) return;
         if (_session is ContractSessionAdapter adapter)
         {
             await adapter.DeleteViewBlockAsync(CurrentPage().Id, viewBlockId);
@@ -3046,18 +3070,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// block behind the row's view id and splits it at the caret instead of appending a
     /// checklist block at the end of the page.
     /// </summary>
-    public Task ListEnterAsync(string viewBlockId, int caretIndex)
+    public async Task ListEnterAsync(string viewBlockId, int caretIndex)
     {
-        if (!RequireEditMode()) return Task.CompletedTask;
         var block = FindChecklistBlock(viewBlockId);
-        if (block is null)
-        {
-            Set("StatusText", "That list row is no longer on this page. Choose a note and try again.");
-            return Task.CompletedTask;
-        }
-        SplitListItemAt(CurrentPage(), block, caretIndex);
-        Set("StatusText", "Enter: added the next list row right after this one.");
-        return Task.CompletedTask;
+        if (block is null || !RequireEditMode()) return;
+        await SplitTextBlockAtAsync(block.Id, caretIndex);
     }
 
     /// <summary>

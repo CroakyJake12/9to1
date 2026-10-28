@@ -17,6 +17,7 @@
         <Input Type="Text" Value="{Binding FilterText}" PlaceholderText="Contains…" Width="150" AccessibleName="Filter value" />
         <Button Content="Filter" Action="Filter" Tooltip="Save this view's filter; records are retained" />
         <Button Content="Sort ↑" Action="SortAscending" /><Button Content="Sort ↓" Action="SortDescending" />
+        <Button Content="Discard field changes" Action="DiscardDrafts" Interactive="{Binding HasDrafts}" Tooltip="Discard uncommitted field edits in this database view; saved records are unchanged" />
         <Button Content="Add record" Action="AddRecord" /><Button Content="Undo" Action="Undo" Interactive="{Binding CanUndo}" /><Button Content="Redo" Action="Redo" Interactive="{Binding CanRedo}" />
       </Container>
       <Object Type="data.record-body" Row="2" AccessibleName="Canonical Data records" />

@@ -105,6 +105,9 @@ internal static class Projector
                             Foreground = item.Foreground
                         });
                     break;
+                case HavenRichBlockKind.Database when block.Database is not null:
+                    blocks.Add(new RichBoardBlock { Id = block.Id, Kind = "database", Database = block.Database });
+                    break;
                 case HavenRichBlockKind.Table when block.Table is not null:
                     blocks.Add(ProjectTable(notes, page, block));
                     break;
@@ -426,6 +429,11 @@ internal static class MergeDeltas
                 HavenRichNotesOps.ApplyStyleToBlock(rich, page.Id, contractBlock.Id, viewBlock.StyleId);
             switch (viewBlock.Kind)
             {
+                case "database":
+                    viewBlock.Database?.Validate();
+                    if (viewBlock.Database is null) throw new InvalidDataException("Database reference missing.");
+                    contractBlock.Database = viewBlock.Database;
+                    break;
                 case "paragraph":
                 case "heading":
                     MergeTextBlock(rich, page, contractBlock, viewBlock, baselineBlock);
@@ -823,6 +831,14 @@ internal static class MergeDeltas
     {
         switch (viewBlock.Kind)
         {
+            case "database":
+            {
+                var reference = viewBlock.Database ?? throw new InvalidDataException("The database reference is missing.");
+                reference.Validate();
+                var block = HavenRichNotesOps.ImportBlock(page, HavenRichBlockKind.Database, viewBlock.Id);
+                block.Database = reference;
+                break;
+            }
             case "paragraph":
             case "heading":
             {

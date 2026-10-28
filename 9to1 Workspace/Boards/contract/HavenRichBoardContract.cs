@@ -131,7 +131,18 @@ public enum HavenRichBlockKind
     Table = 5,
     Image = 6,
     Divider = 7,
-    Graph = 8
+    Graph = 8,
+    Database = 9
+}
+
+/// <summary>A live Data reference. Record rows, field values and permissions remain owned by Data.</summary>
+public sealed record HavenBoardDatabaseReference(Guid StoreID, Guid WorkbookID, Guid TableID, Guid ViewID)
+{
+    public void Validate()
+    {
+        if (StoreID == Guid.Empty || WorkbookID == Guid.Empty || TableID == Guid.Empty || ViewID == Guid.Empty)
+            throw new InvalidDataException("A database block requires stable Data store, workbook, table and view identities.");
+    }
 }
 
 public sealed class HavenRichBlock
@@ -155,6 +166,7 @@ public sealed class HavenRichBlock
     public HavenRichImage? Image { get; set; }
     public HavenRichGraph? Graph { get; set; }
     public HavenRichDivider? Divider { get; set; }
+    public HavenBoardDatabaseReference? Database { get; set; }
     /// <summary>Paragraph alignment override; <see cref="HavenRichAlignment.Inherit"/> resolves from the block style.</summary>
     public HavenRichAlignment Alignment { get; set; } = HavenRichAlignment.Inherit;
     /// <summary>Line spacing multiplier override; 0 inherits from the block style.</summary>
@@ -420,6 +432,12 @@ public static class HavenRichNotesValidator
 
     private static void ValidateBlock(HavenRichBlock block)
     {
+        if (!Enum.IsDefined(block.Kind)) throw new InvalidDataException("Unsupported Board block kind.");
+        if (block.Kind == HavenRichBlockKind.Database)
+        {
+            if (block.Database is null) throw new InvalidDataException("A database block has no Data reference.");
+            block.Database.Validate();
+        }
         if (!HavenRichBlockLayouts.IsSupported(block.Layout))
             throw new InvalidOperationException($"Block layout '{block.Layout}' is not supported.");
         if (!double.IsFinite(block.X) || !double.IsFinite(block.Y) ||

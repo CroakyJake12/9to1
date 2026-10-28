@@ -17,7 +17,7 @@ namespace Haven.Desktop.Services;
 /// <summary>Composite owner for Board-embedded productivity pages. Write continues to use its
 /// existing Home/Notes owner. Canvas opens through the same native CanvasHostSurface and its
 /// original Canvas Files/Home operations; no Files IDs or grants cross the Board reference.</summary>
-internal sealed class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArtifactHost, IAsyncDisposable
+internal sealed partial class NativeCanvasBoardEmbeddedArtifactHost : IBoardsEmbeddedArtifactHost, IAsyncDisposable
 {
     private readonly BoardEmbeddedWritePageOwner _write;
     private readonly IServiceProvider _provider;

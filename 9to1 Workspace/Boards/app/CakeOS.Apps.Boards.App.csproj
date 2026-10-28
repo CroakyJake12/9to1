@@ -18,7 +18,10 @@
   <ItemGroup>
     <Compile Remove="**\*.cs" />
     <Compile Include="Program.cs" />
+    <ProjectReference Include="..\..\Data\RecordsUI\HavenOS.Data.RecordsUI.csproj" />
     <ProjectReference Include="CakeOS.Apps.Boards.Embedding.csproj" />
+    <ProjectReference Include="..\..\shared\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Home\HavenOS.Home.csproj" />
   </ItemGroup>
 
   <ItemGroup>

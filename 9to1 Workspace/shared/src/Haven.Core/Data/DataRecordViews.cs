@@ -74,8 +74,11 @@ public static class DataRecordViews
             DateTimeOffset? Date(Guid? field) => field is { } id && DateTimeOffset.TryParse(cells[id]?.Value,
                 CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var date) ? date : null;
             var start = Date(view.StartFieldID); var end = Date(view.EndFieldID);
+            var invalidEnd = view.EndFieldID is { } endField && end is null &&
+                (!string.IsNullOrWhiteSpace(cells[endField]?.Value) ||
+                 table.RelationalSchema?.Fields.Single(field => field.FieldID == endField).Nullable != true);
             var issue = view.Kind != DataRecordViewKind.Timeline ? null : start is null ? "Undated" :
-                view.EndFieldID is not null && end is null ? "Invalid end date" : end < start ? "End precedes start" : null;
+                invalidEnd ? "Invalid end date" : end < start ? "End precedes start" : null;
             rows.Add(new(record.RecordID, new System.Collections.ObjectModel.ReadOnlyDictionary<Guid, DataCell?>(cells),
                 view.GroupFieldID is { } group ? cells[group]?.Value ?? "" : "", start, end, issue));
         }

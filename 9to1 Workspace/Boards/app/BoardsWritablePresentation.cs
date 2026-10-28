@@ -89,10 +89,26 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
     public Task WaitUntilReadyAsync(CancellationToken cancellationToken = default) =>
         (_surfaceLifecycle ?? throw new InvalidOperationException("The Boards surface has not been initialized.")).WaitUntilReadyAsync(cancellationToken);
     public Task DrainRenderingAsync() => _renderQueue?.DrainAsync() ?? Task.CompletedTask;
-    public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default) =>
-        _disposed ? Task.FromResult(true) : _embeddedArtifacts.TryPrepareToCloseAsync(cancellationToken);
-    public Task<IBoardsPresentationClosePreparation?> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
-        _disposed ? Task.FromResult<IBoardsPresentationClosePreparation?>(CompletedBoardsPresentationClosePreparation.Instance) : _embeddedArtifacts.PrepareToCloseAsync(cancellationToken);
+    public async Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
+    {
+        var preparation = await PrepareToCloseAsync(cancellationToken).ConfigureAwait(false);
+        if (preparation is null) return false;
+        await preparation.AbortAsync().ConfigureAwait(false);
+        return true;
+    }
+    public async Task<IBoardsPresentationClosePreparation?> PrepareToCloseAsync(CancellationToken cancellationToken = default)
+    {
+        if (_disposed) return CompletedBoardsPresentationClosePreparation.Instance;
+        var databases = await ViewModel.PrepareDatabaseCloseAsync(cancellationToken).ConfigureAwait(false);
+        if (databases is null) return null;
+        try
+        {
+            var document = await _embeddedArtifacts.PrepareToCloseAsync(cancellationToken).ConfigureAwait(false);
+            if (document is null) { await databases.AbortAsync(); return null; }
+            return new CombinedBoardsClosePreparation(document, databases);
+        }
+        catch { await databases.AbortAsync(); throw; }
+    }
     /// <summary>Returns the detached document supplied when this presentation opened.</summary>
     public HavenBoardDocument Document => HavenBoardDocumentCodec.Deserialize(_initialDocumentBytes);
     public Task<HavenBoardDocument> GetCurrentDocumentAsync(CancellationToken cancellationToken = default) =>
@@ -372,6 +388,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         await (_surfaceLifecycle?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
         await (_renderQueue?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+        await ViewModel.DisposeDatabasesAsync().ConfigureAwait(false);
         await _embeddedArtifacts.DisposeAsync().ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {

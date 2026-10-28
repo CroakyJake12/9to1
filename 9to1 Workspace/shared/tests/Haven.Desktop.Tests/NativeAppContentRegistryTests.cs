@@ -547,6 +547,24 @@ public sealed class NativeAppContentRegistryTests
         await Assert.ThrowsAsync<AggregateException>(() => session.CloseAndDrainAsync());
     }
 
+    [AvaloniaFact]
+    public async Task Stale_reversible_close_can_reprepare_same_live_owner_then_close_without_cached_failure()
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address);
+        var session = Registry(new(), new(_ => owner)).CreateSession(request); await session.InitializeAsync();
+        var participant = Strong(session);
+        var stale = (await participant.PrepareCloseAsync())!;
+        owner.Revision++;
+        Assert.Throws<InvalidOperationException>(() => stale.BeginClose());
+        Assert.Null(session.OriginalClose); Assert.Null(owner.OriginalClose);
+        await stale.AbortAsync(); Assert.True(session.IsPublicationCurrent);
+        var current = (await participant.PrepareCloseAsync())!;
+        Assert.True(current.IsCurrent);
+        await current.BeginClose().WaitAsync(StrongBound);
+        Assert.True(session.CanRetireOriginalView);
+        Assert.Equal(1, owner.Begins); Assert.Equal(1, owner.Closes);
+    }
+
     private static readonly TimeSpan StrongBound = TimeSpan.FromSeconds(8);
     private static IBrowseAppContentClosePreparationParticipant Strong(IBrowseAppContentSession session) =>
         Assert.IsAssignableFrom<IBrowseAppContentClosePreparationParticipant>(session);

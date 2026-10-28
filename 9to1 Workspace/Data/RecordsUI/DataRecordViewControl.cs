@@ -23,9 +23,15 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
     private readonly List<Task> _operations = [];
     private readonly Dictionary<(Guid Record, Guid Field), string> _drafts = new();
     public bool HasUnsavedDrafts => _drafts.Count != 0;
-    public void DiscardDrafts() { Dispatcher.UIThread.VerifyAccess(); _drafts.Clear(); Render(); }
+    public void DiscardDrafts() { Dispatcher.UIThread.VerifyAccess(); _drafts.Clear(); UpdateDraftState(); Render(); }
     private Guid _selectedView;
-    private bool _closed, _busy;
+    private bool _closed, _busy, _readOnly;
+    public bool IsReadOnly
+    {
+        get => _readOnly;
+        set { Dispatcher.UIThread.VerifyAccess(); if (_readOnly == value) return; _readOnly = value; Render(); }
+    }
+    private void UpdateDraftState() => _model.Set("HasDrafts", HasUnsavedDrafts);
     public Guid SelectedViewID => _selectedView;
     public Task WhenIdleAsync() => Task.WhenAll(_operations.Append(_loader.WhenActionsIdleAsync()).ToArray());
     public event EventHandler? SelectedViewChanged;
@@ -71,6 +77,8 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_closed) return;
+        UpdateDraftState();
+        _model.Set("Idle", !_busy && !_readOnly);
         var workbook = _session.Snapshot;
         _rows.Children.Clear();
         _model.Set("Views", workbook.RecordViews.Select(v => new Dictionary<string, object?>
@@ -82,7 +90,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
         if (_filterField is null || !selected.FieldIDs.Contains(_filterField.Value)) _filterField = selected.FieldIDs.FirstOrDefault();
         _model.Set("Fields", selected.FieldIDs.Select(id => new Dictionary<string, object?>
         { ["ID"] = id, ["Name"] = Name(id) }).ToArray());
-        _model.Set("FieldName", _filterField is { } field ? Name(field) : "Choose field");
+        _model.Set("FieldName", _filterField is { } selectedFilterField ? Name(selectedFilterField) : "Choose field");
         _model.Set("CanUndo", _session.CanUndo); _model.Set("CanRedo", _session.CanRedo);
         var projection = _session.Project(selected.ViewID);
         if (selected.Kind == DataRecordViewKind.Kanban)
@@ -96,7 +104,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
                 foreach (var row in projection.Rows.Where(r => r.Group == group))
                 {
                     var card = BuildRecordEditor(table, selected, row, Name);
-                    var move = new ComboBox { ItemsSource = categories.Append("").Distinct().ToArray(), SelectedItem = row.Group };
+                    var move = new ComboBox { ItemsSource = categories.Append("").Distinct().ToArray(), SelectedItem = row.Group, IsEnabled = !_readOnly };
                     move.SelectionChanged += (_, _) => { if (!_busy && move.SelectedItem is string target && target != row.Group) Run(() => _session.MoveCardAsync(selected.ViewID, row.RecordID, target)); };
                     card.Children.Add(move); column.Children.Add(new Border { Child = card, BorderThickness = new Thickness(1), Padding = new Thickness(8) });
                 }
@@ -117,7 +125,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
                     _rows.Children.Add(new Border { Height = 12, Width = Math.Min(2000, duration * 24),
                         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
                         Margin = new Thickness(Math.Clamp((start.Date - origin).TotalDays * 24, 0, 4000), 0, 0, 0),
-                        Background = TryFindResource("CuiAccentBrush", out var accent) ? accent as Avalonia.Media.IBrush : Avalonia.Media.Brushes.Transparent });
+                        Background = this.TryFindResource("CuiAccentBrush", out var accent) ? accent as Avalonia.Media.IBrush : Avalonia.Media.Brushes.Transparent });
                 }
                 else _rows.Children.Add(new TextBlock { Text = row.TimelineIssue ?? "Undated" });
                 _rows.Children.Add(BuildRecordEditor(table, selected, row, Name));
@@ -141,7 +149,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
         {
             var cell = row.Cells[field];
             var input = new TextBox { Text = _drafts.GetValueOrDefault((row.RecordID, field), cell?.Value ?? ""), PlaceholderText = name(field), MinWidth = 130,
-                IsReadOnly = cell?.Kind == DataCellKind.Formula || !string.IsNullOrWhiteSpace(cell?.Formula) };
+                IsReadOnly = _readOnly || cell?.Kind == DataCellKind.Formula || !string.IsNullOrWhiteSpace(cell?.Formula) };
             Avalonia.Automation.AutomationProperties.SetName(input, name(field));
             if (view.Kind == DataRecordViewKind.Table) input.Width = 150;
             else panel.Children.Add(new TextBlock { Text = name(field), FontSize = 12 });
@@ -150,6 +158,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
                 var value = input.Text ?? "";
                 if (value == (cell?.Value ?? "")) _drafts.Remove((row.RecordID, field));
                 else _drafts[(row.RecordID, field)] = value;
+                UpdateDraftState();
             };
             inputs.Add(field, input); panel.Children.Add(input);
         }
@@ -170,7 +179,9 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
     {
         token.ThrowIfCancellationRequested();
         if (_closed || _busy) return ValueTask.CompletedTask;
+        if (command == "DiscardDrafts") { DiscardDrafts(); return ValueTask.CompletedTask; }
         if (command == "SelectView" && parameter is Guid view) { SelectView(view); return ValueTask.CompletedTask; }
+        if (_readOnly) return ValueTask.CompletedTask;
         if (command == "SelectField" && parameter is Guid field) { _filterField = field; Render(); return ValueTask.CompletedTask; }
         return new(Run(async () =>
         {
@@ -197,11 +208,11 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
     }
     private Button Button(string text, Func<Task> action)
     {
-        var button = new Button { Content = text }; button.Click += (_, _) => Run(action); return button;
+        var button = new Button { Content = text, IsEnabled = !_readOnly }; button.Click += (_, _) => Run(action); return button;
     }
     private Task Run(Func<Task> action)
     {
-        if (_closed || _busy) return Task.CompletedTask;
+        if (_closed || _busy || _readOnly) return Task.CompletedTask;
         var task = RunCore(action); _operations.Add(task); _operations.RemoveAll(t => t.IsCompletedSuccessfully); return task;
     }
     private async Task RunCore(Func<Task> action)
@@ -209,7 +220,7 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
         _busy = true; _model.Set("Idle", false); _rows.IsEnabled = false;
         try { await action(); if (!_closed) Render(); }
         catch (Exception failure) { if (!_closed) Status(failure.Message); }
-        finally { _busy = false; _model.Set("Idle", true); _rows.IsEnabled = true; }
+        finally { _busy = false; _model.Set("Idle", !_readOnly); _rows.IsEnabled = true; }
     }
     public async ValueTask DisposeAsync()
     {

@@ -20,6 +20,9 @@ using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
+using Haven.Application;
+using Haven.Infrastructure;
+using HavenOS.Home.Core;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -68,6 +71,18 @@ internal sealed class BoardsApp : Application
 {
     private JsonFileHavenBoardStore? _store;
     private BoardsLocalDocuments? _localDocuments;
+    private readonly CancellationTokenSource _databaseLifetime = new();
+    private StandaloneDataSource? _databaseSource;
+
+    private sealed class StandaloneDataSource(DataLocalRecordSessionFactory factory, string profile,
+        CancellationToken lifetime) : IBoardsDatabaseSource
+    {
+        public Task<DataRecordSession> CreateDatabaseAsync(string title, CancellationToken token = default) =>
+            factory.CreateAsync(profile, title, token, lifetime);
+        public Task<DataRecordSession> OpenDatabaseAsync(Guid workbookID, CancellationToken token = default) =>
+            factory.OpenAsync(profile, workbookID, token, lifetime);
+
+    }
     private RecentBoardCatalog? _recentBoardCatalog;
     private string? _lastRecentPageKey;
     private IRichBoardSession? _session;
@@ -98,10 +113,14 @@ internal sealed class BoardsApp : Application
         // Real durable session: edits persist to a physical .9to1board file.
         // An explicit file opens through the local catalogue; otherwise resume a recoverable draft.
         var configuredRoot = Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
-        var appRoot = string.IsNullOrWhiteSpace(configuredRoot)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Haven")
-            : Path.GetFullPath(configuredRoot);
-        _localDocuments = new BoardsLocalDocuments("standalone-local", Path.Combine(appRoot, "Boards"));
+        var paths = new AppPaths();
+        var profiles = new HomeLocalProfileIdentity(new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "Home", "state.json")),
+            new OperatingSystemPrincipalSource());
+        var actor = profiles.GetCurrentAsync(_databaseLifetime.Token).AsTask().GetAwaiter().GetResult()
+            ?? throw new UnauthorizedAccessException("The actual local Home profile is unavailable.");
+        _databaseSource = new StandaloneDataSource(new DataLocalRecordSessionFactory(new DataWorkbookRepository(paths), profiles),
+            actor.ProfileId, _databaseLifetime.Token);
+        _localDocuments = new BoardsLocalDocuments(actor.ProfileId, Path.Combine(paths.DataDirectory, "Boards"));
         _store = _localDocuments.Store;
         _recentBoardCatalog = _localDocuments.Recent;
         var legacyFailures = string.IsNullOrWhiteSpace(configuredRoot)
@@ -113,7 +132,7 @@ internal sealed class BoardsApp : Application
             ? _localDocuments.LatestOrCreateAsync().GetAwaiter().GetResult()
             : _localDocuments.ImportAsync(Program.OpenPath).GetAwaiter().GetResult();
         _session = _localDocuments.OpenAsync(id).GetAwaiter().GetResult();
-        _viewModel = new BoardsViewModel(_session);
+        _viewModel = new BoardsViewModel(_session, databaseSource: _databaseSource);
         RecordCurrentPage();
         _viewModel.SetLanding(Program.OpenPath is null);
         if (legacyFailures.Count > 0)
@@ -259,11 +278,19 @@ internal sealed class BoardsApp : Application
         {
             Console.WriteLine($"[CUI Boards] Earlier action failed before close save: {_closeActionDrain?.Exception ?? error}");
         }
+        var databasePreparation = _viewModel is null ? null :
+            await _viewModel.PrepareDatabaseCloseAsync(_databaseLifetime.Token);
+        if (_viewModel is not null && databasePreparation is null)
+        {
+            _closeInteractionRestriction?.Dispose(); _closeInteractionRestriction = null;
+            return;
+        }
         _closeSaveOwner ??= new BoardsCloseSaveOwner(() => _session
             ?? throw new InvalidOperationException("The Boards session is unavailable."));
         try { await _closeSaveOwner.SaveBeforeCloseAsync(); }
         catch (Exception error)
         {
+            if (databasePreparation is not null) await databasePreparation.AbortAsync();
             Console.WriteLine($"[CUI Boards] Save on close failed: {error.Message}");
             _viewModel?.Set("StatusText", "Close canceled; save failed: " + error.Message.Split('\n')[0]);
             _closeInteractionRestriction?.Dispose();
@@ -272,6 +299,7 @@ internal sealed class BoardsApp : Application
         }
         try
         {
+            if (databasePreparation is not null) await databasePreparation.CommitAsync();
             _closeDrain = _closeSaveOwner.DrainAfterSaveAsync(
                 () =>
                 {
@@ -292,6 +320,8 @@ internal sealed class BoardsApp : Application
             Console.WriteLine($"[CUI Boards] Close cleanup failed: {error}");
             Environment.ExitCode = 1;
         }
+        _databaseLifetime.Cancel();
+        _databaseLifetime.Dispose();
         _closeAccepted = true;
         window.Close();
     }
@@ -833,10 +863,20 @@ internal sealed class BoardsApp : Application
 
         oldVm ??= _viewModel;
         oldSession ??= _session;
+        if (oldVm is not null)
+        {
+            var databasePreparation = await oldVm.PrepareDatabaseCloseAsync(_databaseLifetime.Token);
+            if (databasePreparation is null)
+            {
+                await adapter.DisposeAsync();
+                throw new InvalidOperationException("Save or discard database field changes before switching boards.");
+            }
+            await databasePreparation.CommitAsync();
+        }
         _textAndKeyboardOwner?.Dispose();
         _inkInteraction?.Dispose();
         await (_inkInteraction?.DrainAsync() ?? Task.CompletedTask);
-        var next = new BoardsViewModel(adapter);
+        var next = new BoardsViewModel(adapter, databaseSource: _databaseSource);
         next.SetLanding(false);
         if (selectedPageId is not null && !next.SelectPageById(selectedPageId))
             next.Set("StatusText", "The recent page no longer exists in this board; opened its current page instead.");

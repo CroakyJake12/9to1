@@ -57,6 +57,7 @@ public sealed class BoardsLocalDocuments : IDisposable
     {
         var document = HavenBoardDocumentCodec.Deserialize(bytes.IsEmpty ? BoardsViewModel.CreateNewBoardDraftBytes() : bytes);
         var path = PathFor(document.DocumentId);
+        using var lease = await LocalBoardWriteLease.AcquireAsync(path, token).ConfigureAwait(false);
         if (File.Exists(path) || File.Exists(path + ".bak")) throw new IOException("This draft already exists.");
         await Store.SaveDocumentAtPathAsync(document, path, token).ConfigureAwait(false);
         Recent.Record(path);
@@ -65,29 +66,47 @@ public sealed class BoardsLocalDocuments : IDisposable
 
     public async Task<Guid> ImportAsync(string path, CancellationToken token = default)
     {
-        var document = await Store.LoadDocumentAtPathAsync(path, token).ConfigureAwait(false)
-            ?? throw new FileNotFoundException("The selected board is unavailable.", path);
+        var requestedPath = Path.GetFullPath(path);
+        var sourcePath = File.Exists(requestedPath) ? requestedPath : requestedPath + ".bak";
+        byte[] bytes;
+        // Parse and hash the same bounded read. A later external replacement can
+        // only cause a subsequent conflict, never authorize old data with its new hash.
+        await using (var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            if (input.Length > HavenBoardDocumentCodec.MaximumDocumentBytes)
+                throw new InvalidDataException("The selected board exceeds the supported size.");
+            bytes = new byte[checked((int)input.Length)];
+            await input.ReadExactlyAsync(bytes, token).ConfigureAwait(false);
+        }
+        var document = HavenBoardDocumentCodec.Deserialize(bytes);
+        var observedHash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         var privatePath = PathFor(document.DocumentId);
-        if (File.Exists(privatePath))
+        using var lease = await LocalBoardWriteLease.AcquireAsync(privatePath, token).ConfigureAwait(false);
+        if (File.Exists(privatePath) || File.Exists(privatePath + ".bak"))
         {
             lock (_gate)
             {
-                if (_destinations.TryGetValue(document.DocumentId, out var known) &&
-                    string.Equals(known.Path, Path.GetFullPath(path), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                _destinations.Clear();
+                if (File.Exists(_destinationFile))
                 {
-                    var currentHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
-                    if (currentHash != known.Hash)
+                    var latest = JsonSerializer.Deserialize<Dictionary<Guid, Destination>>(File.ReadAllText(_destinationFile))
+                        ?? throw new InvalidDataException("Board destination metadata is empty.");
+                    foreach (var pair in latest) _destinations.Add(pair.Key, pair.Value);
+                }
+                if (_destinations.TryGetValue(document.DocumentId, out var known) &&
+                    string.Equals(known.Path, requestedPath, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                {
+                    if (observedHash != known.Hash)
                         throw new IOException("This file changed outside Boards. Open the retained local board to preserve both revisions.");
                     return document.DocumentId;
                 }
             }
             throw new IOException("A local board with this identity already exists. Open that draft to resolve both revisions.");
         }
-        await RichBoardSession.CopyOwnedSidecarsAsync(path, privatePath, token).ConfigureAwait(false);
+        await RichBoardSession.CopyOwnedSidecarsAsync(requestedPath, privatePath, token).ConfigureAwait(false);
         await Store.SaveDocumentAtPathAsync(document, privatePath, token).ConfigureAwait(false);
-        // Retain the user's chosen active file; all subsequent writes also keep the private recovery revision.
-        RecordDestination(document.DocumentId, Path.GetFullPath(path),
-            Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(path, token).ConfigureAwait(false))).ToLowerInvariant());
+        if (sourcePath == requestedPath)
+            RecordDestination(document.DocumentId, requestedPath, observedHash);
         Recent.Record(privatePath);
         return document.DocumentId;
     }

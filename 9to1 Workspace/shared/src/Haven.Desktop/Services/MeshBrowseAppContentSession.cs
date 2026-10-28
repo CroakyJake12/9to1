@@ -14,7 +14,7 @@ namespace Haven.Desktop.Services;
 
 /// <summary>One tab's SAME MeshPage/editor/repository, not another Mesh implementation.
 /// The page owns its writes and native children; the tab borrows global Home and services.</summary>
-internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSession
+internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
 {
     private readonly BrowseAppContentRequest _request;
     private readonly IServiceProvider _provider;
@@ -31,6 +31,12 @@ internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSessi
     private AuthenticatedResourceActor? _actor;
     private CuiSceneAvailability? _homeObservation;
     private volatile bool _published, _closing, _closed;
+    private bool _unpublishedPageDrained;
+    private readonly List<Exception> _retiredStartupDiagnostics = [];
+    internal IReadOnlyList<Exception> RetiredStartupDiagnostics
+    { get { lock (_gate) return _retiredStartupDiagnostics.ToArray(); } }
+    private void RetainStartupDiagnostic(Exception error)
+    { lock (_gate) if (!_retiredStartupDiagnostics.Any(old => ReferenceEquals(old, error))) _retiredStartupDiagnostics.Add(error); }
 
     internal MeshBrowseAppContentSession(BrowseAppContentRequest request, IServiceProvider provider,
         HomeNativeWindowsComposition home, CancellationToken appLifetime, CancellationToken hostLifetime,
@@ -238,6 +244,71 @@ internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSessi
         });
     }
 
+    // Reuse the existing registry/Browse prepare-abort-begin protocol. The lease
+    // does not freeze editing: a changed page invalidates it before any close starts.
+    public bool SupportsReversibleClosePreparation => _published && !_closing && !_closed;
+    private PreparedClose? _preparedClose;
+    private bool _acceptedPublishedRetirement;
+    public async Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
+    {
+        if (!SupportsReversibleClosePreparation || !await TryPrepareToCloseAsync(cancellationToken).ConfigureAwait(false)) return null;
+        return await Dispatcher.UIThread.InvokeAsync<IBrowseAppContentClosePreparation?>(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (_gate)
+            {
+                if (!SupportsReversibleClosePreparation || _page is not { } page || _preparedFence is not { } fence ||
+                    !page.IsOriginalBrowseCloseFenceCurrent(fence)) return null;
+                return _preparedClose = new PreparedClose(this, fence);
+            }
+        }).GetTask().ConfigureAwait(false);
+    }
+    private sealed class PreparedClose(MeshBrowseAppContentSession owner, object fence) : IBrowseAppContentClosePreparation
+    {
+        private bool _aborted, _accepted;
+        public IBrowseAppContentSession Session => owner;
+        public bool IsCurrent
+        {
+            get
+            {
+                if (!Dispatcher.UIThread.CheckAccess()) return false;
+                lock (owner._gate) return !_aborted && !_accepted && ReferenceEquals(owner._preparedClose, this) &&
+                    owner.SupportsReversibleClosePreparation && owner._page?.IsOriginalBrowseCloseFenceCurrent(fence) == true;
+            }
+        }
+        public Task AbortAsync()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(owner);
+            lock (owner._gate)
+            {
+                if (_accepted) throw new InvalidOperationException("Accepted page retirement cannot be aborted.");
+                _aborted = true;
+                if (ReferenceEquals(owner._preparedClose, this)) { owner._preparedClose = null; owner._preparedFence = null; }
+                return Task.CompletedTask;
+            }
+        }
+        public Task BeginClose()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(owner);
+            Dispatcher.UIThread.VerifyAccess();
+            lock (owner._gate)
+            {
+                if (_accepted) return owner._close!;
+                if (!IsCurrent) throw new InvalidOperationException("The page changed after preparation; prepare its current draft again.");
+                owner.DemandPublicationCurrent();
+                // Start the actual page retirement before publishing any close/fence.
+                // A synchronous no-effect refusal leaves both owner and registry retryable.
+                var actual = owner._page!.BeginOriginalPreparedBrowseClose(fence);
+                owner._actualPageClose = actual;
+                _accepted = true; owner._acceptedPublishedRetirement = true;
+                owner._closing = true; owner._published = false;
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                owner._close = owner.CloseDriverAsync(start.Task); start.SetResult();
+                return owner._close;
+            }
+        }
+    }
+
     public Task CloseAndDrainAsync()
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
@@ -252,6 +323,8 @@ internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSessi
     {
         await start.ConfigureAwait(false);
         var originals = Ledger();
+        var wasPublished = _published || _acceptedPublishedRetirement;
+        var startupDiagnostics = new List<Exception>();
         await originals.RunToOriginalSettlementAsync(async () =>
         {
             if (_initialization is { IsCompleted: false })
@@ -265,15 +338,20 @@ internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSessi
             Task[] pending;
             lock (_gate) pending = new[] { _initialization }.OfType<Task>().Concat(_preparations).Distinct().ToArray();
             foreach (var actual in pending)
-                try { await originals.AwaitAsync(actual).ConfigureAwait(false); }
-                catch (Exception error) { originals.Capture(actual, error); }
+                try { await actual.ConfigureAwait(false); }
+                catch (Exception error) { startupDiagnostics.Add(actual.Exception ?? error); }
             _closeDispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task>(() => CloseOnUiAsync()).GetTask());
             _closeWork = await originals.AwaitAsync(_closeDispatch).ConfigureAwait(false);
             await originals.AwaitAsync(_closeWork).ConfigureAwait(false);
             Task[] observations; lock (_gate) observations = _homeObservations.ToArray();
             foreach (var actual in observations)
-                try { await originals.AwaitAsync(actual).ConfigureAwait(false); }
-                catch (Exception error) { originals.Capture(actual, error); }
+                try { await actual.ConfigureAwait(false); }
+                catch (Exception error) { startupDiagnostics.Add(actual.Exception ?? error); }
+            foreach (var diagnostic in startupDiagnostics)
+            {
+                if (!wasPublished && _unpublishedPageDrained) RetainStartupDiagnostic(diagnostic);
+                else originals.Retain(diagnostic);
+            }
             if (originals.OriginalErrors.Count == 0)
             { _closed = true; _lifetime.Cancel(); _lifetime.Dispose(); StateChanged = null; }
         }).ConfigureAwait(false);
@@ -287,6 +365,7 @@ internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSessi
         {
             if (_page is { } page)
             {
+                var wasPublished = _published || _acceptedPublishedRetirement;
                 Task? returned = null, reported = null;
                 try
                 {
@@ -320,10 +399,19 @@ internal sealed class MeshBrowseAppContentSession : IBrowseNativeAppContentSessi
                 _actualPageClose = returned ?? reported;
                 if (_actualPageClose is not null) { _closing = true; _published = false; }
                 foreach (var actual in new[] { returned, reported }.OfType<Task>().Distinct())
-                    try { await originals.AwaitAsync(actual); }
-                    catch (Exception failure) { originals.Capture(actual, failure); }
+                {
+                    try { await actual; }
+                    catch (Exception failure)
+                    {
+                        if (!wasPublished && page.CanRetireFailedBrowseInitialization(_actualPageInitialization, actual))
+                            RetainStartupDiagnostic(actual.Exception ?? failure);
+                        else originals.Capture(actual, failure);
+                    }
+                }
+                _unpublishedPageDrained = !wasPublished && _actualPageClose is not null &&
+                    (_actualPageClose.IsCompletedSuccessfully || page.CanRetireFailedBrowseInitialization(_actualPageInitialization, _actualPageClose));
             }
-            else { _closing = true; _published = false; }
+            else { _closing = true; _published = false; _unpublishedPageDrained = true; }
             // Never dispose the shared Home, repository, event bus or provider.
         });
     }

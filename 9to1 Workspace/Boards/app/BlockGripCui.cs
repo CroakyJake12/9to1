@@ -71,9 +71,9 @@ internal static class BlockGripCui
             var index = -1;
             for (var blockIndex = 0; blockIndex < blocks.Count; blockIndex++)
                 if (blocks[blockIndex].Id == blockId) { index = blockIndex; break; }
-            var eligible = index >= 0 && !blockId.Contains(':') &&
+            var eligible = index >= 0 &&
                 blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
-                    "checklist" or "bulleted" or "numbered";
+                    "checklist" or "bulleted" or "numbered" or "database";
             var target = eligible && viewModel.SelectedPageId == _pageId &&
                 ReferenceEquals(_session, viewModel.Session) && viewModel.Session is ContractSessionAdapter adapter
                 ? adapter.CaptureBlockAction(_pageId, _blockId)
@@ -81,8 +81,8 @@ internal static class BlockGripCui
             var canManage = viewModel.IsEditMode && target is not null;
             _target = target;
             _values["CanManage"] = canManage;
-            _values["CanMoveUp"] = canManage && index > 0;
-            _values["CanMoveDown"] = canManage && index < blocks.Count - 1;
+            _values["CanMoveUp"] = canManage && target!.ViewIndex > 0;
+            _values["CanMoveDown"] = canManage && target!.ViewIndex < target.ViewCount - 1;
             _values["GripAccessibleName"] = "Open block actions for " + (eligible ? blocks[index].Kind : "block");
             if (target is not null)
             {

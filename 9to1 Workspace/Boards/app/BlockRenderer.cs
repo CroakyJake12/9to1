@@ -575,6 +575,7 @@ public static class BlockRenderer
     private static Control BuildBlock(BoardsViewModel vm, RichBoardBlock block) => block.Kind switch
     {
         "heading" or "paragraph" => BuildTextBlock(vm, block),
+        "database" => vm.DatabaseBlocks.Mount(block),
         "table" => BuildTable(vm, block),
         "divider" => BuildDivider(vm, block),
         "image" => BuildImage(vm, block),

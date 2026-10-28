@@ -68,7 +68,7 @@
     <Compile Include="DeveloperManualRecoveryConflictTests.cs" />
     <Compile Include="OriginalAutomationLibraryGraphEditingTests.cs" />
     <Compile Include="DataSharedInkTests.cs" />
-    <Compile Include="DataRecordViewControlTests.cs" />
+    <Compile Include="DataRecordViewControlTests.cs;BoardsDatabaseIntegrationTests.cs" />
     <Compile Include="PresentFreehandTests.cs" />
     <Compile Include="DeveloperManualSaveAllTests.cs" />
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />

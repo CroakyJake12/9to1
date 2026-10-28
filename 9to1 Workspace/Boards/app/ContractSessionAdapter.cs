@@ -364,10 +364,18 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         if (_disposed) return null;
         var page = _view.Sections.SelectMany(section => section.Pages).FirstOrDefault(value => value.Id == pageId);
         var index = page?.Blocks.FindIndex(block => block.Id == blockId) ?? -1;
-        if (page is null || index < 0 || blockId.Contains(':') ||
+        if (page is null || index < 0 ||
             page.Blocks[index].Kind is not ("paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
-                "checklist" or "bulleted" or "numbered"))
+                "checklist" or "bulleted" or "numbered" or "database"))
         { return null; }
+        var count = page.Blocks.Count;
+        if (blockId.Contains(':'))
+        {
+            var parent = blockId[..blockId.IndexOf(':')];
+            var rows = page.Blocks.Where(row => row.Id.StartsWith(parent + ":", StringComparison.Ordinal)).ToArray();
+            index = Array.FindIndex(rows, row => row.Id == blockId); count = rows.Length;
+            if (index < 0 || page.Blocks.First(row => row.Id == blockId).Kind is not ("checklist" or "bulleted" or "numbered")) return null;
+        }
         var viewStamp = BlockActionStamp();
         lock (_blockActionTicketGate)
         {
@@ -377,7 +385,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 _issuedBlockActionViewStamp = viewStamp;
             }
             var candidate = new BoardBlockActionTarget(_textOwner, DocumentVersion, pageId, blockId,
-                viewStamp, index, page.Blocks.Count);
+                viewStamp, index, count);
             var issued = _issuedBlockActions.FirstOrDefault(value => value == candidate);
             if (issued is not null) return issued;
             _issuedBlockActions.Add(candidate);
@@ -391,6 +399,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         ArgumentNullException.ThrowIfNull(target); ArgumentNullException.ThrowIfNull(originStillEditable);
         if (_disposed) return new(false, "Disposed", null);
         if (!Enum.IsDefined(action)) return new(false, "UnsupportedAction", null);
+        if (target.BlockId.Contains(':')) return await ApplyListActionAsync(target, action, null, originStillEditable, cancellationToken);
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -448,6 +457,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         if (_disposed) return new(false, "Disposed", null);
         if (destinationIndex < 0 || destinationIndex >= target.ViewCount)
             return new(false, "InvalidDestination", null);
+        if (target.BlockId.Contains(':')) return await ApplyListActionAsync(target, null, destinationIndex, originStillEditable, cancellationToken);
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -472,6 +482,62 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
             return new(true, "Applied", target.BlockId);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    private async ValueTask<BoardBlockActionResult> ApplyListActionAsync(BoardBlockActionTarget target,
+        BoardBlockAction? action, int? destination, Func<bool> originStillEditable, CancellationToken token)
+    {
+        await _mergeGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            bool Current() => !_disposed && IsIssuedBlockAction(target) && target.OwnerId == _textOwner &&
+                originStillEditable() && target.ViewStamp == BlockActionStamp();
+            if (!Current() || target.Revision != DocumentVersion) return new(false, "StaleOrReadOnly", null);
+            var split = target.BlockId.IndexOf(':'); var parentId = target.BlockId[..split]; var itemId = target.BlockId[(split + 1)..];
+            var to = destination ?? (action == BoardBlockAction.MoveUp ? target.ViewIndex - 1 : target.ViewIndex + 1);
+            if ((destination is not null || action is BoardBlockAction.MoveUp or BoardBlockAction.MoveDown) &&
+                (to < 0 || to >= target.ViewCount || to == target.ViewIndex)) return new(false, "AtBoundary", target.BlockId);
+            await MergeCoreAsync(token).ConfigureAwait(false);
+            var version = DocumentVersion;
+            bool Applicable(HavenRichNotes rich) => Current() && rich.Version == version &&
+                rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == target.PageId)?
+                    .Blocks.Any(block => block.Id == parentId && block.Items.Any(item => item.Id == itemId)) == true;
+            string? selected = target.BlockId;
+            var applied = await _real.MutateIfAsync(Applicable, rich =>
+            {
+                if (destination is not null || action is BoardBlockAction.MoveUp or BoardBlockAction.MoveDown)
+                    HavenRichNotesOps.MoveListItemTo(rich, target.PageId, parentId, itemId, to);
+                else if (action == BoardBlockAction.Duplicate)
+                    selected = HavenRichNotesOps.DuplicateListItem(rich, target.PageId, parentId, itemId);
+                else if (action == BoardBlockAction.Delete)
+                    selected = HavenRichNotesOps.DeleteListItem(rich, target.PageId, parentId, itemId);
+            }, token).ConfigureAwait(false);
+            if (!applied) return new(false, "StaleOrReadOnly", null);
+            RefreshView(); return new(true, "Applied", selected);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string?> ExitEmptyListItemAsync(string pageId, string viewId, Func<bool> editable,
+        CancellationToken token = default)
+    {
+        var split = viewId.IndexOf(':'); if (split < 1) return null;
+        await _mergeGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            if (_disposed || !editable()) return null;
+            await MergeCoreAsync(token).ConfigureAwait(false);
+            var parent = viewId[..split]; var item = viewId[(split + 1)..];
+            bool Applicable(HavenRichNotes rich) => !_disposed && editable() &&
+                rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == pageId)?
+                    .Blocks.FirstOrDefault(block => block.Id == parent)?.Items.Any(row => row.Id == item && string.IsNullOrEmpty(row.Text)) == true;
+            string? selected = null;
+            var applied = await _real.MutateIfAsync(Applicable,
+                rich => selected = HavenRichNotesOps.ExitEmptyListItem(rich, pageId, parent, item), token).ConfigureAwait(false);
+            if (applied) RefreshView();
+            return selected;
         }
         finally { _mergeGate.Release(); }
     }

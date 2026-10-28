@@ -7,6 +7,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using CakeOS.Cui.Runtime;
 using System.Globalization;
@@ -405,7 +407,26 @@ public static class ToolbarBuilder
         Avalonia.Automation.AutomationProperties.SetName(search, "Search insert menu");
         var list = new StackPanel { Orientation = Orientation.Vertical };
         panel.Children.Add(search);
-        panel.Children.Add(list);
+        panel.Children.Add(new ScrollViewer { Content = list, MaxHeight = 340,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        panel.AddHandler(InputElement.KeyDownEvent, (_, args) =>
+        {
+            if (args.Key == Key.Escape) { popup.Close(); args.Handled = true; return; }
+            var choices = list.Children.OfType<Button>().Where(item => item.IsEnabled).ToArray();
+            if (choices.Length == 0) return;
+            var current = Array.FindIndex(choices, item => item.IsKeyboardFocusWithin);
+            if (args.Key == Key.Enter && (current >= 0 || search.IsKeyboardFocusWithin))
+            {
+                choices[Math.Max(0, current)].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                args.Handled = true; return;
+            }
+            var next = args.Key switch { Key.Down => Math.Min(current + 1, choices.Length - 1),
+                Key.Up => current < 0 ? choices.Length - 1 : Math.Max(0, current - 1),
+                Key.Home => 0, Key.End => choices.Length - 1, _ => -1 };
+            if (next < 0) return;
+            choices[next].Focus(); choices[next].BringIntoView(); args.Handled = true;
+        }, RoutingStrategies.Tunnel);
         void Fill(string filter)
         {
             list.Children.Clear();
@@ -420,6 +441,13 @@ public static class ToolbarBuilder
                 ("Checklist", "checklist"), ("Bulleted list", "bulleted"), ("Numbered list", "numbered"),
                 ("Table", "table"), ("Graph", "graph"), ("Image…", "image"), ("Attachment…", "attachment"),
             ], vm, popup, filter, insertAfterBlockId);
+            if (vm.DatabaseBlocks.IsAvailable)
+            {
+                AddGroup(list, "Database", [("New database", "database"), ("Tab View", "database-tabs"),
+                    ("Timeline View", "database-timeline")], vm, popup, filter, insertAfterBlockId);
+                if (vm.HasPendingDatabaseLink)
+                    AddGroup(list, "Recovery", [("Link created database", "database-retry")], vm, popup, filter, insertAfterBlockId);
+            }
             AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter, insertAfterBlockId);
         }
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
@@ -432,7 +460,7 @@ public static class ToolbarBuilder
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(12),
             MaxHeight = 420,
-            Child = new ScrollViewer { Content = panel },
+            Child = panel,
         };
         button.Click += (_, _) =>
         {
@@ -481,6 +509,8 @@ public static class ToolbarBuilder
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8, 6),
             };
+            SetQuietToolbarControl(item, selected: false, "Boards insertion menu item");
+            CuiPropertyPresentation.Attach(item);
             Avalonia.Automation.AutomationProperties.SetName(item, "Insert " + label);
             item.Click += (_, _) =>
             {

@@ -273,5 +273,62 @@ public sealed class BoardsLocalDraftTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public async Task Concurrent_create_of_one_identity_commits_once_without_overwriting_the_winner()
+    {
+        var root = TempRoot(); Directory.CreateDirectory(root);
+        try
+        {
+            using var first = new BoardsLocalDocuments("profile", root);
+            using var second = new BoardsLocalDocuments("profile", root);
+            var original = HavenBoardDocumentCodec.CreateNew();
+            var firstDoc = HavenBoardDocumentCodec.Deserialize(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(original,
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)));
+            var secondDoc = HavenBoardDocumentCodec.Deserialize(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(original,
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)));
+            firstDoc.RichNotes!.Title = "First"; secondDoc.RichNotes!.Title = "Second";
+            static async Task<bool> Create(BoardsLocalDocuments owner, HavenBoardDocument document)
+            {
+                try
+                {
+                    await owner.CreateAsync(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(document,
+                        new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)));
+                    return true;
+                }
+                catch (IOException) { return false; }
+            }
+            var results = await Task.WhenAll(Create(first, firstDoc), Create(second, secondDoc));
+            Assert.Single(results.Where(result => result));
+            Assert.Equal(results[0] ? "First" : "Second",
+                (await first.Store.LoadDocumentAtPathAsync(first.PathFor(original.DocumentId)))!.RichNotes!.Title);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Concurrent_import_does_not_replace_existing_private_identity_and_external_changes_refuse_save()
+    {
+        var root = TempRoot(); Directory.CreateDirectory(root);
+        try
+        {
+            using var first = new BoardsLocalDocuments("profile", root);
+            using var second = new BoardsLocalDocuments("profile", root);
+            var document = HavenBoardDocumentCodec.CreateNew();
+            document.RichNotes!.Title = "Imported bytes";
+            var path = Path.Combine(root, "source.9to1board");
+            await first.Store.SaveDocumentAtPathAsync(document, path);
+            var ids = await Task.WhenAll(first.ImportAsync(path), second.ImportAsync(path));
+            Assert.All(ids, id => Assert.Equal(document.DocumentId, id));
+            await using var opened = await first.OpenAsync(document.DocumentId);
+            document.RichNotes.Title = "External changed after import";
+            await first.Store.SaveDocumentAtPathAsync(document, path);
+            opened.Document.Title = "Local edit"; opened.MarkDirty();
+            await Assert.ThrowsAsync<IOException>(() => opened.SaveAsync().AsTask());
+            Assert.Equal("Imported bytes", (await first.Store.LoadDocumentAtPathAsync(first.PathFor(document.DocumentId)))!.RichNotes!.Title);
+            Assert.Equal("External changed after import", (await first.Store.LoadDocumentAtPathAsync(path))!.RichNotes!.Title);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     private static string TempRoot() => Path.Combine(Path.GetTempPath(), "boards-local-drafts-" + Guid.NewGuid().ToString("N"));
 }

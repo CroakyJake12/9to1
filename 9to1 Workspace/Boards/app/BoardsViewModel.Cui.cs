@@ -120,7 +120,7 @@ public sealed partial class BoardsViewModel
         var index = blocks.FindIndex(block => block.Id == SelectedBlockId);
         var eligible = index >= 0 && !SelectedBlockId.Contains(':') &&
             blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph" or
-                "checklist" or "bulleted" or "numbered";
+                "checklist" or "bulleted" or "numbered" or "database";
         var available = _isEditMode && eligible && _session is ContractSessionAdapter && !_blockActionBusy && BlockActionEditingAllowed();
         Set("CanManageSelectedBlock", available);
         Set("CanMoveBlockUp", available && index > 0);
@@ -145,6 +145,7 @@ public sealed partial class BoardsViewModel
     internal async ValueTask<bool> DispatchCuiBlockActionAsync(
         BoardBlockActionRequest request, CancellationToken cancellationToken = default)
     {
+        if (request.Action == BoardBlockAction.Delete && !AllowDatabaseStructureChange()) return true;
         if (!_isEditMode || _blockActionBusy || !BlockActionEditingAllowed() ||
             _session is not ContractSessionAdapter adapter ||
             SelectedPageId != request.Target.PageId || SelectedBlockId != request.Target.BlockId)
