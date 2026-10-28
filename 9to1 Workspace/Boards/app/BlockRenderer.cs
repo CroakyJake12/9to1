@@ -696,6 +696,21 @@ public static class BlockRenderer
                         args.Handled = true;
                         await vm.InsertKindAsync("paragraph", captured, initialText: string.Empty, focusEditor: true);
                     }
+                    else
+                    {
+                        // UX27-BOARD-017/029: inside a code block both Enter and Shift+Enter
+                        // stay in the same BlockID as a real line break. The donor TextBox
+                        // newline is not reliable under the tunnelling Enter route the editor
+                        // already owns, so the break is written explicitly and reaches the
+                        // document through the ordinary TextChanged/EditText path.
+                        args.Handled = true;
+                        var caret = box.SelectionStart;
+                        var length = box.SelectionEnd - box.SelectionStart;
+                        var current = box.Text ?? string.Empty;
+                        box.Text = current.Remove(caret, length).Insert(caret, box.NewLine);
+                        box.CaretIndex = Math.Min(caret + box.NewLine.Length, box.Text.Length);
+                        box.Select(box.CaretIndex);
+                    }
                     return;
                 }
                 // Owner decision 27 October: Enter ends the current block and starts the

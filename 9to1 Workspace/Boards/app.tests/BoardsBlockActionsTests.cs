@@ -48,10 +48,12 @@ public sealed class BoardsBlockActionsTests
                 var row = Assert.Single(host.Children.OfType<Border>(), value =>
                     value.Tag is BlockReorderRow { BlockId: "block-a" });
                 var grip = Assert.Single(row.GetVisualDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
-                var actions = Assert.Single(row.GetVisualDescendants().OfType<Button>(), button => button.Name == "BlockDuplicate");
+                // The authored grip keeps its action row inactive until the grip is opened
+                // (BlockGripCui.cui: Active="{Binding IsExpanded}"). The menu target is therefore
+                // resolved after the gesture, from the same row, instead of being captured at rest.
                 var start = grip.TranslatePoint(new Point(grip.Bounds.Width / 2, grip.Bounds.Height / 2), window)!.Value;
                 var end = host.TranslatePoint(new Point(start.X, host.Bounds.Height + 12), window)!.Value;
-                return (Window: window, Host: host, Row: row, Grip: grip, Actions: actions, Start: start, End: end);
+                return (Window: window, Host: host, Row: row, Grip: grip, Start: start, End: end);
             });
             try
             {
@@ -87,7 +89,17 @@ public sealed class BoardsBlockActionsTests
                 TestUiThread.Run(() =>
                 {
                     Assert.False(fixture.Grip.IsPressed);
-                    Assert.Equal(gesture == "click", fixture.Actions.IsEffectivelyVisible);
+                    var revealed = fixture.Row.GetVisualDescendants().OfType<Button>()
+                        .SingleOrDefault(button => button.Name == "BlockDuplicate");
+                    if (gesture == "click")
+                    {
+                        // A click must open the authored menu on the same block target.
+                        Assert.NotNull(revealed);
+                        Assert.True(revealed!.IsEffectivelyVisible);
+                    }
+                    else
+                        // Drag, Escape-return and stale-ticket gestures must never open the menu.
+                        Assert.True(revealed is null || !revealed.IsEffectivelyVisible);
                     Assert.DoesNotContain(fixture.Host.Children.OfType<Border>(), row => row.BorderThickness.Top == 3);
                     Assert.Null(fixture.Row.RenderTransform);
                     Assert.Equal(gesture == "move" && !freePlacement ? new[] { "block-b", "block-c", "block-a" } :

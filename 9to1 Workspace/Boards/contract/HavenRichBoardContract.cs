@@ -973,11 +973,36 @@ public static partial class HavenRichNotesOps
             ?? throw new KeyNotFoundException("Rich board page was not found.");
         var target = RequireSection(notes, targetSectionId);
         var page = source.Pages.Single(p => p.Id == pageId);
-        source.Pages.Remove(page);
-        target.Pages.Insert(Math.Clamp(targetIndex, 0, target.Pages.Count), page);
+        // UX27-BOARD-001/002 and the tree contract: a page travels with its whole nested
+        // subtree. Leaving children behind would make them unreachable, because navigation
+        // only renders a page that is a section root or a child inside its own section.
+        var subtree = CollectSubtree(source.Pages, pageId);
+        if (page.ParentPageId is { Length: > 0 } parent && subtree.All(item => item.Id != parent))
+            page.ParentPageId = null;
+        foreach (var item in subtree)
+            source.Pages.Remove(item);
+        target.Pages.Insert(Math.Clamp(targetIndex, 0, target.Pages.Count), subtree[0]);
+        for (var extra = 1; extra < subtree.Count; extra++)
+            target.Pages.Insert(Math.Min(targetIndex + extra, target.Pages.Count), subtree[extra]);
         NormalizePages(source);
         if (!ReferenceEquals(source, target)) NormalizePages(target);
         Touch(notes);
+    }
+
+    /// <summary>The page plus every transitive child, kept in the stored list order so the
+    /// subtree's internal order survives the move.</summary>
+    private static List<HavenRichPage> CollectSubtree(List<HavenRichPage> pages, string pageId)
+    {
+        var subtree = new List<HavenRichPage> { pages.Single(page => page.Id == pageId) };
+        var settled = 0;
+        while (settled < subtree.Count)
+        {
+            var owner = subtree[settled++].Id;
+            foreach (var child in pages)
+                if (string.Equals(child.ParentPageId, owner, StringComparison.Ordinal) && !subtree.Contains(child))
+                    subtree.Add(child);
+        }
+        return subtree;
     }
 
     public static HavenRichBlock AddBlock(HavenRichNotes notes, string pageId, HavenRichBlockKind kind, string? text = null)

@@ -164,9 +164,22 @@ public sealed class RichBoardSession : IAsyncDisposable
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            PushHistory();
-            mutation(Rich);
-            HavenRichNotesValidator.Validate(Rich);
+            // A refused mutation must not consume or pollute an undo step and must not leave a
+            // partially applied tree behind: capture the head first, and only record history
+            // once the mutation and validation have both succeeded.
+            var before = SerializeRich();
+            try
+            {
+                mutation(Rich);
+                HavenRichNotesValidator.Validate(Rich);
+            }
+            catch
+            {
+                // Roll the head back exactly; the refused attempt must not be observable.
+                ApplyRich(before, validate: false);
+                throw;
+            }
+            PushHistory(before);
             HasUnsavedChanges = true;
             UpdateStatus("Editing…", hasUnsavedChanges: true);
             if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
@@ -191,9 +204,18 @@ public sealed class RichBoardSession : IAsyncDisposable
         try
         {
             if (!condition(Rich)) return false;
-            PushHistory();
-            mutation(Rich);
-            HavenRichNotesValidator.Validate(Rich);
+            var before = SerializeRich();
+            try
+            {
+                mutation(Rich);
+                HavenRichNotesValidator.Validate(Rich);
+            }
+            catch
+            {
+                ApplyRich(before, validate: false);
+                throw;
+            }
+            PushHistory(before);
             HasUnsavedChanges = true;
             UpdateStatus("Editing…", hasUnsavedChanges: true);
             if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
@@ -286,9 +308,14 @@ public sealed class RichBoardSession : IAsyncDisposable
 
     private void PushHistory()
     {
+        PushHistory(SerializeRich());
+    }
+
+    private void PushHistory(string previousHead)
+    {
         lock (_undo)
         {
-            _undo.Push(SerializeRich());
+            _undo.Push(previousHead);
             while (_undo.Count > MaxHistoryEntries) TrimStack(_undo);
         }
         lock (_redo) _redo.Clear();
@@ -297,11 +324,15 @@ public sealed class RichBoardSession : IAsyncDisposable
     private string SerializeRich() =>
         JsonSerializer.Serialize(Rich, HistoryJson);
 
-    private void RestoreRich(string json)
+    private void RestoreRich(string json) => ApplyRich(json, validate: true);
+
+    /// <summary>Installs a serialized head. A rollback re-installs the exact previous head and
+    /// therefore must not re-run validation over a document that was already current.</summary>
+    private void ApplyRich(string json, bool validate)
     {
         var restored = JsonSerializer.Deserialize<HavenRichNotes>(json, HistoryJson)
             ?? throw new InvalidDataException("Undo history entry could not be restored.");
-        HavenRichNotesValidator.Validate(restored);
+        if (validate) HavenRichNotesValidator.Validate(restored);
         Document = Document with { RichNotes = restored };
     }
 
@@ -350,7 +381,15 @@ public sealed class RichBoardSession : IAsyncDisposable
         try
         {
             if (_externalSave is not null && !HasUnsavedChanges) return;
+            UpdateStatus("Saving…", hasUnsavedChanges: true);
             await SaveCoreAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            // IRichBoardSession promises a real failure state: the live edits and the last
+            // durable revision both survive, and the label never claims a completed save.
+            UpdateStatus("Save failed: " + FirstLine(error.Message), hasUnsavedChanges: HasUnsavedChanges);
+            throw;
         }
         finally
         {
@@ -370,7 +409,13 @@ public sealed class RichBoardSession : IAsyncDisposable
         {
             // A rejected/canceled Save As must leave normal Save and close pointed
             // at the last acknowledged file, rather than the attempted target.
+            UpdateStatus("Saving…", hasUnsavedChanges: true);
             await SaveCoreAsync(cancellationToken, Path.GetFullPath(path)).ConfigureAwait(false);
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            UpdateStatus("Save failed: " + FirstLine(error.Message), hasUnsavedChanges: HasUnsavedChanges);
+            throw;
         }
         finally
         {
