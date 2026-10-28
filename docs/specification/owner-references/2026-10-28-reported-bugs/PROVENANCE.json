@@ -1,0 +1,17 @@
+{
+  "schema": "9to1.owner-request/v1",
+  "date": "2026-10-28",
+  "request": "Fixreportedbugsfirst,thenworkthroughasmuchexpandedV2specaspossible;allchangesonmain;onlymainbranch;stopat5percentremainingusage",
+  "bug_register": {
+    "file": "9to1-full-reported-bug-list-2026-10-27.md",
+    "sha256": "db6f3a56ceda00c9b7f7642ff0be64f0c38871c6efde0dcf8e0e99f14d6368bd"
+  },
+  "expanded_spec": {
+    "path": "docs/specification/owner-references/2026-10-27-expanded-spec/9to1_Development_Specification_v2_Expanded_2026-10-27.md",
+    "sha256": "8dfe5908b6a92cfbe6ee42e01c4b4902fb7c657aaa33d9662219568994b1cb9e",
+    "matches_new_user_attachment": true
+  },
+  "acceptance": "Existingfullindependentacceptancepausepreserved;normalcompilation,focusedtests,nativeretestsrequired",
+  "branch_policy": "Onlymainfornewdevelopment;archiveexistinghistorybeforeretiringbranches;noalternateimplementationbranches",
+  "reported_items": 86
+}
