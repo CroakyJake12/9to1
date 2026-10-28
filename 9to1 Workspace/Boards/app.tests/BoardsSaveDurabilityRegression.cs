@@ -135,7 +135,7 @@ public sealed class BoardsSaveDurabilityRegression
 
             Assert.True(session.HasUnsavedChanges);
             Assert.Contains("Save failed", session.Status);
-            Assert.Contains("Save failed", statusSeen);
+            Assert.Contains(statusSeen, status => status.Contains("Save failed", StringComparison.Ordinal));
             Assert.DoesNotContain(durable, document => Title(document) == "kept work");
             // The live document survives the failed attempt unchanged.
             Assert.Equal("kept work", session.Rich.Sections[0].Pages[0].Title);

@@ -46,7 +46,12 @@ public sealed class BoardsEnterBehaviourTests
                 input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter,
                     KeyModifiers = shift ? KeyModifiers.Shift : KeyModifiers.None });
                 Assert.Single(page.Blocks);
-                Assert.Equal("alpha" + input.NewLine + "beta", page.Blocks[0].Text);
+                // Same requirement as before, with the control state reported so a failure
+                // identifies whether the break was lost in the input or in the document write.
+                var expected = "alpha" + input.NewLine + "beta";
+                Assert.True(page.Blocks[0].Text == expected,
+                    "document text was " + System.Text.Json.JsonSerializer.Serialize(page.Blocks[0].Text)
+                    + " while the control held " + System.Text.Json.JsonSerializer.Serialize(input.Text));
                 Assert.Equal("code", page.Blocks[0].StyleId);
                 Assert.Equal("code-block", page.Blocks[0].Id);
             }

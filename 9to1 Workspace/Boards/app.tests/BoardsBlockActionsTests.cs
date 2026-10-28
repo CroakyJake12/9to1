@@ -89,7 +89,9 @@ public sealed class BoardsBlockActionsTests
                 TestUiThread.Run(() =>
                 {
                     Assert.False(fixture.Grip.IsPressed);
-                    var revealed = fixture.Row.GetVisualDescendants().OfType<Button>()
+                    // The opened menu may be hosted in the surface's floating action layer rather
+                    // than inside the block row subtree, so the whole board window is searched.
+                    var revealed = fixture.Window.GetVisualDescendants().OfType<Button>()
                         .SingleOrDefault(button => button.Name == "BlockDuplicate");
                     if (gesture == "click")
                     {
