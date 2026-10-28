@@ -44,7 +44,13 @@ internal static class BlockGripCui
         return text;
     }
 
-    internal sealed class BlockGripContext : ICuiWritableBindingContext, ICuiActionDispatcher
+    // INotifyPropertyChanged is load-bearing here, not decorative: the CUI loader refreshes
+    // authored bindings only when the binding context `is INotifyPropertyChanged`
+    // (CuiControlLoader.cs:262). Declaring only the bare event left every binding in this
+    // document frozen at its load-time value, so the grip's `Active="{Binding IsExpanded}"`
+    // action row could never appear: the click reached ToggleActions and IsExpanded became
+    // true, with no subscriber to act on it (measured 28 October).
+    internal sealed class BlockGripContext : INotifyPropertyChanged, ICuiWritableBindingContext, ICuiActionDispatcher
     {
         private readonly BoardsViewModel _viewModel;
         private readonly string _pageId;
