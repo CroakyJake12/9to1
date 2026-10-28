@@ -77,6 +77,43 @@ public static class BoardsCuiIconResolver
                 CutoutRect(15.9, 3, 0.9, 3.5), CutoutRect(7, 12, 1.2, 1.2),
                 CutoutRect(11.4, 12, 1.2, 1.2), CutoutRect(15.8, 12, 1.2, 1.2),
                 CutoutRect(7, 15, 1.2, 1.2), CutoutRect(11.4, 15, 1.2, 1.2)),
+            // The rest of the picker's choices are authored in the same filled-silhouette family as
+            // the three above, for two measured reasons. (1) Owner requirement: section marks use
+            // filled, rounded SVG shapes, and the section contract is fill PLUS outline - every
+            // choice must render a GeometryDrawing with both a Brush and a Pen. Falling through to
+            // the shared catalogue left marks whose figures are all closed filled with no outline
+            // (Boards_icon_resolver_fills_only_authored_closed_silhouettes failed exactly there).
+            // (2) The same CreateSectionIcon result is what the picker previews AND the navigation
+            // mark render (NavBuilder and the icon observer both call it), so a mixed path would
+            // show the user one mark in the picker and a different weight of mark on the board.
+            // Each mark below is one visible silhouette with cut-out detail, drawn on the 24x24
+            // grid the generated-icon contract validates.
+            "folder" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(3, 7, 18, 12.5, 2),
+                new HavenRichSectionIconPolygon([new(3, 5), new(9, 5), new(11.2, 7.4), new(3, 7.4)]),
+                CutoutRect(3.6, 10.4, 16.8, 0.9)),
+            "chat" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(3, 4, 18, 13, 3),
+                new HavenRichSectionIconPolygon([new(7, 16.4), new(7, 21.2), new(12.4, 16.4)]),
+                CutoutRect(6, 7.2, 12, 1), CutoutRect(6, 10.2, 12, 1), CutoutRect(6, 13.2, 7, 1)),
+            "study" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(4, 4, 16, 16, 2),
+                CutoutRect(11.5, 4.6, 1, 14.8), CutoutRect(6.5, 7.6, 3.4, 0.9),
+                CutoutRect(14.1, 7.6, 3.4, 0.9), CutoutRect(6.5, 10.6, 3.4, 0.9),
+                CutoutRect(14.1, 10.6, 3.4, 0.9)),
+            "target" => SectionGeometry(
+                new HavenRichSectionIconCircle(12, 12, 8.6),
+                CutoutRect(11.4, 4.2, 1.2, 15.6), CutoutRect(4.2, 11.4, 15.6, 1.2)),
+            "bookmark" => SectionGeometry(
+                new HavenRichSectionIconPolygon([new(6, 3), new(18, 3), new(18, 21), new(12, 16.4), new(6, 21)]),
+                CutoutRect(8.6, 5.6, 6.8, 0.9)),
+            "shield" => SectionGeometry(
+                new HavenRichSectionIconPolygon([new(12, 3), new(19.6, 6), new(19.6, 11.8), new(12, 21),
+                    new(4.4, 11.8), new(4.4, 6)]),
+                CutoutRect(11.3, 6.6, 1.4, 10.4), CutoutRect(6.8, 11.1, 10.4, 1.4)),
+            "play" => SectionGeometry(
+                new HavenRichSectionIconRoundRect(3, 3, 18, 18, 4),
+                new HavenRichSectionIconPolygon([new(9.2, 7.2), new(9.2, 16.8), new(16.4, 12)], IsCutout: true)),
             _ => null,
         };
         if (geometry is null) return CreateIcon(key, brush);

@@ -629,8 +629,12 @@ public sealed class BoardsEditorTests
         Assert.True(iconChoices.Properties.TryGetValue("Panel", out var iconChoicesPanel)
             && iconChoicesPanel is CuiLiteralValue { Value: "Wrap" });
         var iconColors = components.Single(component => component.Name == "SectionIconColors");
-        Assert.True(iconColors.Properties.TryGetValue("Source", out var iconColorsSource)
-            && iconColorsSource is CuiBindingValue { Path: "SectionIconPickerColors" });
+        // Measured against the parser: a Repeat's Source is carried on component.Repeat.Source and is
+        // deliberately not duplicated into Properties (probe: props=[Panel] for all three Boards
+        // repeats), which is how the sibling assertions above read it too. Asserting Properties
+        // ["Source"] here asked for a shape the authored surface never produces, so it failed even
+        // though Boards.cui binds the swatches to SectionIconPickerColors exactly as required.
+        Assert.True(iconColors.Repeat is { Source: CuiBindingValue { Path: "SectionIconPickerColors" } });
         var suggestion = components.Single(component => component.Name == "SuggestSectionIconButton");
         Assert.True(suggestion.TryGetLiteralAttribute("action", out var suggestionAction)
             && suggestionAction == "SuggestSectionIcon");
@@ -906,7 +910,15 @@ public sealed class BoardsEditorTests
         Assert.Equal(3, Assert.IsAssignableFrom<IReadOnlyList<BoardsGeneratedSectionIconPreviewView>>(
             vm.Get("GeneratedSectionIconPreviews")).Count);
 
-        var apply = TestUiThread.Run(() => vm.DispatchAsync("ApplyGeneratedSectionIcon", "1")).AsTask();
+        // The apply action is fenced by the picker epoch and the surface dispatches the handle its
+        // own preview views carry - Boards.cui binds parameter="{Binding generated.Index}", and
+        // CreateGeneratedPreviewViews builds that as "<epoch>:<optionIndex>". The fixture passed a
+        // bare "1", which is not a handle this surface ever produces, so the epoch guard was
+        // refusing a value no real click could send and the check proved nothing about applying.
+        var options = TestUiThread.Run(() => Assert.IsAssignableFrom<IReadOnlyList<BoardsGeneratedSectionIconPreviewView>>(
+            vm.Get("GeneratedSectionIconPreviews")));
+        Assert.Equal(3, options.Count);
+        var apply = TestUiThread.Run(() => vm.DispatchAsync("ApplyGeneratedSectionIcon", options[1].Index)).AsTask();
         PumpOnUi(apply);
         await apply;
         Assert.Equal(HavenRichSectionIcons.Generated, section.IconKey);

@@ -21,7 +21,12 @@ public sealed class BoardsTabberTests
             {
                 parentPage = board.Document.Sections[0].Pages[0].Id;
                 blockID = await board.AddTabberAsync(parentPage, null);
-                var tabs = board.Document.Sections[0].Pages[0].Blocks.Single().Tabber!;
+                // Measured here rather than assumed: a fresh page already carries one paragraph
+                // block before the tabber is added (probe output: blocks=[block-…:paragraph] before,
+                // [block-…:paragraph, block-…:tabber] after), so the tabber block has to be selected
+                // by what it is. The bare Blocks.Single() here assumed an empty page and threw
+                // "Sequence contains more than one element" before reaching any tabber behaviour.
+                var tabs = board.Document.Sections[0].Pages[0].Blocks.Single(block => block.Tabber is not null).Tabber!;
                 firstPage = tabs.Panes[0].PageId;
                 var child = new BoardsViewModel(board);
                 Assert.True(child.SelectPageById(firstPage));
@@ -30,7 +35,9 @@ public sealed class BoardsTabberTests
                 await board.SaveAsync();
                 await board.ChangeTabberAsync(parentPage, blockID, "rename", tabs.Panes[0].Id, "Notes");
                 await board.ChangeTabberAsync(parentPage, blockID, "add");
-                tabs = board.Document.Sections[0].Pages[0].Blocks.Single().Tabber!;
+                // Same selection rule as above: the parent page keeps its own paragraph block next to
+                // the tabber, so identify the tabber block by its Tabber projection.
+                tabs = board.Document.Sections[0].Pages[0].Blocks.Single(block => block.Tabber is not null).Tabber!;
                 var second = tabs.Panes[1];
                 Assert.Equal("Notes", tabs.Panes[0].Title);
                 await board.ChangeTabberAsync(parentPage, blockID, "remove", second.Id);
@@ -50,7 +57,8 @@ public sealed class BoardsTabberTests
             Assert.Equal(blockID, panePage.TabberOwnerBlockId);
             Assert.Equal(firstBlock, panePage.Blocks.Single().Id);
             Assert.Equal("Ordinary content inside tab one", panePage.Blocks.Single().Text);
-            Assert.Equal("Notes", reopened.Document.Sections[0].Pages.Single(page => page.Id == parentPage).Blocks.Single().Tabber!.Panes[0].Title);
+            Assert.Equal("Notes", reopened.Document.Sections[0].Pages.Single(page => page.Id == parentPage)
+                .Blocks.Single(block => block.Tabber is not null).Tabber!.Panes[0].Title);
         }
         finally { Directory.Delete(root, true); }
     }
