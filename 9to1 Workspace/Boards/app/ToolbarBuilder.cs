@@ -400,7 +400,11 @@ public static class ToolbarBuilder
     {
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         SetQuietToolbarControl(button, selected: false, "Boards toolbar insert action");
-        var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
+        var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom, IsLightDismissEnabled = true };
+        // A manually owned Popup needs the trigger's logical theme ancestry.
+        button.AttachedToVisualTree += (_, _) => ((ISetLogicalParent)popup).SetParent(button);
+        button.DetachedFromVisualTree += (_, _) => { popup.Close(); ((ISetLogicalParent)popup).SetParent(null); };
+        CuiPopupPresentation.RequestTransparency(popup);
         var panel = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), MinWidth = 300, MaxWidth = 420,
             Height = 384, MaxHeight = 384 };
         var search = new TextBox { PlaceholderText = "Search blocks and styles…", Height = 36, MinHeight = 36,
