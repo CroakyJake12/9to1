@@ -102,6 +102,29 @@
       ],
       "affected_change": "The entire Spaces/Chat/Dulche-relay surface in that branch.",
       "evidence": "work/pc-worker/BOARDS-CLOSE-REFUSES-2026-10-27.md (convergence queue section)"
+    },
+    {
+      "id": "OPEN-2026-10-28-LOCAL-STORAGE-SCOPES",
+      "queued_at": "2026-10-28T20:25:00+01:00",
+      "owner": "owner (local OpenCode PC session, 28 October 2026)",
+      "summary": "Owner states the intended local storage model: 9to1 should create a 9to1Data folder split per app automatically, without a manual directory choice; Files should offer 9to1 Data / this device / the cloud as directories; content is assigned to the relevant path unless the user explicitly saves elsewhere.",
+      "requirement": "Verbatim owner words: 'I think the intended behaviour should be that 9to1 automatically creates a \"9to1Data\" folder split into boards, etc, locally without the user having to manually select a directory. then in files you can choose between 9to1 Data, this device, and the cloud as directories. and then stuff is assigned to the relevant path unless you explicitly choose to save elsewhere' and 'right now files forces the user to select a directory manually first, then creates a bunch of folders but doesn't actually use them'.",
+      "state": "open",
+      "blocker": "Parts of this conflict with requirements and pinned tests that make an explicit folder confirmation mandatory for device stores: Folder_selection_requires_explicit_confirmation_and_revalidates_the_same_current_Home_link, First_use_cancel_and_nonempty_refusal_preserve_state_then_explicit_empty_choice_opens_real_Files, Wrong_profile_and_unconfigured_typed_store_do_not_offer_setup_or_create_a_different_store (all in the boards-creation stage filter over Haven.Desktop.Tests). Auto-creating a user-visible folder and defaulting saves into it changes where user data is written, touches consent/security posture and existing profiles, and spans Files, Home and every app - so it is not something to rewire unilaterally inside one app worker's sitting.",
+      "measured_current_state": [
+        "Files setup already materialises a device workspace: /home/jacob/9to1 with subfolders Boards, Canvas, Games, Media, Picture, Present, Sites, Write, plus a hidden .9to1-files metadata folder (drive.json, bindings.json).",
+        "Home records it: Home/state.json type 'files.native-workspace' with RootDirectory /home/jacob/9to1 and AppFolders for boards/write/present/canvas/picture/media/sites/games.",
+        "Boards does NOT consume it: BoardsBrowseAppContentFactory builds BoardsLocalDocuments over IAppPaths.DataDirectory/Boards, so real drafts live at ~/.local/share/9to1-development/profile/Boards/profiles/<sha256(profileId)>/drafts/<document-guid>.9to1board (GUID filenames, invisible to a normal file browser), and destinations.json is {} - no explicit Save As destination has ever been chosen on this profile.",
+        "The visible workspace folder therefore looks empty: /home/jacob/9to1/Boards contains only hidden .9to1-board-<hex>.content artefacts from another owner, not the boards the user wrote."
+      ],
+      "implemented_already": "Disclosure only, which cannot move anyone's data: BoardsLocalDocuments.DraftDirectory is exposed and the Boards splash now renders 'Boards are kept in <the real folder>' - commit 7eab4032, covered by BoardsLandingRegressionTests.",
+      "options": [
+        "Auto-create a user-visible data root (owner's name: 9to1Data) on first run as the default device scope, and keep the explicit picker only for choosing a NON-default device folder.",
+        "Keep the consent step, but make each app's default destination the Home-workspace app folder that already exists (~/9to1/Boards), named by board title, with the private draft retained as recovery - no new consent prompt, and the created folders finally used.",
+        "Give Files three first-class scopes (9to1 Data / this device / cloud) and treat the manual picker as an action inside 'this device' only."
+      ],
+      "affected_change": "Files workspace setup and its consent tests, Home's native-workspace record and how apps consume AppFolders, Boards' default destination and filename rule, and every app that saves artefacts (Write/Present/Canvas/Sites/Media/Picture/Games).",
+      "evidence": "9to1/.handoff/boards-first-v3/work/STATUS.md (28 October storage section); 9to1 Workspace/Files/NativeHost/NativeFilesWorkspaceService.cs (the record Boards ignores); 9to1 Workspace/Boards/app/BoardsLocalDocuments.cs; 9to1 Workspace/shared/src/Haven.Desktop/Services/BoardsBrowseAppContentFactory.cs:104"
     }
   ]
 }

@@ -1,0 +1,40 @@
+{
+  "applied_in_this_session": [
+    "Storage location disclosure on the Boards splash (commit 7eab4032): the surface now names the real drafts folder and points at Save As for writing elsewhere."
+  ],
+  "authority": "Owner decision elaborating intended product behaviour. The canonical v2 specification (e1779d22...) remains the product authority; this records owner intent for the local storage model and is queued as a correction, not yet applied.",
+  "date": "2026-10-28",
+  "held_for_owner_decision": [
+    "Auto-creating a 9to1Data root as the default device scope.",
+    "Making apps default their saved artefacts into the Home-owned workspace app folders.",
+    "Files' 9to1 Data / this device / cloud scope chooser.",
+    "Reason: these change where user data is written and collide with pinned consent requirements; queued as OPEN-2026-10-28-LOCAL-STORAGE-SCOPES in docs/specification/open-decisions.json."
+  ],
+  "instruction_verbatim": [
+    "files shows folders for \"boards\" etc. I think the intended behaviour should be that 9to1 automatically creates a \"9to1Data\" folder split into boards, etc, locally without the user having to manually select a directory. then in files you can choose between 9to1 Data, this device, and the cloud as directories. and then stuff is assigned to the relevant path unless you explicitly choose to save elsewhere",
+    "right now files forces the user to select a directory manually first, then creates a bunch of folders but doesn't actually use them",
+    "where are boards being saved? it says \"saved locally\" but gives no location; boards folder is empty"
+  ],
+  "observed_facts": {
+    "boards_destinations_file": "{} (no explicit Save As destination chosen)",
+    "boards_drafts_actual_location": "~/.local/share/9to1-development/profile/Boards/profiles/<sha256(profileId)>/drafts/<document-guid>.9to1board",
+    "home_record_fields": {
+      "AppFolders": "boards, write, present, canvas, picture, media, sites, games",
+      "RootDirectory": "/home/jacob/9to1"
+    },
+    "home_record_type": "files.native-workspace",
+    "visible_folder_contents": "only hidden .9to1-board-<hex>.content artefacts, so it reads as empty",
+    "workspace_root_created_by_files": "/home/jacob/9to1",
+    "workspace_subfolders": [
+      "Boards",
+      "Canvas",
+      "Games",
+      "Media",
+      "Picture",
+      "Present",
+      "Sites",
+      "Write"
+    ]
+  },
+  "source": "owner chat message in the local OpenCode PC session, 28 October 2026 ~19:50"
+}
