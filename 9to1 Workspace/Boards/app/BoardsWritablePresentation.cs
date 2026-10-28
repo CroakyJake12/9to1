@@ -250,6 +250,71 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Presents the Boards splash with NO board behind it. Until now the generic Boards link always
+    /// resolved a document first (BoardsLocalDocuments.LatestOrCreateAsync), so reloading that link
+    /// reopened an unrelated recent board - or silently created a brand-new empty one - and left its
+    /// name and page list on screen beside the splash (owner reports, 28 October). The splash gets a
+    /// read-only, store-less placeholder document instead: nothing is opened, nothing is created,
+    /// nothing is recorded as recent, and nothing can be saved by accident, while the same board
+    /// actions (open a card, open a recent page, New board, Open from file) hand back a real document
+    /// identity when the user actually chooses one.
+    /// </summary>
+    public static async Task<BoardsWritablePresentation> OpenLandingAsync(BoardsLocalDocuments documents,
+        Func<Guid, CancellationToken, Task> open, CancellationToken token = default,
+        IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null, CancellationToken lifetimeToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(documents);
+        ArgumentNullException.ThrowIfNull(open);
+        var placeholder = HavenBoardDocumentCodec.CreateNew("Boards");
+        var session = await ContractSessionAdapter.OpenSplashPlaceholderAsync(placeholder).ConfigureAwait(false);
+        var parsed = await session.GetDetachedContractDocumentAsync(token).ConfigureAwait(false);
+        var host = await CreatePresentationAsync(parsed, "landing:boards-home",
+            parsed.RichNotes!.Version.ToString(), session, token, embeddedArtifactHost, false, null, null)
+            .ConfigureAwait(false);
+        var runtimeToken = lifetimeToken.CanBeCanceled ? lifetimeToken : token;
+        try
+        {
+            await Dispatcher.UIThread.InvokeAsync<Task>(async () =>
+            {
+                var vm = host.ViewModel;
+                vm.SetNoBoardOpen();
+                vm.SetLanding(true);
+                vm.Set("BoardTitle", string.Empty);
+                vm.Set("SaveStateText", string.Empty);
+                vm.Set("StatusText", "Choose a board, or create one.");
+                vm.CreateBoardAsync = async ct =>
+                {
+                    using var action = CancellationTokenSource.CreateLinkedTokenSource(ct, runtimeToken);
+                    await open(await documents.CreateAsync(token: action.Token), action.Token);
+                };
+                vm.OpenBoardPathAsync = async (path, _) => await open(documents.IdFor(path), runtimeToken);
+                vm.OpenBoardAsync = async () =>
+                {
+                    var top = TopLevel.GetTopLevel(host.Content) ?? throw new InvalidOperationException("The board window is unavailable.");
+                    var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                    { Title = "Open board", AllowMultiple = false,
+                      FileTypeFilter = [new FilePickerFileType("9to1 Boards") { Patterns = ["*.9to1board"] }] });
+                    if (files.Count == 0) return;
+                    var path = files[0].TryGetLocalPath() ?? throw new NotSupportedException("This location does not provide a readable local file.");
+                    await open(await documents.ImportAsync(path, runtimeToken), runtimeToken);
+                };
+                vm.SetLandingData(await documents.Recent.LoadCardsAsync(documents.Store, token),
+                    await documents.Recent.LoadRecentPagesAsync(documents.Store, token));
+                vm.Set("BoardStorageNotice", StorageNotice(documents));
+            }).GetTask().Unwrap().ConfigureAwait(false);
+            return host;
+        }
+        catch { await host.DisposeAsync().ConfigureAwait(false); throw; }
+    }
+
+    /// <summary>Names the folder the boards are actually in. "Saved locally" without a location
+    /// sent the owner looking at an apparently empty Boards folder, so the surface now says where
+    /// the drafts live and how to write a copy somewhere else on purpose.</summary>
+    private static string StorageNotice(BoardsLocalDocuments documents) =>
+        "Boards are kept in " + documents.DraftDirectory +
+        " — use Save As to write a .9to1board copy somewhere else.";
+
     public static async Task<BoardsWritablePresentation> OpenLocalDocumentAsync(BoardsLocalDocuments documents,
         Guid documentId, Func<Guid, CancellationToken, Task> open, bool landing = false,
         CancellationToken token = default, IBoardsEmbeddedArtifactHost? embeddedArtifactHost = null,
@@ -294,6 +359,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             };
             vm.SetLandingData(await documents.Recent.LoadCardsAsync(documents.Store, token),
                 await documents.Recent.LoadRecentPagesAsync(documents.Store, token));
+            vm.Set("BoardStorageNotice", StorageNotice(documents));
         }).GetTask().Unwrap().ConfigureAwait(false);
         return host;
         }

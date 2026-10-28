@@ -105,6 +105,19 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         return Task.FromResult(adapter);
     }
 
+    /// <summary>Opens the Boards splash placeholder: a detached document with no file and no store
+    /// behind it, whose only save path is an honest refusal. Board switching deliberately stays
+    /// enabled, because choosing which board to open IS the splash's job.</summary>
+    public static Task<ContractSessionAdapter> OpenSplashPlaceholderAsync(HavenBoardDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        var adapter = new ContractSessionAdapter(null, RichBoardSession.OpenExternallyWritable(document,
+            (_, _) => ValueTask.FromException<bool>(
+                new InvalidOperationException("No board is open to save. Choose a board or create one."))));
+        adapter.RefreshView();
+        return Task.FromResult(adapter);
+    }
+
     /// <summary>Creates and durably saves a new board at a distinct local path.</summary>
     public static async Task<ContractSessionAdapter> CreateNewAtPathAsync(
         JsonFileHavenBoardStore store, string path, CancellationToken cancellationToken = default)

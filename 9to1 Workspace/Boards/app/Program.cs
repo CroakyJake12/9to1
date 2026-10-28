@@ -128,11 +128,23 @@ internal sealed class BoardsApp : Application
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "9to1", "Boards", "recent-board-paths.json"),
                 ContractSessionAdapter.DefaultBoardPath()).GetAwaiter().GetResult()
             : Array.Empty<string>();
-        var id = Program.OpenPath is null
-            ? _localDocuments.LatestOrCreateAsync().GetAwaiter().GetResult()
-            : _localDocuments.ImportAsync(Program.OpenPath).GetAwaiter().GetResult();
-        _session = _localDocuments.OpenAsync(id).GetAwaiter().GetResult();
+        if (Program.OpenPath is not null)
+        {
+            var id = _localDocuments.ImportAsync(Program.OpenPath).GetAwaiter().GetResult();
+            _session = _localDocuments.OpenAsync(id).GetAwaiter().GetResult();
+        }
+        else
+        {
+            // Starting the Boards app without a named board is the splash, not a board. The old
+            // path resolved LatestOrCreateAsync, which reopened some other recent board - or
+            // silently created an empty one every time none existed - and left that board's name
+            // and page list on screen beside the splash. The placeholder session is store-less, so
+            // nothing is written and nothing is recorded as recent until a board is chosen.
+            _session = ContractSessionAdapter.OpenSplashPlaceholderAsync(
+                HavenBoardDocumentCodec.CreateNew("Boards")).GetAwaiter().GetResult();
+        }
         _viewModel = new BoardsViewModel(_session, databaseSource: _databaseSource);
+        if (Program.OpenPath is null) _viewModel.SetNoBoardOpen();
         RecordCurrentPage();
         _viewModel.SetLanding(Program.OpenPath is null);
         if (legacyFailures.Count > 0)
@@ -287,7 +299,10 @@ internal sealed class BoardsApp : Application
         }
         _closeSaveOwner ??= new BoardsCloseSaveOwner(() => _session
             ?? throw new InvalidOperationException("The Boards session is unavailable."));
-        try { await _closeSaveOwner.SaveBeforeCloseAsync(); }
+        // A splash with no board open has nothing to persist: its placeholder session is store-less
+        // by design, so attempting to save it would report a false failure when the window closes.
+        var splashWithoutBoard = _viewModel is not null && !_viewModel.HasOpenBoard;
+        try { if (!splashWithoutBoard) await _closeSaveOwner.SaveBeforeCloseAsync(); }
         catch (Exception error)
         {
             if (databasePreparation is not null) await databasePreparation.AbortAsync();

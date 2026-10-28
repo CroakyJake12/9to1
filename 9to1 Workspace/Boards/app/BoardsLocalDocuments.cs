@@ -16,6 +16,10 @@ public sealed class BoardsLocalDocuments : IDisposable
     public JsonFileHavenBoardStore Store { get; }
     public RecentBoardCatalog Recent { get; }
 
+    /// <summary>The folder this profile's board drafts really live in. Exposed so the surface can
+    /// name the location instead of only reporting "Saved locally".</summary>
+    public string DraftDirectory => _directory;
+
     public BoardsLocalDocuments(string profileId, string dataRoot)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(profileId);

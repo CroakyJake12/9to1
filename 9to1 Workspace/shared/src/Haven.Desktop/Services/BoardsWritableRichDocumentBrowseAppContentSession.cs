@@ -174,15 +174,29 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     private async Task InitializeLocalAsync(CancellationToken token)
     {
         var documents = _localDocuments!;
-        _localDocumentId = _address.DocumentId ?? await documents.LatestOrCreateAsync(token).ConfigureAwait(false);
-        var presentation = await BoardsWritablePresentation.OpenLocalDocumentAsync(documents, _localDocumentId,
-            _openLocalDocument!, landing: !_address.IsLocalDocument, token: token, embeddedArtifactHost: _embeddedHost, lifetimeToken: _lifetime.Token).ConfigureAwait(false);
+        // A generic Boards link names no document, so it must land on the splash itself: no board
+        // reopened behind it (the old LatestOrCreateAsync picked the most recent board, or created a
+        // brand-new empty one on every reload) and no board title in the tab.
+        var splashOnly = _address.DocumentId is null && !_address.IsLocalDocument;
+        BoardsWritablePresentation presentation;
+        if (splashOnly)
+        {
+            presentation = await BoardsWritablePresentation.OpenLandingAsync(documents,
+                (id, ct) => _openLocalDocument!(id, ct), token, _embeddedHost, _lifetime.Token).ConfigureAwait(false);
+        }
+        else
+        {
+            _localDocumentId = _address.DocumentId ?? await documents.LatestOrCreateAsync(token).ConfigureAwait(false);
+            presentation = await BoardsWritablePresentation.OpenLocalDocumentAsync(documents, _localDocumentId,
+                _openLocalDocument!, landing: !_address.IsLocalDocument, token: token,
+                embeddedArtifactHost: _embeddedHost, lifetimeToken: _lifetime.Token).ConfigureAwait(false);
+        }
         try
         {
             var dispatch = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 token.ThrowIfCancellationRequested();
-                _title = FormatTitle(presentation.ViewModel.Get("BoardTitle")?.ToString());
+                _title = splashOnly ? "Boards" : FormatTitle(presentation.ViewModel.Get("BoardTitle")?.ToString());
                 presentation.ViewModel.PropertyChanged += OnViewModelPropertyChanged;
                 _transientPresentation = new OriginalTabTransientPresentation();
                 _transientPresentation.BindOriginal(presentation.Content);

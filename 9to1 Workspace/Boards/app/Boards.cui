@@ -47,8 +47,11 @@
           </Container>
         </Container>
       </Container>
-      <!-- Left navigation: search, sections/pages (built in code), add actions -->
-      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="Transparent" BorderWidth="0">
+      <!-- Left navigation: search, sections/pages (built in code), add actions.
+           Gated with the board surface: while the Boards splash is showing there is no current
+           board, so its title, save state and page list must not remain on screen (owner report
+           28 October: the sidebar kept showing the last board's name and pages on the splash). -->
+      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="Transparent" BorderWidth="0" Active="{Binding ShowEditor}">
         <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Current Board" />
@@ -218,6 +221,11 @@
       <Container Type="Vertical Stack" ID="LandingHost" Row="1" Column="1" Active="{Binding IsLanding}" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Padding="32 28" Background="Transparent" CellGap="12">
         <Text Text="Your boards" FontSize="30" FontWeight="Bold" />
         <Text Text="Open a saved workspace or create a new board." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <!-- Where the boards actually live. The status used to say only "Saved locally", which left
+             the owner searching an empty-looking Boards folder; the real path is named here and in
+             the board status, and Save As remains the explicit way to write elsewhere. -->
+        <Text ID="BoardStorageNotice" Text="{Binding BoardStorageNotice}" TextWrapping="Wrap"
+              FontSize="12" Foreground="{Resource CuiMutedBrush}" AccessibleName="Where boards are kept" />
         <Container Type="Wrap" CellGap="8">
           <Button ID="LandingCreateBoard" Content="Create a board" Action="NewBoard" Interactive="{Binding CanEdit}" AccessibleName="Create a new board" />
           <Button ID="LandingOpenBoard" Content="Open a board…" Action="OpenBoard" Interactive="{Binding CanEdit}" AccessibleName="Open an existing board" />

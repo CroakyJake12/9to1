@@ -331,6 +331,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool ShowNativeAuthoring => _isEditMode &&
         string.Equals(CurrentPage().PageType, HavenRichPageTypes.Native, StringComparison.Ordinal);
     public bool IsLanding => Get("IsLanding") as bool? ?? false;
+
+    /// <summary>False while the surface is a Boards splash with no board behind it. The splash used
+    /// to be shown on top of a board that the session had opened (or silently created) for the
+    /// user, which is why reloading the generic Boards link could land on an unrelated document and
+    /// keep that board's name and pages in the sidebar. Save, save-as, undo and redo are refused
+    /// honestly in this state instead of quietly writing to whatever scratch document backs the
+    /// splash.</summary>
+    public bool HasOpenBoard { get; private set; } = true;
+
+    /// <summary>Marks this surface as a splash with no board open. Only the landing presentation
+    /// calls it; showing or hiding the splash over a real board never changes it.</summary>
+    public void SetNoBoardOpen() => HasOpenBoard = false;
     public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
     public IReadOnlyList<RecentPageCard> RecentPageCards => _recentPageCards;
     public double InkZoom { get; set; } = 1;
@@ -423,6 +435,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 : _homeBoardCreationHost.CanRetryOpenCreatedBoard
                     ? "Board created, opening failed. Retry opens the same Board."
                     : "Unable to confirm whether this Board was saved. Creating another is disabled while Home checks.");
+            return;
+        }
+        if (!HasOpenBoard && command is ("SaveBoard" or "SaveAsBoard" or "Undo" or "Redo"))
+        {
+            // The splash is not a board. Reporting these as applied would be a lie about what the
+            // user just saved, so they are refused with the reason and the way forward.
+            Set("StatusText", "No board is open — choose a recent board or create one.");
             return;
         }
         if (command == "ToggleEditView")
