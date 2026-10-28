@@ -2114,6 +2114,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var page = section?.Pages.FirstOrDefault(p => p.Id == pageId);
         if (section is null || page is null)
             return;
+        SetLanding(false);
         CancelSectionIconSuggestion();
         InvalidateTableSelection();
         _selectedSectionId = section.Id;
