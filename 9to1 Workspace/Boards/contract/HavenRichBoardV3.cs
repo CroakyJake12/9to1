@@ -1407,7 +1407,9 @@ public static partial class HavenRichNotesOps
         return true;
     }
 
-    /// <summary>Eraser hit-test: removes strokes passing within <paramref name="radius"/> of a point.</summary>
+    /// <summary>Eraser hit-test: removes strokes passing within <paramref name="radius"/> of a point.
+    /// A stroke the user has explicitly selected is never removed by the point eraser; deleting a
+    /// selected stroke is the explicit command, so the selection state stays meaningful.</summary>
     public static int EraseInkAt(HavenRichNotes notes, string pageId, double x, double y, double radius = 8)
     {
         var page = RequirePage(notes, pageId);
@@ -1416,7 +1418,8 @@ public static partial class HavenRichNotesOps
         // Ink is stored as a sampled polyline. Testing only the stored sample points meant a
         // pen-drawn stroke could pass straight under the eraser: the pointer lands between two
         // samples and nothing is removed. Test the pointer against each stroke's actual path.
-        var removed = page.Ink.RemoveAll(stroke => StrokeHitsPoint(stroke, x, y, radius));
+        var removed = page.Ink.RemoveAll(stroke =>
+            !stroke.Selected && StrokeHitsPoint(stroke, x, y, radius));
         if (removed > 0) TouchNotes(notes);
         return removed;
     }
