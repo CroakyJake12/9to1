@@ -17,12 +17,14 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
         ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
     private readonly BrowseAppContentRequest _request;
+    private readonly BoardsBrowseAppContentAddress _address;
     private readonly CancellationTokenSource _lifetime;
     private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
     private readonly IBoardsHomeBoardCreationHost? _homeBoardCreationHost;
     private readonly IBoardsSectionIconGenerationHost? _sectionIconGenerationHost;
     private readonly object _gate = new();
     private NativeHomeFilesBoardWriteLease? _lease;
+    private readonly Func<CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? _restoreLease;
     private BoardsWritablePresentation? _presentation;
     private Task? _initialization, _close;
     private Task<IBrowseAppContentClosePreparation?>? _preparationTask;
@@ -41,6 +43,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     {
         _request = request ?? throw new ArgumentNullException(nameof(request));
         ArgumentNullException.ThrowIfNull(address);
+        _address = address;
         _lease = lease ?? throw new ArgumentNullException(nameof(lease));
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
         _embeddedHost = embeddedHost;
@@ -52,7 +55,21 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             throw new UnauthorizedAccessException("The prepared Home write lease does not match this canonical Boards address.");
     }
 
-    public AppContentAddress Address => _request.Address;
+    internal BoardsWritableRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
+        BoardsBrowseAppContentAddress address, Func<CancellationToken, Task<NativeHomeFilesBoardWriteLease>> restoreLease,
+        CancellationTokenSource lifetime, IBoardsEmbeddedArtifactHost? embeddedHost = null,
+        IBoardsHomeBoardCreationHost? homeBoardCreationHost = null,
+        IBoardsSectionIconGenerationHost? sectionIconGenerationHost = null)
+    {
+        _request = request; _address = address; _restoreLease = restoreLease;
+        _lifetime = lifetime; _embeddedHost = embeddedHost;
+        _homeBoardCreationHost = homeBoardCreationHost; _sectionIconGenerationHost = sectionIconGenerationHost;
+        if (!address.IsFilesDocument || address.ReadToken is not null || !address.Writable)
+            throw new UnauthorizedAccessException("A restored write requires a durable Files identity without a prepared capability.");
+    }
+
+    public AppContentAddress Address => _published && _lease is { } lease
+        ? _address.ForRestoration(lease.DocumentId, lease.RevisionId) : _request.Address;
     public string Title => _title;
     public string IconKey => "boards";
     public event EventHandler? StateChanged;
@@ -89,9 +106,18 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     {
         await start.ConfigureAwait(false);
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-        var lease = _lease ?? throw new InvalidOperationException("The original Home Files write lease is missing.");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _lifetime.Token);
         linked.Token.ThrowIfCancellationRequested();
+        if (_lease is null)
+            _lease = await (_restoreLease ?? throw new InvalidOperationException("The original Home Files write source is missing."))(linked.Token).ConfigureAwait(false);
+        var lease = _lease ?? throw new InvalidOperationException("The fresh Home Files write returned no lease.");
+        if (_address.RevisionId != lease.RevisionId)
+            throw new UnauthorizedAccessException("The saved Files board revision changed. Reopen its current revision from Home Library.");
+        if (!lease.IsOpen || _address.StoreId != lease.StoreId || _address.ParentFolderId != lease.ParentFolderId ||
+            _address.FileId != lease.FileId ||
+            _address.DocumentId is { } expectedDocument && expectedDocument != lease.DocumentId ||
+            !StringComparer.Ordinal.Equals(_request.ProfileId, lease.ProfileId))
+            throw new UnauthorizedAccessException("The freshly authorized Files board no longer matches the saved identity. Reopen it from Home Library.");
         await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(false);
         var bytes = lease.Bytes;
         var dispatch = Dispatcher.UIThread.InvokeAsync<Task>(async () =>
@@ -101,7 +127,7 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
             linked.Token.ThrowIfCancellationRequested();
             await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);
             var presentation = await BoardsWritablePresentation.OpenWritableDocumentAsync(
-                bytes, lease.SourceId, lease.RevisionId.ToString("D"), lease.SaveAsync, linked.Token, _embeddedHost,
+                bytes, lease.SourceId, lease.RevisionId.ToString("D"), SaveAndPublishRevisionAsync, linked.Token, _embeddedHost,
                 homeBoardCreationHost: _homeBoardCreationHost,
                 sectionIconGenerationHost: _sectionIconGenerationHost);
             try
@@ -122,6 +148,23 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         }).GetTask();
         var actual = await dispatch.ConfigureAwait(false);
         await actual.ConfigureAwait(false);
+    }
+
+    private async ValueTask<BoardsExternalSaveReceipt> SaveAndPublishRevisionAsync(string sourceId,
+        string expectedRevision, ReadOnlyMemory<byte> document, CancellationToken token)
+    {
+        var lease = _lease ?? throw new InvalidOperationException("The current Home Files write lease is missing.");
+        var result = await lease.SaveAsync(sourceId, expectedRevision, document, token).ConfigureAwait(false);
+        if (result.Committed && !_closing && _published)
+        {
+            var dispatch = Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!_closing && _published)
+                    CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+            }).GetTask();
+            await dispatch.ConfigureAwait(false);
+        }
+        return result;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs args)

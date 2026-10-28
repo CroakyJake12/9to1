@@ -396,6 +396,46 @@ public sealed class UnifiedWorkspaceSessionTests
     private static BrowserTabState Browser(string title) => new(
         Guid.NewGuid(), title, "https://example.org/", BrowserTabPrivacy.Standard,
         string.Empty, DateTimeOffset.UnixEpoch) { ProfileId = "profile" };
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Saved_Files_board_state_keeps_identity_but_never_prepared_capability(bool writable)
+    {
+        var token = Guid.NewGuid();
+        var prepared = writable
+            ? BoardsBrowseAppContentAddress.ForWritableFile(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), token)
+            : BoardsBrowseAppContentAddress.ForFile(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), token);
+        var tab = Browser("Saved board") with { Address = prepared.Value };
+        var stored = UnifiedWorkspaceTabState.Merge(null, tab);
+        Assert.DoesNotContain(token.ToString("D"), stored.StateJson, StringComparison.Ordinal);
+        Assert.True(UnifiedWorkspaceTabState.TryProject(stored, "profile", out var restored));
+        var durable = BoardsBrowseAppContentAddress.Parse(AppContentAddress.Parse(restored!.Address));
+        var original = BoardsBrowseAppContentAddress.Parse(prepared);
+        Assert.Null(durable.ReadToken);
+        Assert.Equal(original.FileId, durable.FileId);
+        Assert.Equal(original.ParentFolderId, durable.ParentFolderId);
+        Assert.Equal(original.RevisionId, durable.RevisionId);
+        Assert.Equal(writable, durable.Writable);
+        // A historical on-disk row with the old token is migrated on read as well.
+        var old = stored with { StateJson = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+        { ["9to1.AppContent"] = new { Version = 1, Address = prepared.Value, ProfileId = "profile" } }) };
+        Assert.True(UnifiedWorkspaceTabState.TryProject(old, "profile", out var migrated));
+        Assert.Equal(restored.Address, migrated!.Address);
+    }
+
+    [Theory]
+    [InlineData("9to1://boards/future-format/document")]
+    [InlineData("9to1://boards/files/not-a-prepared-file")]
+    public void Failed_or_future_Boards_routes_remain_persistable_without_breaking_window_close(string address)
+    {
+        var tab = Browser("Failed Board") with { Address = address };
+        var stored = UnifiedWorkspaceTabState.Merge(null, tab);
+        Assert.True(UnifiedWorkspaceTabState.TryProject(stored, "profile", out var restored));
+        Assert.Equal(address, restored!.Address);
+        var roundTrip = UnifiedWorkspaceTabState.Merge(stored, restored);
+        Assert.Equal(stored.StateJson, roundTrip.StateJson);
+    }
     private sealed class SplitPaths(string root) : IAppPaths
     {
         public string DataDirectory => root;

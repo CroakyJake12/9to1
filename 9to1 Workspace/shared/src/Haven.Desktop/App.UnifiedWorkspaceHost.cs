@@ -402,7 +402,21 @@ public sealed partial class App
                 (token, store, folder, file, revision) => (_boardWriteSource ?? throw new UnauthorizedAccessException(
                     "The original Home Files board writer is unavailable."))
                     .TakePrepared(token, store, folder, file, revision),
-                createAndOpenBoard: CreateAndOpenBoardAsync);
+                createAndOpenBoard: CreateAndOpenBoardAsync,
+                restoreBoardRead: async (request, address, token) =>
+                {
+                    var prepared = BoardsBrowseAppContentAddress.Parse(await PrepareRestoredFilesBoardAsync(request, address, token));
+                    return (_boardReadSource ?? throw new UnauthorizedAccessException("The Home Files reader retired."))
+                        .TakePrepared(prepared.ReadToken!.Value, prepared.StoreId!.Value, prepared.ParentFolderId!.Value,
+                            prepared.FileId!.Value, prepared.RevisionId!.Value);
+                },
+                restoreBoardWrite: async (request, address, token) =>
+                {
+                    var prepared = BoardsBrowseAppContentAddress.Parse(await PrepareRestoredFilesBoardAsync(request, address, token));
+                    return (_boardWriteSource ?? throw new UnauthorizedAccessException("The Home Files writer retired."))
+                        .TakePrepared(prepared.ReadToken!.Value, prepared.StoreId!.Value, prepared.ParentFolderId!.Value,
+                            prepared.FileId!.Value, prepared.RevisionId!.Value);
+                });
             var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
             var present = PresentBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
             var modes = _services.GetRequiredService<IModeRegistry>();
@@ -865,7 +879,8 @@ public sealed partial class App
                 DemandCurrent();
                 var createdTabs = _chrome!.State.Tabs.Where(tab => !priorTabs.Contains(tab.Id)).ToArray();
                 var published = createdTabs.Length == 1 ? _chrome.ObserveOriginalAppContent(createdTabs[0].Id) : null;
-                if (published is not BoardsWritableRichDocumentBrowseAppContentSession { IsPublicationCurrent: true } || published.Address != address)
+                if (published is not BoardsWritableRichDocumentBrowseAppContentSession { IsPublicationCurrent: true } ||
+                    !selectedAddress.IdentifiesSameFileRevision(BoardsBrowseAppContentAddress.Parse(published.Address)))
                     return DescribeBoardCreation(state, "BoardPublicationNotCurrent", "The board exists, but its exact writable rich session was not published. Retry the same board.");
                 state.Opened = true;
                 var warning = state.Result.State != FilesOriginalBoardDocumentCreateSettlementState.Committed || state.Result.CleanupFailures.Count != 0;
@@ -1120,6 +1135,65 @@ public sealed partial class App
                 // decision through BeginLibrarySnapshot, including dismissal or explicit denial.
                 return true;
             }).ConfigureAwait(false);
+        }
+
+        /// <summary>Resolve saved metadata through a NEW original Home Library read. A URI,
+        /// including a previously used prepared token, never supplies read/write authority.</summary>
+        private async Task<AppContentAddress> PrepareRestoredFilesBoardAsync(BrowseAppContentRequest request,
+            BoardsBrowseAppContentAddress saved, CancellationToken token)
+        {
+            if (saved.ReadToken is not null || !saved.IsFilesDocument || request.Privacy != BrowserTabPrivacy.Standard ||
+                _actor is not { } actor || !StringComparer.Ordinal.Equals(actor.ProfileId, request.ProfileId))
+                throw new UnauthorizedAccessException("Reopen this board with its original Home profile.");
+            DemandCurrent();
+            var browser = _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>();
+            if (!browser.IsBoundToOriginalComposition(
+                _services.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>(),
+                _home.Profiles, _home.Resources, _services.GetRequiredService<ICompatibilityPackageContentSource>()))
+                throw new UnauthorizedAccessException("The original Home Files composition is unavailable.");
+            var read = _boardReadSource ?? throw new UnauthorizedAccessException("The original Home Files reader is unavailable.");
+            var approvals = _services.GetRequiredService<HomeNativeApprovalWindowOwner>();
+            bool Alive() => IsCurrent && !token.IsCancellationRequested;
+            void Own(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+                () => { DemandCurrent(); body(); return true; });
+            void Retain(Task actual) { _ = Track(actual); }
+            // Only the awaited source owns metadata/read operations. The writable lease's
+            // later save retains its real task in the host and still uses Home review.
+            Guid? issued = null;
+            try
+            {
+            await using var source = new NativeHomeFilesLibrarySource(browser, actor, _home.StateStore,
+                ObserveAppearanceAuthorityAsync, Own, Alive, read, _boardWriteSource,
+                (authorization, cancellation) => PresentHomeLibraryReviewAsync(approvals, authorization, cancellation),
+                Own, Retain);
+            var entries = await source.SearchAsync(new HomeLibraryQuery(OwnerApp: "files"), token).ConfigureAwait(false);
+            var key = saved.StoreId!.Value.ToString("D") + "/" + saved.FileId!.Value.ToString("D");
+            var entry = entries.SingleOrDefault(candidate => candidate.ArtifactId == key && candidate.OpenLink.TargetRouteId == "files.board")
+                ?? throw new FileNotFoundException("This saved board is deleted, unavailable, or no longer a Board document. Find it in Home Library.");
+            var target = await source.ResolveOriginalOpenTargetAsync(entry.OpenLink, token).ConfigureAwait(false)
+                ?? throw new UnauthorizedAccessException("The saved board is no longer authorized. Reopen it from Home Library.");
+            if (target.StoreId != saved.StoreId || target.FolderId != saved.ParentFolderId || target.FileId != saved.FileId)
+                throw new InvalidOperationException("This saved board moved. Reopen its current location from Home Library.");
+            if (target.RevisionId != saved.RevisionId)
+                throw new InvalidOperationException("This saved board has a newer revision. Reopen the current revision from Home Library.");
+            var prepared = saved.Writable
+                ? await source.PrepareOriginalBoardWriteAsync(entry.OpenLink, token).ConfigureAwait(false)
+                : await source.PrepareOriginalBoardReadAsync(entry.OpenLink, token).ConfigureAwait(false);
+            if (prepared is not { } id)
+                throw new UnauthorizedAccessException("The board's current read/write permission is unavailable. Reopen it from Home Library.");
+            issued = id;
+            return saved.Writable
+                ? BoardsBrowseAppContentAddress.ForWritableFile(target.StoreId, target.FolderId, target.FileId!.Value, target.RevisionId!.Value, id)
+                : BoardsBrowseAppContentAddress.ForFile(target.StoreId, target.FolderId, target.FileId!.Value, target.RevisionId!.Value, id);
+            }
+            catch
+            {
+                if (issued is { } id)
+                    await (saved.Writable
+                        ? (_boardWriteSource?.DiscardPreparedAsync(id) ?? Task.CompletedTask)
+                        : read.DiscardPreparedAsync(id)).ConfigureAwait(false);
+                throw;
+            }
         }
 
         private async Task AdmitHomeSettingsAsync(BrowseAppContentRequest request, CancellationToken token)

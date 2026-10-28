@@ -19,6 +19,8 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
     private readonly IBoardsEmbeddedArtifactHost? _embeddedHost;
     private readonly object _gate = new();
     private NativeHomeFilesBoardReadLease? _lease;
+    private readonly Func<CancellationToken, Task<NativeHomeFilesBoardReadLease>>? _restoreLease;
+    private Guid? _documentId;
     private BoardsReadOnlyPresentation? _presentation;
     private Task? _initialization, _close;
     private Task<IBrowseAppContentClosePreparation?>? _preparationTask;
@@ -40,7 +42,18 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
             throw new UnauthorizedAccessException("The prepared Home read lease does not match the canonical Boards address.");
     }
 
-    public AppContentAddress Address => _request.Address;
+    internal BoardsRichDocumentBrowseAppContentSession(BrowseAppContentRequest request,
+        BoardsBrowseAppContentAddress address, Func<CancellationToken, Task<NativeHomeFilesBoardReadLease>> restoreLease,
+        CancellationTokenSource lifetime, IBoardsEmbeddedArtifactHost? embeddedHost = null)
+    {
+        _request = request; _address = address; _restoreLease = restoreLease;
+        _lifetime = lifetime; _embeddedHost = embeddedHost;
+        if (!address.IsFilesDocument || address.ReadToken is not null || address.Writable)
+            throw new UnauthorizedAccessException("A restored read requires a durable Files identity without a prepared capability.");
+    }
+
+    public AppContentAddress Address => _published && _documentId is { } document
+        ? _address.ForRestoration(document) : _request.Address;
     public string Title => _presentation?.Document.RichNotes?.Title is { Length: > 0 } title ? title + " — Boards" : "Boards";
     public string IconKey => "boards";
     public event EventHandler? StateChanged;
@@ -79,9 +92,15 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
     {
         await start.ConfigureAwait(false);
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-        var lease = _lease ?? throw new InvalidOperationException("The original Home Files read lease is missing.");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _lifetime.Token);
         linked.Token.ThrowIfCancellationRequested();
+        if (_lease is null)
+            _lease = await (_restoreLease ?? throw new InvalidOperationException("The original Home Files read source is missing."))(linked.Token).ConfigureAwait(false);
+        var lease = _lease ?? throw new InvalidOperationException("The fresh Home Files read returned no lease.");
+        if (!lease.IsOpen || _address.StoreId != lease.StoreId || _address.ParentFolderId != lease.ParentFolderId ||
+            _address.FileId != lease.FileId || _address.RevisionId != lease.RevisionId ||
+            !StringComparer.Ordinal.Equals(_request.ProfileId, lease.ProfileId))
+            throw new UnauthorizedAccessException("The freshly authorized Files board no longer matches the saved identity. Reopen it from Home Library.");
         await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(false);
         var bytes = lease.Bytes;
         if (bytes.IsEmpty || Convert.ToHexString(SHA256.HashData(bytes.Span)) != lease.Sha256)
@@ -101,6 +120,9 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
                 await lease.DemandCurrentAsync(linked.Token).ConfigureAwait(true);
                 if (presentation.Document.DocumentId == Guid.Empty)
                     throw new InvalidDataException("The selected rich Boards document has no canonical identity.");
+                if (_address.DocumentId is { } expected && presentation.Document.DocumentId != expected)
+                    throw new InvalidDataException("The saved Files board now contains a different document. Reopen it from Home Library.");
+                _documentId = presentation.Document.DocumentId;
                 _presentation = presentation;
                 _published = true;
                 CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });

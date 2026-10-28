@@ -23,16 +23,21 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
     private readonly CuiThemePreferenceContext? _theme;
     private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? _takePreparedBoardRead;
     private readonly Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? _takePreparedBoardWrite;
+    private readonly Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardReadLease>>? _restoreBoardRead;
+    private readonly Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? _restoreBoardWrite;
     private readonly Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? _createAndOpenBoard;
     private BoardsBrowseAppContentFactory(IServiceProvider provider, HomeNativeWindowsComposition home,
         CancellationToken appLifetime, CancellationToken hostLifetime, Func<bool> reduceMotion,
         CuiThemePreferenceContext? theme,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite,
-        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard)
+        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard,
+        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardReadLease>>? restoreBoardRead,
+        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? restoreBoardWrite)
     { _provider = provider; _home = home; _appLifetime = appLifetime; _hostLifetime = hostLifetime;
         _reduceMotion = reduceMotion; _theme = theme; _takePreparedBoardRead = takePreparedBoardRead;
-        _takePreparedBoardWrite = takePreparedBoardWrite; _createAndOpenBoard = createAndOpenBoard; }
+        _takePreparedBoardWrite = takePreparedBoardWrite; _createAndOpenBoard = createAndOpenBoard;
+        _restoreBoardRead = restoreBoardRead; _restoreBoardWrite = restoreBoardWrite; }
 
     internal static BoardsBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
@@ -40,7 +45,9 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         CuiThemePreferenceContext? actualThemePreference = null,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardReadLease>? takePreparedBoardRead = null,
         Func<Guid, Guid, Guid, Guid, Guid, NativeHomeFilesBoardWriteLease>? takePreparedBoardWrite = null,
-        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard = null)
+        Func<BrowseAppContentRequest, BoardsHomeBoardCreationRequest, CancellationToken, Task<BoardsHomeBoardCreationResult>>? createAndOpenBoard = null,
+        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardReadLease>>? restoreBoardRead = null,
+        Func<BrowseAppContentRequest, BoardsBrowseAppContentAddress, CancellationToken, Task<NativeHomeFilesBoardWriteLease>>? restoreBoardWrite = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(actualReduceMotion);
@@ -48,7 +55,8 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             throw new ArgumentException("Retain the actual application and host lifetimes.");
         originalAppLifetime.ThrowIfCancellationRequested(); originalHostLifetime.ThrowIfCancellationRequested();
         return new(originalProvider, sameHome, originalAppLifetime, originalHostLifetime,
-            actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite, createAndOpenBoard);
+            actualReduceMotion, actualThemePreference, takePreparedBoardRead, takePreparedBoardWrite, createAndOpenBoard,
+            restoreBoardRead, restoreBoardWrite);
     }
 
     /// <summary>
@@ -85,6 +93,38 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         var address = BoardsBrowseAppContentAddress.Parse(request.Address);
         if (address.IsFilesDocument)
         {
+            if (address.ReadToken is null)
+            {
+                if (address.Writable && _restoreBoardWrite is null || !address.Writable && _restoreBoardRead is null)
+                    throw new UnauthorizedAccessException("Reopen this saved board from Home Library; its current Files authority is unavailable.");
+                var restoredLifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
+                NativeCanvasBoardEmbeddedArtifactHost? restoredEmbedded = null;
+                try
+                {
+                    restoredEmbedded = CreateEmbeddedArtifactHost(request, restoredLifetime.Token);
+                    if (!address.Writable)
+                        return new BoardsRichDocumentBrowseAppContentSession(request, address,
+                            token => _restoreBoardRead!(request, address, token), restoredLifetime, restoredEmbedded);
+                    var creation = _createAndOpenBoard is null ? null :
+                        CreateOriginalHomeBoardCreationHost(_createAndOpenBoard, request, restoredLifetime.Token);
+                    var modelClient = _provider.GetService<IProviderModelClient>();
+                    var modelSelection = _provider.GetService<HomeModelSelectionSource>();
+                    IBoardsSectionIconGenerationHost? icons = modelClient is null || modelSelection is null ? null :
+                        new BoardsSectionIconSuggestionService(modelClient, modelSelection, request.ProfileId,
+                            _appLifetime, restoredLifetime.Token, () => !restoredLifetime.IsCancellationRequested);
+                    return new BoardsWritableRichDocumentBrowseAppContentSession(request, address,
+                        token => _restoreBoardWrite!(request, address, token), restoredLifetime, restoredEmbedded, creation, icons);
+                }
+                catch
+                {
+                    // Neither constructor above publishes this owner or starts its Open/Select/Create
+                    // operations. Both embedded-owner collections are still empty, so this exact
+                    // allocation-failure cleanup completes inline; it cannot join live UI work.
+                    if (restoredEmbedded is not null) restoredEmbedded.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    restoredLifetime.Dispose();
+                    throw;
+                }
+            }
             if (address.Writable)
             {
                 if (_takePreparedBoardWrite is null || address.StoreId is not { } writeStore ||

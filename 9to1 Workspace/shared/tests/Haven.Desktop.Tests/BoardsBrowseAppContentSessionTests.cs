@@ -77,6 +77,10 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.Same(original, session.InitializeAsync());
         await original;
         Assert.True(session.IsPublicationCurrent);
+        var savedAddress = BoardsBrowseAppContentAddress.Parse(session.Address);
+        Assert.Null(savedAddress.ReadToken);
+        Assert.Equal(document.DocumentId, savedAddress.DocumentId);
+        Assert.Equal(revision, savedAddress.RevisionId);
         Assert.IsAssignableFrom<Control>(session.OriginalNativeView);
         Assert.Contains("Selected Files board", session.Title, StringComparison.Ordinal);
         var closePreparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(
@@ -86,6 +90,107 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.True(session.CanRetireOriginalView);
         Assert.False(session.IsPublicationCurrent);
         Assert.False(lease.IsOpen);
+    }
+
+    [Fact]
+    public async Task Consumed_or_mismatched_prepared_Files_read_is_not_reusable_authority()
+    {
+        var actor = new AuthenticatedResourceActor("local:fixture", "fixture-profile", null, null, "fixture-revision");
+        var source = new NativeHomeFilesBoardReadSource(null!, actor); // TakePrepared never calls a Files boundary.
+        var bytes = new byte[] { 1, 2, 3 };
+        var read = new FilesOriginalBoardDocumentRead(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            Convert.ToHexString(SHA256.HashData(bytes)), bytes);
+        var lease = new NativeHomeFilesBoardReadLease(read, actor, () => true, _ => Task.FromResult(true));
+        var token = source.RegisterPrepared(lease);
+        Assert.Same(lease, source.TakePrepared(token, read.StoreId, read.ParentFolderId, read.FileId, read.RevisionId));
+        Assert.Throws<UnauthorizedAccessException>(() => source.TakePrepared(token, read.StoreId, read.ParentFolderId, read.FileId, read.RevisionId));
+        await lease.DisposeAsync();
+        var mismatch = new NativeHomeFilesBoardReadLease(read, actor, () => true, _ => Task.FromResult(true));
+        var mismatchedToken = source.RegisterPrepared(mismatch);
+        Assert.Throws<UnauthorizedAccessException>(() => source.TakePrepared(mismatchedToken, read.StoreId, read.ParentFolderId, Guid.NewGuid(), read.RevisionId));
+        Assert.False(mismatch.IsOpen);
+        Assert.Throws<UnauthorizedAccessException>(() => source.TakePrepared(mismatchedToken, read.StoreId, read.ParentFolderId, read.FileId, read.RevisionId));
+    }
+
+    [AvaloniaFact]
+    public async Task Saved_Files_board_reopens_with_fresh_authority_and_preserves_document_identity()
+    {
+        var actor = new AuthenticatedResourceActor("local:fixture", "fixture-profile", null, null, "fixture-revision");
+        var now = DateTimeOffset.UtcNow;
+        var document = new HavenBoardDocument(HavenBoardDocument.FormatIdentity, HavenBoardDocument.CurrentSchemaVersion,
+            Guid.NewGuid(), now, now, null, HavenRichNotes.Create("Cold restore"));
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var prepared = BoardsBrowseAppContentAddress.ForFile(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var durable = BoardsBrowseAppContentAddress.Parse(prepared).ForRestoration(document.DocumentId);
+        var request = new BrowseAppContentRequest(Guid.NewGuid(), durable, actor.ProfileId, BrowserTabPrivacy.Standard);
+        var parsed = BoardsBrowseAppContentAddress.Parse(durable);
+        var reads = 0; NativeHomeFilesBoardReadLease? lastLease = null;
+        Task<NativeHomeFilesBoardReadLease> Acquire(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested(); reads++;
+            return Task.FromResult(lastLease = new NativeHomeFilesBoardReadLease(new(parsed.StoreId!.Value,
+                parsed.FileId!.Value, parsed.ParentFolderId!.Value, parsed.RevisionId!.Value,
+                Convert.ToHexString(SHA256.HashData(bytes)), bytes), actor, () => true, _ => Task.FromResult(true)));
+        }
+        for (var reopen = 0; reopen < 2; reopen++)
+        {
+            using var lifetime = new CancellationTokenSource();
+            var session = new BoardsRichDocumentBrowseAppContentSession(request, parsed, Acquire, lifetime);
+            Assert.Equal(reopen, reads); // Allocation is not an authorization operation.
+            await session.InitializeAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(reopen + 1, reads);
+            Assert.Equal(document.DocumentId, BoardsBrowseAppContentAddress.Parse(session.Address).DocumentId);
+            Assert.Null(BoardsBrowseAppContentAddress.Parse(session.Address).ReadToken);
+            Assert.Contains("Cold restore", session.Title, StringComparison.Ordinal);
+            var close = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
+            await close.BeginClose();
+            Assert.False(lastLease!.IsOpen);
+        }
+    }
+
+    [Fact]
+    public async Task Saved_writable_board_does_not_publish_when_current_Home_permission_refuses()
+    {
+        var prepared = BoardsBrowseAppContentAddress.ForWritableFile(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var durable = BoardsBrowseAppContentAddress.Parse(prepared).ForRestoration(Guid.NewGuid());
+        var request = new BrowseAppContentRequest(Guid.NewGuid(), durable, "fixture-profile", BrowserTabPrivacy.Standard);
+        using var lifetime = new CancellationTokenSource();
+        var calls = 0;
+        var session = new BoardsWritableRichDocumentBrowseAppContentSession(request, BoardsBrowseAppContentAddress.Parse(durable),
+            token => { calls++; return Task.FromException<NativeHomeFilesBoardWriteLease>(new UnauthorizedAccessException("Current Home permission denied.")); }, lifetime);
+        Assert.Equal(0, calls);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.InitializeAsync());
+        Assert.Equal(1, calls);
+        Assert.False(session.IsPublicationCurrent);
+        await session.CloseAndDrainAsync();
+        Assert.True(session.CanRetireOriginalView);
+    }
+
+    [Fact]
+    public async Task Fresh_writable_lease_for_a_different_revision_refuses_before_presentation_or_save()
+    {
+        var prepared = BoardsBrowseAppContentAddress.ForWritableFile(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var durable = BoardsBrowseAppContentAddress.Parse(prepared).ForRestoration(Guid.NewGuid());
+        var saved = BoardsBrowseAppContentAddress.Parse(durable);
+        var actor = new AuthenticatedResourceActor("local:fixture", "fixture-profile", null, null, "fixture-revision");
+        var bytes = new byte[] { 1, 2, 3 };
+        var read = new NativeHomeFilesBoardReadLease(new(saved.StoreId!.Value, saved.FileId!.Value,
+            saved.ParentFolderId!.Value, Guid.NewGuid(), Convert.ToHexString(SHA256.HashData(bytes)), bytes),
+            actor, () => true, _ => Task.FromResult(true));
+        var saves = 0;
+        var lease = new NativeHomeFilesBoardWriteLease(read,
+            $"files/{saved.StoreId:D}/{saved.ParentFolderId:D}/{saved.FileId:D}", saved.DocumentId!.Value,
+            (_, _, _, _, _, _) => { saves++; throw new InvalidOperationException("A stale restoration must not save."); });
+        using var lifetime = new CancellationTokenSource();
+        var request = new BrowseAppContentRequest(Guid.NewGuid(), durable, actor.ProfileId, BrowserTabPrivacy.Standard);
+        var session = new BoardsWritableRichDocumentBrowseAppContentSession(request, saved, _ => Task.FromResult(lease), lifetime);
+        var refusal = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.InitializeAsync());
+        Assert.Contains("revision changed", refusal.Message, StringComparison.Ordinal);
+        Assert.False(session.IsPublicationCurrent);
+        Assert.Equal(0, saves);
+        await session.CloseAndDrainAsync();
+        Assert.False(lease.IsOpen);
+        Assert.True(session.CanRetireOriginalView);
     }
 
     [Fact]

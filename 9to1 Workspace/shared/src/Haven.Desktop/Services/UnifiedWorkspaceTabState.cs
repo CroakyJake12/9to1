@@ -54,6 +54,10 @@ internal static class UnifiedWorkspaceTabState
         }
         if (!AppContentAddress.TryParse(address, out var parsed) || parsed is null) return false;
         parsed = AppContentRouteMigration.Canonicalize(parsed);
+        // Old snapshots stored a process-local single-use prepared token. Its identity
+        // survives as a fresh-admission request; replaying that token is never authority.
+        try { parsed = BoardsBrowseAppContentAddress.WithoutPreparedCapability(parsed); }
+        catch (FormatException) { return false; }
         projected = new(tab.Id, tab.Title, parsed.Value, BrowserTabPrivacy.Standard,
             tab.GroupId?.ToString("D") ?? string.Empty, tab.UpdatedAt) { ProfileId = profile, IsPinned = tab.IsPinned };
         return true;
@@ -71,6 +75,7 @@ internal static class UnifiedWorkspaceTabState
         if (current.Group.Length > 0 && (!Guid.TryParse(current.Group, out var parsedGroup) || parsedGroup == Guid.Empty))
             throw new InvalidOperationException("Resolve group names through the canonical workspace before merging a tab.");
         var address = AppContentRouteMigration.Canonicalize(AppContentAddress.Parse(current.Address));
+        address = BoardsBrowseAppContentAddress.WithoutPreparedCapability(address);
         JsonObject state;
         if (existing is null) state = new();
         else
