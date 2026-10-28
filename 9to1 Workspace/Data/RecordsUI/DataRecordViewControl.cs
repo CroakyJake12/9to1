@@ -158,8 +158,9 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
             Avalonia.Automation.AutomationProperties.SetName(input, name(field));
             if (view.Kind == DataRecordViewKind.Table) input.Width = 150;
             else panel.Children.Add(TextLabel(name(field)));
-            if (!input.IsReadOnly) input.TextChanged += (_, _) =>
+            if (!input.IsReadOnly) input.PropertyChanged += (_, change) =>
             {
+                if (change.Property != TextBox.TextProperty) return;
                 var value = input.Text ?? "";
                 if (value == (cell?.Value ?? "")) _drafts.Remove((row.RecordID, field));
                 else _drafts[(row.RecordID, field)] = value;

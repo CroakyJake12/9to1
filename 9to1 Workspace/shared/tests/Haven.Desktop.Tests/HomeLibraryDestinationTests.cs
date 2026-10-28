@@ -344,11 +344,11 @@ public sealed class HomeLibraryDestinationTests
         var search = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(true).CreateSession(Request(searchRoute)));
         try
         {
-            await search.InitializeAsync();
+            await search.InitializeAsync(); window = Show(search.OriginalNativeView);
             Assert.Single(search.OriginalNativeView.GetVisualDescendants().OfType<HomeLibraryDestinationPage>());
             Assert.Equal(searchRoute, search.Address.Value);
         }
-        finally { await search.CloseAndDrainAsync(); }
+        finally { try { await search.CloseAndDrainAsync(); } finally { window?.Close(); } }
     }
     [AvaloniaFact]
     public async Task Folder_picker_cancel_completes_without_a_folder_or_name()

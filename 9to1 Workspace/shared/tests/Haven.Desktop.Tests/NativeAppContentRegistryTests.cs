@@ -438,12 +438,16 @@ public sealed class NativeAppContentRegistryTests
         Assert.False(await prepare); Assert.Equal(1, owner.CloseCalls); Assert.True(session.CanRetireOriginalView);
     }
 
-    [AvaloniaFact]
-    public async Task Mismatched_initialization_receipt_keeps_returned_live_work_until_actual_settlement()
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Mismatched_initialization_receipt_keeps_returned_live_work_until_actual_settlement(bool reportedPending)
     {
         var request = Request(); var raw = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reported = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!reportedPending) reported.SetResult();
         var owner = new NativeOwner(request.Address)
-        { InitializeBody = _ => raw.Task, ReportedInitialization = Task.CompletedTask };
+        { InitializeBody = _ => raw.Task, ReportedInitialization = reported.Task };
         var session = Registry(new(), new(_ => owner)).CreateSession(request);
         await Assert.ThrowsAsync<InvalidOperationException>(() => session.InitializeAsync());
         Assert.False(session.IsPublicationCurrent); Assert.False(raw.Task.IsCompleted);
@@ -451,8 +455,41 @@ public sealed class NativeAppContentRegistryTests
         await owner.Closed.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.False(close.IsCompleted); Assert.False(session.CanRetireOriginalView);
         raw.SetResult();
+        if (reportedPending)
+        {
+            Assert.False(close.IsCompleted);
+            reported.SetResult();
+        }
         await Assert.ThrowsAsync<AggregateException>(() => close);
-        Assert.True(raw.Task.IsCompletedSuccessfully); Assert.Equal(1, owner.CloseCalls);
+        Assert.True(raw.Task.IsCompletedSuccessfully); Assert.True(reported.Task.IsCompletedSuccessfully);
+        Assert.Equal(1, owner.CloseCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task Changed_mismatched_initialization_receipt_is_a_distinct_fault_and_every_actual_task_is_joined()
+    {
+        var request = Request();
+        var actual = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reads = 0;
+        var owner = new NativeOwner(request.Address)
+        {
+            InitializeBody = _ => actual.Task,
+            InitializationObservation = _ => ++reads == 1 ? first.Task : second.Task,
+        };
+        var session = Registry(new(), new(_ => owner)).CreateSession(request);
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => session.InitializeAsync());
+        Assert.Contains(failure.Flatten().InnerExceptions, error => error.Message == "Retain the original native initialization task.");
+        Assert.Contains(failure.Flatten().InnerExceptions, error => error.Message == "The native initialization receipt changed during failure observation.");
+        var close = session.CloseAndDrainAsync();
+        await owner.Closed.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.False(close.IsCompleted);
+        actual.SetResult(); first.SetResult();
+        Assert.False(close.IsCompleted); // The newly observed live task is still owned.
+        second.SetResult();
+        await Assert.ThrowsAsync<AggregateException>(() => close);
+        Assert.False(session.CanRetireOriginalView); Assert.Equal(1, owner.CloseCalls);
     }
 
     [AvaloniaFact]

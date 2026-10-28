@@ -14,6 +14,20 @@ namespace HavenOS.Apps.Browse.Tests;
 public sealed partial class BrowseNativeUiTests
 {
     [AvaloniaFact]
+    public void Navigation_vector_assets_are_packaged_in_the_real_NativeUI_assembly()
+    {
+        foreach (var name in new[] { "nav-back", "nav-forward", "nav-reload", "nav-stop", "search-mode" })
+        {
+            var address = new Uri("avares://HavenOS.Apps.Browse.NativeUI/Assets/" + name + ".svg");
+            Assert.True(Avalonia.Platform.AssetLoader.Exists(address), address.ToString());
+            using var stream = Avalonia.Platform.AssetLoader.Open(address);
+            var svg = System.Xml.Linq.XDocument.Load(stream);
+            Assert.Equal("svg", svg.Root!.Name.LocalName);
+            Assert.NotEmpty(svg.Root.Elements());
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Omnibox_selects_Files_and_9to1_search_with_real_canonical_query_routes()
     {
         var chrome = await BrowseChrome.CreateAsync(new Paths(), internalContentFactory: new TabSurfaceInternalFixtureFactory(), homeProfileId: "fixture-profile");

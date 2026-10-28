@@ -166,6 +166,8 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             {
                 using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
                 var awaitingOriginalInitialization = false;
+                Task? firstReportedInitialization = null;
+                var observedInitializationReceipt = false;
                 try
                 {
                 var app = await WithinOriginal(() => _registry.ResolveAsync(_binding, token));
@@ -182,6 +184,8 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 WithinOriginal(() => { native.StateChanged += OnInnerChanged; return true; });
                 _actualInitialization = Retain(WithinOriginal(() => native.InitializeAsync(token)));
                 var reported = native.OriginalInitialization;
+                firstReportedInitialization = reported;
+                observedInitializationReceipt = true;
                 if (reported is not null) _ = Retain(reported);
                 if (!ReferenceEquals(_actualInitialization, reported))
                     throw new InvalidOperationException("Retain the original native initialization task.");
@@ -208,7 +212,11 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                         {
                             var reported = inner.OriginalInitialization;
                             if (reported is not null) _ = Retain(reported);
-                            if (_actualInitialization is not null && !ReferenceEquals(reported, _actualInitialization))
+                            // A stable wrong (including null) receipt is the already
+                            // diagnosed mismatch, not an independent receipt change.
+                            // Compare with the first actual observation when available.
+                            var expected = observedInitializationReceipt ? firstReportedInitialization : _actualInitialization;
+                            if (_actualInitialization is not null && !ReferenceEquals(reported, expected))
                                 throw new InvalidOperationException("The native initialization receipt changed during failure observation.");
                         }
                     }

@@ -10,4 +10,7 @@
     <EmbeddedResource Include="UI\*.cui" LogicalName="HavenOS.Apps.Browse.NativeUI.UI.%(Filename)%(Extension)" />
     <AvaloniaResource Include="Assets\*.svg" />
   </ItemGroup>
+  <!-- Project references provide runtime types, not resource-build targets.
+       Use the same pinned source-build asset pipeline as CUI and Desktop. -->
+  <Import Project="../../../framework/CUI/vendor/Avalonia/build/BuildTargets.targets" />
 </Project>
