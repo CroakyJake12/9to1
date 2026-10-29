@@ -2905,7 +2905,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     // ----- Block operations used by BlockRenderer -----
 
     public async Task InsertKindAsync(string kindTag, string? insertAfterBlockId = null,
-        string? initialText = null, bool focusEditor = false)
+        string? initialText = null, bool focusEditor = false, string? insertBeforeBlockId = null)
     {
         if (!RequireEditMode()) return;
         if (kindTag == "tabber") { await AddTabberAsync(insertAfterBlockId); return; }
@@ -3017,7 +3017,19 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("StatusText", "The insertion point is no longer on this page. Choose a note and try again.");
             return;
         }
-        if (selectedIndex >= 0)
+        if (insertBeforeBlockId is not null)
+        {
+            // "Add Block Above" has to insert in front of a specific block. The anchor-before model cannot
+            // express that for the first row, so the destination is resolved directly here.
+            var beforeIndex = page.Blocks.FindIndex(item => item.Id == insertBeforeBlockId);
+            if (beforeIndex < 0)
+            {
+                Set("StatusText", "The insertion point is no longer on this page. Choose a note and try again.");
+                return;
+            }
+            page.Blocks.Insert(beforeIndex, block);
+        }
+        else if (selectedIndex >= 0)
             page.Blocks.Insert(selectedIndex + 1, block);
         else
             page.Blocks.Add(block);
@@ -3033,6 +3045,59 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             await ReplaceImageAsync(block.Id);
         else if (kindTag == "attachment")
             await AttachFileAsync(block.Id, attachmentPath);
+    }
+
+    /// <summary>Owner's block plus-control menu, 29 October: Add Block Above / Add Block Below /
+    /// Replace Current Block. Every choice ends in the same real insert path, so there is one factory for
+    /// block kinds and one set of revision-checked edits, not three copies of the insertion logic.</summary>
+    public async Task InsertKindRelativeToAsync(string kindTag, string? blockId, string position,
+        bool focusEditor = true)
+    {
+        if (!RequireEditMode()) return;
+        switch (position.Trim().ToLowerInvariant())
+        {
+            case "above":
+                if (blockId is null || !CurrentPage().Blocks.Any(item => item.Id == blockId))
+                {
+                    Set("StatusText", "That block is no longer on this page. Choose it again and try once more.");
+                    return;
+                }
+                await InsertKindAsync(kindTag, insertBeforeBlockId: blockId, focusEditor: focusEditor);
+                return;
+            case "below":
+                await InsertKindAsync(kindTag, blockId, focusEditor: focusEditor);
+                return;
+            case "replace":
+                await ReplaceBlockWithKindAsync(kindTag, blockId, focusEditor: focusEditor);
+                return;
+            default:
+                Set("StatusText", "Choose Add Block Above, Add Block Below or Replace Current Block.");
+                return;
+        }
+    }
+
+    /// <summary>Replaces a block in place with the chosen type. The new block is created by the same
+    /// factory and inserted at the old block's position before the old one is removed, so the page order
+    /// never shifts and nothing between the two states is left missing. Recorded honestly: this is two
+    /// document edits, so one visible replacement can take two undo steps.</summary>
+    public async Task ReplaceBlockWithKindAsync(string kindTag, string? blockId, bool focusEditor = true)
+    {
+        if (!RequireEditMode()) return;
+        var page = CurrentPage();
+        var replaced = page.Blocks.FirstOrDefault(item => item.Id == blockId);
+        if (replaced is null)
+        {
+            Set("StatusText", "That block is no longer on this page. Choose it again and try once more.");
+            return;
+        }
+        await InsertKindAsync(kindTag, insertBeforeBlockId: replaced.Id, focusEditor: focusEditor);
+        page = CurrentPage();
+        var stale = page.Blocks.FirstOrDefault(item => item.Id == replaced.Id);
+        if (stale is null) return;
+        page.Blocks.Remove(stale);
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
     }
 
     public async Task ApplyStyleToSelectedAsync(string styleId)

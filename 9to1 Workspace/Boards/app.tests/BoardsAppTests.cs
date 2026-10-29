@@ -53,6 +53,7 @@ public sealed class BoardsAppTests
             BoardsCuiDocuments.MainSourceName,
             BoardsCuiDocuments.GraphSlidersSourceName,
             BoardsCuiDocuments.BlockGripSourceName,
+            BoardsCuiDocuments.BlockActionsMenuSourceName,
             BoardsCuiDocuments.BoardPropertiesSourceName,
             BoardsCuiDocuments.StartupFailureSourceName,
         })
@@ -97,21 +98,48 @@ public sealed class BoardsAppTests
     [Fact]
     public void Block_grip_cui_fragment_parses_with_authored_typed_actions()
     {
-        var path = Path.Combine(Path.GetDirectoryName(FindBoardsCui())!, "BlockGripCui.cui");
+        // Split 29 October: the gutter holds only the toggle, the owner's menu lives in its own authored
+        // document (BlockActionsMenuCui.cui) because a 232-unit list cannot fit the 32-unit gutter column.
+        // Both documents are parse-checked and their action rows asserted, so the menu cannot silently
+        // regress into the fallback "unavailable" control that BlockGripCui.Build returns on a bad parse.
+        var directory = Path.GetDirectoryName(FindBoardsCui())!;
+        var gripPath = Path.Combine(directory, "BlockGripCui.cui");
+        var menuPath = Path.Combine(directory, "BlockActionsMenuCui.cui");
+        var grip = ParseCuiWithoutErrors(gripPath);
+        var menu = ParseCuiWithoutErrors(menuPath);
+
+        Assert.Contains("Action=\"ToggleActions\"", grip, StringComparison.Ordinal);
+        Assert.Contains("ID=\"BlockGripToggle\"", grip, StringComparison.Ordinal);
+
+        // The owner's mockup order and the submenu groups the grip menu must carry.
+        foreach (var action in new[] { "Action=\"Delete\"", "Action=\"Duplicate\"", "Action=\"MoveUp\"",
+            "Action=\"MoveDown\"", "Action=\"ToggleMoveMenu\"", "Action=\"ToggleDesignMenu\"" })
+            Assert.Contains(action, menu, StringComparison.Ordinal);
+        // The Design submenu re-types the block in place through the same insert machinery as the plus
+        // menu, so its rows must stay authored commands rather than code-built items.
+        foreach (var turn in new[] { "TurnInto:paragraph", "TurnInto:heading", "TurnInto:checklist",
+            "TurnInto:bulleted", "TurnInto:numbered", "TurnInto:table", "TurnInto:image", "TurnInto:divider" })
+            Assert.Contains(turn, menu, StringComparison.Ordinal);
+        // CUI is the authoring language for presentation: these rows need the hover/preview hooks the
+        // owner asked for (insertion line on Above/Below, red outline on Replace), so their absence in
+        // the authored document is recorded here rather than left as an unmeasured assumption.
+        Assert.DoesNotContain("PointerEntered", menu, StringComparison.Ordinal);
+        Assert.DoesNotContain("BlockInsertionPreview", menu, StringComparison.Ordinal);
+    }
+
+    /// <summary>Parses one authored Boards CUI document and fails with its real compiler diagnostics.
+    /// Returning the source keeps the assertion over authored commands readable at the call site.</summary>
+    private static string ParseCuiWithoutErrors(string path)
+    {
         var parser = new CuiRichParser();
         var document = parser.ParseFile(path);
         var errors = parser.Diagnostics.Diagnostics
             .Where(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error)
             .Select(diagnostic => diagnostic.ToString())
             .ToArray();
-
-        Assert.True(errors.Length == 0, $"BlockGripCui.cui parse errors: {string.Join("; ", errors)}");
+        Assert.True(errors.Length == 0, $"{Path.GetFileName(path)} parse errors: {string.Join("; ", errors)}");
         Assert.NotEmpty(document.Components);
-        var source = File.ReadAllText(path);
-        Assert.Contains("Action=\"MoveUp\"", source, StringComparison.Ordinal);
-        Assert.Contains("Action=\"MoveDown\"", source, StringComparison.Ordinal);
-        Assert.Contains("Action=\"Duplicate\"", source, StringComparison.Ordinal);
-        Assert.Contains("Action=\"Delete\"", source, StringComparison.Ordinal);
+        return File.ReadAllText(path);
     }
 
     [Fact]

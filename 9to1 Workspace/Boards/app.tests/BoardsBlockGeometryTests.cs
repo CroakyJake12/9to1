@@ -52,8 +52,12 @@ public sealed class BoardsBlockGeometryTests
             (double Height, double InsertHeight, double InsertTop, double GripHeight, double GripTop, double Opacity,
                 string InsertLayout) MeasureRow(string id)
             {
-                var border = Row(id);
-                var grid = Assert.IsType<Grid>(border.Child);
+                    var border = Row(id);
+                // The block row lives in a shell panel together with the zero-thickness BlockRowOutline
+                // overlay (owner 29 October: the outline must not thicken the row or shift the text),
+                // so the row Grid is the shell's first child rather than the Border's direct child.
+                var shell = Assert.IsType<Panel>(border.Child);
+                var grid = Assert.IsType<Grid>(shell.Children[0]);
                 var insert = Assert.Single(grid.Children.OfType<Button>(), button =>
                     AutomationProperties.GetName(button) == "Insert");
                 var gripButton = Assert.Single(border.GetLogicalDescendants().OfType<Button>(), button => button.Name == "BlockGripToggle");
@@ -162,7 +166,9 @@ public sealed class BoardsBlockGeometryTests
             BlockRenderer.Rebuild(host, viewModel, []);
             var row = Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
                 border.Tag is BlockReorderRow block && block.BlockId == viewModel.PageBlocks[0].Id);
-            var grid = Assert.IsType<Grid>(row.Child);
+            // Same shell panel as the edit-mode rows: row grid plus the outline overlay.
+            var shell = Assert.IsType<Panel>(row.Child);
+            var grid = Assert.IsType<Grid>(shell.Children[0]);
             var slots = grid.Children.OfType<Border>().ToArray();
             Assert.Equal(2, slots.Length);
             return (Column: grid.ColumnDefinitions[0].Width, SecondColumn: grid.ColumnDefinitions[1].Width, FirstSlotWidth: slots[0].Width,

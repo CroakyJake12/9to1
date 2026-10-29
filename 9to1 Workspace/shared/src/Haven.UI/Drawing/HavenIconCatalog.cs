@@ -161,6 +161,17 @@ public static class HavenIconCatalog
             [new HavenLineSegment(new HavenPoint(6, 6)), new HavenLineSegment(new HavenPoint(8, 18)), new HavenLineSegment(new HavenPoint(18, 18)), new HavenLineSegment(new HavenPoint(20, 6))], true),
             Line((8, 6), (20, 6)), Circle(9, 21, 1.5), Circle(17, 21, 1.5)),
         "experiences" => Geometry(Circle(12, 12, 9), Circle(12, 12, 4), Line((12, 3), (12, 8)), Line((12, 16), (12, 21)), Line((3, 12), (8, 12)), Line((16, 12), (21, 12))),
+        // Block-grip menu family, added for the owner's 29 October block menu mockups. Kept on the same
+        // 24 unit grid with the same open-stroke treatment as the rest of the family, and drawn so each
+        // silhouette is distinguishable at 14 px: Duplicate is a front card with a plus, Move is a pair of
+        // opposing arrows, Link is two rings joined by a bar.
+        "duplicate" => Geometry(RoundedBox(7, 7, 13, 13, 2), Line((17, 3), (3, 3), (3, 17)),
+            Line((13.5, 10), (13.5, 17)), Line((10, 13.5), (17, 13.5))),
+        "move" => Geometry(Line((3, 9), (17, 9)), Line((14, 6), (17, 9), (14, 12)),
+            Line((7, 15), (21, 15)), Line((18, 12), (21, 15), (18, 18))),
+        "link" => Geometry(Circle(8.5, 15.5, 3.6), Circle(15.5, 8.5, 3.6), Line((11, 13), (13, 11))),
+        "swap-vertical" => Geometry(Line((8, 4), (8, 18)), Line((5, 7), (8, 4), (11, 7)),
+            Line((16, 20), (16, 6)), Line((13, 17), (16, 20), (19, 17))),
         "sparkles" => Geometry(Line((12, 3), (12, 7)), Line((10, 5), (14, 5)), Line((19, 8), (19, 12)), Line((17, 10), (21, 10)), Line((5, 14), (5, 18)), Line((3, 16), (7, 16)), Line((15, 16), (15, 20)), Line((13, 18), (17, 18))),
         _ => Geometry(new HavenPathFigure(new HavenPoint(4, 4),
             [new HavenLineSegment(new HavenPoint(20, 4)), new HavenLineSegment(new HavenPoint(20, 20)), new HavenLineSegment(new HavenPoint(4, 20))], true), Line((7, 7), (17, 17)), Line((17, 7), (7, 17)))

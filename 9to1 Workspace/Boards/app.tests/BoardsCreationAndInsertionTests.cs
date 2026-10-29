@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -11,6 +12,118 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsCreationAndInsertionTests
 {
+    // The owner's plus-control menu of 29 October: Add Block Above / Add Block Below / Replace Current
+    // Block. These drive the real view model against a real in-memory board document and then read the
+    // page back, so the assertions are about where the block actually landed.
+    [Fact]
+    public async Task Plus_menu_destinations_put_the_new_block_exactly_where_the_owner_chose()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/plus-destinations");
+        var viewModel = new BoardsViewModel(session);
+        // The view model already opens in edit mode (BoardsViewModel._isEditMode = true), so no toggle
+        // is needed - dispatching ToggleEditView here would switch editing *off*.
+        Assert.True(TestUiThread.Run(() => viewModel.IsEditMode), "the board must be in edit mode for block edits");
+        var middle = TestUiThread.Run(() =>
+        {
+            var page = session.Document.Sections[0].Pages[0];
+            page.Blocks.Clear();
+            foreach (var text in new[] { "first", "middle", "last" })
+                page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = text });
+            return page.Blocks[1].Id;
+        });
+
+        PumpOnUi(TestUiThread.Run(() => viewModel.InsertKindRelativeToAsync("table", middle, "above")));
+        Assert.Equal(new[] { "paragraph", "table", "paragraph", "paragraph" }, Kinds(session));
+
+        var first = TestUiThread.Run(() => session.Document.Sections[0].Pages[0].Blocks[0].Id);
+        PumpOnUi(TestUiThread.Run(() => viewModel.InsertKindRelativeToAsync("divider", first, "below")));
+        Assert.Equal(new[] { "paragraph", "divider", "table", "paragraph", "paragraph" }, Kinds(session));
+    }
+
+    [Fact]
+    public async Task Replace_current_block_keeps_the_position_and_leaves_only_the_new_block_there()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/plus-replace");
+        var viewModel = new BoardsViewModel(session);
+        // The view model already opens in edit mode (BoardsViewModel._isEditMode = true), so no toggle
+        // is needed - dispatching ToggleEditView here would switch editing *off*.
+        Assert.True(TestUiThread.Run(() => viewModel.IsEditMode), "the board must be in edit mode for block edits");
+        var middle = TestUiThread.Run(() =>
+        {
+            var page = session.Document.Sections[0].Pages[0];
+            page.Blocks.Clear();
+            foreach (var text in new[] { "first", "middle", "last" })
+                page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = text });
+            return page.Blocks[1].Id;
+        });
+
+        PumpOnUi(TestUiThread.Run(() => viewModel.InsertKindRelativeToAsync("heading", middle, "replace")));
+
+        // Same slot, one block, the replaced one gone: replacing must not grow the page or shift order.
+        Assert.Equal(new[] { "paragraph", "heading", "paragraph" }, Kinds(session));
+        var ids = TestUiThread.Run(() => session.Document.Sections[0].Pages[0].Blocks.Select(item => item.Id).ToArray());
+        Assert.DoesNotContain(middle, ids);
+        Assert.Equal(3, ids.Distinct().Count());
+    }
+
+    [Fact]
+    public async Task Plus_menu_refuses_an_unknown_destination_and_a_vanished_block_without_editing_anything()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/plus-refusals");
+        var viewModel = new BoardsViewModel(session);
+        // The view model already opens in edit mode (BoardsViewModel._isEditMode = true), so no toggle
+        // is needed - dispatching ToggleEditView here would switch editing *off*.
+        Assert.True(TestUiThread.Run(() => viewModel.IsEditMode), "the board must be in edit mode for block edits");
+        TestUiThread.Run(() =>
+        {
+            var page = session.Document.Sections[0].Pages[0];
+            page.Blocks.Clear();
+            page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = "only" });
+            return true;
+        });
+
+        PumpOnUi(TestUiThread.Run(() => viewModel.InsertKindRelativeToAsync("table", "missing-block", "above")));
+        Assert.Equal(new[] { "paragraph" }, Kinds(session));
+        Assert.Contains("no longer on this page", StatusText(viewModel), StringComparison.Ordinal);
+
+        // Read the id at top level. TestUiThread.Run is a single-threaded queue, so a Run nested
+        // inside another Run's argument list would wait on the pump that is already pumping.
+        var only = TestUiThread.Run(() => session.Document.Sections[0].Pages[0].Blocks[0].Id);
+        PumpOnUi(TestUiThread.Run(() => viewModel.InsertKindRelativeToAsync("table", only, "sideways")));
+        Assert.Equal(new[] { "paragraph" }, Kinds(session));
+        Assert.Contains("Add Block Above, Add Block Below or Replace Current Block", StatusText(viewModel), StringComparison.Ordinal);
+    }
+
+    private static string[] Kinds(InMemoryRichBoardSession session) => TestUiThread.Run(() =>
+        session.Document.Sections[0].Pages[0].Blocks.Select(block => block.Kind).ToArray());
+
+    private static string StatusText(BoardsViewModel viewModel) =>
+        TestUiThread.Run(() => viewModel.Get("StatusText")?.ToString() ?? string.Empty);
+
+    /// <summary>Pumps a Boards UI action to completion on the app dispatcher. Accepts ValueTask too,
+    /// because the view model's dispatch path returns one and a bare Task parameter will not bind.</summary>
+    private static void PumpOnUi(object awaitable) => TestUiThread.Run(() =>
+    {
+        var task = awaitable is Task concrete ? concrete : ((ValueTask)awaitable).AsTask();
+        PumpTask(task);
+    });
+
+    private static void PumpTask(Task task)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        if (!task.IsCompleted) throw new TimeoutException("The Boards insert action did not complete on its dispatcher.");
+        if (task.IsFaulted) throw task.Exception!.GetBaseException();
+    }
+
     [Fact]
     public async Task New_menu_routes_notes_page_section_and_board_and_disables_owner_pages_without_a_host()
     {
