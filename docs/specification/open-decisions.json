@@ -160,6 +160,24 @@
       ],
       "affected_change": "Boards tab restore, the writable/read-only local and Files board sessions, and the app-wide close cohort that currently aborts when one participant declines.",
       "evidence": ".handoff/boards-first-v3/work/STATUS.md (29 October A06 section); /tmp/opencode/native-probe/ (isolated profiles, close logs, conflict copies)"
+    },
+    {
+      "id": "OPEN-2026-10-29-BOARD-SAVE-LOCATION",
+      "at": "2026-10-29T11:20:00+00:00",
+      "owner": "local OpenCode PC session (Boards-first v3)",
+      "summary": "Owner directs that creating a board must show and honour the folder it is saved to: create new board opens Files inside the Boards window, the user navigates, selects a folder and clicks Create, and the board is saved into that folder - instead of trusting that create board saves it somewhere.",
+      "verbatim_owner_request": "still having the saving issue. I think the fix is this: you click create new board - it opens files (inside of the boards window) and then you navigate through files, select a folder, and click \"create\" - the board is saved to that folder. rather than trusting that \"create board\" will save it somewhere",
+      "measured_fact": "Boards artefacts do exist, but only in a private hash-named subtree: ~/.local/share/9to1-development/profile/Boards/profiles/5018c35df725e59bd1f77c32a5ec0f6198116365e004c38910681edbf455395c/drafts/*.9to1board (4 drafts plus 3 conflict copies). There is no Files-visible Boards folder in the Home Files store at all. So a surface that says 'saved locally' with no path, over a directory named by a 64-character hash, is exactly the reported complaint: the files are saved, the user cannot see where, and the folder they look in is empty.",
+      "tension": "The 27 October headline correction says Boards must create and save WITHOUT connecting Files, an account or a dedicated Boards folder. This later explicit owner direction asks for a Files folder step at creation. Both are owner authority; the later one amends the former for the create path, and the resolution below preserves both intents.",
+      "planned_resolution_not_yet_implemented": [
+        "creation is never blocked: a board still becomes a recoverable local draft immediately, with no setup gate and no required account (preserves the 27 October correction and the 'remove the setup gate' answer to OPEN-2026-10-28-LOCAL-STORAGE-SCOPES)",
+        "the save destination is explicit and chosen: the Boards window hosts the actual Files surface for browsing and folder selection (replacing the native Save As dialog currently reached through BoardsWritablePresentation.PickSavePathAsync), and Create writes the .9to1board into the folder the user picked",
+        "the chosen location is always shown in the surface (nav header and board info), and the app-private draft path is named when a board is draft-only, so 'saved locally' can never again be the whole answer",
+        "existing drafts and conflict copies stay where they are and remain openable; nothing is moved silently"
+      ],
+      "state": "open - owner direction recorded, implementation not started",
+      "affected_change": "Boards create flow, the Files host seam inside Boards, BoardsWritablePresentation save/pick path, and the nav header location display",
+      "evidence": "filesystem listing above; docs/specification/owner-references/2026-10-27-expanded-spec (headline correction); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES"
     }
   ]
 }
