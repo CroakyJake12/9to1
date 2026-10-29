@@ -119,6 +119,86 @@ public sealed class UnifiedWorkspaceSessionTests
         Assert.Equal(new[] { a.Id, b.Id }, saved.Panes.OrderBy(pane => pane.Order).Select(pane => pane.TabId));
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Closed_tab_groups_follow_restore_preference_without_breaking_later_navigation_saves(bool restoreTabs)
+    {
+        var directory = Directory.CreateTempSubdirectory("haven-group-restore-").FullName;
+        var paths = new SplitPaths(directory); var succeeded = false;
+        try
+        {
+            using (var data = new BrowserDataService(paths))
+                await data.SetTabRestoreAsync(restoreTabs, CancellationToken.None);
+            var openGroupId = Guid.NewGuid();
+            var active = UnifiedWorkspaceTabState.Merge(null, Browser("Retained open tab") with
+                { Group = openGroupId.ToString("D") });
+            var openGroup = new TabGroupSnapshot(openGroupId, "Open research", true, [active.Id]) { Color = "#123456" };
+            var groupId = Guid.NewGuid();
+            var closed = new WorkspaceClosedTabSnapshot(Guid.NewGuid(), "Closed research", "https://research.example/",
+                "profile", groupId, 1, null, false, DateTimeOffset.UnixEpoch.AddDays(1));
+            var group = new TabGroupSnapshot(groupId, "Research", false, []) { Color = "#654321" };
+            var closedInOpenGroup = closed with { Id = Guid.NewGuid(), Title = "Closed sibling", GroupId = openGroupId };
+            var window = Window(WorkspaceWindowKind.Main, [active.Id]) with { RecentlyClosedTabs = [closedInOpenGroup, closed] };
+            var repository = new Repository { Restored = new(WorkspaceSessionSnapshot.CurrentSchemaVersion,
+                [active], [openGroup, group], [window], DateTimeOffset.UnixEpoch) };
+            var coordinator = new WorkspaceSessionCoordinator(repository);
+            var session = new UnifiedWorkspaceSession(coordinator, await coordinator.LoadAsync(CancellationToken.None));
+            var port = session.OpenWindow(window.Id, "profile");
+            await using (var chrome = await BrowseChrome.CreateAsync(paths, homeProfileId: "profile", tabSessionPersistence: port))
+            {
+                var first = chrome.State.SelectedTabId;
+                // Startup already saved once. The original defect dropped closed-tab references
+                // there, then refused the next real action as a foreign-group mutation.
+                var second = (await chrome.NewTabAsync(false)).SelectedTabId;
+                await chrome.SelectTabAsync(first);
+                await chrome.SelectTabAsync(second);
+                var saved = repository.Writes[^1];
+                Assert.Equal(second, Assert.Single(saved.Windows).SelectedTabId);
+                Assert.Equal(openGroupId, saved.Tabs.Single(tab => tab.Id == active.Id).GroupId);
+                var savedOpenGroup = Assert.Single(saved.Groups, item => item.Id == openGroupId);
+                Assert.Equal(openGroup.Name, savedOpenGroup.Name);
+                Assert.Equal(openGroup.IsCollapsed, savedOpenGroup.IsCollapsed);
+                Assert.Equal(openGroup.Color, savedOpenGroup.Color);
+                Assert.Equal(openGroup.OrderedTabIds, savedOpenGroup.OrderedTabIds);
+                var savedClosedGroup = Assert.Single(saved.Groups, item => item.Id == groupId);
+                Assert.Equal(group.Name, savedClosedGroup.Name);
+                Assert.Equal(group.Color, savedClosedGroup.Color);
+                Assert.Equal(new[] { closedInOpenGroup, closed }, saved.Windows[0].RecentlyClosedTabs);
+                Assert.True(chrome.CanReopenClosedTab);
+                Assert.DoesNotContain(chrome.State.Tabs, tab => tab.Id == closed.Id);
+                if (restoreTabs)
+                {
+                    Assert.Equal(openGroupId, chrome.State.Tabs.Single(tab => tab.Id == active.Id).GroupId);
+                    Assert.Equal(openGroup.Name, chrome.State.Tabs.Single(tab => tab.Id == active.Id).GroupName);
+                }
+                else
+                {
+                    Assert.DoesNotContain(chrome.State.Tabs, tab => tab.Id == active.Id);
+                }
+                await chrome.ReopenClosedTabAsync();
+                Assert.Equal(closed.Id, chrome.State.SelectedTabId);
+                Assert.Equal(groupId, chrome.State.Tabs.Single(tab => tab.Id == closed.Id).GroupId);
+                Assert.Equal(group.Name, chrome.State.Tabs.Single(tab => tab.Id == closed.Id).GroupName);
+                Assert.Equal(groupId, repository.Writes[^1].Tabs.Single(tab => tab.Id == closed.Id).GroupId);
+                await chrome.ReopenClosedTabAsync();
+                Assert.Equal(closedInOpenGroup.Id, chrome.State.SelectedTabId);
+                Assert.Equal(openGroup.Name, chrome.State.Tabs.Single(tab => tab.Id == closedInOpenGroup.Id).GroupName);
+                Assert.Equal(openGroupId, repository.Writes[^1].Tabs.Single(tab => tab.Id == closedInOpenGroup.Id).GroupId);
+                Assert.Equal(new[] { active.Id, closedInOpenGroup.Id },
+                    Assert.Single(repository.Writes[^1].Groups, item => item.Id == openGroupId).OrderedTabIds);
+                Assert.Empty(repository.Writes[^1].Windows[0].RecentlyClosedTabs);
+            }
+            await session.SealAndDrainAsync();
+            await coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
+            succeeded = true;
+        }
+        finally
+        {
+            if (succeeded) Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Browse_group_operations_update_the_existing_canonical_group_identity_and_membership()
     {

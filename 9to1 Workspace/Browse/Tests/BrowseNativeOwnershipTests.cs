@@ -57,6 +57,93 @@ public sealed partial class BrowseNativeOwnershipTests
     }
 
     [Fact]
+    public async Task Page_commit_observers_can_read_original_sources_from_another_thread_before_returning()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        await using var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        var tabId = chrome.State.SelectedTabId;
+        await chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Chromium);
+        await Task.WhenAll(chrome.OriginalNativeSources.ToArray());
+        using var readerEntered = new ManualResetEventSlim();
+        using var readerCompleted = new ManualResetEventSlim();
+        Task<(Task? Close, IReadOnlyList<Task> Sources)>? readback = null;
+        Task? originalCommit = null;
+        var observed = 0; var readerStarted = false; var completedDuringNotification = false;
+        void Observe(object? sender, BrowseChromeSnapshot snapshot)
+        {
+            var pending = chrome.OriginalNativeSources.FirstOrDefault(source => !source.IsCompleted);
+            if (pending is null || Interlocked.CompareExchange(ref observed, 1, 0) != 0) return;
+            originalCommit = pending;
+            // A workspace observer may already own its own source gate while reading
+            // these public lifetime observations. Use a dedicated reader so thread-pool
+            // scheduling cannot impersonate the native lock inversion.
+            readback = Task.Factory.StartNew(() =>
+            {
+                readerEntered.Set();
+                var result = (chrome.OriginalClose, chrome.OriginalNativeSources);
+                readerCompleted.Set();
+                return result;
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            readerStarted = readerEntered.Wait(TimeSpan.FromSeconds(5));
+            completedDuringNotification = readerCompleted.Wait(TimeSpan.FromSeconds(5));
+            // Return even on RED, releasing the publisher so the real commit and
+            // reader can settle; this regression must not leave a deadlocked test host.
+        }
+        chrome.StateChanged += Observe;
+        try
+        {
+            factory.Hosts[0].CommitFixturePage(new Uri("https://committed.example/observer"), "Observed commit");
+            Assert.NotNull(readback); Assert.NotNull(originalCommit);
+            var observation = await readback.WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.WhenAll(chrome.OriginalNativeSources.ToArray()).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(readerStarted, "The cross-thread observer must enter before the notification returns.");
+            Assert.True(completedDuringNotification, "Page-commit publication blocked cross-thread lifetime observation until its callback returned.");
+            Assert.Null(observation.Close);
+            Assert.Contains(originalCommit, observation.Sources);
+        }
+        finally { chrome.StateChanged -= Observe; }
+        var history = Assert.Single(chrome.State.History);
+        Assert.Equal("https://committed.example/observer", history.Address);
+        Assert.Equal("Observed commit", history.Title);
+        await chrome.DisposeAsync();
+        await using var restored = await BrowseChrome.CreateAsync(paths);
+        Assert.Equal(tabId, restored.State.SelectedTabId);
+        Assert.Equal(new Uri(history.Address), restored.State.SelectedTab.Address.WebUri);
+        Assert.Equal(history, Assert.Single(restored.State.History));
+    }
+
+    [Fact]
+    public async Task Page_commit_notification_failure_stays_on_the_original_source_and_close()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(paths, factory); RetainedFailedOwners.Add(chrome);
+        await chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Chromium);
+        await Task.WhenAll(chrome.OriginalNativeSources.ToArray());
+        var failure = new InvalidOperationException("Fixture page-commit observer failed.");
+        Task? originalCommit = null;
+        void Observe(object? sender, BrowseChromeSnapshot snapshot)
+        {
+            originalCommit = chrome.OriginalNativeSources.FirstOrDefault(source => !source.IsCompleted);
+            if (originalCommit is not null) throw failure;
+        }
+        chrome.StateChanged += Observe;
+        try
+        {
+            Assert.Same(failure, Assert.Throws<InvalidOperationException>(() =>
+                factory.Hosts[0].CommitFixturePage(new Uri("https://failure.example/observer"), "Observer failure")));
+        }
+        finally { chrome.StateChanged -= Observe; }
+        Assert.NotNull(originalCommit);
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => originalCommit));
+        var close = chrome.DisposeAsync().AsTask();
+        var closeFailure = await Assert.ThrowsAsync<AggregateException>(() => close);
+        Assert.Contains(failure, closeFailure.Flatten().InnerExceptions);
+        Assert.Same(close, chrome.OriginalClose);
+        Assert.Contains(originalCommit, chrome.OriginalNativeSources);
+        Assert.Empty(chrome.State.History);
+    }
+
+    [Fact]
     public async Task Private_commit_uses_private_profile_and_never_persists_visit_or_private_tab()
     {
         var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();

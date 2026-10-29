@@ -211,15 +211,26 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 await chrome.AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
             }
 
-            chrome.RestoreTabGroups(projected?.Groups);
+            // Startup restoration controls opening tabs, not the user's recovery history.
+            // Keep closed-tab ownership before the first save, including closed-only groups.
+            if (tabSessionPersistence is not null) chrome.RestoreClosedTabs(projected?.ClosedTabs ?? []);
+            else chrome.RestoreStandaloneClosedTabs();
+            var groups = projected?.Groups;
+            if (!chrome._data.Settings.RestoreTabs)
+            {
+                var recoveryGroupIds = chrome.CaptureClosedTabs().Select(item =>
+                    TryGetGroupId(item.Tab.Group, out var id) ? id : Guid.Empty).ToHashSet();
+                // Open members remain in the canonical owner; none were opened in this chrome.
+                groups = groups?.Where(group => recoveryGroupIds.Contains(group.Id))
+                    .Select(group => group with { OrderedTabIds = Array.Empty<Guid>() }).ToArray();
+            }
+            chrome.RestoreTabGroups(groups);
 
             chrome.NormalizeTabPlacement();
             chrome._selectedTabId = projected?.SelectedTabId is { } restoredSelection && chrome._tabs.Any(tab => tab.Id == restoredSelection)
                 ? restoredSelection : chrome._tabs.FirstOrDefault(tab => tab.IsHome)?.Id ?? chrome._tabs[0].Id;
             if (chrome._data.Settings.RestoreTabs)
             {
-                if (tabSessionPersistence is not null) chrome.RestoreClosedTabs(projected?.ClosedTabs ?? []);
-                else chrome.RestoreStandaloneClosedTabs();
                 chrome.RestoreSplitViews(projected);
             }
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
