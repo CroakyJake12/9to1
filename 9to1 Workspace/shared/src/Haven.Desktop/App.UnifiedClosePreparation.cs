@@ -60,12 +60,38 @@ public sealed partial class App
         private static bool HasStrongOwner(BrowseChrome? chrome) => chrome is not null && chrome.State.Tabs.Any(tab =>
             chrome.ObserveOriginalAppContent(tab.Id) is IBrowseAppContentClosePreparationParticipant { SupportsReversibleClosePreparation: true });
 
-        // Names the tab owners a close is waiting behind, by their actual content type. Diagnostic
-        // only; it reads the same observations the close decision already reads.
+        // Names the tab owners a close is waiting behind, by their actual content type AND their real
+        // session state. Measured on 29 October: the abort line said only "chrome returned no close
+        // preparation", so the participant that declined was invisible. Initialization/publication/
+        // retirement state is exactly what the close decision already reads; this prepares, joins or
+        // vetoes nothing.
+        private static string DescribeCloseCandidates(BrowseChrome? chrome) => chrome is null ? "no chrome" :
+            string.Join(",", chrome.State.Tabs.Select(tab =>
+            {
+                var content = chrome.ObserveOriginalAppContent(tab.Id);
+                var participant = content as IBrowseAppContentClosePreparationParticipant;
+                return (content?.GetType().Name ?? "no-content") + "[reversible=" +
+                    (participant?.SupportsReversibleClosePreparation.ToString() ?? "not-a-participant") + "]";
+            }));
+
         private static string DescribeCloseParticipants(BrowseChrome? chrome) => chrome is null ? "no chrome" :
             string.Join(",", chrome.State.Tabs.Select(tab =>
-                (chrome.ObserveOriginalAppContent(tab.Id) is { } content ? content.GetType().Name : "none") +
-                (tab.Address.ToString() is { Length: > 0 } address ? "@" + (address.Length <= 42 ? address : address[..42]) + "…" : string.Empty)));
+            {
+                var content = chrome.ObserveOriginalAppContent(tab.Id);
+                var init = content?.OriginalInitialization;
+                var initState = init is null ? "unstarted"
+                    : init.IsFaulted ? "FAULTED:" + (init.Exception?.InnerExceptions?.FirstOrDefault()?.GetType().Name ?? "unknown")
+                    : init.IsCompletedSuccessfully ? "started"
+                    : init.IsCanceled ? "canceled" : "PENDING";
+                var closing = content?.OriginalClose is { } actualClose
+                    ? (actualClose.IsCompletedSuccessfully ? "closed" : actualClose.IsFaulted ? "close-FAULTED" : "closing")
+                    : "not-closing";
+                var address = tab.Address.ToString();
+                return (content is { } owner ? owner.GetType().Name : "no-content") +
+                    $"[init={initState},pub={content?.IsPublicationCurrent.ToString() ?? "n/a"}," +
+                    $"retirable={content?.CanRetireOriginalView.ToString() ?? "n/a"},{closing}]" +
+                    (address.Length > 0 ? "@" + (address.Length <= 42 ? address : address[..42]) + "…" : string.Empty);
+            }));
 
         internal Task<ClosePreparation?> PrepareCloseAsync(CancellationToken token)
         {
@@ -109,7 +135,17 @@ public sealed partial class App
                     await TimeOriginalCloseStageAsync("unified driver: reversible chrome close preparation", JoinOriginalAppTaskAsync(actual, failures));
                     ThrowAppCauses(failures);
                     attempt.Chrome = actual.GetAwaiter().GetResult(); // SAME completed actual source, before later getters.
-                    if (attempt.Chrome is null) { WriteOriginalCloseDiagnostic("unified driver: chrome returned no close preparation; aborts"); await AbortPreparation(attempt); return null; }
+                    if (attempt.Chrome is null)
+                    {
+                        // Name the decliner instead of reporting only the aggregate. Each tab's close
+                        // capability is exactly what the chrome decision routes on, so this records
+                        // which owners are reversible participants, which are one-shot, and which are
+                        // not owners at all - plus the same live session state as before the call.
+                        WriteOriginalCloseDiagnostic("unified driver: chrome returned no close preparation; aborts. decliner candidates=[" +
+                            DescribeCloseCandidates(_chrome) + "] state after=[" + DescribeCloseParticipants(_chrome) + "]");
+                        await AbortPreparation(attempt);
+                        return null;
+                    }
                 }
                 else if (_chrome is not null)
                 {

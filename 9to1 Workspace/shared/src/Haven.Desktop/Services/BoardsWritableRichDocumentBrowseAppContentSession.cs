@@ -278,9 +278,16 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         cancellationToken.ThrowIfCancellationRequested();
+        App.WriteOriginalCloseDiagnostic("boards close: request received (closing=" + _closing + ", hasClose=" +
+            (_close is not null) + ", alreadyPrepared=" + (_prepared is not null) + ", localDocuments=" +
+            (_localDocuments is not null) + ", address=" + _address + ")");
         lock (_gate)
         {
-            if (_close is not null || _closing) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
+            if (_close is not null || _closing)
+            {
+                App.WriteOriginalCloseDiagnostic("boards close: DECLINED because a close is already running or done: " + _address);
+                return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
+            }
             if (_prepared is { } prepared) return Task.FromResult<IBrowseAppContentClosePreparation?>(prepared);
             if (_preparationTask is { IsCompleted: false }) return _preparationTask;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
