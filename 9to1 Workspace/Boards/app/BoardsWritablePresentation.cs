@@ -301,6 +301,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
                 };
                 vm.SetLandingData(await documents.Recent.LoadCardsAsync(documents.Store, token),
                     await documents.Recent.LoadRecentPagesAsync(documents.Store, token));
+                await documents.ResolveWorkspaceDirectoryAsync(runtimeToken);
                 vm.Set("BoardStorageNotice", StorageNotice(documents));
             }).GetTask().Unwrap().ConfigureAwait(false);
             return host;
@@ -308,12 +309,29 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         catch { await host.DisposeAsync().ConfigureAwait(false); throw; }
     }
 
-    /// <summary>Names the folder the boards are actually in. "Saved locally" without a location
-    /// sent the owner looking at an apparently empty Boards folder, so the surface now says where
-    /// the drafts live and how to write a copy somewhere else on purpose.</summary>
-    private static string StorageNotice(BoardsLocalDocuments documents) =>
-        "Boards are kept in " + documents.DraftDirectory +
-        " — use Save As to write a .9to1board copy somewhere else.";
+    private static string StorageNotice(BoardsLocalDocuments documents) => StorageNoticeFor(documents);
+
+    /// <summary>Names the folder a board is actually in. "Saved locally" without a location sent the
+    /// owner looking at an apparently empty Boards folder, so every case states a real path: the live
+    /// file this board is saved to, the workspace folder new boards go into, or - when the workspace
+    /// could not be used - the draft folder plus the reason. The drafts-only wording survives only for
+    /// a host with no workspace folder at all.</summary>
+    public static string StorageNoticeFor(BoardsLocalDocuments documents, Guid? boardId = null)
+    {
+        var destination = boardId is { } id && id != Guid.Empty ? documents.DestinationFor(id) : null;
+        if (destination is not null) return "Saved in " + destination;
+        if (documents.WorkspaceResolutionFailure is { } unresolved)
+            return "Boards could not reach the 9to1 folder, so this board is a local draft in " +
+                documents.DraftDirectory + " - " + unresolved;
+        if (documents.PlacementFailure is { } failure)
+            return "Saved as a local draft in " + documents.DraftDirectory +
+                " - the 9to1 folder could not be used: " + failure;
+        if (documents.DocumentsDirectory is { } workspace)
+            return "Boards are saved in " + workspace +
+                " - use Save As to put one somewhere else.";
+        return "Boards are kept in " + documents.DraftDirectory +
+            " — use Save As to write a .9to1board copy somewhere else.";
+    }
 
     public static async Task<BoardsWritablePresentation> OpenLocalDocumentAsync(BoardsLocalDocuments documents,
         Guid documentId, Func<Guid, CancellationToken, Task> open, bool landing = false,
@@ -359,6 +377,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
             };
             vm.SetLandingData(await documents.Recent.LoadCardsAsync(documents.Store, token),
                 await documents.Recent.LoadRecentPagesAsync(documents.Store, token));
+            await documents.ResolveWorkspaceDirectoryAsync(runtimeToken);
             vm.Set("BoardStorageNotice", StorageNotice(documents));
         }).GetTask().Unwrap().ConfigureAwait(false);
         return host;

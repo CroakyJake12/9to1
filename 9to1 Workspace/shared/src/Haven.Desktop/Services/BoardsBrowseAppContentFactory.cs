@@ -101,7 +101,9 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
             NativeCanvasBoardEmbeddedArtifactHost? embedded = null;
             try
             {
-                documents = new BoardsLocalDocuments(request.ProfileId, Path.Combine(_provider.GetRequiredService<IAppPaths>().DataDirectory, "Boards"));
+                documents = new BoardsLocalDocuments(request.ProfileId,
+                    Path.Combine(_provider.GetRequiredService<IAppPaths>().DataDirectory, "Boards"),
+                    token => BoardsWorkspaceFolders.ResolveAppDirectoryAsync(_provider, "boards", token));
                 embedded = CreateEmbeddedArtifactHost(request, localLifetime.Token);
                 return new BoardsWritableRichDocumentBrowseAppContentSession(request, address, documents,
                     (id, token) => _openLocalBoard is { } open ? open(request, id, token)

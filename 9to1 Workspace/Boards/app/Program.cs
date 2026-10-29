@@ -120,7 +120,8 @@ internal sealed class BoardsApp : Application
             ?? throw new UnauthorizedAccessException("The actual local Home profile is unavailable.");
         _databaseSource = new StandaloneDataSource(new DataLocalRecordSessionFactory(new DataWorkbookRepository(paths), profiles),
             actor.ProfileId, _databaseLifetime.Token);
-        _localDocuments = new BoardsLocalDocuments(actor.ProfileId, Path.Combine(paths.DataDirectory, "Boards"));
+        _localDocuments = new BoardsLocalDocuments(actor.ProfileId, Path.Combine(paths.DataDirectory, "Boards"),
+            _ => Task.FromResult(BoardsWorkspaceStorage.DefaultBoardsDirectory(paths.DataDirectory)));
         _store = _localDocuments.Store;
         _recentBoardCatalog = _localDocuments.Recent;
         var legacyFailures = string.IsNullOrWhiteSpace(configuredRoot)

@@ -6,6 +6,143 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsLocalDraftTests
 {
+    // The owner's 29 October storage model: a board is saved into the device 9to1 workspace folder as a
+    // normal visible file, not only as a private draft nobody can find. These run against real
+    // directories; the workspace folder stands in for Files' registered boards app folder.
+    [Fact]
+    public async Task A_new_board_is_written_as_a_visible_file_in_the_workspace_folder()
+    {
+        var root = TempRoot(); var workspace = TempRoot();
+        Directory.CreateDirectory(root); Directory.CreateDirectory(workspace);
+        try
+        {
+            using var documents = new BoardsLocalDocuments("placed-profile", root, _ => Task.FromResult<string?>(workspace));
+            var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                HavenBoardDocumentCodec.CreateNew("Roadmap"),
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            var id = await documents.CreateAsync(bytes);
+
+            var visible = Path.Combine(workspace, "Roadmap.9to1board");
+            Assert.True(File.Exists(visible), "the board was not written where the owner can see it");
+            Assert.Equal(visible, documents.PlacedPath);
+            Assert.Null(documents.PlacementFailure);
+            Assert.Equal(visible, documents.DestinationFor(id));
+            Assert.Equal(System.IO.File.ReadAllBytes(documents.PathFor(id)), System.IO.File.ReadAllBytes(visible));
+            Assert.NotEqual(documents.PathFor(id), visible);
+            Assert.False(documents.OwnsPath(visible));
+        }
+        finally { Directory.Delete(root, true); Directory.Delete(workspace, true); }
+    }
+
+    [Fact]
+    public async Task Two_boards_with_the_same_title_never_overwrite_each_other()
+    {
+        var root = TempRoot(); var workspace = TempRoot();
+        Directory.CreateDirectory(root); Directory.CreateDirectory(workspace);
+        try
+        {
+            using var documents = new BoardsLocalDocuments("twins-profile", root, _ => Task.FromResult<string?>(workspace));
+            // Two separate boards that happen to share a title: distinct documents, so distinct drafts.
+            static System.Text.Json.JsonSerializerOptions Json() =>
+                new(System.Text.Json.JsonSerializerDefaults.Web);
+            var roadmap = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                HavenBoardDocumentCodec.CreateNew("Roadmap"), Json());
+            var first = await documents.CreateAsync(roadmap);
+            var firstPath = Assert.IsType<string>(documents.PlacedPath);
+            var firstBytes = System.IO.File.ReadAllBytes(firstPath);
+            var second = await documents.CreateAsync(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                HavenBoardDocumentCodec.CreateNew("Roadmap"), Json()));
+
+            Assert.NotEqual(first, second);
+            Assert.Equal(Path.Combine(workspace, "Roadmap.9to1board"), firstPath);
+            Assert.Equal(Path.Combine(workspace, "Roadmap (2).9to1board"), documents.PlacedPath);
+            Assert.Equal(firstBytes, System.IO.File.ReadAllBytes(firstPath));
+
+            // A file the owner made themselves is never displaced by a board of the same name either.
+            System.IO.File.WriteAllText(Path.Combine(workspace, "Roadmap (3).9to1board"), "the owner wrote this");
+            await documents.CreateAsync(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                HavenBoardDocumentCodec.CreateNew("Roadmap"), Json()));
+            Assert.Equal(Path.Combine(workspace, "Roadmap (4).9to1board"), documents.PlacedPath);
+            Assert.Equal("the owner wrote this", System.IO.File.ReadAllText(Path.Combine(workspace, "Roadmap (3).9to1board")));
+        }
+        finally { Directory.Delete(root, true); Directory.Delete(workspace, true); }
+    }
+
+    [Fact]
+    public async Task A_blocked_workspace_folder_still_keeps_the_board_as_a_recoverable_draft_and_says_why()
+    {
+        var root = TempRoot(); var workspace = TempRoot();
+        Directory.CreateDirectory(root);
+        System.IO.File.WriteAllText(workspace, "a file where the folder belongs");
+        try
+        {
+            using var documents = new BoardsLocalDocuments("blocked-profile", root, _ => Task.FromResult<string?>(workspace));
+            var id = await documents.CreateAsync();
+
+            Assert.True(File.Exists(documents.PathFor(id)), "creation must never be blocked by a storage problem");
+            Assert.Null(documents.PlacedPath);
+            Assert.NotNull(documents.PlacementFailure);
+            Assert.Null(documents.DestinationFor(id));
+            var notice = BoardsWritablePresentation.StorageNoticeFor(documents, id);
+            Assert.Contains(documents.DraftDirectory, notice, StringComparison.Ordinal);
+            Assert.Contains("could not be used", notice, StringComparison.Ordinal);
+        }
+        finally { Directory.Delete(root, true); File.Delete(workspace); }
+    }
+
+    [Fact]
+    public async Task Editing_a_placed_board_saves_through_to_the_visible_file()
+    {
+        var root = TempRoot(); var workspace = TempRoot();
+        Directory.CreateDirectory(root); Directory.CreateDirectory(workspace);
+        try
+        {
+            Guid id; var visible = Path.Combine(workspace, "Untitled board.9to1board");
+            using (var documents = new BoardsLocalDocuments("lives-profile", root, _ => Task.FromResult<string?>(workspace)))
+            {
+                id = await documents.CreateAsync();
+                Assert.Equal(visible, documents.PlacedPath);
+                await using (var session = await documents.OpenAsync(id))
+                {
+                    var page = session.Document.Sections[0].Pages[0];
+                    page.Blocks.Add(new RichBoardBlock { Text = "Written into the Files-visible copy" });
+                    session.MarkDirty();
+                    await session.SaveAsync();
+                }
+            }
+            Assert.Contains("Written into the Files-visible copy", File.ReadAllText(visible), StringComparison.Ordinal);
+            using (var documents = new BoardsLocalDocuments("lives-profile", root, _ => Task.FromResult<string?>(workspace)))
+            {
+                await using var reopened = await documents.OpenAsync(id);
+                Assert.Contains(reopened.Document.Sections[0].Pages[0].Blocks,
+                    block => block.Text == "Written into the Files-visible copy");
+            }
+        }
+        finally { Directory.Delete(root, true); Directory.Delete(workspace, true); }
+    }
+
+    [Fact]
+    public async Task A_board_title_cannot_write_outside_the_workspace_folder()
+    {
+        var root = TempRoot(); var workspace = TempRoot(); var outside = TempRoot();
+        Directory.CreateDirectory(root); Directory.CreateDirectory(Path.Combine(workspace, "Boards"));
+        Directory.CreateDirectory(outside);
+        try
+        {
+            using var documents = new BoardsLocalDocuments("escape-profile", root, _ => Task.FromResult<string?>(Path.Combine(workspace, "Boards")));
+            var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                HavenBoardDocumentCodec.CreateNew("Reports " + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "outside" + Path.DirectorySeparatorChar + "secret" + ":<>|*?"),
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            await documents.CreateAsync(bytes);
+
+            Assert.NotNull(documents.PlacedPath);
+            Assert.Equal(Path.Combine(workspace, "Boards"), Path.GetDirectoryName(documents.PlacedPath));
+            Assert.Empty(Directory.GetFiles(outside));
+            Assert.Single(Directory.GetFiles(Path.Combine(workspace, "Boards")));
+        }
+        finally { Directory.Delete(root, true); Directory.Delete(workspace, true); Directory.Delete(outside, true); }
+    }
+
     [Fact]
     public async Task New_draft_is_durable_without_a_destination_and_reopens_in_the_same_profile()
     {

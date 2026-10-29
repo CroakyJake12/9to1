@@ -737,10 +737,18 @@ public sealed partial class App
         {
             if (_localCreatedBoards.TryGetValue(origin.TabId, out var retained))
                 return await OpenRetainedLocalBoardAsync(origin, retained, token);
-            using var documents = new BoardsLocalDocuments(origin.ProfileId, Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "Boards"));
+            using var documents = new BoardsLocalDocuments(origin.ProfileId,
+                Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "Boards"),
+                cancel => BoardsWorkspaceFolders.ResolveAppDirectoryAsync(_services, "boards", cancel));
             var id = await documents.CreateAsync(bytes, token);
             _localCreatedBoards[origin.TabId] = id;
-            return await OpenRetainedLocalBoardAsync(origin, id, token);
+            var opened = await OpenRetainedLocalBoardAsync(origin, id, token);
+            // The owner's complaint was a board that "says saved locally, gives no location". A created
+            // board now reports the exact file it was written into, and when that could not happen the
+            // reason instead of a success wording.
+            return documents.PlacedPath is { } placed
+                ? opened with { Message = "Saved in " + placed }
+                : opened with { Message = CakeOS.Apps.Boards.App.BoardsWritablePresentation.StorageNoticeFor(documents, id) };
         }
 
         private readonly Dictionary<Guid, Guid> _localCreatedBoards = [];
@@ -751,7 +759,13 @@ public sealed partial class App
             {
                 await OpenLocalBoardAsync(origin, id, token);
                 _localCreatedBoards.Remove(origin.TabId);
-                return new(BoardsHomeBoardCreationOutcome.Opened, "LocalDraftOpened", "Saved locally — draft");
+                // Opening a retained board reports the folder it lives in rather than the old bare
+                // "Saved locally — draft": the owner could not tell where a board actually was.
+                var workspace = await BoardsWorkspaceFolders.ResolveAppDirectoryAsync(_services, "boards", token);
+                return new(BoardsHomeBoardCreationOutcome.Opened, "LocalBoardOpened", workspace is null
+                    ? "Opened the local draft. The 9to1 Boards folder is unavailable - " +
+                        (BoardsWorkspaceFolders.LastResolveFailure ?? "no Files workspace is set up yet") + "."
+                    : "Saved in " + workspace);
             }
             catch (Exception error)
             {
@@ -767,7 +781,9 @@ public sealed partial class App
             if (origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
                 current is not IBrowseNativeAppContentSession { IsPublicationCurrent: true })
                 throw new UnauthorizedAccessException("Open the local board from its current profile-owned tab.");
-            using var documents = new BoardsLocalDocuments(origin.ProfileId, Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "Boards"));
+            using var documents = new BoardsLocalDocuments(origin.ProfileId,
+                Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "Boards"),
+                cancel => BoardsWorkspaceFolders.ResolveAppDirectoryAsync(_services, "boards", cancel));
             var localRead = documents.Store.LoadDocumentAtPathAsync(documents.PathFor(documentId), token);
             _ = Track(localRead);
             var document = await localRead;
