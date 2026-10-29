@@ -181,6 +181,26 @@
       "affected_change": "the Files native host store/folder/file registration (the same store/folder/file/revision identity Boards already writes through), AppPaths/root resolution, first-run creation, the location override control, and the relocation scan",
       "evidence": "filesystem listing above; docs/specification/owner-references/2026-10-27-expanded-spec (headline correction); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES",
       "earlier_owner_instruction_superseded": "the folder-picker-at-creation phrasing from the same day is replaced by an auto-created default location that needs no connect step; the picker becomes the exception path (user picks another location), not the required first step"
+    },
+    {
+      "id": "OPEN-2026-10-29-FILES-THREE-ROOTS",
+      "at": "2026-10-29T11:30:00+00:00",
+      "owner": "local OpenCode PC session (Boards-first v3)",
+      "summary": "Files has exactly three top-level directories: Cloud, 9to1 Local Workspace, This Machine.",
+      "verbatim_owner_request": "so files should have 3 directories: - Cloud: Automatically connected when the user signs in - 9to1 Local Workspace: The 9to1 folder on the user's device - This Machine: The full folder system on a device. For devices for multiple ssds: ThisMachine-C:// ThisMachine-F:// etc. the user would click this machine and then see C:// F://",
+      "model": {
+        "Cloud": "present and automatically connected when the user signs in; absent or signed-out state must never block local creation or saving (the pinned correction that Boards creates and saves without an account)",
+        "9to1LocalWorkspace": "the auto-created 9to1 folder under Documents from BF-39, one root per device, with per-app subfolders, and the relocation rule: if the user moves it, the app finds it by its stable root marker and re-registers there",
+        "ThisMachine": "the device's real file system. Selecting it lists the devices' storage, then the folder tree under each. Multiple SSDs appear as separate entries (ThisMachine-C://, ThisMachine-F:// on Windows)."
+      },
+      "open_sub_decisions": [
+        "Linux naming: this development PC and the ARM laptop have no C:// drives. Worker's chosen default, overridable by the owner: This Machine lists mounted volumes using the same shape, labelled by volume name and mount point (for example 'ThisMachine-nvme1n1p2 (/)' and 'ThisMachine-sda1 (/mnt/data)'), with drive letters used on Windows. Naming shown to the user for non-Windows mounts is the open point.",
+        "whether Cloud storage is a Files store in the same store/folder/file identity model Boards already writes through, or a mounted remote view behind that same boundary",
+        "whether per-app subfolders live inside 9to1 Local Workspace only, or also under a chosen alternate root"
+      ],
+      "state": "open - owner IA recorded; nothing implemented yet",
+      "affected_change": "the Files native host store registration and root list, Home's Files navigation, the Boards save root resolution (BF-39), and the Connect sign-in signal that attaches Cloud",
+      "evidence": "owner messages 29 October; docs/specification/owner-references/2026-10-27-expanded-spec (create and save without Files connect, account or a dedicated Boards folder); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES; OPEN-2026-10-29-BOARD-SAVE-LOCATION"
     }
   ]
 }
