@@ -314,7 +314,31 @@ internal sealed class BoardsWritableRichDocumentBrowseAppContentSession : IBrows
         var presentation = _presentation;
         if (presentation is null) { App.WriteOriginalCloseDiagnostic("boards close: no presentation; failed-initialization preparation"); return CreateFailedInitializationPreparation(); }
         if (_localDocuments is not null)
-            await App.TimeOriginalCloseStageAsync("boards close: document save", presentation.SaveAsync(token).AsTask()).ConfigureAwait(false);
+        {
+            try
+            {
+                await App.TimeOriginalCloseStageAsync("boards close: document save", presentation.SaveAsync(token).AsTask()).ConfigureAwait(false);
+            }
+            catch (IOException conflict)
+            {
+                // A close-time write conflict must not be thrown into the app-wide close preflight.
+                // Measured on 29 October with the owner's saved session restored: the same local board
+                // was open in three tabs, each holding its own baseline, so the second and third saves
+                // raised "This board changed in another editor…" during close; that fault escaped this
+                // participant, aborted the whole close preparation and left the window refusing to
+                // close with nothing said (reported A05/A06). The store already retained the version
+                // separately under drafts/conflicts, so the work is not lost: record the retained copy,
+                // say so on the surface, and let the close complete honestly.
+                var firstLine = conflict.Message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()
+                    ?? conflict.GetType().Name;
+                App.WriteOriginalCloseDiagnostic("boards close: document save conflict retained separately: " + firstLine);
+                try { presentation.ViewModel.Set("StatusText", "This board changed in another tab; your version was kept separately. " + firstLine); }
+                catch (Exception presentationFault)
+                {
+                    App.WriteOriginalCloseDiagnostic("boards close: conflict status presentation failed: " + presentationFault.GetType().Name);
+                }
+            }
+        }
         var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBoardsPresentationClosePreparation?>>(
             () =>
             {

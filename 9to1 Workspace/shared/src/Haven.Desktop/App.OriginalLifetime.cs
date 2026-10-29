@@ -466,6 +466,31 @@ public sealed partial class App
                         () => unified.PrepareCloseAsync(CancellationToken.None));
                     WriteOriginalCloseDiagnostic("unified workspace close preparation acquired");
                     try { await original.AwaitAsync(attempt.UnifiedPreparation); }
+                    catch (Exception preparationFault)
+                    {
+                        // A faulting close participant must be REPORTED, never swallowed. Measured on
+                        // 29 October against a copy of the owner's own saved session: three restored
+                        // tabs of one local board each held their own save baseline, so the close-time
+                        // save raised "This board changed in another editor…" from inside a Boards
+                        // participant, this await faulted, and the fault escaped into an unobserved
+                        // task - the window simply refused to close with nothing said to the user
+                        // (reported A05/A06). The lease recovery below still runs for the actual child
+                        // result; then the retained failure is recorded, written to the bounded close
+                        // diagnostic, and shown through the existing close-obligation recovery state.
+                        // The close stays cancelled; it is no longer silent, and a later request still
+                        // gets a fresh attempt because this attempt completes rather than hanging.
+                        var firstLine = preparationFault.Message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                            .FirstOrDefault() ?? preparationFault.GetType().Name;
+                        WriteOriginalCloseDiagnostic($"unified workspace close preparation FAULTED: {preparationFault.GetType().Name}: {firstLine}");
+                        _actualShutdownFailure ??= preparationFault;
+                        ReportOriginalShutdownFailure(preparationFault);
+                        try { ShowOriginalShutdownRecovery(preparationFault); }
+                        catch (Exception presentationFault)
+                        {
+                            WriteOriginalCloseDiagnostic($"close-obligation recovery presentation failed: {presentationFault.GetType().Name}");
+                        }
+                        return;
+                    }
                     finally
                     {
                         // AwaitAsync may reject publication AFTER the actual child
