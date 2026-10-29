@@ -43,10 +43,10 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         var rig = new SpacePolicyRig(source, space.Id);
 
         var send = rig.SendFromOriginalAsync(callback => callback());
-        await source.CaptureEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await source.CaptureEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.False(send.IsCompleted, "The ordinary send must retain and await the actual delayed policy capture.");
         source.ReleaseCapture.TrySetResult();
-        await send.WaitAsync(TimeSpan.FromSeconds(5));
+        await send.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, source.Captures);
         Assert.True(source.Validations > 0);
