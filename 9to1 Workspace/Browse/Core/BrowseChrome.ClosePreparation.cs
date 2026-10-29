@@ -516,7 +516,25 @@ public sealed partial class BrowseChrome
             token.ThrowIfCancellationRequested();
             lock (_nativeSourceGate)
             {
-                if (StateOf(cohort).Aborted || !StateOf(cohort).Tabs.SequenceEqual(_tabs, ReferenceEqualityComparer.Instance) || !StateOf(cohort).Entries.All(IsCurrent)) return null;
+                var state = StateOf(cohort);
+                if (state.Aborted || !state.Tabs.SequenceEqual(_tabs, ReferenceEqualityComparer.Instance) ||
+                    !state.Entries.All(IsCurrent))
+                {
+                    // Measured 29 October: this is the null path that produced an EMPTY cause list in
+                    // both reproduced aborts, because it is the only cohort void that never consults
+                    // an app session and never throws. Each condition is named separately - the tab
+                    // set changing underneath a preparation and an entry going stale after its own
+                    // save are entirely different faults, and the fix must know which one it is.
+                    var stale = state.Entries.Where(entry => !IsCurrent(entry)).ToArray();
+                    ReportCloseRefusal("cohort-not-settled",
+                        "aborted=" + state.Aborted +
+                        ", tab set changed=" + !state.Tabs.SequenceEqual(_tabs, ReferenceEqualityComparer.Instance) +
+                        " (prepared " + state.Tabs.Length + ", now " + _tabs.Count + ")" +
+                        ", stale entries=" + stale.Length +
+                        (stale.Length == 0 ? string.Empty : " [" + string.Join(" | ", stale.Select(entry =>
+                            entry.Tab.Address + " - " + DescribeStaleAttempt(entry))) + "]"));
+                    return null;
+                }
                 StateOf(cohort).Ready = true; return cohort;
             }
         }
