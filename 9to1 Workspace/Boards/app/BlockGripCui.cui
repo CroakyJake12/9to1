@@ -1,21 +1,15 @@
 <Cui>
+  <!-- In the gutter only this toggle button lives: the authored menu it opens is BlockActionsMenuCui.cui,
+       hosted by the C#-owned Popup in BlockGripCui.cs. Keeping the root a Grid preserves the gutter row
+       shape the geometry checks measure (toggle plus insert inside the row Grid's 32-unit columns). -->
   <Actions>
     <Action name="ToggleActions" command="ToggleActions" />
-    <Action name="MoveUp" command="ApplyBlockAction" parameter="{Binding MoveUpRequest}" />
-    <Action name="MoveDown" command="ApplyBlockAction" parameter="{Binding MoveDownRequest}" />
-    <Action name="Duplicate" command="ApplyBlockAction" parameter="{Binding DuplicateRequest}" />
-    <Action name="Delete" command="ApplyBlockAction" parameter="{Binding DeleteRequest}" />
   </Actions>
   <Page>
-    <Container Type="Horizontal Stack" CellGap="4" VerticalAlignment="Top">
-      <Button ID="BlockGripToggle" Content="⋮" Action="ToggleActions" Padding="4 2" VerticalAlignment="Top"
+    <Container Type="Grid" CellGap="0" VerticalAlignment="Top">
+      <Button ID="BlockGripToggle" Content="⋮" Action="ToggleActions" Padding="4 2"
+              VerticalAlignment="Top" Width="32" Height="32" MinWidth="32" MinHeight="32"
               AccessibleName="{Binding GripAccessibleName}" AccessibleDescription="Open block actions" />
-      <Container Type="Wrap" CellGap="4" VerticalAlignment="Top" Active="{Binding IsExpanded}" AccessibleName="Block actions">
-        <Button ID="BlockMoveUp" Content="Move up" Action="MoveUp" Interactive="{Binding CanMoveUp}" AccessibleName="Move block up" />
-        <Button ID="BlockMoveDown" Content="Move down" Action="MoveDown" Interactive="{Binding CanMoveDown}" AccessibleName="Move block down" />
-        <Button ID="BlockDuplicate" Content="Duplicate" Action="Duplicate" Interactive="{Binding CanManage}" AccessibleName="Duplicate block" />
-        <Button ID="BlockDelete" Content="Delete" Action="Delete" Interactive="{Binding CanManage}" AccessibleName="Delete block" />
-      </Container>
     </Container>
   </Page>
 </Cui>

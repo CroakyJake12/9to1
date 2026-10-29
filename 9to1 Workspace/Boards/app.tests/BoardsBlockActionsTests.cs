@@ -1,8 +1,11 @@
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
@@ -13,6 +16,140 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsBlockActionsTests
 {
+    // Load-level check, reported on its own: the authored grip document must produce a real toggle and
+    // publish its menu host. Every higher-level menu test degrades silently if this fails, so a fallback
+    // "unavailable" TextBlock here names the real cause instead of a null in a gesture test.
+    [Fact]
+    public async Task The_authored_grip_document_loads_a_real_toggle_and_publishes_its_menu_host()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-grip-load-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "load.9to1board");
+            await SeedAsync(store, path, false);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var vm = new BoardsViewModel(adapter);
+
+            var built = TestUiThread.Run(() => BlockGripCui.Build(vm, "block-a"));
+            var observed = TestUiThread.Run(() =>
+            {
+                var toggle = built.GetSelfAndVisualDescendants().OfType<Button>()
+                    .SingleOrDefault(button => button.Name == "BlockGripToggle");
+                var host = built.GetSelfAndVisualDescendants().OfType<Control>()
+                    .Select(BlockGripCui.HostFor)
+                    .OfType<BlockGripCui.BlockActionsHost>()
+                    .SingleOrDefault();
+                string[] menuNames = Array.Empty<string>();
+                if (host is not null)
+                {
+                    var menuSurface = host.Menu;
+                    menuNames = menuSurface.GetSelfAndVisualDescendants().OfType<Button>()
+                        .Select(button => button.Name ?? string.Empty)
+                        .ToArray();
+                }
+                return (Fallback: built is TextBlock, FallbackText: (built as TextBlock)?.Text ?? string.Empty,
+                    Toggle: toggle is not null, Host: host, MenuNames: menuNames);
+            });
+
+            Assert.False(observed.Fallback, "the authored grip fell back to the unavailable message: "
+                + observed.FallbackText);
+            Assert.True(observed.Toggle, "the authored grip has no BlockGripToggle button");
+            Assert.NotNull(observed.Host);
+            var host = observed.Host!;
+            Assert.NotNull(host.Menu);
+            foreach (var expected in new[] { "BlockDelete", "BlockDuplicate", "BlockMoveUp", "BlockMoveDown",
+                "BlockDesignMenuToggle", "BlockMoveMenuToggle" })
+                Assert.Contains(expected, observed.MenuNames);
+            Assert.Equal(0, host.OpenedCount);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    // The owner's 29 October block menu must actually appear when the grip is opened. This check is
+    // deliberately gesture-free (it drives the authored command instead of pointer routing) so a failure
+    // names the broken stage: hosting, opening, or the rows being visible where they live.
+    [Fact]
+    public async Task Opening_the_authored_grip_menu_presents_every_mockup_row_in_the_floating_surface()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync("memory://boards/grip-menu-host");
+        var viewModel = new BoardsViewModel(session);
+        TestUiThread.Run(() =>
+        {
+            var page = session.Document.Sections[0].Pages[0];
+            page.Blocks.Clear();
+            page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = "first" });
+            page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = "second" });
+            return true;
+        });
+
+        var fixture = TestUiThread.Run(() =>
+        {
+            var host = new StackPanel { Width = 600 };
+            BlockRenderer.Rebuild(host, viewModel, []);
+            var window = new Window { Width = 720, Height = 520, Content = host };
+            window.Show();
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            // The row Border is tagged BlockReorderRow by BlockRenderer and holds exactly this block's
+            // gutter, so the grip root is the Button-typed ancestor of the toggle inside that row.
+            var row = Assert.Single(host.GetLogicalDescendants().OfType<Border>(), border =>
+                border.Tag is BlockReorderRow reorder && reorder.BlockId == "second");
+            var trigger = Assert.Single(row.GetVisualDescendants().OfType<Button>(),
+                button => button.Name == "BlockGripToggle");
+            var gripRoot = Assert.IsType<Control>(trigger.Parent);
+            return (Window: window, Row: row, GripRoot: gripRoot, Trigger: trigger);
+        });
+        try
+        {
+            // STAGE 1 - hosting: the authored menu and its C# floating surface must be reachable from the
+            // grip root, otherwise the menu can never be shown to the owner.
+            // Unique path to this grip's own surface: the authored menu is the Popup's child, and the
+            // Popup is logically parented to the gutter trigger (BlockGripCui.Build), so it is not
+            // confused with the row/menu Border tags the renderer and CUI also write.
+            var host = BlockGripCui.HostFor(fixture.Trigger);
+            Assert.NotNull(host);
+            var popup = host!.Popup;
+            Assert.Same(fixture.Trigger, popup.PlacementTarget);
+            Assert.NotNull(host.Menu);
+            Assert.False(host.Popup.IsOpen, "the block menu must stay closed until the grip is opened");
+
+            // STAGE 2 - opening: the authored ToggleActions command must open that same surface.
+            TestUiThread.Run(() => fixture.Trigger.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)));
+            // Synchronous pump: TestUiThread.Run takes a plain Func, so an async lambda inside it is a
+            // compile error (measured 29 October). RunJobs on the UI thread settles the authored action.
+            TestUiThread.Run(() =>
+            {
+                Dispatcher.UIThread.RunJobs();
+                System.Threading.Thread.Sleep(25);
+                Dispatcher.UIThread.RunJobs();
+                return 0;
+            });
+
+            // STAGE 3 - rows: the mockup's rows must exist inside that surface.
+            var names = TestUiThread.Run(() => host.Menu.GetSelfAndVisualDescendants().OfType<Button>()
+                .Select(button => button.Name)
+                .Where(name => name is not null)
+                .ToArray());
+            Assert.Contains("BlockDelete", names);
+            Assert.Contains("BlockDuplicate", names);
+            Assert.Contains("BlockMoveUp", names);
+            Assert.Contains("BlockMoveDown", names);
+            Assert.Contains("BlockDesignMenuToggle", names);
+            Assert.True(host.Popup.IsOpen,
+                "MENU OPEN CHAIN press=" + host.PressCount + " click=" + host.ClickCount
+                + " authored=" + host.ToggleCommandsReceived + " attempts=" + host.OpenAttempts
+                + " opened=" + host.OpenedCount + " closed=" + host.ClosedCount
+                + " fallback=" + host.FallbackClickOpens);
+        }
+        finally
+        {
+            TestUiThread.Run(() => fixture.Window.Close());
+        }
+    }
+
     [Theory]
     [InlineData("move", false)]
     [InlineData("click", false)]
@@ -95,13 +232,32 @@ public sealed class BoardsBlockActionsTests
                 TestUiThread.Run(() =>
                 {
                     Assert.False(fixture.Grip.IsPressed);
-                    // The opened menu may be hosted in the surface's floating action layer rather
-                    // than inside the block row subtree, so the whole board window is searched.
-                    var revealed = fixture.Window.GetVisualDescendants().OfType<Button>()
+                    // The authored block menu floats in a C#-owned Popup hosted off the block row
+                    // (29 October: the gutter is a 32-unit column, so a 232-unit menu cannot render
+                    // inside it). The row subtree search is retained AND the floating host is searched,
+                    // so the assertions below still enforce the same behaviour - a real revealed row
+                    // for a click, and no revealed row for drag/escape/stale - they only follow where
+                    // the rows actually live.
+                    var hosts = fixture.Grip.GetSelfAndVisualDescendants().OfType<Control>()
+                        .Select(BlockGripCui.HostFor)
+                        .OfType<BlockGripCui.BlockActionsHost>()
+                        .Distinct()
+                        .ToArray();
+                    var revealed = fixture.Window.GetSelfAndVisualDescendants().OfType<Button>()
+                        .Concat(fixture.Grip.GetLogicalDescendants().OfType<Button>())
+                        .Concat(hosts.SelectMany(host => host.Menu.GetSelfAndVisualDescendants().OfType<Button>()))
+                        .Distinct()
                         .SingleOrDefault(button => button.Name == "BlockDuplicate");
                     if (gesture == "click")
                     {
-                        // A click must open the authored menu on the same block target.
+                        // Staged so the first failure names the broken stage: hosting, then opening,
+                        // then the row actually being visible where it lives.
+                        var ownHost = Assert.Single(hosts);
+                        Assert.True(ownHost.Popup.IsOpen, "STAGE: the grip's own menu surface did not open");
+                        var inHost = ownHost.Menu.GetSelfAndVisualDescendants().OfType<Button>()
+                            .SingleOrDefault(button => button.Name == "BlockDuplicate");
+                        Assert.NotNull(inHost);
+                        Assert.True(inHost!.IsEffectivelyVisible, "STAGE: the menu row is present but not visible");
                         Assert.NotNull(revealed);
                         Assert.True(revealed!.IsEffectivelyVisible);
                     }
