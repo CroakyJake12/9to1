@@ -70,3 +70,22 @@ Owner's framing alongside it: "overall doing well, just a couple of areas to imp
 Not resolved. ARM execution, installation and first run remain NOT RUN for every package delivered in
 this session, and the on-screen native retest of the storage fix is still outstanding. This is recorded as
 an open gap, not claimed as closed.
+## Owner instruction added during the same exchange (29 October, ~15:25)
+
+> don't worry about context (pin this too)
+
+Meaning, as the owner put it: do **not** ration effort or working context out of caution. Do not shorten a
+task, stop early, skip a verification step, or leave work half-finished because context feels expensive.
+State is preserved by compaction plus the committed handoff, so the correct response to a long task is to
+keep working through it, committing and pushing as I go so nothing depends on me remembering it.
+
+Practical consequences I follow from this:
+- Keep going until the task is genuinely done or a real blocker is hit; do not wind down early.
+- Never claim a smaller scope than the owner asked for in order to save effort.
+- Commit and push each completed unit of work so compaction cannot lose it (this is also why every commit
+  in this session now goes to `origin/main`).
+- Context pressure is not a reason to skip native verification, skip tests, or leave a tree that does not
+  compile. If something must be deferred, name it as deferred and say why.
+
+This does not relax any guard: the serial SDK allocation, memory/disk limits, never stopping the resident
+model host, never signalling the owner's live instance, and the honesty rules about evidence all still apply.

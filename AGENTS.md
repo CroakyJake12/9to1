@@ -1,5 +1,13 @@
 ## Working-method corrections — 29 October 2026, owner-preserved reviewer feedback
 
+Do not ration effort or working context out of caution. The owner's instruction of 29 October is to keep
+working through long tasks rather than winding down early, with continuity carried by compaction plus
+committed and pushed handoffs. Never shorten scope, skip verification, or stop a task because context feels
+expensive; if something is deferred, name it as deferred and give the reason. This relaxes no guard: serial
+SDK allocation, memory and disk limits, the resident model host, the owner's live instance and the evidence
+rules all still apply.
+
+
 Read [the reviewer feedback and the countermeasures adopted in response](docs/development/model-performance-feedback-2026-10-29.md)
 at every startup, handoff and compaction. Three failures it records, with the owner's correction on sequencing:
 requirements were coded before the required flow was pinned (board creation lost its destination selection);
