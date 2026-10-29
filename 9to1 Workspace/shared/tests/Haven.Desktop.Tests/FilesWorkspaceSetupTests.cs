@@ -290,6 +290,162 @@ public sealed class FilesWorkspaceSetupTests
             ? ValueTask.FromResult<string?>(null) : _actual.GetPrincipalAsync(token);
     }
 
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture.")]
+    public async Task First_run_creates_the_workspace_under_documents_without_any_connect_step()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var scratch = Path.GetDirectoryName(rig.Empty)!;
+        var home = Path.Combine(scratch, "profile-home");
+        Directory.CreateDirectory(Path.Combine(home, "Documents"));
+        rig.Files.HomeDirectoryOverride = home;
+        rig.Files.ApplicationDataFallbackDirectory = Path.Combine(scratch, "app-data");
+
+        var before = await rig.Files.ObserveWorkspaceRootAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(FilesWorkspaceRootState.NotRegistered, before.State);
+        Assert.False(before.RequiresRecoveryChoice);
+        Assert.Equal(Path.Combine(home, "Documents", "9to1"), before.DefaultRoot);
+        Assert.Null(await rig.Files.GetConfigurationAsync());
+
+        var workspace = await rig.Files.ConfigureDefaultWorkspaceAsync(rig.Home.LocalStoreOwnership,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(workspace);
+        var configuration = (await rig.Files.GetConfigurationAsync())!;
+        Assert.Equal(Path.Combine(home, "Documents", "9to1"), configuration.RootDirectory);
+        foreach (var (_, folder) in LocalWorkspaceFolders.KnownAppFolders)
+            Assert.True(Directory.Exists(Path.Combine(configuration.RootDirectory, folder)), folder + " was not created");
+        Assert.True(Directory.Exists(Path.Combine(configuration.RootDirectory, ".9to1-files")));
+        var binding = await rig.Home.LocalStoreOwnership.GetVerifiedAsync("files", configuration.StoreId.ToString("D"));
+        Assert.NotNull(binding); Assert.Equal(rig.Profile, binding.ProfileId);
+        var authority = rig.Provider.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        Assert.Equal(Path.Combine(configuration.RootDirectory, "Boards"),
+            await authority.ResolveAppDirectoryAsync("boards", TestContext.Current.CancellationToken));
+        var after = await rig.Files.ObserveWorkspaceRootAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(FilesWorkspaceRootState.Configured, after.State);
+        Assert.False(after.RequiresRecoveryChoice);
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture.")]
+    public async Task An_existing_documents_workspace_is_adopted_without_emptiness_and_keeps_the_owners_files()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var scratch = Path.GetDirectoryName(rig.Empty)!;
+        var home = Path.Combine(scratch, "profile-home");
+        var root = Path.Combine(home, "Documents", "9to1");
+        // The owner made this folder themselves and filled it with their own things, which is exactly
+        // the case they said must not be deleted or overridden.
+        Directory.CreateDirectory(Path.Combine(root, "holiday photos"));
+        File.WriteAllText(Path.Combine(root, "holiday photos", "beach.jpg"), "owner photo");
+        File.WriteAllText(Path.Combine(root, "plans.txt"), "owner notes");
+        rig.Files.HomeDirectoryOverride = home;
+        rig.Files.ApplicationDataFallbackDirectory = Path.Combine(scratch, "app-data");
+
+        var workspace = await rig.Files.ConfigureDefaultWorkspaceAsync(rig.Home.LocalStoreOwnership,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(workspace);
+        var configuration = (await rig.Files.GetConfigurationAsync())!;
+        Assert.Equal(root, configuration.RootDirectory);
+        // The app folders go in a separate Apps folder rather than among the owner's own directories.
+        Assert.True(Directory.Exists(Path.Combine(root, "Apps", "Boards")));
+        Assert.False(Directory.Exists(Path.Combine(root, "Boards")));
+        Assert.Equal("owner photo", File.ReadAllText(Path.Combine(root, "holiday photos", "beach.jpg")));
+        Assert.Equal("owner notes", File.ReadAllText(Path.Combine(root, "plans.txt")));
+        var authority = rig.Provider.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        Assert.Equal(Path.Combine(root, "Apps", "Boards"),
+            await authority.ResolveAppDirectoryAsync("boards", TestContext.Current.CancellationToken));
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
+    public async Task A_moved_workspace_is_found_by_its_own_identity_and_re_registered_not_re_created()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var scratch = Path.GetDirectoryName(rig.Empty)!;
+        var home = Path.Combine(scratch, "profile-home");
+        Directory.CreateDirectory(Path.Combine(home, "Documents"));
+        rig.Files.HomeDirectoryOverride = home;
+        rig.Files.ApplicationDataFallbackDirectory = Path.Combine(scratch, "app-data");
+        var original = await rig.Files.ConfigureDefaultWorkspaceAsync(rig.Home.LocalStoreOwnership,
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(original);
+        var configuration = (await rig.Files.GetConfigurationAsync())!;
+        var board = Path.Combine(configuration.RootDirectory, "Boards", "My board.9to1board");
+        File.WriteAllText(board, "the owner board content");
+
+        // The owner moves the whole folder somewhere else and even renames it.
+        var moved = Path.Combine(home, "moved away", "my 9to1");
+        Directory.CreateDirectory(Path.Combine(home, "moved away"));
+        Directory.Move(configuration.RootDirectory, moved);
+
+        var observation = await rig.Files.ObserveWorkspaceRootAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(FilesWorkspaceRootState.MissingRegistered, observation.State);
+        Assert.True(observation.RequiresRecoveryChoice);
+        Assert.Equal([moved], observation.DiscoveredRoots);
+
+        var relocated = await rig.Files.ReLocateWorkspaceRootAsync(moved, rig.Home.LocalStoreOwnership,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(relocated);
+        var after = (await rig.Files.GetConfigurationAsync())!;
+        Assert.Equal(moved, after.RootDirectory);
+        Assert.Equal(configuration.StoreId, after.StoreId);
+        Assert.Equal(Path.Combine(moved, "Boards"),
+            await rig.Provider.GetRequiredService<NativeFilesWorkspaceAuthority>()
+                .ResolveAppDirectoryAsync("boards", TestContext.Current.CancellationToken));
+        Assert.Equal("the owner board content", File.ReadAllText(Path.Combine(moved, "Boards", "My board.9to1board")));
+        Assert.False(Directory.Exists(Path.Combine(home, "Documents", "9to1")),
+            "a moved workspace must never be re-created empty under Documents");
+        var recovered = await rig.Files.ObserveWorkspaceRootAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(FilesWorkspaceRootState.Configured, recovered.State);
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture.")]
+    public async Task An_unrelated_folder_is_refused_as_a_new_workspace_and_the_record_is_preserved()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var scratch = Path.GetDirectoryName(rig.Empty)!;
+        var home = Path.Combine(scratch, "profile-home");
+        Directory.CreateDirectory(Path.Combine(home, "Documents"));
+        rig.Files.HomeDirectoryOverride = home;
+        rig.Files.ApplicationDataFallbackDirectory = Path.Combine(scratch, "app-data");
+        await rig.Files.ConfigureDefaultWorkspaceAsync(rig.Home.LocalStoreOwnership, TestContext.Current.CancellationToken);
+        var configuration = (await rig.Files.GetConfigurationAsync())!;
+        Directory.Move(configuration.RootDirectory, Path.Combine(home, "somewhere else"));
+
+        var failure = await Record.ExceptionAsync(() => rig.Files.ReLocateWorkspaceRootAsync(rig.Nonempty,
+            rig.Home.LocalStoreOwnership, TestContext.Current.CancellationToken));
+
+        Assert.IsType<InvalidOperationException>(failure);
+        Assert.Contains("not a 9to1 workspace folder", failure!.Message, StringComparison.Ordinal);
+        // The recorded location is read back without touching the missing folder, which is what lets the
+        // Files surface name the path it could not find.
+        Assert.Equal(configuration.RootDirectory,
+            (await rig.Files.ReadRecordedConfigurationAsync(TestContext.Current.CancellationToken))!.RootDirectory);
+        Assert.True(File.Exists(Path.Combine(rig.Nonempty, "preserve.txt")));
+        Assert.Empty(Directory.GetDirectories(rig.Nonempty));
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture.")]
+    public async Task A_profile_that_never_had_a_workspace_is_never_shown_the_missing_folder_choice()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var observation = await rig.Files.ObserveWorkspaceRootAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(FilesWorkspaceRootState.NotRegistered, observation.State);
+        Assert.False(observation.RequiresRecoveryChoice);
+        Assert.Empty(observation.DiscoveredRoots);
+
+        var failure = await Record.ExceptionAsync(() => rig.Files.ReLocateWorkspaceRootAsync(
+            rig.Empty, rig.Home.LocalStoreOwnership, TestContext.Current.CancellationToken));
+        Assert.Contains("created automatically", failure!.Message, StringComparison.Ordinal);
+        Assert.Null(await rig.Files.GetConfigurationAsync());
+        Assert.Empty(Directory.EnumerateFileSystemEntries(rig.Empty));
+    }
+
     private sealed class Rig : IAsyncDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "files-native-setup-" + Guid.NewGuid().ToString("N"));

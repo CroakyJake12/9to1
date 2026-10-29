@@ -64,9 +64,16 @@ public static class LocalWorkspaceFolders
         var overrideHome = string.IsNullOrWhiteSpace(homeDirectory) ? null : HomeDirectory(homeDirectory);
         if (overrideHome is null)
         {
+            var profileHome = HomeDirectory(null);
             var shell = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments,
                 Environment.SpecialFolderOption.DoNotVerify);
-            if (IsUsableDirectory(shell)) return Path.GetFullPath(shell!);
+            // On Linux the shell folder can answer with the home directory itself. Using that would put
+            // the workspace straight in the user's home, which is not the owner's Documents rule, so a
+            // home-shaped answer is rejected and the XDG or conventional Documents folder is used.
+            var usable = IsUsableDirectory(shell) && shell is not null &&
+                !(profileHome is not null && string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(shell)),
+                    profileHome, StringComparison.Ordinal));
+            if (usable) return Path.GetFullPath(shell!);
         }
 
         var home = overrideHome ?? HomeDirectory(null);
