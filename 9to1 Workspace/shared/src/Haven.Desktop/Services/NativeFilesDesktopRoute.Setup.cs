@@ -23,6 +23,24 @@ internal sealed partial class NativeFilesDesktopRoute
         RunOriginalSetupAsync(async cancellation =>
             await OriginalSetupFiles().GetConfigurationAsync(cancellation), token);
 
+    internal Task<FilesWorkspaceRootObservation> ObserveOriginalWorkspaceRootAsync(CancellationToken token) =>
+        RunOriginalSetupAsync(async cancellation =>
+            await OriginalSetupFiles().ObserveWorkspaceRootAsync(cancellation), token);
+
+    internal Task<NativeFilesWorkspace> ReplaceOriginalMissingWorkspaceRootAsync(CancellationToken token) =>
+        RunOriginalSetupAsync(async cancellation =>
+        {
+            var home = _sameProcessHome ?? throw new InvalidOperationException("The owning Home is unavailable.");
+            return await OriginalSetupFiles().ReplaceMissingWorkspaceRootAsync(home.LocalStoreOwnership, cancellation);
+        }, token);
+
+    internal Task<NativeFilesWorkspace> RelocateOriginalWorkspaceRootAsync(string relocatedRoot, CancellationToken token) =>
+        RunOriginalSetupAsync(async cancellation =>
+        {
+            var home = _sameProcessHome ?? throw new InvalidOperationException("The owning Home is unavailable.");
+            return await OriginalSetupFiles().ReLocateWorkspaceRootAsync(relocatedRoot, home.LocalStoreOwnership, cancellation);
+        }, token);
+
     internal Task<NativeFilesWorkspaceConfiguration> ConfigureOriginalWorkspaceAsync(string selectedEmptyDirectory,
         CancellationToken token) => RunOriginalSetupAsync(async cancellation =>
         {

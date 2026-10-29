@@ -110,6 +110,7 @@
          NOT raw-embedded here; this host consumes the emitted compiled bundle through the component. -->
     <EmbeddedResource Include="Views/Pages/Home/HavenAppHeader.cui" LogicalName="Haven.Desktop.Home.HavenAppHeader.cui" />
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
+    <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceRecovery.cui" LogicalName="Haven.Desktop.Files.WorkspaceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Data/UI/DataQueryResults.cui" LogicalName="Haven.Desktop.Data.QueryResults.cui" />
     <EmbeddedResource Include="Views/Pages/Data/UI/DataSharedInk.cui" LogicalName="Haven.Desktop.Data.SharedInk.cui" />
     <EmbeddedResource Include="Views/Pages/Present/UI/PresentFreehandTools.cui" LogicalName="Haven.Desktop.Present.PresentFreehandTools.cui" />

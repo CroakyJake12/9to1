@@ -1,0 +1,14 @@
+<Cui id="files.workspace.recovery" version="1">
+  <Theme Name="user_preference">
+    <Page AccessibleName="9to1 directory missing">
+      <Container Type="Vertical Stack" Padding="24" CellGap="12" Background="{Resource CuiBackgroundBrush}">
+        <Text Text="9to1 directory missing" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+        <Text id="files-recovery-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+        <Button id="files-recovery-use-found" Content="Use the folder we found" action="files.recovery.use-found" AccessibleName="Use the found 9to1 folder" Height="38" MinHeight="38" HorizontalContentAlignment="Left" />
+        <Button id="files-recovery-choose-other" Content="Point to its new location" action="files.recovery.choose-other" AccessibleName="Point to the moved 9to1 folder" Height="38" MinHeight="38" HorizontalContentAlignment="Left" />
+        <Button id="files-recovery-create-new" Content="Create a new 9to1 folder" action="files.recovery.create-new" AccessibleName="Create a new 9to1 folder" Height="38" MinHeight="38" HorizontalContentAlignment="Left" />
+        <Text id="files-recovery-status" AccessibleName="9to1 folder recovery status" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

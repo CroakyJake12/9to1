@@ -123,6 +123,38 @@ public sealed partial class NativeFilesWorkspaceService
         finally { _setupGate.Release(); }
     }
 
+    /// <summary>The owner's second recovery choice: keep the profile's Files setup but start a new 9to1
+    /// folder. Only valid when a previously registered root has actually disappeared, so it can never be
+    /// used to abandon a workspace that is simply in a different place - discovery and re-location are
+    /// offered first. The old folder and everything in it are left exactly where they are; the previous
+    /// record is replaced by a guarded write, and the new store is bound to Home ownership like any other.</summary>
+    public async Task<NativeFilesWorkspace> ReplaceMissingWorkspaceRootAsync(HomeLocalStoreOwnership ownership,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(ownership);
+        var observation = await ObserveWorkspaceRootAsync(cancellationToken).ConfigureAwait(false);
+        if (!observation.RequiresRecoveryChoice)
+            throw new InvalidOperationException(observation.State == FilesWorkspaceRootState.Configured
+                ? "The 9to1 folder is present, so there is nothing to replace."
+                : "This profile has no Files workspace to replace; one is created automatically when Boards or Files needs it.");
+        if (observation.DiscoveredRoots.Count > 0)
+            throw new InvalidOperationException("Your 9to1 folder was found at " +
+                string.Join(", ", observation.DiscoveredRoots) + ". Re-locate to it and keep your existing files, " +
+                "rather than starting a new folder.");
+        await _setupGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var actor = await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) ??
+                throw new UnauthorizedAccessException("A verified local profile is required.");
+            var existing = await ReadConfigurationRecordAsync(actor.ProfileId, cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("The Files workspace record changed. Nothing was created.");
+            var planned = LocalWorkspaceFolders.Provision(ResolvePlannedRoot(createDocuments: true).RootDirectory);
+            return await ConfigureAdoptedCoreAsync(planned.RootDirectory, planned.AppFoldersDirectory,
+                ownership, cancellationToken, allowMissingRecord: true).ConfigureAwait(false);
+        }
+        finally { _setupGate.Release(); }
+    }
+
     /// <summary>Used by Files setup when the owner deliberately points the workspace at a folder they
     /// chose. Unlike the historic empty-folder setup, an adopted folder is inspected and completed; it is
     /// never required to be empty, because requiring that is what forced a "connect" step onto first use.</summary>
@@ -134,7 +166,7 @@ public sealed partial class NativeFilesWorkspaceService
     }
 
     private async Task<NativeFilesWorkspace> ConfigureAdoptedCoreAsync(string rootDirectory, string appFoldersDirectory,
-        HomeLocalStoreOwnership ownership, CancellationToken cancellationToken)
+        HomeLocalStoreOwnership ownership, CancellationToken cancellationToken, bool allowMissingRecord = false)
     {
         await _setupGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -143,8 +175,16 @@ public sealed partial class NativeFilesWorkspaceService
                 throw new UnauthorizedAccessException();
             if (actor.AccountId is not null || actor.OrganisationId is not null || !Guid.TryParse(actor.ProfileId, out var profile))
                 throw new UnauthorizedAccessException("The 9to1 workspace requires the actual personal operating-system profile.");
-            if (await GetConfiguredAsync(cancellationToken).ConfigureAwait(false) is not null)
-                throw new InvalidOperationException("Files is already configured for this profile. Existing configuration was preserved.");
+            try
+            {
+                if (await GetConfiguredAsync(cancellationToken).ConfigureAwait(false) is not null)
+                    throw new InvalidOperationException("Files is already configured for this profile. Existing configuration was preserved.");
+            }
+            catch (DirectoryNotFoundException) when (allowMissingRecord)
+            {
+                // A record whose folder has gone is not a live configuration: this is the recovery path
+                // the owner asked for, and the stale record is replaced rather than honoured.
+            }
             var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootDirectory));
             var apps = Path.TrimEndingDirectorySeparator(Path.GetFullPath(
                 string.IsNullOrWhiteSpace(appFoldersDirectory) ? root : appFoldersDirectory));
@@ -188,7 +228,11 @@ public sealed partial class NativeFilesWorkspaceService
                     if (!registered.IsSuccess) throw new UnauthorizedAccessException(registered.Error!.Message);
                     folders.Add(appId, id);
                 }
-                await WriteConfigurationRecordAsync(actor, configuration, expectedRevision: 0, cancellationToken).ConfigureAwait(false);
+                var stale = allowMissingRecord
+                    ? await ReadConfigurationRecordAsync(actor.ProfileId, cancellationToken).ConfigureAwait(false)
+                    : null;
+                await WriteConfigurationRecordAsync(actor, configuration, stale?.Record.Revision ?? 0,
+                    cancellationToken).ConfigureAwait(false);
                 return workspace;
             }
             finally { _creating.TryRemove(evidence.StoreId, out _); }

@@ -446,6 +446,62 @@ public sealed class FilesWorkspaceSetupTests
         Assert.Empty(Directory.EnumerateFileSystemEntries(rig.Empty));
     }
 
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
+    public async Task A_missing_workspace_offers_relocate_or_create_new_and_re_locating_shows_the_real_files_view()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var scratch = Path.GetDirectoryName(rig.Empty)!;
+        var root = Path.Combine(scratch, "9to1");
+        Directory.CreateDirectory(root);
+        var configured = await rig.Files.ConfigureAdoptedRootAsync(root, root, rig.Home.LocalStoreOwnership,
+            TestContext.Current.CancellationToken);
+        File.WriteAllText(Path.Combine(root, "Boards", "My board.9to1board"), "the owner board");
+        var moved = Path.Combine(scratch, "moved elsewhere", "9to1");
+        Directory.CreateDirectory(Path.GetDirectoryName(moved)!);
+        Directory.Move(root, moved);
+
+        var serviceState = await rig.Files.ObserveWorkspaceRootAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(FilesWorkspaceRootState.MissingRegistered, serviceState.State);
+        Assert.Equal([moved], serviceState.DiscoveredRoots);
+
+        var session = rig.Create(_ => throw new InvalidOperationException("The native picker must not run for the found folder."));
+        var initialization = await Record.ExceptionAsync(() => session.InitializeAsync().WaitAsync(Limit));
+        Assert.Null(initialization);
+        var page = Assert.IsType<FilesWorkspaceRecoveryPage>(session.OriginalNativeView);
+        Assert.Contains(rig.Empty.Length > 0 ? Path.Combine(scratch, "9to1") : "", page.Detail, StringComparison.Ordinal);
+        Assert.Contains("9to1 folder was found again", page.Detail, StringComparison.Ordinal);
+        Assert.True(page.IsActionAvailable("files.recovery.use-found"));
+        Assert.False(page.IsActionAvailable("files.recovery.create-new"),
+            "creating a new folder is not offered when the owner's own folder was found");
+
+        await page.DispatchAsync("files.recovery.use-found", null).AsTask().WaitAsync(Limit);
+        await page.WhenActionsIdleAsync().WaitAsync(Limit);
+
+        var after = (await rig.Files.ReadRecordedConfigurationAsync(TestContext.Current.CancellationToken))!;
+        Assert.Equal(moved, after.RootDirectory);
+        Assert.Equal(configured.Configuration.StoreId, after.StoreId);
+        Assert.IsType<FilesNativeBrowserSurface>(page.Content);
+        Assert.True(session.IsPublicationCurrent);
+        Assert.Equal("the owner board", File.ReadAllText(Path.Combine(moved, "Boards", "My board.9to1board")));
+        Assert.True(await session.TryPrepareToCloseAsync().WaitAsync(Limit));
+        await session.CloseAndDrainAsync().WaitAsync(Limit);
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
+    public async Task A_new_profile_is_never_shown_the_missing_folder_screen_and_keeps_the_historic_setup_path()
+    {
+        await using var rig = new Rig(); await rig.StartAsync();
+        var session = rig.Create(_ => Task.FromResult<string?>(rig.Empty));
+        await session.InitializeAsync().WaitAsync(Limit);
+        var page = Assert.IsType<FilesWorkspaceSetupPage>(session.OriginalNativeView);
+        Assert.IsNotType<Haven.Desktop.Views.Pages.Files.FilesWorkspaceRecoveryPage>(page);
+        Assert.Null(await rig.Files.ReadRecordedConfigurationAsync(TestContext.Current.CancellationToken));
+        Assert.True(await session.TryPrepareToCloseAsync().WaitAsync(Limit));
+        await session.CloseAndDrainAsync().WaitAsync(Limit);
+    }
+
     private sealed class Rig : IAsyncDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "files-native-setup-" + Guid.NewGuid().ToString("N"));
