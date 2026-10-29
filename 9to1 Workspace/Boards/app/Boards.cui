@@ -55,8 +55,11 @@
         <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Current Board" />
-            <Container Type="Vertical Stack" ID="BoardIdentity" Column="1" CellGap="0" VerticalAlignment="Center">
-              <Input id="BoardTitleBox" width="160" max-width="160" accessible-name="Board title" font-size="15" font-weight="Bold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
+            <!-- The owner's 29 October report: the board title was cut mid-word ("A-Level Computer Sc")
+                 and the save line sat hard against it. The title box had a fixed 160 cap inside a 1fr
+                 column, so it could never use the width the nav actually gives it. -->
+            <Container Type="Vertical Stack" ID="BoardIdentity" Column="1" CellGap="3" VerticalAlignment="Center">
+              <Input id="BoardTitleBox" accessible-name="Board title" font-size="15" font-weight="Bold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
               <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
             <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">

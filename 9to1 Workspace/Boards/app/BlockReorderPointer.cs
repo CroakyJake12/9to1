@@ -16,6 +16,24 @@ internal sealed class BlockReorderPointer
     // UX27-BOARD-023: where no platform drag threshold is supplied, use a 4-unit logical
     // default. A larger value makes grip dragging feel dead, which the owner reported (C03).
     private const double DragThreshold = 4;
+
+    // Owner report on 29 October: "using the 6 dots to move is a bit janky. the actual block should
+    // move (animated) and snap to the new position, it shouldn't just show a line there". The vertical
+    // flow grip only drew a 3-unit accent line at the would-be insertion edge: the block stayed put,
+    // nothing followed the pointer, and the list jumped when the typed move committed. (The free-layout
+    // grip in BlockPlacementGesture already translates the real row, so the two grips behaved
+    // differently.) Now the dragged row follows the pointer, the rows it crosses glide aside to open
+    // the slot, and on release the block slides into that slot before the typed move commits, so the
+    // rebuild lands on the arrangement the preview already showed instead of teleporting it.
+    //
+    // The settle loop is driven by a render-priority timer rather than Avalonia Transitions because
+    // this file already drives auto-scroll that way, and a transition that the fork silently ignores
+    // would put the teleport straight back.
+    private const double SettleFraction = 0.35;
+    private const double SettleEpsilon = 0.4;
+    private const int SettleIntervalMs = 16;
+    private const int MaxSettleFrames = 60;
+
     private readonly Control _grip;
     private Button? _handle;
     private readonly StackPanel _host;
@@ -32,9 +50,32 @@ internal sealed class BlockReorderPointer
     private DispatcherTimer? _autoScrollTimer;
     private BoardBlockActionTarget? _target;
     private bool _draggedItemRow;
-    private Border? _markedRow;
-    private Thickness _markedThickness;
-    private IBrush? _markedBrush;
+
+    // Lift state is deliberately separate from the gesture flags: a released gesture must still be
+    // able to finish its slide into the slot before the visuals are taken away.
+    private readonly List<Slot> _slots = [];
+    private readonly Dictionary<Border, Offset> _offsets = new();
+    private Border? _liftRow;
+    private TranslateTransform? _liftTransform;
+    private IBrush? _savedBackground;
+    private BoxShadows _savedShadow;
+    private int _savedZIndex;
+    private int _sourceOrdinal;
+    private bool _lifted;
+    private DispatcherTimer? _settleTimer;
+    private TaskCompletionSource? _settle;
+    private int _settleFrames;
+
+    private sealed record Slot(Border Row, int Ordinal, double Top, double Step);
+
+    private sealed class Offset
+    {
+        public required Border Row;
+        public required TranslateTransform Transform;
+        public TranslateTransform? Initial;
+        public double Current;
+        public double Target;
+    }
 
     private BlockReorderPointer(Control grip, StackPanel host, BoardsViewModel viewModel,
         string blockId, int sourceIndex)
@@ -105,12 +146,14 @@ internal sealed class BlockReorderPointer
             _pointer?.Capture(handle);
             ToolTip.SetTip(handle, "Drag to reorder. Press Escape to cancel.");
             _scrollViewer = _host.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
+            BeginLift();
         }
         if (_dragging)
         {
             e.Handled = true;
             _lastHostY = position.Y;
-            UpdateDropMarker(position.Y);
+            FollowPointer(position.Y);
+            OpenSlot(GetDestination(position.Y));
             UpdateAutoScroll(e);
         }
     }
@@ -124,11 +167,24 @@ internal sealed class BlockReorderPointer
             var wasDrag = _dragging;
             var destination = wasDrag ? GetDestination(e.GetPosition(_host).Y) : null;
             var target = _target;
+            // Resolved while the drag identity is still live: EndGesture below clears the flags this
+            // gesture owns, and the slot mapping depends on whether this is a list row.
+            var slot = wasDrag && destination is int index ? SlotOrdinalFor(index) : -1;
             if (wasDrag) e.Handled = true;
             StopAutoScroll();
-            Cancel();
-            if (wasDrag && destination is int index && target is not null && index != target.ViewIndex)
-                _ = CommitReleasedMoveAsync(target, index);
+            EndGesture();
+            if (!wasDrag)
+            {
+                RestoreLift();
+                return;
+            }
+            if (target is null || slot < 0 || slot == _sourceOrdinal || !_lifted)
+            {
+                // No move: the block glides back to where it came from instead of snapping.
+                _ = GlideHomeAsync();
+                return;
+            }
+            _ = SnapIntoSlotAsync(target, destination!.Value, slot);
         }
         catch (OperationCanceledException)
         {
@@ -161,6 +217,255 @@ internal sealed class BlockReorderPointer
         }
     }
 
+    /// <summary>Slides the block into the opened slot, then commits the typed move while the preview
+    /// is still on screen. The rebuild produces the same arrangement, so nothing jumps.</summary>
+    private async Task SnapIntoSlotAsync(BoardBlockActionTarget target, int destination, int slot)
+    {
+        try
+        {
+            if (_liftRow is not null && _offsets.TryGetValue(_liftRow, out var entry))
+                entry.Target = SlotTopFor(slot) - _slots[_sourceOrdinal].Top;
+            await SettleAsync().ConfigureAwait(false);
+            await CommitReleasedMoveAsync(target, destination).ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            try { _viewModel.ReportBlockMoveFailure(error); }
+            catch { /* A status observer cannot fault this task. */ }
+        }
+        finally { RestoreLiftSafely(); }
+    }
+
+    private async Task GlideHomeAsync()
+    {
+        try
+        {
+            foreach (var entry in _offsets.Values) entry.Target = 0;
+            await SettleAsync().ConfigureAwait(false);
+        }
+        catch { /* an interrupted glide home must never fault a pointer callback */ }
+        finally { RestoreLiftSafely(); }
+    }
+
+    private void BeginLift()
+    {
+        if (_lifted) RestoreLiftSafely();
+        _slots.Clear();
+        _offsets.Clear();
+        _liftRow = null;
+        _sourceOrdinal = -1;
+        foreach (var row in CandidateRows())
+        {
+            var top = row.TranslatePoint(new Point(0, 0), _host)?.Y ?? double.NaN;
+            if (double.IsNaN(top)) return; // an unmeasured row cannot be animated honestly
+            _slots.Add(new Slot(row, _slots.Count, top, StepOf(row)));
+            if (string.Equals((row.Tag as BlockReorderRow)?.BlockId, _blockId, StringComparison.Ordinal))
+            {
+                _liftRow = row;
+                _sourceOrdinal = _slots.Count - 1;
+            }
+        }
+        if (_liftRow is null || _sourceOrdinal < 0)
+        {
+            _slots.Clear();
+            return;
+        }
+        var lifted = _liftRow;
+        _savedBackground = lifted.Background;
+        _savedShadow = lifted.BoxShadow;
+        _savedZIndex = lifted.ZIndex;
+        // The block reads as lifted: a real surface under it keeps the text legible while it passes
+        // over its neighbours, and ZIndex keeps it on top of them.
+        lifted.Background = BoardsTheme.CardBrush;
+        lifted.BoxShadow = new BoxShadows(new BoxShadow { OffsetX = 0, OffsetY = 4, Blur = 18, Spread = 1,
+            Color = Color.FromArgb(64, 0, 0, 0) });
+        lifted.ZIndex = 100;
+        _liftTransform = new TranslateTransform(0, 0);
+        lifted.RenderTransform = _liftTransform;
+        foreach (var slot in _slots)
+        {
+            var isLift = ReferenceEquals(slot.Row, lifted);
+            var entry = new Offset
+            {
+                Row = slot.Row,
+                Transform = isLift ? _liftTransform : new TranslateTransform(0, 0),
+                Initial = isLift ? _liftTransform : slot.Row.RenderTransform as TranslateTransform,
+            };
+            _offsets[slot.Row] = entry;
+            if (!isLift) slot.Row.RenderTransform = entry.Transform;
+        }
+        _lifted = true;
+    }
+
+    private void FollowPointer(double pointerY)
+    {
+        if (!_lifted || _liftTransform is null || _liftRow is null) return;
+        if (!_host.Children.Contains(_liftRow)) { RestoreLiftSafely(); return; }
+        var own = _slots[_sourceOrdinal].Top;
+        var first = _slots[0].Top;
+        var last = _slots[^1].Top + _slots[^1].Step;
+        var delta = pointerY - _start.Y;
+        delta = Math.Clamp(delta, first - own, Math.Max(first - own, last - StepOf(_liftRow) - own));
+        _liftTransform.Y = delta;
+        if (_offsets.TryGetValue(_liftRow, out var entry)) entry.Current = delta;
+    }
+
+    /// <summary>Moves the slot: the rows the block crosses glide aside, so the destination is the gap
+    /// itself rather than a line drawn at it.</summary>
+    private void OpenSlot(int? destination)
+    {
+        if (!_lifted || _liftRow is null) return;
+        var slot = destination is int index ? SlotOrdinalFor(index) : -1;
+        if (slot < 0) slot = _sourceOrdinal;
+        foreach (var entry in _offsets.Values)
+            if (!ReferenceEquals(entry.Row, _liftRow)) entry.Target = ShiftFor(entry.Row, slot);
+        StartSettle();
+    }
+
+    /// <summary>Displacement of one sibling row when the block's final ordinal is slot: rows the block
+    /// passes over move the other way, by exactly the space the block leaves behind.</summary>
+    private double ShiftFor(Border row, int slot)
+    {
+        var own = OrdinalOf(row);
+        if (own < 0 || own == _sourceOrdinal) return 0;
+        var step = StepOf(_liftRow!);
+        if (slot > _sourceOrdinal && own > _sourceOrdinal && own <= slot) return -step;
+        if (slot < _sourceOrdinal && own >= slot && own < _sourceOrdinal) return step;
+        return 0;
+    }
+
+    private void StartSettle()
+    {
+        if (_settleTimer is not null) return;
+        _settleFrames = 0;
+        var timer = new DispatcherTimer(DispatcherPriority.Render)
+        { Interval = TimeSpan.FromMilliseconds(SettleIntervalMs) };
+        timer.Tick += (_, _) => SettleTick();
+        _settleTimer = timer;
+        timer.Start();
+    }
+
+    private void SettleTick()
+    {
+        if (!_lifted) { StopSettle(); return; }
+        var moving = false;
+        foreach (var entry in _offsets.Values)
+        {
+            // While the gesture is live the lifted row tracks the pointer directly; only its
+            // neighbours settle.
+            if (_dragging && ReferenceEquals(entry.Row, _liftRow)) continue;
+            var difference = entry.Target - entry.Current;
+            if (Math.Abs(difference) <= SettleEpsilon)
+            {
+                if (entry.Current != entry.Target)
+                {
+                    entry.Current = entry.Target;
+                    entry.Transform.Y = entry.Current;
+                }
+                continue;
+            }
+            moving = true;
+            entry.Current += difference * SettleFraction;
+            entry.Transform.Y = entry.Current;
+        }
+        _settleFrames++;
+        if (moving && _settleFrames <= MaxSettleFrames) return;
+        var completion = _settle;
+        _settle = null;
+        StopSettle();
+        completion?.TrySetResult();
+    }
+
+    private Task SettleAsync()
+    {
+        if (!_lifted || _offsets.Values.All(entry => Math.Abs(entry.Target - entry.Current) <= SettleEpsilon))
+            return Task.CompletedTask;
+        _settle = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        StartSettle();
+        return _settle.Task;
+    }
+
+    /// <summary>Top edge the lifted row must reach so that it fills the gap that was opened at slot.</summary>
+    private double SlotTopFor(int slot)
+    {
+        if (_liftRow is null || slot == _sourceOrdinal || slot < 0 || slot >= _slots.Count)
+            return _slots[_sourceOrdinal].Top;
+        var step = StepOf(_liftRow);
+        if (slot > _sourceOrdinal)
+            return slot + 1 < _slots.Count
+                ? _slots[slot + 1].Top - step
+                : _slots[slot].Top - step + _slots[slot].Step;
+        return _slots[slot].Top;
+    }
+
+    /// <summary>Turns the destination index from the model/pointer rule into the ordinal position the
+    /// block will occupy inside this candidate row set.</summary>
+    private int SlotOrdinalFor(int destination)
+    {
+        if (_slots.Count == 0) return -1;
+        if (_draggedItemRow) return Math.Clamp(destination, 0, _slots.Count - 1);
+        for (var ordinal = 0; ordinal < _slots.Count; ordinal++)
+            if (_slots[ordinal].Row.Tag is BlockReorderRow info && info.Index == destination)
+                return ordinal;
+        return _slots.Count - 1;
+    }
+
+    private int OrdinalOf(Border row)
+    {
+        for (var ordinal = 0; ordinal < _slots.Count; ordinal++)
+            if (ReferenceEquals(_slots[ordinal].Row, row)) return ordinal;
+        return -1;
+    }
+
+    private IEnumerable<Border> CandidateRows()
+    {
+        var prefix = PrefixOf(_blockId);
+        return _host.Children.OfType<Border>()
+            .Where(row => row.Tag is BlockReorderRow info &&
+                (prefix is null || info.BlockId.StartsWith(prefix, StringComparison.Ordinal)))
+            .OrderBy(row => (row.Tag as BlockReorderRow)!.Index)
+            .ToArray();
+    }
+
+    private static string? PrefixOf(string blockId)
+    {
+        var split = blockId.IndexOf(':');
+        return split > 0 ? blockId[..split] + ":" : null;
+    }
+
+    private static double StepOf(Control row) => row.Bounds.Height + row.Margin.Top + row.Margin.Bottom;
+
+    private void RestoreLift()
+    {
+        StopSettle();
+        _settle = null;
+        if (_liftRow is not null)
+        {
+            _liftRow.Background = _savedBackground;
+            _liftRow.BoxShadow = _savedShadow;
+            _liftRow.ZIndex = _savedZIndex;
+            if (ReferenceEquals(_liftRow.RenderTransform, _liftTransform)) _liftRow.RenderTransform = null;
+        }
+        foreach (var entry in _offsets.Values)
+        {
+            if (ReferenceEquals(entry.Row, _liftRow) || !ReferenceEquals(entry.Row.RenderTransform, entry.Transform))
+                continue;
+            entry.Row.RenderTransform = entry.Initial;
+        }
+        _offsets.Clear();
+        _slots.Clear();
+        _liftRow = null;
+        _liftTransform = null;
+        _lifted = false;
+        _draggedItemRow = false;
+    }
+
+    private void RestoreLiftSafely()
+    {
+        try { RestoreLift(); }
+        catch { /* drag visuals are best-effort; never fault a pointer or timer callback */ }
+    }
+
     private void ReportStatusSafely(string message)
     {
         try { _viewModel.Set("StatusText", message); }
@@ -187,23 +492,27 @@ internal sealed class BlockReorderPointer
 
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs e) => Cancel();
 
-    private void UpdateDropMarker(double y)
+    /// <summary>Ends the gesture - flags, pointer capture, tooltip - without disturbing the lift, so a
+    /// released drag can still finish its slide into the slot.</summary>
+    private void EndGesture()
     {
-        var destination = GetDestination(y);
-        var prefix = _draggedItemRow ? _blockId[.._blockId.IndexOf(':')] + ":" : null;
-        var candidates = _host.Children.OfType<Border>()
-            .Where(row => row.Tag is BlockReorderRow info && (prefix is null || info.BlockId.StartsWith(prefix, StringComparison.Ordinal))).ToArray();
-        var marked = prefix is null ? candidates.FirstOrDefault(row => row.Tag is BlockReorderRow info &&
-                (destination == info.Index || destination == info.Index + 1))
-            : destination is { } index ? candidates.ElementAtOrDefault(index) : null;
-        if (ReferenceEquals(marked, _markedRow)) return;
-        ClearMarker();
-        if (marked is null) return;
-        _markedRow = marked;
-        _markedThickness = marked.BorderThickness;
-        _markedBrush = marked.BorderBrush;
-        marked.BorderThickness = new Thickness(0, 3, 0, 0);
-        marked.BorderBrush = BoardsTheme.AccentBrush;
+        var pointer = _pointer;
+        StopAutoScroll();
+        _pointer = null;
+        _pressed = false;
+        _dragging = false;
+        _target = null;
+        if (_handle is not null) ToolTip.SetTip(_handle, "Open block actions");
+        // CaptureLost can be raised after another control has taken ownership.
+        // Never release that new owner's capture while cancelling this gesture.
+        if (pointer is not null && ReferenceEquals(pointer.Captured, _handle))
+            pointer.Capture(null);
+    }
+
+    private void Cancel()
+    {
+        EndGesture();
+        RestoreLift();
     }
 
     private void UpdateAutoScroll(PointerEventArgs e)
@@ -233,8 +542,14 @@ internal sealed class BlockReorderPointer
             var nextY = Math.Clamp(oldOffset.Y + _scrollDirection * 18, 0, maximum);
             if (nextY == oldOffset.Y) { StopAutoScroll(); return; }
             _scrollViewer.Offset = new Vector(oldOffset.X, nextY);
+            // The host moves under the pointer, so the pointer-derived offsets must shift by the
+            // same amount or the block and its slot drift apart while scrolling.
+            _start = _start.WithY(_start.Y + nextY - oldOffset.Y);
             _lastHostY += nextY - oldOffset.Y;
-            UpdateDropMarker(_lastHostY);
+            if (_lifted && _liftRow is not null && _sourceOrdinal >= 0 && _sourceOrdinal < _slots.Count)
+                _slots[_sourceOrdinal] = _slots[_sourceOrdinal] with { Top = _slots[_sourceOrdinal].Top - (nextY - oldOffset.Y) };
+            FollowPointer(_lastHostY);
+            OpenSlot(GetDestination(_lastHostY));
         };
         return timer;
     }
@@ -243,6 +558,12 @@ internal sealed class BlockReorderPointer
     {
         _scrollDirection = 0;
         _autoScrollTimer?.Stop();
+    }
+
+    private void StopSettle()
+    {
+        _settleTimer?.Stop();
+        _settleTimer = null;
     }
 
     private int? GetDestination(double y) => DestinationForPointer(_host, _blockId,
@@ -267,32 +588,5 @@ internal sealed class BlockReorderPointer
         }
         var slot = prefix is null ? rows[^1].Info!.Index + 1 : rows.Length;
         return slot > sourceIndex ? slot - 1 : slot;
-    }
-
-    private void Cancel()
-    {
-        _draggedItemRow = false;
-        var pointer = _pointer;
-        StopAutoScroll();
-        _pointer = null;
-        _pressed = false;
-        _dragging = false;
-        _target = null;
-        if (_handle is not null) ToolTip.SetTip(_handle, "Open block actions");
-        ClearMarker();
-        // CaptureLost can be raised after another control has taken ownership.
-        // Never release that new owner's capture while cancelling this gesture.
-        if (pointer is not null && ReferenceEquals(pointer.Captured, _handle))
-            pointer.Capture(null);
-    }
-
-    private void ClearMarker()
-    {
-        if (_markedRow is not null)
-        {
-            _markedRow.BorderThickness = _markedThickness;
-            _markedRow.BorderBrush = _markedBrush;
-            _markedRow = null;
-        }
     }
 }
