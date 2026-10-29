@@ -142,7 +142,8 @@
         ],
         "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
         "state": "answered \u2014 implementation in progress"
-      }
+      },
+      "note_29_october": "The setup gate the owner ordered removed is no longer required in order to save: the 9to1 workspace is created on demand and boards land in it. Files' own setup page still exists as the deliberate-choice path; removing that gate is queued with the three-root navigation work."
     },
     {
       "id": "OPEN-2026-10-29-DUPLICATE-BOARDS-TABS",
@@ -181,7 +182,7 @@
         "recovery screen only for a previously-detected root that later disappeared, raised when the user opens Files: '9to1 directory missing - Re-locate or create new', offering either to point at the new location when automatic detection did not find it, or to create a new one",
         "a fresh install never shows that screen and needs no user input: the folder is created or detected silently, so a first-run user is not asked about a folder they have never had"
       ],
-      "state": "open - owner model recorded; implementation not started",
+      "state": "implemented in the current integrated candidate - awaiting native retest on the running copy and independent acceptance",
       "affected_change": "the Files native host store/folder/file registration (the same store/folder/file/revision identity Boards already writes through), AppPaths/root resolution, first-run creation, the location override control, and the relocation scan",
       "evidence": "filesystem listing above; docs/specification/owner-references/2026-10-27-expanded-spec (headline correction); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES",
       "earlier_owner_instruction_superseded": "the folder-picker-at-creation phrasing from the same day is replaced by an auto-created default location that needs no connect step; the picker becomes the exception path (user picks another location), not the required first step",
@@ -190,7 +191,32 @@
         "existing_and_present": "inspect, add only what is missing, keep the user's own directories separate via an apps subfolder when the root is not app-shaped",
         "previously_registered_now_absent": "scan for the root marker; a unique match re-registers silently, no match or several matches raises the Files 'Re-locate or create new' screen instead of recreating under Documents",
         "never": "delete, overwrite, rename or merge into a directory the user already owns"
-      }
+      },
+      "implemented_at": "2026-10-29T13:00:00+00:00",
+      "implementation_commits": [
+        "8a36217d shared workspace-root rule",
+        "1fa867b3 Files auto-provision/adopt/relocate",
+        "b5554d6b Boards visible save + naming",
+        "8e0fa938 Files missing-root recovery screen"
+      ],
+      "measured_cause_found": "Files is registered on this PC at /home/jacob/9to1 with a Boards app folder containing only two hidden .9to1-board-*.content artefacts from 26-27 October, while every board created since was a GUID-named draft under profile/Boards/profiles/<64-hex>/drafts/. Boards and Files answered from different places and the Boards home said only 'Saved locally - draft'.",
+      "implemented_behaviour": [
+        "default root Documents/9to1 (XDG user-dirs on Linux, localised folders honoured); no connect step, no account, no gate",
+        "an existing 9to1 folder is inspected and only missing subfolders added; never deleted, renamed, emptied or overwritten",
+        "a root holding only the user's own directories gets the app folders inside a separate Apps subfolder instead of mixed in",
+        "a moved workspace is rediscovered by the store id inside its own .9to1-files metadata (rename-proof) and re-registered with a guarded record write and re-based app-folder bindings",
+        "a profile that never had a workspace is never shown the recovery screen; a fresh install provisions silently",
+        "the recovery screen appears only when a previously registered root has disappeared, offering use-found / point-to-new-location / create-new, and 'create new' is withheld when the owner's folder was found",
+        "creating a board writes a visible <title>.9to1board in the workspace boards folder and makes it the live destination, with collision-safe naming; the private draft remains the recovery copy and creation is never blocked",
+        "surfaces state real paths instead of 'saved locally'"
+      ],
+      "still_open_sub_decisions": [
+        "BF-40 three Files roots (Cloud / 9to1 Local Workspace / This Machine) and the label wording for mounted volumes on Linux/ARM",
+        "whether Files' own first-run setup page should be replaced by silent provisioning: the historic gate remains today because auto-provisioning there would change existing setup-page expectations; saving is already unblocked because the workspace is created on demand by the first board",
+        "standalone Boards resolves its own default root because it has a separate application-data store and cannot see another installation's registration; single-root consistency across separate app-data roots is unresolved",
+        "on this PC the previously registered /home/jacob/9to1 root wins over Documents by design; whether the owner wants it migrated under Documents is their call"
+      ],
+      "verification": "Haven.Application.Tests 13 new provisioning cases; FilesWorkspaceSetupTests 16/16 including two session-level recovery-screen tests; BoardsLocalDraftTests 16/16 including visible-file, collision, blocked-folder and path-escape cases. Affected Files/Boards suites in Haven.Desktop.Tests were run with and without this work: 30 failures in both, name sets byte-identical, so no regression. ARM execution, installation and native runtime retest remain NOT RUN."
     },
     {
       "id": "OPEN-2026-10-29-FILES-THREE-ROOTS",
