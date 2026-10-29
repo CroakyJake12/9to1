@@ -390,6 +390,22 @@ public static class BlockRenderer
         return panel;
     }
 
+    /// <summary>Container blocks are the ones the owner allows to be selected as a whole; a plain
+    /// paragraph or heading is edited by typing and must not light up.</summary>
+    private static bool IsContainerBlockKind(string? kind) =>
+        kind is "bulleted" or "numbered" or "checklist" or "table" or "image" or "graph" or "database"
+            or "canvas" or "ink" or "callout" or "toggle" or "code" or "embed" or "kanban" or "calendar";
+
+    private static Color? AccentColorOf(Control anchor)
+    {
+        if (anchor.TryFindResource("CuiAccentBrush", out var found))
+        {
+            if (found is ISolidColorBrush solid) return solid.Color;
+            if (found is IImmutableSolidColorBrush immutable) return immutable.Color;
+        }
+        return null;
+    }
+
     /// <summary>Subtle selection outline: transparent until selected, then an accent bar.</summary>
     private static Control WithSelection(
         BoardsViewModel vm, string selectId, Control inner, string insertAfterBlockId, int blockIndex,
@@ -454,11 +470,29 @@ public static class BlockRenderer
         }
         Grid.SetColumn(inner, 2);
         row.Children.Add(inner);
+        // Owner direction, 29 October: typing must read as typing straight onto the page with no block
+        // highlight while they type; the six-dot grip should outline the block on hover so its extent is
+        // visible; and only container blocks (list, table, image, board surfaces) take the accent
+        // outline when clicked or hovered at their edge. The outline is an overlay inside the row, never
+        // a thicker row border, so showing it cannot shift the text underneath it.
+        var container = IsContainerBlockKind(placementBlock?.Kind);
+        var outline = new Border
+        {
+            Name = "BlockRowOutline",
+            BorderThickness = new Thickness(0),
+            BorderBrush = Brushes.Transparent,
+            CornerRadius = new CornerRadius(7),
+            IsHitTestVisible = false,
+            Focusable = false,
+        };
+        var shell = new Panel();
+        shell.Children.Add(row);
+        shell.Children.Add(outline);
         var border = new Border
         {
-            Child = row,
+            Child = shell,
             BorderThickness = new Thickness(3, 0, 0, 0),
-            BorderBrush = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            BorderBrush = selected && container ? BoardsTheme.AccentBrush : Brushes.Transparent,
             Padding = new Thickness(9, 2, 0, 2),
             Margin = absolutePositioned ? new Thickness(0) : new Thickness(-BlockGutterLeadingInset, 0, 0, 10),
             Background = Brushes.Transparent,
@@ -466,6 +500,28 @@ public static class BlockRenderer
         border.Tag = new BlockReorderRow(selectId, blockIndex);
         var hovering = false;
         var focused = false;
+        var gripHover = false;
+        void UpdateBlockOutline()
+        {
+            // Resolved from this row's own resources. BoardsTheme.AccentBrush falls back to the
+            // standalone palette, which is compiled Light, and that fallback is what flipped a dragged
+            // block to a light surface inside Home's dark window (owner report 29 October).
+            var accent = AccentColorOf(border);
+            if (gripHover && accent is { } hoverColour)
+            {
+                outline.BorderThickness = new Thickness(1.5);
+                outline.BorderBrush = new SolidColorBrush(hoverColour) { Opacity = 0.55 };
+                return;
+            }
+            if (selected && container && accent is { } selectedColour)
+            {
+                outline.BorderThickness = new Thickness(1.5);
+                outline.BorderBrush = new SolidColorBrush(selectedColour);
+                return;
+            }
+            outline.BorderThickness = new Thickness(0);
+            outline.BorderBrush = Brushes.Transparent;
+        }
         void UpdateGutterEmphasis()
         {
             // Quiet-but-visible at rest; full opacity on selection or hover.
@@ -482,6 +538,12 @@ public static class BlockRenderer
             }
         }
         UpdateGutterEmphasis();
+        UpdateBlockOutline();
+        if (gripControl is not null)
+        {
+            gripControl.PointerEntered += (_, _) => { gripHover = true; UpdateBlockOutline(); };
+            gripControl.PointerExited += (_, _) => { gripHover = false; UpdateBlockOutline(); };
+        }
         border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
         border.PointerExited += (_, _) => { hovering = false; UpdateGutterEmphasis(); };
         border.AddHandler(InputElement.GotFocusEvent, (_, _) => { focused = true; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
@@ -740,7 +802,46 @@ public static class BlockRenderer
             box.CaretIndex = Math.Clamp(caretIndex, 0, (box.Text ?? string.Empty).Length);
         };
         vm.BindTextSelection(box, captured);
-        shell.Children.Add(box);
+        // Owner request, 29 October: a blank block under the caret must say what to do next instead of
+        // reading as a dead line. It appears only on the block the caret is actually in, only while it
+        // is still empty, and it is an overlay with no layout contribution, so it cannot change the
+        // block's height or shift the text column.
+        var hint = new TextBlock
+        {
+            Text = "Use / to select the block type, or @ to mention an assistant or user",
+            FontSize = box.FontSize,
+            FontStyle = box.FontStyle,
+            Padding = box.Padding,
+            Margin = box.Margin,
+            TextWrapping = TextWrapping.Wrap,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Top,
+            Opacity = 0.5,
+            IsHitTestVisible = false,
+            Focusable = false,
+            IsVisible = false,
+        };
+        void UpdateEditorHint()
+        {
+            if (!(vm.IsEditMode && !isCode && box.IsFocused && string.IsNullOrWhiteSpace(box.Text)))
+            {
+                hint.IsVisible = false;
+                return;
+            }
+            // Read the muted colour from this editor's own resources. BoardsTheme.SecondaryTextBrush
+            // falls back to the standalone palette, which is compiled Light, and that fallback is what
+            // has produced dark-on-dark text inside Home's dark window.
+            hint.Foreground = box.TryFindResource("CuiMutedBrush", out var muted) && muted is IBrush mutedBrush
+                ? mutedBrush : BoardsTheme.SecondaryTextBrush;
+            hint.IsVisible = true;
+        }
+        box.GotFocus += (_, _) => UpdateEditorHint();
+        box.LostFocus += (_, _) => hint.IsVisible = false;
+        box.TextChanged += (_, _) => UpdateEditorHint();
+        var editorHost = new Panel();
+        editorHost.Children.Add(box);
+        editorHost.Children.Add(hint);
+        shell.Children.Add(editorHost);
         return shell;
     }
 

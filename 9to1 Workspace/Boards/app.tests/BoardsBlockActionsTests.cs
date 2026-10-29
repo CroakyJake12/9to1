@@ -67,7 +67,13 @@ public sealed class BoardsBlockActionsTests
                         fixture.Window.MouseMove(fixture.End);
                         Dispatcher.UIThread.RunJobs();
                         if (freePlacement) Assert.IsType<Avalonia.Media.TranslateTransform>(fixture.Row.RenderTransform);
-                        else Assert.Contains(fixture.Host.Children.OfType<Border>(), row => row.BorderThickness.Top == 3);
+                        // The guide line now lives on the row's zero-footprint overlay: it marks the
+                        // slot edge without adding thickness to the row, which used to shift the text
+                        // under a dragging block (owner 29 October: keep the line, for accessibility).
+                        else Assert.Contains(fixture.Host.Children.OfType<Border>(), row =>
+                            row.GetVisualDescendants().OfType<Border>().Any(outline =>
+                                outline.Name == "BlockRowOutline" &&
+                                (outline.BorderThickness.Top == 3 || outline.BorderThickness.Bottom == 3)));
                         if (gesture == "escape")
                             fixture.Grip.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
                         if (gesture == "stale") vm.EditText("t_block-b", "Changed during drag");
@@ -102,7 +108,10 @@ public sealed class BoardsBlockActionsTests
                     else
                         // Drag, Escape-return and stale-ticket gestures must never open the menu.
                         Assert.True(revealed is null || !revealed.IsEffectivelyVisible);
-                    Assert.DoesNotContain(fixture.Host.Children.OfType<Border>(), row => row.BorderThickness.Top == 3);
+                    Assert.DoesNotContain(fixture.Host.Children.OfType<Border>(), row =>
+                        row.GetVisualDescendants().OfType<Border>().Any(outline =>
+                            outline.Name == "BlockRowOutline" &&
+                            (outline.BorderThickness.Top == 3 || outline.BorderThickness.Bottom == 3)));
                     Assert.Null(fixture.Row.RenderTransform);
                     Assert.Equal(gesture == "move" && !freePlacement ? new[] { "block-b", "block-c", "block-a" } :
                         new[] { "block-a", "block-b", "block-c" }, Blocks(adapter).Select(block => block.Id));

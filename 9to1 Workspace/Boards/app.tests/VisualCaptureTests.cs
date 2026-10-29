@@ -207,7 +207,10 @@ public sealed class VisualCaptureTests
         var firstBlockRow = host.GetVisualDescendants().OfType<Border>()
             .FirstOrDefault(border => border.Tag is BlockReorderRow)
             ?? throw new InvalidOperationException("The rendered page has no block gutter row. Runtime tree:\n" + tree);
-        var gutterGrid = firstBlockRow.Child as Grid
+        // The row wraps its authored grid in a zero-footprint overlay panel so an outline or guide
+        // line can be drawn without changing the row's own thickness (29 October owner direction).
+        var gutterGrid = (firstBlockRow.Child as Panel)?.Children.OfType<Grid>().FirstOrDefault()
+            ?? firstBlockRow.Child as Grid
             ?? throw new InvalidOperationException("The block gutter row has no authored grid.");
         var grip = gutterGrid.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "BlockGripToggle");
         var insert = gutterGrid.GetVisualDescendants().OfType<Button>().Single(button =>

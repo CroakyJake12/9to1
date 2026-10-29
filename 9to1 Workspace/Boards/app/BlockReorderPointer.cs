@@ -65,6 +65,12 @@ internal sealed class BlockReorderPointer
     private DispatcherTimer? _settleTimer;
     private TaskCompletionSource? _settle;
     private int _settleFrames;
+    private Border? _flipRow;
+    private TranslateTransform? _flipTransform;
+    private double _flipCurrent;
+    private Border? _guideOutline;
+    private Thickness _guideThickness;
+    private IBrush? _guideBrush;
 
     private sealed record Slot(Border Row, int Ordinal, double Top, double Step);
 
@@ -217,23 +223,48 @@ internal sealed class BlockReorderPointer
         }
     }
 
-    /// <summary>Slides the block into the opened slot, then commits the typed move while the preview
-    /// is still on screen. The rebuild produces the same arrangement, so nothing jumps.</summary>
+    /// <summary>Commits the typed move immediately - a model change must never wait on an animation -
+    /// then glides the real rebuilt row from the point the pointer let go into its new layout position,
+    /// so the block still reads as moving into the slot instead of teleporting.</summary>
     private async Task SnapIntoSlotAsync(BoardBlockActionTarget target, int destination, int slot)
     {
+        var droppedTop = _liftRow is null || _slots.Count == 0
+            ? double.NaN
+            : _slots[_sourceOrdinal].Top + (_offsets.TryGetValue(_liftRow, out var live) ? live.Current : 0);
+        RestoreLift();
         try
         {
-            if (_liftRow is not null && _offsets.TryGetValue(_liftRow, out var entry))
-                entry.Target = SlotTopFor(slot) - _slots[_sourceOrdinal].Top;
-            await SettleAsync().ConfigureAwait(false);
             await CommitReleasedMoveAsync(target, destination).ConfigureAwait(false);
+            if (double.IsNaN(droppedTop)) return;
+            await OnUiRunAsync(() =>
+            {
+                _host.UpdateLayout();
+                var landed = CandidateRows().FirstOrDefault(row =>
+                    (row.Tag as BlockReorderRow)?.BlockId == _blockId);
+                if (landed is null) return;
+                var newTop = landed.TranslatePoint(new Point(0, 0), _host)?.Y ?? double.NaN;
+                var offset = newTop - droppedTop;
+                if (double.IsNaN(newTop) || Math.Abs(offset) < 2) return;
+                // The row is translated back to where the user released it and then settles to zero.
+                var transform = new TranslateTransform(0, offset);
+                landed.RenderTransform = transform;
+                _flipRow = landed;
+                _flipTransform = transform;
+                _flipCurrent = offset;
+                StartSettle();
+            });
         }
         catch (Exception error)
         {
             try { _viewModel.ReportBlockMoveFailure(error); }
             catch { /* A status observer cannot fault this task. */ }
         }
-        finally { RestoreLiftSafely(); }
+    }
+
+    private static async Task OnUiRunAsync(Action action)
+    {
+        if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess()) { action(); return; }
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(action);
     }
 
     private async Task GlideHomeAsync()
@@ -274,9 +305,13 @@ internal sealed class BlockReorderPointer
         _savedBackground = lifted.Background;
         _savedShadow = lifted.BoxShadow;
         _savedZIndex = lifted.ZIndex;
-        // The block reads as lifted: a real surface under it keeps the text legible while it passes
-        // over its neighbours, and ZIndex keeps it on top of them.
-        lifted.Background = BoardsTheme.CardBrush;
+        // The block reads as lifted: a surface under it keeps the text legible while it passes over its
+        // neighbours, and ZIndex keeps it on top of them. That surface must come from THIS row's own
+        // resolved resources: BoardsTheme.CardBrush falls back to the standalone palette, which is
+        // compiled Light, and that is exactly what flipped the dragged block to a light surface inside
+        // Home's dark window (owner report, 29 October). If nothing resolves, the row keeps its own
+        // background and the shadow alone carries the lift.
+        if (SurfaceBrushOf(lifted) is { } liftSurface) lifted.Background = liftSurface;
         lifted.BoxShadow = new BoxShadows(new BoxShadow { OffsetX = 0, OffsetY = 4, Blur = 18, Spread = 1,
             Color = Color.FromArgb(64, 0, 0, 0) });
         lifted.ZIndex = 100;
@@ -319,8 +354,59 @@ internal sealed class BlockReorderPointer
         if (slot < 0) slot = _sourceOrdinal;
         foreach (var entry in _offsets.Values)
             if (!ReferenceEquals(entry.Row, _liftRow)) entry.Target = ShiftFor(entry.Row, slot);
+        // The owner asked for the insertion line to stay while dragging for accessibility, in addition
+        // to the moving block: it marks the exact edge the block will land against. It is painted on
+        // the row's zero-footprint overlay instead of the row border, so it cannot shift any text.
+        if (GuideRowFor(slot) is (Border guideRow, bool topEdge)) SetGuideLine(guideRow, topEdge);
+        else ClearGuideLine();
         StartSettle();
     }
+
+    /// <summary>Which row carries the guide edge for a slot, and on which side.</summary>
+    private (Border Row, bool Top)? GuideRowFor(int slot)
+    {
+        if (slot < 0 || slot >= _slots.Count || slot == _sourceOrdinal) return null;
+        if (slot > _sourceOrdinal)
+            return slot + 1 < _slots.Count ? (_slots[slot + 1].Row, true) : (_slots[slot].Row, false);
+        return (_slots[slot].Row, true);
+    }
+
+    private void SetGuideLine(Border row, bool topEdge)
+    {
+        var outline = OutlineOf(row);
+        if (outline is null) { ClearGuideLine(); return; }
+        if (!ReferenceEquals(outline, _guideOutline))
+        {
+            ClearGuideLine();
+            _guideOutline = outline;
+            _guideThickness = outline.BorderThickness;
+            _guideBrush = outline.BorderBrush;
+        }
+        outline.BorderThickness = topEdge ? new Thickness(0, 3, 0, 0) : new Thickness(0, 0, 0, 3);
+        outline.BorderBrush = AccentBrushOf(row) ?? Brushes.Transparent;
+    }
+
+    private void ClearGuideLine()
+    {
+        if (_guideOutline is null) return;
+        _guideOutline.BorderThickness = _guideThickness;
+        _guideOutline.BorderBrush = _guideBrush;
+        _guideOutline = null;
+    }
+
+    private static Border? OutlineOf(Border row) =>
+        row.GetVisualDescendants().OfType<Border>().FirstOrDefault(child => child.Name == "BlockRowOutline");
+
+    private static IBrush? SurfaceBrushOf(Control anchor)
+    {
+        foreach (var key in new[] { "CuiPanel2Brush", "CuiPanelBrush" })
+            if (anchor.TryFindResource(key, out var found) && found is IBrush brush) return brush;
+        return null;
+    }
+
+    private static IBrush? AccentBrushOf(Control anchor) =>
+        anchor.TryFindResource("CuiAccentBrush", out var found) && found is IBrush brush ? brush : null;
+
 
     /// <summary>Displacement of one sibling row when the block's final ordinal is slot: rows the block
     /// passes over move the other way, by exactly the space the block leaves behind.</summary>
@@ -347,8 +433,25 @@ internal sealed class BlockReorderPointer
 
     private void SettleTick()
     {
-        if (!_lifted) { StopSettle(); return; }
         var moving = false;
+        if (!_lifted && _flipRow is null) { StopSettle(); return; }
+        if (_flipRow is not null)
+        {
+            var remaining = 0 - _flipCurrent;
+            if (Math.Abs(remaining) <= SettleEpsilon)
+            {
+                if (ReferenceEquals(_flipRow.RenderTransform, _flipTransform)) _flipRow.RenderTransform = null;
+                _flipRow = null;
+                _flipTransform = null;
+                _flipCurrent = 0;
+            }
+            else
+            {
+                moving = true;
+                _flipCurrent += remaining * SettleFraction;
+                if (_flipTransform is not null) _flipTransform.Y = _flipCurrent;
+            }
+        }
         foreach (var entry in _offsets.Values)
         {
             // While the gesture is live the lifted row tracks the pointer directly; only its
@@ -381,6 +484,7 @@ internal sealed class BlockReorderPointer
         if (!_lifted || _offsets.Values.All(entry => Math.Abs(entry.Target - entry.Current) <= SettleEpsilon))
             return Task.CompletedTask;
         _settle = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _settleFrames = 0; // a new wait gets its own budget even while a glide is already running
         StartSettle();
         return _settle.Task;
     }
@@ -439,6 +543,7 @@ internal sealed class BlockReorderPointer
     {
         StopSettle();
         _settle = null;
+        ClearGuideLine();
         if (_liftRow is not null)
         {
             _liftRow.Background = _savedBackground;
@@ -546,8 +651,8 @@ internal sealed class BlockReorderPointer
             // same amount or the block and its slot drift apart while scrolling.
             _start = _start.WithY(_start.Y + nextY - oldOffset.Y);
             _lastHostY += nextY - oldOffset.Y;
-            if (_lifted && _liftRow is not null && _sourceOrdinal >= 0 && _sourceOrdinal < _slots.Count)
-                _slots[_sourceOrdinal] = _slots[_sourceOrdinal] with { Top = _slots[_sourceOrdinal].Top - (nextY - oldOffset.Y) };
+            for (var index = 0; index < _slots.Count; index++)
+                _slots[index] = _slots[index] with { Top = _slots[index].Top - (nextY - oldOffset.Y) };
             FollowPointer(_lastHostY);
             OpenSlot(GetDestination(_lastHostY));
         };
