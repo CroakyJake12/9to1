@@ -18,6 +18,14 @@ public interface IBrowseNativeEngineTab : IBrowseEngineTab
 {
     Control OriginalNativeView { get; }
     bool CanRetireOriginalView { get; }
+
+    /// <summary>Reports whether this tab is the page the user can actually see. The Chromium engine
+    /// uses it to stop streaming screencast frames for tabs that are hidden: every open web tab kept
+    /// producing full-window JPEG frames that were decoded on the UI thread, which is the whole-app
+    /// lag the owner reported on 29 October (17 tabs open, window measured 2850x1820). Engines without
+    /// a streaming capture path keep the default no-op, so this adds no requirement to other backends.
+    /// </summary>
+    void SetBrowsePageVisible(bool visible) { }
 }
 
 public static class BrowseNativeSurface
@@ -545,6 +553,7 @@ internal sealed class BrowseEngineViewport : ContentControl
             else if (!ReferenceEquals(mounted, originalView)) throw new InvalidOperationException("The same engine replaced its original native view.");
             originalView.IsVisible = (split ? state.PaneTabIds.Contains(tab.Id) : tab.Id == state.SelectedTabId) &&
                 tab.Address.IsWeb && tab.EngineState == BrowseEngineState.Ready;
+            native.SetBrowsePageVisible(originalView.IsVisible);
             PlaceInPane(originalView, state.PaneTabIds, tab.Id, state.SplitOrientation);
             if (tab.Id == state.SelectedTabId && originalView.IsVisible) selectedHasView = true;
         }

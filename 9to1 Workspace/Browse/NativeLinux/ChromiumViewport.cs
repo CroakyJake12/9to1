@@ -7,6 +7,25 @@ internal sealed record ChromiumViewport(int Width, int Height, double Scale)
     internal static readonly ChromiumViewport Default = new(1280, 800, 1);
     internal int CaptureWidth => Math.Max(1, (int)Math.Ceiling(Width * Scale));
     internal int CaptureHeight => Math.Max(1, (int)Math.Ceiling(Height * Scale));
+
+    // A capture budget, not a viewport reduction. The CSS viewport stays the real size of the tab, so
+    // the page still lays out correctly and hit testing still matches, while the streamed bitmap is
+    // capped so the UI thread can afford to decode each frame. Measured owner window on 29 October:
+    // 2850x1820, so an uncapped frame is roughly 5.2 megapixels at scale 1 and four times that at 2x -
+    // and hidden tabs were streaming them too, which is what froze the desktop once a site loaded.
+    private const double CaptureBudgetPixels = 2_000_000;
+
+    internal double CaptureRatio
+    {
+        get
+        {
+            var devicePixels = (double)CaptureWidth * CaptureHeight;
+            return devicePixels <= CaptureBudgetPixels || devicePixels <= 0
+                ? 1 : Math.Sqrt(CaptureBudgetPixels / devicePixels);
+        }
+    }
+    internal int ScaledCaptureWidth => Math.Max(1, (int)Math.Ceiling(CaptureWidth * CaptureRatio));
+    internal int ScaledCaptureHeight => Math.Max(1, (int)Math.Ceiling(CaptureHeight * CaptureRatio));
     internal static ChromiumViewport From(Size bounds, double scaling)
     {
         if (!double.IsFinite(bounds.Width) || !double.IsFinite(bounds.Height) || bounds.Width <= 0 || bounds.Height <= 0)

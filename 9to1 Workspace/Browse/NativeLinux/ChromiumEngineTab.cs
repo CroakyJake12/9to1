@@ -208,12 +208,74 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => surface.ApplyViewport(viewport)).GetTask().ConfigureAwait(false);
     }
 
-    private Task StartCaptureAsync(ChromiumViewport viewport, CancellationToken token) =>
-        SendVoidAsync("Page.startScreencast", new Dictionary<string, object?>
+    private async Task StartCaptureAsync(ChromiumViewport viewport, CancellationToken token)
+    {
+        await SendVoidAsync("Page.startScreencast", new Dictionary<string, object?>
         {
-            ["format"] = "jpeg", ["quality"] = 95, ["maxWidth"] = viewport.CaptureWidth,
-            ["maxHeight"] = viewport.CaptureHeight, ["everyNthFrame"] = 1
-        }, token);
+            ["format"] = "jpeg", ["quality"] = 95, ["maxWidth"] = viewport.ScaledCaptureWidth,
+            ["maxHeight"] = viewport.ScaledCaptureHeight, ["everyNthFrame"] = 1
+        }, token).ConfigureAwait(false);
+        lock (_gate) _captureActive = true;
+    }
+
+    private bool _pageVisible = true;
+    private bool _captureActive = true;
+    private bool _visibilityPending;
+
+    /// <summary>Suspends frame streaming while this tab is not the visible page, and restores it when
+    /// it becomes visible. Without this, every hidden web tab in a multi-tab window kept streaming
+    /// full-window JPEG frames that the owning surface turned into images on the UI thread forever;
+    /// the owner's 29 October report - "when I do get in, the whole UI becomes extremely laggy and
+    /// unresponsive" - is that, with the live window measured at 2850x1820 and 17 tabs restored.
+    /// Toggles are queued through the same single-flight input channel the viewport uses, so a toggle
+    /// can never race a viewport change or a teardown.</summary>
+    public void SetBrowsePageVisible(bool visible)
+    {
+        lock (_gate)
+        {
+            if (_retiring || _disposed || _pageVisible == visible) return;
+            _pageVisible = visible;
+            _visibilityPending = true;
+            if (!_viewportReady || _viewportUpdate is { IsCompleted: false }) return;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            try { _viewportUpdate = QueueInputAsync(() => DrainVisibilityAsync(start.Task)); }
+            catch { start.TrySetCanceled(); throw; }
+            start.SetResult();
+        }
+    }
+
+    private async Task DrainVisibilityAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        try
+        {
+            bool visible; ChromiumViewport viewport;
+            lock (_gate)
+            {
+                if (_retiring || _disposed) { _viewportUpdate = null; return; }
+                _visibilityPending = false;
+                visible = _pageVisible; viewport = _viewport;
+            }
+            if (visible)
+            {
+                await SetViewportMetricsAsync(viewport, CancellationToken.None).ConfigureAwait(false);
+                await StartCaptureAsync(viewport, CancellationToken.None).ConfigureAwait(false);
+            }
+            else if (_captureActive)
+            {
+                await SendVoidAsync("Page.stopScreencast", null, CancellationToken.None).ConfigureAwait(false);
+                lock (_gate) _captureActive = false;
+            }
+        }
+        catch
+        {
+            // A failed toggle must not fault the input queue; the next visibility change retries it and
+            // the page stays correct either way. The failure is recorded rather than swallowed silently.
+            EmitDiagnostic("capture visibility toggle failed; capture state will be retried on the " +
+                "next visibility or viewport change");
+        }
+        finally { lock (_gate) if (!_visibilityPending) _viewportUpdate = null; }
+    }
 
     private void OnViewportChanged(object? sender, ChromiumViewport viewport)
     {
@@ -247,7 +309,10 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
                 if (next == _viewport) continue;
                 await SendVoidAsync("Page.stopScreencast", null, CancellationToken.None).ConfigureAwait(false);
                 await SetViewportMetricsAsync(next, CancellationToken.None).ConfigureAwait(false);
-                await StartCaptureAsync(next, CancellationToken.None).ConfigureAwait(false);
+                // A hidden tab has no visible frame to produce; resizing while hidden must not restart
+                // streaming. The visibility toggle restarts it when the tab is shown again.
+                bool visibleNow; lock (_gate) { visibleNow = _pageVisible; _captureActive = false; }
+                if (visibleNow) await StartCaptureAsync(next, CancellationToken.None).ConfigureAwait(false);
                 lock (_gate) _viewport = next;
             }
         }
