@@ -58,6 +58,7 @@
     <Compile Include="SpaceTasksDashboardOriginalWorkTests.cs;SpaceTasksDashboardCuiTests.cs" />
     <Compile Include="SpaceGraphContextPickerTests.cs;SpaceGraphTextNormalizationTests.cs;BoardsSectionIconSuggestionServiceTests.cs" />
     <Compile Include="FilesNativeBoardDocumentCreateTests.cs" />
+    <Compile Include="BoardsCreateDestinationRoutingTests.cs" />
     <Compile Include="NativeHomeFilesBoardCreationIntegrationTests.cs" />
     <Compile Include="TaskObservationAuthorizationTests.cs" />
     <Compile Include="UserPreferencesServiceTaskScopeTests.cs" />

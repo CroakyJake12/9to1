@@ -807,6 +807,9 @@ public sealed partial class App
             internal Task<BoardsHomeBoardCreationResult>? Driver;
             internal Task? OriginalSource, Navigation;
             internal bool CreateDispatched, Opened;
+            /// <summary>The Files boards folder for this create, once provisioned; null when the store
+            /// cannot be reached, which is what routes creation to the recoverable draft instead.</summary>
+            internal string? BoardsFolder;
             internal Exception? UnknownFailure;
             internal string? DisplayName;
         }
@@ -821,7 +824,12 @@ public sealed partial class App
             if ((!isBoards && !isBoardsLibrary) || origin.Privacy != BrowserTabPrivacy.Standard || origin.ProfileId != _actor?.ProfileId ||
                 current is not IBrowseNativeAppContentSession { IsPublicationCurrent: true } || current.Address != origin.Address)
                 throw new UnauthorizedAccessException("Create a board only from its actual current standard Home tab.");
-            if (request.Operation == BoardsHomeBoardCreationOperation.Create)
+            // Owner model, corrected 29 October: automatic provisioning of Documents/9to1 removes the
+            // Files *connect* requirement, but it does NOT cancel destination selection when creating a
+            // board. Create still presents the destination surface hosted in the Boards window, the owner
+            // chooses the folder and clicks Create, and the board is saved into that folder. Provisioning
+            // runs first so that surface always has a real workspace to browse without any setup step.
+            if (!BoardsCreateRouting.OffersDestinationSelection(request.Operation, BoardsDestinationSelectionAvailable()))
                 return CreateAndOpenLocalBoardAsync(origin, request.ValidatedDraft, token);
             if (request.Operation == BoardsHomeBoardCreationOperation.RetryOpenExisting &&
                 _localCreatedBoards.TryGetValue(origin.TabId, out var retainedLocal))
@@ -845,9 +853,28 @@ public sealed partial class App
                 var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 var actual = Run(); state.Driver = actual; _sources.Add(actual); begin.SetResult(); return actual;
                 async Task<BoardsHomeBoardCreationResult> Run()
-                { await begin.Task; return await CreateAndOpenBoardCoreAsync(origin, request, state, token); }
+                {
+                    await begin.Task;
+                    if (request.Operation == BoardsHomeBoardCreationOperation.Create)
+                        state.BoardsFolder = await BoardsWorkspaceFolders.ResolveAppDirectoryAsync(_services, "boards", token);
+                    if (Haven.Desktop.Services.BoardsCreateRouting.FallsBackToRecoverableDraft(request.Operation, state.BoardsFolder))
+                    {
+                        // No reachable boards folder: the board is still created, as a recoverable draft
+                        // that Boards also places in the default workspace folder when it can. Creation is
+                        // never gated on Files setup, and the surface states where the board really is.
+                        return await CreateAndOpenLocalBoardAsync(origin, request.ValidatedDraft, token);
+                    }
+                    return await CreateAndOpenBoardCoreAsync(origin, request, state, token);
+                }
             }
         }
+        /// <summary>Whether destination selection can be offered at all right now. It stays off only for a
+        /// profile with no reachable Files workspace service; an unconfigured workspace is provisioned on
+        /// demand instead of asking the owner to connect anything.</summary>
+        private bool BoardsDestinationSelectionAvailable() =>
+            _services.GetService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>() is not null &&
+            _services.GetService<HavenOS.Files.NativeHost.NativeFilesWorkspaceService>() is not null;
+
         private async Task<BoardsHomeBoardCreationResult> CreateAndOpenBoardCoreAsync(BrowseAppContentRequest origin,
             BoardsHomeBoardCreationRequest request, BoardCreationState state, CancellationToken token)
         {
