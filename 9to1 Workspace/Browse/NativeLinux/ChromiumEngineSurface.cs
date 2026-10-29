@@ -75,8 +75,26 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
         _frameViewport.Acknowledge(value);
         InvalidateVisual();
     }
+    /// <summary>Resolve the owning top level lazily. It can be unavailable at the moment of attach -
+    /// the surface is often attached inside a template before its root window is established - and in
+    /// that case the old code fell through to a render scale of 1 forever: ScalingChanged is only
+    /// subscribed once a top level exists, and if the user never changes scaling nothing ever corrected
+    /// it. Measured owner symptom on 29 October: the web surface "not scaling properly to the correct
+    /// resolution" - a 1x page composited into a scaled window reads as soft, wrongly sized text.</summary>
+    private void EnsureTopLevel()
+    {
+        if (_topLevel is not null) return;
+        var actual = TopLevel.GetTopLevel(this);
+        if (actual is null) return;
+        _topLevel = actual;
+        actual.ScalingChanged += OnScalingChanged;
+        EmitDiagnostic("surface top level resolved scaling=" + actual.RenderScaling);
+        UpdateViewport();
+    }
+
     private void UpdateViewport()
     {
+        EnsureTopLevel();
         if (!_attached || Bounds.Width <= 0 || Bounds.Height <= 0) return;
         var next = ChromiumViewport.From(Bounds.Size, _topLevel?.RenderScaling ?? 1);
         if (next == _requestedViewport) return;
@@ -85,6 +103,11 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
         ViewportChanged?.Invoke(this, next);
     }
     private void OnScalingChanged(object? sender, EventArgs args) => UpdateViewport();
+    private void OnLayoutRetryTopLevel(object? sender, EventArgs args)
+    {
+        if (_topLevel is not null) { LayoutUpdated -= OnLayoutRetryTopLevel; return; }
+        EnsureTopLevel();
+    }
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -325,6 +348,9 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
         _topLevel = TopLevel.GetTopLevel(this);
         if (_topLevel is not null) _topLevel.ScalingChanged += OnScalingChanged;
         UpdateViewport();
+        // Bounds are not measured until the first layout after attach, so the same lazy resolution
+        // runs again on the next layout pass rather than being latched at attach time.
+        LayoutUpdated += OnLayoutRetryTopLevel;
         if (!_reportedAttached) { _reportedAttached = true; EmitDiagnostic("surface attached"); }
     }
 
@@ -332,6 +358,7 @@ public sealed class ChromiumEngineSurface : Control, IChromiumEngineView
     {
         base.OnDetachedFromVisualTree(e);
         _attached = false;
+        LayoutUpdated -= OnLayoutRetryTopLevel;
         if (_topLevel is not null) _topLevel.ScalingChanged -= OnScalingChanged;
         _topLevel = null;
         if (!_reportedDetached) { _reportedDetached = true; EmitDiagnostic("surface detached"); }

@@ -10,6 +10,8 @@ public static class ChromiumArguments
 {
     public const string LoopbackAddress = "127.0.0.1";
     private const string RemoteDebuggingPort = "0";
+    internal const int InitialWidth = 1280;
+    internal const int InitialHeight = 800;
 
     /// <summary>Builds the argument list for the given engine-isolated profile. The binary path is
     /// accepted so the engine can be described honestly rather than assumed; when it is absent the
@@ -36,6 +38,13 @@ public static class ChromiumArguments
             "--disable-component-update",
             "--remote-debugging-address=" + LoopbackAddress,
             "--remote-debugging-port=" + RemoteDebuggingPort,
+            // Give the engine the same starting geometry the app already treats as its logical default
+            // (ChromiumEngineSurface.RenderWidth/RenderHeight, ChromiumViewport.Default). Without it
+            // headless starts at Chromium's own default window, so the frames that arrive before the
+            // real viewport override lands are a different shape from the tab and get letterboxed -
+            // the black bars the owner saw around the page on 29 October. The override still decides
+            // every real frame; this only removes the wrong-shaped first frames.
+            "--window-size=" + InitialWidth + "," + InitialHeight,
             "--user-data-dir=" + profileDirectory,
         };
         if (UserAgentFor(binaryPath) is { } agent) arguments.Add("--user-agent=" + agent);
