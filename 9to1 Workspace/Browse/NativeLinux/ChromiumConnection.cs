@@ -59,7 +59,7 @@ internal sealed class ChromiumConnection : IChromiumEndpoint
             RedirectStandardError = true,
             CreateNoWindow = true
         };
-        foreach (var argument in ChromiumArguments.Build(_profileDirectory)) start.ArgumentList.Add(argument);
+        foreach (var argument in ChromiumArguments.Build(_profileDirectory, _binaryPath)) start.ArgumentList.Add(argument);
 
         var endpoint = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         _process = Process.Start(start) ?? throw new InvalidOperationException("Chromium refused to start.");
