@@ -1,3 +1,15 @@
+## Working-method corrections — 29 October 2026, owner-preserved reviewer feedback
+
+Read [the reviewer feedback and the countermeasures adopted in response](docs/development/model-performance-feedback-2026-10-29.md)
+at every startup, handoff and compaction. Three failures it records, with the owner's correction on sequencing:
+requirements were coded before the required flow was pinned (board creation lost its destination selection);
+large patches were written before compiling, producing repeated broken intermediate states; and the loop between
+source and the running application was not closed, because ARM packages were inspected but never executed and
+no on-screen native evidence was produced. The binding consequences: pin the required user flow in writing
+before coding it, compile after each edit unit rather than after a batch, state the evidence level of every
+behaviour claim (test, on-screen capture, owner-reported, not yet observed), and never queue owner-drawn UI
+work behind measurement work without saying so at the time.
+
 ## Single-main bug repair — 28 October 2026, latest owner direction
 
 Fix the [reported bugs](docs/specification/owner-references/2026-10-28-reported-bugs/9to1-full-reported-bug-list-2026-10-27.md) first, then continue the adopted expanded v2 specification. Reproduce applicable failures and preserve already-working behaviour; a historical report is not evidence that current main is broken.
