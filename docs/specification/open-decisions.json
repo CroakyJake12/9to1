@@ -165,19 +165,22 @@
       "id": "OPEN-2026-10-29-BOARD-SAVE-LOCATION",
       "at": "2026-10-29T11:20:00+00:00",
       "owner": "local OpenCode PC session (Boards-first v3)",
-      "summary": "Owner directs that creating a board must show and honour the folder it is saved to: create new board opens Files inside the Boards window, the user navigates, selects a folder and clicks Create, and the board is saved into that folder - instead of trusting that create board saves it somewhere.",
-      "verbatim_owner_request": "still having the saving issue. I think the fix is this: you click create new board - it opens files (inside of the boards window) and then you navigate through files, select a folder, and click \"create\" - the board is saved to that folder. rather than trusting that \"create board\" will save it somewhere",
+      "summary": "Owner model, clarified 29 October: no Files 'connect' step at all. On install the app creates a 9to1 folder under Documents automatically; everything saves there unless the user picks another location; and if the user MOVES that 9to1 folder, the app must find where it went and register it there instead of Documents.",
+      "verbatim_owner_request": "I meant you shouldn't have to go into files and click \"connect\" - it should automatically create a \"9to1\" folder under documents when the user installs the deb. And then everything is saved to that unless the user picks another location. And if the user moves that 9to1 folder the app finds where it's saved and registers it there instead of documents.",
       "measured_fact": "Boards artefacts do exist, but only in a private hash-named subtree: ~/.local/share/9to1-development/profile/Boards/profiles/5018c35df725e59bd1f77c32a5ec0f6198116365e004c38910681edbf455395c/drafts/*.9to1board (4 drafts plus 3 conflict copies). There is no Files-visible Boards folder in the Home Files store at all. So a surface that says 'saved locally' with no path, over a directory named by a 64-character hash, is exactly the reported complaint: the files are saved, the user cannot see where, and the folder they look in is empty.",
       "tension": "The 27 October headline correction says Boards must create and save WITHOUT connecting Files, an account or a dedicated Boards folder. This later explicit owner direction asks for a Files folder step at creation. Both are owner authority; the later one amends the former for the create path, and the resolution below preserves both intents.",
       "planned_resolution_not_yet_implemented": [
-        "creation is never blocked: a board still becomes a recoverable local draft immediately, with no setup gate and no required account (preserves the 27 October correction and the 'remove the setup gate' answer to OPEN-2026-10-28-LOCAL-STORAGE-SCOPES)",
-        "the save destination is explicit and chosen: the Boards window hosts the actual Files surface for browsing and folder selection (replacing the native Save As dialog currently reached through BoardsWritablePresentation.PickSavePathAsync), and Create writes the .9to1board into the folder the user picked",
-        "the chosen location is always shown in the surface (nav header and board info), and the app-private draft path is named when a board is draft-only, so 'saved locally' can never again be the whole answer",
-        "existing drafts and conflict copies stay where they are and remain openable; nothing is moved silently"
+        "default save root: a 9to1 folder under the user's Documents, created automatically with per-app subfolders, with no Files connect, no account and no setup gate",
+        "created by the app at first run rather than by the package: the shipped .deb deliberately has no maintainer scripts and a package must not write into a user's home, so the first launch of the installed build performs the creation. The behaviour the owner asked for is the same; the mechanism is recorded honestly",
+        "Documents may be absent or non-standard: resolve it through the XDG user directories when present, otherwise create it, and if the home itself is not writable fall back to the private app data root and say so on the surface rather than failing silently",
+        "user override: choosing another location is stored as the registered root and is always displayed; a board that has never been placed shows its actual draft path, never a bare 'saved locally'",
+        "relocation discovery: the 9to1 root carries a marker file holding a stable root id; if the registered path disappears, the app scans plausible parents (Documents, home, Desktop, the last known parent and any directory that already contains a registered 9to1 child) for the marker, and when it matches it re-registers the new path instead of recreating one under Documents; more than one match must be presented, never guessed",
+        "migration: the existing drafts (profile/Boards/profiles/<64-hex>/drafts/*.9to1board plus conflict copies) stay openable and are re-pointed into the new root; nothing is deleted or silently moved"
       ],
-      "state": "open - owner direction recorded, implementation not started",
-      "affected_change": "Boards create flow, the Files host seam inside Boards, BoardsWritablePresentation save/pick path, and the nav header location display",
-      "evidence": "filesystem listing above; docs/specification/owner-references/2026-10-27-expanded-spec (headline correction); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES"
+      "state": "open - owner model recorded; implementation not started",
+      "affected_change": "the Files native host store/folder/file registration (the same store/folder/file/revision identity Boards already writes through), AppPaths/root resolution, first-run creation, the location override control, and the relocation scan",
+      "evidence": "filesystem listing above; docs/specification/owner-references/2026-10-27-expanded-spec (headline correction); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES",
+      "earlier_owner_instruction_superseded": "the folder-picker-at-creation phrasing from the same day is replaced by an auto-created default location that needs no connect step; the picker becomes the exception path (user picks another location), not the required first step"
     }
   ]
 }
