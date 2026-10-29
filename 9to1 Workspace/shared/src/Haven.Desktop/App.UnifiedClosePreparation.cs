@@ -65,13 +65,24 @@ public sealed partial class App
         // preparation", so the participant that declined was invisible. Initialization/publication/
         // retirement state is exactly what the close decision already reads; this prepares, joins or
         // vetoes nothing.
+        private static string DescribeChromeRefusals(HavenOS.Apps.Browse.BrowseChrome? chrome) =>
+            chrome is null ? "no chrome" : string.Join(" | ", chrome.CloseRefusals.Select(refusal =>
+                refusal.Kind + ": " + refusal.Detail));
+
         private static string DescribeCloseCandidates(BrowseChrome? chrome) => chrome is null ? "no chrome" :
             string.Join(",", chrome.State.Tabs.Select(tab =>
             {
                 var content = chrome.ObserveOriginalAppContent(tab.Id);
                 var participant = content as IBrowseAppContentClosePreparationParticipant;
+                // The identity hash is not decoration. AcquireContentCloseAsync returns null for the
+                // whole cohort when the tab's content owner ALREADY carries a Preparation, so if two
+                // tabs resolve to the same owner object the second one silently vetoes the close of
+                // the entire window. Recording which tabs share one owner is the only way to see that
+                // from outside the chrome.
                 return (content?.GetType().Name ?? "no-content") + "[reversible=" +
-                    (participant?.SupportsReversibleClosePreparation.ToString() ?? "not-a-participant") + "]";
+                    (participant?.SupportsReversibleClosePreparation.ToString() ?? "not-a-participant") +
+                    ",owner=#" + (content is null ? "0"
+                        : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(content).ToString("X")) + "]";
             }));
 
         private static string DescribeCloseParticipants(BrowseChrome? chrome) => chrome is null ? "no chrome" :
@@ -142,7 +153,8 @@ public sealed partial class App
                         // which owners are reversible participants, which are one-shot, and which are
                         // not owners at all - plus the same live session state as before the call.
                         WriteOriginalCloseDiagnostic("unified driver: chrome returned no close preparation; aborts. decliner candidates=[" +
-                            DescribeCloseCandidates(_chrome) + "] state after=[" + DescribeCloseParticipants(_chrome) + "]");
+                            DescribeCloseCandidates(_chrome) + "] state after=[" + DescribeCloseParticipants(_chrome) +
+                            "] chrome causes=[" + DescribeChromeRefusals(_chrome) + "]");
                         await AbortPreparation(attempt);
                         return null;
                     }

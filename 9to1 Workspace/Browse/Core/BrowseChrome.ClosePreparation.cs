@@ -7,6 +7,28 @@ namespace HavenOS.Apps.Browse;
 public sealed partial class BrowseChrome
 {
     private readonly HashSet<ContentTransition> _contentTransitions = [];
+    private readonly List<BrowseCloseRefusal> _closeRefusals = [];
+
+    /// <summary>Why the most recent close attempt was declined, in the chrome's own words.</summary>
+    public IReadOnlyList<BrowseCloseRefusal> CloseRefusals
+    { get { lock (_nativeSourceGate) return _closeRefusals.ToArray(); } }
+
+    private BrowseCloseVetoException Veto(string site, string detail)
+    {
+        ReportCloseRefusal("veto@" + site, detail);
+        return new BrowseCloseVetoException();
+    }
+
+    private void ReportCloseRefusal(string kind, string detail)
+    {
+        lock (_nativeSourceGate)
+        {
+            // Bounded: a refused close must not grow an unbounded ledger. The first causes are the
+            // ones that explain the abort; later repeats from the same attempt add nothing.
+            if (_closeRefusals.Count < 16) _closeRefusals.Add(new BrowseCloseRefusal(kind, detail));
+        }
+    }
+
     private readonly AsyncLocal<ContentTransition?> _executingContentTransition = new();
     private readonly AsyncLocal<ClosePreparation?> _executingWindowPreparation = new();
     private readonly AsyncLocal<ClosePreparation?> _executingWindowCommit = new();
@@ -104,6 +126,42 @@ public sealed partial class BrowseChrome
             attempt.Tab.Address == attempt.Address && attempt.Tab.NavigationGeneration == attempt.Generation &&
             (attempt.Owner is null || attempt.Owner.Close is not null || ReferenceEquals(attempt.Owner.Preparation, attempt));
     }
+    private string DescribeContentTransitions()
+    {
+        lock (_nativeSourceGate)
+        {
+            var index = 0;
+            return string.Join(" | ", _contentTransitions.Select(fence =>
+            {
+                var held = fence.Retained;
+                var pending = held.Count(task => !task.IsCompleted);
+                var faulted = held.FirstOrDefault(task => task.IsFaulted);
+                var cause = faulted?.Exception?.InnerExceptions?.FirstOrDefault();
+                return "#" + (++index) + " held=" + held.Count + " unfinished=" + pending +
+                    (cause is null ? string.Empty : " fault=" + cause.GetType().Name + ":" +
+                        (cause.Message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                            .FirstOrDefault() ?? string.Empty).Substring(0, Math.Min(90,
+                            (cause.Message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                                .FirstOrDefault() ?? string.Empty).Length)));
+            }));
+        }
+    }
+
+    private static string DescribeStaleAttempt(ContentCloseAttempt attempt)
+    {
+        var owner = attempt.Owner;
+        var causes = new List<string>();
+        if (attempt.Lease?.IsCurrent != true) causes.Add("the preparation lease is no longer current");
+        if (!attempt.Tab.Address.Equals(attempt.Address)) causes.Add("the tab address changed from " +
+            attempt.Address + " to " + attempt.Tab.Address);
+        if (attempt.Tab.NavigationGeneration != attempt.Generation)
+            causes.Add("the tab navigation generation moved " + attempt.Generation + " -> " +
+                attempt.Tab.NavigationGeneration);
+        if (owner is not null && owner.Close is null && !ReferenceEquals(owner.Preparation, attempt))
+            causes.Add("the tab owner's preparation is no longer this attempt");
+        return causes.Count == 0 ? "an unlisted IsCurrent condition failed" : string.Join("; ", causes);
+    }
+
     private sealed class ContentAdmissionCanceledException(CancellationToken token) : OperationCanceledException(token);
     private static void DemandContentAdmission(CancellationToken token)
     { if (token.IsCancellationRequested) throw new ContentAdmissionCanceledException(token); }
@@ -115,7 +173,20 @@ public sealed partial class BrowseChrome
         if (attempt.Owner is not { Close: null } owner) return attempt;
         lock (_nativeSourceGate)
         {
-            if (owner.Preparation is not null) return null;
+            if (owner.Preparation is not null)
+            {
+                // Measured on 29 October: this is the only close path that returns null without the
+                // app session ever being consulted, and both reproduced window-close aborts were
+                // silent here. The tab's owner already carries an earlier attempt, normally one a
+                // navigation or a tab close acquired and never released, so the whole window cohort
+                // is voided and this tab is never asked. Observation only; the decision is unchanged.
+                var stale = owner.Preparation;
+                ReportCloseRefusal("owner-already-prepared", "tab " + tab.Address + " still carries an earlier close preparation" +
+                    " (lease=" + (stale.Lease is null ? "none" : "held") + ", accepted=" + stale.Accepted +
+                    ", beginning=" + stale.Beginning + ", addressThen=" + stale.Address + ", addressNow=" + tab.Address +
+                    ", generationThen=" + stale.Generation + ", generationNow=" + tab.NavigationGeneration + ")");
+                return null;
+            }
             owner.Preparation = attempt;
         }
         try
@@ -135,11 +206,30 @@ public sealed partial class BrowseChrome
             {
                 var actual = owner.Session.TryPrepareToCloseAsync(token) ?? throw new InvalidOperationException("No original close preparation task was supplied.");
                 RetainAppSource(actual);
-                if (!await actual.ConfigureAwait(false)) { ClearAttempt(attempt); return null; }
+                if (!await actual.ConfigureAwait(false))
+                {
+                    // A one-shot owner answering false voids the ENTIRE window close, and until now
+                    // nothing named it: measured on 29 October against a copy of the owner's saved
+                    // session, 10 of 11 Boards tabs reached their own preparation and the eleventh was
+                    // never asked, which is exactly the shape of an earlier one-shot refusal followed
+                    // by a cohort abort. The address and session type are the only way to see which
+                    // tab refused from outside this file. Diagnostic only; the decision is unchanged.
+                    ReportCloseRefusal("one-shot-refused", "one-shot close preparation REFUSED by " +
+                        owner.Session.GetType().Name + "@" + tab.Address + "; the whole cohort is void");
+                    ClearAttempt(attempt); return null;
+                }
             }
             token.ThrowIfCancellationRequested();
             lock (_nativeSourceGate)
-                if (!IsCurrent(attempt)) throw new BrowseCloseVetoException();
+            {
+                if (!IsCurrent(attempt))
+                {
+                    // The 8-tab control run on 29 October aborted exactly here with the generic
+                    // "The native app has unsaved or pending work" message, which names no tab and
+                    // no cause. The sub-conditions below are the same ones IsCurrent already reads.
+                    throw Veto("acquire-not-current", "tab " + tab.Address + " - " + DescribeStaleAttempt(attempt));
+                }
+            }
             return attempt;
         }
         catch (Exception failure)
@@ -177,11 +267,11 @@ public sealed partial class BrowseChrome
         AppContentOwner owner;
         lock (_nativeSourceGate)
         {
-            if (!IsCurrent(attempt)) throw new BrowseCloseVetoException();
+            if (!IsCurrent(attempt)) throw Veto("begin-not-current", "tab " + attempt.Tab.Address + " - " + DescribeStaleAttempt(attempt));
             if (attempt.Owner is not { } actualOwner) { attempt.Accepted = true; return; }
             owner = actualOwner;
             if (owner.Close is not null) { attempt.Accepted = true; return; }
-            if (attempt.Beginning) throw new BrowseCloseVetoException();
+            if (attempt.Beginning) throw Veto("begin-twice", "tab " + attempt.Tab.Address + " was already begun by this preparation");
             attempt.Beginning = true;
         }
         // The exact Preparation still fences this owner against replacement. Native
@@ -319,7 +409,9 @@ public sealed partial class BrowseChrome
         {
             if (state.Close is not null) return state.Close;
             if (!ReferenceEquals(state.Owner, this) || !cohort.IsCurrent || _contentTransitions.Count != 0)
-                throw new BrowseCloseVetoException();
+                throw Veto("commit-window", "host current=" + ReferenceEquals(state.Owner, this) +
+                    ", cohort current=" + cohort.IsCurrent + ", live fences=" + _contentTransitions.Count +
+                    " [" + DescribeContentTransitions() + "]");
             // Keep the reversible host publication alive while synchronously
             // acquiring exact participant originals. Publishing Chrome retirement
             // first could invalidate a perfectly current subordinate host lease.
@@ -361,7 +453,7 @@ public sealed partial class BrowseChrome
         try
         {
             cohort = await PrepareCloseAsync().ConfigureAwait(false);
-            if (cohort is null) throw new BrowseCloseVetoException();
+            if (cohort is null) throw Veto("cohort-null", "the chrome produced no reversible preparation for this window");
             var acceptedOriginal = BeginWindowClose(cohort, _pendingExternalClose);
             if (!ReferenceEquals(acceptedOriginal, OriginalClose)) throw new InvalidOperationException("The window did not retain its exact original close.");
             await StateOf(cohort).ActualClose!.ConfigureAwait(false);
@@ -389,7 +481,18 @@ public sealed partial class BrowseChrome
         {
             ThrowIfCannotAccept();
             if (_windowPreparation is { } existing) return StateOf(existing).Preparation!;
-            if (_contentTransitions.Count != 0) return Task.FromResult<ClosePreparation?>(null);
+            _closeRefusals.Clear(); // this attempt reports its own causes, not an older attempt's
+            if (_contentTransitions.Count != 0)
+            {
+                // Measured on 29 October: with the owner's restored 15-tab session the close aborted
+                // WITHOUT asking any app session (only 2 of 11 Boards tabs had even been entered,
+                // and those were navigation asks). This gate is the only close path that can void the
+                // whole cohort before a single participant is consulted, so it must say which fences
+                // are live and what they are still holding. Observation only.
+                ReportCloseRefusal("content-transition-fence", _contentTransitions.Count +
+                    " live content transition fence(s) blocked the close: " + DescribeContentTransitions());
+                return Task.FromResult<ClosePreparation?>(null);
+            }
             var cohort = _windowPreparation = new ClosePreparation(new WindowCloseState(this));
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var actual = PrepareWindowAsync(start.Task, cohort, token);
@@ -469,7 +572,8 @@ public sealed partial class BrowseChrome
         try
         {
             DemandContentAdmission(token);
-            lock (_nativeSourceGate) if (!IsCurrent(attempt)) throw new BrowseCloseVetoException();
+            lock (_nativeSourceGate) if (!IsCurrent(attempt)) throw Veto("navigation-not-current",
+                "tab " + attempt.Tab.Address + " - " + DescribeStaleAttempt(attempt));
             if (address.IsWeb)
             {
                 var assessment = BrowserNativeRequestPolicy.AssessTopLevel(address.WebUri!);
@@ -586,5 +690,17 @@ public sealed partial class BrowseChrome
             }
         }
     }
+
+
+/// <summary>Read-only observation seam for the app host's bounded close diagnostic. The chrome does
+/// not own that log; this only forwards what the close decision already knows. It never changes a
+/// decision, and a missing host observer is ignored.</summary>
+/// <summary>A close attempt that the chrome itself declined, in the same inspectable style as
+/// BrowseDrainedStartupFailure: the chrome never writes the app host's log, it only records what its
+/// own decision was and why. The host reads this list into its bounded close diagnostic. Until now a
+/// declined close produced no named cause anywhere, which is why the reported window-close failure
+/// could not be attributed (measured 29 October).</summary>
+public sealed record BrowseCloseRefusal(string Kind, string Detail);
+
 
 }

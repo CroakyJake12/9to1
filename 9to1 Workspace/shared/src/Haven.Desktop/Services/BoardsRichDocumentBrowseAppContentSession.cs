@@ -146,9 +146,21 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
     public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        // The read-only Boards tab is a reversible close participant, and every null it returns
+        // vetoes the whole window close (BrowseChrome.AcquireContentCloseAsync turns a null lease
+        // into a null cohort, which is why the 29 October probes ended with "chrome returned no
+        // close preparation; aborts" and nothing was said to the user). Each refusal now names its
+        // reason in the bounded close diagnostic; nothing about the decision itself changed.
+        App.WriteOriginalCloseDiagnostic("boards read-only close: request received (closing=" + _closing +
+            ", hasClose=" + (_close is not null) + ", alreadyPrepared=" + (_prepared is not null) +
+            ", address=" + _address + ")");
         lock (_gate)
         {
-            if (_close is not null || _closing) return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
+            if (_close is not null || _closing)
+            {
+                App.WriteOriginalCloseDiagnostic("boards read-only close: DECLINED, a close is already running or done: " + _address);
+                return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
+            }
             if (_prepared is { } prepared) return Task.FromResult<IBrowseAppContentClosePreparation?>(prepared);
             if (_preparationTask is { IsCompleted: false }) return _preparationTask;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -162,7 +174,11 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
     {
         await start.ConfigureAwait(false);
         var initialization = OriginalInitialization;
-        if (initialization is null) return null;
+        if (initialization is null)
+        {
+            App.WriteOriginalCloseDiagnostic("boards read-only close: DECLINED, never initialized: " + _address);
+            return null;
+        }
         try { await initialization.ConfigureAwait(false); }
         catch { return CreateFailedInitializationPreparation(); }
         token.ThrowIfCancellationRequested();
@@ -172,7 +188,11 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
             () => presentation.PrepareToCloseAsync(token)).GetTask();
         var actual = await dispatch.ConfigureAwait(false);
         var nested = await actual.ConfigureAwait(false);
-        if (nested is null) return null;
+        if (nested is null)
+        {
+            App.WriteOriginalCloseDiagnostic("boards read-only close: DECLINED, the Boards surface returned no close preparation: " + _address);
+            return null;
+        }
         if (token.IsCancellationRequested)
         {
             await AwaitOnUiAsync(nested.AbortAsync).ConfigureAwait(false);
@@ -190,6 +210,7 @@ internal sealed class BoardsRichDocumentBrowseAppContentSession : IBrowseNativeA
         }
         if (!accepted)
         {
+            App.WriteOriginalCloseDiagnostic("boards read-only close: DECLINED, the presentation or its lease stopped being current: " + _address);
             await AwaitOnUiAsync(nested.AbortAsync).ConfigureAwait(false);
             return null;
         }
