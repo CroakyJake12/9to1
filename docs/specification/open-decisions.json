@@ -143,6 +143,23 @@
         "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
         "state": "answered \u2014 implementation in progress"
       }
+    },
+    {
+      "id": "OPEN-2026-10-29-DUPLICATE-BOARDS-TABS",
+      "at": "2026-10-29T08:08:00+01:00",
+      "owner": "local OpenCode PC session (Boards-first v3)",
+      "summary": "What should happen when the same board is open in more than one tab?",
+      "requirement": "Owner headline correction: Boards creates/saves without Files, an account or a dedicated Boards folder, and local drafts stay recoverable. Owner-reported A04/A05/A06 describe restored Boards tabs that refuse to start, cannot be closed, and block the whole window from closing.",
+      "measured_fact": "haven.db workspace_session currently restores six tabs of one Files board and three tabs of one local draft. Each tab opens its own writable session over the same document with its own save baseline, so closing the second or third copy always raises the Boards durability guard and writes a conflict copy. This was reproduced natively against a copy of the owner's profile.",
+      "state": "open",
+      "blocker": "The three possible repairs change user-visible semantics and one of them changes document/session lifetime architecture, so they are not a worker's choice.",
+      "options": [
+        "share ONE live document session across all tabs of the same board (spec-correct 'same board, two views', no conflicts, but requires owner/lease lifetime work in BrowseChrome and workspace restore)",
+        "allow one writable tab per board; later tabs open read-only with a visible 'open in another tab' notice (smallest safe change, no data risk)",
+        "collapse duplicate board addresses on restore into one tab (also addresses the reported tab-overflow complaint, but removes tabs the user may have opened deliberately)"
+      ],
+      "affected_change": "Boards tab restore, the writable/read-only local and Files board sessions, and the app-wide close cohort that currently aborts when one participant declines.",
+      "evidence": ".handoff/boards-first-v3/work/STATUS.md (29 October A06 section); /tmp/opencode/native-probe/ (isolated profiles, close logs, conflict copies)"
     }
   ]
 }
