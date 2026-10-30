@@ -5,13 +5,15 @@ golden_rules: golden-rules.md revision 1
 queue: queue.md revision 11
 branch: main
 base: 90013220198002f78e9aecd40ccea80a87703105 (validated source; use the checkpoint's containing main commit)
-status: CHECKPOINT_READY
+status: STOPPED_BY_OWNER
 usage_remaining_percent: 8
 usage_observation: approximate owner report received 2026-10-30T09:10:29Z; no live platform feed; <=5% stop condition unchanged
 usage_handoff: handoffs/2026-10-30-usage-update.md
-schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
+schedule: disabled on explicit owner instruction, 2026-10-30T12:56:16Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
 cycle_report: cycle-reports/2026-10-30-09.md
 cycle_ownership: cycle 9 complete; foreground claimed 12:21:00 UTC for trigger recorded 12:14:18; source released after validation/commit/push/readback; no overlapping writer
-next_scheduled_trigger: 2026-10-30T13:10:00Z nominal; existing hourly continuation remains enabled
-next: pin document-space anchor geometry and scroll/zoom ownership for Freeform from a flow target; preserve native/ARM gates, Browse WIP and usage wrap-up
+next_scheduled_trigger: none; existing automation paused
+next: none; do not resume without a new explicit owner instruction
+owner_stop: 2026-10-30T12:56:16Z; supersedes all earlier continuation and usage-threshold instructions
+stop_handoff: handoffs/2026-10-30-owner-stop.md
