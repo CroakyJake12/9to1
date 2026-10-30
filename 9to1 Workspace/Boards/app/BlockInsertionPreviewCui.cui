@@ -6,6 +6,8 @@
       <Container Type="Overlay" ID="InsertionBelowEdge" Active="{Binding Below}" Height="3"
                  VerticalAlignment="Bottom" Background="{Resource CuiAccentBrush}" />
       <Container Type="Overlay" ID="InsertionReplaceOutline" Active="{Binding Replace}"
+                 Width="{Binding FrameWidth}" Height="{Binding FrameHeight}" Margin="{Binding FrameMargin}"
+                 HorizontalAlignment="{Binding FrameHorizontal}" VerticalAlignment="{Binding FrameVertical}"
                  BorderWidth="2" BorderColor="{Resource CuiAccentNegativeBrush}" CornerRadius="7"
                  Background="Transparent">
         <Container Type="Overlay" ID="InsertionReplaceTint" Background="{Resource CuiAccentNegativeBrush}"

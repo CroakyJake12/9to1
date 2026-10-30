@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 
@@ -7,9 +9,9 @@ namespace CakeOS.Apps.Boards.App;
 
 internal static class BlockInsertionPreviewCui
 {
-    internal static Control Build(BoardsViewModel vm, string rowId)
+    internal static Control Build(BoardsViewModel vm, string rowId, RichBoardBlock? frame = null, double gutter = 0)
     {
-        var context = new PreviewContext(vm, rowId);
+        var context = new PreviewContext(vm, rowId, frame, gutter);
         var loader = BoardsCuiDocuments.CreateLoader();
         loader.SetBindingContext(context);
         var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.InsertionPreviewSourceName));
@@ -32,7 +34,7 @@ internal static class BlockInsertionPreviewCui
         return root;
     }
 
-    private sealed class PreviewContext(BoardsViewModel vm, string rowId) : ICuiBindingContext, INotifyPropertyChanged
+    private sealed class PreviewContext(BoardsViewModel vm, string rowId, RichBoardBlock? frame, double gutter) : ICuiBindingContext, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
@@ -46,6 +48,11 @@ internal static class BlockInsertionPreviewCui
                 "Above" => placement == BlockInsertionPlacement.Above,
                 "Below" => placement == BlockInsertionPlacement.Below,
                 "Replace" => placement == BlockInsertionPlacement.Replace,
+                "FrameWidth" => frame?.Width ?? double.NaN,
+                "FrameHeight" => frame?.Height ?? double.NaN,
+                "FrameMargin" => new Thickness(frame is null ? 0 : gutter, 0, 0, 0),
+                "FrameHorizontal" => frame is null ? HorizontalAlignment.Stretch : HorizontalAlignment.Left,
+                "FrameVertical" => frame is null ? VerticalAlignment.Stretch : VerticalAlignment.Top,
                 _ => null,
             };
             return value is not null;

@@ -67,7 +67,7 @@ public static class BlockRenderer
         var blocks = vm.PageBlocks;
         if ((blocks.Any(block => block.Layout == HavenRichBlockLayouts.Absolute) || canvasBoxes.Count > 0) && absoluteBlocksHost is null)
             throw new InvalidOperationException("The authored AbsoluteBlocksHost is required to render saved free-positioned blocks.");
-        if (blocks.Count == 0)
+        if (blocks.Count == 0 && canvasBoxes.Count == 0)
         {
             host.Children.Add(BuildEmptyPageHint(vm));
         }
@@ -160,7 +160,7 @@ public static class BlockRenderer
         var height = Math.Clamp(box.Height, 24, 5000);
         var border = new Border
         {
-            Name = "canvas_" + box.Id, Width = width, Height = height,
+            Name = "canvas_" + box.Id, Width = width, Height = height, ZIndex = box.ZOrder,
             HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
             Background = BoardsTheme.CardBrush, BorderBrush = BoardsTheme.BorderBrush,
             BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8), Padding = new Thickness(10),
@@ -171,7 +171,9 @@ public static class BlockRenderer
         AutomationProperties.SetName(border, "Canvas object " + (string.IsNullOrEmpty(box.Text) ? box.Kind : box.Text));
         layer.Children.Add(border);
         var placement = AbsolutePlacements.GetValue(layer, panel => new(panel));
-        void Place(double x, double y) => placement.Add(border, border, x, y, width, height);
+        // CUI absolute cells read coordinates from a Border's child, just as
+        // positioned block wrappers do. Canvas hosts still place the outer cell.
+        void Place(double x, double y) => placement.Add(border, border.Child!, x, y, width, height);
         Place(box.X, box.Y);
         Point? pressed = null;
         IPointer? pointer = null;
@@ -490,7 +492,8 @@ public static class BlockRenderer
         var shell = new Panel();
         shell.Children.Add(row);
         shell.Children.Add(outline);
-        shell.Children.Add(BlockInsertionPreviewCui.Build(vm, selectId));
+        shell.Children.Add(BlockInsertionPreviewCui.Build(vm, selectId,
+            absolutePositioned ? placementBlock : null, BlockGutterTargetSize * 2));
         var border = new Border
         {
             Child = shell,

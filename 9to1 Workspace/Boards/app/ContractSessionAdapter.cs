@@ -1825,7 +1825,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         IReadOnlyList<CanvasBoxView> boxes = page.Canvas.Select(o => new CanvasBoxView
         {
             Id = o.Id, Kind = o.Kind, Text = o.Text,
-            X = o.X, Y = o.Y, Width = o.Width, Height = o.Height,
+            X = o.X, Y = o.Y, Width = o.Width, Height = o.Height, ZOrder = o.ZOrder,
             CanvasWidth = page.CanvasWidth, CanvasHeight = page.CanvasHeight
         }).ToArray();
         return Task.FromResult(boxes);
@@ -2007,6 +2007,7 @@ public sealed class CanvasBoxView
     public double Y { get; set; }
     public double Width { get; set; } = 260;
     public double Height { get; set; } = 160;
+    public int ZOrder { get; set; }
     public double CanvasWidth { get; set; } = 1200;
     public double CanvasHeight { get; set; } = 900;
 }

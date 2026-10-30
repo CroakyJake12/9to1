@@ -312,6 +312,8 @@ public sealed class HavenRichCanvasObject
     public double Y { get; set; }
     public double Width { get; set; } = 260;
     public double Height { get; set; } = 160;
+    // Older page objects have the same zero stacking order they rendered with before.
+    public int ZOrder { get; set; }
 }
 
 /// <summary>

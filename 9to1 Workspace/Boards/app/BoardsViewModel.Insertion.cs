@@ -47,7 +47,17 @@ public sealed partial class BoardsViewModel
             return HasPendingDatabaseLink ? "Link the previously created database before creating another." : null;
         }
         if (kind == "freeform")
-            return "This item cannot yet use a block destination. Add it from the toolbar Insert menu.";
+        {
+            if (_session is not ContractSessionAdapter || !IsNativePage)
+                return "Freeform boxes require an editable Native page.";
+            if (IsCanvasLocked) return "Unlock freeform objects before replacing a block with a box.";
+            var row = PageBlocks.FirstOrDefault(block => block.Id == blockId) ??
+                PageBlocks.First(block => block.Id.StartsWith(blockId + ":", StringComparison.Ordinal));
+            if (placement != BlockInsertionPlacement.Replace || row.Layout != HavenRichBlockLayouts.Absolute)
+                return "Freeform boxes can replace a whole positioned block. Use toolbar Insert for a new page box.";
+            return FreeformBoxPlacement.CanRepresent(row.X, row.Y, row.Width, row.Height) ? null :
+                "This frame cannot be kept exactly as a Freeform box. Use nonnegative coordinates and dimensions from 24 to 5000.";
+        }
         if (kind is not ("paragraph" or "heading" or "checklist" or "bulleted" or "numbered" or "table" or "divider" or "graph" or "image" or "attachment"))
             return "This block type is not available for insertion.";
         if (kind == "image" && PickFileAsync is null) return "Image selection needs the desktop file picker.";
@@ -126,14 +136,14 @@ public sealed partial class BoardsViewModel
             { Set("StatusText", "The image could not be read: " + error.Message); return; }
         }
         if (!OriginCurrent()) { Set("StatusText", "The insertion target changed. Choose it again."); return; }
-        string selected;
+        string? selected;
         if (_session is ContractSessionAdapter adapter)
         {
             if (ticket is null) { Set("StatusText", "That block cannot be edited here."); return; }
             var result = await adapter.InsertRelativeAsync(ticket, prepared, placement, OriginCurrent, attachmentSource: attachmentSource);
             if (!result.Applied)
             { Set("StatusText", result.Message ?? "The insertion target changed or is unavailable. Open the menu and choose again."); return; }
-            selected = result.SelectedBlockId!;
+            selected = result.SelectedBlockId;
         }
         else
         {
@@ -151,8 +161,8 @@ public sealed partial class BoardsViewModel
             selected = prepared.Id;
         }
         if (!OriginCurrent()) return;
-        _selectedBlockId = selected;
-        if (focusEditor && FindBlock(selected)?.Kind is "paragraph" or "heading" or "checklist" or "bulleted" or "numbered")
+        _selectedBlockId = selected ?? string.Empty;
+        if (selected is not null && focusEditor && FindBlock(selected)?.Kind is "paragraph" or "heading" or "checklist" or "bulleted" or "numbered")
             _pendingTextFocus = (page.Id, selected, 0);
         RefreshAfterEdit();
     }
@@ -180,6 +190,9 @@ public sealed partial class BoardsViewModel
                 "attachment" => new RichBoardBlock { Kind = "paragraph", Text = string.Empty },
                 // The canonical insertion action creates the owned pane pages in its one edit.
                 "tabber" => new RichBoardBlock { Kind = "tabber" },
+                // A command payload only: the adapter creates a page.Canvas object, never
+                // a fake paragraph or a persisted unsupported block kind.
+                "freeform" => new RichBoardBlock { Kind = "freeform" },
                 "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
                 "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
                 "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },

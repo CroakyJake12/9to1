@@ -29,8 +29,9 @@ public sealed partial class ContractSessionAdapter
         var wholeList = insertion.WholeList;
         var insertTabber = preparedView.Kind == "tabber";
         var insertDatabase = preparedView.Kind == "database";
-        var prepared = insertTabber ? null : MergeDeltas.PrepareInsertion(preparedView);
-        if (!insertTabber && prepared is null || insertTabber && attachmentSource is not null)
+        var insertCanvas = preparedView.Kind == "freeform";
+        var prepared = insertTabber || insertCanvas ? null : MergeDeltas.PrepareInsertion(preparedView);
+        if (!insertTabber && !insertCanvas && prepared is null || (insertTabber || insertCanvas) && attachmentSource is not null)
             return new(false, "IncompleteBlock", null);
         if (_disposed) return new(false, "Disposed", null);
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -52,6 +53,10 @@ public sealed partial class ContractSessionAdapter
                 var page = rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == target.PageId);
                 if (insertTabber && (page?.PageType != HavenRichPageTypes.Native || page.TabberOwnerBlockId is not null)) return false;
                 var anchor = page?.Blocks.FirstOrDefault(block => block.Id == parentId);
+                if (insertCanvas && (page?.PageType != HavenRichPageTypes.Native || page.IsCanvasLocked ||
+                    placement != BlockInsertionPlacement.Replace || anchor?.Layout != HavenRichBlockLayouts.Absolute ||
+                    split >= 0 && !wholeList || !FreeformBoxPlacement.CanRepresent(anchor.X, anchor.Y, anchor.Width, anchor.Height)))
+                    return false;
                 return anchor is not null && (split < 0 || anchor.Items.Any(item => item.Id == itemId)) &&
                     // Absolute geometry has no flow insertion edge. Keep that combination explicit;
                     // replacement of the complete spatial block can preserve its exact placement.
@@ -76,6 +81,15 @@ public sealed partial class ContractSessionAdapter
             {
                 var page = rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == target.PageId);
                 var anchor = page.Blocks.Single(block => block.Id == parentId);
+                if (insertCanvas)
+                {
+                    var box = HavenRichNotesOps.AddCanvasObject(rich, page.Id, "Text", "New note",
+                        anchor.X, anchor.Y, anchor.Width, anchor.Height);
+                    box.ZOrder = anchor.ZOrder;
+                    HavenRichNotesOps.RemoveBlock(rich, page.Id, anchor.Id);
+                    for (var index = 0; index < page.Blocks.Count; index++) page.Blocks[index].Order = index;
+                    return;
+                }
                 // Metadata-only projection imports cannot create owned pages. Construct the real
                 // Tabber inside this rollback/history boundary, then splice that same block below.
                 var inserted = insertTabber ? HavenTabberOps.Add(rich, page.Id, null) : prepared!;
@@ -113,13 +127,13 @@ public sealed partial class ContractSessionAdapter
                 for (var index = 0; index < page.Blocks.Count; index++) page.Blocks[index].Order = index;
                 HavenRichNotesOps.TouchNotes(rich);
                 selected = inserted.Items.Count > 0 ? inserted.Id + ":" + inserted.Items[0].Id : inserted.Id;
-            }, cancellationToken, requireReadableDocument: insertTabber || insertDatabase || attachmentSource is not null).ConfigureAwait(false);
+            }, cancellationToken, requireReadableDocument: insertTabber || insertDatabase || insertCanvas || attachmentSource is not null).ConfigureAwait(false);
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
             return new(true, "Applied", selected);
         }
-        catch (InvalidDataException error) when (insertTabber || insertDatabase || attachmentSource is not null)
-        { return new(false, insertTabber ? "InvalidTabberInsertion" : insertDatabase ? "InvalidDatabaseInsertion" : "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
+        catch (InvalidDataException error) when (insertTabber || insertDatabase || insertCanvas || attachmentSource is not null)
+        { return new(false, insertTabber ? "InvalidTabberInsertion" : insertDatabase ? "InvalidDatabaseInsertion" : insertCanvas ? "InvalidFreeformInsertion" : "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
         finally { _mergeGate.Release(); }
     }
 }

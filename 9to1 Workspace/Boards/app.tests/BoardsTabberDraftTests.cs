@@ -15,8 +15,10 @@ namespace CakeOS.Apps.Boards.App.Tests;
 [Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsTabberDraftTests
 {
-    [Fact]
-    public async Task Hidden_pane_field_draft_refuses_replacement_and_keeps_the_same_live_editor()
+    [Theory]
+    [InlineData("tabber")]
+    [InlineData("freeform")]
+    public async Task Hidden_pane_field_draft_refuses_replacement_and_keeps_the_same_live_editor(string replacement)
     {
         await using var data = await OpenData();
         var definition = data.Snapshot.RecordViews[0];
@@ -41,7 +43,8 @@ public sealed class BoardsTabberDraftTests
                 TestUiThread.Run(() => window!.Content = vm.Tabbers.Mount(vm.PageBlocks.Single(block => block.Id == owner.Id)));
                 Assert.True(await Task.Run(() => vm.HasUnsettledDatabaseWork));
                 var before = adapter.Snapshot; var version = adapter.DocumentVersion;
-                BoardsTabberInsertionTests.OnUi(() => vm.ReplaceBlockWithKindAsync("tabber", owner.Id));
+                Assert.Null(vm.RelativeInsertionUnavailableReason(replacement, owner.Id, "replace"));
+                BoardsTabberInsertionTests.OnUi(() => vm.ReplaceBlockWithKindAsync(replacement, owner.Id));
                 Assert.Equal(before, adapter.Snapshot); Assert.Equal(version, adapter.DocumentVersion);
                 TestUiThread.Run(() => Assert.True(view!.HasUnsavedDrafts));
                 BoardsTabberInsertionTests.OnUi(() => vm.ChangeTabberAsync(owner.Id, "select", selected));
@@ -54,7 +57,7 @@ public sealed class BoardsTabberDraftTests
                     view!.DiscardDrafts(); Assert.False(view.HasUnsavedDrafts);
                 });
                 Assert.False(await Task.Run(() => vm.HasUnsettledDatabaseWork));
-                BoardsTabberInsertionTests.OnUi(() => vm.ReplaceBlockWithKindAsync("tabber", owner.Id));
+                BoardsTabberInsertionTests.OnUi(() => vm.ReplaceBlockWithKindAsync(replacement, owner.Id));
                 Assert.DoesNotContain(vm.PageBlocks, block => block.Id == owner.Id);
             }
             finally
@@ -68,6 +71,11 @@ public sealed class BoardsTabberDraftTests
         {
             BoardsTabberInsertionTests.SeedTabbers(rich);
             var owner = rich.Sections[0].Pages[0].Blocks.First(block => block.Kind == HavenRichBlockKind.Tabber);
+            if (replacement == "freeform")
+            {
+                owner.Layout = HavenRichBlockLayouts.Absolute;
+                owner.X = 80; owner.Y = 140; owner.Width = 600; owner.Height = 400;
+            }
             var selected = owner.Tabber!.Panes.Single(pane => pane.Id == owner.Tabber.SelectedPaneId);
             rich.Sections[0].Pages.Single(page => page.Id == selected.PageId).Blocks =
                 [new HavenRichBlock { Kind = HavenRichBlockKind.Database, Database = reference }];
