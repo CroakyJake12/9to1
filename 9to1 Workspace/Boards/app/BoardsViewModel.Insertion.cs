@@ -36,7 +36,17 @@ public sealed partial class BoardsViewModel
             return StyleList.Any(style => style.Id == kind[6..]) ? null : "That style is no longer available.";
         if (kind == "tabber")
             return CanAddTabber ? null : "Tabbers require an editable Native parent page; nested Tabbers are not supported.";
-        if (kind is "database" or "database-tabs" or "database-timeline" or "database-retry" or "freeform")
+        if (kind is "database" or "database-tabs" or "database-timeline" or "database-retry")
+        {
+            if (!DatabaseBlocks.IsAvailable || _session is not ContractSessionAdapter)
+                return "The Data owner is unavailable in this host.";
+            if (_creatingDatabase) return "Wait for the current database creation or link to finish.";
+            if (kind == "database-retry")
+                return !HasPendingDatabaseLink ? "There is no created database to link." :
+                    _pendingDatabaseBlock is not null ? "The database block is already inserted. Retry its save from the toolbar Insert menu." : null;
+            return HasPendingDatabaseLink ? "Link the previously created database before creating another." : null;
+        }
+        if (kind == "freeform")
             return "This item cannot yet use a block destination. Add it from the toolbar Insert menu.";
         if (kind is not ("paragraph" or "heading" or "checklist" or "bulleted" or "numbered" or "table" or "divider" or "graph" or "image" or "attachment"))
             return "This block type is not available for insertion.";
@@ -68,6 +78,8 @@ public sealed partial class BoardsViewModel
         if (RelativeInsertionUnavailableReason(kindTag, blockId, position) is { } reason)
         { Set("StatusText", reason); return; }
         TryInsertionPlacement(position, out var placement);
+        if (kindTag is "database" or "database-tabs" or "database-timeline" or "database-retry")
+        { await InsertDatabaseRelativeAsync(kindTag, blockId!, placement); return; }
         if (placement == BlockInsertionPlacement.Replace && !AllowDatabaseStructureChange()) return;
         var page = CurrentPage();
         var row = page.Blocks.FirstOrDefault(block => block.Id == blockId);

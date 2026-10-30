@@ -51,6 +51,8 @@ public sealed partial class BoardsViewModel
 
     private async Task InsertDatabaseCoreAsync(string command, string? after)
     {
+        if (command == "database-retry" && _pendingDatabaseDestination is not null)
+        { await RetryRelativeDatabaseAsync(); return; }
         if (!RequireEditMode() || _creatingDatabase) return;
         if (!DatabaseBlocks.IsAvailable)
         { Set("StatusText", "The Data owner is unavailable in this host."); return; }
@@ -94,7 +96,7 @@ public sealed partial class BoardsViewModel
         try
         {
             await _session.SaveAsync();
-            _pendingDatabase = null; _pendingDatabasePage = null; _pendingDatabaseAnchor = null; _pendingDatabaseBlock = null;
+            ClearPendingDatabaseLink();
         }
         catch (Exception error)
         { Set("StatusText", "The database exists in Data. Its Board link needs Retry: " + error.Message); }
@@ -103,7 +105,7 @@ public sealed partial class BoardsViewModel
 
     internal void UpdateDatabaseReference(string pageID, string blockID, HavenBoardDatabaseReference reference)
     {
-        if (!IsEditMode || SelectedPageId != pageID) return;
+        if (!CanEdit || !IsEditMode || SelectedPageId != pageID) return;
         var block = FindBlock(blockID);
         if (block?.Database is not { } previous || previous == reference ||
             previous.StoreID != reference.StoreID || previous.WorkbookID != reference.WorkbookID) return;

@@ -28,6 +28,7 @@ public sealed partial class ContractSessionAdapter
         var target = insertion.Block;
         var wholeList = insertion.WholeList;
         var insertTabber = preparedView.Kind == "tabber";
+        var insertDatabase = preparedView.Kind == "database";
         var prepared = insertTabber ? null : MergeDeltas.PrepareInsertion(preparedView);
         if (!insertTabber && prepared is null || insertTabber && attachmentSource is not null)
             return new(false, "IncompleteBlock", null);
@@ -112,13 +113,13 @@ public sealed partial class ContractSessionAdapter
                 for (var index = 0; index < page.Blocks.Count; index++) page.Blocks[index].Order = index;
                 HavenRichNotesOps.TouchNotes(rich);
                 selected = inserted.Items.Count > 0 ? inserted.Id + ":" + inserted.Items[0].Id : inserted.Id;
-            }, cancellationToken, requireReadableDocument: insertTabber || attachmentSource is not null).ConfigureAwait(false);
+            }, cancellationToken, requireReadableDocument: insertTabber || insertDatabase || attachmentSource is not null).ConfigureAwait(false);
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
             return new(true, "Applied", selected);
         }
-        catch (InvalidDataException error) when (insertTabber || attachmentSource is not null)
-        { return new(false, insertTabber ? "InvalidTabberInsertion" : "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
+        catch (InvalidDataException error) when (insertTabber || insertDatabase || attachmentSource is not null)
+        { return new(false, insertTabber ? "InvalidTabberInsertion" : insertDatabase ? "InvalidDatabaseInsertion" : "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
         finally { _mergeGate.Release(); }
     }
 }

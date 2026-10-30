@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\app\CakeOS.Apps.Boards.Embedding.csproj" />
+    <ProjectReference Include="..\..\shared\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Headless\Avalonia.Headless\Avalonia.Headless.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
