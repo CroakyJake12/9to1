@@ -129,6 +129,12 @@ def audit(repo="."):
             problems.append(f"no .gitmodules entry for designated donor {d['app']}/{d['donor']}")
 
     designated = {k for d in DESIGNATIONS for k in SYNONYMS.get(d["donor"], {d["donor"]})}
+    # A binding whose donor has no upstream record cannot be pinned, licensed or verified at all. The
+    # pre-existing gate rejects this; the coverage audit must not be blind to it either.
+    for donor_key, apps in sorted(bindings.items()):
+        if not ({donor_key} & upstreams):
+            problems.append(f"binding without upstream record: {donor_key} "
+                            f"(apps: {', '.join(sorted(apps))})")
     extra = sorted(set(bindings) - designated)
     for e in extra:
         problems.append(f"registry binding with no specification designation found: {e} "
