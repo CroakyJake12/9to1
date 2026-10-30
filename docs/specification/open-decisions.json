@@ -280,6 +280,28 @@
       ],
       "affected_change": "Everything in the Browse engine lane, the unified DevTools feature requested by the owner (F12 to the same DevTools on any screen, web or CUI), and the ARM64 package content. No engine-dependent claim should be reported as browser behaviour until a built fork exists.",
       "evidence": "This file; .gitmodules; f775ea45; '9to1 Workspace/Browse/README.md:70-74'; 'docs/architecture/browse.md:101-106'; '9to1 Workspace/Browse/NativeLinux/ChromiumLocator.cs'; 'ChromiumArguments.cs:28 (--headless=new), :39-40 (--remote-debugging-*)'; 'ChromiumEngineTab.cs:383-384 (OpenDeveloperToolsAsync throws NotSupportedException)'; '.github/scripts/native16-arm64/chromium-native/*'; measured binary absence on this PC 30 October."
+    },
+    {
+      "id": "OPEN-2026-10-30-DONOR-LICENCES",
+      "at": "2026-10-30T11:20:00Z",
+      "status": "open - measured licence facts recorded; two copyleft exposures need an owner decision",
+      "title": "Which donor copyleft exposures are acceptable, and is 9to1 distributed closed or open?",
+      "owner_intent": "Take existing app work and build on top of it, re-doing the UI in CUI, keeping every non-proprietary feature or replacing it with a 9to1 equivalent (owner, 30 October 2026).",
+      "measured_facts": [
+        "DuckDB (Data) MIT and Gecko (Browse) MPL-2.0/GPL-2.0/LGPL-2.1 tri-licence are usable; MPL election is the standard Firefox-derivative route and keeps our own code proprietary.",
+        "AppFlowy Board (Boards) is dual-licensed AGPL-3.0 OR MPL-2.0, so MPL election avoids AGPL.",
+        "Rnote (Canvas bridge, Canvas/rnote-poc) is GPL-3.0-or-later and is LINKED by our bridge, which puts GPL-3.0 copyleft on the combined Canvas engine boundary today.",
+        "Unsloth Studio is AGPL-3.0-only (5,659 SPDX headers) and its model browser is studio/backend/hub; only the unsloth core outside studio/ is Apache-2.0.",
+        "The installed Unsloth package has no frontend/Rust source and no Cargo/Tauri config, so it cannot be rebuilt natively as installed (our own migration notes say this)."
+      ],
+      "open_questions": [
+        "Is a 9to1 build distributed under a closed/proprietary licence, under an open licence, or both by edition? This single answer decides Rnote (GPL-3.0) and any Unsloth Studio use.",
+        "If closed: is the Canvas GPL-3.0 bridge replaced (own engine, or a permissively-licensed one) or isolated as a separate process with the decision reviewed, and is Unsloth Studio excluded with the model browser rebuilt in CUI on our existing Strata/Hugging Face integration?",
+        "For Gecko: confirm MPL-2.0 election and the notice/offer process for MPL files in the shipped ARM package.",
+        "For AppFlowy Board: confirm the MPL-2.0 election is recorded in retained notices."
+      ],
+      "affected_change": "Canvas engine bridge licensing posture; whether Unsloth Studio or its model browser may be used at all; notice/offer obligations in the ARM64 package; which donors can be pinned at all.",
+      "evidence": "eng/donor-sources.json licence_audit_20261030; pinned trees under 9to1 Workspace/*/Source; Canvas/rnote-poc/patches/LICENSE-GPL-3.0-or-later.txt; unsloth source tree under ~/.local/share/unsloth-custom-20261014/source (studio/ = AGPL-3.0-only); /home/jacob/Linux-migration/Unsloth-Linux-port.md"
     }
   ]
 }
