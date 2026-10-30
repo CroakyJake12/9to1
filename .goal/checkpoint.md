@@ -1,97 +1,100 @@
-# Checkpoint 6 · 30 October 2026, 04:13 UTC
+# Checkpoint 7 · 30 October 2026, 05:58 UTC
 
-Status: CHECKPOINT_READY. Cycle 3 implemented visible BF-37 insertion/replace preview and the atomic
-relative-edit repairs needed for its actual destination/type journey. BF-37 remains CHECKED PARTIAL:
-unsupported destinations and native/ARM checks are open. Reconcile live source and ownership before
-claiming the next cycle ACTIVE. This is not product completion or a usage stop.
+Status: CHECKPOINT_READY. Cycle 4 completed the dependency-ready BF-37 relative Attachment milestone,
+including real embedded-local picker wiring and payload persistence repairs exposed by its checks.
+BF-37 remains CHECKED PARTIAL. This releases source for the next eligible cycle; it is not an app
+completion, acceptance or usage-stop claim. Reconcile live remote/source/ownership before claiming ACTIVE.
 
 ## Source and validation
 
-- Canonical checkout /workspace/9to1, main, origin https://github.com/CroakyJake12/9to1.git.
-  Started clean and refreshed at a09091a6d985c1415d7a336d85cf8a2ca01c79a5. Remote still matched before push.
-- Source commit **a376fda20fc9b982428599d260072c8d69ffa05b**, “Show Boards insertion previews and make relative
-  edits atomic”, was pushed and read back from refs/heads/main. All 17 source/test files match the final
-  validation manifest. This checkpoint/report is a subsequent documentation commit; resolve its containing
-  main commit and refresh remote source before continuing.
-- Fresh full Boards Release suite: **302 executed, 302 passed, zero failures/skips**, including 53 new
-  preview/persisted-insertion cases. Affected app and all nine embedded CUI documents compiled.
-  No source changed during the final run; no guard violation; peak group RSS **908,763,136 bytes**.
-- Evidence: **headless development / ORDINARY_LAYER1_PARTIAL_NOT_REUSABLE**. No app-completion or
-  acceptance claim follows from totals. Native PC and ARM installation/execution remain NOT RUN;
-  full independent acceptance remains PAUSED. Package held; ARM remains PC-owned.
-- Details: cycle-reports/2026-10-30-03.md; pinned flow and results in
-  docs/development/boards-insertion-preview-2026-10-30.md; all 25 attempts/case names/failures/source and
-  artifact hashes in docs/development/boards-insertion-preview-cycle3-2026-10-30.evidence.json.
-  Three final headless frames are committed under docs/development/evidence/boards-insertion-preview-2026-10-30/.
+- Existing checkout /workspace/9to1, canonical main, origin https://github.com/CroakyJake12/9to1.git.
+  Started clean at refreshed main 56d97238ae7d205c809023d370d97bb3c94d2587. Remote still matched before push.
+- Source commit **71296260e95c830ae9f6948a06be8832f10b1a85**, “Enable atomic Boards attachment destinations
+  and preserve payloads”, was pushed and read back from refs/heads/main at 05:58 UTC. All 11 changed
+  source/test hashes match the final-run manifest and the committed blobs. This checkpoint/report is a
+  subsequent documentation commit; use its containing main commit for continuation.
+- Fresh final Release checks: **337/337 full Boards app tests**, **113/113 full Boards contract tests**,
+  zero failures/skips. Standalone Boards build passed; one existing WebRtcVadSharp AnyCPU→x64 native DLL
+  warning remains. Affected producers and all nine embedded CUI sources compiled. No source changes
+  during these three final runs; no guard violation. Peak owned process-group RSS respectively
+  1,192,693,760 / 432,672,768 / 1,311,059,968 bytes.
+- **Headless development / ORDINARY_LAYER1_PARTIAL_NOT_REUSABLE** only. Native PC/OS dialog and ARM
+  execution/install remain NOT RUN, full independent acceptance PAUSED, package HELD and ARM PC-owned.
+  Test totals are not accepted progress or app-completion evidence.
+- Pinned flow/results: docs/development/boards-attachment-insertion-2026-10-30.md.
+  All 21 attempts, failures, commands, source snapshots, case names and artifact hashes:
+  docs/development/boards-attachment-insertion-cycle4-2026-10-30.evidence.json.
+  Two actual 1180×760 headless captures are committed under
+  docs/development/evidence/boards-attachment-insertion-2026-10-30/.
+  Detailed report: cycle-reports/2026-10-30-04.md.
 
 ## Checked behavior and source seams
 
-- Inline plus now reaches authored Above/Below/Replace destinations instead of skipping them. Typed
-  CUI pointer/focus actions publish transient per-session/page/row/menu-generation preview. Top/bottom
-  edges and red replacement outline/tint occupy no document flow space and do not mutate data/history.
-- Destination choice remains pinned through the type stage. Change, Escape, dismissal, commit, row loss,
-  detach, projection refresh, page/View changes and disposal retire ownership. Pointer and focus remain
-  independent; stale stage/type rows cannot commit. Two Boards do not share preview state.
-- CUI owns destination, preview and floating frame presentation. Visual review found and repaired the
-  initial popup contrast mismatch. Native/installed application behavior has not been observed.
-- Relative replacement prepares first, then uses one canonical mutation with revision/origin fences.
-  Refused styles/types or cancelled/missing/corrupt image files preserve the original; successful edits
-  support one undo. Relative style Above inserts at the chosen position. Images retain natural sizing.
-- Projected list insertion preserves retained item identity/formatting, splits at the selected boundary
-  and keeps a distinct inserted kind. Whole-list preparation fences all parent rows, protecting later-item
-  draft edits during image picking. Free-layout preview groups one canonical list parent, matching the edit.
-  Whole positioned replacement preserves geometry; unsupported spatial combinations refuse explicitly.
-- Implementation seams: BoardsViewModel.InsertionPreview.cs (transient ownership), InsertMenuContext.cs
-  (popup/stages/retained actions), InsertDestinationCui.cui, BlockInsertionPreviewCui.*, InsertMenuSurfaceCui.cui,
-  ToolbarBuilder.Fill/AddGroup, BlockRenderer.WithSelection/list grouping, BoardsViewModel.Insertion.cs,
-  ContractSessionAdapter.Insertion.cs and MergeDeltas.PrepareInsertion in BoardProjection.cs.
-- Real mounted destination→type→commit→save/reopen checks verify placement and exact undo; list tests cover
-  first/middle/last and whole-parent boundaries. Raw pointer/keyboard checks cover geometry, cleanup,
-  disabled reasons, stale callbacks and isolation. These are ordinary development checks, not acceptance.
+- Actual inline plus → Above/Below/Replace → Attachment now uses the existing transient preview/type
+  stages and prepares the selected asset before one canonical edit. Picker cancellation, failure and
+  stale origin preserve the target. One Undo/Redo restores exact content/IDs. Flow-list row/whole-list
+  boundaries retain other items/formatting; whole positioned replacement retains geometry.
+- BoardsFilePicker.cs is the shared OS adapter used by Program and OpenLocalDocumentAsync. Embedded
+  local Boards now receive PickFileAsync. Late choices after detach/reattach or retired owner lifetime
+  are rejected, returned storage handles disposed. External-save sources still explicitly refuse local
+  attachment import even if a host provides a picker; paths are not fabricated Files identities.
+- ContractSessionAdapter.Insertion holds its merge gate across import and atomic mutation, sharing the
+  Save As serialization boundary. RichBoardSession imports under its own gate from one source stream,
+  bounds actual copied bytes, hashes those bytes and publishes an immutable blob through an owned temp.
+  Empty embedded files resolve. Late refusal retains completed blobs needed by history/shared references.
+- Cumulative/JSON-escaped embedded size chooses a sidecar when needed, using the same prepared bytes.
+  MutateIfAsync(requireReadableDocument) checks the actual persisted indented envelope inside rollback
+  before history commit, including metadata duplicated by list splicing. Corrupt existing blobs are
+  refused and preserved; failed-import cleanup removes only the owned temporary file.
+- Ordinary Save As now copies existing sidecars. JsonFileHavenBoardStore validates destination identity
+  under its store gate before publishing blobs, preserving another Board's file/directory on refusal.
+- Real mounted embedded-host tests use raw pointer plus keyboard search and the production picker
+  callback. Only the OS dialog result is substituted; content/save/reopen are real. Final screenshots
+  show Replace/type selection and the attachment name/size with an explicitly synchronized host theme.
 
 ## Retained failures and limits
 
-The missing destination route, eight destructive-refusal/style failures, popup contrast failure,
-whole-list draft fence, large-image sizing and adjacent-list preview scope failures were reproduced,
-repaired and rechecked. Intermediate compile/fixture failures remain retained.
+Reproduced and repaired: 15 initial relative-attachment refusals; empty-file resolution, ordinary Save
+As sidecar loss and oversized-file exception; missing embedded picker callback; cumulative embedded size;
+rejected Save As side effects; list-splice read-limit overflow; and JSON-escaping size overflow. Retained
+intermediate fixture/compiler/missing-assets failures are described in report 04. The earlier 337-pass
+run predates the final escaping fix; cycle4-boards-final is the fresh final result. No invalid terminated
+suite is claimed as passing in cycle 4. No failures remain in the final executed suites.
 
-cycle3-persisted-journeys2 deadlocked its fixture by nesting a synchronous call onto the same UI pump.
-Only its owned SDK process group was terminated. Child exit 0 after SIGTERM is explicitly NOT a pass;
-no completed TRX exists. Subsequent fixtures join bounded asynchronous work correctly. Three initial
-popup journey tests clicked outside the scroll viewport; corrected tests scroll the actual row into
-view before raw input. No failures remain in the final executed suite; feature gaps below remain open.
+The legacy toolbar attachment path still has its prior two-step create/attach edit; only the relative
+route is claimed atomic. Native picker/PC/ARM behavior remains unobserved. Copy-helper cancellation and
+actual filesystem-temp cleanup are separate evidence, not native-dialog acceptance.
 
 ## Next executable milestone
 
-Finish one remaining BF-37 relative insertion capability, beginning with the Attachment destination's
-actual picker/asset ownership flow if dependency-ready. Inspect current toolbar AttachFileAsync and
-Files host seams, pin what the user chooses and what is stored/replaced, reproduce the unsupported
-path, then implement an atomic prepare/commit/cancel flow with save/reopen/undo and mounted checks.
-Do not enable a row that cannot honor its shown destination or remove the original before preparation.
+Inspect and pin the actual Tabber parent/pane ownership flow, starting at BoardsViewModel.AddTabberAsync,
+ContractSessionAdapter.AddTabberAsync and the canonical Tabber operations. If dependency-ready, complete
+one relative Tabber capability with prepare-before-commit, exact destination/preview, cancellation,
+persisted nested identity and single-undo checks. Do not enable a row that cannot honor its destination.
 
-- Relative database/Tabber/freeform/attachment destinations are currently disabled with accessible reasons;
-  their existing toolbar routes remain available. Above/Below on absolute blocks and interior-item
-  replacement in positioned lists are refused. These are implementation gaps, not owner waivers.
-- Lossless Design mappings beyond paragraph/heading and the legacy toolbar converter remain open.
-  BF-38 links, Files root wording and orphan tab-group cleanup retain owner-decision status. Preserve
-  Browse 733f35c3 and its separate evidence/package exclusion. Remaining Boards/Files defects follow.
+- Relative database/Tabber/freeform remain disabled with reasons. Positioned Above/Below and interior
+  positioned-list replacement remain unsupported; whole positioned replacement works in headless checks.
+- Lossless Design mappings beyond paragraph/heading, legacy toolbar conversion and remaining Boards/Files
+  defects remain open. BF-38 link scheme, Files root wording and orphan tab-group cleanup retain their
+  owner-decision status. Preserve Browse 733f35c3 and its separate RED evidence/package exclusion.
 
 ## Environment and continuation
 
-Cloud SDK /workspace/.tools/dotnet/dotnet **10.0.401**, packages /workspace/.tools/nuget/packages.
-Private ordinary Layer1 runner /workspace/scratch/9to1-overnight-20261030/run-layer1.py retains serial
-source/SDK locks, source snapshots, initial memory/disk admission, bounded RSS/floors/time and owned
-process groups. Final label cycle3-boards-regression; no SDK remains active at publication.
+Managed cloud environment was recovered and source accessed, not inferred from metadata. SDK 10.0.401
+at /workspace/.tools/dotnet/dotnet; packages /workspace/.tools/nuget/packages. Serial bounded private
+runner /workspace/scratch/9to1-overnight-20261030/run-layer1.py retained exact source/commands, process
+ownership, memory/disk floors and time/RSS limits. Final labels: cycle4-boards-final, cycle4-contract-final,
+cycle4-standalone-final. No SDK remains active at publication.
 
-Mandatory ROOT-LIVE recovery returned BLOCKED/INFRASTRUCTURE: private projection
-/workspace/shared/9to1-context/development-workflow-state.json is absent. Ordinary source checks followed
-the separate lane permitted by the handoff. Desktop status refreshed at 04:08 UTC: desktop_offline;
-last native observation 29 October 23:56:39 UTC. No native/model/package process was launched, no private
-ledger fabricated, no email/external message sent. Read-only Sol review made no edits or SDK launches
-and found no remaining concrete commit blocker after its three findings were addressed.
+Mandatory ROOT-LIVE recovery remains BLOCKED/INFRASTRUCTURE: missing private projection
+/workspace/shared/9to1-context/development-workflow-state.json. Ordinary Layer1 followed the separately
+permitted lane. Fresh desktop read returned desktop_offline; last native observation was
+2026-10-29T23:56:39Z. No native/model/package launch, new coordinator/ledger, email or external message.
+Read-only Sol review found the size/destination defects and confirmed no remaining concrete blocker
+following repair; it made no source edits or SDK launches.
 
-Existing hourly task remains enabled through **2026-11-01 00:00 UTC**. Cycle 3 handled the 03:10 occurrence;
-the nominal 04:10 trigger arrived while ACTIVE and was coalesced into this checkpoint/report, without
-another writer or milestone. Next nominal trigger 05:10 UTC; cadence is not guaranteed execution.
-Authoritative remaining usage is **UNKNOWN**. At observed ≤5%, finish the safe unit, commit/push/verify
-main, write the precise handoff and pause the task. Never infer usage from context length or forecasts.
+The existing hourly continuation remains enabled through **2026-11-01T00:00:00Z**. This was the nominal
+05:10 occurrence (scheduler records 05:13:49); next nominal occurrence 06:10 UTC. No second writer was
+admitted. Schedule metadata is not proof that a future cycle will execute.
+Authoritative usage remains **UNKNOWN**. At observed ≤5%, safely wrap, commit/push/read back main, write
+the precise handoff and pause without new work. Never infer usage from context length or forecasts.

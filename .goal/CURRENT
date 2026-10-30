@@ -1,15 +1,15 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 6
+checkpoint: checkpoint.md revision 7
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 4
+queue: queue.md revision 5
 branch: main
-base: a376fda20fc9b982428599d260072c8d69ffa05b (validated source; use the checkpoint's containing main commit)
-status: ACTIVE
+base: 71296260e95c830ae9f6948a06be8832f10b1a85 (validated source; use the checkpoint's containing main commit)
+status: CHECKPOINT_READY
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_report: cycle-reports/2026-10-30-03.md
-cycle_ownership: cycle 4 owns Boards relative Attachment insertion and focused tests from clean refreshed main 56d97238; no other writer admitted
-next_scheduled_trigger: 2026-10-30T06:10:00Z nominal; 05:10 cycle executing
-next: remaining BF-37 destination fidelity, starting with Attachment picker/asset flow if dependency-ready; preserve Design and native/ARM gates
+cycle_report: cycle-reports/2026-10-30-04.md
+cycle_ownership: cycle 4 completed and released source after publication; no other writer admitted
+next_scheduled_trigger: 2026-10-30T06:10:00Z nominal; scheduler timing is flexible
+next: inspect and pin Tabber parent/pane flow for one remaining BF-37 capability; preserve Design and native/ARM gates
