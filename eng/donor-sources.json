@@ -579,7 +579,9 @@
             "pattern": "git\\+https://github\\.com/(?P<repo>[^?]+)\\?rev=(?P<rev>[0-9a-f]{7,40})"
           }
         ],
-        "modification_absent_from_consumed_ref": true
+        "modification_absent_from_consumed_ref": true,
+        "fork_not_consumed_yet": true,
+        "drift_acknowledged_until": "plan item 1 (move Cargo.toml + Cargo.lock + the ARM vendor stage onto 44ff1089) awaits owner approval; the census keeps reporting it until then"
       },
       {
         "donor": "rnote (Boards, documented only)",
