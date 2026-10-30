@@ -880,13 +880,18 @@
       {
         "donor": "llama.cpp",
         "path": "9to1 Workspace/Home/Source/Dulche/Source/llama.cpp",
-        "role": "declared, not vendored",
-        "verdict": "NOT CONSUMED",
-        "planned_verdict": "UNRESOLVED",
-        "planned_reason": "Thunder carries reviewed engine enhancements; if they touch llama.cpp source it is a fork, if they stay in our layer it is embed. Needs the actual enhancement inventory before labelling.",
-        "consumed_by": [],
+        "role": "engine used inside our app, consumed as a built/pinned binary",
+        "verdict": "EMBED",
+        "planned_verdict": "EMBED-prebuilt-binary",
+        "planned_reason": "engine used unmodified behind our broker boundary",
+        "consumed_by": [
+          "Home/Dulche llamacpp broker",
+          "shared/tests/Haven.Core.Tests/LlamaCppRuntimeTests.cs"
+        ],
         "modified_artifacts": [],
-        "pristine_scopes": []
+        "pristine_scopes": [],
+        "pinned_at": "53ed051ce5e8193652e449f43216ca3859454f49",
+        "note": "RESOLVED from UNRESOLVED by measurement, not by the phrase 'reviewed enhancements': the Dulche llamacpp tree contains 0 upstream C/C++ files (26 .py, 5 .json, 4 .md, 1 .sh, 1 cpp-LICENSE), and its own README states the directory 'holds 9-1 integration/broker code, not upstream llama.cpp'. Upstream ggml-org/llama.cpp and the controlled fork are both pinned to 53ed051ce5e8193652e4... in Dulche/Source/DONOR-PROVENANCE.md, CI job build-pinned-llamacpp-cpu produces the binary, and LlamaCppRuntimeTests.cs launches an executable path. So no fork is required by the owner's rule. Evidence limits stay as recorded in that README: GPU backends not built/tested, and inference is not runtime-proven until an approved GGUF is actually loaded and prompted."
       },
       {
         "donor": "GStreamer",
