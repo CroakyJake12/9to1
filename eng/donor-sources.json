@@ -501,5 +501,18 @@
       "verdict": "NOT adopted pending the owner's closed-vs-open distribution answer; their feature list is kept as a behaviour parity checklist for our CUI model browser, matching the Boards DonorParityManifest pattern where no donor code is linked",
       "assessment_document": "docs/development/donor-assessments/unsloth-studio-2026-10-30.md"
     }
+  },
+  "owner_decisions_20261030": {
+    "distribution": "open source main apps + proprietary monetisation/identity/subscription components",
+    "engine_rule": "embed what we are not modifying, fork what we are",
+    "repo_root_licence_measured": "GPL-3.0 (root LICENSE, read on 30 October 2026)",
+    "classification": {
+      "firefox-gecko": "embed (measured clean upstream pin, no carried patch or mozconfig)",
+      "rnote-canvas": "fork (controlled fork, our commit + patches/)",
+      "duckdb": "embed (MIT, unmodified)",
+      "chromium": "embed pinned official artefact with digest; remove system-binary lookup",
+      "appflowy-board": "not consumed; elect MPL-2.0 if ever linked",
+      "unsloth-studio": "not adopted (AGPL-3.0-only); parity checklist only"
+    }
   }
 }
