@@ -1035,18 +1035,24 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
     }
 
     public async ValueTask AttachFileToBlockAsync(
-        string pageId, string blockId, string sourcePath, CancellationToken cancellationToken = default)
+        string pageId, string blockId, string sourcePath, CancellationToken cancellationToken = default,
+        Func<bool>? originStillEditable = null)
     {
-        ThrowIfDisposed();
-        var attachment = await _real.ImportAttachmentAsync(sourcePath, cancellationToken).ConfigureAwait(false);
+        ThrowIfDisposed(); EnsureEditable();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            bool OriginCurrent() => !_disposed && (originStillEditable?.Invoke() ?? true);
+            bool Current(HavenRichNotes rich) => OriginCurrent() &&
+                rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == pageId)?.Blocks.Any(block => block.Id == blockId) == true;
+            if (!OriginCurrent()) return;
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            await _real.MutateAsync(
+            if (!Current(_real.Rich)) return;
+            var attachment = await _real.ImportAttachmentAsync(sourcePath, cancellationToken).ConfigureAwait(false);
+            var applied = await _real.MutateIfAsync(Current,
                 rich => HavenRichNotesOps.AttachToBlock(rich, pageId, blockId, attachment),
-                cancellationToken).ConfigureAwait(false);
-            RefreshView();
+                cancellationToken, requireReadableDocument: true).ConfigureAwait(false);
+            if (applied) RefreshView();
         }
         finally
         {
@@ -1916,15 +1922,27 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
     }
 
     public async Task ChangeTabberAsync(string pageID, string blockID, string action, string? paneID = null,
-        string? title = null, CancellationToken token = default)
+        string? title = null, CancellationToken token = default, Func<bool>? originStillEditable = null,
+        string? pendingPaneTitle = null)
     {
         ThrowIfDisposed(); EnsureEditable();
         await _mergeGate.WaitAsync(token).ConfigureAwait(false);
         try
         {
+            if (originStillEditable?.Invoke() == false) return;
             await MergeCoreAsync(token).ConfigureAwait(false);
-            await _real.MutateAsync(notes => HavenTabberOps.Change(notes, pageID, blockID, action, paneID, title), token).ConfigureAwait(false);
-            RefreshView();
+            var applied = await _real.MutateIfAsync(_ => !_disposed && (originStillEditable?.Invoke() ?? true),
+                notes =>
+                {
+                    if (pendingPaneTitle is not null)
+                    {
+                        var tabs = notes.Sections.SelectMany(section => section.Pages).Single(page => page.Id == pageID)
+                            .Blocks.Single(block => block.Id == blockID).Tabber!;
+                        HavenTabberOps.Change(notes, pageID, blockID, "rename", tabs.SelectedPaneId, pendingPaneTitle);
+                    }
+                    HavenTabberOps.Change(notes, pageID, blockID, action, paneID, title);
+                }, token).ConfigureAwait(false);
+            if (applied) RefreshView();
         }
         finally { _mergeGate.Release(); }
     }

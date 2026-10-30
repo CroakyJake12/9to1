@@ -6,15 +6,17 @@ namespace CakeOS.Apps.Boards.App;
 public sealed partial class BoardsViewModel
 {
     private BoardsDatabaseBlocks? _databaseBlocks;
-    private HavenBoardDatabaseReference? _pendingDatabase;
+    private volatile HavenBoardDatabaseReference? _pendingDatabase;
     private string? _pendingDatabasePage, _pendingDatabaseAnchor, _pendingDatabaseBlock;
-    private bool _creatingDatabase;
+    private volatile bool _creatingDatabase;
     public BoardsDatabaseBlocks DatabaseBlocks => _databaseBlocks ??= new(this, _embeddedArtifactHost as IBoardsDatabaseSource);
     public bool HasPendingDatabaseLink => _pendingDatabase is not null;
+    internal bool HasUnsettledDatabaseWork => _creatingDatabase || HasPendingDatabaseLink ||
+        _databaseBlocks?.HasUnsavedDrafts == true || _tabbers?.HasUnsavedDrafts == true;
     private bool AllowDatabaseStructureChange()
     {
-        if (_databaseBlocks?.HasUnsavedDrafts != true && _tabbers?.HasUnsavedDrafts != true) return true;
-        Set("StatusText", "Save or discard the edited database fields before deleting content or changing Board history.");
+        if (!HasUnsettledDatabaseWork) return true;
+        Set("StatusText", "Finish pending database creation or links, and save or discard edited fields before deleting content or changing Board history.");
         return false;
     }
 
@@ -72,6 +74,7 @@ public sealed partial class BoardsViewModel
             finally { _creatingDatabase = false; }
         }
         if (_pendingDatabase is not { } reference) return;
+        if (!RequireEditMode()) return;
         if (_pendingDatabasePage != SelectedPageId)
         { Set("StatusText", "The database was created in Data. Return to its original page and choose Link created database."); return; }
         var page = CurrentPage();

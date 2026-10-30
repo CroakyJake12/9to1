@@ -243,7 +243,7 @@ public sealed partial class BoardsViewModel
 
     public bool TrySetValue(string path, object? value)
     {
-        if (_disposed || SessionIsDisposed) return false;
+        if (_disposed || EditorLifetimeEnded) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
         if (key == "IsEditMode" && value is bool editMode)
         {
@@ -271,7 +271,7 @@ public sealed partial class BoardsViewModel
             RefreshSectionIconPickerChoices();
             return true;
         }
-        if (!_isEditMode) return false;
+        if (!_isEditMode || !CanEdit) return false;
         if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
         var block = FindBlock(SelectedBlockId);
         if (block is null) return false;

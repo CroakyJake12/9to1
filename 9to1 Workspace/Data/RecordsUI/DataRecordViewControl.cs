@@ -22,7 +22,8 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
     private Guid? _filterField;
     private readonly List<Task> _operations = [];
     private readonly Dictionary<(Guid Record, Guid Field), string> _drafts = new();
-    public bool HasUnsavedDrafts => _drafts.Count != 0;
+    private int _draftCount;
+    public bool HasUnsavedDrafts => Volatile.Read(ref _draftCount) != 0;
     public void DiscardDrafts() { Dispatcher.UIThread.VerifyAccess(); _drafts.Clear(); UpdateDraftState(); Render(); }
     private Guid _selectedView;
     private bool _closed, _busy, _readOnly;
@@ -31,7 +32,11 @@ public sealed class DataRecordViewControl : UserControl, ICuiActionDispatcher, I
         get => _readOnly;
         set { Dispatcher.UIThread.VerifyAccess(); if (_readOnly == value) return; _readOnly = value; Render(); }
     }
-    private void UpdateDraftState() => _model.Set("HasDrafts", HasUnsavedDrafts);
+    private void UpdateDraftState()
+    {
+        Volatile.Write(ref _draftCount, _drafts.Count);
+        _model.Set("HasDrafts", HasUnsavedDrafts);
+    }
     public Guid SelectedViewID => _selectedView;
     public Task WhenIdleAsync() => Task.WhenAll(_operations.Append(_loader.WhenActionsIdleAsync()).ToArray());
     public event EventHandler? SelectedViewChanged;

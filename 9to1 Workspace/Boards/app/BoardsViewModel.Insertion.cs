@@ -34,7 +34,9 @@ public sealed partial class BoardsViewModel
         if (InsertionDestinationUnavailableReason(blockId, placement) is { } destination) return destination;
         if (kind.StartsWith("style:", StringComparison.Ordinal))
             return StyleList.Any(style => style.Id == kind[6..]) ? null : "That style is no longer available.";
-        if (kind is "database" or "database-tabs" or "database-timeline" or "database-retry" or "tabber" or "freeform")
+        if (kind == "tabber")
+            return CanAddTabber ? null : "Tabbers require an editable Native parent page; nested Tabbers are not supported.";
+        if (kind is "database" or "database-tabs" or "database-timeline" or "database-retry" or "freeform")
             return "This item cannot yet use a block destination. Add it from the toolbar Insert menu.";
         if (kind is not ("paragraph" or "heading" or "checklist" or "bulleted" or "numbered" or "table" or "divider" or "graph" or "image" or "attachment"))
             return "This block type is not available for insertion.";
@@ -66,14 +68,16 @@ public sealed partial class BoardsViewModel
         if (RelativeInsertionUnavailableReason(kindTag, blockId, position) is { } reason)
         { Set("StatusText", reason); return; }
         TryInsertionPlacement(position, out var placement);
+        if (placement == BlockInsertionPlacement.Replace && !AllowDatabaseStructureChange()) return;
         var page = CurrentPage();
         var row = page.Blocks.FirstOrDefault(block => block.Id == blockId);
         var wholeList = row is null;
         row ??= page.Blocks.First(block => block.Id.StartsWith(blockId + ":", StringComparison.Ordinal));
         var epoch = Interlocked.Read(ref _insertionOperationEpoch);
         var ticket = (_session as ContractSessionAdapter)?.CaptureInsertionTarget(page.Id, row.Id, wholeList);
-        bool OriginCurrent() => !_disposed && !SessionIsDisposed && _isEditMode && CanEdit &&
-            SelectedPageId == page.Id && Interlocked.Read(ref _insertionOperationEpoch) == epoch;
+        bool OriginCurrent() => !_disposed && !EditorLifetimeEnded && _isEditMode && CanEdit &&
+            SelectedPageId == page.Id && Interlocked.Read(ref _insertionOperationEpoch) == epoch &&
+            (placement != BlockInsertionPlacement.Replace || !HasUnsettledDatabaseWork);
         var style = kindTag.StartsWith("style:", StringComparison.Ordinal)
             ? StyleList.First(style => style.Id == kindTag[6..]) : null;
         var prepared = CreateInsertionBlock(kindTag, null, style);
@@ -162,6 +166,8 @@ public sealed partial class BoardsViewModel
             {
                 "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? "New paragraph" },
                 "attachment" => new RichBoardBlock { Kind = "paragraph", Text = string.Empty },
+                // The canonical insertion action creates the owned pane pages in its one edit.
+                "tabber" => new RichBoardBlock { Kind = "tabber" },
                 "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
                 "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
                 "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },

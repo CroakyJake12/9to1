@@ -23,7 +23,7 @@ public sealed partial class BoardsViewModel
     internal BlockInsertionPreviewOwner? BeginInsertionPreview(string anchorBlockId, string rowId)
     {
         CancelInsertionPreview();
-        if (_disposed || SessionIsDisposed || !_isEditMode || !CanEdit || !ShowNativeAuthoring) return null;
+        if (_disposed || EditorLifetimeEnded || !_isEditMode || !CanEdit || !ShowNativeAuthoring) return null;
         var row = PageBlocks.FirstOrDefault(block => block.Id == rowId);
         if (row is null) return null;
         _insertionPreviewOwner = new(_session, _session.Document, SelectedPageId, anchorBlockId, row,
@@ -33,7 +33,7 @@ public sealed partial class BoardsViewModel
     }
 
     internal bool IsInsertionPreviewCurrent(BlockInsertionPreviewOwner owner) =>
-        ReferenceEquals(owner, _insertionPreviewOwner) && !_disposed && !SessionIsDisposed &&
+        ReferenceEquals(owner, _insertionPreviewOwner) && !_disposed && !EditorLifetimeEnded &&
         _isEditMode && CanEdit && ShowNativeAuthoring && ReferenceEquals(owner.Session, _session) &&
         ReferenceEquals(owner.Document, _session.Document) && owner.PageId == SelectedPageId &&
         PageBlocks.Any(block => ReferenceEquals(block, owner.Row));

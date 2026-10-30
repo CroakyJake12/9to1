@@ -28,10 +28,10 @@ public sealed class BoardsTabberTests
                 // "Sequence contains more than one element" before reaching any tabber behaviour.
                 var tabs = board.Document.Sections[0].Pages[0].Blocks.Single(block => block.Tabber is not null).Tabber!;
                 firstPage = tabs.Panes[0].PageId;
-                var child = new BoardsViewModel(board);
-                Assert.True(child.SelectPageById(firstPage));
+                var child = TestUiThread.Run(() => new BoardsViewModel(board));
+                TestUiThread.Run(() => Assert.True(child.SelectPageById(firstPage)));
                 firstBlock = child.PageBlocks.Single().Id;
-                child.EditText("t_" + firstBlock, "Ordinary content inside tab one");
+                TestUiThread.Run(() => child.EditText("t_" + firstBlock, "Ordinary content inside tab one"));
                 await board.SaveAsync();
                 await board.ChangeTabberAsync(parentPage, blockID, "rename", tabs.Panes[0].Id, "Notes");
                 await board.ChangeTabberAsync(parentPage, blockID, "add");
@@ -44,13 +44,13 @@ public sealed class BoardsTabberTests
                 Assert.DoesNotContain(board.Document.Sections[0].Pages, page => page.Id == second.PageId);
                 Assert.True(await board.UndoAsync());
                 Assert.Contains(board.Document.Sections[0].Pages, page => page.Id == second.PageId);
-                var parent = new BoardsViewModel(board);
-                Assert.True(parent.SelectPageById(parentPage));
-                await parent.DeleteBlockAsync(blockID);
+                var parent = TestUiThread.Run(() => new BoardsViewModel(board));
+                TestUiThread.Run(() => Assert.True(parent.SelectPageById(parentPage)));
+                BoardsTabberInsertionTests.OnUi(() => parent.DeleteBlockAsync(blockID));
                 Assert.Single(board.Document.Sections[0].Pages);
                 Assert.True(await board.UndoAsync());
                 await board.SaveAsync();
-                child.Dispose(); parent.Dispose();
+                TestUiThread.Run(() => { child.Dispose(); parent.Dispose(); });
             }
             await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
             var panePage = reopened.Document.Sections[0].Pages.Single(page => page.Id == firstPage);

@@ -27,8 +27,10 @@ public sealed partial class ContractSessionAdapter
     {
         var target = insertion.Block;
         var wholeList = insertion.WholeList;
-        var prepared = MergeDeltas.PrepareInsertion(preparedView);
-        if (prepared is null) return new(false, "IncompleteBlock", null);
+        var insertTabber = preparedView.Kind == "tabber";
+        var prepared = insertTabber ? null : MergeDeltas.PrepareInsertion(preparedView);
+        if (!insertTabber && prepared is null || insertTabber && attachmentSource is not null)
+            return new(false, "IncompleteBlock", null);
         if (_disposed) return new(false, "Disposed", null);
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -46,8 +48,9 @@ public sealed partial class ContractSessionAdapter
             bool Applicable(HavenRichNotes rich)
             {
                 if (!CurrentView() || rich.Version != version) return false;
-                var anchor = rich.Sections.SelectMany(section => section.Pages)
-                    .FirstOrDefault(page => page.Id == target.PageId)?.Blocks.FirstOrDefault(block => block.Id == parentId);
+                var page = rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == target.PageId);
+                if (insertTabber && (page?.PageType != HavenRichPageTypes.Native || page.TabberOwnerBlockId is not null)) return false;
+                var anchor = page?.Blocks.FirstOrDefault(block => block.Id == parentId);
                 return anchor is not null && (split < 0 || anchor.Items.Any(item => item.Id == itemId)) &&
                     // Absolute geometry has no flow insertion edge. Keep that combination explicit;
                     // replacement of the complete spatial block can preserve its exact placement.
@@ -61,16 +64,21 @@ public sealed partial class ContractSessionAdapter
                     return new(false, "AttachmentImportUnavailable", null, "This board source does not grant local attachment import access.");
                 // Save As uses this same merge gate. Hold it through payload preparation and commit
                 // so a sidecar cannot be written beside one path and referenced from another.
-                try { prepared.Attachment = await _real.ImportAttachmentAsync(attachmentSource, cancellationToken).ConfigureAwait(false); }
+                try { prepared!.Attachment = await _real.ImportAttachmentAsync(attachmentSource, cancellationToken).ConfigureAwait(false); }
                 catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
                 { return new(false, "AttachmentImportFailed", null, "The attachment could not be imported: " + error.Message.Split('\n')[0]); }
                 // Applicable runs again under the canonical gate, including lifetime/content checks.
                 // A completed immutable blob is retained on refusal; another reference/history may own it.
             }
+            string? selected = null;
             var applied = await _real.MutateIfAsync(Applicable, rich =>
             {
                 var page = rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == target.PageId);
                 var anchor = page.Blocks.Single(block => block.Id == parentId);
+                // Metadata-only projection imports cannot create owned pages. Construct the real
+                // Tabber inside this rollback/history boundary, then splice that same block below.
+                var inserted = insertTabber ? HavenTabberOps.Add(rich, page.Id, null) : prepared!;
+                if (insertTabber) page.Blocks.Remove(inserted);
                 var at = page.Blocks.IndexOf(anchor);
                 if (split >= 0 && !wholeList)
                 {
@@ -87,30 +95,30 @@ public sealed partial class ContractSessionAdapter
                         anchor.Items = before; page.Blocks.Insert(at++, anchor);
                         trailing.Id = "block-" + Guid.NewGuid().ToString("N");
                     }
-                    page.Blocks.Insert(at++, prepared);
+                    page.Blocks.Insert(at++, inserted);
                     if (after.Count > 0) { trailing.Items = after; page.Blocks.Insert(at, trailing); }
                 }
                 else
                 {
                     if (placement == BlockInsertionPlacement.Replace)
                     {
-                        prepared.Layout = anchor.Layout; prepared.X = anchor.X; prepared.Y = anchor.Y;
-                        prepared.Width = anchor.Width; prepared.Height = anchor.Height; prepared.ZOrder = anchor.ZOrder;
+                        inserted.Layout = anchor.Layout; inserted.X = anchor.X; inserted.Y = anchor.Y;
+                        inserted.Width = anchor.Width; inserted.Height = anchor.Height; inserted.ZOrder = anchor.ZOrder;
                         HavenRichNotesOps.RemoveBlock(rich, page.Id, anchor.Id);
                     }
                     else if (placement == BlockInsertionPlacement.Below) at++;
-                    page.Blocks.Insert(at, prepared);
+                    page.Blocks.Insert(at, inserted);
                 }
                 for (var index = 0; index < page.Blocks.Count; index++) page.Blocks[index].Order = index;
                 HavenRichNotesOps.TouchNotes(rich);
-            }, cancellationToken, requireReadableDocument: attachmentSource is not null).ConfigureAwait(false);
+                selected = inserted.Items.Count > 0 ? inserted.Id + ":" + inserted.Items[0].Id : inserted.Id;
+            }, cancellationToken, requireReadableDocument: insertTabber || attachmentSource is not null).ConfigureAwait(false);
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
-            var selected = prepared.Items.Count > 0 ? prepared.Id + ":" + prepared.Items[0].Id : prepared.Id;
             return new(true, "Applied", selected);
         }
-        catch (InvalidDataException error) when (attachmentSource is not null)
-        { return new(false, "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
+        catch (InvalidDataException error) when (insertTabber || attachmentSource is not null)
+        { return new(false, insertTabber ? "InvalidTabberInsertion" : "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
         finally { _mergeGate.Release(); }
     }
 }

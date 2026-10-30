@@ -74,6 +74,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private bool _embeddedPageLinkOperationInProgress;
     private PendingEmbeddedPageLink? _pendingEmbeddedPageLink;
     private bool _disposed;
+    private Action? _removeStatusHandler;
 
     private sealed class AuthoringTextState(bool isReadOnly) { public bool IsReadOnly { get; } = isReadOnly; }
     private sealed class AuthoringCheckState(bool isEnabled) { public bool IsEnabled { get; } = isEnabled; }
@@ -122,13 +123,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("SectionIconSuggestionModel", string.Empty);
         RefreshEmbeddedPageLinkState();
         RefreshHomeBoardCreationAvailability();
-        _session.StatusChanged += (_, status) =>
+        void StatusChanged(object? sender, string status)
         {
             if (Dispatcher.UIThread.CheckAccess()) ValidateInsertionPreview();
             else Dispatcher.UIThread.Post(ValidateInsertionPreview);
             Set("StatusText", status);
             Set("SaveStateText", MapSaveState(status));
-        };
+        }
+        _session.StatusChanged += StatusChanged;
+        _removeStatusHandler = () => _session.StatusChanged -= StatusChanged;
         void RefreshPickerOnThemeChange()
         {
             if (_sectionIconPickerSectionId is null || _disposed) return;
@@ -147,8 +150,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             void ProjectionChanged()
             {
-                if (Dispatcher.UIThread.CheckAccess()) ValidateInsertionPreview();
-                else Dispatcher.UIThread.Post(ValidateInsertionPreview);
+                // Refresh can run off UI under the merge gate. Retire a removed pane now;
+                // waiting for posted rendering would let Undo revive its retained commands.
+                _ = PaneLifetimeIsCurrent;
+                _tabbers?.ValidateOwners();
+                void RefreshOwners()
+                {
+                    if (_disposed) return;
+                    _tabbers?.Reconcile();
+                    ValidateInsertionPreview();
+                }
+                if (Dispatcher.UIThread.CheckAccess()) RefreshOwners();
+                else Dispatcher.UIThread.Post(RefreshOwners);
             }
             previewSession.ViewReplaced += ProjectionChanged;
             _detachers.Add(() => previewSession.ViewReplaced -= ProjectionChanged);
@@ -314,7 +327,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public string InkColor { get; set; } = "#FF111111";
     public bool IsDrawMode { get; private set; }
     public bool IsEditMode => _isEditMode;
-    public bool CanEdit => _session is not IBoardSessionCapabilities { CanEdit: false };
+    public bool CanEdit => !_disposed && !EditorLifetimeEnded &&
+        (_paneOwner is null || _paneOwner.IsEditMode && _paneOwner.SelectedPageId == _paneIdentity!.ParentPageId) &&
+        _session is not IBoardSessionCapabilities { CanEdit: false };
     public bool CanToggleEditMode => CanEdit;
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
     public bool CanOpenBoardMenu => CanSwitchBoard || CanCreateBoard ||
@@ -394,7 +409,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Push bindings, flag dirty and rebuild after a direct view-model edit.</summary>
     public void CommitViewEdit()
     {
-        if (_disposed || SessionIsDisposed) return;
+        if (_disposed || EditorLifetimeEnded) return;
         if (!RequireEditMode()) return;
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -419,7 +434,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         using var themeScope = BoardsTheme.UseSurface(_attachedRoot ?? _themeSurface, _embeddedArtifactHost?.ThemeContext);
-        if (_disposed || SessionIsDisposed) return;
+        if (_disposed || EditorLifetimeEnded) return;
+        if (_paneOwner is not null && !CanEdit) return;
         if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
             "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
             "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ApplySectionIconChoice" or
@@ -1065,11 +1081,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (Exception error)
         {
-            if (!_disposed && !SessionIsDisposed)
+            if (!_disposed && !EditorLifetimeEnded)
                 Set("StatusText", $"{applicationName} page could not be selected: " + FirstLine(error.Message));
             return;
         }
-        if (_disposed || SessionIsDisposed) return;
+        if (_disposed || EditorLifetimeEnded) return;
         if (reference is null)
         {
             Set("StatusText", createNew
@@ -1144,14 +1160,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     }
 
     private bool IsEmbeddedPageTargetCurrent(EmbeddedPageTarget target) =>
-        !_disposed && !SessionIsDisposed && ReferenceEquals(_session, target.Session) &&
+        !_disposed && !EditorLifetimeEnded && ReferenceEquals(_session, target.Session) &&
         ReferenceEquals(_session.Document, target.Document) && CanEdit && _isEditMode &&
         target.Document.Sections.Any(section => ReferenceEquals(section, target.Section) && section.Id == target.Section.Id) &&
         string.Equals(_selectedSectionId, target.Section.Id, StringComparison.Ordinal) &&
         string.Equals(_selectedPageId, target.PageId, StringComparison.Ordinal);
 
     private bool IsOriginalEmbeddedPageSelectionCurrent(EmbeddedPageTarget target) =>
-        !_disposed && !SessionIsDisposed && ReferenceEquals(_session, target.Session) && CanEdit && _isEditMode &&
+        !_disposed && !EditorLifetimeEnded && ReferenceEquals(_session, target.Session) && CanEdit && _isEditMode &&
         _session.Document.Sections.Any(section => section.Id == target.Section.Id &&
             section.Pages.Any(page => page.Id == target.PageId)) &&
         string.Equals(_selectedSectionId, target.Section.Id, StringComparison.Ordinal) &&
@@ -1194,7 +1210,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var pageId = await adapter.AddEmbeddedArtifactPageAsync(pending.Target.Section.Id,
                 pending.PageType, pending.Reference, $"New {pending.ApplicationName} document",
                 cancellationToken: cancellationToken).ConfigureAwait(true);
-            if (_disposed || SessionIsDisposed) return;
+            if (_disposed || EditorLifetimeEnded) return;
             _pendingEmbeddedPageLink = null;
             RefreshEmbeddedPageLinkState();
             if (IsOriginalEmbeddedPageSelectionCurrent(pending.Target))
@@ -1203,20 +1219,20 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            if (_disposed || SessionIsDisposed) return;
+            if (_disposed || EditorLifetimeEnded) return;
             _pendingEmbeddedPageLink = pending with { LinkAttempted = true };
             Set("StatusText", $"{pending.ApplicationName} exists, but the Board could not confirm whether its link finished. Check the original section before trying again.");
         }
         catch (Exception error)
         {
-            if (_disposed || SessionIsDisposed) return;
+            if (_disposed || EditorLifetimeEnded) return;
             _pendingEmbeddedPageLink = pending with { LinkAttempted = true };
             Set("StatusText", $"{pending.ApplicationName} exists, but the Board could not confirm whether its link finished: " + FirstLine(error.Message));
         }
         finally
         {
             _embeddedPageLinkOperationInProgress = false;
-            if (!_disposed && !SessionIsDisposed) RefreshEmbeddedPageLinkState();
+            if (!_disposed && !EditorLifetimeEnded) RefreshEmbeddedPageLinkState();
         }
     }
 
@@ -1231,7 +1247,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private bool RequireEditMode()
     {
-        if (_disposed || SessionIsDisposed) return false;
+        if (_disposed || EditorLifetimeEnded) return false;
         if (!CanEdit)
         {
             Set("StatusText", "This board source is open read-only.");
@@ -1242,7 +1258,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         return false;
     }
 
-    private bool SessionIsDisposed => _session is IBoardSessionLifetime { IsDisposed: true };
+    private bool EditorLifetimeEnded => _session is IBoardSessionLifetime { IsDisposed: true } || !PaneLifetimeIsCurrent;
 
     internal void ApplyAuthoringState(Control? root)
     {
@@ -1357,6 +1373,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         if (_disposed) return;
         _disposed = true;
+        _removeStatusHandler?.Invoke(); _removeStatusHandler = null;
         _themeSurface = null;
         CancelSectionIconSuggestion();
         Detach();
@@ -1688,7 +1705,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditText(string controlName, string text)
     {
-        if (_disposed || SessionIsDisposed) return;
+        if (_disposed || EditorLifetimeEnded) return;
+        if (!CanEdit && controlName != "NavSearchBox") return;
         if (!_isEditMode && controlName != "NavSearchBox") return;
         switch (controlName)
         {
@@ -1891,8 +1909,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void EditCheck(string controlName, bool done)
     {
-        if (_disposed || SessionIsDisposed) return;
-        if (!_isEditMode) return;
+        if (_disposed || EditorLifetimeEnded) return;
+        if (!_isEditMode || !CanEdit) return;
         switch (controlName)
         {
             case "Check1Done": FindChecklist(0).IsChecked = done; Set("Check1Done", done); break;
@@ -2959,6 +2977,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var targetSectionId = SelectedSectionId;
             var targetPageId = SelectedPageId;
             attachmentPath = await PickFileAsync("attach");
+            if (!RequireEditMode()) return;
             if (SelectedSectionId != targetSectionId || SelectedPageId != targetPageId)
             {
                 Set("StatusText", "The page changed while choosing an attachment. Choose a note and try again.");
@@ -3512,9 +3531,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return;
         }
         var path = await PickFileAsync("image");
+        if (!RequireEditMode()) return;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return;
         var bytes = await File.ReadAllBytesAsync(path);
+        if (!RequireEditMode() || !ReferenceEquals(FindBlock(blockId), block)) return;
         var mediaType = Path.GetExtension(path).ToLowerInvariant() switch
         {
             ".jpg" or ".jpeg" => "image/jpeg",
@@ -3545,17 +3566,22 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var block = FindBlock(blockId);
         if (block is null)
             return;
+        var pageId = SelectedPageId;
+        var epoch = Interlocked.Read(ref _insertionOperationEpoch);
+        bool Current() => !_disposed && !EditorLifetimeEnded && CanEdit && _isEditMode &&
+            SelectedPageId == pageId && Interlocked.Read(ref _insertionOperationEpoch) == epoch;
         if (pickedPath is null && PickFileAsync is null)
         {
             Set("StatusText", "Attachment pick needs the desktop host");
             return;
         }
         var path = pickedPath ?? await PickFileAsync!("attach");
+        if (!Current()) return;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return;
         if (_session is ContractSessionAdapter adapter)
         {
-            await adapter.AttachFileToBlockAsync(CurrentPage().Id, ToContractBlockId(block), path);
+            await adapter.AttachFileToBlockAsync(pageId, ToContractBlockId(block), path, originStillEditable: Current);
             RefreshAfterEdit();
             return;
         }
@@ -3667,7 +3693,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Turns the current note page into its contextual drawing state.</summary>
     public Task ActivateDrawingAsync()
     {
-        if (_disposed || SessionIsDisposed) return Task.CompletedTask;
+        if (_disposed || EditorLifetimeEnded) return Task.CompletedTask;
         if (!CanEdit)
         {
             // Say why the tool refused instead of leaving the toggle looking selected.

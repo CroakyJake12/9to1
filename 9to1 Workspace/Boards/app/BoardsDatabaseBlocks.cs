@@ -15,6 +15,7 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
     private readonly IBoardsDatabaseSource? _source;
     private readonly Dictionary<Guid, Task<DataRecordSession>> _sessions = [];
     private readonly Dictionary<(string Page, string Block), ViewEntry> _views = [];
+    private DataRecordViewControl[] _draftOwners = [];
     private readonly List<Task> _loads = [];
     private readonly List<Exception> _openDiagnostics = [];
     public IReadOnlyList<Exception> OpenDiagnostics { get { lock (_gate) return _openDiagnostics.ToArray(); } }
@@ -26,7 +27,10 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
     public BoardsDatabaseBlocks(BoardsViewModel model, IBoardsDatabaseSource? source)
     { _model = model; _source = source; }
     public bool IsAvailable => _source is not null;
-    public bool HasUnsavedDrafts => _views.Values.Any(entry => entry.View.HasUnsavedDrafts);
+    // Canonical admission runs off UI. Publish an immutable owner list; each view
+    // publishes its draft count, so admission never enumerates UI dictionaries.
+    public bool HasUnsavedDrafts => Volatile.Read(ref _draftOwners).Any(view => view.HasUnsavedDrafts);
+    private void PublishDraftOwners() => Volatile.Write(ref _draftOwners, _views.Values.Select(entry => entry.View).ToArray());
 
     public async Task<HavenBoardDatabaseReference> CreateAsync(DataRecordViewKind kind, CancellationToken token = default)
     {
@@ -128,12 +132,14 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
                     }
                     await previous.View.DisposeAsync();
                     _views.Remove(key);
+                    PublishDraftOwners();
                 }
                 if (!_views.TryGetValue(key, out var entry))
                 {
                     var view = new DataRecordViewControl(session, reference.ViewID, _source?.DatabaseTheme);
                     entry = new(reference.WorkbookID, view);
                     _views.Add(key, entry);
+                    PublishDraftOwners();
                     view.SelectedViewChanged += (_, _) =>
                     {
                         var selected = session.Snapshot.RecordViews.Single(item => item.ViewID == view.SelectedViewID);
@@ -258,6 +264,7 @@ public sealed class BoardsDatabaseBlocks : IAsyncDisposable
             _deferredMounts.Clear();
             foreach (var entry in _views.Values) await entry.View.DisposeAsync();
             _views.Clear();
+            PublishDraftOwners();
         }).GetTask().Unwrap().ConfigureAwait(false);
         foreach (var task in _sessions.Values)
             if (task.IsCompletedSuccessfully) await task.Result.DisposeAsync().ConfigureAwait(false);
