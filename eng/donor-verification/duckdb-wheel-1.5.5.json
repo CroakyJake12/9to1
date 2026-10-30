@@ -1,0 +1,47 @@
+{
+  "schema": "9to1.python-wheel-pinning/v1",
+  "package": "duckdb",
+  "version": "1.5.5",
+  "why": "9to1 Workspace/Data/workers/duckdb_worker.py refuses any other version at runtime, yet the dependency was satisfied by whatever the environment happened to provide. This record plus workers/requirements.in and workers/locks/ makes the actually-loaded artifact pinned and digest-checked.",
+  "worker_gate": {
+    "file": "9to1 Workspace/Data/workers/duckdb_worker.py",
+    "required_version_constant": "REQUIRED_DUCKDB_VERSION = \"1.5.5\"",
+    "behaviour": "imports duckdb, compares __version__ exactly, exits 78 with an explicit message otherwise"
+  },
+  "declared_locks": [
+    "9to1 Workspace/Data/workers/requirements.in",
+    "9to1 Workspace/Data/workers/locks/linux-x86_64-cp312.txt",
+    "9to1 Workspace/Data/workers/locks/linux-aarch64-cp312.txt"
+  ],
+  "verified_artifacts": [
+    {
+      "filename": "duckdb-1.5.5-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 21510909,
+      "sha256": "7a6d2d11859d82a936ebdcb30ce3d8a1cbb3e990bff05c12abb9b54c44fa7bd1",
+      "pypi_published_digest": "7a6d2d11859d82a936ebdcb30ce3d8a1cbb3e990bff05c12abb9b54c44fa7bd1",
+      "local_sha256sum_after_download": "7a6d2d11859d82a936ebdcb30ce3d8a1cbb3e990bff05c12abb9b54c44fa7bd1",
+      "verdict": "MATCH - downloaded and hashed on this PC, not merely read from metadata"
+    },
+    {
+      "filename": "duckdb-1.5.5-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl",
+      "bytes": 19391959,
+      "sha256": "f316eae2323d9a851883fdf2dee91c1f9efe251ab33e14a2272f82a913422ed6",
+      "pypi_published_digest": "f316eae2323d9a851883fdf2dee91c1f9efe251ab33e14a2272f82a913422ed6",
+      "local_sha256sum_after_download": "f316eae2323d9a851883fdf2dee91c1f9efe251ab33e14a2272f82a913422ed6",
+      "verdict": "MATCH - ARM64 wheel for the test-package target, downloaded and hashed on this PC"
+    }
+  ],
+  "measurement_context": {
+    "date": "2026-10-30",
+    "host_interpreter": "Python 3.12.3 (cp312)",
+    "source": "https://pypi.org/pypi/duckdb/1.5.5/json plus the two wheel URLs from files.pythonhosted.org",
+    "download_location": "/tmp/opencode/wheelcheck (private, outside the repository; wheels are not committed)",
+    "signature_note": "PyPI serves these over TLS and publishes the digests in its own metadata; this is not an independent publisher signature, and no wheel was installed, imported or executed here."
+  },
+  "still_outstanding": [
+    "The wheelhouse itself is not yet produced or packaged into the ARM64 build; the lock declares what must go into it.",
+    "HavenOS.Apps.Data.DuckDbDatabaseEngine still defaults to pythonExecutable=\"python3\", so until the package installs into a bundled interpreter directory and the engine points at it, a build could still resolve a user-site duckdb. The lock and tests make that a visible defect instead of an invisible fallback.",
+    "Only cp312 is locked because that is this PC's interpreter; a different interpreter needs its own resolved lock rather than silently reusing this one.",
+    "The failure-mode tests (missing dependency, wrong version, wrong ABI, corrupt wheel bytes, offline startup, x64 and ARM64 worker launch) are still to be written."
+  ]
+}

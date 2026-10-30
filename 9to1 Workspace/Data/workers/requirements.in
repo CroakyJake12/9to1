@@ -1,0 +1,9 @@
+# Runtime dependency declaration for the real DuckDB worker (workers/duckdb_worker.py).
+#
+# The worker refuses to run unless the imported duckdb reports exactly REQUIRED_DUCKDB_VERSION, so this
+# declaration must agree with it. It is checked by Tests/test_duckdb_dependency.py rather than left as a
+# comment. The vendored C++ source under Source/DuckDB is provenance only; nothing here builds it.
+#
+# Resolved, hash-locked artifacts live in workers/locks/<platform>-<interpreter>.txt and are installed
+# with:  python -m pip install --require-hashes --no-index --find-links <wheelhouse> -r <lock>
+duckdb==1.5.5

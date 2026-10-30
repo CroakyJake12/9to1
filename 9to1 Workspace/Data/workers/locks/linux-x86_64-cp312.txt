@@ -1,0 +1,5 @@
+# Resolved by measurement on 2026-10-30 from PyPI metadata, and independently hash-verified by
+# downloading both wheels below and taking sha256sum locally. Install with --require-hashes --no-index.
+duckdb==1.5.5 \
+    --hash=sha256:7a6d2d11859d82a936ebdcb30ce3d8a1cbb3e990bff05c12abb9b54c44fa7bd1
+# filename: duckdb-1.5.5-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (21510909 bytes)

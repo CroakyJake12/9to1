@@ -681,7 +681,14 @@
         "modified_artifacts": [],
         "verdict": "NOT CONSUMED",
         "planned_verdict": "EMBED-prebuilt-wheel",
-        "note": "Unmodified and never built by us today: Data spawns a Python worker that imports the duckdb wheel and hard-requires 1.5.5. The vendored C++ pin is provenance only. The real dependency needs a versioned, hash-locked wheel record - a separate supply-chain record from the source pin."
+        "note": "Data runs DuckDB through a Python worker that does `import duckdb` and hard-requires exactly 1.5.5; the vendored C++ pin is provenance only and nothing builds it. As of 30 October 2026 the actually-loaded artifact is pinned: requirements.in plus per-platform hash-locked wheels, with both the x86_64 and aarch64 cp312 wheels downloaded and sha256-verified on this PC against PyPI's published digests (receipt in eng/donor-verification/duckdb-wheel-1.5.5.json). Agreement between the worker constant, the declaration and the locks is enforced by 4 new tests in Data/Tests/test_duckdb_dependency.py (6 total, all pass). Still open: no wheelhouse is produced or packaged yet, DuckDbDatabaseEngine still defaults to system python3, only cp312 is resolved, and the failure-mode tests are unwritten.",
+        "runtime_dependency_pinned": true,
+        "runtime_locks": [
+          "9to1 Workspace/Data/workers/requirements.in",
+          "9to1 Workspace/Data/workers/locks/linux-x86_64-cp312.txt",
+          "9to1 Workspace/Data/workers/locks/linux-aarch64-cp312.txt"
+        ],
+        "runtime_verification_receipt": "eng/donor-verification/duckdb-wheel-1.5.5.json"
       },
       {
         "donor": "avalonia-fork",
