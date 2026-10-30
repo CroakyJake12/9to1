@@ -151,6 +151,55 @@ class GitFixtureTests(unittest.TestCase):
         self.assertTrue(state["present"])
         self.assertEqual(state["modified"], ["engine.c"])
 
+    def test_a_lock_fetching_a_different_revision_than_the_pin_is_drift(self):
+        # Exactly the failure the owner's rule targets: the checkout records one revision while the
+        # build fetches another, so the build depends on whatever copy it happens to resolve.
+        (self.repo / "deps.lock").write_text(
+            'source = "git+https://github.com/upstream/donor?rev=1111111111111111111111111111111111111111\n')
+        entry = {"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
+                 "consumed_by": ["Canvas"], "verdict": "FORK",
+                 "modified_artifacts": [{"artifact": "engine.c", "kind": "recorded",
+                                         "paths": ["engine.c"]}],
+                 "modification_absent_from_consumed_ref": True,
+                 "consumed_refs": [{"file": "deps.lock",
+                                    "pattern": r"rev=(?P<rev>[0-9a-f]{7,40})"}]}
+        found = policy.census(self.repo, self.registry([entry]))
+        self.assertEqual(found["violations"], [], found["violations"])
+        self.assertTrue(any("different revisions" in f for f in found["findings"]), found["findings"])
+
+    def test_unacknowledged_pin_and_build_drift_is_a_violation(self):
+        (self.repo / "deps.lock").write_text(
+            'source = "git+https://github.com/upstream/donor?rev=1111111111111111111111111111111111111111\n')
+        result = policy.census(self.repo, self.registry(
+            [{"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
+              "consumed_by": ["Canvas"], "verdict": "FORK",
+              "modified_artifacts": [{"artifact": "engine.c", "kind": "recorded",
+                                      "paths": ["engine.c"]}],
+              "consumed_refs": [{"file": "deps.lock",
+                                 "pattern": r"rev=(?P<rev>[0-9a-f]{7,40})"}]}]))
+        self.assertTrue(any("different revisions" in v for v in result["violations"]),
+                        result["violations"])
+        self.assertEqual([r for r in result["donors"] if r["donor"] == "engine-donor"][0]
+                         ["consumed_refs"][0]["revisions"],
+                         ["1111111111111111111111111111111111111111"])
+
+    def test_a_fork_branch_that_the_pin_does_not_carry_is_reported(self):
+        # Our modification lives on a fork branch while the pin still sits on upstream. That is the
+        # honest current state of Canvas/Rnote, so the tool must name it instead of going quiet.
+        entry = {"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
+                 "consumed_by": ["Canvas"], "verdict": "FORK",
+                 "modified_artifacts": [{"artifact": "engine.c", "kind": "recorded",
+                                         "paths": ["engine.c"]}],
+                 "fork_branch": "9to1/example", "fork_tip": "2" * 40, "fork_not_consumed_yet": True}
+        found = policy.census(self.repo, self.registry([entry]))
+        self.assertEqual(found["violations"], [], found["violations"])
+        self.assertTrue(any("consumption has not moved onto the fork" in f for f in found["findings"]),
+                        found["findings"])
+        # Unacknowledged, the same state must stop the run.
+        entry.pop("fork_not_consumed_yet")
+        self.assertTrue(any("consumption has not moved onto the fork" in v
+                            for v in policy.census(self.repo, self.registry([entry]))["violations"]))
+
     def test_cli_refuses_to_overwrite_an_existing_report(self):
         reg = self.registry([{"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
                               "consumed_by": [], "verdict": "NOT CONSUMED",

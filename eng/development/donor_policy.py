@@ -173,6 +173,26 @@ def modifications_present_at_pin(repo, donor, pin):
     return found
 
 
+def consumed_refs(repo, donor):
+    """The revision the build actually fetches, read out of the project's own lock or manifest.
+
+    A gitlink pin only says what the checkout records. What the *build* consumes can be a different
+    revision fetched from a different remote, which is how a donor ends up depending on whatever copy
+    the build environment happens to have. Reading the lock closes that gap.
+    """
+    out = []
+    for spec in donor.get("consumed_refs") or []:
+        f = Path(repo) / spec["file"]
+        if not f.is_file():
+            out.append({"file": spec["file"], "revisions": [], "error": "declared lock/manifest file missing"})
+            continue
+        text = f.read_text(errors="replace")
+        revs = sorted({m.group("rev") for m in re.finditer(spec["pattern"], text, re.M)
+                       if m.groupdict().get("rev")})
+        out.append({"file": spec["file"], "revisions": revs, "error": None})
+    return out
+
+
 def census(repo, registry_path=REGISTRY):
     """Read-only census of declared donors against HEAD gitlinks, working trees and policy."""
     repo = Path(repo)
@@ -200,7 +220,25 @@ def census(repo, registry_path=REGISTRY):
         if donor.get("pinned_at") and pin and not pin.startswith(donor["pinned_at"]):
             violations.append(f"{name}: pin {pin[:12]} does not match the policy pin "
                               f"{str(donor['pinned_at'])[:12]}")
+        fork_tip = donor.get("fork_tip")
+        if fork_tip and pin and not str(pin).startswith(str(fork_tip)[:12]):
+            message = (f"{name}: our fork branch {donor.get('fork_branch', '(unnamed)')} carries the "
+                       f"modification at {str(fork_tip)[:12]}, but the pinned revision is "
+                       f"{str(pin)[:12]} - consumption has not moved onto the fork")
+            (findings if donor.get("fork_not_consumed_yet") else violations).append(message)
         findings += [f"{name}: {m}" for m in modifications_present_at_pin(repo, donor, pin)]
+        refs = consumed_refs(repo, donor)
+        acknowledged = bool(donor.get("modification_absent_from_consumed_ref"))
+        for ref in refs:
+            if ref["error"]:
+                findings.append(f"{name}: {ref['error']} ({ref['file']})")
+            elif ref["revisions"] and not any(
+                    str(pin).startswith(r) or r.startswith(str(pin)[:12])
+                    for r in ref["revisions"]):
+                message = (f"{name}: the build fetches "
+                           f"{', '.join(ref['revisions'])[:48]} from {ref['file']} but the recorded "
+                           f"pin is {str(pin)[:12]} - pin and build input are different revisions")
+                (findings if acknowledged else violations).append(message)
         if not donor.get("declared_submodule", True) and path not in declared_paths:
             findings.append(f"{name}: vendored as a loose tree, not a pinned submodule - provenance "
                             "gap (no upstream base commit or commit-level modification history)")
@@ -214,6 +252,8 @@ def census(repo, registry_path=REGISTRY):
                                   for s in got["modified_scopes"]}),
             "pristine_scopes": donor.get("pristine_scopes") or [],
             "planned_verdict": donor.get("planned_verdict"),
+            "consumed_refs": [{"file": r["file"], "revisions": r["revisions"], "error": r["error"]}
+                              for r in refs],
         })
 
     orphans = sorted(declared_paths - {d["path"] for d in block["donors"]})

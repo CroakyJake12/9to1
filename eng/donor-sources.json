@@ -569,7 +569,17 @@
         ],
         "patch_root": "9to1 Workspace/Canvas/rnote-poc/patches",
         "verdict": "FORK",
-        "note": "MEASURED: both patch files touch crates/rnote-engine (their +++ headers) and our own serialization commit touches crates/rnote-compose. So here the ENGINE is the modified artifact and must be forked - the inverse of the Gecko case. rnote-poc/Cargo.toml still fetches upstream flxzt/rnote at rev 8cac558f and the ARM producer applies the patches at vendor time, which the census reports as modifications absent from the pin."
+        "note": "MEASURED: both patch files touch crates/rnote-engine (their +++ headers) and our own serialization commit touches crates/rnote-compose. So here the ENGINE is the modified artifact and must be forked - the inverse of the Gecko case. rnote-poc/Cargo.toml still fetches upstream flxzt/rnote at rev 8cac558f and the ARM producer applies the patches at vendor time, which the census reports as modifications absent from the pin. FORK BRANCH CREATED: 9to1/canvas-engine-20261030 @ 44ff1089 (two commits on the consumed v0.14.2 pin, hash-verified). Consumption still points at upstream, so the switch of Cargo.toml + Cargo.lock + the ARM vendor-patch stage is pending owner approval; until then the build reconstructs our modification instead of fetching the fork.",
+        "fork_branch": "9to1/canvas-engine-20261030",
+        "fork_tip": "44ff108978184c6fd7e7e5fce686059ff865efa9",
+        "fork_verified_by": "patch after-hashes reproduced exactly: crates/rnote-engine/src/engine/mod.rs c9297ad60653 then 46c0e665915f, matching source-patches.json",
+        "consumed_refs": [
+          {
+            "file": "9to1 Workspace/Canvas/rnote-poc/Cargo.lock",
+            "pattern": "git\\+https://github\\.com/(?P<repo>[^?]+)\\?rev=(?P<rev>[0-9a-f]{7,40})"
+          }
+        ],
+        "modification_absent_from_consumed_ref": true
       },
       {
         "donor": "rnote (Boards, documented only)",
@@ -635,19 +645,75 @@
         "donor": "avalonia-fork",
         "path": "framework/CUI/vendor/Avalonia",
         "declared_submodule": false,
-        "role": "rendering framework we modify",
+        "role": "framework we modify (CUI-owned templates, property precedence, compiler replaces Avalonia.Build.Tasks)",
         "consumed_by": [
           "framework/CUI"
         ],
         "modified_artifacts": [
           {
-            "artifact": "Avalonia fork (CUI-owned templates, property precedence, SimpleTheme isolation)",
-            "kind": "unenumerated",
-            "paths": []
+            "artifact": "21 files modified against upstream 12.0.1",
+            "kind": "measured-modified",
+            "paths": [
+              "NuGet.Config",
+              "packages/Avalonia/AvaloniaBuildTasks.targets",
+              "packages/Avalonia/AvaloniaBuildTasks.props",
+              "packages/Avalonia/Avalonia.props",
+              "src/Avalonia.X11/Avalonia.X11.csproj",
+              "src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+              "src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+              "src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+              "src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+              "src/Avalonia.Controls/ToolTip.cs",
+              "src/Avalonia.Controls/ContextMenu.cs",
+              "src/Avalonia.Controls/TopLevel.cs",
+              "src/Avalonia.Controls/Primitives/Popup.cs",
+              "src/Avalonia.Controls/Presenters/TextPresenter.cs",
+              "src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+              "src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
+              "src/Avalonia.Base/Avalonia.Base.csproj",
+              "src/Avalonia.Base/Utilities/Ref.cs",
+              "src/Headless/Avalonia.Headless/HeadlessUnitTestSession.cs",
+              "src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
+              "build/BuildTargets.targets"
+            ]
+          },
+          {
+            "artifact": "9+ files added by us (CUI fork project + generated interop + browser assets)",
+            "kind": "measured-added",
+            "paths": [
+              "CakeOS.Cui.AvaloniaFork.csproj",
+              "src/Avalonia.Native/Interop.Generated.cs",
+              "src/Windows/Avalonia.Win32/DComposition/DComp.Generated.cs",
+              "src/Windows/Avalonia.Win32/DirectX/directx.Generated.cs",
+              "src/Windows/Avalonia.Win32/Win32Com/Win32.Generated.cs",
+              "src/Windows/Avalonia.Win32/WinRT/WinRT.Generated.cs",
+              "src/Browser/Avalonia.Browser/staticwebassets/avalonia.js",
+              "src/Browser/Avalonia.Browser/staticwebassets/sw.js",
+              "src/Browser/Avalonia.Browser/staticwebassets/storage.js"
+            ]
           }
         ],
         "verdict": "FORK",
-        "note": "MEASURED: a loose 106 M / 5,877-file tree with no .git of its own; provenance is only SOURCE.md/NOTICE.md. It is genuinely modified and genuinely used, i.e. a fork by the rule recorded as a folder copy - the largest provenance gap in the set: no upstream base commit, no commit-level history of our changes."
+        "note": "MEASURED 30 Oct 2026 by git blob identity against the declared upstream base. Also measured: my first comparison script wrongly reported the 20 manifest blobs as mismatched; a direct check (manifest blob == upstream blob == on-disk hash, 1c85a67641fb for AmbientAttribute.cs) shows 20/20 correct, and that correction is recorded rather than dropped.",
+        "upstream_base": "AvaloniaUI/Avalonia tag 12.0.1 = fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
+        "pinned_at": "fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
+        "measured_tree_counts": {
+          "files_on_disk_excluding_external": 5273,
+          "byte_identical_to_upstream_12_0_1": 2948,
+          "modified_by_us": 21,
+          "added_by_us_non_build": 19,
+          "untracked_build_outputs_inside_tree": 2245,
+          "tracked_by_git_under_vendor_path": 3030,
+          "source_manifest_entries_matching_upstream_exactly": "20/20 (spot-verified by blob id)"
+        },
+        "sample_real_changes": [
+          "Popup.cs: adds BeforeShow event raising the real PopupRoot so CUI can request per-pixel alpha before first show",
+          "TextPresenter.cs: CreateTextLayoutInternal becomes protected virtual; adds RefreshCaretBounds() preserving native character affinity",
+          "Avalonia.Base.csproj: Avalonia.Build.Tasks project reference commented out in favour of the CUI compiler at framework/CUI/Compiler",
+          "Ref.cs: CloneAs<TResult> removed from IRef<T>"
+        ],
+        "provenance_gap": "SOURCE.md calls this 'actual, unmodified Avalonia source' staging only the 20-file src/Avalonia.Base/Metadata directory, and SOURCE-MANIFEST.txt covers only those 20. Measured reality is a near-full Avalonia tree with 21 modifications and 19 additions. The record understates our own fork surface.",
+        "controlled_fork_remote": "absent - https://github.com/CroakyJake12/avalonia.git returns 'Repository not found' (measured), so this fork has no remote and no commit-level history of our changes"
       },
       {
         "donor": "files (WinUI Files app)",
@@ -659,13 +725,27 @@
         ],
         "modified_artifacts": [
           {
-            "artifact": "Files application layer: features added, UI replaced by CUI",
-            "kind": "planned",
-            "paths": []
+            "artifact": "AGENTS.md inside the donor tree (our text, not the donor's)",
+            "kind": "measured-modified",
+            "paths": [
+              "AGENTS.md"
+            ]
           }
         ],
         "verdict": "FORK",
-        "note": "Owner's worked example: 9to1 Files extends the donor's features and replaces its UI, so the application donor is forked. MEASURED: 2,351 loose vendored files, no gitlink; licence files present are MPL-2.0 and MIT. Its WinUI/C# cannot be app source under the CUI rule, so the fork carries feature/behaviour lineage while the UI is rebuilt in CUI."
+        "note": "MEASURED 30 Oct 2026: the vendored copy is an unmodified snapshot of the controlled Files fork at 21d407b5 except one file, AGENTS.md, which we overwrote - the only change of ours in the donor tree, and it is our agent instructions rather than anything the app consumes. The fork verdict comes from the owner's decision (9to1 Files extends the donor's features and replaces its UI with CUI), not from that single file. No pin exists yet: this is a loose 2,351-file copy, so the base revision is inferred by byte comparison rather than recorded in a gitlink.",
+        "upstream_base": "CroakyJake12/Files (controlled fork of files-community/Files) main tip 21d407b51dbc2b1bd2733ef615d727345d5dd16f; nearest ancestor build v4.2.37 (34a03ef1)",
+        "pinned_at": "21d407b51dbc2b1bd2733ef615d727345d5dd16f",
+        "measured_tree_counts": {
+          "our_vendored_files": 2351,
+          "byte_identical_to_that_revision": 2350,
+          "differing": 1,
+          "differing_files": [
+            "AGENTS.md"
+          ],
+          "upstream_files_not_vendored": 28,
+          "files_unique_to_us": 0
+        }
       },
       {
         "donor": "Avalonia.DBus",
@@ -899,6 +979,35 @@
         "consumed_by": [],
         "modified_artifacts": [],
         "pristine_scopes": []
+      },
+      {
+        "donor": "firefox (browser application, distinct from the gecko engine)",
+        "path": "9to1 Workspace/Browse/Source/FirefoxGecko",
+        "role": "application donor: chrome, tabs, preferences, extension surfaces",
+        "pinned_at": "5836a062726f",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "note": "Owner's clarification 30 Oct 2026: Firefox is a browser and 9to1 Haven is a browser, so we extend Firefox's features and replace its UI with CUI -> fork Firefox, while Gecko (the engine inside it) stays unmodified and ships prebuilt. The same submodule carries both, so the fork must keep the 17 engine scopes pristine; donor_policy.py reports a modification inside a pristine scope as UNRESOLVED. Nothing consumes it today: Browse has no engine on this PC (both system chromium paths absent).",
+        "pristine_scopes": [
+          "gfx",
+          "layout",
+          "js",
+          "netwerk",
+          "storage",
+          "dom",
+          "ipc",
+          "hal",
+          "widget",
+          "xpcom",
+          "modules",
+          "toolkit/library",
+          "intl",
+          "memory",
+          "mfbt",
+          "xpfe"
+        ]
       }
     ]
   }
