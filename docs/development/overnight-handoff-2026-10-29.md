@@ -212,6 +212,10 @@ menus are missing" is our queue, not a stale package.
   low-level infrastructure. Never load or fall back to Avalonia FluentTheme/Fluent templates anywhere.
 - One implementation per app: Haven embeds the SAME standalone app implementations; never maintain a
   second copy of an app.
+- **Do not message the parallel worker from this run.** The owner reports that prompts arriving in the
+  Astra session cause long prefill delays in their ChatGPT app. Coordination is asynchronous through the
+  repo: write to `.handoff/boards-first-v3/work/ASTRA-REPORT.md` on the PC, or leave notes in the commit
+  messages and this file. Only send a message if the owner explicitly asks.
 - Do not weaken, skip or manufacture tests. If you change an existing expectation, state what it enforced
   before and what it enforces now (the gutter-test change at `aa0d7b85` is the model: the expectation was
   stale against today's owner-directed outline overlay, and the same geometry is still asserted).
