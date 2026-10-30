@@ -82,12 +82,14 @@ def load(repo):
     repo = Path(repo)
     registry = json.loads((repo / REGISTRY).read_text())
     bindings = {}
+    bindings_by_donor = {}
     for b in registry.get("bindings", []):
         bindings.setdefault(b["donor"], set()).add(b["app"])
+        bindings_by_donor.setdefault(b["donor"], b)
     upstreams = {k.lower() for k in registry.get("upstreams", {})}
     modules = (repo / GITMODULES).read_text() if (repo / GITMODULES).is_file() else ""
     spec_lines = (repo / SPEC).read_text().splitlines()
-    return repo, bindings, upstreams, modules, spec_lines
+    return repo, bindings, bindings_by_donor, upstreams, modules, spec_lines
 
 
 def find_fragment(spec_lines, fragment):
@@ -97,7 +99,7 @@ def find_fragment(spec_lines, fragment):
 
 
 def audit(repo="."):
-    repo, bindings, upstreams, modules, spec_lines = load(repo)
+    repo, bindings, bindings_by_donor, upstreams, modules, spec_lines = load(repo)
     problems, notes, rows = [], [], []
     for d in DESIGNATIONS:
         hits = find_fragment(spec_lines, d["fragment"])
@@ -114,21 +116,41 @@ def audit(repo="."):
                 notes.append(f"{d['app']}/{d['donor']}: wording is now on line {hits[0]}, recorded "
                              f"{d['line']} - the specification has been amended since this mapping "
                              f"was written")
-        keys = SYNONYMS.get(d["donor"], {d["donor"]})
+        # The canonical key always counts as one of its own names: SYNONYMS records the *other* project
+        # identities a donor is known by, so replacing the key with them made a donor unmatchable
+        # against a binding that uses its own name (gnome-system-monitor, designated at 16694, was
+        # reported both as undeclared and as an unmatched binding in the same run).
+        keys = set(SYNONYMS.get(d["donor"], set())) | {d["donor"]}
         declared = bool(keys & set(bindings))
         in_upstreams = bool(keys & upstreams)
+        # A donor does not have to be a submodule: an imported source snapshot verified by tree hashes, or
+        # an embedded prebuilt binary, are legitimate verification modes. Only the default expectation of a
+        # recursive checkout requires a .gitmodules entry, so the declared mode is respected rather than
+        # assumed - and an undeclared mode still reports.
+        binding_entries = [bindings_by_donor[k] for k in keys if k in bindings_by_donor]
+        modes = {b.get("verification") for b in binding_entries if b.get("verification")}
+        aspirational = [b for b in binding_entries
+                        if str(b.get("status", "")).startswith("aspirational")]
+        declared_mode = bool(modes) or bool(aspirational)
         in_modules = any(k.lower() in modules.lower() for k in keys)
         rows.append({**d, "wording_found_at": wording, "declared_binding": declared,
-                     "declared_upstream": in_upstreams, "has_gitmodules_entry": in_modules})
+                     "declared_upstream": in_upstreams, "has_gitmodules_entry": in_modules,
+                     "verification_mode": sorted(modes) or (["aspirational"] if aspirational else []),
+                     "aspirational": bool(aspirational)})
+        if aspirational and declared:
+            notes.append(f"{d['app']}/{d['donor']}: designated (line {wording}) and declared, but "
+                         f"deliberately not vendored yet - planned {aspirational[0].get('plannedVerdict')}; "
+                         f"reason: {str(aspirational[0].get('reason'))[:120]}")
         if not declared:
             problems.append(f"undeclared donor: {d['app']} is designated on {d['donor']} by the "
                             f"specification (line {wording}) but has no binding in {REGISTRY}")
         elif not in_upstreams:
             problems.append(f"binding without upstream record: {d['app']}/{d['donor']}")
-        elif not in_modules:
-            problems.append(f"no .gitmodules entry for designated donor {d['app']}/{d['donor']}")
+        elif not in_modules and not declared_mode:
+            problems.append(f"no .gitmodules entry for designated donor {d['app']}/{d['donor']} and no "
+                            f"declared verification mode")
 
-    designated = {k for d in DESIGNATIONS for k in SYNONYMS.get(d["donor"], {d["donor"]})}
+    designated = {k for d in DESIGNATIONS for k in set(SYNONYMS.get(d["donor"], set())) | {d["donor"]}}
     # A binding whose donor has no upstream record cannot be pinned, licensed or verified at all. The
     # pre-existing gate rejects this; the coverage audit must not be blind to it either.
     for donor_key, apps in sorted(bindings.items()):

@@ -111,6 +111,24 @@ class CoverageFixtureTests(unittest.TestCase):
         self.assertEqual(document["counts"]["designations"], 2)
         self.assertTrue(document["problems"])
 
+    def test_a_synonym_donor_still_matches_a_binding_using_its_own_name(self):
+        # Regression for a bug I introduced: SYNONYMS replaced the canonical donor name instead of
+        # adding to it, so gnome-system-monitor (whose recorded other identities are gnome-shell and
+        # mutter) was reported at once as undeclared AND as an unmatched binding.
+        self.registry([("Build", "gitea"), ("CUI framework", "avalonia"),
+                       ("9to1 OS", "gnome-system-monitor")])
+        with mock.patch.object(coverage, "SYNONYMS",
+                               {"gnome-system-monitor": {"gnome-shell", "mutter"},
+                                "avalonia": {"avalonia-fork"}}):
+            with mock.patch.object(coverage, "DESIGNATIONS", self.designations() + [
+                    {"app": "9to1 OS", "donor": "gnome-system-monitor", "line": 5,
+                     "fragment": "no such sentence in this fixture"}]):
+                result = coverage.audit(self.repo)
+        names = {r["donor"]: r for r in result["designations"]}
+        self.assertTrue(names["gnome-system-monitor"]["declared_binding"], result["problems"])
+        self.assertFalse(any("gnome-system-monitor" in p and "no specification designation" in p
+                             for p in result["problems"]), result["problems"])
+
     def test_cli_refuses_to_touch_an_existing_report(self):
         self.registry([("Build", "gitea")])
         out = self.repo / "audit.json"

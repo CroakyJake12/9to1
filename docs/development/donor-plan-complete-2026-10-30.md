@@ -119,6 +119,39 @@ audit runs in any CI workflow (measured: no workflow references them).
    Gitnuro ~13 MB. Free disk here is 542 G. Unmaterialised donors must stay pinned-but-not-checked-out
    until an app consumes them, or every guarded export grows by gigabytes per candidate.
 
+## 5b. Status after the declarations (measured 30 October 2026, same day)
+
+The registry now carries every donor the specification designates: **31 upstream records, 36 bindings**
+(was 18/23). The 13 previously undeclared designated donors are declared as
+`status: "aspirational-designated-not-yet-vendored"` with the specification line, the planned verdict, the
+reason and the licence state written as measured or UNVERIFIED. Nothing was vendored, pinned, built or
+integrated to achieve this.
+
+Measured with `python3 -B .github/scripts/record-donor-audit-baselines.py check`:
+- coverage audit: **26 -> 9 problems**. 9 = the registry bindings the specification's own wording does not
+  designate (`code-oss`, `vscodium`, `eds`, `libical`, `glycin`, `loupe`, `gstreamer`, `ges`, `libvterm`) —
+  the owner-decision set from section 3, unchanged in substance.
+- donor gate: **17 issues, unchanged**, still all never-vendored donors with no aspirational annotation
+  (Write/Present/Data LibreOffice, GStreamer/GES, glycin/loupe, libvterm, eds/libical, llama.cpp source,
+  Wine, WinBoat, gnome-shell, mutter, Code-OSS/VSCodium). Those stay hard failures because recorded
+  consumers exist for several of them; the annotation class was deliberately not applied to them.
+- 12 bindings now print as `ASPIRATIONAL:` notes and 13 designations appear as audit notes, each naming the
+  outstanding work, so the debt is visible per row and not only in a total.
+- census: 29 rows, 0 violations, 6 findings — unchanged.
+- ratchet baselines lowered to gate 17 / census 0 / coverage 9, with the file's own notes stating why each
+  number moved, including that the coverage drop came from declaring designations, not from closing them.
+
+Two bugs in my own new code, found by running it against the real repository and fixed here: my
+`gnome-system-monitor` binding declared an `owner` that did not match its own `Source/` layout (which grew
+the gate from 17 to 18 before the fix), and the audit's synonym lookup *replaced* a donor's canonical name
+with its other identities instead of adding to them, so gnome-system-monitor was reported simultaneously as
+undeclared and as unmatched. A test now pins the synonym behaviour.
+
+Also recorded: `verification` modes for two donors that are legitimately not submodules — `files`
+(imported source verified by two whole-tree hashes against the controlled fork revision) and `llama-cpp`
+(pinned prebuilt binary produced by CI, with the open gap written out: it still needs the same
+version-plus-digest artifact manifest as the planned Firefox engine).
+
 ## 6. What I am not claiming
 
 No donor integration is proven by this document. Nothing here is compiled, run natively, packaged or

@@ -134,6 +134,9 @@ def failures(local_only=False):
     upstreams = data["upstreams"]
     bindings = data["bindings"]
     errors = []
+    # Aspirational donors are reported separately and never counted as issues: they are named future
+    # work, not a gate failure over product that has not been built.
+    aspirational = []
     modules = configparser.ConfigParser(interpolation=None)
     modules.read(ROOT / ".gitmodules", encoding="utf-8")
     paths_in_modules = {modules[s]["path"]: modules[s]["url"].removesuffix(".git")
@@ -236,16 +239,20 @@ def failures(local_only=False):
     # rather than inventing external source obligations for them.
     if not data.get("firstPartyOrInternal"):
         errors.append("first-party/internal dependency classification missing")
-    return errors, len(bindings)
+    return errors, len(bindings), aspirational
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--local-only", action="store_true", help="Inspect current materialisation; do NOT claim recursive-checkout acceptance")
     args = parser.parse_args()
-    errors, count = failures(args.local_only)
+    errors, count, aspirational = failures(args.local_only)
     for issue in errors:
         print("FAIL:", issue)
+    for note in aspirational:
+        print("ASPIRATIONAL:", note)
+    if aspirational:
+        print(f"Recorded aspirational donors (named future work, not gate failures): {len(aspirational)}")
     if errors:
         print(f"Donor-source audit FAIL: {len(errors)} issue(s) across {count} bindings")
         return 1
