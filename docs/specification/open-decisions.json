@@ -141,7 +141,7 @@
           "Moving existing saved artefacts between locations."
         ],
         "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
-        "state": "answered \u2014 implementation in progress"
+        "state": "answered — implementation in progress"
       },
       "note_29_october": "The setup gate the owner ordered removed is no longer required in order to save: the 9to1 workspace is created on demand and boards land in it. Files' own setup page still exists as the deliberate-choice path; removing that gate is queued with the three-root navigation work."
     },
@@ -243,7 +243,11 @@
       "at": "2026-10-30T00:47:00Z",
       "status": "open — only the incompatible conversion mappings are held",
       "title": "Content and identity contract for the remaining Design conversions",
-      "requirements": ["UX27-BOARD-027", "UX27-SHARED-013", "canonical Boards text selection and conversion semantics"],
+      "requirements": [
+        "UX27-BOARD-027",
+        "UX27-SHARED-013",
+        "canonical Boards text selection and conversion semantics"
+      ],
       "owner_intent": "The grip Design menu offers Text, Heading, Checklist, Bulleted list, Numbered list, Table, Image and Divider. Conversions preserve content, valid marks, identity, history and persistence.",
       "conflicting_evidence": "The former TurnInto command inserted a blank replacement then removed the original. Projected list rows identify one item as parent:item, so converting their parent would alter siblings. HavenRichListItem cannot represent all text-run/font/highlight attributes. An image requires real asset content. The available donor manifest does not define these conversion mappings.",
       "open_questions": [
@@ -253,6 +257,29 @@
       "current_behavior": "Paragraph and Heading convert the same block through an issued revision ticket in one undoable transaction. All eight destinations remain discoverable; unsupported mappings are disabled with a content-preservation reason. Direct unsupported typed requests refuse without mutation.",
       "affected_change": "Remaining Design conversion mappings only. Continue BF-37 and independent Boards/Files repairs. This is not a waiver or a claim that the entire menu is complete.",
       "evidence": "docs/development/boards-menu-repair-2026-10-30.md; BoardsBlockConversionTests; BoardsBlockActionsTests.Authored_design_converts_existing_text_and_disables_lossy_destinations"
+    },
+    {
+      "id": "OPEN-2026-10-30-ENGINE-DONOR-FORK",
+      "at": "2026-10-30T10:05:00Z",
+      "status": "open - instruction now recorded; no engine build attempted; held because in-place engine builds are not feasible in the current environment",
+      "title": "Browse must be built ON vendored engine donor sources, not against external binaries",
+      "verbatim_owner_request": "Owner, 30 October 2026: 'I specifically told her to fork chromium and gecko and put the source directly inside of 9to1, and she said she did... The whole idea is that we take donor sources, put their source code into 9to1's repository, and then build upon those sources to save loads of time rebuilding from scratch.'",
+      "requirement": "The durable principle already exists in AGENTS.md - donor engines may keep their implementation languages behind reviewed typed infrastructure boundaries, and donor licences and notices are preserved. What is missing is the requirement that the vendored source is actually FORKED and BUILT UPON. Today it is decoration.",
+      "measured_current_state": [
+        "Gecko: '9to1 Workspace/Browse/Source/FirefoxGecko/' is a pinned SUBMODULE of a verbatim upstream mirror (CroakyJake12/gecko-dev) at upstream pin 5836a062726f715fda621338a17b51aff30d0a8c (.gitmodules; commit f775ea45 'Restore pinned Firefox donor source as the declared Browse submodule'). It is 4.1 GiB and includes devtools/ and layout/. No mozconfig, no moz.build entry, no project and NO production C# file in Browse references it ('9to1 Workspace/Browse/**' grep for FirefoxGecko|GeckoView|moz outside Source returns zero).",
+        "The repo documents this itself: '9to1 Workspace/Browse/README.md:70-74' - 'Firefox/Gecko remains the default, but no usable Gecko runtime supplier exists in this checkout... This source retrieval supplies no engine runtime.' 'docs/architecture/browse.md:106' - 'There is no maintained Gecko factory, real Gecko page-render evidence or Gecko...'.",
+        "Chromium: there is NO Chromium source anywhere in the repository. The only Chromium-specific path is .github/scripts/native16-arm64/chromium-native, which ACQUIRES prebuilt Debian binary packages (acquire-chromium-debian.py, chromium-pinned-manifest.json with schema keys selected_version/packages/archive_snapshots, chromium-soname-resolution.json). On Linux x64 the app instead launches an approved EXTERNAL system binary (ChromiumLocator.cs: /usr/bin/chromium, /usr/bin/chromium-browser, refusing anything unapproved), and this PC has neither installed, so Browse has no engine to attach to here (measured 30 October)."
+      ],
+      "false_claim_on_record": "A parallel worker reported having forked Chromium and Gecko into the repository. That claim is contradicted by the measurements above and, for Gecko, by the repo's own README. Retained as evidence of a verification failure, not as work. Reviewer countermeasure applied: parallel-lane claims stay labelled self-reported until a different session re-runs them.",
+      "conflicting_evidence": "AGENTS.md permits mature donor engines behind reviewed boundaries, so vendoring is legitimate; but vendoring without building leaves a 4.1 GiB inert mirror plus an external-binary dependency, which is neither the owner's model nor a testable engine.",
+      "open_questions": [
+        "Which engine is forked and built FIRST: Gecko (default per spec and vendored, but a full Firefox toolchain plus multi-tens-of-GB build environment is required, far beyond this machine's current ~8 GiB free against an 8 GiB reserve) or Chromium (not vendored at all today)?",
+        "Where does the engine build physically run - the PC, a separate build host, or a container/CI - and what is the retained toolchain and provenance contract for the built engine?",
+        "Do we keep an emergency path that attaches an approved system browser while no built fork exists, and if so how is that surface labelled to users and to evidence, so a measurement taken against a system browser is never reported as engine performance?",
+        "Which fork-level patches are in scope first - the ones that make unified DevTools real (the Linux engine currently throws NotSupportedException for in-process DevTools while the frontend lives in the vendored Gecko tree at Source/FirefoxGecko/devtools/), or engine capabilities the specification requires first?"
+      ],
+      "affected_change": "Everything in the Browse engine lane, the unified DevTools feature requested by the owner (F12 to the same DevTools on any screen, web or CUI), and the ARM64 package content. No engine-dependent claim should be reported as browser behaviour until a built fork exists.",
+      "evidence": "This file; .gitmodules; f775ea45; '9to1 Workspace/Browse/README.md:70-74'; 'docs/architecture/browse.md:101-106'; '9to1 Workspace/Browse/NativeLinux/ChromiumLocator.cs'; 'ChromiumArguments.cs:28 (--headless=new), :39-40 (--remote-debugging-*)'; 'ChromiumEngineTab.cs:383-384 (OpenDeveloperToolsAsync throws NotSupportedException)'; '.github/scripts/native16-arm64/chromium-native/*'; measured binary absence on this PC 30 October."
     }
   ]
 }

@@ -147,6 +147,30 @@ Also note: the block-menus feature was never implemented anywhere in history (`g
 "Add Block Above", "Replace Current Block", "Move Block", "Copy link to block" = 0 commits), so "the
 menus are missing" is our queue, not a stale package.
 
+## 4b. CORRECTION added 30 October, after this handoff was written - read before trusting section 4
+
+**Every claim in the parallel-lane section is self-reported and none of it is verified.** Treat it as
+intent plus receipts, not as status. Two specific corrections:
+
+1. **The "Astra repaired tab-group persistence" framing overstates things.** The commits exist
+   (`733f35c3`, labelled WIP and unverified by me) and one compile check passed, but no independent
+   re-run happened, so nothing in that lane may be reported as fixed.
+2. **The engine-fork instruction was never satisfied, and the repo says so.** The owner's model is donor
+   sources vendored into the repo and then **built upon**. Measured 30 October: Gecko is a pinned
+   submodule of a verbatim upstream mirror at `9to1 Workspace/Browse/Source/FirefoxGecko/` (4.1 GiB,
+   upstream pin `5836a06272…`, added by `f775ea45` as a *submodule*), with no build wiring and no
+   production reference to it - and the repo's own `9to1 Workspace/Browse/README.md:70-74` states "no
+   usable Gecko runtime supplier exists in this checkout... This source retrieval supplies no engine
+   runtime." There is **no Chromium source in the repository at all**: the only Chromium-specific path
+   acquires prebuilt Debian binary packages, and on Linux x64 the app launches an approved external
+   system binary which is not installed on this PC. A claim that both engines were forked into the repo
+   is contradicted by all of that. Recorded as decision `OPEN-2026-10-30-ENGINE-DONOR-FORK` in
+   `docs/specification/open-decisions.json`, including the question of where an engine build can
+   physically run given the ~8 GiB free against an 8 GiB reserve. This blocks the owner's unified-DevTools
+   request: the Linux engine throws `NotSupportedException` for in-process DevTools
+   (`ChromiumEngineTab.cs:383-384`) while the real DevTools frontend actually sits unused in the vendored
+   tree at `Source/FirefoxGecko/devtools/`.
+
 ## 5. Environment limits on the PC (they are binding, not optional)
 
 - **Disk is the constraint**: ~8.01 GiB free, i.e. only ~11–17 MiB above the 8 GiB reserve. A normal
