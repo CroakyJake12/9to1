@@ -135,7 +135,9 @@ public sealed class BoardsTabberInsertionTests
         BoardsRelativeInsertionTests.Run(async (adapter, vm) =>
         {
             var owner = vm.PageBlocks.First(block => block.Kind == "tabber");
-            var child = TestUiThread.Run(() => vm.CreatePaneModel(owner.Tabber!.Panes[0].PageId));
+            // Keep nested-insert refusal and the fresh-editor positive path on
+            // the visible pane, independently of the hidden-pane toolbar fence.
+            var child = TestUiThread.Run(() => vm.CreatePaneModel(owner.Tabber!.Panes.Single(pane => pane.Id == owner.Tabber.SelectedPaneId).PageId));
             try
             {
                 var before = adapter.Snapshot;
@@ -148,7 +150,7 @@ public sealed class BoardsTabberInsertionTests
                 Assert.True(await adapter.UndoAsync()); Assert.Equal(before, adapter.Snapshot);
                 OnUi(() => child.InsertKindAsync("paragraph", null));
                 await adapter.SaveAsync(); Assert.Equal(before, adapter.Snapshot); Assert.False(adapter.CanUndo);
-                var fresh = TestUiThread.Run(() => vm.CreatePaneModel(owner.Tabber!.Panes[0].PageId));
+                var fresh = TestUiThread.Run(() => vm.CreatePaneModel(owner.Tabber!.Panes.Single(pane => pane.Id == owner.Tabber.SelectedPaneId).PageId));
                 try
                 {
                     OnUi(() => fresh.InsertKindAsync("paragraph", null));

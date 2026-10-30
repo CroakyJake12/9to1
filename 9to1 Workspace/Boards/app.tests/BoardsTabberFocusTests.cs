@@ -167,11 +167,20 @@ public sealed class BoardsTabberFocusTests
                     var name = window.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Tab name");
                     var childRoot = name.GetVisualAncestors().OfType<StackPanel>().First(panel =>
                         panel.GetVisualDescendants().OfType<Button>().Any(button => AutomationProperties.GetName(button) == "Add tab"));
+                    // The owner removed the duplicate pane toolbar. Its first-click/rename
+                    // contract now belongs to the shared top toolbar targeting this pane.
+                    if (target == "toolbar")
+                    {
+                        childRoot.GetVisualDescendants().OfType<TextBox>().Single(box =>
+                            AutomationProperties.GetName(box) == "Paragraph editor").Focus();
+                        Dispatcher.UIThread.RunJobs();
+                    }
                     Control control = target switch
                     {
                         "neighbor" => window.GetVisualDescendants().OfType<Button>().Single(button => ToolbarBuilder.HasInsertMenu(button) &&
                             button.GetVisualAncestors().OfType<Border>().Any(border => border.Tag is BlockReorderRow row && row.BlockId == anchor)),
-                        "toolbar" => childRoot.GetVisualDescendants().OfType<Button>().Single(button => ToolbarBuilder.InsertMenuFor(button) is { AnchorBlockId: null }),
+                        "toolbar" => BoardsCuiControlFinder.FindByAutomationId<StackPanel>(presentation.Content, "ToolbarHost")!
+                            .GetVisualDescendants().OfType<Button>().Single(button => ToolbarBuilder.InsertMenuFor(button) is { AnchorBlockId: null }),
                         _ => childRoot.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Paragraph editor")
                     };
                     control.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();

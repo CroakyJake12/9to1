@@ -108,6 +108,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         ViewModel.RebuildRequested += QueueRender;
         ViewModel.NavRebuildRequested += QueueRender;
         ViewModel.SelectionChanged += QueueRender;
+        ViewModel.ToolbarChanged += RefreshToolbar;
         _surfaceLifecycle = new BoardsEmbeddedSurfaceLifecycle(root, ViewModel, QueueRender);
         if (_themeContext is not null) _themeContext.Changed += OnOwnerThemeChanged;
     }
@@ -139,13 +140,21 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
             await BlockRenderer.RebuildAsync(blocks, ViewModel);
         if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "NavHost") is { } nav)
             NavBuilder.Rebuild(nav, ViewModel);
-        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
-            ToolbarBuilder.Rebuild(toolbar, ViewModel);
+        RefreshToolbar();
         if (BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(Content, "EmbeddedArtifactHost") is { } embedded)
             await _embeddedArtifacts.RenderAsync(embedded);
         ViewModel.RefreshCuiContext();
         if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "InkOverlayLayer") is { } ink)
             await (_surfaceLifecycle!.InkInteraction?.RenderAsync() ?? BoardInkOverlayRenderer.RenderReadOnlyAsync(ink, ViewModel));
+    }
+
+    private void RefreshToolbar()
+    {
+        if (_disposed) return;
+        if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(RefreshToolbar); return; }
+        using var themeScope = BoardsTheme.UseSurface(Content, _themeContext);
+        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
+            ToolbarBuilder.Rebuild(toolbar, ViewModel);
     }
 
     public async ValueTask DisposeAsync()
@@ -158,6 +167,7 @@ public sealed class BoardsReadOnlyPresentation : IAsyncDisposable
         ViewModel.RebuildRequested -= QueueRender;
         ViewModel.NavRebuildRequested -= QueueRender;
         ViewModel.SelectionChanged -= QueueRender;
+        ViewModel.ToolbarChanged -= RefreshToolbar;
         _renderQueue?.Dispose();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {

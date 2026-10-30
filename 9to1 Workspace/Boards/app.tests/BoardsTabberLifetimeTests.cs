@@ -147,7 +147,9 @@ public sealed class BoardsTabberLifetimeTests
         BoardsRelativeInsertionTests.Run(async (adapter, vm) =>
         {
             var owner = vm.PageBlocks.First(block => block.Kind == "tabber");
-            var child = TestUiThread.Run(() => vm.CreatePaneModel(owner.Tabber!.Panes[0].PageId));
+            // Open a real pending picker in the visible pane; hidden panes now
+            // refuse toolbar edits before a picker can be opened.
+            var child = TestUiThread.Run(() => vm.CreatePaneModel(owner.Tabber!.Panes.Single(pane => pane.Id == owner.Tabber.SelectedPaneId).PageId));
             var chosen = new TaskCompletionSource<string?>();
             var path = Path.Combine(Path.GetDirectoryName(adapter.FilePath!)!, "late.txt");
             await File.WriteAllTextAsync(path, "Late data");

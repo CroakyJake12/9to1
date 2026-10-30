@@ -337,7 +337,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool IsDrawMode { get; private set; }
     public bool IsEditMode => _isEditMode;
     public bool CanEdit => !_disposed && !EditorLifetimeEnded &&
-        (_paneOwner is null || _paneOwner.IsEditMode && _paneOwner.SelectedPageId == _paneIdentity!.ParentPageId) &&
+        (_paneOwner is null || _paneOwner.IsEditMode && _paneOwner.SelectedPageId == _paneIdentity!.ParentPageId && PaneIsSelected) &&
         _session is not IBoardSessionCapabilities { CanEdit: false };
     public bool CanToggleEditMode => CanEdit;
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
@@ -445,6 +445,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         using var themeScope = BoardsTheme.UseSurface(_attachedRoot ?? _themeSurface, _embeddedArtifactHost?.ThemeContext);
         if (_disposed || EditorLifetimeEnded) return;
         if (_paneOwner is not null && !CanEdit) return;
+        if (command is "ToggleBold" or "ToggleItalic" or "ToggleUnderline" or "ToggleStrike" &&
+            ToolbarTarget is var toolbarTarget && !ReferenceEquals(toolbarTarget, this))
+        {
+            await toolbarTarget.DispatchAsync(command, parameter, cancellationToken);
+            return;
+        }
         if (!CanEdit && command is ("ToggleEditView" or "ShowLanding" or "OpenRecentBoard" or "OpenRecentPage" or
             "NewBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or "FileMenu" or
             "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ApplySectionIconChoice" or
@@ -1360,6 +1366,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Unsubscribe all Attach handlers (used when switching boards).</summary>
     public void Detach()
     {
+        ReleaseToolbar();
         Interlocked.Increment(ref _insertionOperationEpoch);
         CancelInsertionPreview();
         _attachedRoot = null;
@@ -1965,6 +1972,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         if (FindBlock(blockId) is null)
             return;
+        ActivateToolbar();
         if (_selectedBlockId == blockId)
             return;
         InvalidateTableSelection();
@@ -1986,9 +1994,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void BindTextSelection(TextBox box, string blockId)
     {
         ArgumentNullException.ThrowIfNull(box);
+        // Formatting controls take focus on pointer-down. Preserve the editor's
+        // real selection until their action has read it and returned focus.
+        box.ClearSelectionOnLostFocus = false;
         void Observe()
         {
             if (!box.IsKeyboardFocusWithin && !ReferenceEquals(_textRangeControl, box)) return;
+            if (box.IsKeyboardFocusWithin) ActivateToolbar();
             Interlocked.Increment(ref _textRangeEpoch);
             _textRangeControl = box; _textRangeBlock = blockId; _textRangePage = SelectedPageId;
             RefreshTextRangeBindings();
@@ -2035,6 +2047,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private void RefreshTextRangeBindings()
     {
+        if (ToolbarTarget is var toolbarTarget && !ReferenceEquals(toolbarTarget, this))
+        {
+            CopyToolbarRangeBindings(toolbarTarget);
+            return;
+        }
         var block = FindBlock(SelectedBlockId);
         if (_textRangeControl is not null && (_textRangePage != SelectedPageId || _textRangeBlock != SelectedBlockId)) InvalidateTextRange();
         var selection = CurrentTextRange();
@@ -2052,6 +2069,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("RangeItalicState", "Italic, " + (selection is null ? (block?.Italic == true ? "on" : "off") : FormatMarkName(selection.Italic)));
         Set("RangeUnderlineState", "Underline, " + (selection is null ? (block?.Underline == true ? "on" : "off") : FormatMarkName(selection.Underline)));
         Set("RangeStrikeState", "Strikethrough, " + (selection is null ? (block?.Strike == true ? "on" : "off") : FormatMarkName(selection.StrikeThrough)));
+        PublishToolbarRangeBindings();
         RefreshCuiBlockActions();
     }
 
@@ -2071,10 +2089,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (selection is null || _session is not IBoardTextRangeSession ranges || _textRangeBusy)
         { Set("StatusText", "Select editable text to format."); return true; }
         var control = _textRangeControl!;
-        var epoch = Interlocked.Read(ref _textRangeEpoch);
         var focused = TopLevel.GetTopLevel(control)?.FocusManager?.GetFocusedElement() as Control;
         var focusId = focused is null ? null : Avalonia.Automation.AutomationProperties.GetAutomationId(focused);
         var restoreFocus = control.IsKeyboardFocusWithin || focusId is "RangeBold" or "RangeItalic" or "RangeUnderline" or "RangeStrike";
+        // Return toolbar focus before its busy binding disables the pressed button.
+        // Otherwise the framework clears that disabled focus and the later guarded
+        // restoration cannot distinguish it from an unrelated user focus change.
+        if (restoreFocus && !control.IsKeyboardFocusWithin) control.Focus();
+        var epoch = Interlocked.Read(ref _textRangeEpoch);
         _textRangeBusy = true; RefreshTextRangeBindings();
         try
         {

@@ -58,6 +58,7 @@ public static class ToolbarBuilder
     private static void Rebuild(Panel host, BoardsViewModel vm)
     {
         ArgumentNullException.ThrowIfNull(vm);
+        vm = vm.ToolbarTarget;
         host.Children.Clear();
 
         // The authored ToolbarHost is a single-row CUI scroll host. Related commands

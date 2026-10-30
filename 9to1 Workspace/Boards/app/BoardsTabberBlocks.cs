@@ -255,7 +255,6 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
     {
         public BoardsViewModel Model { get; }
         public StackPanel Root { get; } = new() { Spacing = 8 };
-        private readonly WrapPanel _toolbar = new();
         private readonly StackPanel _blocks = new();
         private readonly Canvas _absolute = new();
         private readonly Canvas _ink = new();
@@ -271,17 +270,13 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             Model.BindThemeSurface(Root);
             var viewport = new Grid();
             viewport.Children.Add(_blocks); viewport.Children.Add(_absolute); viewport.Children.Add(_ink);
-            Root.Children.Add(_toolbar); Root.Children.Add(viewport);
+            Root.Children.Add(viewport);
+            Root.GotFocus += OnFocused;
             _inkOwner = new(_ink, model);
             Model.RebuildRequested += Queue;
-            Model.SelectionChanged += RefreshToolbar;
+            Model.SelectionChanged += Model.RefreshSharedToolbar;
         }
-        private void RefreshToolbar()
-        {
-            if (_disposed) return;
-            using var themeScope = BoardsTheme.UseSurface(Root);
-            ToolbarBuilder.Rebuild(_toolbar, Model);
-        }
+        private void OnFocused(object? sender, FocusChangedEventArgs args) => Model.ActivateToolbar();
         public void Queue()
         {
             if (_disposed) return;
@@ -301,7 +296,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
                     if (_disposed) return;
                     using var themeScope = BoardsTheme.UseSurface(Root);
                     BlockRenderer.Rebuild(_blocks, Model, boxes, _absolute);
-                    RefreshToolbar();
+                    Model.RefreshSharedToolbar();
                 });
                 await _inkOwner.RenderAsync();
             }
@@ -319,7 +314,8 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             var renders = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Root.IsEnabled = false;
-                Model.RebuildRequested -= Queue; Model.SelectionChanged -= RefreshToolbar;
+                Root.GotFocus -= OnFocused;
+                Model.RebuildRequested -= Queue; Model.SelectionChanged -= Model.RefreshSharedToolbar;
                 Model.Dispose(); _inkOwner.Dispose();
                 return _renders.ToArray();
             });

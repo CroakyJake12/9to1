@@ -84,14 +84,25 @@ public sealed class BoardsTabberDraftTests
             var vm = TestUiThread.Run(() => new BoardsViewModel(adapter, databaseSource: source));
             var parentId = vm.SelectedPageId;
             var owner = vm.PageBlocks.First(block => block.Kind == "tabber");
-            Window? window = null; Task? creating = null;
+            Window? window = null; Task? creating = null; Action? refreshToolbar = null;
             try
             {
                 TestUiThread.Run(() =>
                 {
-                    window = new Window { Width = 1100, Height = 750, Content = vm.Tabbers.Mount(owner) }; window.Show();
+                    // This Data-port component fixture now supplies the one host toolbar;
+                    // a pane no longer owns a duplicate. Keep the real insertion menu
+                    // and all pending-artifact/owner-loss assertions below unchanged.
+                    var toolbar = new StackPanel();
+                    refreshToolbar = () => ToolbarBuilder.Rebuild(toolbar, vm);
+                    vm.ToolbarChanged += refreshToolbar;
+                    var content = new StackPanel(); content.Children.Add(toolbar); content.Children.Add(vm.Tabbers.Mount(owner));
+                    window = new Window { Width = 1100, Height = 750, Content = content }; window.Show();
+                    BoardsTabberLifetimeTests.Settle(window, () => window.GetVisualDescendants().OfType<TextBox>().Any(box =>
+                        AutomationProperties.GetName(box) == "Paragraph editor"));
+                    window.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Paragraph editor").Focus();
+                    refreshToolbar();
                     Button? insert = null;
-                    BoardsTabberLifetimeTests.Settle(window, () => (insert = window.GetVisualDescendants().OfType<Button>().FirstOrDefault(button =>
+                    BoardsTabberLifetimeTests.Settle(window, () => (insert = toolbar.GetVisualDescendants().OfType<Button>().FirstOrDefault(button =>
                         ToolbarBuilder.HasInsertMenu(button) && ToolbarBuilder.InsertMenuFor(button)?.AnchorBlockId is null)) is not null);
                     var menu = Assert.IsType<InsertMenuContext>(ToolbarBuilder.InsertMenuFor(insert!));
                     Assert.True(menu.Open()); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
@@ -114,7 +125,7 @@ public sealed class BoardsTabberDraftTests
             {
                 source.Creation.TrySetResult(data);
                 if (creating is not null) BoardsTabberInsertionTests.OnUi(() => creating);
-                TestUiThread.Run(() => window?.Close());
+                TestUiThread.Run(() => { vm.ToolbarChanged -= refreshToolbar; window?.Close(); });
                 BoardsTabberInsertionTests.OnUi(() => vm.DisposeDatabasesAsync().AsTask());
                 TestUiThread.Run(vm.Dispose);
             }

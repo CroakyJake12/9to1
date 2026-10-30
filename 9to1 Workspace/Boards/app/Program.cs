@@ -185,6 +185,7 @@ internal sealed class BoardsApp : Application
         viewModel.NewBoardRequested -= PostNewBoard;
         viewModel.NewMenuRequested -= PostNewMenu;
         viewModel.SelectionChanged -= OnSelectionChanged;
+        viewModel.ToolbarChanged -= OnToolbarChanged;
         viewModel.NavRebuildRequested -= RebuildNav;
         viewModel.LandingRequested -= OnLandingRequested;
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
@@ -372,6 +373,7 @@ internal sealed class BoardsApp : Application
         _ = RenderInkOverlayAsync();
         UpdateWindowTitle();
         _viewModel.SelectionChanged += OnSelectionChanged;
+        _viewModel.ToolbarChanged += OnToolbarChanged;
         _viewModel.LandingRequested += OnLandingRequested;
         _viewModel.NavRebuildRequested += RebuildNav;
         _viewModel.RebuildRequested += PostRebuild;
@@ -459,6 +461,8 @@ internal sealed class BoardsApp : Application
         if (e.PropertyName is "SaveStateText" or "StatusText")
             Post(SyncSaveState);
     }
+
+    private void OnToolbarChanged() => Post(RefreshToolbarAndContext);
 
     private void OnSelectionChanged()
     {
