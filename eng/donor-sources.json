@@ -252,6 +252,24 @@
         "LICENSE-MPL"
       ],
       "tag": null
+    },
+    "avalonia": {
+      "repository": "https://github.com/AvaloniaUI/Avalonia",
+      "canonicalRepository": "https://github.com/AvaloniaUI/Avalonia",
+      "fork": "https://github.com/CroakyJake12/Avalonia",
+      "commit": "1c465a47b097e849250f3928a8ea8c475a02ec32",
+      "forkCommit": "1c465a47b097e849250f3928a8ea8c475a02ec32",
+      "upstreamBaseCommit": "fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
+      "upstreamBaseTag": "12.0.1",
+      "forkBranch": "9to1/cui-framework-20261030",
+      "license": "MIT",
+      "licenseFiles": [
+        "licence.md",
+        "NOTICE.md"
+      ],
+      "scope": "framework",
+      "verification": "fork-tree-equivalence",
+      "pinNote": "The pinned commit is the tip of our own fork branch, because that is what the vendored tree actually contains: upstream base fe2741d6 (tag 12.0.1) plus 21 modified files and our build glue and carried generated inputs, in 5 reviewable commits. Pinning the upstream base instead would hide our own modification, which the owner's rule treats as the artifact being forked."
     }
   },
   "bindings": [
@@ -441,6 +459,24 @@
       "path": "9to1 Workspace/Files/Source/Files",
       "consumer": "Vendored Files source with .gitignore/.github/.gitattributes omitted at import",
       "runtimeRequirement": "Files Windows-only app build/launch not revalidated"
+    },
+    {
+      "app": "CUI",
+      "donor": "avalonia",
+      "owner": "framework/CUI",
+      "path": "framework/CUI/vendor/Avalonia",
+      "scope": "framework",
+      "role": "low-level rendering/composition/text/input/focus/accessibility/windowing platform behind the CUI boundary; CUI owns all presentation",
+      "consumer": "CakeOS.Cui.AvaloniaFork.csproj compiles the staged slice, and 9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj plus the desktop test and native-probe projects reference src/Avalonia.Base, src/Avalonia.Controls and src/Avalonia.Desktop from this vendored tree; the ARM stage also builds src/Avalonia.Build.Tasks from it as a host compiler",
+      "runtimeRequirement": "built from source into the app; no Avalonia package reference for the forked projects; the Avalonia FluentTheme engine stays forbidden throughout CUI",
+      "equivalenceReceipt": "eng/donor-verification/avalonia-fork-equivalence.json",
+      "wrapperPaths": [
+        ".revision",
+        "SOURCE.md",
+        "SOURCE-MANIFEST.txt",
+        "FORK-MANIFEST.txt"
+      ],
+      "switchNote": "Still a loose vendored tree, not a submodule. The switch is a separate verified unit because it also moves the nested external/Avalonia.DBus and external/XamlX gitlinks into the fork's own .gitmodules and touches the ARM donor-compiler stage, the notices inputs (which read licence.md/NOTICE.md/OFL.txt from inside this path with recorded digests), the source-identity manifest and nine workflow files."
     }
   ],
   "firstPartyOrInternal": [
@@ -653,7 +689,11 @@
         "declared_submodule": false,
         "role": "framework we modify (CUI-owned templates, property precedence, compiler replaces Avalonia.Build.Tasks)",
         "consumed_by": [
-          "framework/CUI"
+          "framework/CUI (CakeOS.Cui.AvaloniaFork.csproj)",
+          "9to1 Workspace/shared/src/Haven.Desktop",
+          "9to1 Workspace/shared/tests/Haven.Desktop.Tests",
+          "9to1 Workspace/shared/tests/Haven.Desktop.NativeProbe",
+          "ARM stage: src/Avalonia.Build.Tasks host compiler"
         ],
         "modified_artifacts": [
           {
@@ -702,7 +742,7 @@
         "verdict": "FORK",
         "note": "MEASURED 30 Oct 2026 by git blob identity against the declared upstream base. Also measured: my first comparison script wrongly reported the 20 manifest blobs as mismatched; a direct check (manifest blob == upstream blob == on-disk hash, 1c85a67641fb for AmbientAttribute.cs) shows 20/20 correct, and that correction is recorded rather than dropped.",
         "upstream_base": "AvaloniaUI/Avalonia tag 12.0.1 = fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
-        "pinned_at": "fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
+        "pinned_at": "1c465a47b097e849250f3928a8ea8c475a02ec32",
         "measured_tree_counts": {
           "files_on_disk_excluding_external": 5273,
           "byte_identical_to_upstream_12_0_1": 2948,
@@ -721,9 +761,9 @@
         "provenance_gap": "SOURCE.md calls this 'actual, unmodified Avalonia source' staging only the 20-file src/Avalonia.Base/Metadata directory, and SOURCE-MANIFEST.txt covers only those 20. Measured reality is a near-full Avalonia tree with 21 modifications and 19 additions. The record understates our own fork surface.",
         "controlled_fork_remote": "https://github.com/CroakyJake12/Avalonia (created 30 October 2026), branch 9to1/cui-framework-20261030, tip b5bdd8cb9ada162d0282ecb55d4f63409532eadd",
         "fork_branch": "9to1/cui-framework-20261030",
-        "fork_tip": "b5bdd8cb9ada162d0282ecb55d4f63409532eadd",
-        "fork_not_consumed_yet": true,
-        "fork_verified_by": "all 21 fork-branch files byte-identical to the vendored tree (21/21 by git blob identity); FORK-MANIFEST.txt records both sides",
+        "fork_tip": "1c465a47b097e849250f3928a8ea8c475a02ec32",
+        "fork_not_consumed_yet": false,
+        "fork_verified_by": "blob-level equivalence: 3,027 shared paths all identical, 0 differing, 4 repository-only paths are our own wrapper records (.revision/SOURCE.md/SOURCE-MANIFEST.txt/FORK-MANIFEST.txt); 2,284 fork-only paths are upstream files never vendored here. Receipt: eng/donor-verification/avalonia-fork-equivalence.json",
         "drift_acknowledged_until": "plan item 4: switch this directory to a pinned submodule of the fork and build-verify on this PC, pending owner approval"
       },
       {
@@ -1043,6 +1083,27 @@
         "all_failures_are": "no app-local source tree (the 19 declared donors with no gitlink and no on-disk content)"
       },
       "relationship_to_census": "The gate answers 'is the declared donor source actually materialised and pinned'. donor_policy.py census answers 'is this artifact modified, and does the build fetch the revision we pinned'. They are complementary, and the plan proposes wiring the census into the same gate rather than maintaining two tools. The 4 donors pinned during 30 October (Browse/firefox-gecko, Canvas/rnote, Boards/appflowy-board, Boards/rnote, Data/duckdb) are no longer among the gate failures; the remaining 19 failures pre-date this session."
+    }
+  },
+  "frameworkScopes": {
+    "CUI": [
+      "avalonia"
+    ]
+  },
+  "verification_receipts": {
+    "avalonia": {
+      "receipt": "eng/donor-verification/avalonia-fork-equivalence.json",
+      "measured": "2026-10-30",
+      "shared_paths": 3027,
+      "identical_blobs": 3027,
+      "differing_paths": 0,
+      "repository_only": [
+        ".revision",
+        "SOURCE.md",
+        "SOURCE-MANIFEST.txt",
+        "FORK-MANIFEST.txt"
+      ],
+      "fork_only_not_vendored": 2284
     }
   }
 }

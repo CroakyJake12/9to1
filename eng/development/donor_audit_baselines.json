@@ -4,9 +4,10 @@
   "_measured_on": "2026-10-30",
   "_measured_at_source": "1d7700e928d5",
   "donor_gate_issues": 17,
-  "donor_gate_note": "eng/check-donor-sources.py --local-only: 17 issues across 23 bindings, all 'no app-local source tree' for declared-but-never-vendored donors. These pre-date the 30 October pinning work; none of them comes from a pin.",
+  "donor_gate_note": "eng/check-donor-sources.py --local-only: 17 issues across 24 bindings, all 'no app-local source tree' for declared-but-never-vendored donors, none from a pin. Avalonia now passes as a framework-scope donor via recorded fork equivalence rather than a gitlink.",
   "census_violations": 0,
   "census_note": "eng/development/donor_policy.py census: 29 donor rows, 0 violations, 6 findings. Findings are recorded drift (Rnote patches absent from the consumed pin, fork not consumed yet, Avalonia and Files as loose vendored trees) and stay visible in the log.",
   "coverage_problems": 26,
-  "coverage_note": "eng/development/donor_coverage.py audit: 28 specification designations over 25 distinct donors against 18 registry bindings. Problems are designated-but-undeclared donors (Avalonia, Strata, Godot, Blender, VirtualBox, CoMaps, Lawnchair, Gitea, Gitnuro, cakemods, Element/Matrix, Thunderbird, GNOME system-monitor) plus registry bindings whose designation this audit has not matched. Each one is an open item, not a pass."
+  "coverage_note": "eng/development/donor_coverage.py audit: 28 specification designations over 25 distinct donors. 24 problems = 13 undeclared designated donors (12 distinct: blender, cakemods, comaps, element-matrix, gitea, gitnuro, gnome-system-monitor, godot, lawnchair, strata, thunderbird, virtualbox) + 2 designated donors with no .gitmodules entry (files: loose vendored copy; llama-cpp: consumed as a pinned prebuilt binary) + 9 registry bindings this audit cannot match to a specification designation (code-oss, vscodium, eds, libical, glycin, loupe, gstreamer, ges, libvterm) - of which the Planner pair contradicts the specification's own 'no external application donor is currently normative' wording and the VS Code pair contradicts 'Build is one application; Dev is not an app'.",
+  "coverage_note_history": "Previously 26 problems; Avalonia was declared as a framework-scope donor with a blob-level fork-equivalence receipt, resolving its two designations (lines 1816, 1830). The underlying debt for the remaining 24 is unchanged - only a real declaration reduced the count."
 }

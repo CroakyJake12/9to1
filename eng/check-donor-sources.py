@@ -66,6 +66,69 @@ def resolved_pin(entry, record):
     return commit, fork_commit, problems
 
 
+def framework_verification_problems(entry, record, path):
+    """Checks for a donor vendored as a loose tree inside a framework, with no gitlink of its own.
+
+    A framework donor cannot be pinned by a submodule gitlink yet, so the enforceable claim is a
+    recorded blob-level equivalence: the repository tree for the path, the fork branch it was compared
+    against, and which repository-only paths are the wrapper's own provenance records rather than
+    unexplained source. The receipt is written by eng/development/donor_fork_equivalence.py.
+    """
+    problems = []
+    receipt_ref = entry.get("equivalenceReceipt")
+    if not receipt_ref:
+        return [f"{entry['app']}/{entry['donor']}: framework donor has no equivalenceReceipt recorded"]
+    receipt_path = ROOT / receipt_ref
+    if not receipt_path.is_file():
+        return [f"{entry['app']}/{entry['donor']}: equivalenceReceipt missing at {receipt_ref}"]
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [f"{entry['app']}/{entry['donor']}: equivalenceReceipt is not valid JSON ({exc})"]
+    if receipt.get("path") != path:
+        problems.append(f"{entry['app']}/{entry['donor']}: equivalenceReceipt path {receipt.get('path')!r} "
+                        f"does not match the binding path {path!r}")
+    recorded_tree = receipt.get("repository_tree")
+    current_tree = git("rev-parse", f"HEAD:{path}")
+    if not recorded_tree:
+        problems.append(f"{entry['app']}/{entry['donor']}: equivalenceReceipt records no repository_tree")
+    elif recorded_tree != current_tree:
+        problems.append(f"{entry['app']}/{entry['donor']}: vendored tree changed since the equivalence "
+                        f"receipt ({str(recorded_tree)[:12]} -> {current_tree[:12]}); re-run "
+                        f"eng/development/donor_fork_equivalence.py and review the difference")
+    if receipt.get("fork_ref") and record.get("fork") and \
+            not str(receipt.get("fork_commit", "")).startswith(str(record.get("commit", ""))[:12]) and \
+            receipt.get("fork_commit") != record.get("commit"):
+        problems.append(f"{entry['app']}/{entry['donor']}: equivalence receipt fork commit "
+                        f"{str(receipt.get('fork_commit'))[:12]} is not the recorded pin "
+                        f"{str(record.get('commit'))[:12]}")
+    equivalence = receipt.get("equivalence") or {}
+    if equivalence.get("differing_paths"):
+        problems.append(f"{entry['app']}/{entry['donor']}: {len(equivalence['differing_paths'])} "
+                        f"vendored paths differ from the fork branch: "
+                        + ", ".join(equivalence["differing_paths"][:5]))
+    allowed = set(entry.get("wrapperPaths") or [])
+    extra = sorted(set(equivalence.get("only_in_repository_tree") or []) - allowed)
+    if extra:
+        problems.append(f"{entry['app']}/{entry['donor']}: vendored tree holds paths the fork does not "
+                        f"carry and the binding does not declare as wrapper records: "
+                        + ", ".join(extra[:5]))
+    return problems
+
+
+def aspirational_binding(entry):
+    """A declared donor with no source yet, whose absence is recorded rather than hidden.
+
+    The specification designates donors for apps that have not been built yet. Demanding source for them
+    makes a real gate fail on unbuilt product, which trains people to ignore the gate; silently dropping
+    the declaration hides debt. So such a binding must state why it is aspirational, what it is planned
+    to be, and which specification line requires it - and the gate reports the whole class separately.
+    """
+    missing = [key for key in ("status", "plannedVerdict", "reason", "specLine")
+               if not entry.get(key)]
+    return missing
+
+
 def failures(local_only=False):
     data = json.loads(LOCK.read_text(encoding="utf-8"))
     upstreams = data["upstreams"]
@@ -88,12 +151,30 @@ def failures(local_only=False):
         record = upstreams[donor]
         path = entry["path"]
         owner = entry["owner"]
-        if not path.startswith(owner + "/Source/"):
+        scope = entry.get("scope", "app-local")
+        if scope == "framework":
+            # A framework donor is vendored under the framework that consumes it, not under an app's
+            # Source tree, because it is compiled by the framework itself.
+            if not path.startswith(owner + "/vendor/"):
+                errors.append(f"{app}/{donor}: framework donor source must sit under {owner}/vendor/")
+                continue
+        elif not path.startswith(owner + "/Source/"):
             errors.append(f"{app}/{donor}: source must be inside its owning Source/ tree")
             continue
         source = ROOT / path
         if not source.is_dir() or not source.resolve().is_relative_to(ROOT.resolve()):
-            errors.append(f"{app}/{donor}: no app-local source tree at {path}")
+            status = str(entry.get("status", ""))
+            missing_fields = aspirational_binding(entry) if status else ["status"]
+            if status and not missing_fields:
+                aspirational.append(
+                    f"{app}/{donor}: declared donor with no materialised source "
+                    f"(status {status}; planned {entry['plannedVerdict']}; spec line "
+                    f"{entry['specLine']}) - {entry['reason']}")
+            else:
+                errors.append(f"{app}/{donor}: no app-local source tree at {path}")
+                if status:
+                    errors.append(f"{app}/{donor}: aspirational status is missing required field(s): "
+                                  + ", ".join(missing_fields))
             continue
         if not record.get("license") or not record.get("licenseFiles"):
             errors.append(f"{app}/{donor}: missing licence metadata")
@@ -112,9 +193,12 @@ def failures(local_only=False):
                 errors.append("Files: imported code/test trees disagree with the verified upstream snapshot")
             if git("diff", "--name-only", "--", path):
                 errors.append("Files: working source differs from the pinned imported snapshot")
-        else:
+        elif scope == "framework":
+            # No gitlink yet, so the enforceable claim is the recorded blob-level equivalence.
             if not record.get("repository", "").startswith("https://") or not record.get("fork", "").startswith("https://github.com/CroakyJake12/"):
                 errors.append(f"{app}/{donor}: missing canonical upstream or controlled fork")
+            errors.extend(framework_verification_problems(entry, record, path))
+        else:
             if (entry.get("forkCommit") or record.get("forkCommit")) != commit:
                 errors.append(f"{app}/{donor}: fork and upstream revisions disagree")
             if paths_in_modules.get(path) != record.get("fork"):
