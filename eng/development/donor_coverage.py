@@ -172,8 +172,17 @@ def main(argv=None):
     if out is not None:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text + "\n")
+    if args.json:
+        # One JSON document on stdout and nothing after it: the counts, notes and problems are already
+        # fields of that document, so a CI step never has to split prose off a JSON tail.
+        print(text)
+        return 1 if result["problems"] else 0
     print(text)
     print(f"\ncounts: {result['counts']}")
+    if result["notes"]:
+        print("\nNOTES:")
+        for n in result["notes"]:
+            print(f"  - {n}")
     if result["problems"]:
         print("\nPROBLEMS:", file=sys.stderr)
         for p in result["problems"]:

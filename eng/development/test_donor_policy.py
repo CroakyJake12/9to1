@@ -200,6 +200,36 @@ class GitFixtureTests(unittest.TestCase):
         self.assertTrue(any("consumption has not moved onto the fork" in v
                             for v in policy.census(self.repo, self.registry([entry]))["violations"]))
 
+    def test_json_mode_prints_exactly_one_parseable_document(self):
+        # A CI step parses stdout. prose after the JSON (counts, findings, violations) makes that
+        # parse fail, which is precisely what happened the first time this was wired into CI.
+        import io
+        from contextlib import redirect_stdout
+        from pathlib import Path as P
+        # A clean, consumed, unmodified donor resolves as EMBED, so this fixture must agree with the
+        # evidence or the census would legitimately report a violation and exit non-zero.
+        reg = self.registry([{"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
+                              "consumed_by": ["Browse"], "verdict": "EMBED",
+                              "modified_artifacts": []}])
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = policy.main(["census", "--repo", str(self.repo), "--json"])
+        document = json.loads(buffer.getvalue())          # raises if anything follows the JSON
+        self.assertEqual(code, 0, code)
+        self.assertEqual(len(document["donors"]), 1)
+        self.assertIn("findings", document)
+        self.assertIn("violations", document)
+
+    def test_non_json_mode_still_reports_in_prose(self):
+        self.registry([{"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
+                        "consumed_by": ["Browse"], "verdict": "EMBED", "modified_artifacts": []}])
+        import io
+        from contextlib import redirect_stdout
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            policy.main(["census", "--repo", str(self.repo)])
+        self.assertIn("no violations", buffer.getvalue())
+
     def test_cli_refuses_to_overwrite_an_existing_report(self):
         reg = self.registry([{"donor": "engine-donor", "path": "donor", "pinned_at": self.head,
                               "consumed_by": [], "verdict": "NOT CONSUMED",

@@ -97,6 +97,20 @@ class CoverageFixtureTests(unittest.TestCase):
         self.assertEqual(result["counts"]["designations"], 2)
         self.assertEqual(result["counts"]["registry_bindings"], 2)
 
+    def test_json_mode_emits_one_document_and_exit_code_reflects_problems(self):
+        import io
+        import json
+        from contextlib import redirect_stdout
+        self.registry([("Build", "gitea")])
+        buffer = io.StringIO()
+        with mock.patch.object(coverage, "DESIGNATIONS", self.designations()):
+            with redirect_stdout(buffer):
+                code = coverage.main(["audit", "--repo", str(self.repo), "--json"])
+        document = json.loads(buffer.getvalue())   # no prose may follow the JSON
+        self.assertEqual(code, 1)                  # the unbound avalonia designation is a problem
+        self.assertEqual(document["counts"]["designations"], 2)
+        self.assertTrue(document["problems"])
+
     def test_cli_refuses_to_touch_an_existing_report(self):
         self.registry([("Build", "gitea")])
         out = self.repo / "audit.json"

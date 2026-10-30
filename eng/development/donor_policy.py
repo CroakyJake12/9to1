@@ -288,6 +288,12 @@ def main(argv=None):
     if out is not None:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text + "\n")
+    if args.json:
+        # JSON mode prints exactly one JSON document: findings and violations are already inside it,
+        # so a machine consumer never has to split a prose tail off the end of a document.
+        print(text)
+        return 1 if result["violations"] else 0
+
     print(text)
     for label, items in (("FINDINGS", result["findings"]), ("VIOLATIONS", result["violations"])):
         if items:
