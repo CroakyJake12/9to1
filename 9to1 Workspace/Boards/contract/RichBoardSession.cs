@@ -78,6 +78,7 @@ public sealed class RichBoardSession : IAsyncDisposable
     public HavenRichNotes Rich => Document.RichNotes ?? throw new InvalidOperationException("This board has no rich notes yet.");
     public bool HasRichNotes => Document.RichNotes is not null;
     public bool IsReadOnly => _readOnly;
+    public bool CanImportLocalAttachments => !_disposed && !_readOnly && _externalSave is null;
     public string? FilePath { get; private set; }
     public string Status { get; private set; } = string.Empty;
     public bool HasUnsavedChanges { get; private set; }
@@ -194,7 +195,8 @@ public sealed class RichBoardSession : IAsyncDisposable
     /// checked under its gate BEFORE history or content changes. A refusal is not
     /// an empty undo transaction. Exceptions/cancellation retain their normal cause.</summary>
     public async Task<bool> MutateIfAsync(Func<HavenRichNotes, bool> condition,
-        Action<HavenRichNotes> mutation, CancellationToken cancellationToken = default)
+        Action<HavenRichNotes> mutation, CancellationToken cancellationToken = default,
+        bool requireReadableDocument = false)
     {
         ArgumentNullException.ThrowIfNull(condition);
         ArgumentNullException.ThrowIfNull(mutation);
@@ -209,6 +211,11 @@ public sealed class RichBoardSession : IAsyncDisposable
             {
                 mutation(Rich);
                 HavenRichNotesValidator.Validate(Rich);
+                // Include persisted indentation/escaping and the longest possible save timestamp.
+                // List splicing may duplicate metadata beyond an import's estimated byte budget.
+                if (requireReadableDocument && JsonFileHavenBoardStore.GetDocumentByteCount(
+                        Document with { ModifiedUtc = DateTimeOffset.MaxValue }) > HavenBoardDocumentCodec.MaximumDocumentBytes)
+                    throw new InvalidDataException("This insertion would exceed the maximum document size. Choose another destination.");
             }
             catch
             {
@@ -428,55 +435,96 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         ThrowIfDisposed();
-        if (_readOnly || _externalSave is not null)
+        if (!CanImportLocalAttachments)
             throw new InvalidOperationException("This board source does not grant local attachment import access.");
-        var info = new FileInfo(sourcePath);
-        if (!info.Exists)
-            throw new FileNotFoundException("Attachment source was not found.", sourcePath);
-        if (info.Length > MaxSidecarAttachmentBytes)
-            throw new InvalidDataException(
-                $"Attachments larger than {MaxSidecarAttachmentBytes / 1024 / 1024} MB are not supported in this build.");
-        if (info.Length <= MaxEmbeddedAttachmentBytes)
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            var bytes = await File.ReadAllBytesAsync(sourcePath, cancellationToken).ConfigureAwait(false);
-            return new HavenRichAttachmentRef
+            ThrowIfDisposed();
+            await using var source = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            var initialLength = source.Length;
+            if (initialLength > MaxSidecarAttachmentBytes)
+                throw new InvalidDataException(
+                    $"Attachments larger than {MaxSidecarAttachmentBytes / 1024 / 1024} MB are not supported in this build.");
+            // The per-file threshold alone is insufficient: several embedded files can exceed
+            // the canonical document read limit. Prefer sidecars before exhausting that budget.
+            var embeddedBudget = initialLength <= MaxEmbeddedAttachmentBytes
+                ? HavenBoardDocumentCodec.MaximumDocumentBytes - JsonFileHavenBoardStore.GetDocumentByteCount(Document) - 8192 : 0;
+            var embeddedFits = initialLength <= MaxEmbeddedAttachmentBytes && 4 * ((initialLength + 2) / 3) <= embeddedBudget;
+            using var memory = embeddedFits ? new MemoryStream((int)initialLength) : null;
+            Stream payloadSource = source;
+            if (memory is not null)
             {
-                DisplayName = Path.GetFileName(sourcePath),
-                MediaType = GuessMediaType(sourcePath),
-                DataBase64 = Convert.ToBase64String(bytes),
-                SizeBytes = bytes.Length
-            };
-        }
+                var copied = await CopyAttachmentPayloadAsync(source, memory, MaxEmbeddedAttachmentBytes, cancellationToken).ConfigureAwait(false);
+                if (copied.Size != initialLength) throw new IOException("The attachment changed while being imported. Choose it again.");
+                ThrowIfDisposed();
+                var encoded = Convert.ToBase64String(memory.GetBuffer(), 0, (int)copied.Size);
+                // '+' is escaped by the JSON encoder. Budget the actual encoded string, not only
+                // the base64 character count, before claiming this payload can stay embedded.
+                if (JsonSerializer.SerializeToUtf8Bytes(encoded, HistoryJson).LongLength <= embeddedBudget)
+                    return new HavenRichAttachmentRef
+                    {
+                        DisplayName = Path.GetFileName(sourcePath), MediaType = GuessMediaType(sourcePath),
+                        DataBase64 = encoded, SizeBytes = copied.Size
+                    };
+                // Fall back from the same prepared bytes, never reopen a potentially changed file.
+                memory.Position = 0;
+                payloadSource = memory;
+            }
 
-        // Large payloads stream into a portable sidecar directory next to the board
-        // so the .9to1board file itself stays a safe size. Move/copy the board together
-        // with its sibling ".files" directory; a missing sidecar reports Missing, never blank.
-        var digest = await HashFileAsync(sourcePath, cancellationToken).ConfigureAwait(false);
-        var sidecarDir = SidecarDirectoryFor(FilePath);
-        Directory.CreateDirectory(sidecarDir);
-        var blobPath = Path.Combine(sidecarDir, digest + ".blob");
-        if (!File.Exists(blobPath))
-        {
-            var temp = blobPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            // Hash exactly the bytes copied from this one open source stream. The old path hashed
+            // the source, reopened it, then copied potentially different bytes under the first hash.
+            var directory = SidecarDirectoryFor(FilePath);
+            Directory.CreateDirectory(directory);
+            var temporary = Path.Combine(directory, ".import-" + Guid.NewGuid().ToString("N") + ".tmp");
             try
             {
-                await using (var source = File.OpenRead(sourcePath))
-                await using (var target = File.Create(temp))
-                    await source.CopyToAsync(target, cancellationToken).ConfigureAwait(false);
-                File.Move(temp, blobPath);
+                (long Size, string Digest) copied;
+                await using (var target = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                    65536, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                {
+                    copied = await CopyAttachmentPayloadAsync(payloadSource, target, MaxSidecarAttachmentBytes, cancellationToken).ConfigureAwait(false);
+                    await target.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
+                if (copied.Size != initialLength) throw new IOException("The attachment changed while being imported. Choose it again.");
+                ThrowIfDisposed();
+                cancellationToken.ThrowIfCancellationRequested();
+                var blob = Path.Combine(directory, copied.Digest + ".blob");
+                try { File.Move(temporary, blob); }
+                catch (IOException) when (File.Exists(blob))
+                {
+                    // Another reference/import may already own the same immutable payload.
+                    // Never overwrite a conflicting existing file or delete a shared blob.
+                    if (await HashFileAsync(blob, cancellationToken).ConfigureAwait(false) != copied.Digest)
+                        throw new IOException("The existing attachment payload is inconsistent; it was preserved unchanged.");
+                }
+                return new HavenRichAttachmentRef
+                {
+                    DisplayName = Path.GetFileName(sourcePath), MediaType = GuessMediaType(sourcePath),
+                    LocalReference = "sidecar:" + copied.Digest, SizeBytes = copied.Size
+                };
             }
-            finally
-            {
-                TryDelete(temp);
-            }
+            finally { TryDelete(temporary); }
         }
-        return new HavenRichAttachmentRef
+        finally { _gate.Release(); }
+    }
+
+    private static async Task<(long Size, string Digest)> CopyAttachmentPayloadAsync(
+        Stream source, Stream target, long limit, CancellationToken token)
+    {
+        var buffer = new byte[65536];
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        long size = 0;
+        int read;
+        while ((read = await source.ReadAsync(buffer, token).ConfigureAwait(false)) != 0)
         {
-            DisplayName = Path.GetFileName(sourcePath),
-            MediaType = GuessMediaType(sourcePath),
-            LocalReference = "sidecar:" + digest,
-            SizeBytes = info.Length
-        };
+            size += read;
+            if (size > limit) throw new InvalidDataException("The attachment grew beyond its import size limit. Choose it again.");
+            await target.WriteAsync(buffer.AsMemory(0, read), token).ConfigureAwait(false);
+            hash.AppendData(buffer, 0, read);
+        }
+        return (size, Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant());
     }
 
     /// <summary>
@@ -488,7 +536,8 @@ public sealed class RichBoardSession : IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(attachment);
         cancellationToken.ThrowIfCancellationRequested();
-        if (!string.IsNullOrEmpty(attachment.DataBase64))
+        if (!string.IsNullOrEmpty(attachment.DataBase64) ||
+            attachment is { DataBase64: "", SizeBytes: 0, LocalReference: null or "" })
         {
             try
             {
@@ -625,15 +674,16 @@ public sealed class RichBoardSession : IAsyncDisposable
                 }
                 if (!SamePath(_recoveryPath, targetPath!))
                 {
-                    await CopyOwnedSidecarsAsync(FilePath ?? _recoveryPath, _recoveryPath, cancellationToken).ConfigureAwait(false);
-                    await store.SaveDocumentAtPathAsync(toSave, _recoveryPath, cancellationToken).ConfigureAwait(false);
+                    await store.SaveDocumentAndSidecarsAtPathAsync(toSave, _recoveryPath,
+                        FilePath ?? _recoveryPath, cancellationToken).ConfigureAwait(false);
                     // The private commit is already acknowledged; cancellation must not
                     // leave its expected head behind even if the destination write fails.
                     _expectedRecoveryHash = await HashFileAsync(_recoveryPath, CancellationToken.None).ConfigureAwait(false);
-                    await CopyOwnedSidecarsAsync(FilePath ?? _recoveryPath, targetPath!, cancellationToken).ConfigureAwait(false);
                 }
             }
-            await store.SaveDocumentAtPathAsync(toSave, targetPath!, cancellationToken).ConfigureAwait(false);
+            await store.SaveDocumentAndSidecarsAtPathAsync(toSave, targetPath!,
+                FilePath is { } previousPath && !SamePath(previousPath, targetPath!) ? previousPath : null,
+                cancellationToken).ConfigureAwait(false);
             FilePath = targetPath;
             if (_recoveryPath is not null)
             {

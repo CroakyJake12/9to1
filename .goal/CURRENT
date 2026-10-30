@@ -5,11 +5,11 @@ golden_rules: golden-rules.md revision 1
 queue: queue.md revision 4
 branch: main
 base: a376fda20fc9b982428599d260072c8d69ffa05b (validated source; use the checkpoint's containing main commit)
-status: CHECKPOINT_READY
+status: ACTIVE
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
 cycle_report: cycle-reports/2026-10-30-03.md
-cycle_ownership: released after cycle 3 validation and verified source push; reconcile live source/ownership before claiming ACTIVE
-next_scheduled_trigger: 2026-10-30T05:10:00Z nominal; overlapping 04:10 trigger coalesced into cycle 3
+cycle_ownership: cycle 4 owns Boards relative Attachment insertion and focused tests from clean refreshed main 56d97238; no other writer admitted
+next_scheduled_trigger: 2026-10-30T06:10:00Z nominal; 05:10 cycle executing
 next: remaining BF-37 destination fidelity, starting with Attachment picker/asset flow if dependency-ready; preserve Design and native/ARM gates

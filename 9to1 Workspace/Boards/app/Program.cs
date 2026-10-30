@@ -162,7 +162,8 @@ internal sealed class BoardsApp : Application
 
     private void WireViewModel(BoardsViewModel viewModel)
     {
-        viewModel.PickFileAsync = PickFileAsync;
+        viewModel.PickFileAsync = kind => BoardsFilePicker.PickAsync(_window, kind,
+            () => ReferenceEquals(viewModel, _viewModel));
         viewModel.CreateBoardAsync = _ => CreateNewBoardAsync();
         viewModel.SaveAsBoardAsync = async token =>
         {
@@ -782,40 +783,10 @@ internal sealed class BoardsApp : Application
 
     // ----- File pickers -----
 
-    private async Task<string?> PickFileAsync(string kind)
+    private Task<string?> PickFileAsync(string kind)
     {
-        if (_window is null)
-            return null;
-        var options = kind switch
-        {
-            "image" => new FilePickerOpenOptions
-            {
-                Title = "Choose an image",
-                AllowMultiple = false,
-                FileTypeFilter =
-                [
-                    new FilePickerFileType("Images")
-                    {
-                        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"],
-                        MimeTypes = ["image/png", "image/jpeg", "image/gif", "image/bmp", "image/webp"],
-                    },
-                ],
-            },
-            "board" => new FilePickerOpenOptions
-            {
-                Title = "Open board",
-                AllowMultiple = false,
-                FileTypeFilter = [new FilePickerFileType("Boards") { Patterns = ["*.9to1board"] }],
-            },
-            _ => new FilePickerOpenOptions
-            {
-                Title = "Choose a file",
-                AllowMultiple = false,
-                FileTypeFilter = [FilePickerFileTypes.All],
-            },
-        };
-        var files = await _window.StorageProvider.OpenFilePickerAsync(options);
-        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        var viewModel = _viewModel;
+        return BoardsFilePicker.PickAsync(_window, kind, () => ReferenceEquals(viewModel, _viewModel));
     }
 
     private async Task SwitchBoardAsync()

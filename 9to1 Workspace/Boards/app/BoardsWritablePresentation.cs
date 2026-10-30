@@ -349,6 +349,8 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         await Dispatcher.UIThread.InvokeAsync<Task>(async () =>
         {
             var vm = host.ViewModel;
+            vm.PickFileAsync = kind => BoardsFilePicker.PickAsync(host.Content, kind,
+                () => !host._disposed && !runtimeToken.IsCancellationRequested);
             vm.SetLanding(landing);
             vm.Set("StatusText", session.Status);
             vm.Set("SaveStateText", BoardsViewModel.MapSaveState(session.Status));
@@ -489,6 +491,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         _renderQueue?.Dispose();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
+            ViewModel.PickFileAsync = null;
             _surfaceLifecycle?.Dispose();
         });
         await (_surfaceLifecycle?.DrainAsync() ?? Task.CompletedTask).ConfigureAwait(false);

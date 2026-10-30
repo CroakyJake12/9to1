@@ -34,11 +34,17 @@ public sealed partial class BoardsViewModel
         if (InsertionDestinationUnavailableReason(blockId, placement) is { } destination) return destination;
         if (kind.StartsWith("style:", StringComparison.Ordinal))
             return StyleList.Any(style => style.Id == kind[6..]) ? null : "That style is no longer available.";
-        if (kind is "database" or "database-tabs" or "database-timeline" or "database-retry" or "tabber" or "freeform" or "attachment")
+        if (kind is "database" or "database-tabs" or "database-timeline" or "database-retry" or "tabber" or "freeform")
             return "This item cannot yet use a block destination. Add it from the toolbar Insert menu.";
-        if (kind is not ("paragraph" or "heading" or "checklist" or "bulleted" or "numbered" or "table" or "divider" or "graph" or "image"))
+        if (kind is not ("paragraph" or "heading" or "checklist" or "bulleted" or "numbered" or "table" or "divider" or "graph" or "image" or "attachment"))
             return "This block type is not available for insertion.";
         if (kind == "image" && PickFileAsync is null) return "Image selection needs the desktop file picker.";
+        if (kind == "attachment")
+        {
+            if (_session is not ContractSessionAdapter { CanImportLocalAttachments: true })
+                return "This board source does not grant local attachment import access.";
+            if (PickFileAsync is null) return "Attachment selection needs the desktop file picker.";
+        }
         return null;
     }
 
@@ -71,6 +77,14 @@ public sealed partial class BoardsViewModel
         var style = kindTag.StartsWith("style:", StringComparison.Ordinal)
             ? StyleList.First(style => style.Id == kindTag[6..]) : null;
         var prepared = CreateInsertionBlock(kindTag, null, style);
+        string? attachmentSource = null;
+        if (kindTag == "attachment")
+        {
+            try { attachmentSource = await PickFileAsync!("attach"); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or NotSupportedException)
+            { if (OriginCurrent()) Set("StatusText", "The attachment could not be chosen: " + error.Message.Split('\n')[0]); return; }
+            if (string.IsNullOrWhiteSpace(attachmentSource)) return;
+        }
         if (kindTag == "image")
         {
             var path = await PickFileAsync!("image");
@@ -100,8 +114,9 @@ public sealed partial class BoardsViewModel
         if (_session is ContractSessionAdapter adapter)
         {
             if (ticket is null) { Set("StatusText", "That block cannot be edited here."); return; }
-            var result = await adapter.InsertRelativeAsync(ticket, prepared, placement, OriginCurrent);
-            if (!result.Applied) { Set("StatusText", "The insertion target changed or is unavailable. Open the menu and choose again."); return; }
+            var result = await adapter.InsertRelativeAsync(ticket, prepared, placement, OriginCurrent, attachmentSource: attachmentSource);
+            if (!result.Applied)
+            { Set("StatusText", result.Message ?? "The insertion target changed or is unavailable. Open the menu and choose again."); return; }
             selected = result.SelectedBlockId!;
         }
         else
@@ -146,6 +161,7 @@ public sealed partial class BoardsViewModel
             block = kindTag switch
             {
                 "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? "New paragraph" },
+                "attachment" => new RichBoardBlock { Kind = "paragraph", Text = string.Empty },
                 "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
                 "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
                 "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },

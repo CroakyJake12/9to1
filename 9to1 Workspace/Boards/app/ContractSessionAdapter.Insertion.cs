@@ -23,7 +23,7 @@ public sealed partial class ContractSessionAdapter
 
     internal async ValueTask<BoardBlockActionResult> InsertRelativeAsync(BoardInsertionTarget insertion,
         RichBoardBlock preparedView, BlockInsertionPlacement placement,
-        Func<bool> originStillEditable, CancellationToken cancellationToken = default)
+        Func<bool> originStillEditable, CancellationToken cancellationToken = default, string? attachmentSource = null)
     {
         var target = insertion.Block;
         var wholeList = insertion.WholeList;
@@ -55,6 +55,18 @@ public sealed partial class ContractSessionAdapter
                         (placement == BlockInsertionPlacement.Replace && (split < 0 || wholeList)));
             }
             if (!Applicable(_real.Rich)) return new(false, "StaleOrUnsupportedPlacement", null);
+            if (attachmentSource is not null)
+            {
+                if (!CanImportLocalAttachments)
+                    return new(false, "AttachmentImportUnavailable", null, "This board source does not grant local attachment import access.");
+                // Save As uses this same merge gate. Hold it through payload preparation and commit
+                // so a sidecar cannot be written beside one path and referenced from another.
+                try { prepared.Attachment = await _real.ImportAttachmentAsync(attachmentSource, cancellationToken).ConfigureAwait(false); }
+                catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
+                { return new(false, "AttachmentImportFailed", null, "The attachment could not be imported: " + error.Message.Split('\n')[0]); }
+                // Applicable runs again under the canonical gate, including lifetime/content checks.
+                // A completed immutable blob is retained on refusal; another reference/history may own it.
+            }
             var applied = await _real.MutateIfAsync(Applicable, rich =>
             {
                 var page = rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == target.PageId);
@@ -91,12 +103,14 @@ public sealed partial class ContractSessionAdapter
                 }
                 for (var index = 0; index < page.Blocks.Count; index++) page.Blocks[index].Order = index;
                 HavenRichNotesOps.TouchNotes(rich);
-            }, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken, requireReadableDocument: attachmentSource is not null).ConfigureAwait(false);
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
             var selected = prepared.Items.Count > 0 ? prepared.Id + ":" + prepared.Items[0].Id : prepared.Id;
             return new(true, "Applied", selected);
         }
+        catch (InvalidDataException error) when (attachmentSource is not null)
+        { return new(false, "InvalidAttachmentInsertion", null, error.Message.Split('\n')[0]); }
         finally { _mergeGate.Release(); }
     }
 }

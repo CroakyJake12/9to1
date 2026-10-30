@@ -47,6 +47,10 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
         WriteIndented = true
     };
 
+    // Admission must include the same indentation/string escaping as the actual stored envelope.
+    internal static long GetDocumentByteCount(HavenBoardDocument document) =>
+        JsonSerializer.SerializeToUtf8Bytes(document, Json).LongLength;
+
     private readonly string _rootDirectory;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private bool _disposed;
@@ -260,10 +264,14 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
     }
 
     /// <summary>Saves an envelope to an explicit user-chosen file path (Save As friendly).</summary>
-    public async Task SaveDocumentAtPathAsync(
+    public Task SaveDocumentAtPathAsync(
         HavenBoardDocument document,
         string path,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        SaveDocumentAndSidecarsAtPathAsync(document, path, null, cancellationToken);
+
+    internal async Task SaveDocumentAndSidecarsAtPathAsync(HavenBoardDocument document,
+        string path, string? sidecarSource, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(document);
@@ -291,6 +299,10 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
                 targetId != document.DocumentId)
                 throw new InvalidOperationException("The target file belongs to a different board; choose another path.");
 
+            // Identity refusal must not publish source blobs into somebody else's board directory.
+            // Keep preparation under the same store gate as identity validation and file commit.
+            if (sidecarSource is not null)
+                await RichBoardSession.CopyOwnedSidecarsAsync(sidecarSource, fullPath, cancellationToken).ConfigureAwait(false);
             await SaveCoreAtPathAsync(
                 fullPath, document, existing.Document,
                 existing.InvalidDocument is not null, cancellationToken).ConfigureAwait(false);

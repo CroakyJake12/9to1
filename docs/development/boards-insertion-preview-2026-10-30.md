@@ -1,5 +1,10 @@
 # BF-37 insertion preview — required flow and implementation sequence
 
+**Latest follow-up (cycle 4, 30 October):** relative Attachment destinations and embedded-local picker
+wiring are now implemented and checked at ordinary headless Layer1. See
+[the Attachment flow and exact limits](boards-attachment-insertion-2026-10-30.md). Historical cycle 3
+results below remain retained; relative database/Tabber/freeform and the spatial gaps are still open.
+
 Source: owner's 29 October plus-menu request, retained in the overnight handoff; canonical CUI
 ActionEvent/typed actions and Boards inline insertion; UX27-SHARED-002/009/010/013. Starting main 0b758fc6.
 

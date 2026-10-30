@@ -17,7 +17,7 @@ public sealed record BoardBlockActionRequest(BoardBlockActionTarget Target, Boar
 public sealed record BoardBlockMoveRequest(BoardBlockActionTarget Target, int DestinationIndex);
 public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string PageId, string BlockId,
     string ViewStamp, int ViewIndex, int ViewCount);
-public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
+public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId, string? Message = null);
 public sealed record BoardBlockConversionCapability(bool CanApply, string Code);
 
 public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities,
@@ -195,6 +195,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
     }
     public string Snapshot => JsonSerializer.Serialize(_view, Json);
     public bool CanEdit => !_real.IsReadOnly;
+    public bool CanImportLocalAttachments => !_disposed && _real.CanImportLocalAttachments;
     public bool CanSwitchBoard => _canSwitchBoard;
     public bool CanSaveAs => _canSaveAs;
     public bool HasUnsavedChanges => _real.HasUnsavedChanges ||
