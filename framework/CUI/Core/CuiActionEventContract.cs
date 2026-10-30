@@ -12,8 +12,13 @@ public static class CuiActionEventContract
 {
     private static readonly FrozenSet<string> KnownEvents = new[]
     {
-        "Hover", "OnceHover", "Clicked", "OnceClick", "PointerEnter", "PointerExit",
+        "Hover", "OnceHover", "Clicked", "OnceClick", "PointerEnter", "PointerExit", "Focused", "Blurred",
         "Loaded", "OnceLoaded", "Deactivated", "OnceDeactivated"
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly FrozenSet<string> ExecutableEvents = new[]
+    {
+        "Clicked", "OnceClick", "PointerEnter", "PointerExit", "Focused", "Blurred"
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     public static bool IsActionEvent(CuiComponent component) =>
@@ -33,6 +38,8 @@ public static class CuiActionEventContract
         {
             foreach (var component in components)
             {
+                if (component.Type.Equals("Button", StringComparison.OrdinalIgnoreCase) && HasCompetingActionRoutes(component))
+                    Error("CUIE004", "A Button supports one route per event family; direct Action, on:click, Clicked and OnceClick share the click family.", component.Span);
                 if (IsActionEvent(component)) Check(component, owner);
                 Visit(component.Children, component);
                 Visit(component.ElseChildren, component);
@@ -47,14 +54,11 @@ public static class CuiActionEventContract
                 Error("CUIE002", "ActionEvent requires exactly one literal Type.", declaration.Span);
             else if (!KnownEvents.Contains(type.Value))
                 Error("CUIE001", $"Unknown CUI action event '{type.Value}'.", type.Span);
-            else if (!type.Value.Equals("Clicked", StringComparison.OrdinalIgnoreCase)
-                && !type.Value.Equals("OnceClick", StringComparison.OrdinalIgnoreCase))
+            else if (!ExecutableEvents.Contains(type.Value))
                 Error("CUIE003", $"ActionEvent '{type.Value}' is specified but its runtime semantics are not implemented yet.", type.Span);
 
             if (owner is null || !owner.Type.Equals("Button", StringComparison.OrdinalIgnoreCase))
                 Error("CUIE003", "Executable ActionEvent currently requires an owning Button; Style and external event targets are not implemented yet.", declaration.Span);
-            else if (HasCompetingActionRoutes(owner))
-                Error("CUIE004", "A Button currently supports one action route: either its direct Action or one owned ActionEvent.", declaration.Span);
 
             foreach (var group in declaration.Properties.GroupBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase))
                 if (group.Count() > 1)
@@ -92,12 +96,29 @@ public static class CuiActionEventContract
 
     /// <summary>Call only after validating the document; no declaration creates a visual control.</summary>
     public static CuiActionReference? OwnedAction(CuiComponent owner) =>
-        owner.Children.FirstOrDefault(IsActionEvent)?.Actions.GetValueOrDefault("action");
+        OwnedAction(owner, "Clicked");
+
+    /// <summary>Resolve the named route for one event family, independently of other owned events.</summary>
+    public static CuiActionReference? OwnedAction(CuiComponent owner, string eventType) =>
+        owner.Children.FirstOrDefault(child => IsActionEvent(child)
+            && string.Equals(EventFamily(child), EventFamily(eventType), StringComparison.OrdinalIgnoreCase))
+            ?.Actions.GetValueOrDefault("action");
+
+    private static string? EventFamily(CuiComponent declaration) =>
+        declaration.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value
+            is CuiLiteralValue literal ? EventFamily(literal.Value) : null;
+
+    private static string EventFamily(string type) =>
+        type.Equals("OnceClick", StringComparison.OrdinalIgnoreCase) ? "Clicked" : type;
 
     /// <summary>Recheck after Definition instance merging, where caller properties can add a competing route.</summary>
     public static bool HasCompetingActionRoutes(CuiComponent owner)
     {
-        var count = owner.Children.Count(IsActionEvent);
-        return count > 1 || count > 0 && (owner.Actions.ContainsKey("action") || owner.Actions.ContainsKey("on:click"));
+        var families = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (owner.Actions.ContainsKey("action")) families.Add("Clicked");
+        if (owner.Actions.ContainsKey("on:click") && !families.Add("Clicked")) return true;
+        foreach (var declaration in owner.Children.Where(IsActionEvent))
+            if (EventFamily(declaration) is { } family && !families.Add(family)) return true;
+        return false;
     }
 }

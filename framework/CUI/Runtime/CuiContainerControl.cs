@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -343,6 +344,13 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             // Record whether the retained cell is present in this container's layout before applying the
             // authored placement, so the measure gate below fires only on a genuine membership transition.
             var wasPresent = Layout.Children.Contains(cell);
+            // A hidden floating host is about to leave native layout. Retire its portal while the
+            // original cell/host custody is still available; otherwise arrange can no longer find it.
+            if (!child.IsVisible && child is CuiContainerControl host && Layout is CuiOverlayPanel overlay)
+                overlay.ForceRetirePortaledHost(host);
+            // Retirement can restore focus synchronously. Its callbacks may remove this exact child
+            // and install a same-ID replacement; the old placement must not resurrect its cell.
+            if (!_cells.Contains(cell) || !ReferenceEquals(AuthoredChildOf(cell), child)) return;
             Grid.SetRow(cell, Grid.GetRow(child)); Grid.SetColumn(cell, Grid.GetColumn(child));
             Grid.SetRowSpan(cell, Grid.GetRowSpan(child)); Grid.SetColumnSpan(cell, Grid.GetColumnSpan(child));
             Canvas.SetLeft(cell, Canvas.GetLeft(child)); Canvas.SetTop(cell, Canvas.GetTop(child));
@@ -363,7 +371,16 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             // stale (e.g. 0,0 from when the child was hidden) and the owner mis-reads the floating content
             // size. The gate is bounded to the membership transition (not grid/span/canvas/ZIndex
             // coordinate cascades), so generic placement property changes never trigger re-measure cycles.
-            if (Layout.Children.Contains(cell) != wasPresent) InvalidateMeasure();
+            if (Layout.Children.Contains(cell) != wasPresent)
+            {
+                InvalidateMeasure();
+                // A nested transition under a suppressed floating wrapper cannot rely on the native
+                // layout manager to refresh intervening cached presenters. Invalidate that retained
+                // measure path through the floating host, only for this actual membership change.
+                var ancestors = Layout.GetVisualAncestors().OfType<Layoutable>().ToArray();
+                var floating = Array.FindIndex(ancestors, ancestor => ancestor is CuiContainerControl { Layout: CuiFloatingLayer });
+                for (var position = 0; position <= floating; position++) ancestors[position].InvalidateMeasure();
+            }
         }
         EventHandler<AvaloniaPropertyChangedEventArgs> handler = (_, change) =>
         {

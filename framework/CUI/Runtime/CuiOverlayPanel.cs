@@ -155,6 +155,9 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// re-measure is performed here.</summary>
     private static Size MeasureHost(CuiContainerControl host, double usableWidth)
     {
+        // An authored-hidden host must retire even if its previous native measure is cached.
+        // Only check the host's own gate: the private unplaced wrapper may be hidden during recovery.
+        if (!host.IsVisible) return default;
         host.Measure(new Size(usableWidth, double.PositiveInfinity));
         return new Size(
             Math.Max(0, Math.Min(host.DesiredSize.Width, usableWidth)),
@@ -578,16 +581,17 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
                 if (!targets.Contains(ancestor)) targets.Add(ancestor);
         }
 
-        // Retained authored floating content: observe the floating hosts' authored children, including
-        // hidden children that may be absent from the visual tree while their wrapper is suppressed.
+        // Retained authored floating content: observe the host and its authored subtree, including
+        // hidden nested children that may be absent from the visual tree while their wrapper is suppressed.
         // Membership is re-derived here every arrange; removed/retired children drop out of the observed
         // set and are unsubscribed by DisposeObservers, so no lingering subscriptions survive
-        // removal/detach/dispose. A child's IsVisible/Bounds change invalidates this owner so
+        // removal/detach/dispose. A retained descendant's IsVisible/Bounds change invalidates this owner so
         // Place/MeasureHost re-run against the live retained content.
+        var retained = new HashSet<Control>(targets, ReferenceEqualityComparer.Instance);
         foreach (var host in AllFloatingHosts())
         {
-            foreach (var child in host.AuthoredChildren)
-                if (!targets.Contains(child)) targets.Add(child);
+            foreach (var child in RetainedContent(host))
+                if (retained.Add(child)) targets.Add(child);
         }
 
         if (_observed.Count == targets.Count
@@ -604,6 +608,22 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
             target.PropertyChanged += handler;
             _observed.Add((target, handler));
         }
+    }
+
+    private static IEnumerable<Control> RetainedContent(Control root)
+    {
+        yield return root;
+        // Follow authored/content ownership, not native templates or an unrelated popup tree.
+        IEnumerable<Control> children = root switch
+        {
+            CuiContainerControl container => container.AuthoredChildren,
+            ContentControl { Content: Control child } => [child],
+            Decorator { Child: Control child } => [child],
+            Panel panel => panel.Children,
+            _ => []
+        };
+        foreach (var child in children)
+            foreach (var descendant in RetainedContent(child)) yield return descendant;
     }
 
     /// <summary>Enumerate every authored floating host this panel owns: hosts still present as floating

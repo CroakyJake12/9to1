@@ -294,10 +294,10 @@ public sealed partial class CuiControlLoader : IDisposable
         get { lock (_actionTasksGate) return _pendingActionTasks.Count; }
     }
 
-    private void ObserveActionDispatch(Control control, Control? contextMenuOwner)
+    private void ObserveActionDispatch(Control control, Control? contextMenuOwner, CuiActionInvocation? invocation = null)
     {
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
-            !TryGetActionInvocation(control, out var invocation)) return;
+            invocation is null && !TryGetActionInvocation(control, out invocation)) return;
         var isLocal = invocation.Command is LocalToggleCommand or LocalSetCommand;
         // Dispatch through the OWNED dispatcher captured at load/action-invocation time (the nearest
         // owning query scope, usually a QueryViewport). This owner is retained regardless of current
@@ -390,15 +390,16 @@ public sealed partial class CuiControlLoader : IDisposable
     private async Task DispatchInputSubmitAsync(Task start, TextBox input, ICuiActionDispatcher dispatcher,
         CuiActionInvocation invocation, CuiInputSubmitRequest request)
     {
+        var frame = _committedActionFrame;
         await start;
-        if (!IsActionOriginCurrent(_committedActionFrame, input, frameOwned: true) ||
+        if (!IsActionOriginCurrent(frame, input, frameOwned: false) ||
             !input.IsEffectivelyEnabled || input.IsReadOnly || !input.IsEffectivelyVisible) return;
         await DispatchActionAsync(Task.CompletedTask, input, dispatcher, invocation with
         {
             Parameter = request,
             ParameterContext = null,
             LiveParameter = null,
-            FrameOwned = true
+            FrameOwned = false
         });
     }
 
@@ -461,6 +462,7 @@ public sealed partial class CuiControlLoader : IDisposable
             _repeats.Clear();
             foreach (var (control, handler) in _actionHandlers.ToArray()) Attempt(() => UnwireAction(control, handler));
             _actionHandlers.Clear();
+            foreach (var control in _interactionActions.Keys.ToArray()) Attempt(() => RetireInteractionActions(control));
             foreach (var (input, handler) in _inputSubmitHandlers.ToArray()) Attempt(() => UnwireInputSubmit(input, handler));
             _inputSubmitHandlers.Clear();
             // Close input/action admission FIRST (unwire actions, clear gestures). Owned physical close
@@ -703,6 +705,10 @@ public sealed partial class CuiControlLoader : IDisposable
         var mountingFrame = _committedActionFrame;
         _effectsReady = false; // a rejected preflight leaves prior effects operational
         _effectRoot = null; // a failed replacement must not reactivate the retired root
+        // Retire executable routes before native close/focus callbacks run. In particular an old
+        // Blur/PointerExit during teardown must not be admitted against the new action frame.
+        ClearActionHandlers();
+        _actionInvocations.Clear();
         var retiredKeyboardTooltipHost = _keyboardTooltipHost;
         _keyboardTooltipHost = null;
         retiredKeyboardTooltipHost?.Dispose();
@@ -721,9 +727,7 @@ public sealed partial class CuiControlLoader : IDisposable
         _authoredControls.Clear();
         _observedBindings.Clear();
         _inputPresentation.Clear();
-        ClearActionHandlers();
         _rootOwnsBackdrop = false;
-        _actionInvocations.Clear();
         _documentActions = document.Actions;
         // Commit the validated, pre-selected per-instance local-state frame.
         _declaredVariables.Clear();
@@ -908,9 +912,9 @@ public sealed partial class CuiControlLoader : IDisposable
             }
             else
                 parameter = invocation.ResolveCurrentParameter(); // SAME captured Repeat/query/host context.
-            // An initial effect's parameter getter can synchronously replace/close the loader.
+            // Any parameter getter can synchronously replace/close the loader or retire its row.
             // Admission retains its real pipeline, but no retired frame may start a command.
-            if (invocation.FrameOwned && !IsActionOriginCurrent(frame, control, frameOwned: true)) return;
+            if (!IsActionOriginCurrent(frame, control, invocation.FrameOwned)) return;
             // Prefer a result-reporting dispatcher so CUI can branch on a typed outcome; fall back
             // to the lifetime-aware/generic contracts with an implicit success outcome.
             if (dispatcher is ICuiResultReportingDispatcher reporting)
@@ -1327,7 +1331,7 @@ public sealed partial class CuiControlLoader : IDisposable
             submitInput.TextChanged += submitState.TextChanged;
             _wiredActions.Add(control);
         }
-        else if (control is Button or MenuItem && !_wiredActions.Contains(control)
+        else if (control is Button or MenuItem && !_actionHandlers.ContainsKey(control)
             && TryGetActionInvocation(control, out var actionInvocation)
             && (_actionDispatcher is not null
                 || actionInvocation.Command is LocalToggleCommand or LocalSetCommand
@@ -1345,6 +1349,7 @@ public sealed partial class CuiControlLoader : IDisposable
             _actionHandlers[control] = handler;
             _wiredActions.Add(control);
         }
+        if (control is Button or MenuItem) WireInteractionActions(control, contextMenuOwner);
         // ContextMenu is outside the visual tree while closed. Recurse only the
         // exact menu attached by this loader to the actual owning control.
         if (_ownedContextMenus.TryGetValue(control, out var menu) && ReferenceEquals(control.ContextMenu, menu))
@@ -1380,6 +1385,7 @@ public sealed partial class CuiControlLoader : IDisposable
     {
         foreach (var (control, handler) in _actionHandlers) UnwireAction(control, handler);
         _actionHandlers.Clear();
+        ClearInteractionActions();
         foreach (var (input, handler) in _inputSubmitHandlers) UnwireInputSubmit(input, handler);
         _inputSubmitHandlers.Clear();
         ClearFloatingCloseGestures();
@@ -1993,6 +1999,7 @@ public sealed partial class CuiControlLoader : IDisposable
                 UnwireInputSubmit(input, submitHandler);
             _actionInvocations.Remove(control);
             if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
+            RetireInteractionActions(control);
             _observedBindings.Remove(control);
             _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
             _authoredControls.Remove(control);
@@ -3784,13 +3791,15 @@ public sealed partial class CuiControlLoader : IDisposable
             return;
         }
 
-        var ownedEvent = CuiActionEventContract.OwnedAction(component);
-        if (ownedEvent is not null && CuiActionEventContract.HasCompetingActionRoutes(component))
+        var anyOwnedEvent = component.Children.FirstOrDefault(CuiActionEventContract.IsActionEvent);
+        if (control is Button or MenuItem && CuiActionEventContract.HasCompetingActionRoutes(component))
             throw new CuiRuntimeLoadException(new("CUIE004", CuiDiagnosticSeverity.Error,
-                "The effective Button contains competing direct and ActionEvent routes after Definition merging.", ownedEvent.Span));
-        if (ownedEvent is not null && control is not (Button or MenuItem))
+                "The effective Button contains competing routes for the same event family after Definition merging.", component.Span));
+        if (anyOwnedEvent is not null && control is not (Button or MenuItem))
             throw new CuiRuntimeLoadException(new("CUIE003", CuiDiagnosticSeverity.Error,
-                "The registered Button implementation cannot execute the owned click ActionEvent.", ownedEvent.Span));
+                "The registered Button implementation cannot execute owned ActionEvents.", anyOwnedEvent.Span));
+        ApplyInteractionActionTags(control, component);
+        var ownedEvent = CuiActionEventContract.OwnedAction(component);
         // The parser routes action="Cmd" into CuiComponent.Actions (not Properties),
         // so honor it here; WireBindingsRecursive dispatches via control.Tag.
         string? reference = control.Tag as string;
@@ -3806,21 +3815,24 @@ public sealed partial class CuiControlLoader : IDisposable
             return;
 
         control.Tag = reference;
+        _actionInvocations[control] = CreateActionInvocation(reference, ownedEvent is not null);
+    }
+
+    private CuiActionInvocation CreateActionInvocation(string reference, bool originOnly)
+    {
         var command = reference;
         object? parameter = null;
         if (_documentActions.TryGetValue(reference, out var definition))
         {
             if (definition.LocalTarget is { } localTarget)
             {
-                _actionInvocations[control] = new CuiActionInvocation(LocalToggleCommand, localTarget, null, null, ownedEvent is not null);
-                return;
+                return new CuiActionInvocation(LocalToggleCommand, localTarget, null, null, originOnly);
             }
             // A pure-local transition action declares only <Set> mutations and no command.
             if ((definition.Sets?.Count ?? 0) > 0 && string.IsNullOrEmpty(definition.Command))
             {
-                _actionInvocations[control] = new CuiActionInvocation(LocalSetCommand, null, null, null, ownedEvent is not null,
+                return new CuiActionInvocation(LocalSetCommand, null, null, null, originOnly,
                     null, definition.Sets, definition.ResultTarget);
-                return;
             }
             command = definition.Command;
             if (definition.Parameter is not null && definition.Parameter is not CuiBindingValue)
@@ -3833,7 +3845,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // so a hidden/detached same-frame control keeps its correct local query owner; a retired
         // frame's controls are cleaned up with their invocations and cannot adopt a new/global owner.
         var sets = boundDefinition?.Sets ?? Array.Empty<CuiSetDirective>();
-        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null,
+        return new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, originOnly,
             (_actionDispatcher is CuiQueryViewport or CuiActionShelf ? _actionDispatcher : null), sets, boundDefinition?.ResultTarget);
     }
 

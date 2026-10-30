@@ -234,10 +234,11 @@ internal sealed class CuiFloatingPortal : IDisposable
     private void OnClosed(object? sender, EventArgs e)
     {
         if (_dismissing || _disposed) return;
-        // External/native-policy close: admit once through the ORIGINAL publisher now — a real before/
-        // after close seam. Do NOT synthesize success inside OnClosed while later teardown callbacks
-        // can still fail; settle only after the actual restore/teardown succeeds.
-        if (_closeReceipt is null)
+        // When NativeClose already published the receipt, that outer call owns settlement after
+        // ALL native Closed handlers return. This handler only restores custody; a later handler
+        // can still fail. A direct external close has no outer owner, so admit its restore here.
+        var ownsReceipt = _closeReceipt is null;
+        if (ownsReceipt)
         {
             var receipt = new TaskCompletionSource();
             _closeReceipt = receipt;
@@ -257,7 +258,7 @@ internal sealed class CuiFloatingPortal : IDisposable
         catch (Exception error) { failure = error; }
         try { _owner.OnPortalClosed(this); }
         catch (Exception error) { failure ??= error; }
-        if (_closeReceipt is not null && !_closeReceipt.Task.IsCompleted)
+        if (ownsReceipt && _closeReceipt is not null && !_closeReceipt.Task.IsCompleted)
         {
             if (failure is not null) { _closeFailure = failure; _closeReceipt.TrySetException(failure); }
             else _closeReceipt.TrySetResult();

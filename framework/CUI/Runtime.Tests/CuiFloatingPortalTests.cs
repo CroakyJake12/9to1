@@ -145,8 +145,17 @@ public sealed class CuiFloatingPortalTests
             AutomationProperties.GetAutomationId(b) == id);
 
     private static Control? FindContainer(Control root, string id) =>
-        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(c =>
+        AuthoredTree(root).SingleOrDefault(c =>
             AutomationProperties.GetAutomationId(c) == id);
+
+    private static IEnumerable<Control> AuthoredTree(Control root)
+    {
+        yield return root;
+        var children = root is CuiContainerControl container
+            ? container.AuthoredChildren : root.GetVisualChildren().OfType<Control>();
+        foreach (var child in children)
+            foreach (var descendant in AuthoredTree(child)) yield return descendant;
+    }
 
     private static void SendEscapeToPortaledContent(CuiFloatingPortal portal)
     {
@@ -161,7 +170,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Escaping_floating_cell_engages_portal_with_the_same_retained_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -185,7 +194,7 @@ public sealed class CuiFloatingPortalTests
     public async Task No_safe_space_dismisses_portal_and_safe_space_recovers_the_same_retained_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -216,7 +225,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Off_state_retires_portal_and_reopen_reengages_the_same_retained_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -226,12 +235,13 @@ public sealed class CuiFloatingPortalTests
                 var first = Assert.Single(panel.ActivePortals);
                 Assert.Same(authoredHost, first.Host);
 
-                authoredHost.IsVisible = false;
+                Assert.True(CuiPropertyPresentation.Set(authoredHost, "IsVisible", false, CuiPropertyLevel.Instance, "test"));
+                Assert.False(authoredHost.IsVisible);
                 PumpLayout(window);
                 Assert.Empty(panel.ActivePortals);
-                Assert.Contains(authoredHost, surface.GetVisualDescendants());
+                Assert.Same(authoredHost, first.Cell.Child);
 
-                authoredHost.IsVisible = true;
+                Assert.True(CuiPropertyPresentation.Set(authoredHost, "IsVisible", true, CuiPropertyLevel.Instance, "test"));
                 PumpLayout(window);
                 var reopened = Assert.Single(panel.ActivePortals);
                 Assert.True(reopened.IsOpen);
@@ -245,7 +255,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Inner_visible_content_off_retires_portal_and_on_recovers_same_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -255,12 +265,13 @@ public sealed class CuiFloatingPortalTests
                 var f0 = FindButton(authoredHost, "f0");
                 Assert.NotNull(f0);
 
-                f0!.IsVisible = false;
+                Assert.True(CuiPropertyPresentation.Set(f0!, "IsVisible", false, CuiPropertyLevel.Instance, "test"));
+                Assert.False(f0!.IsVisible);
                 PumpLayout(window);
                 Assert.Empty(panel.ActivePortals);
                 Assert.Contains(authoredHost, surface.GetVisualDescendants());
 
-                f0.IsVisible = true;
+                Assert.True(CuiPropertyPresentation.Set(f0, "IsVisible", true, CuiPropertyLevel.Instance, "test"));
                 PumpLayout(window);
                 var reopened = Assert.Single(panel.ActivePortals);
                 Assert.True(reopened.IsOpen);
@@ -280,7 +291,7 @@ public sealed class CuiFloatingPortalTests
         // state, and the open transition goes through the loader's canonical toggle-fmt close-gesture
         // action path (FloatingCloseRequested -> ObserveActionDispatch -> local toggle) with its real ledger.
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -324,7 +335,7 @@ public sealed class CuiFloatingPortalTests
         // (never manual Measure/Arrange) and assert the wrapper layout-update rate settles instead of
         // growing without bound when the portal geometry is unchanged.
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -392,7 +403,7 @@ public sealed class CuiFloatingPortalTests
         // 0,0 / hidden forever. Drive only the real layout manager/dispatcher (no forced
         // InvalidateMeasure, no manual Measure/Arrange) and assert the opened toolbar is genuinely placed.
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -436,7 +447,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Escape_on_hosted_root_closes_via_authored_action_ledger()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -472,10 +483,11 @@ public sealed class CuiFloatingPortalTests
     public async Task Authored_close_failure_is_acknowledged_through_original_ledger()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             var failed = false;
+            InvalidOperationException? original = null;
             loader.ActionFailed += (_, _) => failed = true;
             Window window = null!;
             try
@@ -488,14 +500,25 @@ public sealed class CuiFloatingPortalTests
                 // portal, and the original loader ledger surfaces the failure acknowledgement.
                 SendEscapeToPortaledContent(portal);
                 PumpLayout(window);
-                try { await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
-                catch (AggregateException) { }
+                original = await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+                Assert.Contains("UndefinedVar", original.Message);
 
                 Assert.True(failed, "the authored close failure must be acknowledged through the original ledger");
                 Assert.Empty(panel.ActivePortals);
                 Assert.Contains(authoredHost, surface.GetVisualDescendants());
             }
-            finally { window?.Close(); }
+            finally
+            {
+                window?.Close(); loader.Dispose();
+                if (original is not null)
+                {
+                    var closeFailure = await Assert.ThrowsAsync<InvalidOperationException>(
+                        () => loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+                    Assert.Same(original, closeFailure);
+                }
+                else await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
         }, CancellationToken.None);
     }
 
@@ -503,7 +526,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Portaled_host_keeps_stable_authored_identity_traversal_reorder()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -534,15 +557,15 @@ public sealed class CuiFloatingPortalTests
     public async Task Reentrant_focus_driven_retirement_keeps_authored_custody_stable()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
             Exception? reentrantFailure = null;
             try
             {
-                var panel = LoadSurface(loader, out var surface, out var authoredHost, out window);
-                surface.EnableCompoundFocus();
+                var panel = Mount(loader, Markup.Replace("id=\"surface\"", "id=\"surface\" CompoundFocus=\"True\""),
+                    out var surface, out var authoredHost, out window);
                 var scope = surface.CompoundFocusScope;
                 Assert.NotNull(scope);
                 var portal = Assert.Single(panel.ActivePortals);
@@ -552,11 +575,14 @@ public sealed class CuiFloatingPortalTests
                 // reconciled. Those callbacks MUST still see the authored host (stable identity) via the
                 // normal cell.Child path, never through a transient active-portal-only recovery.
                 var btn = portal.Host.GetVisualDescendants().OfType<Button>().First();
-                btn.Focus();
+                Assert.True(btn.Focus());
+                Assert.True(scope!.IsFocused);
+                var retireFocusCallbacks = 0;
                 scope!.FocusChanged += (_, focused) =>
                 {
                     if (!focused)
                     {
+                        retireFocusCallbacks++;
                         try
                         {
                             if (!surface.AuthoredChildren.Contains(authoredHost))
@@ -566,12 +592,53 @@ public sealed class CuiFloatingPortalTests
                     }
                 };
                 panel.ForceRetirePortaledHost(authoredHost);
-                PumpLayout(window);
 
                 Assert.Null(reentrantFailure);
+                Assert.True(retireFocusCallbacks > 0);
                 Assert.Empty(panel.ActivePortals);
                 Assert.Contains(authoredHost, surface.AuthoredChildren);
                 Assert.Contains(authoredHost, surface.GetVisualDescendants());
+                // Physical retirement alone does not change the authored open state. Close through
+                // that original route before a later layout may legitimately re-engage the portal.
+                authoredHost.FloatingCloseRequested!.Invoke();
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                PumpLayout(window); Assert.Empty(panel.ActivePortals);
+            }
+            finally { window?.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Visibility_retirement_focus_callback_cannot_resurrect_a_replaced_child()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
+        {
+            using var loader = new CuiControlLoader();
+            Window window = null!;
+            try
+            {
+                var panel = Mount(loader, Markup.Replace("id=\"surface\"", "id=\"surface\" CompoundFocus=\"True\""),
+                    out var surface, out var host, out window);
+                var portal = Assert.Single(panel.ActivePortals);
+                var scope = surface.CompoundFocusScope!;
+                Assert.True(FindButton(host, "f0")!.Focus()); Assert.True(scope.IsFocused);
+                var replacement = new TextBlock { Name = host.Name, Text = "Replacement" };
+                var replaced = false;
+                scope.FocusChanged += (_, focused) =>
+                {
+                    if (focused || replaced) return;
+                    replaced = true;
+                    Assert.True(surface.RemoveChild(host));
+                    surface.AddChild(replacement);
+                    Assert.True(CuiPropertyPresentation.Set(host, "IsVisible", true, CuiPropertyLevel.Instance, "test"));
+                };
+                Assert.True(CuiPropertyPresentation.Set(host, "IsVisible", false, CuiPropertyLevel.Instance, "test"));
+                PumpLayout(window); await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.True(replaced); Assert.False(portal.IsOpen); Assert.Empty(panel.ActivePortals);
+                Assert.DoesNotContain(host, surface.AuthoredChildren);
+                Assert.Same(replacement, Assert.Single(surface.AuthoredChildren, child => child.Name == host.Name));
+                Assert.DoesNotContain(host, surface.GetVisualDescendants());
             }
             finally { window?.Close(); }
         }, CancellationToken.None);
@@ -581,7 +648,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Portal_close_escape_path_retires_and_cleanup_restores_same_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -605,7 +672,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Direct_dismiss_and_dispose_retire_portal_and_restore_same_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -629,7 +696,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Host_removal_while_portaled_retires_portal_and_removes_host()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -666,7 +733,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Conditional_retirement_withdraws_exact_close_callback_before_presentation_disposal()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var state = new ConditionalState();
             using var loader = new CuiControlLoader();
@@ -705,7 +772,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Native_popup_close_is_acknowledged_once_in_owner_ledger_and_repeated_close_never_replays()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -742,24 +809,24 @@ public sealed class CuiFloatingPortalTests
     public async Task Ancestor_retirement_rejects_captured_descendant_gesture_and_preserves_replacement()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var state = new ConditionalState();
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(state);
             var loaded = loader.LoadMarkup(ConditionalMountedMarkup);
             Assert.Empty(loaded.Diagnostics);
-            var ifRoot = (CuiContainerControl)loaded.Root!;
+            var ifRoot = Assert.IsType<ContentControl>(loaded.Root);
             loader.WireBindings(ifRoot);
             Window window = null!;
             try
             {
+                window = MountSurfaceInWindow(ifRoot);
                 var surface = ifRoot.GetVisualDescendants().OfType<CuiContainerControl>()
                     .Single(c => c.Layout is CuiOverlayPanel);
-                var authoredHost = surface.GetVisualDescendants().OfType<CuiContainerControl>()
+                var authoredHost = AuthoredTree(surface).OfType<CuiContainerControl>()
                     .Single(c => c.AuthoredTargetId is not null);
                 var panel = (CuiOverlayPanel)surface.Layout;
-                window = MountSurfaceInWindow(surface);
                 PumpLayout(window);
                 var portal = Assert.Single(panel.ActivePortals);
                 Assert.Same(authoredHost, portal.Host);
@@ -789,9 +856,10 @@ public sealed class CuiFloatingPortalTests
                 // Newer same-ID replacement is unaffected and freshly wired.
                 state.Visible = true;
                 state.NotifyAll();
+                PumpLayout(window);
                 var surface2 = ifRoot.GetVisualDescendants().OfType<CuiContainerControl>()
                     .Single(c => c.Layout is CuiOverlayPanel);
-                var replacement = surface2.GetVisualDescendants().OfType<CuiContainerControl>()
+                var replacement = AuthoredTree(surface2).OfType<CuiContainerControl>()
                     .Single(c => c.AuthoredTargetId is not null);
                 Assert.NotSame(authoredHost, replacement);
                 Assert.NotNull(replacement.FloatingCloseRequested);
@@ -805,7 +873,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Physical_close_failure_is_retained_once_across_disposal_and_quiesces_late_receipt()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -855,7 +923,7 @@ public sealed class CuiFloatingPortalTests
     public async Task Escape_late_Closed_failure_remains_original_in_close_ledger()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             using var loader = new CuiControlLoader();
             Window window = null!;
@@ -964,7 +1032,7 @@ public sealed class CuiFloatingPortalTests
         }
     }
 
-    private static Window MountSurfaceInWindow(CuiContainerControl surface)
+    private static Window MountSurfaceInWindow(Control surface)
     {
         var wrapper = new Border { Width = 200, Height = 120, Child = surface };
         var canvas = new Canvas();

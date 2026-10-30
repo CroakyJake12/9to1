@@ -22,7 +22,7 @@ public sealed class CuiInputSubmitRuntimeTests
     public async Task Named_submit_action_receives_exact_input_and_supported_modifier_identity()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var requests = new List<CuiInputSubmitRequest>(); using var loader = NewLoader((_, parameter, _) =>
             { requests.Add(Assert.IsType<CuiInputSubmitRequest>(parameter)); return ValueTask.CompletedTask; });
@@ -49,16 +49,26 @@ public sealed class CuiInputSubmitRuntimeTests
     }
 
     [Fact]
-    public async Task Shift_enter_and_unsupported_modifier_chords_keep_editor_text_and_do_not_submit()
+    public async Task Shift_enter_and_unsupported_modifier_chords_preserve_native_editor_behavior_and_do_not_submit()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var calls = 0; using var loader = NewLoader((_, _, _) => { calls++; return ValueTask.CompletedTask; });
             var (root, input) = LoadInput(loader);
             var window = new Window { Width = 420, Height = 180, Content = root };
+            using var plainLoader = new CuiControlLoader();
+            var (plainRoot, plainInput) = LoadInput(plainLoader, submit: false);
+            var plainWindow = new Window { Width = 420, Height = 180, Content = plainRoot };
             try
             {
+                plainWindow.Show(); Pump(plainWindow); Assert.True(plainInput.Focus());
+                plainInput.Text = "draft"; plainInput.CaretIndex = plainInput.Text.Length;
+                foreach (var modifiers in new[] { RawInputModifiers.Shift, RawInputModifiers.Control | RawInputModifiers.Alt, RawInputModifiers.Meta })
+                {
+                    plainWindow.KeyPress(Key.Enter, modifiers, PhysicalKey.Enter, null);
+                    plainWindow.KeyRelease(Key.Enter, modifiers, PhysicalKey.Enter, null);
+                }
                 window.Show(); Pump(window); Assert.True(input.Focus()); input.Text = "draft"; input.CaretIndex = input.Text.Length;
                 window.KeyPress(Key.Enter, RawInputModifiers.Shift, PhysicalKey.Enter, null);
                 Assert.Equal("draft\n", input.Text);
@@ -66,9 +76,9 @@ public sealed class CuiInputSubmitRuntimeTests
                 window.KeyPress(Key.Enter, RawInputModifiers.Meta, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 Assert.Equal(0, calls);
-                Assert.Equal("draft\n", input.Text);
+                Assert.Equal(plainInput.Text, input.Text);
             }
-            finally { window.Close(); }
+            finally { window.Close(); plainWindow.Close(); }
         }, CancellationToken.None);
     }
 
@@ -76,7 +86,7 @@ public sealed class CuiInputSubmitRuntimeTests
     public async Task Active_ime_preedit_disabled_and_readonly_inputs_never_dispatch_submit()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var calls = 0; using var loader = NewLoader((_, _, _) => { calls++; return ValueTask.CompletedTask; });
             var (root, input) = LoadInput(loader);
@@ -89,11 +99,19 @@ public sealed class CuiInputSubmitRuntimeTests
                 window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 presenter.PreeditText = null;
                 input.IsReadOnly = true;
+                Assert.True(input.IsReadOnly);
                 window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
-                input.IsReadOnly = false; input.IsEnabled = false;
+                input.IsReadOnly = false;
+                Assert.True(CuiLifecycleProperties.SetLiteral(input, "Interactive", "False", CuiPropertyLevel.Instance, "test"));
+                Assert.False(input.IsEffectivelyEnabled);
                 window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
                 await loader.WhenActionsIdleAsync().WaitAsync(Bound);
                 Assert.Equal(0, calls);
+                Assert.True(CuiLifecycleProperties.SetLiteral(input, "Interactive", "True", CuiPropertyLevel.Instance, "test"));
+                Assert.True(input.Focus()); input.Text = "ready again";
+                window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+                await loader.WhenActionsIdleAsync().WaitAsync(Bound);
+                Assert.Equal(1, calls);
             }
             finally { window.Close(); }
         }, CancellationToken.None);
@@ -103,7 +121,7 @@ public sealed class CuiInputSubmitRuntimeTests
     public async Task A_second_enter_is_not_dispatched_until_the_first_submit_action_settles()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -128,7 +146,7 @@ public sealed class CuiInputSubmitRuntimeTests
     public async Task Edited_input_admits_a_second_submit_while_the_first_source_task_is_retained()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var firstEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var secondEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -179,7 +197,7 @@ public sealed class CuiInputSubmitRuntimeTests
     public async Task Retyping_identical_text_after_a_real_edit_is_a_new_submit_admission()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await CuiHeadlessDispatch.RunAsync(session, async () =>
         {
             var calls = 0;
             using var loader = NewLoader((_, _, _) => { calls++; return ValueTask.CompletedTask; });
@@ -209,9 +227,9 @@ public sealed class CuiInputSubmitRuntimeTests
         return loader;
     }
 
-    private static (Control Root, TextBox Input) LoadInput(CuiControlLoader loader)
+    private static (Control Root, TextBox Input) LoadInput(CuiControlLoader loader, bool submit = true)
     {
-        var loaded = loader.LoadMarkup(Source);
+        var loaded = loader.LoadMarkup(submit ? Source : Source.Replace(" SubmitAction=\"Submit\"", ""));
         Assert.Empty(loaded.Diagnostics); var root = Assert.IsAssignableFrom<Control>(loaded.Root);
         var input = Assert.Single(root.GetVisualDescendants().OfType<TextBox>());
         loader.WireBindings(root); return (root, input);
