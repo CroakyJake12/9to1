@@ -1,17 +1,17 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 10
+checkpoint: checkpoint.md revision 11
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 8
+queue: queue.md revision 9
 branch: main
-base: ee4b96914b74fa945cf09b7af9cda5ca24b88f2a (validated source; use the checkpoint's containing main commit)
+base: aa5e9e1d4b19f65c26466fa87b82c04d1031694e (validated source; use the checkpoint's containing main commit)
 status: CHECKPOINT_READY
 usage_remaining_percent: 8
 usage_observation: approximate owner report received 2026-10-30T09:10:29Z; no live platform feed; <=5% stop condition unchanged
 usage_handoff: handoffs/2026-10-30-usage-update.md
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_report: cycle-reports/2026-10-30-06.md
-cycle_ownership: cycle 6 complete and source released; subsequent owner-usage state update complete, no source or SDK work; no other writer admitted
-next_scheduled_trigger: 2026-10-30T09:10:00Z nominal; existing hourly continuation remains enabled
-next: owner paragraph toolbar cleanup with focused-pane top-toolbar routing, then pin Data destination ownership; preserve Design/native/ARM gates
+cycle_report: cycle-reports/2026-10-30-07.md
+cycle_ownership: cycle 7 complete; source released after validation/commit/push/readback; scheduled trigger recorded 10:05:18 coalesced; no second writer
+next_scheduled_trigger: 2026-10-30T11:10:00Z nominal; existing hourly continuation remains enabled
+next: pin actual Data creation/reference/link ownership for one remaining BF-37 capability; preserve Design/native/ARM gates and bounded usage wrap-up
