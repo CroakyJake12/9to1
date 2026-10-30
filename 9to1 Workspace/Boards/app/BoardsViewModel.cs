@@ -124,6 +124,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RefreshHomeBoardCreationAvailability();
         _session.StatusChanged += (_, status) =>
         {
+            if (Dispatcher.UIThread.CheckAccess()) ValidateInsertionPreview();
+            else Dispatcher.UIThread.Post(ValidateInsertionPreview);
             Set("StatusText", status);
             Set("SaveStateText", MapSaveState(status));
         };
@@ -141,6 +143,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         BoardsTheme.Changed += RefreshPickerOnThemeChange;
         _detachers.Add(() => BoardsTheme.Changed -= RefreshPickerOnThemeChange);
+        if (_session is ContractSessionAdapter previewSession)
+        {
+            void ProjectionChanged()
+            {
+                if (Dispatcher.UIThread.CheckAccess()) ValidateInsertionPreview();
+                else Dispatcher.UIThread.Post(ValidateInsertionPreview);
+            }
+            previewSession.ViewReplaced += ProjectionChanged;
+            _detachers.Add(() => previewSession.ViewReplaced -= ProjectionChanged);
+        }
         ReselectDefaults();
         PushDocumentToBindings();
         Set("StatusText", _session.Status);
@@ -187,6 +199,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     public void SetLanding(bool show)
     {
+        Interlocked.Increment(ref _insertionOperationEpoch);
+        if (show) CancelInsertionPreview();
         Set("IsLanding", show);
         Set("ShowEditor", !show);
         if (show) Set("LandingSearchQuery", _landingSearchQuery);
@@ -958,6 +972,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         CancelSectionIconSuggestion();
         if (!enabled) CloseSectionIconPicker();
         _isEditMode = enabled;
+        Interlocked.Increment(ref _insertionOperationEpoch);
+        if (!enabled) CancelInsertionPreview();
         if (enabled)
         {
             _viewInkOverrides.Clear();
@@ -1319,6 +1335,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Unsubscribe all Attach handlers (used when switching boards).</summary>
     public void Detach()
     {
+        Interlocked.Increment(ref _insertionOperationEpoch);
+        CancelInsertionPreview();
         _attachedRoot = null;
         _textRangeDetached = true;
         Interlocked.Increment(ref _textRangeEpoch);
@@ -2959,63 +2977,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 Set("StatusText", $"Style '{styleId}' was not found");
                 return;
             }
-            if (insertAfterBlockId is null)
+            if (insertAfterBlockId is null && insertBeforeBlockId is null)
             {
                 await ApplyStyleToSelectedAsync(styleId);
                 return;
             }
         }
         var page = CurrentPage();
-        RichBoardBlock block;
-        if (insertionStyle is not null)
-        {
-            block = new RichBoardBlock
-            {
-                Kind = insertionStyle.BlockKind == "heading" ? "heading" : "paragraph",
-                Text = insertionStyle.BlockKind == "heading" ? "New heading" : "New paragraph",
-                StyleId = insertionStyle.Id,
-            };
-        }
-        else
-        {
-            block = kindTag switch
-            {
-                "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? "New paragraph" },
-                "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
-                "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
-                "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },
-                "numbered" => new RichBoardBlock { Kind = "numbered", Text = "New item" },
-                "table" => new RichBoardBlock
-                {
-                    Kind = "table", Text = "New table", TableRows = 2, TableCols = 2,
-                    TableCells = new Dictionary<string, string>(StringComparer.Ordinal)
-                    {
-                        ["0,0"] = string.Empty, ["0,1"] = string.Empty,
-                        ["1,0"] = string.Empty, ["1,1"] = string.Empty,
-                    },
-                },
-                "image" => new RichBoardBlock
-                {
-                    Kind = "image", Text = "image",
-                    Image = new RichImageView { DisplayName = "image (choose a file)", MediaType = "image/png" },
-                },
-                "divider" => new RichBoardBlock
-                {
-                    Kind = "divider",
-                    Divider = new RichDividerView { Thickness = 1, LineStyle = "solid", Color = "#FF5F6368" },
-                },
-                "graph" => new RichBoardBlock
-                {
-                    Kind = "graph",
-                    Graph = new RichGraphView
-                    {
-                        Expressions = [new RichGraphExpressionView { Text = "y = x" }],
-                        XMin = -10, XMax = 10, YMin = -10, YMax = 10,
-                    },
-                },
-                _ => new RichBoardBlock { Kind = "paragraph", Text = "New block" },
-            };
-        }
+        var block = CreateInsertionBlock(kindTag, initialText, insertionStyle);
         var insertionAnchor = insertAfterBlockId ?? _selectedBlockId;
         var selectedIndex = page.Blocks.FindIndex(item => item.Id == insertionAnchor);
         if (insertAfterBlockId is not null && selectedIndex < 0)
@@ -3053,58 +3022,6 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             await AttachFileAsync(block.Id, attachmentPath);
     }
 
-    /// <summary>Owner's block plus-control menu, 29 October: Add Block Above / Add Block Below /
-    /// Replace Current Block. Every choice ends in the same real insert path, so there is one factory for
-    /// block kinds and one set of revision-checked edits, not three copies of the insertion logic.</summary>
-    public async Task InsertKindRelativeToAsync(string kindTag, string? blockId, string position,
-        bool focusEditor = true)
-    {
-        if (!RequireEditMode()) return;
-        switch (position.Trim().ToLowerInvariant())
-        {
-            case "above":
-                if (blockId is null || !CurrentPage().Blocks.Any(item => item.Id == blockId))
-                {
-                    Set("StatusText", "That block is no longer on this page. Choose it again and try once more.");
-                    return;
-                }
-                await InsertKindAsync(kindTag, insertBeforeBlockId: blockId, focusEditor: focusEditor);
-                return;
-            case "below":
-                await InsertKindAsync(kindTag, blockId, focusEditor: focusEditor);
-                return;
-            case "replace":
-                await ReplaceBlockWithKindAsync(kindTag, blockId, focusEditor: focusEditor);
-                return;
-            default:
-                Set("StatusText", "Choose Add Block Above, Add Block Below or Replace Current Block.");
-                return;
-        }
-    }
-
-    /// <summary>Replaces a block in place with the chosen type. The new block is created by the same
-    /// factory and inserted at the old block's position before the old one is removed, so the page order
-    /// never shifts and nothing between the two states is left missing. Recorded honestly: this is two
-    /// document edits, so one visible replacement can take two undo steps.</summary>
-    public async Task ReplaceBlockWithKindAsync(string kindTag, string? blockId, bool focusEditor = true)
-    {
-        if (!RequireEditMode()) return;
-        var page = CurrentPage();
-        var replaced = page.Blocks.FirstOrDefault(item => item.Id == blockId);
-        if (replaced is null)
-        {
-            Set("StatusText", "That block is no longer on this page. Choose it again and try once more.");
-            return;
-        }
-        await InsertKindAsync(kindTag, insertBeforeBlockId: replaced.Id, focusEditor: focusEditor);
-        page = CurrentPage();
-        var stale = page.Blocks.FirstOrDefault(item => item.Id == replaced.Id);
-        if (stale is null) return;
-        page.Blocks.Remove(stale);
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
-    }
 
     public async Task ApplyStyleToSelectedAsync(string styleId)
     {
@@ -4372,6 +4289,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private void PushDocumentToBindings()
     {
+        TrackInsertionOrigin();
+        ValidateInsertionPreview();
         CancelSectionIconSuggestion();
         var doc = _session.Document;
         var page = CurrentPage();

@@ -99,8 +99,10 @@ public static class BlockRenderer
             {
                 var run = new List<RichBoardBlock>();
                 var runStart = index;
+                var spatialParent = vm.IsFreeLayout && absoluteBlocksHost is not null ? ParentKey(block.Id) : null;
                 while (index < blocks.Count && IsListKind(blocks[index].Kind) &&
-                    blocks[index].Layout != HavenRichBlockLayouts.Absolute)
+                    blocks[index].Layout != HavenRichBlockLayouts.Absolute &&
+                    (spatialParent is null || ParentKey(blocks[index].Id) == spatialParent))
                     run.Add(blocks[index++]);
                 // Locked vertical mode keeps item rows independently reorderable.
                 // Free mode treats the canonical list parent as one spatial block,
@@ -423,7 +425,7 @@ public static class BlockRenderer
         if (vm.IsEditMode)
         {
             insert = ToolbarBuilder.CreateInsertButton(
-                vm, "Insert a block after this note", insertAfterBlockId) as Button
+                vm, "Insert a block beside this note", insertAfterBlockId, selectId) as Button
                 ?? throw new InvalidOperationException("The insert affordance must remain a button.");
             ConfigureBlockGutterButton(insert, insertAction: true);
             insert.Margin = new Thickness(0);
@@ -488,6 +490,7 @@ public static class BlockRenderer
         var shell = new Panel();
         shell.Children.Add(row);
         shell.Children.Add(outline);
+        shell.Children.Add(BlockInsertionPreviewCui.Build(vm, selectId));
         var border = new Border
         {
             Child = shell,

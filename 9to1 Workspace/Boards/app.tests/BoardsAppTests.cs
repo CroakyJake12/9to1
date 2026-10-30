@@ -120,11 +120,15 @@ public sealed class BoardsAppTests
         foreach (var turn in new[] { "TurnInto:paragraph", "TurnInto:heading", "TurnInto:checklist",
             "TurnInto:bulleted", "TurnInto:numbered", "TurnInto:table", "TurnInto:image", "TurnInto:divider" })
             Assert.Contains(turn, menu, StringComparison.Ordinal);
-        // CUI is the authoring language for presentation: these rows need the hover/preview hooks the
-        // owner asked for (insertion line on Above/Below, red outline on Replace), so their absence in
-        // the authored document is recorded here rather than left as an unmeasured assumption.
-        Assert.DoesNotContain("PointerEntered", menu, StringComparison.Ordinal);
-        Assert.DoesNotContain("BlockInsertionPreview", menu, StringComparison.Ordinal);
+        // BF-37 belongs to the plus destination document, not the grip menu. Verify the actual authored
+        // routes and overlay; mounted pointer/keyboard tests separately establish runtime behaviour.
+        var destinations = ParseCuiWithoutErrors(Path.Combine(directory, "InsertDestinationCui.cui"));
+        foreach (var type in new[] { "PointerEnter", "PointerExit", "Focused", "Blurred" })
+            Assert.Contains("Type=\"" + type + "\"", destinations, StringComparison.Ordinal);
+        var preview = ParseCuiWithoutErrors(Path.Combine(directory, "BlockInsertionPreviewCui.cui"));
+        foreach (var id in new[] { "InsertionAboveEdge", "InsertionBelowEdge", "InsertionReplaceOutline", "InsertionReplaceTint" })
+            Assert.Contains("ID=\"" + id + "\"", preview, StringComparison.Ordinal);
+        Assert.Contains("Interactive=\"False\"", preview, StringComparison.Ordinal);
     }
 
     /// <summary>Parses one authored Boards CUI document and fails with its real compiler diagnostics.

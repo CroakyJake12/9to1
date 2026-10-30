@@ -15,6 +15,9 @@ public static class BoardsCuiDocuments
     public const string GraphSlidersSourceName = "GraphSliderCui.cui";
     public const string BlockGripSourceName = "BlockGripCui.cui";
     public const string BlockActionsMenuSourceName = "BlockActionsMenuCui.cui";
+    public const string InsertionPreviewSourceName = "BlockInsertionPreviewCui.cui";
+    public const string InsertDestinationSourceName = "InsertDestinationCui.cui";
+    public const string InsertMenuSurfaceSourceName = "InsertMenuSurfaceCui.cui";
     public const string BoardPropertiesSourceName = "BoardProperties.cui";
     public const string StartupFailureSourceName = "BoardsStartupFailure.cui";
     private static readonly Lazy<IReadOnlyDictionary<string, CuiDocument>> CompiledDocuments =

@@ -1,0 +1,16 @@
+<Cui>
+  <Page>
+    <Container Type="Overlay" ID="BlockInsertionPreview" Interactive="False" Background="Transparent">
+      <Container Type="Overlay" ID="InsertionAboveEdge" Active="{Binding Above}" Height="3"
+                 VerticalAlignment="Top" Background="{Resource CuiAccentBrush}" />
+      <Container Type="Overlay" ID="InsertionBelowEdge" Active="{Binding Below}" Height="3"
+                 VerticalAlignment="Bottom" Background="{Resource CuiAccentBrush}" />
+      <Container Type="Overlay" ID="InsertionReplaceOutline" Active="{Binding Replace}"
+                 BorderWidth="2" BorderColor="{Resource CuiAccentNegativeBrush}" CornerRadius="7"
+                 Background="Transparent">
+        <Container Type="Overlay" ID="InsertionReplaceTint" Background="{Resource CuiAccentNegativeBrush}"
+                   Opacity="0.16" CornerRadius="6" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

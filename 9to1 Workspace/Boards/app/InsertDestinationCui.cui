@@ -1,0 +1,48 @@
+<Cui>
+  <Actions>
+    <Action Name="ChooseAbove" Command="ChooseDestination" Parameter="{Binding AboveChoose}" />
+    <Action Name="ChooseBelow" Command="ChooseDestination" Parameter="{Binding BelowChoose}" />
+    <Action Name="ChooseReplace" Command="ChooseDestination" Parameter="{Binding ReplaceChoose}" />
+    <Action Name="AbovePointerEnter" Command="Preview" Parameter="{Binding AbovePointerEnter}" />
+    <Action Name="AbovePointerExit" Command="Preview" Parameter="{Binding AbovePointerExit}" />
+    <Action Name="AboveFocusEnter" Command="Preview" Parameter="{Binding AboveFocusEnter}" />
+    <Action Name="AboveFocusExit" Command="Preview" Parameter="{Binding AboveFocusExit}" />
+    <Action Name="BelowPointerEnter" Command="Preview" Parameter="{Binding BelowPointerEnter}" />
+    <Action Name="BelowPointerExit" Command="Preview" Parameter="{Binding BelowPointerExit}" />
+    <Action Name="BelowFocusEnter" Command="Preview" Parameter="{Binding BelowFocusEnter}" />
+    <Action Name="BelowFocusExit" Command="Preview" Parameter="{Binding BelowFocusExit}" />
+    <Action Name="ReplacePointerEnter" Command="Preview" Parameter="{Binding ReplacePointerEnter}" />
+    <Action Name="ReplacePointerExit" Command="Preview" Parameter="{Binding ReplacePointerExit}" />
+    <Action Name="ReplaceFocusEnter" Command="Preview" Parameter="{Binding ReplaceFocusEnter}" />
+    <Action Name="ReplaceFocusExit" Command="Preview" Parameter="{Binding ReplaceFocusExit}" />
+  </Actions>
+  <Page>
+    <Container Type="Vertical Stack" ID="InsertDestinations" CellGap="2" Background="Transparent">
+      <Text Text="ADD WHERE" FontSize="11" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}" />
+      <Button Type="Menu Item" ID="InsertAbove" Content="Add Block Above" AccessibleName="Add Block Above"
+              AccessibleDescription="{Binding AboveDescription}" IsEnabled="{Binding CanAbove}"
+              Action="ChooseAbove" Height="34" MinHeight="34">
+        <ActionEvent Type="PointerEnter" Action="AbovePointerEnter" />
+        <ActionEvent Type="PointerExit" Action="AbovePointerExit" />
+        <ActionEvent Type="Focused" Action="AboveFocusEnter" />
+        <ActionEvent Type="Blurred" Action="AboveFocusExit" />
+      </Button>
+      <Button Type="Menu Item" ID="InsertBelow" Content="Add Block Below" AccessibleName="Add Block Below"
+              AccessibleDescription="{Binding BelowDescription}" IsEnabled="{Binding CanBelow}"
+              Action="ChooseBelow" Height="34" MinHeight="34">
+        <ActionEvent Type="PointerEnter" Action="BelowPointerEnter" />
+        <ActionEvent Type="PointerExit" Action="BelowPointerExit" />
+        <ActionEvent Type="Focused" Action="BelowFocusEnter" />
+        <ActionEvent Type="Blurred" Action="BelowFocusExit" />
+      </Button>
+      <Button Type="Menu Item" ID="InsertReplace" Content="Replace Current Block" AccessibleName="Replace Current Block"
+              AccessibleDescription="{Binding ReplaceDescription}" IsEnabled="{Binding CanReplace}"
+              Action="ChooseReplace" Height="34" MinHeight="34">
+        <ActionEvent Type="PointerEnter" Action="ReplacePointerEnter" />
+        <ActionEvent Type="PointerExit" Action="ReplacePointerExit" />
+        <ActionEvent Type="Focused" Action="ReplaceFocusEnter" />
+        <ActionEvent Type="Blurred" Action="ReplaceFocusExit" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

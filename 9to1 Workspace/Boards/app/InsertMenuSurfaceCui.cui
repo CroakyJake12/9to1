@@ -1,0 +1,9 @@
+<Cui>
+  <Page>
+    <Container Type="Overlay" ID="InsertMenuSurface" Padding="12" CornerRadius="8" BorderWidth="1"
+               BorderColor="{Resource CuiLineBrush}" Background="{Resource CuiFloatingSurfaceMaterial}"
+               MinWidth="324" MaxWidth="444" AccessibleName="Insert a block">
+      <Container Type="Vertical Stack" ID="InsertMenuContents" CellGap="0" />
+    </Container>
+  </Page>
+</Cui>

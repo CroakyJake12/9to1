@@ -12,25 +12,16 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using CakeOS.Cui.Runtime;
 using System.Globalization;
+using System.Runtime.CompilerServices;
+using Avalonia.VisualTree;
 
 namespace CakeOS.Apps.Boards.App;
 
 public static class ToolbarBuilder
 {
-    /// <summary>State of one open insert menu. A block-scoped menu first asks WHERE (the owner's
-    /// 29 October plus menu), then WHAT; the toolbar control keeps the older single-stage behaviour.</summary>
-    private sealed class InsertMenuContext(Popup popup, TextBox search)
-    {
-        public Popup Popup { get; } = popup;
-        public TextBox Search { get; } = search;
-        /// <summary>The block this menu was opened beside. Null for the toolbar plus control.</summary>
-        public string? AnchorBlockId { get; init; }
-        /// <summary>above | below | replace once chosen; null while the destination stage is showing.</summary>
-        public string? Placement { get; set; }
-        /// <summary>Re-runs the single fill path for this menu, so the destination stage and the type list
-        /// are one code path rather than two copies that can drift.</summary>
-        public Action? Refill { get; set; }
-    }
+    private static readonly ConditionalWeakTable<Control, InsertMenuContext> InsertMenus = new();
+    internal static InsertMenuContext? InsertMenuFor(Control control) =>
+        InsertMenus.TryGetValue(control, out var context) ? context : null;
 
     private static readonly (string Name, string Hex)[] TextColors =
     [
@@ -402,14 +393,15 @@ public static class ToolbarBuilder
     }
 
     public static Control CreateInsertButton(
-        BoardsViewModel vm, string? tooltip = null, string? insertAfterBlockId = null)
+        BoardsViewModel vm, string? tooltip = null, string? insertAfterBlockId = null, string? previewBlockId = null)
     {
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         SetQuietToolbarControl(button, selected: false, "Boards toolbar insert action");
-        var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom, IsLightDismissEnabled = true };
+        var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom,
+            IsLightDismissEnabled = true, ShouldUseOverlayLayer = true };
         // A manually owned Popup needs the trigger's logical theme ancestry.
         button.AttachedToVisualTree += (_, _) => ((ISetLogicalParent)popup).SetParent(button);
-        button.DetachedFromVisualTree += (_, _) => { popup.Close(); ((ISetLogicalParent)popup).SetParent(null); };
+        ((ISetLogicalParent)popup).SetParent(button);
         CuiPopupPresentation.RequestTransparency(popup);
         var panel = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), MinWidth = 300, MaxWidth = 420,
             Height = 384, MaxHeight = 384 };
@@ -418,10 +410,15 @@ public static class ToolbarBuilder
         CuiPropertyPresentation.Set(search, "Height", 36d, CuiPropertyLevel.Instance, "Boards insert search geometry");
         CuiPropertyPresentation.Set(search, "MinHeight", 36d, CuiPropertyLevel.Instance, "Boards insert search geometry");
         CuiPropertyPresentation.Set(search, "MaxHeight", 36d, CuiPropertyLevel.Instance, "Boards insert search geometry");
-        button.Tag = new InsertMenuContext(popup, search) { AnchorBlockId = insertAfterBlockId };
+        var context = new InsertMenuContext(vm, popup, search)
+            { AnchorBlockId = insertAfterBlockId, RowBlockId = previewBlockId ?? insertAfterBlockId };
+        button.Tag = context;
+        InsertMenus.Add(button, context);
+        popup.Closed += (_, _) => context.Close();
+        button.DetachedFromVisualTree += (_, _) => { context.Dispose(); ((ISetLogicalParent)popup).SetParent(null); };
         panel.Tag = button.Tag;
         Avalonia.Automation.AutomationProperties.SetName(search, "Search insert menu");
-        var list = new StackPanel { Orientation = Orientation.Vertical };
+        var list = new StackPanel { Orientation = Orientation.Vertical, Tag = button.Tag };
         panel.Children.Add(search);
         var scroll = new ScrollViewer { Content = list,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
@@ -430,13 +427,17 @@ public static class ToolbarBuilder
         panel.Children.Add(scroll);
         panel.AddHandler(InputElement.KeyDownEvent, (_, args) =>
         {
-            if (args.Key == Key.Escape) { popup.Close(); args.Handled = true; return; }
-            var choices = list.Children.OfType<Button>().Where(item => item.IsEnabled).ToArray();
+            if (args.Handled || !popup.IsOpen || args.KeyModifiers != KeyModifiers.None) return;
+            if (args.Key == Key.Escape) { context.Close(); button.Focus(); args.Handled = true; return; }
+            var choices = list.GetVisualDescendants().OfType<Control>()
+                .Where(item => item is Button or MenuItem && item.IsEffectivelyEnabled &&
+                    item.IsEffectivelyVisible && item.IsHitTestVisible && item.Focusable).ToArray();
             if (choices.Length == 0) return;
             var current = Array.FindIndex(choices, item => item.IsKeyboardFocusWithin);
             if (args.Key == Key.Enter && (current >= 0 || search.IsKeyboardFocusWithin))
             {
-                choices[Math.Max(0, current)].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var choice = choices[Math.Max(0, current)];
+                choice.RaiseEvent(new RoutedEventArgs(choice is MenuItem ? MenuItem.ClickEvent : Button.ClickEvent));
                 args.Handled = true; return;
             }
             var next = args.Key switch { Key.Down => Math.Min(current + 1, choices.Length - 1),
@@ -447,54 +448,48 @@ public static class ToolbarBuilder
         }, RoutingStrategies.Tunnel);
         void Fill(string filter)
         {
+            context.RetireDestination();
             list.Children.Clear();
-            if (list.Tag is InsertMenuContext scoped && scoped.AnchorBlockId is not null && scoped.Placement is null)
+            if (context.AnchorBlockId is not null && context.Owner is null) return;
+            if (context.AnchorBlockId is not null && context.Placement is null)
             {
-                AddDestinationStage(list, scoped, search, vm);
+                list.Children.Add(context.CreateDestination());
                 return;
             }
-            if (list.Tag is InsertMenuContext chosen && chosen.AnchorBlockId is not null && chosen.Placement is not null)
+            if (context.AnchorBlockId is not null && context.Placement is not null)
             {
-                list.Children.Add(DestinationHeader(chosen.Placement!, () =>
+                list.Children.Add(DestinationHeader(context.Placement, () =>
                 {
-                    chosen.Placement = null;
+                    context.Placement = null;
                     Fill(search.Text ?? string.Empty);
+                    search.Focus();
                 }));
             }
             if (vm.DatabaseBlocks.IsAvailable)
             {
                 AddGroup(list, "Database", [("New database", "database"), ("Tab View", "database-tabs"),
-                    ("Timeline View", "database-timeline")], vm, popup, filter, (InsertMenuContext)button.Tag);
+                    ("Timeline View", "database-timeline")], vm, popup, filter, context);
                 if (vm.HasPendingDatabaseLink)
-                    AddGroup(list, "Recovery", [("Link created database", "database-retry")], vm, popup, filter, (InsertMenuContext)button.Tag);
+                    AddGroup(list, "Recovery", [("Link created database", "database-retry")], vm, popup, filter, context);
             }
-            if (vm.CanAddTabber) AddGroup(list, "Containers", [("Tabber", "tabber")], vm, popup, filter, (InsertMenuContext)button.Tag);
+            if (vm.CanAddTabber) AddGroup(list, "Containers", [("Tabber", "tabber")], vm, popup, filter, context);
             AddGroup(list, "Text", [
                 ("Paragraph", "paragraph"), ("Title", "style:title"), ("Header", "style:heading-1"),
                 ("Quote", "style:quote"), ("Code", "style:code"),
-            ], vm, popup, filter, (InsertMenuContext)button.Tag);
+            ], vm, popup, filter, context);
             var customs = vm.StyleList.Where(s => !s.IsBuiltIn).ToList();
             if (customs.Count > 0)
-                AddGroup(list, "Custom styles", customs.Select(s => (s.Name, "style:" + s.Id)).ToList(), vm, popup, filter, (InsertMenuContext)button.Tag);
+                AddGroup(list, "Custom styles", customs.Select(s => (s.Name, "style:" + s.Id)).ToList(), vm, popup, filter, context);
             AddGroup(list, "Content", [
                 ("Checklist", "checklist"), ("Bulleted list", "bulleted"), ("Numbered list", "numbered"),
                 ("Table", "table"), ("Graph", "graph"), ("Image…", "image"), ("Attachment…", "attachment"),
-            ], vm, popup, filter, (InsertMenuContext)button.Tag);
-            AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter, (InsertMenuContext)button.Tag);
+            ], vm, popup, filter, context);
+            AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter, context);
         }
-        ((InsertMenuContext)panel.Tag!).Refill = () => Fill(search.Text ?? string.Empty);
+        context.Refill = () => Fill(search.Text ?? string.Empty);
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
         Fill(string.Empty);
-        popup.Child = new Border
-        {
-            Background = BoardsTheme.CardBrush,
-            BorderBrush = BoardsTheme.BorderBrush,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(12),
-            MaxHeight = 420,
-            Child = panel,
-        };
+        popup.Child = context.CreateSurface(panel);
         button.Click += (_, _) =>
         {
             OpenInsertMenu(button);
@@ -505,14 +500,10 @@ public static class ToolbarBuilder
     public static bool OpenInsertMenu(Control button)
     {
         ArgumentNullException.ThrowIfNull(button);
-        if (button.Tag is not InsertMenuContext context) return false;
-        context.Search.Text = string.Empty;
-        context.Popup.Open();
-        context.Search.Focus();
-        return true;
+        return InsertMenuFor(button)?.Open() == true;
     }
 
-    public static bool HasInsertMenu(Control button) => button.Tag is InsertMenuContext;
+    public static bool HasInsertMenu(Control button) => InsertMenuFor(button) is not null;
 
     private static void AddGroup(
         StackPanel list, string heading, IReadOnlyList<(string Label, string Tag)> entries,
@@ -545,63 +536,25 @@ public static class ToolbarBuilder
             SetQuietToolbarControl(item, selected: false, "Boards insertion menu item");
             CuiPropertyPresentation.Attach(item);
             Avalonia.Automation.AutomationProperties.SetName(item, "Insert " + label);
+            if (context.AnchorBlockId is not null &&
+                vm.RelativeInsertionUnavailableReason(tag, context.AnchorBlockId, context.Placement) is { } unavailable)
+            {
+                item.IsEnabled = false;
+                ToolTip.SetTip(item, unavailable);
+                Avalonia.Automation.AutomationProperties.SetHelpText(item, unavailable);
+            }
+            var opening = context.Opening;
+            var contentVersion = context.ContentVersion;
+            var owner = context.Owner;
+            var placement = context.Placement;
             item.Click += (_, _) =>
             {
-                popup.Close();
-                // The destination the owner chose in the plus menu decides where this type lands, so the
-                // same type list serves Add Block Above / Below and Replace Current Block.
-                if (context.AnchorBlockId is not null && !string.IsNullOrWhiteSpace(context.Placement))
-                    _ = vm.InsertKindRelativeToAsync(tag, context.AnchorBlockId, context.Placement!);
-                else
-                    _ = vm.InsertKindAsync(tag, context.AnchorBlockId);
+                context.Commit(tag, opening, contentVersion, owner, placement);
             };
             list.Children.Add(item);
         }
     }
 
-
-    /// <summary>The owner's plus-menu destinations, in the order and wording of the 29 October mockup.</summary>
-    private static void AddDestinationStage(StackPanel list, InsertMenuContext context, TextBox search,
-        BoardsViewModel vm)
-    {
-        list.Children.Add(new TextBlock
-        {
-            Text = "ADD WHERE",
-            FontSize = 11,
-            FontWeight = FontWeight.SemiBold,
-            Foreground = BoardsTheme.SecondaryTextBrush,
-            Margin = new Thickness(0, 0, 0, 4),
-        });
-        foreach (var (label, key, tip) in new[]
-        {
-            ("Add Block Above", "above", "Put a new block in front of this one"),
-            ("Add Block Below", "below", "Put a new block after this one"),
-            ("Replace Current Block", "replace", "Turn this block into the type you choose next"),
-        })
-        {
-            var row = new Button
-            {
-                Content = label,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(8, 6),
-            };
-            SetQuietToolbarControl(row, selected: false, "Boards insert destination item");
-            CuiPropertyPresentation.Attach(row);
-            Avalonia.Automation.AutomationProperties.SetName(row, label);
-            ToolTip.SetTip(row, tip);
-            row.Click += (_, _) =>
-            {
-                context.Placement = key;
-                // Hand control back to the one fill path: the destination is remembered and the type list
-                // is drawn by the same code that always drew it.
-                context.Refill?.Invoke();
-            };
-            list.Children.Add(row);
-        }
-    }
 
     private static Control DestinationHeader(string placement, Action changeBack)
     {

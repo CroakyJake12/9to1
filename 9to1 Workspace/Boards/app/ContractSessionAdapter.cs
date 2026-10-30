@@ -20,7 +20,7 @@ public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string 
 public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
 public sealed record BoardBlockConversionCapability(bool CanApply, string Code);
 
-public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities,
+public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities,
     IBoardSessionLifetime
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -1116,6 +1116,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
         _baselineJson = ProjectedViewJson();
     }
 
+    internal event Action? ViewReplaced;
+
     private void RefreshView()
     {
         // Undo/redo can restore equal revision/content; never revive an issued range.
@@ -1137,6 +1139,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
                 !issued.BlockId.Contains(':') || !CurrentListRowTicket(issued));
             _issuedBlockActionViewStamp = null;
         }
+        ViewReplaced?.Invoke();
     }
 
     private void SetError(string message)
@@ -1929,6 +1932,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         if (_disposed) return;
         _disposed = true;
+        ViewReplaced?.Invoke();
         await _mergeGate.WaitAsync().ConfigureAwait(false);
         try
         {

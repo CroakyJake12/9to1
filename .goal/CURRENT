@@ -5,11 +5,11 @@ golden_rules: golden-rules.md revision 1
 queue: queue.md revision 3
 branch: main
 base: e17b7ee164080481464ceb500bcb0db8862bdb18 (validated source; use the checkpoint's containing main commit)
-status: CHECKPOINT_READY
+status: ACTIVE
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
 cycle_report: cycle-reports/2026-10-30-02.md
-cycle_ownership: cycle 2 completed and released; next writer must reconcile current main/dirty work and claim ACTIVE
-next_scheduled_trigger: 2026-10-30T03:10:00Z nominal; 01:10 completed as cycle 2, overlapping 02:10 coalesced into its report
+cycle_ownership: cycle 3 owns Boards BF-37 preview implementation and focused tests from clean refreshed main a09091a6; no other writer admitted
+next_scheduled_trigger: 2026-10-30T04:10:00Z nominal; 03:10 cycle executing
 next: visible BF-37 insertion/replace preview using checked CUI pointer/focus actions; retain Design and native/ARM gates

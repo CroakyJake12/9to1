@@ -110,3 +110,116 @@ Next: use these authored event routes for the pinned BF-37 flow. Keep pointer/fo
 publish transient state without rebuilding the popup anchor, preserve chosen destination through the type
 stage and verify actual geometry/history/cleanup/isolation. Unsupported Style overlays, Hover/OnceHover,
 external targets, propagation and Event context remain explicit CUI gaps.
+
+## Cycle 3 flow and source ownership
+
+Starting clean refreshed main a09091a6, cycle 3 owns Boards insertion menu, transient preview state,
+overlay and focused tests. The flow above remains the required behaviour. A live source review found
+the existing inline menu never enters its destination stage: Fill reads list.Tag while only the trigger
+and panel receive the context. First reproduce that with the actual mounted plus popup, then restore
+the destination route and author its pointer/focus actions and overlay in CUI.
+
+Keep rendered row identity separate from canonical insertion identity for projected list rows. Choosing
+a destination pins the preview before retiring destination controls; capture the commit target before
+closing the popup. Reopen explicitly resets/refills even when search is already empty. Keyboard traversal
+must reach nested authored rows. Popup close/detach, invalid targets, page/session/View changes and
+disposal revoke the owning generation. Preview publication must not rebuild the popup anchor or change
+document/history/geometry. The existing type factory remains the actual insertion path; retain and repair
+any destination-fidelity failures found by the mounted journey rather than hiding them behind VM-only tests.
+
+## Cycle 3 result — visible preview and destination fidelity
+
+The actual inline plus now opens the authored Above/Below/Replace destinations. CUI pointer and focus
+actions publish transient session/page/row/menu-generation state; the zero-footprint CUI overlay shows
+the actual top/bottom edge or red replacement outline/tint. Choosing a destination pins it through the
+type stage. Change, Escape, dismissal, commit, row loss/detach, projection replacement, page/View changes
+and disposal retire the appropriate owner. Pointer and focus channels are independent; retired stages
+and old type buttons cannot commit a new destination. Two live Boards remain isolated.
+
+The floating frame is now authored in CUI. Initial headless captures exposed a native-background/theme
+mismatch despite passing behavioural tests; the corrected frame uses the same theme resources as its
+rows. The existing type list and search remain hosted inside it. These are component rendering checks,
+not a claim that the installed native application was updated.
+
+Enabling the real destination stage exposed unsafe existing insertion behavior, repaired in this same
+milestone so choosing a preview has a truthful result:
+
+- Replacement prepares and validates the new block before one canonical, revision-fenced mutation.
+  Missing styles, unsupported operations and cancelled/unreadable/invalid image choices preserve the
+  original. Successful replacement is one undo step. Relative style Above inserts instead of formatting
+  the selected block. The existing block factory/import mapping is reused.
+- Projected list-item insertion splits the canonical list only where needed, retaining item identities,
+  formatting and order; whole-list insertion uses the complete parent. Its content stamp covers all rows
+  before asynchronous preparation and under both mutation gates, protecting later-item draft edits.
+  Free-layout rendering now groups one canonical parent per preview/handle, so adjacent distinct lists
+  cannot share a misleading target outline.
+- Image bytes are decoded before mutation, with natural display sizing retained even for a valid
+  9001-pixel source. Leaving and returning to a page, View mode, disposal or a changed target invalidates
+  pending insertion. Whole positioned-block replacement preserves its geometry.
+
+## Cycle 3 validation and retained failures
+
+Fresh full Boards Release suite: **302 executed, 302 passed, zero failures/skips**, including 53 new
+preview and persisted-insertion cases. SDK **10.0.401**, serial bounded ordinary Layer1 runner, source
+unchanged throughout the final run, no guard violation, peak process-group RSS **908,763,136 bytes**.
+The final run compiled the affected application and all nine embedded CUI documents. No shared CUI
+runtime/compiler source changed in this cycle; cycle 2's separately pinned evidence remains historical.
+
+Actual mounted raw pointer and keyboard input checks cover destination selection, edge geometry,
+noninteractive overlays, unchanged content/status/undo/row/editor bounds and no rebuild on preview,
+type-stage retention, stale callbacks, cleanup, two-Board isolation and genuinely disabled unsupported
+rows. Real contract-backed destination → type → commit → save/reopen journeys verify Above/Below/Replace
+placement and exact single undo. First/middle/last list boundaries retain IDs, item formatting, order and
+history. Additional checks cover whole lists, adjacent free-layout lists, cancelled/missing/corrupt/large
+image files, page-away-and-back refusal, pending later-item drafts and positioned-block geometry.
+
+All **25 attempts** remain recorded in
+[cycle 3 evidence](boards-insertion-preview-cycle3-2026-10-30.evidence.json), including source/SDK pins,
+commands, case names, counters, failure messages, compiler diagnostics and log/TRX/receipt hashes.
+Original raw artifacts remain in `/workspace/scratch/9to1-overnight-20261030/`.
+
+- `cycle3-menu-red` reproduced the missing destination stage with the mounted plus.
+- `cycle3-preview-and-replacement-red`: 5 passed, 8 failed; retained the destructive refusal and relative
+  style failures before repair. Intermediate compile/fixture errors also remain recorded.
+- `cycle3-preview-expanded`: 17 checks passed, but visual review failed popup contrast. Original and
+  repaired captures are retained separately.
+- `cycle3-persisted-journeys2` is **invalid completed-suite evidence**: a fixture nested a synchronous
+  call onto its own UI pump and deadlocked. Only its owned SDK process group was terminated after
+  diagnosis. The child reported exit 0 on SIGTERM; no passing suite or TRX is claimed. Its two observed
+  image failures and termination explanation remain retained.
+- `cycle3-persisted-journeys3`: 35 passed, 6 failed. Whole-parent fencing and image size failures were
+  repaired. Three journey fixtures were corrected to scroll the actual type row into view before raw
+  clicking. The subsequent 41-case run passed in full.
+- `cycle3-list-scope-red`: 1 passed, 1 failed; reproduced the multiple-parent preview boundary. Both
+  passed after repair, followed by the fresh 302-case full suite.
+
+Final headless component frames (800×650, 96 dpi, same source as final tests):
+[Above](evidence/boards-insertion-preview-2026-10-30/Above.png),
+[Below](evidence/boards-insertion-preview-2026-10-30/Below.png),
+[Replace](evidence/boards-insertion-preview-2026-10-30/Replace.png).
+All three were visually inspected; the artifact hashes and rendering context are in the evidence JSON.
+
+## Remaining scope and next action after cycle 3
+
+BF-37 is **checked partial**, not accepted or complete across all block capabilities. Relative
+database/Tabber/freeform/attachment destinations are visibly disabled with reasons; those existing
+operations still use the toolbar path. Above/Below on positioned absolute blocks and replacement of an
+interior item in a positioned list are refused explicitly; whole positioned replacement is supported.
+These are implementation gaps, not owner waivers. Continue one dependency-ready remaining insertion
+capability after pinning its actual transaction/placement/asset ownership flow and reproducing its
+current behavior. Do not replace unrelated data to make an unsupported choice appear to succeed.
+
+Lossless Design mappings beyond paragraph/heading, legacy toolbar conversion, remaining Boards/Files
+defects and BF-38/root-wording/orphan-tab-group decisions remain open. Browse WIP stays preserved and
+excluded from packaging under the handoff. Full independent acceptance remains PAUSED.
+
+Evidence is **headless development / ORDINARY_LAYER1_PARTIAL_NOT_REUSABLE**. Native PC and ARM
+installation/execution remain NOT RUN. Desktop status refreshed again at 04:08 UTC: `desktop_offline`,
+last native observation 29 October 23:56:39 UTC. Private ROOT-LIVE recovery remains
+BLOCKED/INFRASTRUCTURE because `/workspace/shared/9to1-context/development-workflow-state.json` is
+absent. No substitute ledger, heavy/ARM allocation, model launch or native reload was made. Package
+remains held; ARM remains PC-owned. Usage remains UNKNOWN, with the authoritative ≤5% stop rule active.
+
+The nominal 04:10 trigger arrived while cycle 3 owned ACTIVE source and was coalesced into this cycle's
+report/checkpoint. It did not start a second writer or milestone. Continue from the newest published Goal
+checkpoint after checking remote main, dirty work and current ownership.

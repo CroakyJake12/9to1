@@ -314,6 +314,20 @@ internal static class Projector
 
 internal static class MergeDeltas
 {
+    /// <summary>Use the existing import mapping without merging into an unrelated list or publishing
+    /// an incomplete placeholder. The returned block belongs to a future atomic insertion.</summary>
+    internal static HavenRichBlock? PrepareInsertion(RichBoardBlock viewBlock)
+    {
+        var temporary = new HavenRichPage { Blocks = [] };
+        ImportViewBlockInner(temporary, viewBlock, new Dictionary<string, HavenRichBlock>(StringComparer.Ordinal));
+        if (temporary.Blocks.Count != 1) return null;
+        var block = temporary.Blocks[0];
+        block.Id = viewBlock.Id;
+        block.Layout = viewBlock.Layout; block.X = viewBlock.X; block.Y = viewBlock.Y;
+        block.Width = viewBlock.Width; block.Height = viewBlock.Height; block.ZOrder = viewBlock.ZOrder;
+        return block;
+    }
+
     public static bool HasChanges(RichBoardDocument view, RichBoardDocument baseline) =>
         !WorkerJson(view).Equals(WorkerJson(baseline), StringComparison.Ordinal);
 
