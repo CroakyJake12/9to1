@@ -287,12 +287,13 @@
         "DuckDB": "EMBED (MIT, unmodified, tag v1.5.5)",
         "Chromium": "EMBED pinned official artefact + digest; the /usr/bin/chromium system lookup must go or be labelled dev-only (Browse currently has no engine on this PC)",
         "AppFlowy Board": "NOT CONSUMED — currently first-party; elect MPL-2.0 only if donor code is linked"
-      }
+      },
+      "corrections": "Chrome for Testing has no Linux ARM64 build (measured from the research pack); Gecko candidate builds publish linux-aarch64 with SHA-256/512 + signatures. DevTools on Gecko uses RDP/BiDi, not CDP (CDP removed Firefox 141)."
     },
     {
       "id": "OPEN-2026-10-30-DONOR-LICENCES",
       "at": "2026-10-30T11:20:00Z",
-      "status": "answered by owner 30 October 2026 — open source main apps with a few proprietary monetisation/identity/subscription components; engines embed what we do not modify and fork what we do",
+      "status": "answered by owner 30 October 2026 with explicit risk criteria; research pack folded in and three of my earlier claims corrected",
       "title": "Which donor copyleft exposures are acceptable, and is 9to1 distributed closed or open?",
       "owner_intent": "Take existing app work and build on top of it, re-doing the UI in CUI, keeping every non-proprietary feature or replacing it with a 9to1 equivalent (owner, 30 October 2026).",
       "measured_facts": [
@@ -314,13 +315,15 @@
       "affected_change": "Canvas engine bridge licensing posture; whether Unsloth Studio or its model browser may be used at all; notice/offer obligations in the ARM64 package; which donors can be pinned at all.",
       "evidence": "eng/donor-sources.json licence_audit_20261030; pinned trees under 9to1 Workspace/*/Source; Canvas/rnote-poc/patches/LICENSE-GPL-3.0-or-later.txt; unsloth source tree under ~/.local/share/unsloth-custom-20261014/source (studio/ = AGPL-3.0-only); /home/jacob/Linux-migration/Unsloth-Linux-port.md",
       "unsloth_assessment": "docs/development/donor-assessments/unsloth-studio-2026-10-30.md",
-      "owner_decision": "Open source with proprietary components only where spoofing could give free access to paid services (cloud models, storage, accounts, subscription). Engine rule: embed what we aren't modifying, fork what we are.",
+      "owner_decision": "Open source by default. Proprietary only for components whose open-sourcing creates one of: safeguard bypass, malicious account-service requests, monetary risk, sensitive-information exposure, infrastructure security risk, or third-party IP/confidentiality breach - and only where that risk cannot be mitigated by secure design, server-side validation or removing sensitive data. Minimum necessary portion stays closed.",
       "consequences_recorded": "docs/development/donor-assessments/licence-posture-2026-10-30.md",
       "followup_work": [
         "Proprietary identity/subscription/entitlement code must not link GPL-3.0 code: separate modules + separate processes behind typed boundaries (implementation, not yet built).",
         "Record the repo's own licence posture in packaging notices; root LICENSE measured as GPL-3.0.",
         "Elect MPL-2.0 for AppFlowy Board only if donor code is ever linked; nothing is elected today because Boards links no donor code.",
-        "Unsloth Studio not adopted (AGPL); feature list kept as parity checklist only."
+        "Unsloth Studio not adopted (AGPL); feature list kept as parity checklist only.",
+        "Re-open the Unsloth Studio question as a specific integration review (which files, what linkage, what is distributed), not a licence-name verdict.",
+        "ARM64 engine route is Gecko-first; any Chromium-based path needs an artifact-availability check before it is planned."
       ]
     }
   ]

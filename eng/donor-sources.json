@@ -512,7 +512,25 @@
       "duckdb": "embed (MIT, unmodified)",
       "chromium": "embed pinned official artefact with digest; remove system-binary lookup",
       "appflowy-board": "not consumed; elect MPL-2.0 if ever linked",
-      "unsloth-studio": "not adopted (AGPL-3.0-only); parity checklist only"
+      "unsloth-studio": "adoption CONDITIONAL on a concrete source/linkage/distribution review; not excluded on principle. Earlier blanket rejection was too broad - AGPL s.13 and combined-work status are fact questions. Technical blockers stand regardless: SvelteKit/Tauri UI (must be CUI), own llama.cpp model host, and 'no support for PLE GGUFs' in their Hugging Face path."
+    },
+    "proprietary_criteria": {
+      "default": "open source",
+      "closed_only_if_risk": [
+        "bypass service safeguards",
+        "malicious account-service API/network requests",
+        "monetary risk (spoofing paid access, unauthorised payments)",
+        "exposure of sensitive information (keys, credentials, personal data, secrets)",
+        "significant infrastructure security risk",
+        "third-party IP/licence/confidentiality violation"
+      ],
+      "qualifier": "only where the risk cannot reasonably be mitigated by secure design, server-side validation or removal of sensitive data; minimum necessary portion stays closed"
+    },
+    "corrections_from_research_pack": {
+      "chromium_arm64": "Chrome for Testing publishes no Linux ARM64 artifact; Gecko candidate builds do publish linux-aarch64 with checksum manifests + signatures. ARM64 engine route is Gecko-first.",
+      "gecko_devtools_protocol": "Mozilla CDP removed in Firefox 141; use RDP (and BiDi where suitable), capability-tested per operation against the pinned revision.",
+      "duckdb_two_pins": "vendored C++ source pin does not install the Python wheel Data imports; needs requirements.in + hash-locked per-platform lock + agreement check with REQUIRED_DUCKDB_VERSION",
+      "research_pack": "docs/development/research/2026-10-30-six-handoffs/README.md"
     }
   }
 }
