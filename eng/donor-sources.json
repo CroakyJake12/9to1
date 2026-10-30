@@ -715,7 +715,12 @@
           "Ref.cs: CloneAs<TResult> removed from IRef<T>"
         ],
         "provenance_gap": "SOURCE.md calls this 'actual, unmodified Avalonia source' staging only the 20-file src/Avalonia.Base/Metadata directory, and SOURCE-MANIFEST.txt covers only those 20. Measured reality is a near-full Avalonia tree with 21 modifications and 19 additions. The record understates our own fork surface.",
-        "controlled_fork_remote": "absent - https://github.com/CroakyJake12/avalonia.git returns 'Repository not found' (measured), so this fork has no remote and no commit-level history of our changes"
+        "controlled_fork_remote": "https://github.com/CroakyJake12/Avalonia (created 30 October 2026), branch 9to1/cui-framework-20261030, tip b5bdd8cb9ada162d0282ecb55d4f63409532eadd",
+        "fork_branch": "9to1/cui-framework-20261030",
+        "fork_tip": "b5bdd8cb9ada162d0282ecb55d4f63409532eadd",
+        "fork_not_consumed_yet": true,
+        "fork_verified_by": "all 21 fork-branch files byte-identical to the vendored tree (21/21 by git blob identity); FORK-MANIFEST.txt records both sides",
+        "drift_acknowledged_until": "plan item 4: switch this directory to a pinned submodule of the fork and build-verify on this PC, pending owner approval"
       },
       {
         "donor": "files (WinUI Files app)",

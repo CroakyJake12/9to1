@@ -1,0 +1,26 @@
+# 9to1 Avalonia fork surface, measured 30 October 2026
+# upstream base: AvaloniaUI/Avalonia tag 12.0.1 = fe2741d62a467c3efa4f0c5f68f7861bc338c99f
+# controlled fork: https://github.com/CroakyJake12/Avalonia branch 9to1/cui-framework-20261030 tip b5bdd8cb9ada162d0282ecb55d4f63409532eadd
+# blob = the object in the fork branch; vendor = the same path in this repository's tree
+# A '==' marker means the two are byte-identical, verified by git blob identity.
+dc58b578d310853695a1e45dcfe2fcc4dea5fb23 == dc58b578d310853695a1e45dcfe2fcc4dea5fb23 NuGet.Config
+110dfbbd91d5b564da32680d59511a272178dc66 == 110dfbbd91d5b564da32680d59511a272178dc66 build/BuildTargets.targets
+7dd78bf53a234611afc1f46e48194c930e52b5cd == 7dd78bf53a234611afc1f46e48194c930e52b5cd packages/Avalonia/Avalonia.props
+ee3fbc8102db6c6fb836ced791d5a1b10a7e11c0 == ee3fbc8102db6c6fb836ced791d5a1b10a7e11c0 packages/Avalonia/AvaloniaBuildTasks.props
+c02eec5f2b5c480d3e2a877c2e02fadce066a0df == c02eec5f2b5c480d3e2a877c2e02fadce066a0df packages/Avalonia/AvaloniaBuildTasks.targets
+b8202de5c3ace53e840774ba52cca90af17531dc == b8202de5c3ace53e840774ba52cca90af17531dc src/Avalonia.Base/Avalonia.Base.csproj
+d2b70bde616c82e5b5f9609475d421bfe0f01145 == d2b70bde616c82e5b5f9609475d421bfe0f01145 src/Avalonia.Base/Utilities/Ref.cs
+8b6bbdb0791363b53f3d20d7cd190d7dcc800e05 == 8b6bbdb0791363b53f3d20d7cd190d7dcc800e05 src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj
+9bad28ab88afd4c0bcf390f6049a9eb113098945 == 9bad28ab88afd4c0bcf390f6049a9eb113098945 src/Avalonia.Controls/ContextMenu.cs
+e0b5620cd893178cb324d788b7d1486c1c829c15 == e0b5620cd893178cb324d788b7d1486c1c829c15 src/Avalonia.Controls/Presenters/TextPresenter.cs
+f6ef8e58fcda33289d393dff1695e26603482e51 == f6ef8e58fcda33289d393dff1695e26603482e51 src/Avalonia.Controls/Primitives/Popup.cs
+ddb3ce4e4d58b22e0b72cab92581c7ec2fb5d2cd == ddb3ce4e4d58b22e0b72cab92581c7ec2fb5d2cd src/Avalonia.Controls/ToolTip.cs
+75e9d0e801138e0b998819515e214b37a2ea10d6 == 75e9d0e801138e0b998819515e214b37a2ea10d6 src/Avalonia.Controls/TopLevel.cs
+8ceb904dfd8d2586c237a6d0a0bfe24dc3668c29 == 8ceb904dfd8d2586c237a6d0a0bfe24dc3668c29 src/Avalonia.MicroCom/Avalonia.MicroCom.csproj
+a0eb75d9d092bfaa9d8bcb0636d6ba7ddbcc68f5 == a0eb75d9d092bfaa9d8bcb0636d6ba7ddbcc68f5 src/Avalonia.X11/Avalonia.X11.csproj
+73c38de4680c094230ce769e609b903e1b2aa54d == 73c38de4680c094230ce769e609b903e1b2aa54d src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj
+4cb1f0707032ba9044a6dc18d1c2a552412ee78d == 4cb1f0707032ba9044a6dc18d1c2a552412ee78d src/Headless/Avalonia.Headless/Avalonia.Headless.csproj
+dabb093614695ac99b0864f872ef89023f8d306f == dabb093614695ac99b0864f872ef89023f8d306f src/Headless/Avalonia.Headless/HeadlessUnitTestSession.cs
+c00d7c74bc9fda1b8f36f100982d01118230200d == c00d7c74bc9fda1b8f36f100982d01118230200d src/Skia/Avalonia.Skia/Avalonia.Skia.csproj
+b2a0b9e04d81f4921144e299418e26d9160e9097 == b2a0b9e04d81f4921144e299418e26d9160e9097 src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj
+545999e05a424a02e0a87a61fa8b62a192f3ae19 == 545999e05a424a02e0a87a61fa8b62a192f3ae19 src/Windows/Avalonia.Win32/Avalonia.Win32.csproj
