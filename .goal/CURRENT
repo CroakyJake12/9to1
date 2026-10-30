@@ -1,15 +1,15 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 7
+checkpoint: checkpoint.md revision 8
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 5
+queue: queue.md revision 6
 branch: main
-base: 71296260e95c830ae9f6948a06be8832f10b1a85 (validated source; use the checkpoint's containing main commit)
+base: badceabe4856cd1fa751fd565aed5396c009b9d9 (validated source; use the checkpoint's containing main commit)
 status: CHECKPOINT_READY
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_report: cycle-reports/2026-10-30-04.md
-cycle_ownership: cycle 4 completed and released source after publication; no other writer admitted
-next_scheduled_trigger: 2026-10-30T06:10:00Z nominal; scheduler timing is flexible
-next: inspect and pin Tabber parent/pane flow for one remaining BF-37 capability; preserve Design and native/ARM gates
+cycle_report: cycle-reports/2026-10-30-05.md
+cycle_ownership: cycle 5 complete; source released after validated commit/push/readback; no other writer admitted
+next_scheduled_trigger: 2026-10-30T07:10:00Z nominal; existing hourly continuation remains enabled
+next: reproduce remaining Tabber blur-to-neighbor review hypothesis, then pin Data creation/reference flow for one remaining BF-37 capability; preserve Design/native/ARM gates
