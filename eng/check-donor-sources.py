@@ -44,6 +44,28 @@ def git(*args, cwd=ROOT):
     return result.stdout.strip() if result.returncode == 0 else None
 
 
+def resolved_pin(entry, record):
+    """The commit one app really pins for a donor, with the shared upstream record as the default.
+
+    Different apps may legitimately consume different revisions of the same donor (Canvas builds
+    against Rnote v0.14.2 while Boards records the v0.15 line). A binding may override the shared
+    record, but only with a recorded reason, so deliberate divergence stays distinguishable from drift.
+    """
+    commit = entry.get("commit") or record.get("commit", "")
+    fork_commit = entry.get("forkCommit") or record.get("forkCommit")
+    problems = []
+    if entry.get("commit") and not entry.get("commitReason"):
+        problems.append("per-app donor pin has no recorded commitReason")
+    if commit and not SHA.fullmatch(commit):
+        problems.append("no exact immutable upstream commit")
+    # Only donors that have a controlled fork must agree between the upstream and fork revisions.
+    # Some donors are imported as plain source files with verified tree hashes instead (Files), and the
+    # original check deliberately did not apply to them.
+    if record.get("fork") and fork_commit != commit:
+        problems.append("fork and upstream revisions disagree")
+    return commit, fork_commit, problems
+
+
 def failures(local_only=False):
     data = json.loads(LOCK.read_text(encoding="utf-8"))
     upstreams = data["upstreams"]
@@ -78,9 +100,12 @@ def failures(local_only=False):
         for file in record.get("licenseFiles", []):
             if not (source / file).is_file():
                 errors.append(f"{app}/{donor}: upstream licence/notice missing: {file}")
-        commit = record.get("commit", "")
-        if not SHA.fullmatch(commit):
-            errors.append(f"{app}/{donor}: no exact immutable upstream commit")
+        # One donor can be pinned at different revisions by different apps, and that is legitimate when
+        # the apps really build against different revisions (Canvas consumes Rnote v0.14.2 while Boards
+        # records the v0.15 line). A binding may therefore override the shared upstream commit, but only
+        # with a recorded reason, so a deliberate divergence stays distinct from silent drift.
+        commit, fork_commit, pin_problems = resolved_pin(entry, record)
+        errors.extend(f"{app}/{donor}: {p}" for p in pin_problems)
         if donor == "files":
             # Files was imported as source files, excluding only GitHub/attribute metadata.
             if git("rev-parse", "HEAD:9to1 Workspace/Files/Source/Files/src") != "d4a883424a2d11cb460774a9fb41debbe5c96363" or git("rev-parse", "HEAD:9to1 Workspace/Files/Source/Files/tests") != "be743d924b432091a7229d9f8b80091c9b1290b1":
@@ -90,7 +115,7 @@ def failures(local_only=False):
         else:
             if not record.get("repository", "").startswith("https://") or not record.get("fork", "").startswith("https://github.com/CroakyJake12/"):
                 errors.append(f"{app}/{donor}: missing canonical upstream or controlled fork")
-            if record.get("forkCommit") != commit:
+            if (entry.get("forkCommit") or record.get("forkCommit")) != commit:
                 errors.append(f"{app}/{donor}: fork and upstream revisions disagree")
             if paths_in_modules.get(path) != record.get("fork"):
                 errors.append(f"{app}/{donor}: .gitmodules URL/path disagrees with donor record")

@@ -13,7 +13,8 @@ Compatibility with the newest sources is **not proven**. See `eng/donor-sources.
 
 ## DuckDB pinned as a submodule 30 October 2026 - re-pinned to the version the runtime demands
 
-- `Source/DuckDB` gitlink pinned at **tag `v1.5.5` = `d8cdaa33fda8`** (`git describe` -> `v1.5.5`).
+- `Source/DuckDB` gitlink pinned at **tag `v1.5.5` = `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`**
+  (`git describe` -> `v1.5.5`).
 - The donor registry previously recorded `12633c226f827d4328a83e820d3d6a3f16195207`, which measures
   **14,480 commits past the v1.5.5 tag** (mainline, not a release). Re-pinned because
   `Data/workers/duckdb_worker.py:17` hard-requires exactly `REQUIRED_DUCKDB_VERSION = "1.5.5"` and

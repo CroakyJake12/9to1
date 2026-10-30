@@ -62,14 +62,15 @@
       "project": "DuckDB",
       "repository": "https://github.com/duckdb/duckdb",
       "branch": "v2.0-cyanoptera",
-      "commit": "12633c226f827d4328a83e820d3d6a3f16195207",
+      "commit": "d8cdaa33fda8df955cc76ef58a280f68f4cd43fa",
       "fork": "https://github.com/CroakyJake12/duckdb",
-      "forkCommit": "12633c226f827d4328a83e820d3d6a3f16195207",
+      "forkCommit": "d8cdaa33fda8df955cc76ef58a280f68f4cd43fa",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
       ],
-      "tag": null
+      "tag": null,
+      "pinNote": "re-pinned 30 October 2026 to tag v1.5.5: Data/workers/duckdb_worker.py:17 requires exactly 1.5.5, and the previous value 12633c226f827d4328a83e820d3d6a3f16195207 sits 14,480 commits past that tag on mainline, so the recorded pin could never satisfy the project's own runtime gate"
     },
     "eds": {
       "project": "Evolution Data Server",
@@ -276,7 +277,10 @@
       "donor": "rnote",
       "path": "9to1 Workspace/Canvas/Source/Rnote",
       "consumer": "Existing Cargo proof still pins 8cac558 v0.14.2",
-      "runtimeRequirement": "Existing Cargo proof requires 8cac558 (compatibility with newest unverified)"
+      "runtimeRequirement": "Existing Cargo proof requires 8cac558 (compatibility with newest unverified)",
+      "commit": "8cac558fa73ee63d958cec05124ea2fdbd7d608d",
+      "forkCommit": "8cac558fa73ee63d958cec05124ea2fdbd7d608d",
+      "commitReason": "Canvas/rnote-poc compiles against Rnote v0.14.2; verified by reading that commit's Cargo.toml (version = \"0.14.2\"). The shared record's v0.15 line is not what this app builds, so pinning it would misrepresent the build."
     },
     {
       "app": "Browse",
@@ -752,7 +756,16 @@
           ],
           "upstream_files_not_vendored": 28,
           "files_unique_to_us": 0
-        }
+        },
+        "base_proven_by_tree_identity": {
+          "our_src_tree": "d4a883424a2d11cb460774a9fb41debbe5c96363",
+          "their_src_tree_at_21d407b5": "d4a883424a2d11cb460774a9fb41debbe5c96363",
+          "our_tests_tree": "be743d924b432091a7229d9f8b80091c9b1290b1",
+          "their_tests_tree_at_21d407b5": "be743d924b432091a7229d9f8b80091c9b1290b1",
+          "nearest_ancestor_build_34a03ef1_src_tree": "0dc1ace840cd7e7dc49862412936ce583b7c24a5",
+          "meaning": "Two whole Git trees in our vendored copy are byte-identical to the same-named trees at CroakyJake12/Files 21d407b5, so the base revision is proven by tree identity, not inferred from file counts. The ancestor build v4.2.37 (34a03ef1) has a different src tree, so 21d407b5 is the exact base."
+        },
+        "already_pinned_by_existing_gate": "eng/check-donor-sources.py asserts these two tree hashes today, so the vendored copy does have a content identity assertion - but as loose committed files with no gitlink, which is why the same gate still treats it as app-local source rather than a recursive checkout"
       },
       {
         "donor": "Avalonia.DBus",
@@ -1021,6 +1034,15 @@
           "xpfe"
         ]
       }
-    ]
+    ],
+    "existing_gate_reconciliation": {
+      "check": "eng/check-donor-sources.py (pre-existing release gate; 151 lines; audits declared donors, app-local source, provenance and recursive checkout pins over 23 bindings)",
+      "measured_output_20261030": {
+        "exit_note": "Donor-source audit FAIL: 19 issue(s) across 23 bindings",
+        "fail_lines": 19,
+        "all_failures_are": "no app-local source tree (the 19 declared donors with no gitlink and no on-disk content)"
+      },
+      "relationship_to_census": "The gate answers 'is the declared donor source actually materialised and pinned'. donor_policy.py census answers 'is this artifact modified, and does the build fetch the revision we pinned'. They are complementary, and the plan proposes wiring the census into the same gate rather than maintaining two tools. The 4 donors pinned during 30 October (Browse/firefox-gecko, Canvas/rnote, Boards/appflowy-board, Boards/rnote, Data/duckdb) are no longer among the gate failures; the remaining 19 failures pre-date this session."
+    }
   }
 }
