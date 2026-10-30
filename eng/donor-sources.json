@@ -496,8 +496,10 @@
       "gnome-shell, mutter (OS platform)"
     ],
     "third_party_claim_to_verify": {
-      "unsloth-studio": "AGPL-3.0-only (5659 SPDX headers under studio/); model browser lives at studio/backend/hub; the unsloth core outside studio/ is Apache-2.0 (root LICENSE). Installed package lacks frontend/Rust source and Cargo/Tauri config, so the installed binary cannot supply a native rebuild (recorded in Linux-migration/Unsloth-Linux-port.md).",
-      "action": "decision queued as OPEN-2026-10-30-DONOR-LICENCES"
+      "unsloth-studio": "MEASURED 30 Oct: dual-licensed. Core 'unsloth' package declares Apache-2.0 (pyproject.toml license field + README); studio/ is AGPL-3.0-only (5,659 AGPL SPDX headers vs 1 Apache). The model browser is studio/backend/hub and is AGPL (88 AGPL headers, 0 others). Backend is Python/FastAPI, UI is SvelteKit + Tauri/Rust, so the UI cannot be adopted under the CUI rule. Their models/tabs/hugging_face_tab.py states 'no support for PLE GGUFs' while the model this PC serves is a PLE GGUF. studio/backend has 19 top-level subsystems including its own router/inference/tunnel/auth and llama.cpp prebuilt installers. Installed package lacks frontend/Rust source and Cargo/Tauri config.",
+      "action": "decision queued as OPEN-2026-10-30-DONOR-LICENCES",
+      "verdict": "NOT adopted pending the owner's closed-vs-open distribution answer; their feature list is kept as a behaviour parity checklist for our CUI model browser, matching the Boards DonorParityManifest pattern where no donor code is linked",
+      "assessment_document": "docs/development/donor-assessments/unsloth-studio-2026-10-30.md"
     }
   }
 }

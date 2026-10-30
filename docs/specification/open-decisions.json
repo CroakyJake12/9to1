@@ -292,16 +292,20 @@
         "AppFlowy Board (Boards) is dual-licensed AGPL-3.0 OR MPL-2.0, so MPL election avoids AGPL.",
         "Rnote (Canvas bridge, Canvas/rnote-poc) is GPL-3.0-or-later and is LINKED by our bridge, which puts GPL-3.0 copyleft on the combined Canvas engine boundary today.",
         "Unsloth Studio is AGPL-3.0-only (5,659 SPDX headers) and its model browser is studio/backend/hub; only the unsloth core outside studio/ is Apache-2.0.",
-        "The installed Unsloth package has no frontend/Rust source and no Cargo/Tauri config, so it cannot be rebuilt natively as installed (our own migration notes say this)."
+        "The installed Unsloth package has no frontend/Rust source and no Cargo/Tauri config, so it cannot be rebuilt natively as installed (our own migration notes say this).",
+        "Unsloth's own README and pyproject declare a DUAL model: the core unsloth package is Apache-2.0, optional components such as the Studio app are AGPL-3.0. Measured 5,659 AGPL-3.0-only SPDX headers in studio/ against 1 Apache-2.0, and 88 AGPL headers in studio/backend/hub (the model browser) with none others, so the browser is an AGPL extraction, not an Apache one.",
+        "Independent of licence, their browser cannot serve this PC's live model: models/tabs/hugging_face_tab.py states 'no support for PLE GGUFs', while the resident Strata host is launched with --ple-gguf on an IQ3_S shard. Their backend also ships its own llama.cpp model host, service router and tunnel/auth subsystems, which must not duplicate or displace the resident host."
       ],
       "open_questions": [
         "Is a 9to1 build distributed under a closed/proprietary licence, under an open licence, or both by edition? This single answer decides Rnote (GPL-3.0) and any Unsloth Studio use.",
         "If closed: is the Canvas GPL-3.0 bridge replaced (own engine, or a permissively-licensed one) or isolated as a separate process with the decision reviewed, and is Unsloth Studio excluded with the model browser rebuilt in CUI on our existing Strata/Hugging Face integration?",
         "For Gecko: confirm MPL-2.0 election and the notice/offer process for MPL files in the shipped ARM package.",
-        "For AppFlowy Board: confirm the MPL-2.0 election is recorded in retained notices."
+        "For AppFlowy Board: confirm the MPL-2.0 election is recorded in retained notices.",
+        "If Unsloth Studio is excluded as a code donor: adopt only the Apache-2.0 core (quantisation/download logic) behind a typed boundary with the UI rebuilt in CUI, or set the whole donor aside and keep building on our existing Hugging Face + Strata path?"
       ],
       "affected_change": "Canvas engine bridge licensing posture; whether Unsloth Studio or its model browser may be used at all; notice/offer obligations in the ARM64 package; which donors can be pinned at all.",
-      "evidence": "eng/donor-sources.json licence_audit_20261030; pinned trees under 9to1 Workspace/*/Source; Canvas/rnote-poc/patches/LICENSE-GPL-3.0-or-later.txt; unsloth source tree under ~/.local/share/unsloth-custom-20261014/source (studio/ = AGPL-3.0-only); /home/jacob/Linux-migration/Unsloth-Linux-port.md"
+      "evidence": "eng/donor-sources.json licence_audit_20261030; pinned trees under 9to1 Workspace/*/Source; Canvas/rnote-poc/patches/LICENSE-GPL-3.0-or-later.txt; unsloth source tree under ~/.local/share/unsloth-custom-20261014/source (studio/ = AGPL-3.0-only); /home/jacob/Linux-migration/Unsloth-Linux-port.md",
+      "unsloth_assessment": "docs/development/donor-assessments/unsloth-studio-2026-10-30.md"
     }
   ]
 }
