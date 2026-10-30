@@ -205,12 +205,12 @@ internal sealed class BlockReorderPointer
         }
     }
 
-    private async Task CommitReleasedMoveAsync(BoardBlockActionTarget target, int destination)
+    private async Task<bool> CommitReleasedMoveAsync(BoardBlockActionTarget target, int destination)
     {
         try
         {
             _viewModel.FocusBlock(target.BlockId);
-            await _viewModel.DispatchCuiBlockMoveAsync(new BoardBlockMoveRequest(target, destination));
+            return await _viewModel.DispatchCuiBlockMoveAsync(new BoardBlockMoveRequest(target, destination));
         }
         catch (OperationCanceledException)
         {
@@ -221,6 +221,7 @@ internal sealed class BlockReorderPointer
             try { _viewModel.ReportBlockMoveFailure(error); }
             catch { /* A status observer cannot fault the released pointer task. */ }
         }
+        return false;
     }
 
     /// <summary>Commits the typed move immediately - a model change must never wait on an animation -
@@ -234,7 +235,7 @@ internal sealed class BlockReorderPointer
         RestoreLift();
         try
         {
-            await CommitReleasedMoveAsync(target, destination).ConfigureAwait(false);
+            if (!await CommitReleasedMoveAsync(target, destination).ConfigureAwait(false)) return;
             if (double.IsNaN(droppedTop)) return;
             await OnUiRunAsync(() =>
             {
@@ -243,7 +244,7 @@ internal sealed class BlockReorderPointer
                     (row.Tag as BlockReorderRow)?.BlockId == _blockId);
                 if (landed is null) return;
                 var newTop = landed.TranslatePoint(new Point(0, 0), _host)?.Y ?? double.NaN;
-                var offset = newTop - droppedTop;
+                var offset = droppedTop - newTop;
                 if (double.IsNaN(newTop) || Math.Abs(offset) < 2) return;
                 // The row is translated back to where the user released it and then settles to zero.
                 var transform = new TranslateTransform(0, offset);
@@ -269,13 +270,21 @@ internal sealed class BlockReorderPointer
 
     private async Task GlideHomeAsync()
     {
+        var lift = _liftTransform;
         try
         {
             foreach (var entry in _offsets.Values) entry.Target = 0;
             await SettleAsync().ConfigureAwait(false);
         }
         catch { /* an interrupted glide home must never fault a pointer callback */ }
-        finally { RestoreLiftSafely(); }
+        finally
+        {
+            await OnUiRunAsync(() =>
+            {
+                // A cancelled glide may finish after a fresh gesture has started.
+                if (ReferenceEquals(_liftTransform, lift)) RestoreLiftSafely();
+            });
+        }
     }
 
     private void BeginLift()
@@ -542,7 +551,13 @@ internal sealed class BlockReorderPointer
     private void RestoreLift()
     {
         StopSettle();
+        var completion = _settle;
         _settle = null;
+        if (_flipRow is not null && ReferenceEquals(_flipRow.RenderTransform, _flipTransform))
+            _flipRow.RenderTransform = null;
+        _flipRow = null;
+        _flipTransform = null;
+        _flipCurrent = 0;
         ClearGuideLine();
         if (_liftRow is not null)
         {
@@ -563,6 +578,7 @@ internal sealed class BlockReorderPointer
         _liftTransform = null;
         _lifted = false;
         _draggedItemRow = false;
+        completion?.TrySetResult();
     }
 
     private void RestoreLiftSafely()

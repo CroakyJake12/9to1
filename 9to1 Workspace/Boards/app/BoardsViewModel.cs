@@ -1735,6 +1735,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(controlName["t_".Length..]);
             if (block is null)
                 return false;
+            // TextBox can deliver its initial TextChanged after attachment. Rendering
+            // unchanged content is not an edit and must not move the active selection.
+            if (string.Equals(block.Text ?? string.Empty, text, StringComparison.Ordinal))
+                return false;
             BoardTextRanges.ReplaceText(block, text);
             _selectedBlockId = block.Id;
             PushSelectedInfo();
@@ -1745,6 +1749,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             var block = FindChecklistBlock(controlName["chk_".Length..]);
             if (block is null)
+                return false;
+            if (string.Equals(block.Text ?? string.Empty, text, StringComparison.Ordinal))
                 return false;
             block.Text = text;
             _selectedBlockId = block.Id;

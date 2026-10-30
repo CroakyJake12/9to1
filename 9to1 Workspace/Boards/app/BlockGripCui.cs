@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
@@ -85,11 +87,17 @@ internal static class BlockGripCui
             PlacementTarget = trigger,
             Placement = PlacementMode.Bottom,
             IsLightDismissEnabled = true,
+            ShouldUseOverlayLayer = true,
             Child = menu,
         };
-        var host = new BlockActionsHost(popup, menu);
+        var host = new BlockActionsHost(popup, menu,
+            () => Task.WhenAll(loader.WhenActionsIdleAsync(), menuLoader.WhenActionsIdleAsync()));
         popup.Opened += (_, _) => host.OpenedCount++;
-        popup.Closed += (_, _) => host.ClosedCount++;
+        popup.Closed += (_, _) =>
+        {
+            host.ClosedCount++;
+            context.Close();
+        };
         ((ISetLogicalParent)popup).SetParent(trigger);
         trigger.DetachedFromVisualTree += (_, _) =>
         {
@@ -110,47 +118,79 @@ internal static class BlockGripCui
         // surface alive after the row is rebuilt.
         RegisterHost(trigger, menu, host);
 
-        // Open and close follow the authored state, and every stage is counted so a stuck menu names the
-        // broken link (press, click, authored command received, open attempted, actually opened, closed)
-        // instead of asserting on a bare null. The secondary click path is a measured accommodation, not
-        // a preference: the authored ToggleActions command was observed NOT arriving at this context for
-        // the gutter trigger on 29 October, while the same authored path works for the inline menu.
-        // It still routes through the single state owner so a second open cannot double-fire.
+        // Only the authored action changes expansion. A second Click fallback races the loader's
+        // retained dispatch and can immediately undo the same click. Dismissal reconciles this state
+        // through Popup.Closed, including light dismissal and owner detachment.
         context.ExpansionChanged = expanded =>
         {
             if (expanded)
             {
                 host.OpenAttempts++;
-                if (!popup.IsOpen) popup.Open();
-                if (!popup.IsOpen)
-                {
-                    host.OpenAttempts++;
-                    trigger.Focus();
-                    popup.IsOpen = true;
-                }
+                popup.Open();
+                if (popup.IsOpen) MenuRows().FirstOrDefault()?.Focus();
+                else context.Close();
             }
             else
             {
+                var returnFocus = MenuRows().Any(item => item.IsFocused);
                 popup.Close();
-                menuLoader.WhenActionsIdleAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                if (returnFocus && trigger.IsEffectivelyVisible) trigger.Focus();
+                // Never join WhenActionsIdleAsync here: this callback may be executing inside the
+                // very action being joined. The external owner can await the host's retained tasks.
             }
         };
         trigger.PointerPressed += (_, _) => host.PressCount++;
-        trigger.Click += (_, _) =>
+        trigger.Click += (_, _) => host.ClickCount++;
+
+        // The floating CUI rows are not inside a MenuBase. Supply only native focus/key mechanics;
+        // activation still raises the row's authored Click and uses its existing typed dispatcher.
+        MenuItem[] MenuRows() => menu.GetSelfAndVisualDescendants().OfType<MenuItem>()
+            .Where(item => item.IsEffectivelyVisible && item.IsEffectivelyEnabled &&
+                item.IsHitTestVisible && item.Focusable).ToArray();
+        menu.AddHandler(InputElement.KeyDownEvent, (_, args) =>
         {
-            host.ClickCount++;
-            if (context.IsExpanded) return;
-            host.FallbackClickOpens++;
-            context.ForceExpandedForDiagnostics(true);
-        };
+            if (args.Handled || !popup.IsOpen || args.KeyModifiers != KeyModifiers.None) return;
+            var rows = MenuRows();
+            var focused = rows.FirstOrDefault(item => item.IsFocused);
+            if (args.Key == Key.Escape)
+            {
+                var submenu = context.CloseSubmenu();
+                if (submenu is not null)
+                    rows.FirstOrDefault(item => item.Name == submenu)?.Focus();
+                else
+                {
+                    context.Close();
+                    trigger.Focus();
+                }
+                args.Handled = true;
+            }
+            else if ((args.Key is Key.Down or Key.Up or Key.Home or Key.End) && rows.Length > 0)
+            {
+                var index = Array.IndexOf(rows, focused);
+                var next = args.Key switch
+                {
+                    Key.Home => 0,
+                    Key.End => rows.Length - 1,
+                    Key.Up => index < 0 ? rows.Length - 1 : (index + rows.Length - 1) % rows.Length,
+                    _ => (index + 1) % rows.Length,
+                };
+                rows[next].Focus();
+                args.Handled = true;
+            }
+            else if (args.Key == Key.Enter && focused is not null)
+            {
+                focused.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                args.Handled = true;
+            }
+        }, RoutingStrategies.Tunnel);
         return root;
     }
 
     /// <summary>The authored menu surface plus the C#-owned Popup that floats it, reachable from the
-    /// menu control's Tag. The menu is not in the block row's subtree, so anything looking for its rows
+    /// weak side table. The menu is not in the block row's subtree, so anything looking for its rows
     /// must go through this handle (BoardsBlockActionsTests does exactly that). The counters record the
     /// open chain: presses, clicks, authored commands received, open attempts, actual opens, closes, and
-    /// how often the secondary click path had to present the menu.</summary>
+    /// authored dispatches.</summary>
     private static readonly ConditionalWeakTable<Control, BlockActionsHost> Hosts = new();
 
     /// <summary>Attaches the surface handle to both controls the grip owns, so a caller holding either
@@ -166,7 +206,7 @@ internal static class BlockGripCui
     public static BlockActionsHost? HostFor(Control control) =>
         Hosts.TryGetValue(control, out var host) ? host : null;
 
-    internal sealed record BlockActionsHost(Popup Popup, Control Menu)
+    internal sealed record BlockActionsHost(Popup Popup, Control Menu, Func<Task> WhenActionsIdleAsync)
     {
         public int PressCount { get; internal set; }
         public int ClickCount { get; internal set; }
@@ -174,7 +214,6 @@ internal static class BlockGripCui
         public int OpenAttempts { get; internal set; }
         public int OpenedCount { get; internal set; }
         public int ClosedCount { get; internal set; }
-        public int FallbackClickOpens { get; internal set; }
     }
 
     private static Control Unavailable(string message)
@@ -204,23 +243,35 @@ internal static class BlockGripCui
         /// document owns which rows exist and what they mean; only the Popup needs this signal.</summary>
         public Action<bool>? ExpansionChanged;
 
-        /// <summary>Set by the hosting surface so a command that closes the menu (a typed action, a
-        /// turn-into, or a light dismissal) can retire the floating Popup without owning it.</summary>
-        public Action? CloseRequested;
-
         /// <summary>The surface this context drives, set by Build; used to count the open chain so
         /// a stuck menu can name the broken link instead of failing on a bare null.</summary>
         internal BlockActionsHost? Host;
 
-        /// <summary>Single owner of the expansion state, so the authored command path and the
-        /// secondary click path cannot diverge or double-open the surface.</summary>
-        internal void ForceExpandedForDiagnostics(bool expanded)
+        internal void Close()
         {
-            if (expanded && !_isExpanded) RefreshTarget();
-            _isExpanded = expanded;
-            if (!expanded) _moveExpanded = _designExpanded = false;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
-            ExpansionChanged?.Invoke(expanded);
+            if (!_isExpanded && !_moveExpanded && !_designExpanded && _target is null) return;
+            _isExpanded = _moveExpanded = _designExpanded = false;
+            _target = null;
+            foreach (var key in new[] { "MoveUpRequest", "MoveDownRequest", "DuplicateRequest", "DeleteRequest" })
+                _values[key] = null;
+            PublishExpansion();
+            ExpansionChanged?.Invoke(false);
+        }
+
+        internal string? CloseSubmenu()
+        {
+            var toggle = _moveExpanded ? "BlockMoveMenuToggle" : _designExpanded ? "BlockDesignMenuToggle" : null;
+            _moveExpanded = _designExpanded = false;
+            PublishExpansion();
+            return toggle;
+        }
+
+        private void PublishExpansion()
+        {
+            _values["MoveMenuDescription"] = _moveExpanded ? "Move block submenu expanded" : "Move block submenu collapsed";
+            _values["DesignMenuDescription"] = _designExpanded ? "Design submenu expanded" : "Design submenu collapsed";
+            foreach (var name in new[] { "IsExpanded", "IsMoveExpanded", "IsDesignExpanded", "MoveMenuDescription", "DesignMenuDescription" })
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         public bool IsExpanded => _isExpanded;
@@ -306,21 +357,22 @@ internal static class BlockGripCui
                 // Ordinary typing updates the existing editor without rebuilding its grip.
                 // Capture the same block's current ticket only when opening the menu; an
                 // already open menu retains its revision fence until it is closed.
-                if (!_isExpanded) RefreshTarget(); else _moveExpanded = _designExpanded = false;
-                _isExpanded = !_isExpanded;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
-                ExpansionChanged?.Invoke(_isExpanded);
+                if (_isExpanded) { Close(); return; }
+                RefreshTarget();
+                _isExpanded = true;
+                PublishExpansion();
+                ExpansionChanged?.Invoke(true);
                 return;
             }
+            if (!_isExpanded || _viewModel.SelectedPageId != _pageId ||
+                !ReferenceEquals(_session, _viewModel.Session) || !_viewModel.IsEditMode) return;
             // Submenu toggles open one group at a time, matching the mockup's single open panel.
             if (command == "ToggleMoveMenu" || command == "ToggleDesignMenu")
             {
                 var move = command == "ToggleMoveMenu";
                 if (move) _moveExpanded = !_moveExpanded; else _designExpanded = !_designExpanded;
                 if (move) _designExpanded = false; else _moveExpanded = false;
-                RefreshTarget();
-                foreach (var name in new[] { "IsMoveExpanded", "IsDesignExpanded", "MoveMenuDescription", "DesignMenuDescription" })
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+                PublishExpansion();
                 return;
             }
             // The Design submenu's "turn into" list re-types this block in place. The block identity
@@ -344,9 +396,7 @@ internal static class BlockGripCui
                 !Enum.IsDefined(request.Action)) return;
             _viewModel.FocusBlock(_blockId);
             await _viewModel.DispatchCuiBlockActionAsync(request, cancellationToken);
-            _isExpanded = false;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
-            ExpansionChanged?.Invoke(false);
+            Close();
         }
     }
 }

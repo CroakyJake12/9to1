@@ -26,44 +26,44 @@
                CornerRadius="10" BorderWidth="1" BorderColor="{Resource CuiLineBrush}"
                Background="{Resource CuiFloatingSurfaceMaterial}" AccessibleName="Block actions">
       <Button Type="Menu Item" ID="BlockDelete" Content="Delete" IconSource="icon:delete" Action="Delete"
-              Interactive="{Binding CanManage}" AccessibleName="Delete block" Height="34" MinHeight="34" />
+              IsEnabled="{Binding CanManage}" AccessibleName="Delete block" Height="34" MinHeight="34" />
       <Button Type="Menu Item" ID="BlockDuplicate" Content="Duplicate" IconSource="icon:duplicate" Action="Duplicate"
-              Interactive="{Binding CanManage}" AccessibleName="Duplicate block" Height="34" MinHeight="34" />
+              IsEnabled="{Binding CanManage}" AccessibleName="Duplicate block" Height="34" MinHeight="34" />
       <Button Type="Menu Item" ID="BlockMoveMenuToggle" Content="Move Block" IconSource="icon:move"
-              Action="ToggleMoveMenu" Interactive="{Binding CanManage}" AccessibleName="Move block menu"
+              Action="ToggleMoveMenu" IsEnabled="{Binding CanManage}" AccessibleName="Move block menu"
               Height="34" MinHeight="34" AccessibleDescription="{Binding MoveMenuDescription}" />
       <Container Type="Vertical Stack" ID="BlockMoveMenu" CellGap="2" Active="{Binding IsMoveExpanded}"
                  AccessibleName="Move block submenu" Padding="26 0 0 0">
         <Button Type="Menu Item" ID="BlockMoveUp" Content="Move up" IconSource="icon:chevron-down" Action="MoveUp"
-                Interactive="{Binding CanMoveUp}" AccessibleName="Move block up" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanMoveUp}" AccessibleName="Move block up" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockMoveDown" Content="Move down" IconSource="icon:chevron-down" Action="MoveDown"
-                Interactive="{Binding CanMoveDown}" AccessibleName="Move block down" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanMoveDown}" AccessibleName="Move block down" Height="30" MinHeight="30" />
       </Container>
       <Container Type="Vertical Stack" ID="BlockActionDivider" Height="1" BorderWidth="0"
                  Background="{Resource CuiLineBrush}" Margin="4 6" />
       <Button Type="Menu Item" ID="BlockDesignMenuToggle" Content="Design" IconSource="icon:palette"
-              Action="ToggleDesignMenu" Interactive="{Binding CanManage}" AccessibleName="Design block menu"
+              Action="ToggleDesignMenu" IsEnabled="{Binding CanManage}" AccessibleName="Design block menu"
               Height="34" MinHeight="34" AccessibleDescription="{Binding DesignMenuDescription}" />
       <Container Type="Vertical Stack" ID="BlockDesignMenu" CellGap="2" Active="{Binding IsDesignExpanded}"
                  AccessibleName="Design block submenu" Padding="26 0 0 0">
         <Text Text="TURN INTO" FontSize="11" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}"
               Margin="0 2" />
         <Button Type="Menu Item" ID="BlockTurnIntoText" Content="Text" IconSource="icon:bold" Action="TurnIntoText"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into text" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into text" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoHeading" Content="Heading" IconSource="icon:edit" Action="TurnIntoHeading"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into heading" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into heading" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoChecklist" Content="Checklist" IconSource="icon:check" Action="TurnIntoChecklist"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into checklist" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into checklist" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoBulleted" Content="Bulleted list" IconSource="icon:bulleted-list" Action="TurnIntoBulleted"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into bulleted list" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into bulleted list" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoNumbered" Content="Numbered list" IconSource="icon:numbered-list" Action="TurnIntoNumbered"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into numbered list" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into numbered list" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoTable" Content="Table" IconSource="icon:table" Action="TurnIntoTable"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into table" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into table" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoImage" Content="Image" IconSource="icon:image" Action="TurnIntoImage"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into image" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into image" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoDivider" Content="Divider" IconSource="icon:align-left" Action="TurnIntoDivider"
-                Interactive="{Binding CanManage}" AccessibleName="Turn block into divider" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into divider" Height="30" MinHeight="30" />
       </Container>
     </Container>
   </Page>

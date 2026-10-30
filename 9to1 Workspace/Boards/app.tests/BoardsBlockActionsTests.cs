@@ -4,11 +4,13 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Runtime;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -45,7 +47,7 @@ public sealed class BoardsBlockActionsTests
                 if (host is not null)
                 {
                     var menuSurface = host.Menu;
-                    menuNames = menuSurface.GetSelfAndVisualDescendants().OfType<Button>()
+                    menuNames = AuthoredControls(menuSurface).OfType<MenuItem>()
                         .Select(button => button.Name ?? string.Empty)
                         .ToArray();
                 }
@@ -80,8 +82,8 @@ public sealed class BoardsBlockActionsTests
         {
             var page = session.Document.Sections[0].Pages[0];
             page.Blocks.Clear();
-            page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = "first" });
-            page.Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = "second" });
+            page.Blocks.Add(new RichBoardBlock { Id = "first", Kind = "paragraph", Text = "first" });
+            page.Blocks.Add(new RichBoardBlock { Id = "second", Kind = "paragraph", Text = "second" });
             return true;
         });
 
@@ -99,7 +101,7 @@ public sealed class BoardsBlockActionsTests
                 border.Tag is BlockReorderRow reorder && reorder.BlockId == "second");
             var trigger = Assert.Single(row.GetVisualDescendants().OfType<Button>(),
                 button => button.Name == "BlockGripToggle");
-            var gripRoot = Assert.IsType<Control>(trigger.Parent);
+            var gripRoot = Assert.IsAssignableFrom<Control>(trigger.Parent);
             return (Window: window, Row: row, GripRoot: gripRoot, Trigger: trigger);
         });
         try
@@ -112,9 +114,12 @@ public sealed class BoardsBlockActionsTests
             var host = BlockGripCui.HostFor(fixture.Trigger);
             Assert.NotNull(host);
             var popup = host!.Popup;
-            Assert.Same(fixture.Trigger, popup.PlacementTarget);
-            Assert.NotNull(host.Menu);
-            Assert.False(host.Popup.IsOpen, "the block menu must stay closed until the grip is opened");
+            TestUiThread.Run(() =>
+            {
+                Assert.Same(fixture.Trigger, popup.PlacementTarget);
+                Assert.NotNull(host.Menu);
+                Assert.False(host.Popup.IsOpen, "the block menu must stay closed until the grip is opened");
+            });
 
             // STAGE 2 - opening: the authored ToggleActions command must open that same surface.
             TestUiThread.Run(() => fixture.Trigger.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)));
@@ -129,7 +134,7 @@ public sealed class BoardsBlockActionsTests
             });
 
             // STAGE 3 - rows: the mockup's rows must exist inside that surface.
-            var names = TestUiThread.Run(() => host.Menu.GetSelfAndVisualDescendants().OfType<Button>()
+            var names = TestUiThread.Run(() => AuthoredControls(host.Menu).OfType<MenuItem>()
                 .Select(button => button.Name)
                 .Where(name => name is not null)
                 .ToArray());
@@ -138,11 +143,10 @@ public sealed class BoardsBlockActionsTests
             Assert.Contains("BlockMoveUp", names);
             Assert.Contains("BlockMoveDown", names);
             Assert.Contains("BlockDesignMenuToggle", names);
-            Assert.True(host.Popup.IsOpen,
+            TestUiThread.Run(() => Assert.True(host.Popup.IsOpen,
                 "MENU OPEN CHAIN press=" + host.PressCount + " click=" + host.ClickCount
                 + " authored=" + host.ToggleCommandsReceived + " attempts=" + host.OpenAttempts
-                + " opened=" + host.OpenedCount + " closed=" + host.ClosedCount
-                + " fallback=" + host.FallbackClickOpens);
+                + " opened=" + host.OpenedCount + " closed=" + host.ClosedCount));
         }
         finally
         {
@@ -192,10 +196,18 @@ public sealed class BoardsBlockActionsTests
                 var end = host.TranslatePoint(new Point(start.X, host.Bounds.Height + 12), window)!.Value;
                 return (Window: window, Host: host, Row: row, Grip: grip, Start: start, End: end);
             });
+            var releasedTop = double.NaN;
+            var landingTops = new List<double>();
             try
             {
                 TestUiThread.Run(() =>
                 {
+                    fixture.Row.PropertyChanged += (_, change) =>
+                    {
+                        if (change.Property == Visual.RenderTransformProperty &&
+                            change.NewValue is Avalonia.Media.TranslateTransform && !fixture.Grip.IsPressed)
+                            landingTops.Add(fixture.Row.TranslatePoint(new Point(0, 0), fixture.Host)!.Value.Y);
+                    };
                     fixture.Window.MouseMove(fixture.Start);
                     fixture.Window.MouseDown(fixture.Start, MouseButton.Left);
                     Assert.True(fixture.Grip.IsPressed);
@@ -216,6 +228,8 @@ public sealed class BoardsBlockActionsTests
                         if (gesture == "stale") vm.EditText("t_block-b", "Changed during drag");
                         if (gesture is "return-to-grip" or "escape") fixture.Window.MouseMove(fixture.Start);
                     }
+                    if (gesture == "move" && !freePlacement)
+                        releasedTop = fixture.Row.TranslatePoint(new Point(0, 0), fixture.Host)!.Value.Y;
                     fixture.Window.MouseUp(gesture is "click" or "return-to-grip" or "escape" ? fixture.Start : fixture.End, MouseButton.Left);
                     Dispatcher.UIThread.RunJobs();
                 });
@@ -227,6 +241,22 @@ public sealed class BoardsBlockActionsTests
                             (freePlacement ? Blocks(adapter)[0].Layout == HavenRichBlockLayouts.Absolute : Blocks(adapter)[0].Id == "block-b") :
                             vm.TryGetValue("StatusText", out var status) && status?.ToString()?.Contains("Block move refused", StringComparison.Ordinal) == true)) break;
                         await Task.Delay(10);
+                    }
+                }
+                if (!freePlacement && gesture is "move" or "return-to-grip")
+                {
+                    // A successful drop commits before its settling animation finishes. Retain the
+                    // cleanup assertion, but allow the bounded animation its real timer frames.
+                    for (var attempt = 0; attempt < 100; attempt++)
+                    {
+                        if (TestUiThread.Run(() =>
+                        {
+                            // RunJobs drains queued work but never services the platform timer.
+                            // Pump the real dispatcher briefly so the production settle timer runs.
+                            using var frame = new CancellationTokenSource(TimeSpan.FromMilliseconds(20));
+                            Dispatcher.UIThread.MainLoop(frame.Token);
+                            return fixture.Host.Children.OfType<Border>().All(row => row.RenderTransform is null);
+                        })) break;
                     }
                 }
                 TestUiThread.Run(() =>
@@ -243,9 +273,10 @@ public sealed class BoardsBlockActionsTests
                         .OfType<BlockGripCui.BlockActionsHost>()
                         .Distinct()
                         .ToArray();
-                    var revealed = fixture.Window.GetSelfAndVisualDescendants().OfType<Button>()
-                        .Concat(fixture.Grip.GetLogicalDescendants().OfType<Button>())
-                        .Concat(hosts.SelectMany(host => host.Menu.GetSelfAndVisualDescendants().OfType<Button>()))
+                    var revealed = fixture.Window.GetSelfAndVisualDescendants().OfType<MenuItem>()
+                        .Concat(fixture.Grip.GetLogicalDescendants().OfType<MenuItem>())
+                        .Concat(hosts.Where(host => host.Popup.IsOpen)
+                            .SelectMany(host => host.Menu.GetSelfAndVisualDescendants().OfType<MenuItem>()))
                         .Distinct()
                         .SingleOrDefault(button => button.Name == "BlockDuplicate");
                     if (gesture == "click")
@@ -254,7 +285,7 @@ public sealed class BoardsBlockActionsTests
                         // then the row actually being visible where it lives.
                         var ownHost = Assert.Single(hosts);
                         Assert.True(ownHost.Popup.IsOpen, "STAGE: the grip's own menu surface did not open");
-                        var inHost = ownHost.Menu.GetSelfAndVisualDescendants().OfType<Button>()
+                        var inHost = ownHost.Menu.GetSelfAndVisualDescendants().OfType<MenuItem>()
                             .SingleOrDefault(button => button.Name == "BlockDuplicate");
                         Assert.NotNull(inHost);
                         Assert.True(inHost!.IsEffectivelyVisible, "STAGE: the menu row is present but not visible");
@@ -262,13 +293,20 @@ public sealed class BoardsBlockActionsTests
                         Assert.True(revealed!.IsEffectivelyVisible);
                     }
                     else
+                    {
                         // Drag, Escape-return and stale-ticket gestures must never open the menu.
+                        Assert.All(hosts, host => Assert.False(host.Popup.IsOpen));
                         Assert.True(revealed is null || !revealed.IsEffectivelyVisible);
+                    }
                     Assert.DoesNotContain(fixture.Host.Children.OfType<Border>(), row =>
                         row.GetVisualDescendants().OfType<Border>().Any(outline =>
                             outline.Name == "BlockRowOutline" &&
                             (outline.BorderThickness.Top == 3 || outline.BorderThickness.Bottom == 3)));
                     Assert.Null(fixture.Row.RenderTransform);
+                    Assert.All(fixture.Host.Children.OfType<Border>(), row => Assert.Null(row.RenderTransform));
+                    if (gesture == "move" && !freePlacement)
+                        Assert.Equal(releasedTop, Assert.Single(landingTops), precision: 6);
+                    if (gesture == "stale") Assert.Empty(landingTops);
                     Assert.Equal(gesture == "move" && !freePlacement ? new[] { "block-b", "block-c", "block-a" } :
                         new[] { "block-a", "block-b", "block-c" }, Blocks(adapter).Select(block => block.Id));
                     if (freePlacement)
@@ -296,6 +334,238 @@ public sealed class BoardsBlockActionsTests
             finally { TestUiThread.Run(() => fixture.Window.Close()); }
         }
         finally { Directory.Delete(root, recursive: true); }
+    }
+
+    // CUI detaches inactive submenu cells from layout while retaining their authored controls.
+    // Loading proves all authored rows exist; opening/gesture checks separately require visible rows
+    // in the actual popup. Menu Item is a MenuItem, never an Avalonia Button.
+    private static IEnumerable<Control> AuthoredControls(Control root)
+    {
+        yield return root;
+        var children = root is CuiContainerControl container
+            ? container.AuthoredChildren
+            : root.GetVisualChildren().OfType<Control>();
+        foreach (var child in children)
+            foreach (var descendant in AuthoredControls(child))
+                yield return descendant;
+    }
+
+    [Theory]
+    [InlineData("outside")]
+    [InlineData("escape")]
+    [InlineData("trigger")]
+    public async Task Authored_menu_dismisses_and_reopens_with_one_click(string dismissal)
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            await OpenMenuAsync(fixture);
+            if (dismissal == "escape" && Environment.GetEnvironmentVariable("NINETOONE_BOARDS_MENU_CAPTURE") is { Length: > 0 } capturePath)
+                TestUiThread.Run(() =>
+                {
+                    using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(760, 600), new Vector(96, 96));
+                    bitmap.Render(fixture.Window);
+                    bitmap.Save(capturePath);
+                });
+            TestUiThread.Run(() =>
+            {
+                if (dismissal == "outside")
+                {
+                    var outside = new Point(fixture.Window.Bounds.Width - 8, fixture.Window.Bounds.Height - 8);
+                    fixture.Window.MouseDown(outside, MouseButton.Left);
+                    fixture.Window.MouseUp(outside, MouseButton.Left);
+                }
+                else if (dismissal == "escape")
+                    MenuRow(fixture, "BlockDelete").RaiseEvent(new KeyEventArgs
+                        { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
+                else fixture.Trigger.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            });
+            await DrainMenuAsync(fixture);
+            TestUiThread.Run(() => Assert.False(fixture.Host.Popup.IsOpen));
+            await OpenMenuAsync(fixture);
+            TestUiThread.Run(() =>
+            {
+                Assert.Equal(2, fixture.Host.OpenedCount);
+                Assert.Equal(dismissal == "trigger" ? 3 : 2, fixture.Host.ToggleCommandsReceived);
+            });
+            Assert.Equal(3, Blocks(fixture.Adapter).Count);
+            Assert.False(fixture.Adapter.CanUndo);
+        });
+    }
+
+    [Fact]
+    public async Task Authored_menu_keyboard_opens_submenu_then_escapes_to_its_trigger()
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            await OpenMenuAsync(fixture);
+            TestUiThread.Run(() =>
+            {
+                var move = MenuRow(fixture, "BlockMoveMenuToggle");
+                Assert.True(move.Focus());
+                SendKey(fixture, PhysicalKey.Enter);
+            });
+            await DrainMenuAsync(fixture);
+            TestUiThread.Run(() =>
+            {
+                Assert.True(MenuRow(fixture, "BlockMoveUp").IsEffectivelyVisible);
+                var down = MenuRow(fixture, "BlockMoveDown");
+                Assert.True(down.Focus());
+                SendKey(fixture, PhysicalKey.Escape);
+                Assert.True(fixture.Host.Popup.IsOpen);
+                Assert.True(MenuRow(fixture, "BlockMoveMenuToggle").IsFocused);
+                Assert.DoesNotContain(fixture.Host.Menu.GetVisualDescendants().OfType<MenuItem>(),
+                    row => row.Name == "BlockMoveDown" && row.IsEffectivelyVisible);
+                SendKey(fixture, PhysicalKey.Escape);
+                Assert.False(fixture.Host.Popup.IsOpen);
+                Assert.True(fixture.Trigger.IsFocused);
+            });
+        });
+    }
+
+    [Theory]
+    [InlineData(HavenRichBlockKind.Paragraph)]
+    [InlineData(HavenRichBlockKind.Checklist)]
+    [InlineData(HavenRichBlockKind.BulletList)]
+    [InlineData(HavenRichBlockKind.NumberedList)]
+    public async Task Authored_duplicate_finishes_without_waiting_on_itself_and_keeps_one_undo(HavenRichBlockKind kind)
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            var before = fixture.Adapter.Snapshot;
+            var beforeCount = Blocks(fixture.Adapter).Count;
+            await OpenMenuAsync(fixture);
+            TestUiThread.Run(() =>
+            {
+                var duplicate = MenuRow(fixture, "BlockDuplicate");
+                Assert.True(duplicate.Focus());
+                SendKey(fixture, PhysicalKey.Enter);
+            });
+            await DrainMenuAsync(fixture);
+            TestUiThread.Run(() => Assert.False(fixture.Host.Popup.IsOpen));
+            var blocks = Blocks(fixture.Adapter);
+            Assert.Equal(beforeCount + 1, blocks.Count);
+            Assert.Equal(2, blocks.Count(block => block.Text == "AlphaBeta"));
+            Assert.Equal(beforeCount + 1, blocks.Select(block => block.Id).Distinct().Count());
+            TestUiThread.Run(() =>
+            {
+                var focused = Assert.IsType<TextBox>(fixture.Window.FocusManager!.GetFocusedElement());
+                var editor = kind == HavenRichBlockKind.Paragraph ? "t_" : "chk_";
+                Assert.Equal(editor + fixture.ViewModel.SelectedBlockId.Replace(':', '_'), focused.Name);
+                Assert.Same(fixture.Window, TopLevel.GetTopLevel(focused));
+            });
+            Assert.True(await fixture.Adapter.UndoAsync());
+            Assert.Equal(before, fixture.Adapter.Snapshot);
+            Assert.False(fixture.Adapter.CanUndo);
+        }, liveRebuild: true, kind: kind);
+    }
+
+    [Theory]
+    [InlineData("ToggleMoveMenu")]
+    [InlineData("ToggleDesignMenu")]
+    public async Task Opening_a_submenu_never_renews_a_stale_ticket(string submenu)
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            var context = new BlockGripCui.BlockGripContext(fixture.ViewModel, "block-b");
+            await DispatchContextAsync(context, "ToggleActions");
+            Assert.True(context.TryGetValue("DuplicateRequest", out var original));
+            TestUiThread.Run(() => fixture.ViewModel.EditText("t_block-b", "Newer unsaved text"));
+            await DispatchContextAsync(context, submenu);
+            Assert.True(context.TryGetValue("DuplicateRequest", out var retained));
+            Assert.Same(original, retained);
+            await DispatchContextAsync(context, "ApplyBlockAction", retained);
+            Assert.Equal(3, Blocks(fixture.Adapter).Count);
+            Assert.Equal("Newer unsaved text", Blocks(fixture.Adapter)[1].Text);
+            Assert.True(fixture.ViewModel.TryGetValue("StatusText", out var status));
+            Assert.Contains("Block action refused", status?.ToString() ?? string.Empty);
+
+            await DispatchContextAsync(context, "ToggleActions");
+            Assert.True(context.TryGetValue("DuplicateRequest", out var queued));
+            TestUiThread.Run(context.Close);
+            await DispatchContextAsync(context, "ApplyBlockAction", queued);
+            Assert.Equal(3, Blocks(fixture.Adapter).Count);
+        });
+    }
+
+    private sealed record MenuFixture(Window Window, Button Trigger, BlockGripCui.BlockActionsHost Host,
+        BoardsViewModel ViewModel, ContractSessionAdapter Adapter);
+
+    private static async Task WithMenuAsync(Func<MenuFixture, Task> check, bool liveRebuild = false,
+        HavenRichBlockKind kind = HavenRichBlockKind.Paragraph)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-menu-lifetime-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "menu.9to1board");
+            await SeedAsync(store, path, kind: kind);
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var fixture = TestUiThread.Run(() =>
+            {
+                var vm = new BoardsViewModel(adapter);
+                var panel = new StackPanel { Width = 600, Margin = new Thickness(50) };
+                BlockRenderer.Rebuild(panel, vm, []);
+                if (liveRebuild)
+                    vm.RebuildRequested += () => Dispatcher.UIThread.Post(() => BlockRenderer.Rebuild(panel, vm, []));
+                var window = new Window { Width = 760, Height = 600, Content = panel };
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var targetId = kind == HavenRichBlockKind.Paragraph ? "block-b" : "block-b:item-one";
+                var row = panel.Children.OfType<Border>().Single(item =>
+                    item.Tag is BlockReorderRow info && info.BlockId == targetId);
+                var trigger = row.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "BlockGripToggle");
+                return new MenuFixture(window, trigger, Assert.IsType<BlockGripCui.BlockActionsHost>(BlockGripCui.HostFor(trigger)), vm, adapter);
+            });
+            try { await check(fixture); }
+            finally { TestUiThread.Run(() => { fixture.Window.Close(); fixture.ViewModel.Dispose(); }); }
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    private static MenuItem MenuRow(MenuFixture fixture, string name) =>
+        AuthoredControls(fixture.Host.Menu).OfType<MenuItem>().Single(row => row.Name == name);
+
+    private static void SendKey(MenuFixture fixture, PhysicalKey key)
+    {
+        fixture.Window.KeyPressQwerty(key, RawInputModifiers.None);
+        fixture.Window.KeyReleaseQwerty(key, RawInputModifiers.None);
+    }
+
+    private static async Task DispatchContextAsync(BlockGripCui.BlockGripContext context, string command, object? parameter = null)
+    {
+        var action = TestUiThread.Run(() => context.DispatchAsync(command, parameter).AsTask());
+        await DrainUiAsync(action);
+    }
+
+    private static async Task OpenMenuAsync(MenuFixture fixture)
+    {
+        TestUiThread.Run(() => fixture.Trigger.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)));
+        await DrainMenuAsync(fixture);
+        TestUiThread.Run(() =>
+        {
+            fixture.Window.UpdateLayout();
+            Assert.True(fixture.Host.Popup.IsOpen);
+            Assert.True(fixture.Host.Popup.IsUsingOverlayLayer);
+            Assert.True(MenuRow(fixture, "BlockDuplicate").IsEffectivelyVisible);
+        });
+    }
+
+    private static async Task DrainMenuAsync(MenuFixture fixture)
+    {
+        var actions = TestUiThread.Run(() => fixture.Host.WhenActionsIdleAsync());
+        await DrainUiAsync(actions);
+        TestUiThread.Run(() => { Dispatcher.UIThread.RunJobs(); fixture.Window.UpdateLayout(); });
+    }
+
+    private static async Task DrainUiAsync(Task actions)
+    {
+        for (var attempt = 0; attempt < 200 && !actions.IsCompleted; attempt++)
+        {
+            TestUiThread.Run(() => Dispatcher.UIThread.RunJobs());
+            await Task.Delay(10);
+        }
+        await actions.WaitAsync(TimeSpan.FromSeconds(5));
+        TestUiThread.Run(() => Dispatcher.UIThread.RunJobs());
     }
 
     [Fact]
@@ -555,7 +825,8 @@ public sealed class BoardsBlockActionsTests
 
     private static bool Flag(BoardsViewModel model, string name) => model.TryGetValue(name, out var value) && value is true;
     private static List<RichBoardBlock> Blocks(ContractSessionAdapter adapter) => adapter.Document.Sections.Single().Pages.Single().Blocks;
-    private static async Task SeedAsync(JsonFileHavenBoardStore store, string path, bool freePlacement = false)
+    private static async Task SeedAsync(JsonFileHavenBoardStore store, string path, bool freePlacement = false,
+        HavenRichBlockKind kind = HavenRichBlockKind.Paragraph)
     {
         await using var owner = await RichBoardSession.CreateNewAsync(store, "Same block owner");
         await owner.MutateAsync(rich =>
@@ -565,6 +836,12 @@ public sealed class BoardsBlockActionsTests
             page.Blocks.Add(new() { Id = "block-a", PlainText = "first", Order = 0 });
             page.Blocks.Add(new() { Id = "block-b", PlainText = "AlphaBeta", Order = 1, Runs =
                 [new() { Text = "Alpha" }, new() { Text = "Beta", Bold = true, Baseline = HavenRichBaseline.Superscript, FontFamily = "Georgia" }] });
+            if (kind != HavenRichBlockKind.Paragraph)
+            {
+                page.Blocks[1].Kind = kind;
+                page.Blocks[1].Items = [new() { Id = "item-one", Text = "AlphaBeta", Checked = true },
+                    new() { Id = "item-two", Text = "second item" }];
+            }
             page.Blocks.Add(new() { Id = "block-c", PlainText = "last", Order = 2 });
         });
         await owner.SaveAsAsync(path);

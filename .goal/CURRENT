@@ -1,0 +1,13 @@
+goal: 9to1 overnight development
+contract: contract.md revision 1 (owner-authorised continuation)
+checkpoint: checkpoint.md revision 2
+golden_rules: golden-rules.md revision 1
+queue: queue.md revision 1
+branch: main
+base: 7199daab
+status: ACTIVE
+usage_remaining_percent: UNKNOWN
+schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
+schedule_id: 6ae3e05720308191a7bf4008466d8263
+cycle_ownership: foreground owns source; scheduled cycles are read-only while ACTIVE
+next: commit validated menu/lifetime/drag unit, then safe Design conversion and remaining Boards failures

@@ -162,6 +162,8 @@ public sealed partial class BoardsViewModel
             if (!result.Applied) { Set("StatusText", "Block action refused: " + result.Code); return true; }
             _selectedBlockId = result.SelectedBlockId ?? string.Empty;
             InvalidateTextRange();
+            if (FindBlock(_selectedBlockId)?.Kind is "paragraph" or "heading" or "checklist" or "bulleted" or "numbered")
+                _pendingTextFocus = (request.Target.PageId, _selectedBlockId, 0);
             RefreshAfterEdit();
             return true;
         }
