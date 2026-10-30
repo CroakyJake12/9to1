@@ -1,15 +1,15 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 5
+checkpoint: checkpoint.md revision 6
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 3
+queue: queue.md revision 4
 branch: main
-base: e17b7ee164080481464ceb500bcb0db8862bdb18 (validated source; use the checkpoint's containing main commit)
-status: ACTIVE
+base: a376fda20fc9b982428599d260072c8d69ffa05b (validated source; use the checkpoint's containing main commit)
+status: CHECKPOINT_READY
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_report: cycle-reports/2026-10-30-02.md
-cycle_ownership: cycle 3 owns Boards BF-37 preview implementation and focused tests from clean refreshed main a09091a6; no other writer admitted
-next_scheduled_trigger: 2026-10-30T04:10:00Z nominal; 03:10 cycle executing
-next: visible BF-37 insertion/replace preview using checked CUI pointer/focus actions; retain Design and native/ARM gates
+cycle_report: cycle-reports/2026-10-30-03.md
+cycle_ownership: released after cycle 3 validation and verified source push; reconcile live source/ownership before claiming ACTIVE
+next_scheduled_trigger: 2026-10-30T05:10:00Z nominal; overlapping 04:10 trigger coalesced into cycle 3
+next: remaining BF-37 destination fidelity, starting with Attachment picker/asset flow if dependency-ready; preserve Design and native/ARM gates
