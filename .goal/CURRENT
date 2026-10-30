@@ -1,15 +1,17 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 9
+checkpoint: checkpoint.md revision 10
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 7
+queue: queue.md revision 8
 branch: main
 base: ee4b96914b74fa945cf09b7af9cda5ca24b88f2a (validated source; use the checkpoint's containing main commit)
 status: CHECKPOINT_READY
-usage_remaining_percent: UNKNOWN
+usage_remaining_percent: 8
+usage_observation: approximate owner report received 2026-10-30T09:10:29Z; no live platform feed; <=5% stop condition unchanged
+usage_handoff: handoffs/2026-10-30-usage-update.md
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
 cycle_report: cycle-reports/2026-10-30-06.md
-cycle_ownership: cycle 6 complete; source released after validated commit/push/readback; 08:10 overlapping trigger coalesced; no other writer admitted
+cycle_ownership: cycle 6 complete and source released; subsequent owner-usage state update complete, no source or SDK work; no other writer admitted
 next_scheduled_trigger: 2026-10-30T09:10:00Z nominal; existing hourly continuation remains enabled
 next: owner paragraph toolbar cleanup with focused-pane top-toolbar routing, then pin Data destination ownership; preserve Design/native/ARM gates

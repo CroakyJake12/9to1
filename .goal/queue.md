@@ -1,4 +1,4 @@
-# Development queue · revision 7
+# Development queue · revision 8
 
 Source: owner continuation, latest paragraph-toolbar direction and cycle 6 results.
 
@@ -35,4 +35,5 @@ The overlapping 08:10 trigger was coalesced. New owner UI direction leads next.
 Claim ACTIVE only from CHECKPOINT_READY/recorded release after live inspection.
 Compile each unit, retain failures, review, commit/push/read back main and checkpoint.
 No branch/worktree/force push/reset/model launch. Acceptance PAUSED, package HELD,
-usage UNKNOWN. Stop at observed <=5% or 2026-11-01T00:00:00Z.
+latest usage approximately 8%, owner-reported at 09:10 UTC on 30 October; no live
+platform feed. Queue order unchanged. Stop at observed <=5% or 2026-11-01T00:00:00Z.

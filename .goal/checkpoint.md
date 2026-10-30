@@ -1,8 +1,15 @@
-# Checkpoint 9 · 30 October 2026, 08:55 UTC
+# Checkpoint 10 · 30 October 2026, owner usage update
 
 Status: CHECKPOINT_READY. Cycle 6 completed the reproduced Tabber rename/neighbor
 gesture milestone. BF-37 remains CHECKED PARTIAL. Refresh live ownership, remote/source
 and dirty work before claiming the next writer.
+
+Owner update received at 09:10 UTC: “Ok, usage about 8%”. Latest remaining usage is
+therefore **approximately 8%, owner-reported**, superseding UNKNOWN at cycle 6's
+publication. This is an approximate point-in-time report, not a live platform feed.
+The observed <=5% wrap/commit/push/readback/handoff/pause instruction is unchanged;
+8% does not trigger it. No code or SDK work accompanied this state update. The
+paragraph-toolbar repair remains next. See handoffs/2026-10-30-usage-update.md.
 
 ## Source and validation
 
@@ -78,5 +85,6 @@ heavy/ARM/package launch, branch/worktree, force push, reset, email or replaceme
 Nominal 07:10 cycle (recorded 07:15:19) owns this milestone. The 08:10 trigger (recorded
 08:11:52) was coalesced while ACTIVE without another writer/milestone. Existing hourly
 continuation remains enabled through **2026-11-01T00:00:00Z**; next nominal 09:10 UTC,
-not a guarantee of execution. Usage **UNKNOWN**. At authoritative observed <=5%, safely
+not a guarantee of execution. Usage was UNKNOWN at cycle 6 publication; the owner's
+later approximate 8% report above is now the latest observation. At authoritative observed <=5%, safely
 wrap, commit/push/read back main, hand off and pause without starting new work.
