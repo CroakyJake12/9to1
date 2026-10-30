@@ -420,6 +420,234 @@
         "output.log": "0e8683a4569b63f3d65d612fe55f4692c045410b5727eb69a1efab647dba2587",
         "_7ede5e866468_2026-10-30_00_34_26_net10.0.trx": "1560f850514ded924ef8608354b8c64546b5c7b6769cd3f0017753b9908ffc79"
       }
+    },
+    {
+      "classification": "ORDINARY_LAYER1_PARTIAL_NOT_REUSABLE",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "test",
+        "9to1 Workspace/Boards/app.tests/CakeOS.Apps.Boards.App.Tests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "--nologo",
+        "-v",
+        "minimal",
+        "--disable-build-servers",
+        "-m:1",
+        "-nodeReuse:false",
+        "-p:UseSharedCompilation=false",
+        "-p:BuildInParallel=false",
+        "-p:EnableWindowsTargeting=true",
+        "--filter",
+        "FullyQualifiedName~BoardsBlockActionsTests|FullyQualifiedName~BoardsBlockConversionTests",
+        "--logger",
+        "trx",
+        "--results-directory",
+        "/workspace/scratch/9to1-overnight-20261030/conversion-final/trx"
+      ],
+      "source_before": {
+        "head": "81400baec8add3db82e6b0c2dd8c20d681df5b83",
+        "diff_sha256": "5d02fc1698372dd97b403ce2bb7181789fabd8dd66525806575e4b3785a22d53",
+        "status": " M \"9to1 Workspace/Boards/app.tests/BoardsBlockActionsTests.cs\"\n M \"9to1 Workspace/Boards/app/BlockActionsMenuCui.cui\"\n M \"9to1 Workspace/Boards/app/BlockGripCui.cs\"\n M \"9to1 Workspace/Boards/app/BoardsViewModel.Cui.cs\"\n M \"9to1 Workspace/Boards/app/ContractSessionAdapter.cs\"\n M docs/development/boards-menu-repair-2026-10-30.md\n?? \"9to1 Workspace/Boards/app.tests/BoardsBlockConversionTests.cs\"\n",
+        "donors": "-5836a062726f715fda621338a17b51aff30d0a8c 9to1 Workspace/Browse/Source/FirefoxGecko\n 864a05282841bf04006890f04d11d60d1a046aa9 framework/CUI/vendor/Avalonia/external/Avalonia.DBus (remotes/origin/fix/empty-array-and-error-handling-1-g864a052)\n 009d4815470cf4bf71d1adbb633a5d81dcb2bb52 framework/CUI/vendor/Avalonia/external/XamlX (remotes/origin/fixes/10856-cecil-declared-in-another-module-93-g009d481)\n"
+      },
+      "start_utc": "2026-10-30T00:46:40Z",
+      "exit_code": 0,
+      "source_unchanged": true,
+      "peak_group_rss": 566132736,
+      "violation": null,
+      "label": "conversion-final",
+      "counters": {
+        "total": "41",
+        "executed": "41",
+        "passed": "41",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "cases": [
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Typed_block_move_uses_one_undo_step_and_cancelled_move_is_inert",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_menu_dismisses_and_reopens_with_one_click(dismissal: \"outside\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Grip_refreshes_after_typing_but_an_open_menu_cannot_apply_a_stale_ticket",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Canonical_commands_move_duplicate_delete_with_same_history_and_save_reopen",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Opening_a_submenu_never_renews_a_stale_ticket(submenu: \"ToggleMoveMenu\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_menu_dismisses_and_reopens_with_one_click(dismissal: \"escape\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"stale\", freePlacement: False)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_menu_dismisses_and_reopens_with_one_click(dismissal: \"trigger\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Unimplemented_lossless_mapping_refuses_without_blank_replacement(kind: Image)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"escape\", freePlacement: False)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Unimplemented_lossless_mapping_refuses_without_blank_replacement(kind: Table)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"escape\", freePlacement: True)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Conversion_keeps_full_payload_identity_one_undo_and_reopen(from: Paragraph, to: Heading)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_duplicate_finishes_without_waiting_on_itself_and_keeps_one_undo(kind: Paragraph)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Refused_conversion_never_changes_content_or_adds_history(refusal: \"cancelled\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Unimplemented_lossless_mapping_refuses_without_blank_replacement(kind: Checklist)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.The_authored_grip_document_loads_a_real_toggle_and_publishes_its_menu_host",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Refused_conversion_never_changes_content_or_adds_history(refusal: \"stale-view\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"click\", freePlacement: True)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Refused_conversion_never_changes_content_or_adds_history(refusal: \"stale-revision\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Unimplemented_lossless_mapping_refuses_without_blank_replacement(kind: BulletList)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Opening_a_submenu_never_renews_a_stale_ticket(submenu: \"ToggleDesignMenu\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_menu_keyboard_opens_submenu_then_escapes_to_its_trigger",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Unimplemented_lossless_mapping_refuses_without_blank_replacement(kind: Divider)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"move\", freePlacement: True)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_duplicate_finishes_without_waiting_on_itself_and_keeps_one_undo(kind: Checklist)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Refused_conversion_never_changes_content_or_adds_history(refusal: \"read-only\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_design_converts_existing_text_and_disables_lossy_destinations",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Unimplemented_lossless_mapping_refuses_without_blank_replacement(kind: NumberedList)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Refused_conversion_never_changes_content_or_adds_history(refusal: \"revoked-during-apply\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Refused_conversion_never_changes_content_or_adds_history(refusal: \"forged\")",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_duplicate_finishes_without_waiting_on_itself_and_keeps_one_undo(kind: BulletList)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Boundary_denied_stale_and_composite_targets_create_no_action_history_or_disk_change",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Opening_the_authored_grip_menu_presents_every_mockup_row_in_the_floating_surface",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"return-to-grip\", freePlacement: False)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockConversionTests.Conversion_keeps_full_payload_identity_one_undo_and_reopen(from: Heading, to: Paragraph)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"move\", freePlacement: False)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Design_does_not_refresh_its_ticket_after_the_open_block_changes",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Authored_duplicate_finishes_without_waiting_on_itself_and_keeps_one_undo(kind: NumberedList)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Actual_grip_pointer_routes_move_click_cancel_and_revision_refusal(gesture: \"click\", freePlacement: False)",
+          "outcome": "Passed"
+        },
+        {
+          "name": "CakeOS.Apps.Boards.App.Tests.BoardsBlockActionsTests.Duplication_preserves_full_contract_payload_and_refreshes_only_owned_nested_identities",
+          "outcome": "Passed"
+        }
+      ],
+      "artifacts": {
+        "receipt.json": "55439ecf28e61081124fcc878bda303c843929053deb45ab21fc88279d6d29ae",
+        "output.log": "c4a1a0c2d1c9a7272dae43866d265195c1ebe81788c88c3845439220b23ad2c1",
+        "_7ede5e866468_2026-10-30_00_46_53_net10.0.trx": "e0d0430a15f23ad9344dbe03a3a45a90aa721c193c859523d6769e94584fd38f"
+      },
+      "untracked_test_hash_at_checkpoint": "dad33531df78fa52db49a5b922f4c97a95e4f1a96c0dd13d556b4244cd92b670"
     }
   ],
   "component_capture": {

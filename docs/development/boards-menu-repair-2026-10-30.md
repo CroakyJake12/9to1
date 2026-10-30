@@ -67,10 +67,41 @@ dotnet test '9to1 Workspace/Boards/app.tests/CakeOS.Apps.Boards.App.Tests.csproj
   -p:EnableWindowsTargeting=true --logger trx --results-directory /private/fresh/results
 ```
 
-**Next, not complete:** Design still uses the prior blank insert-and-remove replacement. Replace it
-with revision-fenced, content-preserving conversion before claiming the whole menu fixed. Mapping
-incompatible objects or multi-item projected lists must not silently discard content. BF-37 remains
-queued and BF-38 retains its owner decision. The two other suite failures remain open.
+**Next, not complete:** remaining Design mappings must not silently discard incompatible objects or
+multi-item projected lists. BF-37 remains queued and BF-38 retains its owner decision. The two other
+suite failures remain open at this checkpoint.
+
+## Design conversion unit — flow pinned before editing
+
+1. Open Design for the exact block and retain its original issued menu ticket.
+2. For paragraph ↔ heading, change the existing canonical block kind in one transaction. Keep its ID,
+   order, text, runs, layout/coordinates, style, paragraph attributes and any retained payload.
+3. Restore the editor selection/focus, close the menu, and preserve undo/redo/save/reopen. A same-kind
+   request is a no-op. Changed content/revision, another owner, View mode, cancellation or a stale
+   selection refuses the mutation without adding an undo step.
+4. Keep all eight owner-authored Design destinations discoverable. Until a lossless mapping exists,
+   disable unsupported conversions and expose a meaningful reason. Never call blank replacement.
+
+This unit does not claim all conversions complete. Projected list IDs refer to individual children;
+turning their parent into another kind would alter siblings. List items currently cannot represent
+all text-run/font/highlight attributes. Images require a real asset. Table/object flattening and list
+splitting need a defined content/identity contract, not an implementer-selected lossy mapping.
+
+Implemented and checked: **41/41 focused block-action/conversion cases, 0 skipped**, including actual
+window-keyboard Design activation and refusal after typing into an already-open target. Full-payload
+tests compare every serialized block field except the intended kind, including absolute geometry,
+paragraph attributes, rich runs and retained list/table/attachment payloads. They also check one-step
+undo/redo and save/reopen. Forged tickets, stale view/revision, revoked edit authority, cancellation,
+same-kind no-op and six unsupported destinations preserve content/history.
+
+The old blank replacement route is removed from Design. Remaining mappings are tracked explicitly in
+`OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION`; unsupported rows have real disabled states and
+accessible reasons. This is partial Design implementation, not native acceptance or all-conversions
+completion. The legacy toolbar conversion helper is outside this menu unit and still needs review.
+
+Final focused run: `conversion-final`, source unchanged while running, peak group RSS 566,132,736 bytes,
+no resource violation. New test-file bytes were untracked during that run and are hashed at checkpoint;
+the ordinary Layer1 receipt remains PARTIAL / NOT REUSABLE. The next full-suite run uses tracked source.
 
 Original PC screenshots and private runtime evidence are unavailable here. Headless UI tests or
 component captures must be labelled as such. ARM installation/execution and owner-instance retest

@@ -18,6 +18,7 @@ public sealed record BoardBlockMoveRequest(BoardBlockActionTarget Target, int De
 public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string PageId, string BlockId,
     string ViewStamp, int ViewIndex, int ViewCount);
 public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
+public sealed record BoardBlockConversionCapability(bool CanApply, string Code);
 
 public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession, IBoardSessionCapabilities,
     IBoardSessionLifetime
@@ -494,6 +495,66 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
             return new(true, "Applied", selected);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Reports implemented lossless mappings; this is not mutation authority.</summary>
+    public BoardBlockConversionCapability GetBlockConversionCapability(BoardBlockActionTarget target,
+        HavenRichBlockKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        if (_disposed) return new(false, "Disposed");
+        if (kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading))
+            return new(false, "UnsupportedConversion");
+        var block = _view.Sections.SelectMany(section => section.Pages)
+            .FirstOrDefault(page => page.Id == target.PageId)?.Blocks.FirstOrDefault(value => value.Id == target.BlockId);
+        if (block is null) return new(false, "TargetNotFound");
+        if (target.BlockId.Contains(':') || block.Kind is not ("paragraph" or "heading"))
+            return new(false, "UnsupportedConversion");
+        if ((kind == HavenRichBlockKind.Paragraph && block.Kind == "paragraph") ||
+            (kind == HavenRichBlockKind.Heading && block.Kind == "heading"))
+            return new(false, "NoChange");
+        return new(true, "Ready");
+    }
+
+    /// <summary>Converts the exact menu target in one transaction without replacing its payload.</summary>
+    public async ValueTask<BoardBlockActionResult> ApplyBlockConversionAsync(BoardBlockActionTarget target,
+        HavenRichBlockKind kind, Func<bool> originStillEditable, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target); ArgumentNullException.ThrowIfNull(originStillEditable);
+        if (_disposed) return new(false, "Disposed", null);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            bool CurrentView() => !_disposed && IsIssuedBlockAction(target) && target.OwnerId == _textOwner &&
+                originStillEditable() && (target.BlockId.Contains(':') ? CurrentListRowTicket(target)
+                    : target.ViewStamp == BlockActionStamp());
+            if (!CurrentView() || target.Revision != DocumentVersion) return new(false, "StaleOrReadOnly", null);
+            var capability = GetBlockConversionCapability(target, kind);
+            if (!capability.CanApply) return new(false, capability.Code, target.BlockId);
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var version = DocumentVersion;
+            bool Applicable(HavenRichNotes rich)
+            {
+                if (!CurrentView() || rich.Version != version) return false;
+                var block = rich.Sections.SelectMany(section => section.Pages)
+                    .FirstOrDefault(page => page.Id == target.PageId)?.Blocks.FirstOrDefault(value => value.Id == target.BlockId);
+                return block is not null && block.Kind != kind &&
+                    block.Kind is HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading;
+            }
+            var applied = await _real.MutateIfAsync(Applicable, rich =>
+            {
+                var block = rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == target.PageId)
+                    .Blocks.Single(value => value.Id == target.BlockId);
+                // Preserve identity, coordinates, paragraph attributes, runs and retained object
+                // payloads. Blank insertion/removal would lose all of them and create two edits.
+                block.Kind = kind;
+                HavenRichNotesOps.TouchNotes(rich);
+            }, cancellationToken).ConfigureAwait(false);
+            if (!applied) return new(false, "StaleOrReadOnly", null);
+            RefreshView();
+            return new(true, "Applied", target.BlockId);
         }
         finally { _mergeGate.Release(); }
     }

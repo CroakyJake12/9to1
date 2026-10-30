@@ -237,6 +237,22 @@
       "state": "open - owner IA recorded; nothing implemented yet",
       "affected_change": "the Files native host store registration and root list, Home's Files navigation, the Boards save root resolution (BF-39), and the Connect sign-in signal that attaches Cloud",
       "evidence": "owner messages 29 October; docs/specification/owner-references/2026-10-27-expanded-spec (create and save without Files connect, account or a dedicated Boards folder); OPEN-2026-10-28-LOCAL-STORAGE-SCOPES; OPEN-2026-10-29-BOARD-SAVE-LOCATION"
+    },
+    {
+      "id": "OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION",
+      "at": "2026-10-30T00:47:00Z",
+      "status": "open — only the incompatible conversion mappings are held",
+      "title": "Content and identity contract for the remaining Design conversions",
+      "requirements": ["UX27-BOARD-027", "UX27-SHARED-013", "canonical Boards text selection and conversion semantics"],
+      "owner_intent": "The grip Design menu offers Text, Heading, Checklist, Bulleted list, Numbered list, Table, Image and Divider. Conversions preserve content, valid marks, identity, history and persistence.",
+      "conflicting_evidence": "The former TurnInto command inserted a blank replacement then removed the original. Projected list rows identify one item as parent:item, so converting their parent would alter siblings. HavenRichListItem cannot represent all text-run/font/highlight attributes. An image requires real asset content. The available donor manifest does not define these conversion mappings.",
+      "open_questions": [
+        "For conversion of one projected list row, how are the remaining sibling lists split and their canonical block identities retained?",
+        "Which lossless mapping is intended between rich text and list/table/image/divider content, including inline marks and non-text payloads? Image conversion needs a real asset-selection flow; object flattening must not silently discard content."
+      ],
+      "current_behavior": "Paragraph and Heading convert the same block through an issued revision ticket in one undoable transaction. All eight destinations remain discoverable; unsupported mappings are disabled with a content-preservation reason. Direct unsupported typed requests refuse without mutation.",
+      "affected_change": "Remaining Design conversion mappings only. Continue BF-37 and independent Boards/Files repairs. This is not a waiver or a claim that the entire menu is complete.",
+      "evidence": "docs/development/boards-menu-repair-2026-10-30.md; BoardsBlockConversionTests; BoardsBlockActionsTests.Authored_design_converts_existing_text_and_disables_lossy_destinations"
     }
   ]
 }

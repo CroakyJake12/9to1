@@ -170,6 +170,37 @@ public sealed partial class BoardsViewModel
         finally { _blockActionBusy = false; RefreshCuiBlockActions(); }
     }
 
+    internal async ValueTask<bool> DispatchCuiBlockConversionAsync(BoardBlockActionTarget target,
+        HavenRichBlockKind kind, CancellationToken cancellationToken = default)
+    {
+        if (!_isEditMode || _blockActionBusy || !BlockActionEditingAllowed() ||
+            _session is not ContractSessionAdapter adapter ||
+            SelectedPageId != target.PageId || SelectedBlockId != target.BlockId)
+        { Set("StatusText", "Select an editable block."); return false; }
+        var epoch = Interlocked.Read(ref _textRangeEpoch);
+        _blockActionBusy = true; RefreshCuiBlockActions();
+        try
+        {
+            var result = await adapter.ApplyBlockConversionAsync(target, kind,
+                () => !_textRangeDetached && _isEditMode && SelectedPageId == target.PageId &&
+                    SelectedBlockId == target.BlockId && Interlocked.Read(ref _textRangeEpoch) == epoch,
+                cancellationToken);
+            if (!result.Applied)
+            {
+                if (result.Code != "NoChange") Set("StatusText", result.Code == "UnsupportedConversion"
+                    ? "This conversion cannot preserve this block's content."
+                    : "Block conversion refused: " + result.Code);
+                return false;
+            }
+            _selectedBlockId = target.BlockId;
+            InvalidateTextRange();
+            _pendingTextFocus = (target.PageId, target.BlockId, 0);
+            RefreshAfterEdit();
+            return true;
+        }
+        finally { _blockActionBusy = false; RefreshCuiBlockActions(); }
+    }
+
     internal async ValueTask<bool> DispatchCuiBlockMoveAsync(
         BoardBlockMoveRequest request, CancellationToken cancellationToken = default)
     {

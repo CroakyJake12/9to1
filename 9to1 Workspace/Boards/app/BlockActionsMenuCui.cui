@@ -49,21 +49,29 @@
         <Text Text="TURN INTO" FontSize="11" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}"
               Margin="0 2" />
         <Button Type="Menu Item" ID="BlockTurnIntoText" Content="Text" IconSource="icon:bold" Action="TurnIntoText"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into text" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertText}" AccessibleDescription="{Binding ConvertTextDescription}"
+                AccessibleName="Turn block into text" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoHeading" Content="Heading" IconSource="icon:edit" Action="TurnIntoHeading"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into heading" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertHeading}" AccessibleDescription="{Binding ConvertHeadingDescription}"
+                AccessibleName="Turn block into heading" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoChecklist" Content="Checklist" IconSource="icon:check" Action="TurnIntoChecklist"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into checklist" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertChecklist}" AccessibleDescription="{Binding ConvertChecklistDescription}"
+                AccessibleName="Turn block into checklist" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoBulleted" Content="Bulleted list" IconSource="icon:bulleted-list" Action="TurnIntoBulleted"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into bulleted list" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertBulleted}" AccessibleDescription="{Binding ConvertBulletedDescription}"
+                AccessibleName="Turn block into bulleted list" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoNumbered" Content="Numbered list" IconSource="icon:numbered-list" Action="TurnIntoNumbered"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into numbered list" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertNumbered}" AccessibleDescription="{Binding ConvertNumberedDescription}"
+                AccessibleName="Turn block into numbered list" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoTable" Content="Table" IconSource="icon:table" Action="TurnIntoTable"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into table" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertTable}" AccessibleDescription="{Binding ConvertTableDescription}"
+                AccessibleName="Turn block into table" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoImage" Content="Image" IconSource="icon:image" Action="TurnIntoImage"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into image" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertImage}" AccessibleDescription="{Binding ConvertImageDescription}"
+                AccessibleName="Turn block into image" Height="30" MinHeight="30" />
         <Button Type="Menu Item" ID="BlockTurnIntoDivider" Content="Divider" IconSource="icon:align-left" Action="TurnIntoDivider"
-                IsEnabled="{Binding CanManage}" AccessibleName="Turn block into divider" Height="30" MinHeight="30" />
+                IsEnabled="{Binding CanConvertDivider}" AccessibleDescription="{Binding ConvertDividerDescription}"
+                AccessibleName="Turn block into divider" Height="30" MinHeight="30" />
       </Container>
     </Container>
   </Page>

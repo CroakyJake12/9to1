@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -231,6 +232,13 @@ internal static class BlockGripCui
     // true, with no subscriber to act on it (measured 28 October).
     internal sealed class BlockGripContext : INotifyPropertyChanged, ICuiWritableBindingContext, ICuiActionDispatcher
     {
+        private static readonly (string Name, string Token, HavenRichBlockKind Kind)[] ConversionKinds =
+        [
+            ("Text", "paragraph", HavenRichBlockKind.Paragraph), ("Heading", "heading", HavenRichBlockKind.Heading),
+            ("Checklist", "checklist", HavenRichBlockKind.Checklist), ("Bulleted", "bulleted", HavenRichBlockKind.BulletList),
+            ("Numbered", "numbered", HavenRichBlockKind.NumberedList), ("Table", "table", HavenRichBlockKind.Table),
+            ("Image", "image", HavenRichBlockKind.Image), ("Divider", "divider", HavenRichBlockKind.Divider),
+        ];
         private readonly BoardsViewModel _viewModel;
         private readonly string _pageId;
         private readonly string _blockId;
@@ -305,6 +313,18 @@ internal static class BlockGripCui
             _values["CanManage"] = canManage;
             _values["CanMoveUp"] = canManage && target!.ViewIndex > 0;
             _values["CanMoveDown"] = canManage && target!.ViewIndex < target.ViewCount - 1;
+            foreach (var conversion in ConversionKinds)
+            {
+                var support = target is not null && viewModel.Session is ContractSessionAdapter conversionAdapter
+                    ? conversionAdapter.GetBlockConversionCapability(target, conversion.Kind)
+                    : new BoardBlockConversionCapability(false, "ReadOnly");
+                _values["CanConvert" + conversion.Name] = canManage && support.CanApply;
+                _values["Convert" + conversion.Name + "Description"] = !viewModel.IsEditMode
+                    ? "Switch to Edit mode to change this block."
+                    : support.Code == "NoChange" ? "This block already uses this type."
+                    : support.CanApply ? "Convert this block while keeping its content."
+                    : "This conversion cannot preserve this block's content.";
+            }
             _values["GripAccessibleName"] = "Open block actions for " + (eligible ? blocks[index].Kind : "block");
             // The submenu rows carry their own expansion state so a screen reader can tell the owner
             // whether Move Block or Design is open, rather than hearing the same label twice.
@@ -375,20 +395,17 @@ internal static class BlockGripCui
                 PublishExpansion();
                 return;
             }
-            // The Design submenu's "turn into" list re-types this block in place. The block identity
-            // changes because a new block is built by the same factory the plus menu uses, so the grip is
-            // rebuilt for the new row rather than pretending the old ticket survived.
+            // Design converts the original issued target. Never refresh its ticket here or route
+            // through insertion/replacement: both would discard the open menu's content contract.
             if (command.StartsWith("TurnInto:", StringComparison.OrdinalIgnoreCase))
             {
-                if (_target is null || !_isExpanded) return;
-                var kind = command["TurnInto:".Length..].Trim().ToLowerInvariant();
-                if (kind.Length == 0) return;
-                _isExpanded = _moveExpanded = _designExpanded = false;
-                RefreshTarget();
-                ExpansionChanged?.Invoke(false);
-                await _viewModel.InsertKindRelativeToAsync(kind, _blockId, "replace");
-                foreach (var name in new[] { "IsExpanded", "IsMoveExpanded", "IsDesignExpanded" })
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+                if (_target is null) return;
+                var token = command["TurnInto:".Length..].Trim();
+                var conversion = ConversionKinds.FirstOrDefault(value => value.Token.Equals(token, StringComparison.OrdinalIgnoreCase));
+                if (conversion.Token is null) return;
+                _viewModel.FocusBlock(_blockId);
+                try { await _viewModel.DispatchCuiBlockConversionAsync(_target, conversion.Kind, cancellationToken); }
+                finally { Close(); }
                 return;
             }
             if (command != "ApplyBlockAction" || parameter is not BoardBlockActionRequest request || _target is null ||

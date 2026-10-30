@@ -1,6 +1,22 @@
-# Checkpoint 2 · 30 October 2026
+# Checkpoint 3 · 30 October 2026
 
 Status: ACTIVE, BF-35 menu/lifetime/drag repair compiled and checked; foreground retains source ownership.
+
+- Menu/lifetime/drag unit **81400baec8add3db82e6b0c2dd8c20d681df5b83** committed, pushed and verified
+  with `git ls-remote origin main`.
+- Design now converts paragraph ↔ heading in place through the original issued ticket. **41/41**
+  focused block-action/conversion checks pass. Full payload, one undo/redo, persistence and stale,
+  forged, cancelled and revoked-permission refusals are checked. Unsupported destinations are
+  disabled with reasons; their unresolved mappings are in the open-decisions register. Legacy
+  toolbar converter review remains separate; do not call all Design mappings complete.
+- Next baseline fixes are identified: ThemeApplier must update title Foreground in the CUI property
+  store instead of a native assignment that the old CUI Instance value overrides. The host-lookup
+  test expects obsolete Canvas/direct parenting; assert actual authored child cells and Absolute
+  layout semantics without changing the correct runtime layout. Then run the full Boards suite.
+- BF-37 investigation: three destination rows are in ToolbarBuilder.AddDestinationStage; no existing
+  BlockInsertionPreview model. CUI's event contract currently rejects Hover/PointerEnter/PointerExit,
+  so do not pretend adding inert markup supplies preview behavior. Implement an authentic typed/CUI
+  path and test cleanup/activation separately, or record the exact framework gap while progressing.
 
 - Full normal source test at 00:34 UTC: **233 total, 231 passed, 2 failed, 0 skipped**.
   Baseline was **223 total, 215 passed, 8 failed**. All 25 block-action cases now pass.
@@ -10,15 +26,14 @@ Status: ACTIVE, BF-35 menu/lifetime/drag repair compiled and checked; foreground
   dispatcher timers, release geometry and complete visual cleanup.
 - Pre-existing full-suite failures remain: embedded custom/high-contrast document paint after theme
   change (White expected, Black observed), and BoardsEditor declared-surface assertion at line 710.
-- Design conversion is **NOT fixed yet**: old TurnInto path replaces with blank content/new ID. Next
-  unit must use original revision ticket and preserve identity/content/history. Text/heading is clear;
-  projected list-row splitting and incompatible object mappings require explicit lossless semantics.
+- The former blank TurnInto replacement is removed. Projected list-row splitting and incompatible
+  object mappings still require explicit lossless semantics.
 - Precise scope/results: `docs/development/boards-menu-repair-2026-10-30.md` and its evidence JSON.
   Logs/receipts: `/workspace/scratch/9to1-overnight-20261030/`. Private runner `run-layer1.py` takes a
   fresh label plus exact dotnet argv, serial locks, resource guards and immutable output receipts.
   Evidence is ordinary Layer1 PARTIAL / NOT REUSABLE; native PC and ARM remain NOT RUN.
-- Next safe step: commit/push this checked unit to main, then continue Design and the remaining
-  reproduced failures. Record verified pushed commit in the next checkpoint. No branch/worktree made.
+- Next safe step: commit/push the checked conversion unit to main, then fix the remaining reproduced
+  failures. Record verified pushed commit in the next checkpoint. No branch/worktree made.
 
 - Fetched origin/main and switched the clean existing checkout from `work` to canonical `main`.
   Starting main revision: `7199daab` (overnight handoff), containing Boards WIP `8aa8e906` and Browse

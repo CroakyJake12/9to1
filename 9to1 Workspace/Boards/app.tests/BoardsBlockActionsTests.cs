@@ -459,6 +459,67 @@ public sealed class BoardsBlockActionsTests
         }, liveRebuild: true, kind: kind);
     }
 
+    [Fact]
+    public async Task Authored_design_converts_existing_text_and_disables_lossy_destinations()
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            var before = fixture.Adapter.Snapshot;
+            await OpenMenuAsync(fixture);
+            TestUiThread.Run(() =>
+            {
+                Assert.True(MenuRow(fixture, "BlockDesignMenuToggle").Focus());
+                SendKey(fixture, PhysicalKey.Enter);
+            });
+            await DrainMenuAsync(fixture);
+            TestUiThread.Run(() =>
+            {
+                foreach (var name in new[] { "Text", "Checklist", "Bulleted", "Numbered", "Table", "Image", "Divider" })
+                    Assert.False(MenuRow(fixture, "BlockTurnInto" + name).IsEnabled);
+                var heading = MenuRow(fixture, "BlockTurnIntoHeading");
+                Assert.True(heading.IsEffectivelyVisible);
+                Assert.True(heading.IsEnabled);
+                Assert.True(heading.Focus());
+                SendKey(fixture, PhysicalKey.Enter);
+            });
+            await DrainMenuAsync(fixture);
+            Assert.Equal(3, Blocks(fixture.Adapter).Count);
+            var changed = Blocks(fixture.Adapter).Single(block => block.Id == "block-b");
+            Assert.Equal("heading", changed.Kind);
+            Assert.Equal("AlphaBeta", changed.Text);
+            Assert.Equal("Georgia", changed.Runs[1].FontFamily);
+            TestUiThread.Run(() =>
+            {
+                Assert.False(fixture.Host.Popup.IsOpen);
+                Assert.Equal("block-b", fixture.ViewModel.SelectedBlockId);
+                Assert.Equal("t_block-b", Assert.IsType<TextBox>(fixture.Window.FocusManager!.GetFocusedElement()).Name);
+            });
+            Assert.True(await fixture.Adapter.UndoAsync());
+            Assert.Equal(before, fixture.Adapter.Snapshot);
+            Assert.False(fixture.Adapter.CanUndo);
+        }, liveRebuild: true);
+    }
+
+    [Fact]
+    public async Task Design_does_not_refresh_its_ticket_after_the_open_block_changes()
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            var context = new BlockGripCui.BlockGripContext(fixture.ViewModel, "block-b");
+            await DispatchContextAsync(context, "ToggleActions");
+            TestUiThread.Run(() => fixture.ViewModel.EditText("t_block-b", "Newer text to preserve"));
+            var before = fixture.Adapter.Snapshot;
+            await DispatchContextAsync(context, "ToggleDesignMenu");
+            await DispatchContextAsync(context, "TurnInto:heading");
+            Assert.Equal(before, fixture.Adapter.Snapshot);
+            Assert.Equal("paragraph", Blocks(fixture.Adapter)[1].Kind);
+            Assert.Equal("Newer text to preserve", Blocks(fixture.Adapter)[1].Text);
+            Assert.False(context.IsExpanded);
+            Assert.True(fixture.ViewModel.TryGetValue("StatusText", out var status));
+            Assert.Contains("Block conversion refused", status?.ToString() ?? string.Empty);
+        });
+    }
+
     [Theory]
     [InlineData("ToggleMoveMenu")]
     [InlineData("ToggleDesignMenu")]
