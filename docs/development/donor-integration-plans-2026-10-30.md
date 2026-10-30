@@ -80,35 +80,60 @@ Evidence labels: **MEASURED** = verified on this PC today; **NOT RUN** = no exec
   (**NOT RUN**), and Chrome for Testing publishes **no Linux ARM64** build, so the ARM route is
   Gecko-first.
 
-## 4. Avalonia framework fork (fork action proposed; needs a build to verify)
+## 4. Avalonia framework fork (fork branch CREATED and pushed; switching the vendored tree needs approval)
 
-- **MEASURED:** `framework/CUI/vendor/Avalonia` is a loose tree of 5,273 non-`external` files against
-  upstream tag `12.0.1` (`fe2741d6`): 21 files **modified** by us (including
-  `Avalonia.Controls/ToolTip.cs`, `ContextMenu.cs`, `TopLevel.cs`, `Primitives/Popup.cs`,
-  `Presenters/TextPresenter.cs`, `Avalonia.Base/Utilities/Ref.cs`, several `.csproj`,
-  `build/BuildTargets.targets`, `NuGet.Config`, three `packages/Avalonia/*.props|targets`), **19 files
-  added** by us (e.g. `CakeOS.Cui.AvaloniaFork.csproj`, generated interop such as
-  `src/Avalonia.Native/Interop.Generated.cs`, `src/Windows/Avalonia.Win32/**.Generated.cs`,
-  `src/Browser/Avalonia.Browser/staticwebassets/*`), 2,948 verified byte-identical, plus 2,245
-  **untracked** build outputs sitting inside the vendor tree (`git ls-files` shows 0 tracked bin/obj, so
-  they are clutter, not provenance). Spot-verified sample of why those are real fork changes, not noise:
-  `Popup.cs` gains a `BeforeShow` event raising the real `PopupRoot` destination so authored presentation
-  policy can request per-pixel alpha before first show; `TextPresenter.CreateTextLayoutInternal` becomes
-  `protected virtual` and gains `RefreshCaretBounds()`; `Avalonia.Base.csproj` comments out the
-  `Avalonia.Build.Tasks` project reference in favour of the CUI compiler.
+- **DONE under the forking authorisation:** created the controlled fork
+  `https://github.com/CroakyJake12/Avalonia` (it did not exist: `CroakyJake12/avalonia` returned
+  "Repository not found" when measured) and branch `9to1/cui-framework-20261030`, tip
+  `b5bdd8cb9ada162d0282ecb55d4f63409532eadd`, on the declared upstream base tag `12.0.1`
+  (`fe2741d6`). Our modification is split into three reviewable commits: framework build routing through
+  CUI instead of the Avalonia meta-package (14 files), the popup/text/ref seams CUI needs (6 files), and
+  a headless-session startup race fix (1 file).
+- **Verified:** all 21 files on the fork branch are byte-identical to the files in this directory
+  (21/21 by git blob identity), and `framework/CUI/vendor/Avalonia/FORK-MANIFEST.txt` records both blob
+  identities per file. Also verified the 21 are real content changes, not line-ending noise: 21 with
+  content differences, 0 line-ending-only.
+
+- **MEASURED (one filter, stated so it is reproducible):** files under
+  `framework/CUI/vendor/Avalonia` whose path has no `external` component: **5,274**, of which **2,245**
+  are build outputs that `git ls-files` shows are **not tracked** (clutter, not provenance). Comparing
+  the rest against upstream tag `12.0.1` (`fe2741d6`) by git blob identity: **2,872 byte-identical**,
+  **20 modified C#/build-source files + `NuGet.Config` = the 21 on the fork branch**, and **21 files that
+  exist only in our tree** once build outputs are excluded.
+- The 21 modifications include `Avalonia.Controls/ToolTip.cs`, `ContextMenu.cs`, `TopLevel.cs`,
+  `Primitives/Popup.cs`, `Presenters/TextPresenter.cs`, `Avalonia.Base/Utilities/Ref.cs`, several
+  `.csproj`, `build/BuildTargets.targets`, `NuGet.Config` and three `packages/Avalonia/*.props|targets`.
+  Our own 21 additions include `CakeOS.Cui.AvaloniaFork.csproj`,
+  `build/upstream-resource-targets/*.props|targets`, generated interop
+  (`src/Avalonia.Native/Interop.Generated.cs`, the four Win32 `*.Generated.cs`) and the browser
+  `staticwebassets` JS. Spot-verified sample of why the modifications are real fork changes and not
+  noise: `Popup.cs` gains a `BeforeShow` event raising the real `PopupRoot` destination so authored
+  presentation policy can request per-pixel alpha before first show;
+  `TextPresenter.CreateTextLayoutInternal` becomes `protected virtual` and gains
+  `RefreshCaretBounds()`; `Avalonia.Base.csproj` comments out the `Avalonia.Build.Tasks` project
+  reference in favour of the CUI compiler.
 - **Correction to my own earlier reading:** I first reported that `SOURCE-MANIFEST.txt`'s 20 blobs did
   **not** match upstream 12.0.1. That was a bug in my comparison script, not a finding. Direct check:
   for `src/Avalonia.Base/Metadata/AmbientAttribute.cs` the manifest blob, the upstream blob and the
   on-disk file hash are all `1c85a67641fb…`; the manifest covers **20/20** files exactly.
 - **The real gap, stated accurately:** `SOURCE.md` says the CUI fork "stages the complete
   `src/Avalonia.Base/Metadata` directory" (20 files) and calls the source "actual, unmodified Avalonia
-  source", but the vendored tree is a near-full Avalonia checkout — 5,273 files with 21 modifications and
-  19 additions — while `SOURCE-MANIFEST.txt` only covers those 20. So the provenance record understates
-  both the vendored scope and our own modification surface.
-- **Proposed fork action:** create our own branch on a controlled Avalonia remote from `fe2741d6`,
-  commit exactly those 21 modifications + 19 additions as visible commits with reasons, then vendor it
-  as a pinned submodule at that fork revision. The existing
-  `CakeOS.Cui.AvaloniaFork.csproj` keeps compiling from the same path.
+  source", while `SOURCE-MANIFEST.txt` covers only those 20. Measured reality is a near-full Avalonia
+  checkout carrying our 21 modifications and 21 additions. So the provenance record understates both the
+  vendored scope and our own modification surface — corrected in `SOURCE.md` on 30 October 2026.
+- **Fork action: DONE** (see the block at the top of this item). What remains is the *switch*: vendor
+  this directory as a pinned submodule of the fork revision instead of a loose copy, which changes how
+  the framework builds and so needs the verification below plus owner approval.
+- **Open question raised by the measurement:** the fork branch carries **only the 21 modifications** —
+  verified as 21 `M` entries and no additions. Our own 21 additions (`CakeOS.Cui.AvaloniaFork.csproj`,
+  `build/upstream-resource-targets/*.props|targets`, generated interop such as
+  `src/Avalonia.Native/Interop.Generated.cs` and the four Win32 `*.Generated.cs`, and the browser
+  `staticwebassets`) are **not** on it. Before the vendored directory can become a submodule checkout of
+  the fork, that has to be decided: put the authored additions (`CakeOS.Cui.AvaloniaFork.csproj`, the
+  `upstream-resource-targets` props/targets) on the fork branch, and treat the generated interop and
+  browser assets as build output regenerated by the build rather than donor source. My earlier note in
+  this item wrongly implied `CakeOS.Cui.AvaloniaFork.csproj` was already on the branch — it is not, and
+  the check that should have added it failed with a pathspec error that I then did not act on.
 - **Verification required before switching:** build the CUI framework on this PC after the switch
   (dotnet only, no new toolchain), because this is the one donor whose tree our build actually
   compiles. Until then the loose tree stays, so nothing regresses.
@@ -129,14 +154,19 @@ Evidence labels: **MEASURED** = verified on this PC today; **NOT RUN** = no exec
 - **Tests to add:** offline startup, missing dependency, wrong version, wrong ABI, corrupt wheel bytes,
   no leakage from the system Python, and worker launch on x64 + ARM64.
 
-## 6. llama.cpp → Dulche/Thunder (classification deliberately unresolved)
+## 6. llama.cpp → Dulche/Thunder (resolved by measurement: EMBED, not a fork)
 
-- **MEASURED:** the controlled remote exists (`CroakyJake12/llama.cpp`, 805 branches) but no gitlink and
-  no vendored source; the census records `UNRESOLVED` on purpose.
-- **Proposed first step (measurement, not code):** inventory what Thunder changes — CUDA/host-manager
-  work, resident-budget behaviour, PLE handling — against the upstream revision we build from. If a
-  change lands in llama.cpp source ⇒ fork; if everything stays in our host layer ⇒ embed. Either way the
-  answer must come with the file list, not from the phrase "reviewed enhancements".
+- **MEASURED 30 October 2026**, replacing the earlier unresolved label: `Home/Source/Dulche/llamacpp`
+  contains **no upstream C/C++ at all** — 26 `.py`, 5 `.json`, 4 `.md`, 1 `.sh`, 1 `cpp-LICENSE` — and its
+  own README states the directory "holds 9-1 integration/broker code, **not** upstream llama.cpp".
+- Upstream `ggml-org/llama.cpp` and the controlled fork `CroakyJake12/llama.cpp` are pinned to
+  `53ed051ce5e8193652e449f43216ca3859454f49` in `Dulche/Source/DONOR-PROVENANCE.md`; CI job
+  `build-pinned-llamacpp-cpu` produces the binary, and
+  `shared/tests/Haven.Core.Tests/LlamaCppRuntimeTests.cs` launches an executable path.
+- So the engine is consumed unmodified behind our broker boundary: **no fork required**. Evidence limits
+  recorded in that README are not upgraded here — GPU backends are unbuilt/unbenchmarked, and inference is
+  not runtime-proven until an approved GGUF is actually loaded and prompted. This PC's live model runs on
+  the resident Strata host, a separate runtime from this broker path.
 
 ## 7. Unsloth Studio → Spaces model browser (conditional review, not adoption)
 
@@ -152,7 +182,32 @@ Evidence labels: **MEASURED** = verified on this PC today; **NOT RUN** = no exec
 - **Hard invariant either way:** the resident Strata host is never stopped, replaced or commandeered by
   donor code.
 
-## 8. Enforcement so this cannot rot
+## 8. The 17 declared-but-never-vendored donors (decision needed, gate is red because of them)
+
+- **MEASURED:** `eng/check-donor-sources.py` reports **17 issues across 23 bindings**, all of the form
+  `no app-local source tree`, for LibreOffice (Write, Present, Data), VSCode/VSCodium (Dev),
+  GStreamer/GES (Wave, Motion), glycin/loupe (Picture), libvterm (Terminal),
+  evolution-data-server/libical (Planner), llama.cpp (Dulche), Wine/WinBoat and gnome-shell/mutter (OS).
+  These pre-date this session: my own two pin failures were fixed, taking the count from 19 to 17.
+- The registry declares them, the gate demands their source, and nothing vendors them. Both positions
+  cannot stay as they are: either vendor at a pinned revision, or make the declaration explicitly
+  aspirational so the gate stops demanding source for intent that no build consumes yet.
+- Under the owner's rule the two groups are: **fork when used** (LibreOffice, VSCode/VSCodium, Wine,
+  WinBoat, gnome-shell, mutter) and **embed prebuilt** (GStreamer, GES, glycin, loupe, libvterm,
+  evolution-data-server, libical, llama.cpp).
+- Cost measured on this PC: cloning LibreOffice or VS Code is roughly 1–2 G each against 542 G free, so
+  disk is not the obstacle; the obstacle is that unconsumed multi-gigabyte trees would ride into every
+  guarded export unless they are pinned-but-not-checked-out, which is why §4 rule 6 exists.
+
+## 9. Enforcement so none of this rots again
+
+- Run both the donor gate and `eng/development/donor_policy.py census` in CI and before each ARM export.
+  Today **neither is wired into CI** (measured: no workflow references `check-donor-sources`).
+- The census answers "is this artifact modified, and does the build fetch the revision we pinned"; the
+  gate answers "is the declared donor source materialised and pinned". They are complementary; the
+  proposal is to run both, not to merge them, so each question keeps a separate answer.
+
+
 
 - `eng/development/donor_policy.py census --repo .` (28 donor rows) already reports: pin-vs-build
   revision divergence, recorded modifications absent from the pin, unclassified changes inside a donor

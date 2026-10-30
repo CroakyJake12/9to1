@@ -71,11 +71,15 @@ modification split into three reviewable commits on the 12.0.1 base. Every file 
 byte-identical to the corresponding file in this directory (21/21 verified), and
 `FORK-MANIFEST.txt` here records both blob identities per file.
 
+The fork branch carries the 21 modifications only (verified: 21 `M` entries, no additions). The 21
+non-upstream files of ours (`CakeOS.Cui.AvaloniaFork.csproj`,
+`build/upstream-resource-targets/*.props|targets`, generated interop such as
+`src/Avalonia.Native/Interop.Generated.cs` and the four Win32 `*.Generated.cs`, and the browser
+`staticwebassets`) are **not** on it yet.
+
 Not yet done, deliberately: this directory is still a loose tree rather than a checkout of the fork,
 because switching it to a pinned submodule changes how the framework builds and needs a build
-verification on this PC. That is item 4 of
-`docs/development/donor-integration-plans-2026-10-30.md`, awaiting owner approval. The 19
-non-upstream added files (generated interop such as `src/Avalonia.Native/Interop.Generated.cs` and the
-Win32 `*.Generated.cs`, browser `staticwebassets`, and `CakeOS.Cui.AvaloniaFork.csproj`) are **not** on
-the fork branch yet; where each belongs is an open question raised in that plan, because generated
-output arguably belongs to the build, not to the donor's source history.
+verification on this PC plus a decision on where each of our own files belongs - the authored ones
+(`CakeOS.Cui.AvaloniaFork.csproj`, the `upstream-resource-targets` props/targets) arguably on the fork,
+the generated interop and browser assets arguably build output rather than donor source history. Both
+are item 4 of `docs/development/donor-integration-plans-2026-10-30.md`, awaiting owner approval.
