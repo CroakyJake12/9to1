@@ -697,14 +697,27 @@ public sealed class BoardsEditorTests
             var pageBlocksSurface = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "PageBlocksSurface");
             var flowBlocks = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost");
             var absoluteBlocks = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "AbsoluteBlocksHost");
+            Assert.NotNull(pageBlocksSurface);
+            Assert.IsType<Grid>(pageBlocksSurface.Layout);
+            foreach (var child in new[] { flowBlocks, absoluteBlocks })
+            {
+                Assert.NotNull(child);
+                Assert.Contains(child, pageBlocksSurface.AuthoredChildren);
+                var cell = Assert.IsType<Border>(child.Parent);
+                Assert.Same(child, cell.Child);
+                Assert.Same(pageBlocksSurface.Layout, cell.Parent);
+                Assert.Contains(cell, pageBlocksSurface.Layout.Children);
+                Assert.Equal(0, Grid.GetRow(cell));
+                Assert.Equal(0, Grid.GetColumn(cell));
+                Assert.Equal(1, Grid.GetRowSpan(cell));
+                Assert.Equal(1, Grid.GetColumnSpan(cell));
+            }
             return pageBlocksSurface is { LayoutType: "Grid" }
                 && flowBlocks is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "NavHost") is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Horizontal Stack", Layout: StackPanel }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ContextHost") is { LayoutType: "Vertical Stack" }
-                && absoluteBlocks is { LayoutType: "Absolute", Layout: Canvas }
-                && ReferenceEquals(flowBlocks.Parent, pageBlocksSurface)
-                && ReferenceEquals(absoluteBlocks.Parent, pageBlocksSurface)
+                && absoluteBlocks is { LayoutType: "Absolute", Layout: Panel }
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
         });
         Assert.True(found);

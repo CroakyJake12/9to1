@@ -3,6 +3,10 @@
 Continuation of the overnight handoff at `7199daab`. Scope: BF-35; UX27-BOARD-023/024/027,
 UX27-SHARED-001/002/009/010/013 and the canonical Boards inline-control/action contracts.
 
+**Latest result: 249/249 owning tests pass.** Menu lifetime/focus/drag, safe Text/Heading conversion and
+title theme repaint are checked. Remaining Design mappings and native/ARM verification remain open.
+The sections below retain the baseline and intermediate failures as well as the final result.
+
 ## Required user flow (pinned before editing)
 
 1. In an editable native Board page, hover/focus a block to reveal its existing gutter controls.
@@ -102,6 +106,23 @@ completion. The legacy toolbar conversion helper is outside this menu unit and s
 Final focused run: `conversion-final`, source unchanged while running, peak group RSS 566,132,736 bytes,
 no resource violation. New test-file bytes were untracked during that run and are hashed at checkpoint;
 the ordinary Layer1 receipt remains PARTIAL / NOT REUSABLE. The next full-suite run uses tracked source.
+
+## Remaining baseline repair — required behavior
+
+An embedded Board title must follow its own host's bright/dark/high-contrast theme after repaint,
+without changing document-authored text colours or another live Board's resources. Update the CUI
+property owner for title Foreground; native assignment cannot override its retained Instance value.
+The two-board runtime test's colour and isolation assertions stay unchanged.
+
+The declared-surface fixture must recognise the existing CUI Absolute layout and authored-child cells.
+Its old Canvas/direct-parent assumptions contradict the current CUI runtime. Preserve checks on the
+actual flow/absolute overlay membership, physical cell ownership and grid geometry.
+
+Result: **249/249 passed, 0 failed, 0 skipped** in `boards-full-green` at 00:52 UTC. This full fresh
+source run includes every tracked conversion test and both formerly failing baseline cases. SDK process
+group peak RSS was 1,501,343,744 bytes; no guard violation; source unchanged. All eight original baseline
+failures are resolved at the owning test level. Native application/ARM verification remains NOT RUN and
+unsupported Design mappings remain explicit; a passing suite is not whole-app or release acceptance.
 
 Original PC screenshots and private runtime evidence are unavailable here. Headless UI tests or
 component captures must be labelled as such. ARM installation/execution and owner-instance retest

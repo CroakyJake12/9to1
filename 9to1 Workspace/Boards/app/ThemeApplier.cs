@@ -40,13 +40,15 @@ public static class ThemeApplier
         Paint<TextBox>(root, "BoardTitleBox", box =>
         {
             SetDocumentTextSurface(box, Brushes.Transparent);
-            box.Foreground = BoardsTheme.TextBrush;
+            CuiPropertyPresentation.Set(box, "Foreground", BoardsTheme.TextBrush,
+                CuiPropertyLevel.Instance, "Boards document text");
             box.FontFamily = interfaceFont;
         });
         Paint<TextBox>(root, "PageTitleBox", box =>
         {
             SetDocumentTextSurface(box, Brushes.Transparent);
-            box.Foreground = BoardsTheme.TextBrush;
+            CuiPropertyPresentation.Set(box, "Foreground", BoardsTheme.TextBrush,
+                CuiPropertyLevel.Instance, "Boards document text");
             box.FontFamily = interfaceFont;
         });
         Paint<TextBox>(root, "NavSearchBox", box => box.FontFamily = interfaceFont);

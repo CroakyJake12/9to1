@@ -1,13 +1,15 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 3
+checkpoint: checkpoint.md revision 4
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 1
+queue: queue.md revision 2
 branch: main
-base: 81400bae
-status: ACTIVE
+base: 25aee616 (last published predecessor; use this checkpoint's containing main commit)
+status: CHECKPOINT_READY
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_ownership: foreground owns source; scheduled cycles are read-only while ACTIVE
-next: commit checked Design conversion, fix the two remaining baseline failures, then BF-37 hover previews
+cycle_report: cycle-reports/2026-10-30-01.md
+cycle_ownership: foreground milestone finished; next eligible cycle may claim ACTIVE after verifying current main and ownership
+next_scheduled_trigger: 2026-10-30T01:10:00Z (configured DTSTART; execution not yet observed)
+next: BF-37 insertion/replace previews; retain partial Design mappings and native/ARM gates
