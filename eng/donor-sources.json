@@ -532,5 +532,374 @@
       "duckdb_two_pins": "vendored C++ source pin does not install the Python wheel Data imports; needs requirements.in + hash-locked per-platform lock + agreement check with REQUIRED_DUCKDB_VERSION",
       "research_pack": "docs/development/research/2026-10-30-six-handoffs/README.md"
     }
+  },
+  "fork_policy_20261030": {
+    "rule_owner_words": [
+      "Embed what we aren't modifying, fork what we are.",
+      "A CUI wrapper counts as modify - unless it is literally just an engine used within another process that isn't modified.",
+      "F is a files app; 9to1 Files is a files app; we extend F's features and replace its UI with CUI -> fork F.",
+      "Firefox is a browser; 9to1 Haven is a browser; we extend Firefox's features and replace its UI with CUI -> fork Firefox. Gecko is an engine used within a browser; we do not modify Gecko -> do not fork it, include it prebuilt.",
+      "Rnote has an engine and we are modifying that engine separately -> fork the engine. It is not always app=fork, engine=embed; the discriminator is what is actually being modified."
+    ],
+    "test": "verdict follows the artifact 9to1 actually modifies, measured from patch files, our own commits and observed working-tree dirt - not from the artifact's role label. A fork scope can be narrower than the project (Rnote engine crates) or cover the application layer only (planned Firefox fork, with engine scopes kept pristine).",
+    "enforcement": "eng/development/donor_policy.py census --repo . (read-only; exits non-zero when evidence and policy disagree, when donor trees carry unclassified changes, when a pin does not match the recorded pin, and it reports when recorded modifications are absent from the pin or a donor is a loose vendored tree)",
+    "donors": [
+      {
+        "donor": "rnote (Canvas bridge)",
+        "path": "9to1 Workspace/Canvas/Source/Rnote",
+        "role": "engine crates, consumed by our bridge",
+        "pinned_at": "8cac558fa73e",
+        "consumed_by": [
+          "Canvas/rnote-poc"
+        ],
+        "modified_artifacts": [
+          {
+            "artifact": "crates/rnote-engine",
+            "kind": "patch",
+            "patch_files": [
+              "0001-keyed-stroke-operations.patch",
+              "0002-headless-tasks-and-split-lineage.patch"
+            ]
+          },
+          {
+            "artifact": "crates/rnote-compose",
+            "kind": "commit",
+            "commit": "53981d09b0cdcc7f12af9ee579c4c4bfb95d6821"
+          }
+        ],
+        "patch_root": "9to1 Workspace/Canvas/rnote-poc/patches",
+        "verdict": "FORK",
+        "note": "MEASURED: both patch files touch crates/rnote-engine (their +++ headers) and our own serialization commit touches crates/rnote-compose. So here the ENGINE is the modified artifact and must be forked - the inverse of the Gecko case. rnote-poc/Cargo.toml still fetches upstream flxzt/rnote at rev 8cac558f and the ARM producer applies the patches at vendor time, which the census reports as modifications absent from the pin."
+      },
+      {
+        "donor": "rnote (Boards, documented only)",
+        "path": "9to1 Workspace/Boards/Source/Rnote",
+        "role": "declared donor, no build consumes it",
+        "pinned_at": "1a728d6a85db",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "verdict": "NOT CONSUMED",
+        "note": "Owner decision 30 Oct: Canvas stays pinned v0.14.2 and Boards keeps the v0.15-line pin; the divergence is accepted and recorded rather than aligned."
+      },
+      {
+        "donor": "appflowy-board",
+        "path": "9to1 Workspace/Boards/Source/AppFlowyBoard",
+        "role": "declared donor, no build consumes it",
+        "pinned_at": "804d7898ac0b",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "verdict": "NOT CONSUMED",
+        "note": "AppFlowyBoardEventAdapter.cs is pure C# command mapping and links no Flutter/Dart; Boards is first-party with a donor-parity checklist. Dual AGPL-3.0 OR MPL-2.0: elect MPL-2.0 only if donor code is ever linked."
+      },
+      {
+        "donor": "firefox-gecko",
+        "path": "9to1 Workspace/Browse/Source/FirefoxGecko",
+        "role": "engine used inside a browser",
+        "pinned_at": "5836a062726f",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": [
+          "gfx",
+          "layout",
+          "js",
+          "netwerk",
+          "storage",
+          "dom",
+          "ipc",
+          "hal",
+          "widget",
+          "xpcom",
+          "modules",
+          "toolkit/library",
+          "intl",
+          "memory",
+          "mfbt",
+          "xpfe"
+        ],
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "note": "MEASURED clean upstream checkout: the pin is a Mozilla changeset (author florian@queze.net), and no .patch, no mozconfig and no carried modification exists anywhere under Browse. Today nothing consumes it on this PC - /usr/bin/chromium and /usr/bin/chromium-browser are both absent, so Browse has no engine here. Planned shape per the owner: fork the Firefox APPLICATION layer for features and drop its UI for CUI, while these engine scopes stay byte-pristine and ship prebuilt from a signed, digest-verified Mozilla build (linux-aarch64 candidates exist upstream; Chrome for Testing publishes no Linux ARM64 build)."
+      },
+      {
+        "donor": "duckdb",
+        "path": "9to1 Workspace/Data/Source/DuckDB",
+        "role": "engine used inside another process",
+        "pinned_at": "d8cdaa33fda8",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt-wheel",
+        "note": "Unmodified and never built by us today: Data spawns a Python worker that imports the duckdb wheel and hard-requires 1.5.5. The vendored C++ pin is provenance only. The real dependency needs a versioned, hash-locked wheel record - a separate supply-chain record from the source pin."
+      },
+      {
+        "donor": "avalonia-fork",
+        "path": "framework/CUI/vendor/Avalonia",
+        "declared_submodule": false,
+        "role": "rendering framework we modify",
+        "consumed_by": [
+          "framework/CUI"
+        ],
+        "modified_artifacts": [
+          {
+            "artifact": "Avalonia fork (CUI-owned templates, property precedence, SimpleTheme isolation)",
+            "kind": "unenumerated",
+            "paths": []
+          }
+        ],
+        "verdict": "FORK",
+        "note": "MEASURED: a loose 106 M / 5,877-file tree with no .git of its own; provenance is only SOURCE.md/NOTICE.md. It is genuinely modified and genuinely used, i.e. a fork by the rule recorded as a folder copy - the largest provenance gap in the set: no upstream base commit, no commit-level history of our changes."
+      },
+      {
+        "donor": "files (WinUI Files app)",
+        "path": "9to1 Workspace/Files/Source/Files",
+        "declared_submodule": false,
+        "role": "application donor",
+        "consumed_by": [
+          "Files"
+        ],
+        "modified_artifacts": [
+          {
+            "artifact": "Files application layer: features added, UI replaced by CUI",
+            "kind": "planned",
+            "paths": []
+          }
+        ],
+        "verdict": "FORK",
+        "note": "Owner's worked example: 9to1 Files extends the donor's features and replaces its UI, so the application donor is forked. MEASURED: 2,351 loose vendored files, no gitlink; licence files present are MPL-2.0 and MIT. Its WinUI/C# cannot be app source under the CUI rule, so the fork carries feature/behaviour lineage while the UI is rebuilt in CUI."
+      },
+      {
+        "donor": "Avalonia.DBus",
+        "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+        "role": "unmodified dependency inside the Avalonia fork",
+        "pinned_at": "864a05282841",
+        "consumed_by": [
+          "framework/CUI/vendor/Avalonia"
+        ],
+        "modified_artifacts": [],
+        "verdict": "EMBED",
+        "note": "upstream remote, no carried patch"
+      },
+      {
+        "donor": "XamlX",
+        "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+        "role": "unmodified compiler dependency inside the Avalonia fork",
+        "pinned_at": "009d4815470c",
+        "consumed_by": [
+          "framework/CUI/vendor/Avalonia"
+        ],
+        "modified_artifacts": [],
+        "verdict": "EMBED",
+        "note": "upstream remote, no carried patch"
+      },
+      {
+        "donor": "WinBoat",
+        "path": "9to1 OS/compatibility/winboat/Source/WinBoat",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "we change OS compatibility tooling",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "Wine",
+        "path": "9to1 OS/compatibility/wine/Source/Wine",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "we change Wine behaviour for 9to1 OS",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "gnome-shell",
+        "path": "9to1 OS/platform/gnome-shell",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "9to1 OS shell is our own product surface",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "mutter",
+        "path": "9to1 OS/platform/mutter",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "9to1 OS compositor is our own product surface",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "LibreOffice",
+        "path": "9to1 Workspace/Data/Source/LibreOffice",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "application donor with added features",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "LibreOffice",
+        "path": "9to1 Workspace/Present/Source/LibreOffice",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "application donor with added features",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "LibreOffice",
+        "path": "9to1 Workspace/Write/Source/LibreOffice",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "application donor with added features",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "CodeOSS",
+        "path": "9to1 Workspace/Dev/Source/CodeOSS",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "VS Code is an application donor; Dev extends it",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "VSCodium",
+        "path": "9to1 Workspace/Dev/Source/VSCodium",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "FORK",
+        "planned_reason": "same application donor, telemetry-free build",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "llama.cpp",
+        "path": "9to1 Workspace/Home/Source/Dulche/Source/llama.cpp",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "UNRESOLVED",
+        "planned_reason": "Thunder carries reviewed engine enhancements; if they touch llama.cpp source it is a fork, if they stay in our layer it is embed. Needs the actual enhancement inventory before labelling.",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "GStreamer",
+        "path": "9to1 Workspace/Motion/Source/GStreamer",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "media engine, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "GStreamer",
+        "path": "9to1 Workspace/Wave/Source/GStreamer",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "media engine, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "GES",
+        "path": "9to1 Workspace/Motion/Source/GES",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "editing engine, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "GES",
+        "path": "9to1 Workspace/Wave/Source/GES",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "editing engine, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "glycin",
+        "path": "9to1 Workspace/Picture/Source/glycin",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "image sandbox engine, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "loupe",
+        "path": "9to1 Workspace/Picture/Source/loupe",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "image viewer engine, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "libvterm",
+        "path": "9to1 Workspace/Terminal/Source/libvterm",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "terminal emulator library, as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "EvolutionDataServer",
+        "path": "9to1 Workspace/Planner/Source/EvolutionDataServer",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "PIM backend, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      },
+      {
+        "donor": "libical",
+        "path": "9to1 Workspace/Planner/Source/libical",
+        "role": "declared, not vendored",
+        "verdict": "NOT CONSUMED",
+        "planned_verdict": "EMBED-prebuilt",
+        "planned_reason": "iCalendar library, used as-is",
+        "consumed_by": [],
+        "modified_artifacts": [],
+        "pristine_scopes": []
+      }
+    ]
   }
 }
