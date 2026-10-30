@@ -1,80 +1,92 @@
-# Checkpoint 4 · 30 October 2026, 00:56 UTC
+# Checkpoint 5 · 30 October 2026, 02:15 UTC
 
-Status: CHECKPOINT_READY. The foreground menu/selection/drag/theme milestone is compiled and validated;
-the next scheduled cycle may claim ACTIVE after reconciling live source and ownership. The Goal remains
-active through tomorrow; this is not a usage stop or product-completion claim.
+Status: CHECKPOINT_READY. Cycle 2 completed the shared CUI prerequisite for BF-37 and the lifecycle
+repairs exposed by authentic regression checks. The visible Boards preview remains NEXT. The next cycle
+must reconcile current source/ownership before claiming ACTIVE. This is not product completion or a
+usage stop; the Goal remains authorised through the end of 31 October UTC.
 
 ## Source and results
 
 - Canonical checkout: /workspace/9to1, **main**, origin https://github.com/CroakyJake12/9to1.git.
-  Fetched starting main 7199daab. Original work ref/history preserved; no implementation branch,
-  worktree, reset, force-push or branch cleanup was used.
-- 81400baec8add3db82e6b0c2dd8c20d681df5b83: menu lifetime, keyboard/focus, drag cleanup. Pushed and
-  verified remotely. 25aee6160a36e4f9fd550c3b906fa0056405c6ec: safe Design conversion. Pushed and
-  verified remotely. Title theme/host-fixture repair and this checkpoint are in the containing commit;
-  resolve git rev-parse HEAD and verify origin/main before continuing.
-- Full fresh Boards app suite: **249 passed / 249 executed, 0 failed, 0 skipped**. Baseline reproduced
-  **215 passed / 223 executed, 8 failed**. All eight original test failures are resolved.
-- Evidence remains **ordinary Layer1 PARTIAL / NOT REUSABLE**. Skia headless component capture exists;
-  no native PC application or ARM install/run was observed. Full independent acceptance stays paused.
-- Detailed report: cycle-reports/2026-10-30-01.md; flow/results and exact evidence hashes:
-  docs/development/boards-menu-repair-2026-10-30.md and its .evidence.json companion.
+  Cycle 2 started from clean refreshed main 0b758fc6747afef93de77716f74783e2fb131766.
+- Source commit **e17b7ee164080481464ceb500bcb0db8862bdb18**, “Add CUI preview events and repair action
+  lifecycles”, is pushed and was read back from refs/heads/main. All 13 source/test files match the
+  final validation manifest. This checkpoint/report is a subsequent documentation commit; resolve its
+  containing main commit and compare the current remote before continuing.
+- Final fresh Release checks: focused CUI runtime **234/234**, full CUI compiler **204/204**, full Boards
+  app suite **249/249**; **zero failures and zero skipped** in each. No source changed during these runs.
+  These results do not establish full app completion, native behaviour or independent acceptance.
+- Evidence is **headless development / ORDINARY_LAYER1_PARTIAL_NOT_REUSABLE**. All 23 attempts,
+  including failures and withdrawn early async passes, remain recorded. Detailed report:
+  cycle-reports/2026-10-30-02.md; pinned flow/results and exact evidence:
+  docs/development/boards-insertion-preview-2026-10-30.md and its .evidence.json companion.
+- Cycle 1's checked menu/drag/focus, safe paragraph/heading conversion and title theme repairs remain
+  preserved. Its source and checkpoint are recoverable in main history, including checkpoint 4 at
+  0b758fc6 and cycle-reports/2026-10-30-01.md.
+
+## What this prerequisite now supports
+
+- Named Button PointerEnter/PointerExit actions plus the explicitly documented generic Focused/Blurred
+  extension use the retained typed-action pipeline. Click aliases share one family; distinct event
+  families coexist, and duplicate routes are rejected, including typed/Definition composition.
+- Actual headless pointer/Tab/Space/arrow/Enter tests cover authored Buttons and context-menu rows,
+  live parameters, current/query dispatchers, local state, Repeat ownership, retirement and isolation.
+  Parameter evaluation cannot reenter and then dispatch a stale command from a retired origin.
+- Input SubmitAction uses its authored input and captured frame. Popup NativeClose receipts retain
+  later Closed-handler failures. Hidden floating hosts retire correctly; nested content can recover its
+  measure path. Reentrant focus replacement cannot resurrect a retired child/cell.
+- Bare async headless Dispatch calls in the affected event/input/floating fixtures are now fully joined.
+  Earlier apparent async passes are explicitly invalid behaviour evidence, not promoted into results.
+- Style overlays, Hover/OnceHover, external targets, propagation and Event context remain unsupported
+  CUI gaps. No Boards app source, transient preview model or visible preview overlay changed in cycle 2.
 
 ## Next executable milestone
 
-BF-37: the plus-menu destination preview. Hover/focus Above/Below must show the actual insertion edge;
-Replace must show a red outline and translucent red tint. No preview may mutate content/history or move
-row geometry. Retain chosen destination through the type stage and clear safely on dismissal/change,
-commit, detachment, page/session/View-mode change. Delayed exit from an old row must not clear a newer
-preview; different live Boards must remain isolated.
+BF-37: implement the pinned plus-menu destination preview using the checked authored event routes.
+Hover/focus Above/Below must show the actual insertion edge; Replace must show a red outline and
+translucent red tint. Preview must not mutate content, IDs, revision, dirty state, undo or row geometry.
 
-- Existing rows: ToolbarBuilder.AddDestinationStage, plus CreateInsertButton, Fill,
-  DestinationHeader, OpenInsertMenu and InsertMenuContext. Actual insertion remains
-  BoardsViewModel.InsertKindRelativeToAsync; don't conflate explicit replacement with Design conversion.
-- Zero-footprint overlay host: BlockRenderer.WithSelection beside BlockRowOutline.
-- No BlockInsertionPreview state exists yet. Add a typed transient model carrying session/page/block,
-  placement and menu-owner generation. Publish changes without rebuilding/destroying the popup anchor.
-- CUI's CuiActionEventContract recognises but rejects PointerEnter/PointerExit/Hover. Only Clicked and
-  OnceClick execute; it also currently rejects multiple owned events/direct + event routes. Implement
-  required generic runtime support and authored destination/preview presentation, with authentic tests.
-  Do not add inert hover markup or an app-specific presentation/interaction bypass.
-- BoardsAppTests currently asserts missing preview text in the wrong grip-menu document. Replace the
-  absence diagnostic with checks of the actual authored destination/preview documents and runtime path.
+- Existing rows: ToolbarBuilder.AddDestinationStage, CreateInsertButton, Fill,
+  DestinationHeader, OpenInsertMenu, InsertMenuContext. Commit still routes through
+  BoardsViewModel.InsertKindRelativeToAsync; explicit replacement is distinct from Design conversion.
+- Overlay seam: BlockRenderer.WithSelection, beside BlockRowOutline.
+- Add typed transient session/page/block/placement/menu-owner-generation state. Publish it without
+  rebuilding the popup anchor. Keep pointer and focus ownership independent; an old exit must not clear
+  a newer or still-active preview. Different live Boards must remain isolated.
+- Retain the destination through type selection; Change returns to destinations. Clear applicable state
+  on departure/dismissal/Escape, commit, target loss/detachment and page/session/View-mode transitions.
+- Replace the existing absence assertion against the wrong grip-menu document with authentic checks of
+  the destination and overlay path. Check real input, geometry, history, insertion position and cleanup.
+  Do not claim visible BF-37 implemented from this framework prerequisite.
 
-## Remaining requirements
+## Remaining requirements and environment
 
-- BF-35 menu open/dismissal/keyboard, duplicate/move/delete routing and drag separation have focused
-  executable coverage. Design paragraph ↔ heading preserves the same canonical block and all payloads,
-  one undo/redo, persistence and the original revision ticket. Unsupported destinations stay discoverable
-  but disabled with content-preservation reasons. Do not call all Design conversions implemented.
-- OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION tracks projected list-row identity/splitting and
-  incompatible object mappings. The legacy toolbar converter still needs review independently.
-- BF-38 link scheme, Files root wording and orphan tab-group cleanup remain owner decisions. ARM package
-  stays held pending genuine menu/native verification and PC custody. Browse 733f35c3 remains preserved
-  and excluded from the next package under the handoff; do not claim its independent/native check passed.
-
-## Runtime and guard recovery
-
-- SDK /workspace/.tools/dotnet/dotnet **10.0.401**, compatible global.json roll-forward; packages under
-  /workspace/.tools/nuget/packages. XamlX/Avalonia.DBus exact pinned submodules are materialised.
+- Lossless Design mappings beyond paragraph/heading and the legacy toolbar converter remain open.
+  OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION retains projected list-row identity/splitting and
+  incompatible mappings. BF-38 link scheme, Files root wording and orphan tab-group cleanup remain owner
+  decisions. Browse 733f35c3 stays preserved and excluded from the next package under the handoff.
+- Native PC and ARM install/execution remain NOT RUN; full independent acceptance remains PAUSED.
+  Package stays held pending genuinely working menu/native verification; ARM remains PC-owned.
+- Cloud SDK /workspace/.tools/dotnet/dotnet **10.0.401**; packages
+  /workspace/.tools/nuget/packages; pinned XamlX/Avalonia.DBus submodules retained.
 - Private ordinary Layer1 runner: /workspace/scratch/9to1-overnight-20261030/run-layer1.py.
-  It takes a fresh label and exact argv; locks one source/SDK lane, snapshots HEAD/diff/untracked files,
-  bounds memory/disk/time, retains logs/TRX/receipts, and signals only its owned process group.
-  Final full run: boards-full-green; peak group RSS 1,501,343,744 bytes, no guard violation, source unchanged.
-- The existing private cloud ROOT-LIVE projection is absent; required recovery returned
-  INFRASTRUCTURE/BLOCKED. No replacement ledger or heavy/ARM allocation was fabricated. The overnight
-  handoff explicitly distinguishes ordinary source checks from that separate lane. Preserve that boundary.
-- Desktop bridge was offline at setup, last observation 29 October 23:56:39 UTC with
-  native_contract_changed. No PC process, profile, model or installed package was touched. Refresh actual
-  availability; historical access is not current custody.
-- Read-only Sol review helped diagnose source/fixture problems; it made no edits and ran no SDK tasks.
+  Serial source/SDK locks, exact source snapshots, bounded memory/disk/time and owned process groups.
+  Final labels: cycle2-runtime-regression3, cycle2-compiler-regression, cycle2-boards-regression.
+  All had no guard violation and unchanged source; maximum final group RSS **1,123,299,328 bytes**.
+- Mandatory ROOT-LIVE recovery was refreshed and again returned **BLOCKED/INFRASTRUCTURE** because
+  /workspace/shared/9to1-context/development-workflow-state.json is absent. Ordinary source checks are
+  separate, as the handoff permits; no ledger, heavy/ARM allocation or coordinator was fabricated.
+- Desktop status was refreshed: **desktop_offline**, last native observation 29 October 23:56:39 UTC.
+  No PC process, model, profile or installed package was touched. Refresh availability next cycle;
+  historical access is not current custody. Read-only Sol review made no source edits or SDK launches.
 
 ## Continuation
 
-One hourly continuation is enabled through 2026-11-01 00:00 UTC, first configured trigger 01:10 UTC on
-30 October. No scheduled execution has yet been observed. ACTIVE forbids another writer; CHECKPOINT_READY
-permits the next cycle to reconcile and claim. Use the newest files, not the schedule's fallback prose.
+The existing hourly continuation remains enabled through **2026-11-01 00:00 UTC**. Cycle 2 executed the
+01:10 occurrence. The 02:10 nominal trigger arrived while cycle 2 was ACTIVE and was coalesced into its
+checkpoint/report; it did not admit another source writer or begin another milestone. Next nominal
+trigger is 03:10 UTC; the schedule is a trigger cadence, not guaranteed compute or delivery.
 
-Authoritative remaining usage is **UNKNOWN**; no allowance API was available. At an actual reading ≤5%,
-finish the safe unit, commit/push/verify main, save the precise handoff and pause the task. Never infer the
-threshold from context length or forecasts. No emails or other external communications are authorised.
+Authoritative remaining usage is **UNKNOWN**; no allowance API was available. At an observed **≤5%**,
+finish the safe unit, commit/push/read back main, write the precise handoff and pause this task. Never
+infer usage from context length, rate limits or forecasts. No email or external messages are authorised.

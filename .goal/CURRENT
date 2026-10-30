@@ -1,15 +1,15 @@
 goal: 9to1 overnight development
 contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 4
+checkpoint: checkpoint.md revision 5
 golden_rules: golden-rules.md revision 1
-queue: queue.md revision 2
+queue: queue.md revision 3
 branch: main
-base: 25aee616 (last published predecessor; use this checkpoint's containing main commit)
+base: e17b7ee164080481464ceb500bcb0db8862bdb18 (validated source; use the checkpoint's containing main commit)
 status: CHECKPOINT_READY
 usage_remaining_percent: UNKNOWN
 schedule: enabled hourly continuation through 2026-11-01T00:00:00Z
 schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_report: cycle-reports/2026-10-30-01.md
-cycle_ownership: foreground milestone finished; next eligible cycle may claim ACTIVE after verifying current main and ownership
-next_scheduled_trigger: 2026-10-30T01:10:00Z (configured DTSTART; execution not yet observed)
-next: BF-37 insertion/replace previews; retain partial Design mappings and native/ARM gates
+cycle_report: cycle-reports/2026-10-30-02.md
+cycle_ownership: cycle 2 completed and released; next writer must reconcile current main/dirty work and claim ACTIVE
+next_scheduled_trigger: 2026-10-30T03:10:00Z nominal; 01:10 completed as cycle 2, overlapping 02:10 coalesced into its report
+next: visible BF-37 insertion/replace preview using checked CUI pointer/focus actions; retain Design and native/ARM gates
