@@ -1,29 +1,38 @@
-# Development queue · revision 6
+# Development queue · revision 7
 
-Source: current owner continuation, live handoff and cycle 5 source/test behavior.
+Source: owner continuation, latest paragraph-toolbar direction and cycle 6 results.
 
-1. **NEXT — verify remaining Tabber focus interaction, then BF-37 destination fidelity.** Read-only
-   review flagged rename blur into a neighboring inline plus/child toolbar as unverified; own Tabber
-   rename/tab-selection is checked. Reproduce the actual gesture first and repair if observed. Then
-   inspect/pin Data creation/reference/link ownership for one dependency-ready relative capability.
-   Database/freeform and positioned Above/Below/interior-list replacement remain disabled gaps.
-2. **CHECKED PARTIAL — relative Tabber, Attachment and prior Boards repairs.** badceabe48 adds atomic
-   owned-pane insertion, exact history/identity, stale-editor retirement, hidden draft/pending-work
-   refusal and checked metadata gesture. Fresh Boards 367/367 and contract 113/113; standalone build
-   passed, zero final test failures/skips. Evidence is headless ordinary Layer1 only. Prior menu/focus/
-   drag, paragraph/heading, title theme, CUI actions and transient preview repairs remain preserved.
-   Six other Design mappings, legacy toolbar conversion and broader Tabber CUI/focus review remain open.
-   Legacy toolbar attachment remains two-step create/attach. Counts are not acceptance.
-3. **HELD — ARM package and native verification.** Package needs genuinely working menu and actual PC
-   build/native custody. Desktop remains offline; ARM is PC-owned. Preserve installed package/evidence.
-4. **PRESERVED — Browse lane.** 733f35c3, group restoration, RED native ownership test and package exclusion
-   remain separate. Advance only with current ownership after Boards/Files priority.
-5. **QUEUED — remaining reproduced Boards/Files defects, then expanded specification.** Use live bug
-   register/owner feedback, preserve working behavior and distinguish evidence levels.
-6. **OWNER DECISION — underspecified lossless Design mappings, BF-38 link scheme, Files root wording and
-   orphan tab-group cleanup.** Hold only dependent behavior; continue independent work.
+1. **NEXT — one paragraph-formatting toolbar.** Owner, 30 October during cycle 6:
+   “No need to show a floating toolbar while editing a paragraph as there's already
+   a toolbar at the top.” Keep top-toolbar actions; remove the duplicate without
+   losing selected-range formatting, caret ownership, undo or persistence. Current
+   main-page source has no separate floating format popup; actual captures show an
+   extra Tabber row. Working target: focused-pane routing through the top toolbar
+   before removal. Surface clarification was requested; an owner reply supersedes
+   this interpretation. Pin and test the actual shared standalone/embedded flow.
+2. **NEXT AFTER VISIBLE REPAIR — BF-37 destination fidelity.** Pin actual Data
+   creation/reference/link ownership for one dependency-ready relative capability.
+   Relative database/freeform, positioned Above/Below and interior positioned-list
+   replacement remain disabled gaps. Preserve atomic cancellation/history and identity.
+3. **CHECKED PARTIAL — Boards repairs.** ee4b9691 preserves rename-to-neighbor/child
+   gestures, long-caption pointer lifetime, delayed metadata publication, reattach
+   and later child drafts. Fresh app 382/382, contract 113/113, standalone build passed;
+   zero final failures/skips. Headless Layer1 only. Prior relative Tabber/Attachment,
+   preview, menu/drag/focus, paragraph/heading conversion, title theme and CUI action
+   repairs remain preserved. Counts do not establish acceptance.
+4. **HELD — ARM package/native verification.** Actual PC custody and native menu
+   retest remain required. Desktop offline; ARM PC-owned. Preserve packages/data.
+5. **PRESERVED — Browse.** 733f35c3, group restoration, RED native ownership evidence
+   and package exclusion remain separate; current exclusive ownership is required.
+6. **QUEUED — remaining Boards/Files defects and expanded specification.** Broader
+   Tabber CUI migration, lossless Design mappings, legacy toolbar conversion and its
+   two-step attachment route remain open. Reproduce current failures before repair.
+7. **OWNER DECISION — underspecified Design mappings, BF-38 block links, Files root
+   wording and orphan tab-group cleanup.** Hold only dependent behavior.
 
-Next writer must inspect CURRENT and live remote/source/dirty work, then claim ACTIVE only from
-CHECKPOINT_READY or an explicit recorded release. Compile each edit unit, retain failures, review diff,
-commit/push/read back main and checkpoint. No branch/worktree/force push/reset. Acceptance PAUSED,
-package HELD, usage UNKNOWN; observed <=5% and 2026-11-01T00:00:00Z remain stop boundaries.
+Cycle 6 completed one reproduced focus/lifetime milestone; Data was not started.
+The overlapping 08:10 trigger was coalesced. New owner UI direction leads next.
+Claim ACTIVE only from CHECKPOINT_READY/recorded release after live inspection.
+Compile each unit, retain failures, review, commit/push/read back main and checkpoint.
+No branch/worktree/force push/reset/model launch. Acceptance PAUSED, package HELD,
+usage UNKNOWN. Stop at observed <=5% or 2026-11-01T00:00:00Z.
