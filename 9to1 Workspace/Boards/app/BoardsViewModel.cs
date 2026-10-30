@@ -59,6 +59,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private long _textRangeEpoch;
     private bool _textRangeDetached, _textRangeBusy;
     private readonly List<Action> _detachers = [];
+    private readonly List<Action> _lifetimeDetachers = [];
     private readonly ConditionalWeakTable<TextBox, AuthoringTextState> _textModeStates = new();
     private readonly ConditionalWeakTable<CheckBox, AuthoringCheckState> _checkModeStates = new();
     private readonly Dictionary<string, (double PanX, double PanY, double Zoom)> _viewInkOverrides = new(StringComparer.Ordinal);
@@ -145,7 +146,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 });
         }
         BoardsTheme.Changed += RefreshPickerOnThemeChange;
-        _detachers.Add(() => BoardsTheme.Changed -= RefreshPickerOnThemeChange);
+        _lifetimeDetachers.Add(() => BoardsTheme.Changed -= RefreshPickerOnThemeChange);
         if (_session is ContractSessionAdapter previewSession)
         {
             void ProjectionChanged()
@@ -164,7 +165,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 else Dispatcher.UIThread.Post(RefreshOwners);
             }
             previewSession.ViewReplaced += ProjectionChanged;
-            _detachers.Add(() => previewSession.ViewReplaced -= ProjectionChanged);
+            _lifetimeDetachers.Add(() => previewSession.ViewReplaced -= ProjectionChanged);
+            void TabberNameChanged(string pageId, string blockId)
+            {
+                // Transfer metadata ownership before another projection can retire
+                // the old title snapshot. Visual updates are dispatched separately.
+                if (!_disposed && SelectedPageId == pageId) _tabbers?.RefreshName(blockId);
+            }
+            previewSession.TabberNameChanged += TabberNameChanged;
+            _lifetimeDetachers.Add(() => previewSession.TabberNameChanged -= TabberNameChanged);
         }
         ReselectDefaults();
         PushDocumentToBindings();
@@ -1374,6 +1383,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (_disposed) return;
         _disposed = true;
         _removeStatusHandler?.Invoke(); _removeStatusHandler = null;
+        foreach (var remove in _lifetimeDetachers) remove();
+        _lifetimeDetachers.Clear();
         _themeSurface = null;
         CancelSectionIconSuggestion();
         Detach();

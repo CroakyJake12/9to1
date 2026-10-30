@@ -1124,6 +1124,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
     }
 
     internal event Action? ViewReplaced;
+    internal event Action<string, string>? TabberNameChanged;
 
     private void RefreshView()
     {
@@ -1921,7 +1922,12 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
-    public async Task ChangeTabberAsync(string pageID, string blockID, string action, string? paneID = null,
+    public Task ChangeTabberAsync(string pageID, string blockID, string action, string? paneID = null,
+        string? title = null, CancellationToken token = default, Func<bool>? originStillEditable = null,
+        string? pendingPaneTitle = null) =>
+        TryChangeTabberAsync(pageID, blockID, action, paneID, title, token, originStillEditable, pendingPaneTitle);
+
+    internal async Task<bool> TryChangeTabberAsync(string pageID, string blockID, string action, string? paneID = null,
         string? title = null, CancellationToken token = default, Func<bool>? originStillEditable = null,
         string? pendingPaneTitle = null)
     {
@@ -1929,7 +1935,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         await _mergeGate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            if (originStillEditable?.Invoke() == false) return;
+            if (originStillEditable?.Invoke() == false) return false;
             await MergeCoreAsync(token).ConfigureAwait(false);
             var applied = await _real.MutateIfAsync(_ => !_disposed && (originStillEditable?.Invoke() ?? true),
                 notes =>
@@ -1942,9 +1948,33 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
                     }
                     HavenTabberOps.Change(notes, pageID, blockID, action, paneID, title);
                 }, token).ConfigureAwait(false);
-            if (applied) RefreshView();
+            if (applied)
+            {
+                if (action == "rename" && pendingPaneTitle is null) RefreshTabberName(pageID, blockID, paneID!);
+                else RefreshView();
+            }
+            return applied;
         }
         finally { _mergeGate.Release(); }
+    }
+
+    private void RefreshTabberName(string pageID, string blockID, string paneID)
+    {
+        // A name edit must not replace every projected block: an unrelated live
+        // insertion menu owns its exact row, and a child editor owns its focus.
+        var canonicalPage = _real.Rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == pageID);
+        var pane = canonicalPage.Blocks.Single(block => block.Id == blockID).Tabber!.Panes.Single(item => item.Id == paneID);
+        var page = _view.Sections.SelectMany(section => section.Pages).Single(item => item.Id == pageID);
+        var tabs = page.Blocks.Single(block => block.Id == blockID).Tabber!;
+        var index = tabs.Panes.FindIndex(item => item.Id == paneID && item.PageId == pane.PageId);
+        if (index < 0) throw new InvalidOperationException("The renamed pane is no longer present in the editor.");
+        tabs.Panes[index] = pane;
+        _view.Sections.SelectMany(section => section.Pages).Single(item => item.Id == pane.PageId).Title = pane.Title;
+        _issuedTextSelection = null;
+        // Baseline the canonical result, not the live editor graph: a later draft
+        // typed while the canonical gate awaited must still be merged and saved.
+        _baselineJson = ProjectedViewJson();
+        TabberNameChanged?.Invoke(pageID, blockID);
     }
 
     public async ValueTask DisposeAsync()

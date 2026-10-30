@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
@@ -11,6 +12,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
 {
     private readonly Dictionary<string, PaneEditor> _editors = [];
     private readonly Dictionary<string, ControlLifetime> _controls = [];
+    private readonly Dictionary<string, Action> _nameRefreshes = [];
     private readonly object _ownershipGate = new();
     private readonly List<Task> _retirements = [];
     private Task? _disposeTask;
@@ -22,6 +24,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
     private sealed class ControlLifetime(Func<bool> validate)
     {
         private int _retired;
+        internal bool IsRetired => Volatile.Read(ref _retired) != 0;
         internal bool IsCurrent()
         {
             if (Volatile.Read(ref _retired) != 0) return false;
@@ -29,6 +32,12 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             Retire(); return false;
         }
         internal void Retire() => Interlocked.Exchange(ref _retired, 1);
+    }
+
+    internal void RefreshName(string blockId)
+    {
+        lock (_ownershipGate)
+            if (!_disposed && _nameRefreshes.TryGetValue(blockId, out var refresh)) refresh();
     }
 
     // Projection publication can run under the adapter gate off UI. Revoke only here;
@@ -46,6 +55,8 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         lock (_ownershipGate)
         {
             if (_disposed) return;
+            foreach (var id in _controls.Where(pair => pair.Value.IsRetired).Select(pair => pair.Key).ToArray())
+            { _controls.Remove(id); _nameRefreshes.Remove(id); }
             var missing = _editors.Where(pair => !pair.Value.Model.PaneLifetimeIsCurrent).ToArray();
             foreach (var pair in missing)
             {
@@ -60,6 +71,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         Reconcile();
         var lifetime = new ControlLifetime(owner.CaptureTabberControls(block));
+        var sameStructure = owner.CaptureTabberControls(block, namesMayChange: true);
         lock (_ownershipGate)
         {
             if (_controls.Remove(block.Id, out var previous)) previous.Retire();
@@ -71,7 +83,35 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             && tabber.Panes.Any(pane => pane.Id == viewID) ? viewID : tabber.SelectedPaneId;
         var selected = tabber.Panes.Single(pane => pane.Id == selectedID);
         var name = new TextBox { Text = selected.Title, Width = 180, IsReadOnly = !owner.IsEditMode };
+        InputElement? pointerTarget = null;
+        long pointerGesture = 0;
+        Action? pendingCaption = null;
+        void ClearPointer()
+        {
+            if (pointerTarget is null) return;
+            pointerTarget.RemoveHandler(InputElement.PointerReleasedEvent, PointerFinished);
+            pointerTarget.PointerCaptureLost -= PointerCaptureEnded;
+            pointerTarget = null;
+            pointerGesture++;
+        }
+        void QueueCaption()
+        {
+            var target = pointerTarget;
+            var gesture = pointerGesture;
+            // Run after the real release/cancellation has finished routing. A
+            // longer caption can wrap the header and move the pressed button.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (gesture != pointerGesture || !ReferenceEquals(pointerTarget, target)) return;
+                ClearPointer();
+                var publish = pendingCaption; pendingCaption = null; publish?.Invoke();
+            });
+        }
+        void PointerFinished(object? sender, PointerReleasedEventArgs args) => QueueCaption();
+        void PointerCaptureEnded(object? sender, PointerCaptureLostEventArgs args) => QueueCaption();
+        panel.DetachedFromVisualTree += (_, _) => { ClearPointer(); pendingCaption = null; };
         var actions = new HashSet<Button>();
+        var tabButtons = new Dictionary<string, Button>();
         Task Apply(string action, string? paneId = null) => !lifetime.IsCurrent() ? Task.CompletedTask :
             owner.ChangeTabberAsync(block.Id, action, paneId, controlsCurrent: lifetime.IsCurrent,
                 pendingPaneTitle: action != "remove" && name.Text != selected.Title ? name.Text : null);
@@ -87,7 +127,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
                 if (owner.IsEditMode) await Apply("select", pane.Id);
                 else { _viewSelection[block.Id] = pane.Id; owner.RefreshAfterEdit(); }
             };
-            actions.Add(button); tabs.Children.Add(button);
+            actions.Add(button); tabButtons.Add(pane.Id, button); tabs.Children.Add(button);
         }
         var add = new Button { Content = "+", IsEnabled = owner.IsEditMode };
         Avalonia.Automation.AutomationProperties.SetName(add, "Add tab");
@@ -102,11 +142,55 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         // That action commits the pending name and its own change together. Leaving
         // the action group without activating it still commits the name on blur.
         panel.LostFocus += async (_, args) =>
-        { if (args.NewFocusedElement is not Button button || !actions.Contains(button)) await Rename(); };
+        {
+            if (args.NewFocusedElement is Button button && actions.Contains(button)) return;
+            if (name.Text != selected.Title && args.NavigationMethod == NavigationMethod.Pointer &&
+                args.NewFocusedElement is InputElement target)
+            {
+                ClearPointer(); pointerTarget = target;
+                target.AddHandler(InputElement.PointerReleasedEvent, PointerFinished, RoutingStrategies.Bubble, handledEventsToo: true);
+                target.PointerCaptureLost += PointerCaptureEnded;
+            }
+            await Rename();
+        };
         var remove = new Button { Content = "Remove tab", IsEnabled = owner.IsEditMode && tabber.Panes.Count > 1 };
         remove.Click += async (_, _) => await Apply("remove", selected.Id);
         actions.Add(remove);
         options.Children.Add(name); options.Children.Add(remove); panel.Children.Add(options);
+        lock (_ownershipGate)
+            _nameRefreshes[block.Id] = () =>
+            {
+                // Only this still-mounted metadata group may take a fresh lease.
+                // Captured in-flight delegates retain the old, permanently retired
+                // lease. Never renew a group retired by removal/Undo or remounting.
+                if (lifetime.IsRetired || !sameStructure() ||
+                    !_controls.TryGetValue(block.Id, out var current) || !ReferenceEquals(current, lifetime)) return;
+                var updated = owner.FindBlock(block.Id)!;
+                var nextSelected = updated.Tabber!.Panes.Single(pane => pane.Id == selected.Id);
+                var panes = updated.Tabber.Panes.ToArray();
+                lifetime.Retire();
+                lifetime = new ControlLifetime(owner.CaptureTabberControls(updated));
+                _controls[block.Id] = lifetime;
+                var acceptedLifetime = lifetime;
+                void PresentName()
+                {
+                    if (_disposed || !acceptedLifetime.IsCurrent()) return;
+                    if (name.Text == selected.Title || name.Text?.Trim() == nextSelected.Title) name.Text = nextSelected.Title;
+                    selected = nextSelected;
+                    void PublishCaptions()
+                    {
+                        if (_disposed || !acceptedLifetime.IsCurrent()) return;
+                        foreach (var pane in panes)
+                        {
+                            var button = tabButtons[pane.Id];
+                            button.Content = pane.Title;
+                            Avalonia.Automation.AutomationProperties.SetName(button, "Open tab " + pane.Title);
+                        }
+                    }
+                    if (pointerTarget is null) PublishCaptions(); else pendingCaption = PublishCaptions;
+                }
+                if (Dispatcher.UIThread.CheckAccess()) PresentName(); else Dispatcher.UIThread.Post(PresentName);
+            };
         PaneEditor editor;
         lock (_ownershipGate)
         {
@@ -160,6 +244,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         {
             foreach (var controls in _controls.Values) controls.Retire();
             _controls.Clear();
+            _nameRefreshes.Clear();
             foreach (var editor in _editors.Values) _retirements.Add(editor.DisposeAsync().AsTask());
             _editors.Clear(); retirements = _retirements.ToArray();
         }

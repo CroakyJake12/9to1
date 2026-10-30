@@ -47,7 +47,7 @@ public sealed partial class BoardsViewModel
     }
     internal void SyncPaneMode(bool editing) => SetEditMode(editing);
 
-    internal Func<bool> CaptureTabberControls(RichBoardBlock block)
+    internal Func<bool> CaptureTabberControls(RichBoardBlock block, bool namesMayChange = false)
     {
         var pageId = SelectedPageId;
         var epoch = Interlocked.Read(ref _insertionOperationEpoch);
@@ -59,7 +59,10 @@ public sealed partial class BoardsViewModel
                 .FirstOrDefault(page => page.Id == pageId)?.Blocks.FirstOrDefault(item => item.Id == block.Id && item.Kind == "tabber")?.Tabber;
             return !_disposed && !EditorLifetimeEnded && SelectedPageId == pageId &&
                 Interlocked.Read(ref _insertionOperationEpoch) == epoch &&
-                current is not null && current.SelectedPaneId == selected && current.Panes.SequenceEqual(panes);
+                current is not null && current.SelectedPaneId == selected &&
+                (namesMayChange
+                    ? current.Panes.Select(pane => (pane.Id, pane.PageId)).SequenceEqual(panes.Select(pane => (pane.Id, pane.PageId)))
+                    : current.Panes.SequenceEqual(panes));
         };
     }
 
@@ -81,8 +84,16 @@ public sealed partial class BoardsViewModel
         bool Current() => !_disposed && !EditorLifetimeEnded && CanEdit && _isEditMode &&
             SelectedPageId == pageId && Interlocked.Read(ref _insertionOperationEpoch) == epoch &&
             (controlsCurrent?.Invoke() ?? true) && (action != "remove" || !HasUnsettledDatabaseWork);
-        try { await adapter.ChangeTabberAsync(pageId, blockID, action, paneID, title, originStillEditable: Current,
-            pendingPaneTitle: pendingPaneTitle); RefreshAfterEdit(); }
+        try
+        {
+            if (!await adapter.TryChangeTabberAsync(pageId, blockID, action, paneID, title, originStillEditable: Current,
+                pendingPaneTitle: pendingPaneTitle)) return;
+            if (action == "rename" && pendingPaneTitle is null)
+            {
+                PushDocumentToBindings();
+            }
+            else RefreshAfterEdit();
+        }
         catch (Exception error) { Set("StatusText", error.Message); }
     }
 }
