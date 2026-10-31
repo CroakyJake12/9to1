@@ -1031,7 +1031,18 @@
         "modules": "frontend/ (appflowy_flutter UI, including the board widget, + rust-lib engine)",
         "committedToGit": false,
         "reason": "Owner decision 2026-10-31: fork the newest AppFlowy rather than the old stand-alone board widget package, because the board view lives inside the application and the shared engine comes from frontend/rust-lib. The previously pinned appflowy-board package stays in history and remains what the app itself depends on (pubspec pins e8317c0d1af8).",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-appflowy",
+          "branch": "main",
+          "commit": "29c9b46d7ef019b53fc223a4e63730665d1522dd",
+          "tag": "upstream-0.14.11-5cf3a365dec0",
+          "pushed": "2026-10-31",
+          "files": 4543,
+          "contentDigest": "9f8d94e88ee5f5d94687d674583e304c0507298853f6900c9cf524b8749bcde4",
+          "digestVerification": "proven by exporting the pushed commit with `git archive` into a clean directory and recomputing snapshot_digest: it equalled the recorded 9f8d94e88ee5f5d94687d674583e304c0507298853f6900c9cf524b8749bcde4",
+          "note": "Not a fork with upstream history: this is a preservation copy of the exact extracted tree 9to1 relies on as its Boards donor UI reference. The two files the donor tree's own .gitignore would skip (frontend/appflowy_flutter/assets/translations/mr-IN.json and frontend/rust-lib/flowy-sqlite/.env) are included because the recorded snapshot contains them."
+        }
       }
     }
   ],

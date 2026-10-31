@@ -40,3 +40,24 @@ AppFlowy Board proof still uses its existing pin; Rnote freeform integration at 
 - Fork state: the exact pinned object is reachable in the controlled fork (measured with the GitHub API on this date). That is object reachability, **not** a submodule gitlink: the tree is not committed to this repository and recursive checkout cannot materialise it. Converting the snapshot into a fork submodule pin is a separate verified unit.
 - Why snapshot rather than submodule: Owner decision 2026-10-31: fork the newest AppFlowy rather than the old stand-alone board widget package, because the board view lives inside the application and the shared engine comes from frontend/rust-lib. The previously pinned appflowy-board package stays in history and remains what the app itself depends on (pubspec pins e8317c0d1af8).
 - Evidence level: source materialisation and licence custody only. Nothing here is built, run, rendered, packaged or accepted.
+
+## AppFlowy snapshot pushed to a remote 31 October 2026 - measured
+
+The AppFlowy frontend snapshot was disk-only: `git ls-files` returned **0 tracked files** for
+`Source/AppFlowy`, so a clean checkout, a reset or another machine would have lost the donor UI
+reference entirely. It is now on a remote:
+
+- repository `https://github.com/CroakyJake12/donor-appflowy`, branch `main`
+- commit `29c9b46d7ef019b53fc223a4e63730665d1522dd`, tag `upstream-0.14.11-5cf3a365dec0`
+- upstream it preserves: `AppFlowy-IO/AppFlowy` tag `0.14.11` @ `5cf3a365dec0d59f64bad1ee4bb1050471a39b93`
+- 4,543 files; content digest verified by `git archive`-exporting the pushed commit into a clean
+  directory and recomputing `eng/check-donor-sources.py` `snapshot_digest`: it equalled the recorded
+  `9f8d94e88ee5f5d94687d674583e304c0507298853f6900c9cf524b8749bcde4`
+- the tree was not edited, formatted or pruned. Two files needed `git add -f` because the donor
+  tree's own `.gitignore` would otherwise drop them (`frontend/appflowy_flutter/assets/translations/mr-IN.json`,
+  `frontend/rust-lib/flowy-sqlite/.env`) and the recorded snapshot includes them.
+
+Verification evidence: `git ls-remote` shows `29c9b46d7ef0` as `HEAD`, `refs/heads/main` and that tag.
+Conversion to an in-repo submodule/gitlink is still outstanding; the loose tree remains the
+materialisation the donor gate checks by digest. The same disk-only exposure exists for the other
+six snapshot donors (LibreOffice x3, CodeOSS, Gitea, Thunderbird) and is being closed the same way.
