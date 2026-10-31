@@ -83,8 +83,14 @@ Until then: rendering claims are on-screen; behaviour claims are compile/test-le
 ## Test state at handoff
 
 * Boards app build: succeeds (`reui-build43.log`).
-* CUI runtime suite and Boards app tests: **not re-run after the chrome unit** — run them next
-  (`eng/development/cui_test_ratchet check`, Boards app tests were 436/436 before this unit).
+* Boards app tests after the chrome unit: **Passed! Failed: 0, Passed: 436, Skipped: 0, Total: 436**
+  (`/tmp/opencode/boards-app-tests-chrome.log`, project `CakeOS.Apps.Boards/app.tests`). Note that the earlier
+  attempt against `app/CakeOS.Apps.Boards.App.csproj` was a no-op (restore only, no tests in an app project) —
+  the test project is `app.tests`, which is why the first run printed nothing.
+* CUI runtime suite: **not re-run** in this unit (unchanged framework code); run `eng/development/cui_test_ratchet
+  check` next session to confirm the 749/755 baseline with the 6 pinned failures.
+* Handoff reload: the newest built candidate is running on `DISPLAY=:1` (window `0x420000f`, frame
+  `/tmp/opencode/j1.png` `cd82fe05837c…`, 0 load diagnostics).
 * Independent acceptance: paused per owner instruction. All 102 `UX27` scenarios: NOT RUN.
 
 ## Commits in this unit (all pushed to `main`)
