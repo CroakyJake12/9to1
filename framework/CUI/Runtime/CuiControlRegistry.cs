@@ -383,6 +383,10 @@ public sealed class CuiControlRegistry
             "Hidden", "Interactive", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
             "Role", "AutomationId", "Tooltip", "HorizontalAlignment", "VerticalAlignment", "IsHitTestVisible", "Effect", "Shadow", "Layer", "Modal",
             "Clip", "ClipToBounds", "Cursor", "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate",
+            // Universal interaction-paint vocabulary, alongside Cursor/Opacity which already live in common:
+            // any element may author its hover paint mode (owner 31 October 2026: document blocks must be able to
+            // hover blank, with only container blocks taking an accent outline).
+            "HoverTint",
             "TranslateX", "TranslateY", "Column", "Row", "ColumnSpan", "RowSpan", "X", "Y", "XPixel", "YPixel", "XPercent", "YPercent", "ActiveIndependently"
         };
         var container = common.Concat(new[]
@@ -473,6 +477,7 @@ public sealed class CuiControlRegistry
             ("Selected", "boolean", typeof(bool), true), ("ResizeEdge", "symbol", typeof(string), true),
             ("OverflowHost", "boolean", typeof(bool), true), ("GroupLabel", "text", typeof(string), true),
             ("Chromeless", "boolean", typeof(bool), true),
+            ("HoverTint", "symbol", typeof(string), true),
             ("Header", "text", typeof(string), true), ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
             ("ItemsSource", "collection", typeof(System.Collections.IEnumerable), true), ("SelectedIndex", "integer", typeof(int), true),
             ("Value", "value", typeof(object), true), ("Checked", "boolean", typeof(bool), true),

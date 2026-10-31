@@ -3403,6 +3403,15 @@ public sealed partial class CuiControlLoader : IDisposable
                     relationshipContainer.SetAuthoredPlacement(resolved);
                 return;
             }
+            if (propName.Equals("HoverTint", StringComparison.OrdinalIgnoreCase))
+            {
+                // Authored hover-paint mode (owner 31 October 2026: hover must be able to be blank on a document
+                // block). Validation is here so a bad value is a source diagnostic rather than a silent no-op.
+                if (!CuiHoverTintPolicy.IsKnownMode(resolved))
+                    throw new ArgumentException("HoverTint must be Default, None or Outline.");
+                CuiHoverTintPolicy.Set(control, resolved);
+                return;
+            }
             if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
             if (CuiLayoutProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
             if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;

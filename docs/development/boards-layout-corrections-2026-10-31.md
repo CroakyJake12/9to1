@@ -80,3 +80,30 @@ Add a CUI-visible property **`HoverTint`** with values `Default | None | Outline
 Boards then authors block controls with `HoverTint="None"` (leaf blocks) and `HoverTint="Outline"` (container
 blocks), and the ghost accent caret is added at the pointer in the block row host. A regression test must fail
 without the property and pass with it, so the capability is pinned rather than patched only in Boards.
+
+## State at 22:30 (owner leaving) - what is finished, committed and proven vs staged
+
+**Done, tested, NOT YET COMMITTED:** the `HoverTint="None|Default|Outline"` CUI capability
+- new framework vocabulary + policy: `framework/CUI/Runtime/CuiHoverTintPolicy.cs`
+- accepted by the compiler/loader gate: registered in `CuiControlRegistry` (`("HoverTint", "symbol", ...)`) and
+  added to the **common** element property set (the per-element gate is what produced
+  `CUIR052: CUI property 'HoverTint' is not supported on Button` before that)
+- applied in `CuiControlLoader.ApplyLiteralProperty` with value validation (bad values -> source diagnostic)
+- honoured by the shared hover feedback in `CuiButtonFeedback.cs` (`PaintsFill` / `WantsOutline`)
+- regression tests: `framework/CUI/Runtime.Tests/CuiHoverTintOptOutTests.cs` - **proven to fail without the fix**
+  (`Assert.Empty() Failure: ... error CUIR052: Unknown or forbidden CUI property 'HoverTint'`) and **passing with
+  it**: `Passed: 2, Failed: 0`. The second test asserts a *value* diagnostic and explicitly rejects the
+  unknown-property message, so it cannot pass while the vocabulary entry is missing.
+- full CUI suite ratchet was **started and killed by an unrelated SIGTERM**; it must be re-run
+  (`python3 -B eng/development/cui_test_ratchet.py check --dotnet <guarded sdk dotnet> --timeout 1500`) before
+  this framework change is described as regression-clean. Until then: focused tests pass, suite-wide status NOT RUN.
+
+**Staged in the working tree, compiled NOT RUN:** `BlockRenderer.cs` hover wiring - hover outline restricted to
+`container` kinds, a `BlockGhostCaret` border (2x18, accent at 0.45 alpha, never hit-testable, hidden at rest) that
+follows the pointer via `PointerMoved`, and `CuiHoverTintPolicy.Set(..., None|Outline)` applied to the TextBox/Button
+controls inside each block row. Needs: compile, on-screen capture, and the two remaining owner items -
+menu alignment/spacing, and "pressing enter creates a new block that immediately loses focus".
+
+**Unstaged CUI work still to commit from earlier this hour:** `BlockActionsMenuCui.cui` / insert-menu label
+alignment, and the design-menu rename ("Design" + palette icon -> "Block Type", turn-into only for blank blocks,
+because the + button is the replace path).

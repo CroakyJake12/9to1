@@ -284,7 +284,23 @@ internal sealed class CuiHoverFeedback : IDisposable
         var tint = DeriveTint(background, highContrast);
         if (active && tint is null)
             tint = DeriveTint(Resource("CuiPanelBrush") as IBrush, highContrast);
-        _frame.SetHoverTint(active ? tint : null);
+        // Authored opt-out: CuiHoverTintPolicy is what lets a surface say "no hover fill on this control"
+        // (HoverTint="None") without dropping its rest chrome the way Chromeless would. An Outline mode control
+        // gets an accent border instead of a wash. Both default to today's behaviour when nothing is authored.
+        var paintsFill = active && CuiHoverTintPolicy.PaintsFill(_owner);
+        _frame.SetHoverTint(paintsFill ? tint : null);
+        if (CuiHoverTintPolicy.WantsOutline(_owner))
+        {
+            if (active && Resource("CuiAccentBrush") is IBrush accentBrush)
+            {
+                _frame.BorderBrush = accentBrush;
+                _frame.BorderThickness = new Thickness(1.5);
+            }
+            else
+            {
+                _frame.BorderThickness = new Thickness(0);
+            }
+        }
     }
 
     private object? Resource(string key) => _owner.TryFindResource(key, out var value) ? value : null;
