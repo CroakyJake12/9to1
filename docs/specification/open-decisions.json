@@ -325,6 +325,108 @@
         "Re-open the Unsloth Studio question as a specific integration review (which files, what linkage, what is distributed), not a licence-name verdict.",
         "ARM64 engine route is Gecko-first; any Chromium-based path needs an artifact-availability check before it is planned."
       ]
+    },
+    {
+      "id": "OPEN-2026-10-31-BOARDS-UI-DONOR",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "answered by owner 31 October 2026 (AppFlowy is Boards' UI donor); one sub-question still open",
+      "title": "Boards UI mirror was built from Rnote's application UI instead of AppFlowy's UI",
+      "verbatim_owner_request": "Owner, 31 October 2026: 'wait rnote ui for boards? should be appflowy ui, unless you were just referring to the drawing tools within boards. anyway resume and sort that if that's a mistake'",
+      "measured_facts": [
+        "'9to1 Workspace/Boards/CUI/DonorMirror/rnote' mirrored rnote's app UI (appwindow, appmenu, canvasmenu, sidebar, dialogs): 33 documents.",
+        "31 of those 33 were byte-identical to the Canvas rnote mirror; 2 differed. The two donor checkouts are pinned apart: Boards 1a728d6a85db (v0.15 line), Canvas 8cac558fa73e (v0.14.2, the revision the Canvas bridge compiles). Their UI directories differ in 8 files (canvasmenu, dialogs/dialogs, dialogs/export, dialogs/import, mainheader, overlays, shortcuts, sidebar).",
+        "AppFlowy has no markup UI at all: 1,524 Dart files under frontend/appflowy_flutter/lib, 824 of which contain widget trees. There was no mirror pass for Dart, so Boards effectively had no UI mirror of its own donor."
+      ],
+      "action_taken": "Retired the duplicate rnote UI mirror with a recorded reason, corpus digest (c2892b9c4b401d5a) and recovery path (git checkout 04a19137 -- <path>): '9to1 Workspace/Boards/CUI/DonorMirror/rnote-retired-2026-10-31.md'. Kept the Boards->rnote binding as the shared drawing/ink ENGINE the specification requires (lines 1400, 9120, 9459, 10107). Wrote eng/cui-mirror/dialect_dart.py, which mirrors Flutter widget constructor calls into CUI: 824 documents from AppFlowy's lib plus 55 from its design-system packages, all compiling clean (corpus now 1,758 documents, 0 errors).",
+      "still_open": "If your 'unless you were just referring to the drawing tools' clause means something specific: should the shared ink tool SURFACE (rnote's toolbar/sidebar presentation) inform Boards' drawing toolbar in Stage B, or should Boards' drawing toolbar come only from AppFlowy plus the 9to1 spec presentation? Today the engine is shared and the surface is not decided."
+    },
+    {
+      "id": "OPEN-2026-10-31-SHIPMAS-SCOPE-CUTS",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "owner decision recorded; needs written confirmation because it narrows specification scope",
+      "title": "Delivery scope for the next package, and the donor rows it defers",
+      "owner_intent": "Owner, 31 October 2026: MUST-do is Haven plus all required frameworks under Haven, Spaces with all six built-in Spaces, Voice & Vision, Automations, Accounts/Subscriptions, Build, Write, Present, Boards, Canvas, Data, Files, AI Studio, with **Connect = email capabilities only**; provisional if time: Cards, then Planner; out: Games, Play, Picture, Wave, Motion, Mini Computer and the 9to1 OS distribution. Donor forks required: Impress, Writer and Calc only - 'you won't need to fork libreoffice draw or math'.",
+      "measured_facts": [
+        "Canonical specification v2 (sha e1779d22...) carries 3,461 normative MUSTs; the in-scope set above is about 2,786 of them (80%).",
+        "Measured donor leverage: about 7.4 KB of our own source per in-scope MUST for the donor-based Files work versus 15.8 KB for first-party Boards, so donors roughly halve own-source volume - they do not change the shape of the calendar.",
+        "Twelve donor rows were classified in eng/donor-sources.json rather than deleted: out-of-scope-for-2026-11-delivery (Wave/Motion GStreamer+GES, Picture glycin+loupe, Terminal libvterm, Wine, WinBoat), provisional-scope-not-yet-vendored (Planner eds + libical), superseded-designation-2026-10-31 (VSCodium, in favour of Code - OSS). Each keeps its exact pin and names its requirement reference.",
+        "Conclusion recorded at the time: the remaining work is March-shaped, not Christmas-shaped."
+      ],
+      "still_open": "Written confirmation that the scope cut is a delivery decision rather than a specification amendment, and whether the deferred donor designations should be re-sequenced in the specification itself."
+    },
+    {
+      "id": "OPEN-2026-10-31-CUI-VS-C-SHARP-BOUNDARY",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "owner rule recorded and applied as stated; one clause deliberately not yet enforced",
+      "title": "The CUI / C# boundary exactly as the owner applied it",
+      "owner_intent": "Owner, 31 October 2026: 'the main distinction is replace any foreign ui rendering. main ui structure is rendered in cui'. Dynamic or transient surfaces - ads, pop-up banners, dropdowns - may stay C# for now. CUI's live-variable system is the ideal end state for dynamic values but is not a hard gate yet. 'same syntax as in follow cui principles, just adapt to the language'.",
+      "applied_so_far": [
+        "Stage A mirrors re-describe donor UI structure in canonical CUI: 1,758 generated documents across 10 corpora, compiling clean.",
+        "Donor control names are never emitted (CuiLanguageVocabulary.DonorElements); the framework extends through canonical Container/Object Types the way Markdown and ReadOnlyText already do.",
+        "Foreign rendering inventoried: .xaml/.axaml/.hui (including test fixtures and Styles/DefaultTheme.axaml) are all foreign UI source. .hui is pre-spec CUI and is being replaced with real CUI."
+      ],
+      "not_enforced_yet": "The clause allowing transient surfaces to stay C# is why several mirrored pop-up/banner/dropdown constructs are recorded as gaps instead of being converted. Nothing has been claimed as boundary-complete, and DefaultTheme.axaml plus the .hui inventory is still foreign today; that is outstanding work, not a waived requirement."
+    },
+    {
+      "id": "OPEN-2026-10-31-ACCEPTANCE-INDEPENDENCE-WAIVED",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "owner waived it for now; must be restored when a second reviewer exists",
+      "title": "Independent acceptance requires a different reviewer, and there is only one worker",
+      "measured_facts": [
+        "AGENTS.md states implementation and independent acceptance must be performed by a different reviewer. Only one development worker exists on this PC; a second GPU/worker is 'a maybe', not a plan.",
+        "All 102 UX27 scenarios in the 27 October expanded specification package remain NOT RUN, and eng/browser/validate-acceptance-evidence.py has never had a single record fed to it.",
+        "Full independent acceptance is separately paused under the 24 October implementation-first instruction."
+      ],
+      "still_open": "Whether to (a) accept self-review with the limitation stated on every claim, (b) hold acceptance until a second worker exists, or (c) let the owner be the acceptance reviewer for specific surfaces. Choice (a) is what has actually been happening and it must be labelled as such."
+    },
+    {
+      "id": "OPEN-2026-10-31-STRATA-IDENTITY-AND-LLAMA-CPP-PIN",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "policy answered, identity still unknown; llama.cpp inconsistency found and corrected in the record",
+      "title": "Strata upstream identity is still unresolved, and the llama.cpp registry pin did not match what the build consumes",
+      "owner_intent": "Owner, 31 October 2026: 'always the latest for llama.cpp and strata unless there's a significant known regression'; 'I think we fork both'; engine auto-selected with a manual override; Rust donor backends are acceptable 'for the sake of speed'.",
+      "measured_facts": [
+        "Strata: no upstream repository or revision is established. The resident model host on this PC (about 45 GiB, --resident-budget-gib 41) is the running instance and must not be stopped, so its identity could not be read out by restarting it.",
+        "llama.cpp: the donor registry named 53ed051ce5e8 (tag b11157, upstream commit date 2026-09-24) as pinned, but nothing in this repository builds from it. The consumed revision is 3cf03257f219 (2026-09-20), named by 9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/llama.cpp-dependency-lock.json (tree d255198f..., 3,982 entries), the host-cache ggml-VERSION.txt, haven-chat-model-ci.yml, thunder-artifact-audit.py and NativeStrataCandidatePlanTests.py.",
+        "Measured 31 October 2026: 3cf03257f219 is reachable in the controlled fork CroakyJake12/llama.cpp (GitHub API)."
+      ],
+      "action_taken": "Registry corrected to the consumed revision with consumedEvidence (lock path, tree, lock sha256) and the newer revision retained as newerDeclaredRevision with upgradeStatus NOT RUN. A new dependency-lock verification mode in eng/check-donor-sources.py now fails if the lock and the registry ever disagree.",
+      "still_open": "The upgrade to the newest llama.cpp is owed under your latest-unless-known-regression rule and needs a rebuild plus a native run of the inference host (deferred because that host is this session). Strata's identity is still the blocker for forking it."
+    },
+    {
+      "id": "OPEN-2026-10-31-CAKEMODS-LICENCE-UNVERIFIED",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "unresolved - owner to confirm ownership",
+      "title": "cakemods donor ownership and licence basis (specification line 7491)",
+      "verbatim_owner_request": "Owner, 30 October 2026, asked 'are these my own repositories?': 'I believe they are my repositories. Have to double check.'",
+      "measured_facts": [
+        "eng/donor-sources.json carries cakemods as an aspirational binding with plannedVerdict UNRESOLVED and no materialised source; the ownership statement is not yet verifiable from the record.",
+        "Nothing has been vendored from cakemods, so no licence obligation has been triggered yet."
+      ],
+      "still_open": "Confirm whether the cakemods repositories are yours. If they are not, the donor needs a licence review before any vendoring; if they are, the record should say so with the repository owner named."
+    },
+    {
+      "id": "OPEN-2026-10-31-PLANNER-DONORS-VS-SPEC-11897",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "needs an owner amendment or a rejection; currently a recorded divergence",
+      "title": "Planner keeps eds + libical as donors although specification line 11897 reads differently",
+      "measured_facts": [
+        "Specification line 11897 area is where Planner's calendar/data source requirement is stated; the donor designation for Evolution Data Server and libical does not appear in the specification text (a keyword search returns zero hits for 'Evolution Data Server', 'libical', 'libvterm', 'VSCodium', 'glycin' and 'loupe').",
+        "Those donors therefore come from the engineering donor plan (docs/development/donor-plan-complete-2026-10-30.md), not from the canonical specification, and the coverage audit reports them as bindings with no specification designation - a discrepancy deliberately left visible rather than mapped away."
+      ],
+      "still_open": "Either amend the specification to name the Planner data donors, or drop them and implement Planner's calendar layer first-party. Until then the divergence is recorded and the audit keeps reporting it."
+    },
+    {
+      "id": "OPEN-2026-10-31-UNSLOTH-STUDIO-FOR-SPACES",
+      "at": "2026-10-31T10:20:00Z",
+      "status": "answer owed to the owner since 30 October 2026",
+      "title": "Should Unsloth Studio be the Spaces/Training donor: separability yes, licence and format no",
+      "measured_facts": [
+        "The model-hub component is separable in practice: studio/backend/hub is 88 files / 2.4 MB with zero cross-package imports measured from the pinned tree.",
+        "Licence is AGPL-3.0-only (5,659 SPDX headers measured), against a 9to1 repository recorded as GPL-3.0 - the copyleft direction is not compatible in the way MPL or MIT donors are.",
+        "No PLE-GGUF support in that component, so it does not serve the Dulche/Thunder packing path."
+      ],
+      "still_open": "Recommendation is to take the idea (a hub layout and job queue) rather than the code, and to keep llama.cpp/Strata as the training and serving path. Needs your yes/no before Spaces' model-management surface is designed."
     }
   ]
 }
