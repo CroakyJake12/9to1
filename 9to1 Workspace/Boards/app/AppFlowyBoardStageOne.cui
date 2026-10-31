@@ -119,10 +119,16 @@
               <Text Column="2" Text="{Binding group.CountLabel}" FontSize="12"
                     Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center"
                     AccessibleName="Number of cards in this group" />
-              <Container Column="3" Type="Menu" ID="DonorGroupOptions" MaxWidth="168">
+              <!-- Menu items belong INSIDE the trigger, which is how the working FileMenu and board-name menu are
+                   authored in Boards.cui. My first version self-closed the trigger and left the items as siblings,
+                   so they rendered inline beside the header instead of opening as a popover - measured on screen in
+                   /tmp/opencode/e3-crop.png. The donor's own popover is limited to 168 x 300; that limit stays
+                   unexpressed here and is recorded as a fidelity gap rather than forced through an unsupported
+                   attribute. -->
+              <Container Column="3" Type="Menu" ID="DonorGroupOptions">
                 <Button Type="Menu Item" ID="DonorGroupOptionsButton" IconSource="icon:more" IconOnly="True"
                         Width="20" Height="20" Padding="0" Background="Transparent" BorderWidth="0"
-                        AccessibleName="Group options" />
+                        AccessibleName="Group options">
                 <Button Type="Menu Item" ID="DonorGroupRename" Content="Rename" Action="RenameGroupStart" Height="26"
                         IsEnabled="{Binding group.CanRename}" Interactive="{Binding group.CanRename}"
                         AccessibleName="Rename this group" />
@@ -132,6 +138,7 @@
                 <Button Type="Menu Item" ID="DonorGroupDelete" Content="Delete group" Action="DeleteGroupConfirm"
                         Height="26" IsEnabled="{Binding group.CanDelete}" Interactive="{Binding group.CanDelete}"
                         AccessibleName="Delete this group" />
+                </Button>
               </Container>
             </Container>
 
