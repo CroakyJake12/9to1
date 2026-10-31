@@ -1,0 +1,7 @@
+{
+  "specification": "docs/specification/9to1-development-specification-v2.md",
+  "sha256": "e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81",
+  "pinnedBy": "AGENTS.md 'Sole product authority'",
+  "matchesPinnedDigest": true,
+  "note": "if the digest changes this tool refuses until the pin is changed deliberately"
+}

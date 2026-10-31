@@ -439,6 +439,16 @@
       "requirement": "Replace the rough ranges currently in the progress report with measured per-app numbers. A measured number needs three things, and they must not be conflated: (1) an exact per-app denominator of normative MUST requirements, parsed from the canonical specification with the section each sits in; (2) an explicit state per MUST with an evidence pointer (implemented / partial / not implemented / not assessed); (3) a separate acceptance state, which stays almost entirely NOT RUN because independent acceptance is paused.",
       "measured_position": "Denominators are computable exactly from the specification text and are being instrumented now. Implementation STATE per requirement cannot be inferred from file counts or test counts; any percentage produced before the state pass is labelled an estimate, and I have been quoting those as ranges until today.",
       "what_would_make_it_false": "A MUST counted against the wrong app because section headings are ambiguous; a requirement counted twice under two headings; counting illustrative or propositional text as MUST; or treating a compiled mirror as implementation evidence. All four are checked explicitly by the instrument's tests."
+    },
+    {
+      "id": "OPEN-2026-10-31-SCOPE-UNRESOLVED-APPS",
+      "at": "2026-10-31T13:17:46Z",
+      "status": "owner answer needed; the count is measured, the choice is not mine to make",
+      "title": "865 MUST requirements (22% of the specification's MUSTs) sit in apps your Shipmas scoping does not name",
+      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848…, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
+      "why_it_matters": "The plan and every per-app percentage depend on this. The specification calls several of these mandatory - 'Dulche, nodes and agentic runtime' carries 414 MUSTs and the Spaces/Build/Boards workflows depend on it; the TF family (116 MUSTs) is called one mandatory shipping product at spec L947 while its own name is an OPEN decision at spec L1037; packaging (63) and Admin (61) sit under frameworks and the Business/Accounts surface. I have counted them, kept them in the register so nothing disappears, and marked them UNRESOLVED instead of choosing.",
+      "question_for_owner": "For each of these buckets, in or out for the Shipmas delivery: Dulche runtime (414), TF (116, spec names no product), other independent apps such as Terminal/Maps/Launcher/Shelf (97), Voice & Vision is named but its requirements are split across sections, packaging/lifecycle (63), Admin (61), shared settings/models (39), Study Space (33), Forms (42). A one-line answer per bucket is enough; I will not infer it.",
+      "what_would_make_it_false": "If a later owner instruction names these apps one way or the other, that answer supersedes this record; the register rows themselves do not change, only their scope class, which is derived from a recorded mapping table rather than embedded in the parse."
     }
   ]
 }

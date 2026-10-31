@@ -1,0 +1,170 @@
+{
+  "_meaning": "Hand verdicts on probe-credited rows. Each verdict is my reading of the requirement next to the pointer the probe produced, recorded so the probe's precision is a measured quantity with a stated sample size rather than an assumption.",
+  "_method": "python3 -B eng/spec-coverage/assess.py sample <n> --tier TEST-ASSERTED,CODE-PRESENT --seed <seed> [--app ...], then read the requirement text against the pointed file and its matched terms.",
+  "_scale": "verdict true = the pointed first-party code genuinely addresses this requirement's subject; verdict false = the match is coincidental vocabulary, or the pointer is not implementation evidence.",
+  "_samples": [
+    {
+      "seed": 20261031,
+      "n": 12,
+      "apps": [
+        "Spaces",
+        "Boards",
+        "Haven",
+        "Build"
+      ],
+      "setting": "before markdown exclusion"
+    },
+    {
+      "seed": 4242,
+      "n": 16,
+      "apps": [
+        "all"
+      ],
+      "setting": "before markdown exclusion",
+      "judged": 10,
+      "note": "the printed sample was truncated at 10 rows by the terminal capture; only those 10 were judged and only those are recorded"
+    }
+  ],
+  "verdicts": [
+    {
+      "id": "G0:L7891-e74c8c7963",
+      "tier": "TEST-ASSERTED",
+      "verdict": true,
+      "why": "SiteDomainVerificationTests.cs asserts a site-bound DomainChallenges token hash and VerifiedAt - that is the requirement's subject"
+    },
+    {
+      "id": "G0:L6294-b1d1f7b7ef",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "Dev/README.md is documentation and the matched words are about line endings and service boundaries, not the failure taxonomy the requirement names"
+    },
+    {
+      "id": "G0:L4905-bb5a3e8bd2",
+      "tier": "CODE-PRESENT",
+      "verdict": true,
+      "why": "SpacesHomeCuiBindings.cs carries SpacesHomeSidebarRow with sidebar-item ids and bindings; the field set may be incomplete but the subject is genuinely addressed"
+    },
+    {
+      "id": "G0:L4845-8c887ac8b3",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "McpToolRuntime.cs matched on 'considered' and 'retrieved' in unrelated comments about read verbs"
+    },
+    {
+      "id": "G0:L1129-0d267a2d88",
+      "tier": "TEST-ASSERTED",
+      "verdict": true,
+      "why": "HomeEcosystemTests.cs asserts AllowAiGeneratedTiles and AllowAiReorder as separate controls - the exact requirement"
+    },
+    {
+      "id": "G0:L9425-0dd584b62b",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "pointer was Boards/DonorParityManifest.md, a document that says the schema is NOT yet established: a gap record credited as implementation"
+    },
+    {
+      "id": "G0:L1392-ea194780a0",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "CuiPropertyPresentation.cs matched 'participate' and 'representations' in range-coercion comments, nothing to do with shared action representations"
+    },
+    {
+      "id": "G0:L9415-8672e11afb",
+      "tier": "CODE-PRESENT",
+      "verdict": true,
+      "why": "BlockRenderer.cs really carries the contextual strip and visually distinct selection/nesting presentation the requirement asks for"
+    },
+    {
+      "id": "G0:L9591-0b691f3976",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "DonorParityManifest.md again: a document listing collaboration and performance as still outstanding"
+    },
+    {
+      "id": "SPUI-208:L5470-c2d079dffd",
+      "tier": "TEST-ASSERTED",
+      "verdict": true,
+      "why": "ChatSpaceUserMessageGraphTests asserts SpaceNumberExtraction locale and invariant values - the numeric-extraction half of the requirement"
+    },
+    {
+      "id": "G0:L1370-4850ae23b6",
+      "tier": "CODE-PRESENT",
+      "verdict": true,
+      "why": "NotesDocumentValidator.cs validates shared drawings with their native drawing block and numbered equations - real shared-object-family handling"
+    },
+    {
+      "id": "G0:L9669-de4e0aa4e1",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "DonorParityManifest.md is the parity contract document, not an API surface"
+    },
+    {
+      "id": "TF-H01:L16404-08bf401598",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "SpacesBrowseAppContentSession.cs matched 'disposable'/'identified' from IAsyncDisposable disposal code, unrelated to testing a draft revision"
+    },
+    {
+      "id": "G0:L1936-b59e8fbbdf",
+      "tier": "CODE-PRESENT",
+      "verdict": true,
+      "why": "CuiThemeExpression.cs is the CUI theme expression carrying typography scale, radius, elevation and motion defaults - the theme coherence requirement's subject"
+    },
+    {
+      "id": "G0:L16837-859e13a18e",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "pointer was eng/donor-sources.json: my own tooling metadata, matched on 'compatibility' and 'installed'. Tooling must not credit a product requirement"
+    },
+    {
+      "id": "SPUI-151:L5197-e9aeb65dac",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "HomeAppsCuiBindings.cs matched 'actionable'/'discoverable' about app-group search, not about permission questions staying visible under a status badge"
+    },
+    {
+      "id": "G0:L15088-12105aa51a",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "ChatSessionService.cs matched 'affected'/'appropriate' from recovery-telemetry field names; Mini Computer has no VM/removable-medium surface here"
+    },
+    {
+      "id": "G0:L10986-d08d3807fe",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "NodeGraphRuntimeRegistry.cs matched 'adapters'/'handling'; filename legality and path traversal are not that code"
+    },
+    {
+      "id": "G0:L10348-632a2adaf6",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "ChatComposerCuiView.cs matched 'expansion'/'filtering' about formatting panels and query viewports, not list/set/record cell members"
+    },
+    {
+      "id": "G0:L16071-8f4b270280",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "ChatSessionService.cs matched 'materially'/'necessary' inside agent prompt text; there is no Maps interpretation-candidates surface"
+    },
+    {
+      "id": "TF-X01:L991-e694596960",
+      "tier": "CODE-PRESENT",
+      "verdict": false,
+      "why": "VisionVoiceActionCatalog.cs matched 'screenshot'/'session-local' in capture actions, not Prototype embedding semantics"
+    }
+  ],
+  "precision": {
+    "CODE-PRESENT": {
+      "audited": 18,
+      "true": 4,
+      "false": 14,
+      "precision": 0.222
+    },
+    "TEST-ASSERTED": {
+      "audited": 3,
+      "true": 3,
+      "false": 0,
+      "precision": 1.0
+    }
+  }
+}

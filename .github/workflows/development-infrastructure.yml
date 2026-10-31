@@ -81,6 +81,24 @@ jobs:
           print((evidence / 'installer-delivery.log').read_text())
           raise SystemExit(result.returncode)
           PY
+      - name: Measure the specification requirement register and evidence tiers
+        # The denominator and the tiers are measurements, so CI recomputes them from the pinned specification
+        # rather than trusting the committed artifacts. Donor checkouts are absent from a CI checkout and are
+        # excluded from the evidence corpus by the donor registry anyway.
+        run: |
+          python3 -B eng/spec-coverage/spec_register.py build
+          python3 -B eng/spec-coverage/assess.py score
+          python3 -B eng/spec-coverage/assess.py verify-pointers
+      - name: Upload the coverage record
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886067c06451c # v4
+        with:
+          name: spec-coverage-record
+          path: |
+            eng/spec-coverage/coverage-summary.json
+            eng/spec-coverage/spec-pin.json
+          if-no-files-found: error
+
       - name: Validate committed identity, closed-index recovery and benchmark streams
         if: always()
         run: |
@@ -99,6 +117,8 @@ jobs:
               ('donor-audit-ratchet', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_record_donor_audit_baselines.py', '-v']),
               ('cui-donor-mirror', 61, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/cui-mirror', '-p', 'test_*.py', '-v']),
               ('cui-framework-test-ratchet', 8, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_cui_test_ratchet.py', '-v']),
+              ('spec-requirement-register', 30, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/spec-coverage', '-p', 'test_spec_register.py', '-v']),
+              ('spec-coverage-evidence', 26, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/spec-coverage', '-p', 'test_assess.py', '-v']),
           ]
           failed = False
           for name, expected_tests, command in suites:

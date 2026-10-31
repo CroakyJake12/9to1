@@ -1,0 +1,519 @@
+{
+  "_meaning": "Which directories hold each specification app's own source. This decides what counts as evidence for that app, so it is recorded with reasons rather than derived from directory-name guessing.",
+  "_measured_on": "2026-10-31",
+  "_measured_at_source": "254e1f2b",
+  "_root_classes": {
+    "app-local": "the app's own workspace directory, excluding its DonorMirror corpus (that is indexed as 'mirror')",
+    "shared": "9to1 Workspace/shared/src plus native: the shared implementation the specification requires every app to use (one implementation per app, Home Core service plane)",
+    "tests": "9to1 Workspace/shared/tests plus framework/*/Tests: genuine test projects, including the Haven.Desktop.Tests and Haven.Core.Tests suites",
+    "framework": "framework/: the CUI language, compiler and runtime plus the donor-derived Avalonia fork",
+    "models": "9to1 Models/: Dulche model packages and the pinned native inference engines",
+    "workspace-other": "other 9to1 Workspace app directories, used only for cross-cutting requirements that genuinely span apps"
+  },
+  "_notes": [
+    "Measured 31 Oct 2026: 'shared' holds 2,956 first-party source files while the app directories hold far fewer (Build 0 own .cui/.cs outside donor trees, Connect 0, Planner 0). Treating only app-local directories as evidence would report Build as empty when its scope lives in Dev/Sites/Stacks and shared/src.",
+    "Build combines Dev + Sites + Stacks per the specification's one-app rule, so all three are Build's app-local roots; the separate 'Build' directory is included too.",
+    "Connect is scoped to email by the owner, and Mail is its email mode, so Connect's app-local roots are Connect + Mail; non-mail Connect surfaces stay visible because the register keeps the full denominator.",
+    "Automations, Voice & Vision and Dulche have no workspace directory of their own: measured, their implementation lives in shared/src and their tests in shared/tests, so they get shared + tests + models roots and no app-local claim.",
+    "CUI requirements are framework-conformance requirements, so their roots are framework/ (not an app directory).",
+    "Every DonorMirror corpus is reclassified as 'mirror' during indexing: a Stage A donor mirror is structure without specification behaviour and must never raise an app's code-presence tier.",
+    "Corrected 31 Oct 2026 after a measured implausibility: Games reported 72% test-asserted and Play 70% while neither app exists in this repository, because their recorded roots were the whole '9to1 Workspace'. No app is scored against the whole workspace, and an app with no first-party source gets no roots so its requirements land in NO-EVIDENCE.",
+    "Markdown excluded from the evidence corpus after the first hand audit measured 6 of 12 credited rows as false, four of them app gap-manifest documents crediting a recorded absence as if it were an implementation. docs/specification is not a root for any app.",
+    "eng/ is a root only for 'packaging' (its requirements are genuinely about the build and launch tooling) and not for other apps: measured, treating eng/ as a product root credited a 9to1 OS requirement from donor-registry metadata. Apps with no product source get no roots and therefore measure zero evidence."
+  ],
+  "apps": {
+    "Haven": [
+      [
+        "app-local",
+        "9to1 Workspace/Home"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Root"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Browse"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/native"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ]
+    ],
+    "Browse": [
+      [
+        "app-local",
+        "9to1 Workspace/Browse"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Spaces": [
+      [
+        "app-local",
+        "9to1 Workspace/Spaces"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Assistants"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Study Space": [
+      [
+        "app-local",
+        "9to1 Workspace/Spaces"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Voice & Vision": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Dulche": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "models",
+        "9to1 Models"
+      ]
+    ],
+    "Automations": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Build": [
+      [
+        "app-local",
+        "9to1 Workspace/Build"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Dev"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Sites"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Stacks"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Write": [
+      [
+        "app-local",
+        "9to1 Workspace/Write"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ]
+    ],
+    "Present": [
+      [
+        "app-local",
+        "9to1 Workspace/Present"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ]
+    ],
+    "Boards": [
+      [
+        "app-local",
+        "9to1 Workspace/Boards"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ]
+    ],
+    "Canvas": [
+      [
+        "app-local",
+        "9to1 Workspace/Canvas"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ]
+    ],
+    "Data": [
+      [
+        "app-local",
+        "9to1 Workspace/Data"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Files": [
+      [
+        "app-local",
+        "9to1 Workspace/Files"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Connect": [
+      [
+        "app-local",
+        "9to1 Workspace/Connect"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Mail"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Accounts": [
+      [
+        "app-local",
+        "9to1 Workspace/Accounts"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Planner": [
+      [
+        "app-local",
+        "9to1 Workspace/Planner"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Cards": [
+      [
+        "app-local",
+        "9to1 Workspace/Cards"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Forms": [
+      [
+        "app-local",
+        "9to1 Workspace/Forms"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "AI Studio": [
+      [
+        "app-local",
+        "9to1 Workspace/Studio"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "models",
+        "9to1 Models"
+      ]
+    ],
+    "CUI": [
+      [
+        "framework",
+        "framework/CUI"
+      ],
+      [
+        "tests",
+        "framework/CUI/Runtime.Tests"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ]
+    ],
+    "packaging": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ],
+      [
+        "app-local",
+        "eng"
+      ]
+    ],
+    "shared-settings": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "models",
+        "9to1 Models"
+      ]
+    ],
+    "cross-cutting": [
+      [
+        "framework",
+        "framework"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "cross-app UI (SPUI)": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ],
+      [
+        "framework",
+        "framework"
+      ]
+    ],
+    "other apps": [
+      [
+        "app-local",
+        "9to1 Workspace/Terminal"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Assistants"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Admin": [
+      [
+        "app-local",
+        "9to1 Workspace/Accounts"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "TF (spec names no product)": [
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ],
+      [
+        "app-local",
+        "9to1 Workspace/Files"
+      ],
+      [
+        "tests",
+        "9to1 Workspace/shared/tests"
+      ]
+    ],
+    "Picture": [
+      [
+        "app-local",
+        "9to1 Workspace/Picture"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ]
+    ],
+    "Wave": [
+      [
+        "app-local",
+        "9to1 Workspace/Wave"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ]
+    ],
+    "Motion": [
+      [
+        "app-local",
+        "9to1 Workspace/Motion"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ]
+    ],
+    "Mini Computer": [
+      [
+        "app-local",
+        "9to1 Workspace/MiniComputer"
+      ],
+      [
+        "shared",
+        "9to1 Workspace/shared/src"
+      ]
+    ],
+    "Games": [],
+    "Play": [],
+    "9to1 OS": [],
+    "deferred": [],
+    "open decisions": []
+  }
+}
