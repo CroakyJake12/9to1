@@ -23,3 +23,9 @@ Usage meter is unavailable. Current owner’s approximately 2% stop boundary sup
 ## Golden rules and acceptance
 
 Preserve source/history, unrelated WIP, user data, existing instances, model host, donor licences and all failures. CUI owns frontend composition; typed host/domain operations own behaviour. Read relevant canonical/expanded requirements and latest owner decisions. Full independent acceptance remains paused; compile/headless/native evidence are distinct. Goal is not complete while requirements or material verification gaps remain.
+
+## Owner continuation — 31 October 2026 21:56 UTC
+
+Owner reports 76% remaining allowance and requests maximum useful parallel implementation for the two-hour window before midnight plan expiry. Only Astra subagents are allowed. One dedicated worker now owns Spaces implementation through its actual specification; this explicitly expands the earlier Boards-only scope for that worker. Continue active cycles without early wind-down; serialize SDK, keep source scopes exclusive, commit and normally push verified milestones, secure work before midnight UTC. No new schedule or external message authorized.
+
+Owner latest instruction: at reported13% usage, wrap up, commit and push quickly. Stop beginning features; preserve verified source and a precise unfinished-work handoff. This supersedes the midnight continuation window.

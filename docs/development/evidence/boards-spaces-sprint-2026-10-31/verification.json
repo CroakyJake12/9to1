@@ -1,0 +1,136 @@
+{
+  "base_commit": "d748bbf9dd7770717496c77a487a3615551e0831",
+  "branch": "main",
+  "sdk": "10.0.401",
+  "guard_floor_mib": 2048,
+  "evidence_level": "Compilation and headless production-CUI interaction; not complete native acceptance.",
+  "runs": [
+    {
+      "run": "boards-final-full",
+      "trx_sha256": "c8f7a3e1ef9df066b50a0502ddfa92a1766637f299b855f028347fbc35c88147",
+      "counts": {
+        "total": "565",
+        "executed": "565",
+        "passed": "565",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "failed_tests": [],
+      "raw_trx": "/workspace/scratch/boards-sprint-20261031/boards-final-full-trx/_7da2d9b32d40_2026-10-31_22_25_23_net10.0.trx"
+    },
+    {
+      "run": "boards-contract-full",
+      "trx_sha256": "b82bead5e2538e49d68210f62b1e5213577deb86e4b001f87e121c7a429a5c17",
+      "counts": {
+        "total": "124",
+        "executed": "124",
+        "passed": "124",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "failed_tests": [],
+      "raw_trx": "/workspace/scratch/boards-sprint-20261031/boards-contract-full-trx/_7da2d9b32d40_2026-10-31_22_14_44_net10.0.trx"
+    },
+    {
+      "run": "spaces-corrected-full",
+      "trx_sha256": "2ba9e431b743980fd4c44ed441b15827c522dd33c0647b05afbbd208096ebd20",
+      "counts": {
+        "total": "306",
+        "executed": "306",
+        "passed": "306",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "failed_tests": [],
+      "raw_trx": "/workspace/scratch/boards-sprint-20261031/spaces-corrected-full-trx/_7da2d9b32d40_2026-10-31_22_22_41_net10.0.trx"
+    },
+    {
+      "run": "cui-bounded-full",
+      "trx_sha256": "a7053439d18539f041ffd5a144187d27a3da4e0069a0b3fd318a1288e2f00077",
+      "counts": {
+        "total": "779",
+        "executed": "779",
+        "passed": "774",
+        "failed": "5",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "failed_tests": [
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: Bright)",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: Dark)",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: SuperDark)",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: SuperBright)",
+        "CakeOS.Cui.Runtime.Tests.CuiRecordedSurfaceLayoutTests.Home_library_labels_and_folder_name_field_flow_and_survive_live_branch_updates"
+      ],
+      "raw_trx": "/workspace/scratch/boards-sprint-20261031/cui-bounded-full-trx/_7da2d9b32d40_2026-10-31_22_21_50_net10.0.trx"
+    }
+  ],
+  "implementation_commit": "221510f1a817366f813cbbfe557bf7f6f5b7b8a1",
+  "implementation_remote_readback": "221510f1a817366f813cbbfe557bf7f6f5b7b8a1",
+  "builds": [
+    {
+      "run": "desktop-final",
+      "result": "passed",
+      "configuration": "Release",
+      "errors": 0,
+      "warnings": 1,
+      "warning": "Existing WebRtcVadSharp AnyCPU fallback to x64",
+      "log_sha256": "5b861d7e8f5775f6f5539a9efef7378192d3bfc8efb9af1ae82c196c5db02fba",
+      "raw_log": "/workspace/scratch/boards-sprint-20261031/desktop-final.log"
+    },
+    {
+      "run": "standalone-final",
+      "result": "passed",
+      "configuration": "Release",
+      "errors": 0,
+      "warnings": 1,
+      "warning": "Existing WebRtcVadSharp AnyCPU fallback to x64",
+      "log_sha256": "0bf55a2dfe5025fd5693dba149ed58ea46e176cc2ba07c088288ac196270964b",
+      "raw_log": "/workspace/scratch/boards-sprint-20261031/standalone-final.log"
+    }
+  ],
+  "native_final_build": "NOT RUN: owner requested immediate wrap and push; prior baseline native evidence does not verify every sprint change."
+}

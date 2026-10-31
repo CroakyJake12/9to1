@@ -1,13 +1,14 @@
 goal: 9to1 Boards usability and continuation
 contract: contract.md revision 2
-checkpoint: checkpoint.md revision 5
+checkpoint: checkpoint.md
 branch: main
-base: bf0375e438f9cb5d6487a9bbb1e4c823d753a0e5
-verified_pushed_implementation: a0f37f4fa5961d26ec832bf624e549bb1bcd2660
-status: CHECKPOINT_READY
-owner: no active source writer; all delegated scopes frozen
-usage_remaining_percent: UNKNOWN
-stop_boundary: approximately 2 percent only when actually observed
-schedule: no new schedule; existing coordination preserved
-next: canonical list-row typography/persistence/renderer support with compatibility decision
-handoff: docs/development/boards-usability-handoff-2026-10-31.md
+base: d748bbf9dd7770717496c77a487a3615551e0831
+verified_pushed_implementation: 221510f1a817366f813cbbfe557bf7f6f5b7b8a1
+status: PAUSED_OWNER_WRAP
+owner: root coordinator; all Astra workers stopped
+usage_remaining_percent: 13 (owner-reported during wrap request; not live-metered)
+stop_boundary: immediate wrap, commit and push per latest owner instruction
+schedule: none; prior midnight continuation superseded
+handoff: docs/development/boards-spaces-sprint-handoff-2026-10-31.md
+next: Native retest final Boards and actual Desktop Spaces route, then Spaces archive-selection persistence and responsive navigation; see handoff
+completion: overall Goal unfinished; verified milestone pushed
