@@ -255,7 +255,8 @@ public sealed partial class CuiControlLoader : IDisposable
     public void SetBindingContext(ICuiBindingContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if (_bindingContext is INotifyPropertyChanged previous && _bindingChangedHandler is not null)
+        var previousContext = _bindingContext;
+        if (previousContext is INotifyPropertyChanged previous && _bindingChangedHandler is not null)
             previous.PropertyChanged -= _bindingChangedHandler;
 
         _bindingContext = context;
@@ -264,6 +265,47 @@ public sealed partial class CuiControlLoader : IDisposable
             : null;
         if (context is INotifyPropertyChanged current && _bindingChangedHandler is not null)
             current.PropertyChanged += _bindingChangedHandler;
+
+        // A context swap is how a host replaces the document behind an already mounted surface (Boards
+        // switching boards, Data replacing a query result set). The recorded live bindings and conditional
+        // branches carry the context object they were mounted against, so without this rebase the mounted
+        // tree keeps reading the retired document: its Active / Text / Interactive gates never move again and
+        // the user is left looking at the previous page topology forever. Rebase only the entries that named
+        // the retired context; scoped item contexts (Repeat, query scopes) are different objects and stay put.
+        if (previousContext is not null && !ReferenceEquals(previousContext, context))
+            RebaseLiveState(previousContext, context);
+    }
+
+    private void RebaseLiveState(ICuiBindingContext previous, ICuiBindingContext next)
+    {
+        for (var index = 0; index < _liveBindings.Count; index++)
+        {
+            var entry = _liveBindings[index];
+            if (ReferenceEquals(entry.Context, previous))
+                _liveBindings[index] = entry with { Context = next };
+        }
+
+        for (var index = 0; index < _liveConditionals.Count; index++)
+        {
+            var entry = _liveConditionals[index];
+            if (ReferenceEquals(entry.Context, previous))
+                _liveConditionals[index] = entry with { Context = next };
+        }
+
+        foreach (var entry in _liveBindings.Where(entry => ReferenceEquals(entry.Context, next)).ToArray())
+        {
+            if (!_liveBindings.Contains(entry)) continue;
+            try
+            {
+                ApplyObservedBinding(entry.Control, entry.PropertyName, entry.Binding, next, entry.Span);
+            }
+            catch (CuiRuntimeLoadException failure)
+            {
+                _runtimeDiagnostics.Add(failure.Diagnostic);
+            }
+        }
+
+        RefreshLiveConditionals(null, next);
     }
 
     /// <summary>Set an action dispatcher for action= and on:click= attributes.</summary>
