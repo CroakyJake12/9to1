@@ -123,6 +123,45 @@ sub-tokens are now indexed.
 WEAK-SINGLE-TERM 2,299, NO-EVIDENCE 700, unsearchable prose 756. The dominance of WEAK-SINGLE-TERM is the
 honest signal: **most requirements cannot be decided by text matching at all.**
 
+## Measured against your pinned rule: the running shells are still foreign rendering
+
+Measured with `eng/spec-coverage/surface_conformance.py` (13 tests, baseline committed, CI suite
+`surface-conformance`), excluding every pinned donor checkout and every test fixture:
+
+| Measured | Count |
+|---|---:|
+| First-party foreign-rendering UI files (`.xaml`/`.axaml`/`.hui`) | **93** |
+| …of which app-shell or page surfaces | **55** |
+| First-party `.cui` documents, whole product | **72** |
+| Stage A donor mirror `.cui` documents | 1,784 |
+
+Per app, first-party `.cui`: Boards 11, Assistants 8, Spaces 7, Home 5, Canvas/Data/Dev/Files 2 each, and
+**Build, Write, Present, Connect have zero** first-party `.cui` — their CUI documents are mirrors only
+(Build 289, Write 232, Data 188, Present 89, Connect 19).
+
+What the 55 shell/page files are, named: `Haven.Desktop/App.axaml`, `MainWindow.axaml`,
+`Interface/Shell/MainView.axaml`, `Views/Shell/Sidebar/Sidebar.axaml`, `Views/Shell/TopRail/*` (3 files) and 30+
+`Views/Pages/*Page.axaml` — Chat, Mail, Home, NewDashboard, Settings, Terminal, Maps, Play, Tasks, Plan, Go,
+Automations, Browser, Call, Canvas, Data, Notes, Present, Write, Studio, Translate, Training, WorkspaceEditor,
+WorkspaceHome, ProjectCreator, Experiences, Catalog, LessonSettings, ContainerSettings, ModeLibrary, Archive,
+ActivityLog. Plus 23 `.hui` production files: 19 in `Haven.Desktop/DynamicUI/` and `Prefabs/` (including
+`Chatbox.hui` and `ChatAddMenu.hui`) and 4 in `Haven.UI/Resources/`.
+
+Two consequences worth your attention, both measured rather than argued:
+
+1. **The Stage A mirror work and the shell work are different jobs.** 1,784 donor-UI documents now exist in CUI,
+   but the surfaces a user actually runs in the desktop build are still AXAML/HUI. The two-stage plan
+   (donor → CUI mirror → spec adaptation) does not by itself remove those 93 files; the shell and page views are
+   a separate conversion, and 55 of them are main structure, not transient pop-ups.
+2. **`.hui` is still in production**, which the CUI mandate treats as a retired authoring language — including
+   `Prefabs/Chatbox.hui`, in a specification amendment the composer replaced legacy chatbox with the CUI
+   composer. That file being present does not by itself prove the legacy composer is what users see; whether it
+   is loaded at runtime is **NOT RUN** here. The measurement is file presence, which is exactly what it claims.
+
+The baseline is recorded as a **violation level**: it may only move by reducing foreign files and increasing
+first-party `.cui`, and `check` fails both if someone adds an `.axaml` view and if someone deletes a CUI
+document to improve the ratio.
+
 ## The path to per-app percentages you can use
 
 A measured percentage needs a **state per requirement**, so the instrument is built as: denominator (done,

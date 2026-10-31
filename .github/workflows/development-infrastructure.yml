@@ -118,7 +118,8 @@ jobs:
               ('cui-donor-mirror', 61, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/cui-mirror', '-p', 'test_*.py', '-v']),
               ('cui-framework-test-ratchet', 8, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_cui_test_ratchet.py', '-v']),
               ('spec-requirement-register', 30, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/spec-coverage', '-p', 'test_spec_register.py', '-v']),
-              ('spec-coverage-evidence', 26, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/spec-coverage', '-p', 'test_assess.py', '-v']),
+              ('spec-coverage-evidence', 28, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/spec-coverage', '-p', 'test_assess.py', '-v']),
+              ('surface-conformance', 13, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/spec-coverage', '-p', 'test_surface_conformance.py', '-v']),
           ]
           failed = False
           for name, expected_tests, command in suites:

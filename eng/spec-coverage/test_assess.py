@@ -15,6 +15,7 @@ and the honesty rules in place.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -255,6 +256,32 @@ class AuditAndOverrideTests(unittest.TestCase):
                 out.unlink(missing_ok=True)
 
 
+class ArtifactSafetyTests(unittest.TestCase):
+    """A measurement run inside a test must never move the published evidence record."""
+
+    def test_scoring_without_publishing_leaves_both_committed_artifacts_byte_identical(self):
+        targets = [HERE / "coverage-summary.json"]
+        if (HERE / "assessment.json").is_file():
+            targets.append(HERE / "assessment.json")
+        if not targets:
+            self.skipTest("no committed artifacts yet")
+        before = {path: path.read_bytes() for path in targets}
+        self.assertTrue(before, "expected at least coverage-summary.json to be committed")
+        assess.score(write_artifacts=False)
+        for path, blob in before.items():
+            self.assertEqual(path.read_bytes(), blob,
+                             f"{path.name} was modified by a non-publishing score")
+
+    def test_a_publishing_score_is_deterministic_for_an_unchanged_tree(self):
+        # The opposite of what I first wrote here. My first attempt asserted that a publishing score must CHANGE
+        # the summary, which would itself be an instrument defect: identical input must produce identical bytes.
+        # Measured: two publishing runs on an unchanged tree gave byte-identical records.
+        before = (HERE / "coverage-summary.json").read_bytes()
+        subprocess.run([sys.executable, "-B", str(HERE / "assess.py"), "score"], check=True,
+                       capture_output=True, cwd=assess.ROOT)
+        after = (HERE / "coverage-summary.json").read_bytes()
+        self.assertEqual(after, before, "the same tree must measure to the same record")
+
 class MeasuredNumberTests(unittest.TestCase):
     """Numbers that came from a real run, pinned so a change has to be deliberate."""
 
@@ -267,14 +294,22 @@ class MeasuredNumberTests(unittest.TestCase):
         self.assertEqual(summary["must_by_scope"]["out"], 392)
         self.assertEqual(summary["must_by_scope"]["UNRESOLVED"], 865)
 
-    def _assessment_or_skip(self):
-        path = HERE / "assessment.json"
-        if not path.is_file():
-            self.skipTest("assessment.json is produced by `assess.py score`; CI runs score before these tests")
-        return json.loads(path.read_text())
+    def _assessment(self):
+        """Score in-process rather than reading the generated file.
+
+        Two earlier suite runs failed for exactly this reason and I could not name the test at the time: the
+        measurement tests were reading assessment.json, which was stale against a classification change made
+        minutes earlier. The failure was deterministic staleness, not a flake - 13 consecutive clean runs after
+        a re-score showed that. Scoring in the test removes the fragility instead of working around it, and the
+        corpus-size assertion below stops an empty index from being mistaken for a result.
+        """
+        payload = assess.score(write_artifacts=False)
+        self.assertGreater(payload["_meta"]["files_indexed"], 3000,
+                           "assessment against an empty corpus is not evidence")
+        return payload
 
     def test_apps_the_owner_scoped_out_measure_zero_evidence_not_a_percentage_of_nothing(self):
-        payload = self._assessment_or_skip()
+        payload = self._assessment()
         for app in ("Games", "Play"):
             row = payload["summary"][app]
             self.assertEqual(row["CODE-PRESENT"], 0, app)
@@ -288,7 +323,7 @@ class MeasuredNumberTests(unittest.TestCase):
         # Measured 31 Oct 2026 from a full 7,811-file index. Pinned exactly so that if this ever moves, the
         # failure names the app and the tier instead of an unexplained red run. Any move must be a deliberate
         # change to source or roots, and the number must be re-measured, not edited to make a run pass.
-        payload = self._assessment_or_skip()
+        payload = self._assessment()
         # Re-measured 31 Oct 2026 after two deliberate corpus changes, each with a measured cause: markdown and
         # .json were removed as evidence classes (4 of 12 audited false positives were app gap-manifest docs and
         # my own donor-registry metadata), and snake_case test names began contributing their sub-tokens (the
@@ -323,7 +358,7 @@ class MeasuredNumberTests(unittest.TestCase):
             assess.candidates = original
 
     def test_the_assessment_carries_a_row_for_every_must_in_the_register(self):
-        payload = self._assessment_or_skip()
+        payload = self._assessment()
         register = json.loads((HERE / "register.json").read_text())
         must_ids = {r["id"] for r in register["requirements"] if r["level"] == "MUST"}
         self.assertEqual({r["id"] for r in payload["assessments"]}, must_ids)

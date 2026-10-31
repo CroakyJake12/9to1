@@ -16,7 +16,7 @@
       "NOT-IMPLEMENTED"
     ],
     "min_terms_for_tier": 2,
-    "files_indexed": 6793
+    "files_indexed": 6795
   },
   "specification": "docs/specification/9to1-development-specification-v2.md",
   "summary": {
@@ -546,5 +546,5 @@
       "mirror_only_pct": 0.0
     }
   },
-  "honesty_note": "The band between the strict and loose probe settings is itself the measured finding: static text matching cannot decide implementation state. NO-EVIDENCE rows are the reliable claim (the requirement's distinctive vocabulary is absent from the app's recorded roots); CODE-PRESENT rows are candidate evidence awaiting a hand verdict. Nothing here is on-screen behaviour, packaging or acceptance."
+  "honesty_note": "The band between the strict and loose probe settings is itself the measured finding: static text matching cannot decide implementation state. NO-EVIDENCE rows are the reliable claim (the requirement's distinctive vocabulary is absent from the app's recorded roots); CODE-PRESENT rows are candidate evidence awaiting a hand verdict; audited precision of the credited tiers is in audit.json and docs/development/per-app-measured-coverage-2026-10-31.md. Nothing here is on-screen behaviour, packaging or acceptance."
 }

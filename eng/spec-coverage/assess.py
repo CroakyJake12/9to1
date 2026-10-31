@@ -72,10 +72,17 @@ TIERS = ("TEST-ASSERTED", "CODE-PRESENT", "MIRROR-ONLY", "WEAK-SINGLE-TERM", "NO
 # "compatibility" and "installed" in my own registry metadata. Tooling metadata is not product evidence.
 FILE_SUFFIXES = {".cui", ".cs", ".axaml", ".xaml", ".ts", ".tsx", ".js", ".rs", ".cpp", ".h", ".hpp",
                  ".py", ".xhtml", ".html", ".dart", ".ui"}
-SKIP_FRAGMENTS = ("/bin/", "/obj/", "/vendor/", "/node_modules/", "/.git/", "/source/libreoffice/",
+SKIP_FRAGMENTS = ("/bin/", "/obj/", "/vendor/", "/node_modules/", "/.git/", "/_fixtures/",
+                  "/source/libreoffice/",
                   "/source/thunderbird/", "/source/codeoss/", "/source/gitea/", "/source/appflowy/",
                   "/source/rnote/", "/source/firefox", "/source/strata/")
 MIRROR_HINTS = ("donormirror",)
+# Test fixtures are not product evidence. Measured cause of a suite flake on 31 Oct 2026: ClassifyTests writes
+# synthetic files under eng/spec-coverage/_fixtures, and eng/ is a recorded root for the packaging bucket, so a
+# leftover fixture changed the packaging tier counts between runs - the committed coverage summary and an
+# in-process re-score disagreed, and the mismatch appeared and disappeared with fixture lifetime rather than with
+# any real change to the product.
+FIXTURE_FRAGMENT = "/_fixtures/"
 ASSERT_RE = re.compile(r"\b(Assert|assert\.|Assert\.|Should\.|EXPECT_|expect\(|DidNot|IsTrue|IsFalse|AreEqual)\b")
 
 # Words so common in this specification that matching them would credit every file in the repository.
@@ -439,23 +446,28 @@ def score(app_filter: list[str] | None = None, write_artifacts: bool = True) -> 
         "tiers": list(TIERS), "min_terms_for_tier": MIN_TERMS,
         "files_indexed": len(corpus.paths),
     }, "summary": summary, "assessments": results}
-    if write_artifacts:
-        OUT.write_text(json.dumps(payload, indent=2) + "\n")
-    # The compact summary is the committed record; the full row set is a working file. The summary carries the
-    # same provenance so a number in a report can always be traced back to the specification pin that produced it.
-    SUMMARY_OUT.write_text(json.dumps({"_meta": payload["_meta"],
-                                       "specification": json.loads(REGISTER.read_text())["_meta"]["specification"],
-                                           "summary": summary,
-                                           "honesty_note": (
-                                           "The band between the strict and loose probe settings is itself the "
-                                           "measured finding: static text matching cannot decide implementation "
-                                           "state. NO-EVIDENCE rows are the reliable claim (the requirement's "
-                                           "distinctive vocabulary is absent from the app's recorded roots); "
-                                           "CODE-PRESENT rows are candidate evidence awaiting a hand verdict. "
-                                           "Nothing here is on-screen behaviour, packaging or acceptance.")},
-                                          indent=2) + "\n")
     if not write_artifacts:
-        payload.pop("_written", None)
+        # Tests must never move the published evidence. Measured defect of the first version of this guard: the
+        # summary write stayed unconditional while only the row dump was gated, so an in-test re-score overwrote
+        # coverage-summary.json - the committed record - with whatever synthetic state the test happened to have
+        # on disk. The comparison test then passed by comparing a file it had just written.
+        return payload
+
+    OUT.write_text(json.dumps(payload, indent=2) + "\n")
+    # The compact summary is the committed record; the full row set is a working file. The summary carries the
+    # same provenance so a number in a report can always be traced back to the specification pin that made it.
+    SUMMARY_OUT.write_text(json.dumps({
+        "_meta": payload["_meta"],
+        "specification": json.loads(REGISTER.read_text())["_meta"]["specification"],
+        "summary": summary,
+        "honesty_note": (
+            "The band between the strict and loose probe settings is itself the measured finding: static text "
+            "matching cannot decide implementation state. NO-EVIDENCE rows are the reliable claim (the "
+            "requirement's distinctive vocabulary is absent from the app's recorded roots); CODE-PRESENT rows "
+            "are candidate evidence awaiting a hand verdict; audited precision of the credited tiers is in "
+            "audit.json and docs/development/per-app-measured-coverage-2026-10-31.md. Nothing here is on-screen "
+            "behaviour, packaging or acceptance."),
+    }, indent=2) + "\n")
     return payload
 
 
