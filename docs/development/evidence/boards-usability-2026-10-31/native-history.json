@@ -1,0 +1,12 @@
+[
+  {
+    "action": "undo",
+    "expected": 0,
+    "saved_font_size": 0
+  },
+  {
+    "action": "redo",
+    "expected": 22,
+    "saved_font_size": 22
+  }
+]

@@ -1,6 +1,6 @@
-# Golden rules · revision 1
+# Golden rules · revision 2
 
-- Current owner instruction: develop autonomously; stop at an **observed 5% remaining usage**.
+- Current owner instruction: develop autonomously; stop at an **observed approximately 2% remaining usage**.
   Never substitute context length or a forecast for allowance. No reliable allowance API discovered
   at setup; the value is UNKNOWN.
 - Current owner instruction and AGENTS.md: canonical `main` only; preserve every existing change,
@@ -15,3 +15,5 @@
   model restart or private-ledger fabrication. Full independent acceptance remains paused.
 - Goal continuity: reread current source and checkpoint before each cycle. Never overlap source
   writers or claim scheduled/native execution without a successful supported tool receipt.
+
+- Latest owner brief, 31 October: keep the CUI frontend and ghost caret/container outlines; improve its usability first, then continue the full Boards ledger. AppFlowy Rust integration requires actual compatibility/licence checks; no donor UI replacement.

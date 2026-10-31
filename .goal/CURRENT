@@ -1,19 +1,13 @@
-goal: 9to1 overnight development
-contract: contract.md revision 1 (owner-authorised continuation)
-checkpoint: checkpoint.md revision 13
-golden_rules: golden-rules.md revision 1
-queue: queue.md revision 11
+goal: 9to1 Boards usability and continuation
+contract: contract.md revision 2
+checkpoint: checkpoint.md revision 5
 branch: main
-base: 90013220198002f78e9aecd40ccea80a87703105 (validated source; use the checkpoint's containing main commit)
-status: STOPPED_BY_OWNER
-usage_remaining_percent: 8
-usage_observation: approximate owner report received 2026-10-30T09:10:29Z; no live platform feed; <=5% stop condition unchanged
-usage_handoff: handoffs/2026-10-30-usage-update.md
-schedule: disabled on explicit owner instruction, 2026-10-30T12:56:16Z
-schedule_id: 6ae3e05720308191a7bf4008466d8263
-cycle_report: cycle-reports/2026-10-30-09.md
-cycle_ownership: cycle 9 complete; foreground claimed 12:21:00 UTC for trigger recorded 12:14:18; source released after validation/commit/push/readback; no overlapping writer
-next_scheduled_trigger: none; existing automation paused
-next: none; do not resume without a new explicit owner instruction
-owner_stop: 2026-10-30T12:56:16Z; supersedes all earlier continuation and usage-threshold instructions
-stop_handoff: handoffs/2026-10-30-owner-stop.md
+base: bf0375e438f9cb5d6487a9bbb1e4c823d753a0e5
+verified_pushed_implementation: a0f37f4fa5961d26ec832bf624e549bb1bcd2660
+status: CHECKPOINT_READY
+owner: no active source writer; all delegated scopes frozen
+usage_remaining_percent: UNKNOWN
+stop_boundary: approximately 2 percent only when actually observed
+schedule: no new schedule; existing coordination preserved
+next: canonical list-row typography/persistence/renderer support with compatibility decision
+handoff: docs/development/boards-usability-handoff-2026-10-31.md

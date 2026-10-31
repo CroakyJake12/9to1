@@ -1,0 +1,82 @@
+{
+  "evidence_level": "Compile and test results; native evidence is recorded separately.",
+  "sdk": "10.0.401",
+  "configuration": "Release",
+  "build_policy": "Serial flock, guarded_lowmem_build.py, floor2048MiB, timeout900s, -m:1, no shared compilation",
+  "runs": [
+    {
+      "label": "boards-verified",
+      "counts": {
+        "total": 463,
+        "passed": 463,
+        "failed": 0
+      },
+      "failures": [],
+      "new_failures": [],
+      "trx_sha256": "fcb6263c214ca5040df1432ec3cfe346dd42a7d5f69803fd8a31a61862294b89",
+      "log": "/workspace/scratch/boards-overhaul-20261031/boards-verified.log"
+    },
+    {
+      "label": "boards-capabilities",
+      "counts": {
+        "total": 464,
+        "passed": 464,
+        "failed": 0
+      },
+      "failures": [],
+      "new_failures": [],
+      "trx_sha256": "deb3cc4826d46c86d9d5c55bf52fdca9bc9a4f5b27b681f64076fbcd5fd5f02c",
+      "log": "/workspace/scratch/boards-overhaul-20261031/boards-capabilities.log"
+    },
+    {
+      "label": "cui-escape-final",
+      "counts": {
+        "total": 766,
+        "passed": 754,
+        "failed": 12
+      },
+      "failures": [
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.CUI_templates_render_and_edit_without_a_donor_theme_and_retheme_preserves_input",
+        "CakeOS.Cui.Runtime.Tests.CuiAppearancePreferenceTests.Owned_appearance_refreshes_existing_scopes_and_preserves_document_controls_and_exact_global_mode",
+        "CakeOS.Cui.Runtime.Tests.CuiRecordedSurfaceLayoutTests.Home_library_labels_and_folder_name_field_flow_and_survive_live_branch_updates",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: SuperBright)",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: SuperDark)",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.Global_palette_refresh_publishes_complete_resources_without_per_token_notifications",
+        "CakeOS.Cui.Runtime.Tests.CuiAppearancePreferenceTests.Retained_inherited_scene_tracks_global_bright_dark_bright_and_keeps_explicit_appearance",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.Busy_gate_retheme_and_release_restore_enabled_presentation",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: Bright)",
+        "CakeOS.Cui.Runtime.Tests.CuiAppearancePreferenceTests.Inherited_global_refresh_waits_for_admission_and_retries_after_callback_failure",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance: Dark)",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.Private_scrollbar_parts_are_compact_and_follow_real_scroll_position"
+      ],
+      "new_failures": [],
+      "trx_sha256": "78212ec86767d5de1186c9333c8f2e69cc8c51894374107e768f77d29b76e5f4",
+      "log": "/workspace/scratch/boards-overhaul-20261031/cui-escape-final.log"
+    },
+    {
+      "label": "boards-adaptive-final",
+      "counts": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "failures": [],
+      "new_failures": [],
+      "trx_sha256": "b8cc92cccfa6ecac579115491e29e69a4c59079a9c48a48d7ba99049193f9808",
+      "log": "/workspace/scratch/boards-overhaul-20261031/boards-adaptive-final.log"
+    },
+    {
+      "label": "boards-conversion-final",
+      "counts": {
+        "total": 469,
+        "passed": 469,
+        "failed": 0
+      },
+      "failures": [],
+      "new_failures": [],
+      "trx_sha256": "ccc8fbaa45de5edb541e137c431489d2babdecb2d3792592c72b9740e57b5be2",
+      "log": "/workspace/scratch/boards-overhaul-20261031/boards-conversion-final.log"
+    }
+  ],
+  "verified_source_commit": "a0f37f4fa5961d26ec832bf624e549bb1bcd2660"
+}

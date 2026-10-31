@@ -1,0 +1,17 @@
+{
+  "source_commit": "a0f37f4fa5961d26ec832bf624e549bb1bcd2660",
+  "informational_version_base": "115834b978b3cced7bbd72da23dc4ec9dd1b129a",
+  "note": "Built and exercised before committing the identical source; informational version still names the previous HEAD.",
+  "build": "native-conversion.log",
+  "result": "succeeded",
+  "errors": 0,
+  "warnings": [
+    "Existing WebRtcVad AnyCPU/x64 native DLL warning"
+  ],
+  "artifacts": {
+    "CakeOS.Apps.Boards.App.dll": "33a77bdb590d7af912b914e8b380c928d3970a33b20bb601b889f5d6e8905d98",
+    "CakeOS.Apps.Boards.Embedding.dll": "c5a8ab7c881309fb7e62dc8cb79708b8f9667e1afda4b4b22e3c5a0a3070698a",
+    "CakeOS.Cui.Runtime.dll": "cd4076327198c9a6d99160bc242afc248687988d8e17d70957b89a6d527d085d",
+    "Avalonia.Controls.dll": "322639448e8d9772a4f6fbbde9f2ad06dc82228f39a042123d1415df1742199c"
+  }
+}

@@ -1,62 +1,25 @@
-# 9to1 overnight development
+# 9to1 Boards usability and continuation
 
-Revision 1 · Active · 30 October 2026
+Revision 2 · Active · 31 October 2026
 
-## Authority and outcome
+The owner requests autonomous implementation of the detailed Boards usability overhaul and continuation of Qwen’s development, and explicitly selects Goal. This direct instruction authorises implementation now, normal focused builds/tests, commits and pushes to the existing authorised remote branch. The full requested outcome is preserved below; this is not a replacement programme or coordinator.
 
-The owner requested: “Pull fhe latest source then find tonight's handoff and continue development”,
-then “Keep going overnight autonomously and through tomorrow. Wrap up, commit and push when usage
-hits 5%. All changes must converge into main, not individual branches, at the end. Use a goal if possible.”
+## Outcome and success criteria
 
-Continue the existing programme from `docs/development/overnight-handoff-2026-10-29.md` in coherent,
-validated milestones. Boards/Files fixes lead; the immediate task is BF-35, the block-actions grip menu.
-Preserve the separate Browse WIP and all existing source/history. This is development, not a new
-coordinator or resumption of full independent acceptance.
+- Keep the mounted 9to1 CUI frontend, canonical persistence, existing working features and ghost caret/container outlines.
+- Header: customisable board icon where supported, Board Name dropdown retaining New/Open/Save/Save As/Rename/Export and applicable operations, directly accessible Undo/Redo, accurate save state.
+- One rounded adaptive toolbar with logical Style/Font, Formatting, Paragraph, Properties sections, and one separate fixed Add/Drawing/AI pill. Real selected formatting values, compact dropdowns, context-specific controls and measured responsive overflow.
+- Repair actual menu placement/dismissal, control geometry, focus/caret, Enter, hover/selection, search/tabs/keyboard/feedback and responsive defects.
+- Resume the latest verified checkpoint and requirement ledger across blocks, selection, pages, structured content, ink, manipulation, history, recovery, AppFlowy Rust integration, properties, AI and collaboration. No unreviewed donor copying or replacement with AppFlowy UI.
+- Compile each coherent unit, run focused authentic regressions, exercise the actual app where possible, inspect changed files and retain failures. No manufactured passes or acceptance claims.
+- Commit verified in-scope units, push main without force, verify remote, leave exact results and next task.
 
-## Success criteria
+## Authority and execution
 
-1. BF-35 opens the actual authored menu; its commands, dismissal and click/drag separation work in
-   focused executable checks, with the native evidence level stated separately.
-2. Continue the ordered handoff queue, preserving every unresolved requirement and failure.
-3. Compile each coherent code edit, run owning regression checks, retain exact results and review the
-   diff before committing. No stale `--no-build` passes after failed builds.
-4. Commit and push completed units to canonical `main`, verify the remote commit, and leave a precise
-   recoverable handoff at an observed 5% remaining allowance or a genuine execution blocker.
+Existing repository /workspace/9to1; canonical branch main tracking origin/main. User’s main/existing branch instruction overrides default Goal branch/merge confirmation. Starting checkout work at 81400bae was clean and 94 commits behind; fetched and checked out existing remote main bf0375e4. No local source/SDK/model worker was running; remote bridges offline. Source scopes are disjoint: root header/integration; delegated toolbar files; delegated BlockRenderer/focus regression. One serial SDK allocation protected by flock, existing guarded_lowmem_build.py, normal dependencies and -m:1/no shared compilation. No new remote workers, model sessions, schedules, emails or deployments.
 
-## Constraints and approved exceptions
+Usage meter is unavailable. Current owner’s approximately 2% stop boundary supersedes historic 5/10% thresholds. Never infer cloud allowance from context tokens. Preserve checkpoints regularly and finish safely under actual execution limits. Existing scheduled goal state is preserved; foreground ACTIVE means no scheduled writer may overlap. No new schedule created.
 
-The user's current autonomous-work instruction authorises this exact continuation without another
-setup approval. The user's main-only rule overrides the Goal skill's default integration-branch and
-merge-confirmation procedure. Use the existing checkout; no new implementation branches/worktrees.
-The current 5% stop instruction supersedes historical 10% stop instructions. Context length and rate
-limit forecasts are not usage readings. If no authoritative usage feed is available, record UNKNOWN.
+## Golden rules and acceptance
 
-All canonical CUI, same-app, data-preservation, resource and evidence rules remain. The held ARM package
-must not be built/delivered before the menu genuinely works. ARM packaging remains in the PC lane;
-an offline desktop bridge does not authorise remote process control or replacing its ledger.
-
-## Execution and milestones
-
-Primary execution: Codex, `/workspace/9to1`, `main`, origin `CroakyJake12/9to1`.
-Persistent state is tracked here and in the existing development handoffs. Use current source as truth.
-Logical workstreams share main and serial SDK execution. Read-only delegated investigation is permitted
-by AGENTS.md; source scopes remain exclusive. See `queue.md` and `golden-rules.md`.
-
-Active work runs now. A single hourly continuation trigger may resume coherent work after checkpoints,
-without overlapping an active writer. Through tomorrow is bounded to the end of 31 October 2026 in
-the supplied UTC timezone (1 November 00:00 UTC), unless stopped earlier by the owner, 5% usage, or a
-genuine blocker. Record the actual schedule receipt in CURRENT; a plan is not a scheduled task.
-
-## Permissions and reporting
-
-Routine investigation, source edits, focused validation, commits and pushes to main are authorised.
-Do not spend money, change permissions, restart models, delete retained evidence/user data, or deploy
-as a side effect. Report in this conversation/task; no email or external messages are requested here.
-Every milestone states working behaviour with its evidence level, failures, commit/push identity and
-next executable action. No completion or acceptance percentage is inferred from test totals.
-
-## Completion or suspension
-
-The overnight goal ends with a truthful committed/pushed handoff at the stop boundary. Remaining
-product work stays queued; the whole application is not declared complete. A hard platform interruption
-requires the smallest recoverable checkpoint. Resume only after re-reading live source and this state.
+Preserve source/history, unrelated WIP, user data, existing instances, model host, donor licences and all failures. CUI owns frontend composition; typed host/domain operations own behaviour. Read relevant canonical/expanded requirements and latest owner decisions. Full independent acceptance remains paused; compile/headless/native evidence are distinct. Goal is not complete while requirements or material verification gaps remain.

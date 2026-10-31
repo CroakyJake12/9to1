@@ -1,0 +1,36 @@
+{
+  "reason": "Preserve prior goal contract and checkpoint before the owner-directed Boards usability overhaul and 2 percent usage boundary; old scope/stop instructions are superseded by the current explicit request.",
+  "recovered_base": "bf0375e438f9cb5d6487a9bbb1e4c823d753a0e5",
+  "files": [
+    {
+      "original": ".goal/CURRENT",
+      "archive": ".goal/revisions/2026-10-31-before-usability/CURRENT",
+      "sha256": "f6e72ac8489f739684a482082d3309945f3806d99a27eaebce1c5b92d77e9cae",
+      "matches_recovered_qwen_base": true
+    },
+    {
+      "original": ".goal/checkpoint.md",
+      "archive": ".goal/revisions/2026-10-31-before-usability/checkpoint.md",
+      "sha256": "e215a080887f5036ae68000c18dc9cef6c7bdcc454578a62a8617542340f4ef0",
+      "matches_recovered_qwen_base": true
+    },
+    {
+      "original": ".goal/contract.md",
+      "archive": ".goal/revisions/2026-10-31-before-usability/contract.md",
+      "sha256": "8fb9bbaff92295345c3132332f374092f59a9f252f5b8323f3c4831566246034",
+      "matches_recovered_qwen_base": true
+    },
+    {
+      "original": ".goal/golden-rules.md",
+      "archive": ".goal/revisions/2026-10-31-before-usability/golden-rules.md",
+      "sha256": "fd8655688c498bce077d0786c9318a0c2fac075954edb7541ffe497a72ae2a1b",
+      "matches_recovered_qwen_base": true
+    },
+    {
+      "original": ".goal/queue.md",
+      "archive": ".goal/revisions/2026-10-31-before-usability/queue.md",
+      "sha256": "f48b5265f3235e42c1b463a5ec78a3d5b17ec197489b926b1c1478a0ffb01934",
+      "matches_recovered_qwen_base": true
+    }
+  ]
+}
