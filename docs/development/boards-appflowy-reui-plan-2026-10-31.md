@@ -124,3 +124,59 @@ The owner asked for `Legacy XX` / `XX` pairs so before-and-after can be tested s
   spec behaviour the legacy surface demonstrably had, and the pair has been compared on screen, the
   legacy entry is removed and only the shared implementation remains. The pinned "one implementation per
   app" requirement is unchanged; the pair is a testing scaffold with an end condition.
+
+## Owner direction, 31 October 2026 late evening — supersedes my "route it through CUI Actions" approach
+
+Owner words, in order: *"like u don't even need to use cui actions rn literally just rebuild the interface in
+cui"*, *"and make it work"*, *"but you can do stuff in the native rust"*, *"rather than forcing it inside of cui
+actions"*, *"just wire up the existing code to new ui"*.
+
+Reading applied: **the new AppFlowy-shaped UI must be laid out in CUI, and it must run the behaviour 9to1 Boards
+already has.** Do not invent a second command pipeline for it and do not force capability work into CUI action
+syntax. Where behaviour already exists in native/host code, call it. That retires the parallel stage-one command
+set (`Donor*`) as the wiring mechanism.
+
+### Why this also explains the input blocker
+
+The stage-one surface runs in a **separate preview host** (`BOARDS_STAGE_ONE_PREVIEW=1`, its own window, log line
+`[CUI Boards] Root: Panel — awaiting mounted CUI layout`), while the first-party `Boards.cui` surface is the one
+the owner uses and clicks. The parallel host is therefore both the duplicate-implementation problem (pinned owner
+rule: one implementation per app) and the leading suspect for the frames never changing. Hypothesis, not yet
+proven: mounting the AppFlowy-shaped layout into the working surface removes the problem entirely.
+
+### Measured mapping: new UI element → existing code to call
+
+Verified existing handler cases in `9to1 Workspace/Boards/app/BoardsViewModel.cs` (this is the input-proven
+surface): `AddPage`, `AddSubpage`, `AddSection`, `AddCanvasPage`, `AddWritePage`, `OpenRecentPage`, `OpenBoard`,
+`NewBoard`, `SaveBoard`, `SaveAsBoard`, `BoardTitleBox`, `PageTitleBox`, `BoardProperties`, `ToggleTheme`,
+`ApplySectionIconChoice`, `SuggestSectionIcon`, `NewMenu`.
+
+Verified existing adapter calls in `9to1 Workspace/Boards/app/ContractSessionAdapter.cs`:
+`AddSectionAsync` (:1255), `AddPageAsync` (:1271), `RenameSectionAsync` (:1457), `RenamePageAsync` (:1506),
+`DeleteSectionAsync` (:1239), `DeletePageAsync` (:1551), `MovePageAsync` (:1582).
+
+| new CUI element | reuse | status |
+| --- | --- | --- |
+| sidebar `+ New page`, tab `+` | `AddPage` / `AddSubpage` view-model cases | exists, input-proven |
+| section `+` (page in that section) | `AddPageAsync(sectionId, title)` | adapter exists; needs the section id argument from the row |
+| section header inline rename | `RenameSectionAsync` | adapter exists; **no view-model case found** in the list above → one dispatch case needed |
+| section `⋯` → delete | `DeleteSectionAsync` | adapter exists; same note |
+| sidebar page row, card open | `OpenRecentPage` + the existing page-selection route into the block editor | exists |
+| board name / page title boxes | `BoardTitleBox`, `PageTitleBox` | exists |
+| Save / Save As / new / open | `SaveBoard`, `SaveAsBoard`, `NewBoard`, `OpenBoard` | exists |
+| dark theme (AppFlowy's default look) | `ToggleTheme` + Home-owned theme state | exists; theme *appearance* defects stay queued behind this work per owner instruction |
+
+Not present anywhere (still genuine capability gaps, to be closed in the host/infrastructure layer rather than by
+faking CUI actions): page/board **search**, **filter**, **sort**, board **layout settings**, hidden-section
+state, reference views, and the grid/calendar views. The donor's controls for these may now be *rendered* for
+visual parity (the owner's "rebuild the interface" instruction overrides my earlier no-dead-controls rule for
+stage one) as long as they are labelled in code as not yet wired.
+
+### Next unit, in order
+1. Port the AppFlowy-shaped layout (sidebar 268 / tab row 40 / section column 256 / card 226 / footer under the
+   cards) into the **working** `Boards.cui` presentation, driven by the existing view-model state and bindings.
+2. Delete the preview seam and the `Donor*` command duplicates once the ported surface covers them; keep the
+   stage-one document as a reference until then, and keep the `Legacy Boards` comparison pair per the recorded
+   retirement condition.
+3. Wire the two adapter calls that lack a view-model dispatch case (`RenameSectionAsync`, `DeleteSectionAsync`) —
+   host-side, not CUI-side.
