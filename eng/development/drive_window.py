@@ -23,7 +23,7 @@ from Xlib import Xatom
 from Xlib.protocol import event as xevent
 
 
-def find(dpy: Display, wanted: str):
+def find(dpy: Display, wanted: str, exclude: str | None = None):
     stack = [dpy.screen().root]
     while stack:
         window = stack.pop()
@@ -32,6 +32,12 @@ def find(dpy: Display, wanted: str):
             attributes = window.get_attributes()
         except (Xerror.XError, ValueError):
             name, attributes = None, None
+        if exclude and exclude.lower() in str(name or "").lower():
+            try:
+                stack.extend(window.query_tree().children)
+            except Xerror.XError:
+                pass
+            continue
         if name and wanted.lower() in str(name).lower() and attributes and attributes.map_state == X.IsViewable:
             try:
                 klass = " ".join(str(part) for part in (window.get_wm_class() or ()))
@@ -124,7 +130,8 @@ def wm_close(dpy: Display, window) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--window", required=True)
+    ap.add_argument("--window", required=True, help="substring of the WM_NAME to match")
+    ap.add_argument("--exclude", default=None, help="skip windows whose title contains this substring")
     ap.add_argument("--click", action="append", default=[], help="x,y in window pixels")
     ap.add_argument("--key", action="append", default=[], help='e.g. "ctrl+n"')
     ap.add_argument("--pause", type=float, default=1.2)
@@ -133,7 +140,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     dpy = Display(None)
-    window, title = find(dpy, args.window)
+    window, title = find(dpy, args.window, args.exclude)
     if window is None:
         print(f"NOT SENT: no mapped window matching {args.window!r}", file=sys.stderr)
         return 2

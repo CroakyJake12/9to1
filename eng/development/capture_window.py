@@ -56,9 +56,10 @@ def find_window(dpy, wanted: str):
     return results
 
 
-def capture(name_filter: str, out: Path, surface: str = "") -> dict[str, object]:
+def capture(name_filter: str, out: Path, surface: str = "", exclude: str | None = None) -> dict[str, object]:
     dpy = Display(None)                   # DISPLAY from the environment, exactly as the session sees it
-    found = find_window(dpy, name_filter)
+    found = [hit for hit in find_window(dpy, name_filter)
+             if not (exclude and exclude.lower() in hit[1].lower())]
     if not found:
         raise SystemExit(f"NOT CAPTURED: no mapped viewable window matching {name_filter!r} on this display")
     clients = [hit for hit in found if hit[3] and "mutter" not in hit[3].lower()]
@@ -108,11 +109,12 @@ def capture(name_filter: str, out: Path, surface: str = "") -> dict[str, object]
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--window", required=True, help="substring of the WM_NAME to capture")
+    ap.add_argument("--window", required=True, help="substring of the WM_NAME to match")
+    ap.add_argument("--exclude", default=None, help="skip windows whose title contains this substring")
     ap.add_argument("--out", required=True)
     ap.add_argument("--surface", default="", help="label recorded with the capture, e.g. Boards (new CUI)")
     args = ap.parse_args(argv)
-    record = capture(args.window, Path(args.out), args.surface)
+    record = capture(args.window, Path(args.out), args.surface, args.exclude)
     print(json.dumps(record, indent=2))
     return 0
 
