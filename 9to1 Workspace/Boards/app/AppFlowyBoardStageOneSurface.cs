@@ -1,213 +1,332 @@
+using System.ComponentModel;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
 
 /// <summary>
-/// Stage one of the owner's pinned Boards route (31 October 2026): "the intended boards surface is appflowy re-ui
-/// first, then transition that re-ui into the 9to1 boards". This is the binding context for
-/// <c>AppFlowyBoardStageOne.cui</c>, which re-renders AppFlowy's desktop board screen in CUI with its structure
-/// unchanged. It projects the REAL current board onto the donor's group/card shape, so nothing rendered is invented:
-/// group = a 9to1 Board section, card = a 9to1 Board page, the title cell = the page's first non-empty block text.
+/// Binding context and command wiring for <c>AppFlowyBoardStageOne.cui</c>, the AppFlowy board screen re-rendered
+/// in CUI. The owner's instruction on 31 October 2026 was to copy AppFlowy's UI and "route it up and whatnot… so it
+/// actually works", so the donor's board commands are executed against the REAL 9to1 board rather than rendered as
+/// dead controls: a card is a 9to1 page, a group is a 9to1 section, creating a card calls the session's
+/// <c>AddPageAsync(sectionId)</c>, renaming a group calls <c>RenameSectionAsync</c>, deleting one calls
+/// <c>DeleteSectionAsync</c>, and the trailing column calls <c>AddSectionAsync</c>. Opening a card selects that page
+/// and returns to the editor surface.
 /// </summary>
 /// <remarks>
-/// The mapping is deliberately provisional and kept in one place. Whether 9to1 Boards carries AppFlowy's
-/// database-view semantics at all (grid, calendar, per-type cell editors) is the open owner question
-/// <c>OPEN-2026-10-31-BOARDS-DONOR-VIEW-SCOPE</c>, and that answer changes the Boards requirement denominator.
+/// The surface re-reads the live document after every mutation and raises <see cref="PropertyChanged"/> with no
+/// property name, which is the notification the CUI repeat engine reconciles on. Nothing here writes to disk by
+/// itself: durability stays with the board session's own save path, so a stage-one view cannot invent a second
+/// persistence route.
 ///
-/// Donor commands belonging to stage two are reported as unavailable rather than faked: the controls bound to
-/// <see cref="DonorCanFilter"/>, <c>group.CanRename</c>/<c>CanHide</c>/<c>CanDelete</c>/<c>CanCreateCard</c> and
-/// <see cref="DonorCanCreateGroup"/> render disabled, and anything that still reaches <see cref="DispatchAsync"/>
-/// says so in <see cref="DonorStageOneNotice"/>. Two things are genuinely live: opening a card selects the page it
-/// was projected from, and collapse/expand of the hidden-groups column is view state this surface owns. Hover
-/// accessories stay hidden because <c>card.Hovered</c> is false until CUI exposes the donor's hover seam — recorded
-/// here rather than worked around with a fake hover.
+/// Two donor features stay unavailable and are reported, not faked: hiding a group (9to1 Boards has no hidden
+/// section concept yet) and the filter/settings panel (no board filter model yet). Their controls render disabled
+/// with the notice line stating why.
 /// </remarks>
-internal sealed class AppFlowyBoardStageOneSurface : ICuiBindingContext, ICuiActionDispatcher
+internal sealed class AppFlowyBoardStageOneSurface : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
 {
-    private const double GroupColumnWidth = 280;   // donor column presentation; stage two binds the layout setting
-    private const double CardWidth = 256;
+    // Measured donor constraints: AppFlowy board_page.dart:352 groupConstraints tightFor(width: compact ? 196 : 256);
+    // AppFlowyBoard lib/src/widgets/board.dart:29-34 groupMargin horizontal 8, header padding horizontal 16,
+    // body padding horizontal 12, footer padding horizontal 12, card margin horizontal 3 vertical 4.
+    internal const double GroupColumnWidth = 256;
+    internal const double CardWidth = 226;   // 256 column - 2 * body padding 12 - 2 * card margin 3
 
-    private readonly Dictionary<string, object?> _values = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, CardItem> _cards = new(StringComparer.Ordinal);
+    private readonly Func<RichBoardDocument> _document;
     private readonly Func<string, Task> _openCardPage;
+    private readonly Func<string, string?, Task> _createCardInSection;
+    private readonly Func<string, string, Task> _renameSection;
+    private readonly Func<string, Task> _deleteSection;
+    private readonly Func<Task> _createSection;
+    private readonly List<GroupCard> _groups = [];
 
-    public AppFlowyBoardStageOneSurface(RichBoardDocument notes, Func<string, Task> openCardPage)
+    public AppFlowyBoardStageOneSurface(
+        Func<RichBoardDocument> document,
+        Func<string, Task> openCardPage,
+        Func<string, string?, Task> createCardInSection,
+        Func<string, string, Task> renameSection,
+        Func<string, Task> deleteSection,
+        Func<Task> createSection)
     {
-        ArgumentNullException.ThrowIfNull(notes);
+        _document = document ?? throw new ArgumentNullException(nameof(document));
         _openCardPage = openCardPage ?? throw new ArgumentNullException(nameof(openCardPage));
-
-        var groups = new List<GroupCard>();
-        foreach (var section in notes.Sections)
-        {
-            var cards = new List<CardItem>();
-            foreach (var page in section.Pages)
-            {
-                var card = BuildCard(page);
-                _cards[card.Id] = card;
-                cards.Add(card);
-            }
-            groups.Add(new GroupCard(
-                section.Id,
-                section.Title,
-                section.Pages.Count + (section.Pages.Count == 1 ? " card" : " cards"),
-                GroupColumnWidth,
-                CanRename: false,
-                CanHide: false,
-                CanDelete: false,
-                CanCreateCard: false,
-                Cards: cards));
-        }
-
-        _values["DonorBoardTitle"] = notes.Title;
-        _values["DonorGroupColumns"] = groups;
-        _values["DonorStageOneNotice"] =
-            "AppFlowy structure projected from this real board. Rename, hide, delete and card creation belong to " +
-            "stage two and are disabled here.";
-        // 9to1 Boards has no hidden groups, reference views or board filters yet, so those donor branches render
-        // absent rather than showing an empty donor control that does nothing.
-        _values["DonorHasHiddenGroups"] = false;
-        _values["DonorHiddenGroupsCollapsed"] = false;
-        _values["DonorHiddenGroupsExpanded"] = false;
-        _values["DonorHiddenGroups"] = Array.Empty<HiddenGroupCard>();
-        _values["DonorIsViewReference"] = false;
-        _values["DonorCanFilter"] = false;
-        const bool canCreateGroup = false;   // 9to1 Boards has no grouping-field creation yet (stage two)
-        _values["DonorCanCreateGroup"] = canCreateGroup;
-        _values["DonorTrailingWidth"] = (double)GroupColumnWidth;
-        // Donor board_page.dart:365 - with no creatable grouping field the trailing column is absent
-        // and the donor leaves a 40-wide spacer there instead.
-        _values["DonorShowsTrailingSpacer"] = !canCreateGroup;
+        _createCardInSection = createCardInSection ?? throw new ArgumentNullException(nameof(createCardInSection));
+        _renameSection = renameSection ?? throw new ArgumentNullException(nameof(renameSection));
+        _deleteSection = deleteSection ?? throw new ArgumentNullException(nameof(deleteSection));
+        _createSection = createSection ?? throw new ArgumentNullException(nameof(createSection));
+        Rebuild();
     }
 
     public event Action? ExitRequested;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public bool TryGetValue(string path, out object? value) => _values.TryGetValue(path, out value);
+    public bool TryGetValue(string path, out object? value)
+    {
+        switch (path)
+        {
+            case "DonorBoardTitle":
+                value = _document().Title;
+                return true;
+            case "DonorGroupColumns":
+                value = _groups;
+                return true;
+            case "DonorHasHiddenGroups":
+            case "DonorHiddenGroupsCollapsed":
+            case "DonorHiddenGroupsExpanded":
+            case "DonorIsViewReference":
+            case "DonorCanFilter":
+                // Absent in 9to1 Boards today: 9to1 Boards has no hidden sections, no reference views and no board
+                // filter model, so those donor branches render absent instead of showing empty donor chrome.
+                value = false;
+                return true;
+            case "DonorHiddenGroups":
+                value = Array.Empty<HiddenGroupCard>();
+                return true;
+            case "DonorCanCreateGroup":
+                value = true;
+                return true;
+            case "DonorShowsTrailingSpacer":
+                value = false;
+                return true;
+            case "DonorStageOneNotice":
+                value = _notice;
+                return true;
+            default:
+                value = null;
+                return false;
+        }
+    }
 
-    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+    private string _notice =
+        "AppFlowy board structure, wired to this real board: New page creates a page in that section, Rename and " +
+        "Delete act on the section, and opening a page goes to its block editor.";
+
+    public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         switch (command)
         {
             case "DonorExitStageOneSurface":
                 ExitRequested?.Invoke();
-                return ValueTask.CompletedTask;
-            case "DonorExpandHiddenGroups":
-                _values["DonorHiddenGroupsCollapsed"] = false;
-                _values["DonorHiddenGroupsExpanded"] = true;
-                return ValueTask.CompletedTask;
-            case "DonorCollapseHiddenGroups":
-                _values["DonorHiddenGroupsCollapsed"] = true;
-                _values["DonorHiddenGroupsExpanded"] = false;
-                return ValueTask.CompletedTask;
-            case "DonorOpenCard" when parameter is string cardId && _cards.ContainsKey(cardId):
-                // Real behaviour: the donor opens a card; the equivalent available today is selecting the page this
-                // card was projected from on the actual board.
-                return new ValueTask(_openCardPage(cardId));
+                return;
+            case "DonorOpenCard" when parameter is string pageId:
+                await _openCardPage(pageId).ConfigureAwait(false);
+                return;
+            case "DonorCreateCard" when parameter is string sectionId:
+                await _createCardInSection(sectionId, null).ConfigureAwait(false);
+                Rebuild();
+                Raise();
+                return;
+            case "DonorCreateCardAtTop" when parameter is string sectionId:
+                // The donor inserts at the column head; 9to1 page creation appends. Recorded honestly rather than
+                // silently pretending the ordering matches.
+                await _createCardInSection(sectionId, null).ConfigureAwait(false);
+                _notice = "Created at the end of the column: 9to1 page creation does not yet position a page, so " +
+                          "the donor's insert-at-top is not reproduced.";
+                Rebuild();
+                Raise();
+                return;
+            case "DonorBeginCreateCard" when parameter is string sectionId:
+                ToggleCreating(sectionId, create: true);
+                return;
+            case "DonorCancelCreateCard" when parameter is string sectionId:
+                ToggleCreating(sectionId, create: false);
+                return;
+            case "DonorCommitCreateCard":
+                {
+                    // The submit event arrives as CuiInputSubmitRequest and the two-way Value binding has already
+                    // written the typed text into the column item, so the column is identified by its own state.
+                    var target = _groups.FirstOrDefault(group => group.Creating);
+                    foreach (var group in _groups)
+                        group.Creating = false;
+                    if (target is null)
+                        return;
+                    var title = (target.NewPageDraft ?? string.Empty).Trim();
+                    if (title.Length == 0)
+                    {
+                        Rebuild();
+                        Raise();
+                        return;
+                    }
+                    await _createCardInSection(target.Id, title).ConfigureAwait(false);
+                    Rebuild();
+                    Raise();
+                    return;
+                }
+            case "DonorRenameGroupStart" when parameter is string sectionId:
+                foreach (var group in _groups)
+                    group.Editing = group.Id == sectionId;
+                Raise();
+                return;
+            case "DonorCommitGroupTitle":
+                {
+                    var target = _groups.FirstOrDefault(group => group.Editing);
+                    if (target is null)
+                        return;
+                    var title = (target.DraftTitle ?? target.Title).Trim();
+                    foreach (var group in _groups)
+                        group.Editing = false;
+                    if (title.Length > 0)
+                    {
+                        await _renameSection(target.Id, title).ConfigureAwait(false);
+                        Rebuild();
+                        Raise();
+                    }
+                    return;
+                }
+            case "DonorDeleteGroup" when parameter is string sectionId:
+                await _deleteSection(sectionId).ConfigureAwait(false);
+                Rebuild();
+                Raise();
+                return;
+            case "DonorHideGroup":
+                _notice = "Hiding a section is not wired: 9to1 Boards has no hidden-section concept yet.";
+                Raise();
+                return;
+            case "DonorCreateGroup":
+                await _createSection().ConfigureAwait(false);
+                Rebuild();
+                Raise();
+                return;
+            case "DonorOpenLayoutSettings":
+            case "DonorOpenFilterEditor":
+            case "DonorSwitchToGrid":
+                _notice = "'" + command + "' is not wired: 9to1 Boards has no board filter, layout-setting panel or " +
+                          "grid view yet, so the donor's controls for them stay out of the way instead of doing nothing.";
+                Raise();
+                return;
             default:
-                _values["DonorStageOneNotice"] =
-                    "'" + command + "' is a stage-two command: it is not wired on this surface and nothing changed.";
-                return ValueTask.CompletedTask;
+                return;
         }
     }
 
-    private static CardItem BuildCard(RichBoardPage page)
+    private void ToggleCreating(string sectionId, bool create)
     {
-        var cells = new List<CardCell>();
-        foreach (var block in page.Blocks)
+        foreach (var group in _groups)
+            group.Creating = create && group.Id == sectionId;
+        Raise();
+    }
+
+    private void Rebuild()
+    {
+        var document = _document();
+        var existing = _groups.ToDictionary(group => group.Id, StringComparer.Ordinal);
+        _groups.Clear();
+        foreach (var section in document.Sections)
         {
-            if (string.IsNullOrWhiteSpace(block.Text))
-                continue;
-            var text = block.Text.Trim();
-            if (text.Length > 160)
-                text = text[..160] + "…";
-            var isTitle = cells.Count == 0;
-            cells.Add(new CardCell(
-                page.Id + "-cell-" + cells.Count,
-                text,
-                isTitle ? "Bold" : "Normal",
-                isTitle ? "Card title" : "Card detail"));
+            var cards = section.Pages
+                .Select(page => new CardItem(this, page.Id, page.Title, page.Blocks
+                    .Select(block => block.Text)
+                    .Where(text => !string.IsNullOrWhiteSpace(text))
+                    .Select(text => text.Trim().Length > 160 ? text.Trim()[..160] + "…" : text.Trim())
+                    .ToList()))
+                .ToList();
+            var group = existing.TryGetValue(section.Id, out var reused) ? reused : new GroupCard(this, section.Id);
+            group.Title = section.Title;
+            group.Items = cards;
+            _groups.Add(group);
+            foreach (var card in cards)
+                card.Owner = this;
         }
-        if (cells.Count == 0)
-            cells.Add(new CardCell(page.Id + "-cell-0", page.Title, "Bold", "Card title"));
-
-        // The donor shows a cover only when the row carries one; a 9to1 page has no cover asset yet, so HasCover is
-        // false and no placeholder image is invented.
-        return new CardItem(page.Id, CardWidth, HasCover: false, CoverSource: string.Empty, CoverHeight: 0d,
-            Hovered: false, Cells: cells);
     }
 
-    private sealed record HiddenGroupCard(string Id, string Title, string CountLabel) : ICuiBindingContext
+    private void Raise() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+
+    private sealed record HiddenGroupCard(string Id, string Title, string CountLabel);
+
+    /// <summary>A donor card. Its title cell is the 9to1 page title, then one cell per non-empty block, because
+    /// the donor's card body is a cell column whose first cell is the row title.</summary>
+    private sealed class CardItem : ICuiBindingContext
     {
+        public CardItem(AppFlowyBoardStageOneSurface owner, string id, string title, IReadOnlyList<string> previews)
+        {
+            Owner = owner;
+            Id = id;
+            Title = title;
+            Previews = previews;
+        }
+
+        public AppFlowyBoardStageOneSurface Owner { get; set; }
+        public string Id { get; }
+        public string Title { get; }
+        public IReadOnlyList<string> Previews { get; }
+
+        public bool TryGetValue(string path, out object? value)
+        {
+            value = path switch
+            {
+                "Id" => Id,
+                "Width" => CardWidth,
+                "HasCover" => false,
+                "CoverSource" => string.Empty,
+                "CoverHeight" => 0d,
+                "Hovered" => false,
+                "Title" => Title,
+                "Previews" => Previews,
+                "HasPreview" => Previews.Count > 0,
+                "AccessibleName" => "Open " + Title,
+                _ => null,
+            };
+            return value is not null;
+        }
+    }
+
+    /// <summary>A donor group column: a 9to1 section, with the donor's create-card editing state held per column.</summary>
+    private sealed class GroupCard : ICuiBindingContext, ICuiWritableBindingContext
+    {
+        public GroupCard(AppFlowyBoardStageOneSurface owner, string id)
+        {
+            Owner = owner;
+            Id = id;
+        }
+
+        public AppFlowyBoardStageOneSurface Owner { get; set; }
+        public string Id { get; }
+        public string Title { get; set; } = string.Empty;
+        public IReadOnlyList<CardItem> Items { get; set; } = Array.Empty<CardItem>();
+        public bool Creating { get; set; }
+        public bool Editing { get; set; }
+
         public bool TryGetValue(string path, out object? value)
         {
             value = path switch
             {
                 "Id" => Id,
                 "Title" => Title,
-                "CountLabel" => CountLabel,
+                "CountLabel" => Items.Count + (Items.Count == 1 ? " page" : " pages"),
+                "Width" => GroupColumnWidth,
+                "Cards" => Items,
+                "CanRename" => true,
+                "CanDelete" => true,
+                // 9to1 Boards has no hidden-section concept, so the donor's hide command stays visibly unavailable.
+                "CanHide" => false,
+                "CanCreateCard" => true,
+                "Creating" => Creating,
+                "NotCreating" => !Creating,
+                "Editing" => Editing,
+                "NotEditing" => !Editing,
+                "DraftTitle" => DraftTitle ?? Title,
+                "NewPageDraft" => NewPageDraft ?? string.Empty,
                 _ => null,
             };
             return value is not null;
         }
-    }
 
-    private sealed record CardCell(string Id, string Text, string TitleWeight, string AccessibleName) : ICuiBindingContext
-    {
-        public bool TryGetValue(string path, out object? value)
-        {
-            value = path switch
-            {
-                "Id" => Id,
-                "Text" => Text,
-                "TitleWeight" => TitleWeight,
-                "AccessibleName" => AccessibleName,
-                _ => null,
-            };
-            return value is not null;
-        }
-    }
+        public string? DraftTitle { get; set; }
+        public string? NewPageDraft { get; set; }
 
-    private sealed record CardItem(string Id, double Width, bool HasCover, string CoverSource, double CoverHeight,
-        bool Hovered, IReadOnlyList<CardCell> Cells) : ICuiBindingContext
-    {
-        public bool TryGetValue(string path, out object? value)
+        public bool TrySetValue(string path, object? value)
         {
-            value = path switch
+            switch (path)
             {
-                "Id" => Id,
-                "Width" => Width,
-                "HasCover" => HasCover,
-                "CoverSource" => CoverSource,
-                "CoverHeight" => CoverHeight,
-                "Hovered" => Hovered,
-                "Cells" => Cells,
-                _ => null,
-            };
-            // HasCover/CoverHeight/Hovered are false or zero for a real reason (a 9to1 page has no cover asset and
-            // the CUI hover seam is not wired yet), so false must still resolve rather than fall through.
-            return value is not null;
-        }
-    }
-
-    private sealed record GroupCard(string Id, string Title, string CountLabel, double Width, bool CanRename,
-        bool CanHide, bool CanDelete, bool CanCreateCard, IReadOnlyList<CardItem> Cards) : ICuiBindingContext
-    {
-        public bool TryGetValue(string path, out object? value)
-        {
-            value = path switch
-            {
-                "Id" => Id,
-                "Title" => Title,
-                "CountLabel" => CountLabel,
-                "Width" => Width,
-                "CanRename" => CanRename,
-                "CanHide" => CanHide,
-                "CanDelete" => CanDelete,
-                "CanCreateCard" => CanCreateCard,
-                "Cards" => Cards,
-                _ => null,
-            };
-            return value is not null;
+                case "DraftTitle":
+                    DraftTitle = value as string;
+                    return true;
+                case "NewPageDraft":
+                    NewPageDraft = value as string;
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

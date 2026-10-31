@@ -578,18 +578,81 @@ internal sealed class BoardsApp : Application
         {
             // Read the LIVE session document, not the stored file shape: the comparison surface must show what the
             // user is actually looking at. IRichBoardSession.Document exposes RichBoardDocument { Title, Sections }.
-            var notes = _session.Document;
-            var surface = new AppFlowyBoardStageOneSurface(notes, pageId =>
-            {
-                // The donor opens a card; the equivalent available here is selecting the page the card was
-                // projected from, on the real board.
-                if (_viewModel is null) return Task.CompletedTask;
-                return Dispatcher.UIThread.InvokeAsync(() =>
+            var session = _session;
+            var viewModel = _viewModel;
+            // The donor's board commands are executed against the real board session, so this surface can actually
+            // be used rather than looked at. Mapping, named against the donor calls so it is auditable:
+            //   BoardEvent.createRow -> ContractSessionAdapter.AddPageAsync(sectionId)          (line 1271)
+            //   BoardEvent.renameGroup -> RenameSectionAsync                                    (line 1457)
+            //   BoardEvent.deleteGroup -> DeleteSectionAsync                                    (line 1239)
+            //   create new group -> AddSectionAsync                                             (line 1255)
+            //   opening a card -> the donor opens the row document (widgets/card/card.dart,
+            //     plugins/database/widgets/row/row_document.dart); 9to1 edits that page in the block editor, so
+            //     opening a card selects the page AND leaves the board view for the editor in one step.
+            var surface = new AppFlowyBoardStageOneSurface(
+                () => session.Document,
+                async pageId =>
                 {
-                    if (!_viewModel.SelectPageById(pageId))
-                        _viewModel.Set("StatusText", "That card's page is no longer in this board.");
-                }).GetTask();
-            });
+                    if (viewModel is null) return;
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (!viewModel.SelectPageById(pageId))
+                        {
+                            viewModel.Set("StatusText", "That card's page is no longer in this board.");
+                            return;
+                        }
+                        RestoreBoardsSurface();
+                        PostRebuild();
+                        RebuildNav();
+                    }).GetTask();
+                },
+                async (sectionId, title) =>
+                {
+                    if (session is ContractSessionAdapter adapter)
+                        await adapter.AddPageAsync(sectionId, title).ConfigureAwait(false);
+                    if (viewModel is not null)
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            viewModel.RefreshCuiContext();
+                            PostRebuild();
+                            RebuildNav();
+                        }).GetTask();
+                },
+                async (sectionId, title) =>
+                {
+                    if (session is ContractSessionAdapter adapter)
+                        await adapter.RenameSectionAsync(sectionId, title).ConfigureAwait(false);
+                    if (viewModel is not null)
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            viewModel.RefreshCuiContext();
+                            PostRebuild();
+                            RebuildNav();
+                        }).GetTask();
+                },
+                async sectionId =>
+                {
+                    if (session is ContractSessionAdapter adapter)
+                        await adapter.DeleteSectionAsync(sectionId).ConfigureAwait(false);
+                    if (viewModel is not null)
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            viewModel.RefreshCuiContext();
+                            PostRebuild();
+                            RebuildNav();
+                        }).GetTask();
+                },
+                async () =>
+                {
+                    if (session is ContractSessionAdapter adapter)
+                        await adapter.AddSectionAsync().ConfigureAwait(false);
+                    if (viewModel is not null)
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            PostRebuild();
+                            RebuildNav();
+                        }).GetTask();
+                });
             surface.ExitRequested += RestoreBoardsSurface;
 
             var loader = BoardsCuiDocuments.CreateLoader();

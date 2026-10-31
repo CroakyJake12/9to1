@@ -30,6 +30,10 @@
     <Action name="OpenDonorGroup" command="DonorOpenGroup" parameter="{Binding group.Id}" />
     <Action name="OpenDonorCard" command="DonorOpenCard" parameter="{Binding card.Id}" />
     <Action name="CreateCardInGroup" command="DonorCreateCard" parameter="{Binding group.Id}" />
+    <Action name="BeginCreateCard" command="DonorBeginCreateCard" parameter="{Binding group.Id}" />
+    <Action name="CommitNewPage" command="DonorCommitCreateCard" parameter="{Binding Event}" />
+    <Action name="StartRenameSection" command="DonorRenameGroupStart" parameter="{Binding group.Id}" />
+    <Action name="CommitSectionTitle" command="DonorCommitGroupTitle" parameter="{Binding Event}" />
     <Action name="CreateCardAtTop" command="DonorCreateCardAtTop" parameter="{Binding group.Id}" />
     <Action name="RenameGroupStart" command="DonorRenameGroup" parameter="{Binding group.Id}" />
     <Action name="HideGroup" command="DonorHideGroup" parameter="{Binding group.Id}" />
@@ -78,7 +82,12 @@
            them, so every column collapsed to its content and the whole board sat in the top-left corner of a
            2080x1400 window (owner: "very broken rn"). The donor uses tight constraints, so the geometry is
            authored as literals here and the column body is a 1fr row so it fills the height. -->
-      <Container Type="Horizontal Stack" ID="DonorBoardColumns" Row="1" CellGap="12" VerticalAlignment="Stretch"
+      <!-- Pattern taken from a shipping first-party surface rather than guessed: Files/NativeUI/UI/
+           FilesBrowser.cui:17-18 wraps a horizontally scrolling strip in Container Type="Overlay" with
+           HorizontalScrolling, and the Repeat itself carries Panel="Horizontal Stack". My Horizontal Stack
+           container produced a column layout that broke twice in a row (side-by-side columns lost, card panels
+           vanished - /tmp/opencode/g2.png b24fa8d2795a and g3.png f5e4c1f977d3). -->
+      <Container Type="Horizontal Stack" ID="DonorBoardColumns" Row="1" CellGap="16" VerticalAlignment="Stretch"
                  HorizontalScrolling="True" VerticalScrolling="False" ScrollBarThickness="8">
         <If Condition="{Binding DonorHasHiddenGroups}">
           <!-- CUI021 measured on compile: an <Else> must be a sibling that follows a complete <If>, not a child
@@ -88,23 +97,23 @@
             <!-- Donor collapsed state: a 50-high strip carrying only the expand control. -->
             <Container Type="Horizontal Stack" ID="DonorHiddenGroupsCollapsedStrip" Height="50" CellGap="4"
                        VerticalAlignment="Center">
-              <Button ID="DonorHiddenGroupsExpand" Content="Hidden groups" Action="ExpandHiddenGroups" Height="26"
-                      AccessibleName="Expand hidden groups" />
+              <Button ID="DonorHiddenGroupsExpand" Content="Hidden sections" Action="ExpandHiddenGroups" Height="26"
+                      AccessibleName="Expand hidden sections" />
             </Container>
           </If>
           <If Condition="{Binding DonorHiddenGroupsExpanded}">
               <Container Type="Vertical Stack" ID="DonorHiddenGroupsColumn" Width="274" CellGap="4">
                 <Container Type="Grid" ColumnSizes="1fr Auto" Height="50" VerticalAlignment="Center">
-                  <Text Column="0" Text="Hidden groups" FontSize="14" FontWeight="Medium"
+                  <Text Column="0" Text="Hidden sections" FontSize="14" FontWeight="Medium"
                         Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
                   <Button Column="1" ID="DonorHiddenGroupsCollapse" Content="Collapse" Action="CollapseHiddenGroups"
-                          Height="26" AccessibleName="Collapse hidden groups" />
+                          Height="26" AccessibleName="Collapse hidden sections" />
                 </Container>
                 <Repeat Source="{Binding DonorHiddenGroups}" As="hidden" Key="{Binding hidden.Id}" Panel="Vertical Stack">
                   <Container Type="Horizontal Stack" CellGap="6" Padding="8 6" CornerRadius="6"
                              Background="{Resource CuiPanelBrush}">
                     <Button Action="OpenHiddenGroup" Content="{Binding hidden.Title}"
-                            AccessibleName="Add this hidden group back to the board" />
+                            AccessibleName="Add this hidden section back to the board" />
                     <Text Text="{Binding hidden.CountLabel}" Foreground="{Resource CuiTextSoftBrush}" />
                   </Container>
                 </Repeat>
@@ -112,37 +121,51 @@
           </If>
         </If>
 
-        <Repeat Source="{Binding DonorGroupColumns}" As="group" Key="{Binding group.Id}" Panel="Horizontal Stack">
+        <Repeat Source="{Binding DonorGroupColumns}" As="group" Key="{Binding group.Id}" Panel="Horizontal Stack" CellGap="16">
+          <!-- group.dart builds the column as a vertical Flex with MainAxisSize.min and a LOOSE flexible body, so
+               the column is only as tall as its cards and the footer follows them. An "Auto 1fr Auto" grid pinned the
+               footer to the window foot instead. -->
           <Container Type="Grid" ID="DonorGroupColumn" Width="256" RowSizes="Auto 1fr Auto" CellGap="4">
             <!-- Donor header: height 50, content varies with the group's field type. -->
-            <Container Type="Grid" Column="0" Row="0" ColumnSizes="Auto 1fr Auto Auto" Height="50"
+            <Container Type="Grid" Column="0" Row="0" ColumnSizes="Auto 1fr Auto Auto Auto" Height="50" Padding="16 0"
                        ID="DonorGroupHeader" CellGap="4" VerticalAlignment="Center">
               <Image Column="0" Source="icon:folder" Width="16" Height="16" VerticalAlignment="Center"
-                     AccessibleName="Group" />
-              <Text Column="1" Text="{Binding group.Title}" FontSize="14" FontWeight="Medium"
-                    VerticalAlignment="Center" AccessibleName="Group title" />
+                     AccessibleName="Section" />
+              <!-- The donor shows the group's card count beside the title (board_column_header.dart) -->
+              <If Condition="{Binding group.Editing}">
+                <Input Column="1" ID="DonorGroupTitleEdit" Type="Text" Value="{Binding group.DraftTitle}"
+                       SubmitAction="CommitSectionTitle" FontSize="14" AccessibleName="Section title" />
+              </If>
+              <If Condition="{Binding group.NotEditing}">
+                <Text Column="1" Text="{Binding group.Title}" FontSize="14" FontWeight="Medium"
+                      VerticalAlignment="Center" AccessibleName="Section title" />
+              </If>
               <Text Column="2" Text="{Binding group.CountLabel}" FontSize="12"
                     Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center"
-                    AccessibleName="Number of cards in this group" />
+                    AccessibleName="Number of pages in this section" />
               <!-- Menu items belong INSIDE the trigger, which is how the working FileMenu and board-name menu are
                    authored in Boards.cui. My first version self-closed the trigger and left the items as siblings,
                    so they rendered inline beside the header instead of opening as a popover - measured on screen in
                    /tmp/opencode/e3-crop.png. The donor's own popover is limited to 168 x 300; that limit stays
                    unexpressed here and is recorded as a fidelity gap rather than forced through an unsupported
                    attribute. -->
-              <Container Column="3" Type="Menu" ID="DonorGroupOptions">
+              <Button Column="3" ID="DonorGroupNewCardAtTop" Width="20" Height="20" Padding="0"
+                      Action="CreateCardAtTop" Background="Transparent" BorderWidth="0" FontSize="16"
+                      ToolTip="Add page to the top of the section" AccessibleName="Add page to the top of the section">+
+              </Button>
+              <Container Column="4" Type="Menu" ID="DonorGroupOptions">
                 <Button Type="Menu Item" ID="DonorGroupOptionsButton" IconSource="icon:more" IconOnly="True"
                         Width="20" Height="20" Padding="0" Background="Transparent" BorderWidth="0"
-                        AccessibleName="Group options">
-                <Button Type="Menu Item" ID="DonorGroupRename" Content="Rename" Action="RenameGroupStart" Height="26"
+                        AccessibleName="Section options">
+                <Button Type="Menu Item" ID="DonorGroupRename" Content="Rename section" Action="StartRenameSection" Height="26"
                         IsEnabled="{Binding group.CanRename}" Interactive="{Binding group.CanRename}"
-                        AccessibleName="Rename this group" />
-                <Button Type="Menu Item" ID="DonorGroupHide" Content="Hide group" Action="HideGroup" Height="26"
+                        AccessibleName="Rename this section" />
+                <Button Type="Menu Item" ID="DonorGroupHide" Content="Hide section" Action="HideGroup" Height="26"
                         IsEnabled="{Binding group.CanHide}" Interactive="{Binding group.CanHide}"
-                        AccessibleName="Hide this group" />
-                <Button Type="Menu Item" ID="DonorGroupDelete" Content="Delete group" Action="DeleteGroupConfirm"
+                        AccessibleName="Hide this section" />
+                <Button Type="Menu Item" ID="DonorGroupDelete" Content="Delete section" Action="DeleteGroupConfirm"
                         Height="26" IsEnabled="{Binding group.CanDelete}" Interactive="{Binding group.CanDelete}"
-                        AccessibleName="Delete this group" />
+                        AccessibleName="Delete this section" />
                 </Button>
               </Container>
             </Container>
@@ -150,35 +173,44 @@
             <!-- Donor body: the column's cards. RowCard = cover (when present) then the cell column whose
                  first cell is the title, with the hover accessories overlay carrying edit and more-options. -->
             <!-- Donor: the column body is padded 8 on top (board_page.dart:341) and scrolls its cards. -->
-            <Container Type="Vertical Stack" ID="DonorCardList" Column="0" Row="1" Margin="0 8 0 0" CellGap="8"
+            <Container Type="Vertical Stack" ID="DonorCardList" Column="0" Row="1" Margin="0 8 0 0" Padding="12 0" CellGap="8"
                        VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="8">
               <Repeat Source="{Binding group.Cards}" As="card" Key="{Binding card.Id}" Panel="Vertical Stack">
                 <!-- Donor RowCard fills the column width; its content padding is EdgeInsets.all(4)
                      (card.dart RowCardStyleConfiguration). The previous bound Width collapsed to the title text. -->
-                <Container Type="Overlay" ID="DonorCard" Width="248" MinHeight="56" HorizontalAlignment="Stretch"
-                           Background="{Resource CuiPanelBrush}" CornerRadius="6" BorderWidth="1">
+                <Container Type="Overlay" ID="DonorCard" Width="226" MinHeight="56" Margin="3 4"
+                           HorizontalAlignment="Stretch" Background="{Resource CuiPanelBrush}" CornerRadius="6"
+                           BorderWidth="1">
+                  <!-- Donor: the whole card is the open gesture (card.dart tap to open the row document). This is a
+                       hit area over the card, deliberately without its own label, so the title is not drawn twice. -->
+                  <Button ID="DonorCardOpenSurface" Action="OpenDonorCard" Width="226" MinHeight="56"
+                          Background="Transparent" BorderWidth="0" Padding="0"
+                          AccessibleName="{Binding card.AccessibleName}" />
                   <Container Type="Vertical Stack" CellGap="0">
                     <If Condition="{Binding card.HasCover}">
                       <Image ID="DonorCardCover" Source="{Binding card.CoverSource}" Height="{Binding card.CoverHeight}"
-                             Width="248" AccessibleName="Card cover" />
+                             Width="248" AccessibleName="Page cover" />
                     </If>
+                    <!-- Donor _CardContent: the cell column's first cell is the row title (card.dart:231-268), so the
+                         9to1 page title is that cell and each non-empty block becomes a following cell. -->
                     <Container Type="Vertical Stack" Padding="4" CellGap="4">
-                      <Repeat Source="{Binding card.Cells}" As="cell" Key="{Binding cell.Id}" Panel="Vertical Stack">
-                        <Text ID="DonorCardCell" Text="{Binding cell.Text}" FontSize="13"
-                              FontWeight="{Binding cell.TitleWeight, fallback=Normal}"
-                              Foreground="{Resource CuiTextBrush}" AccessibleName="{Binding cell.AccessibleName}" />
+                      <Text ID="DonorCardTitle" Text="{Binding card.Title}" FontSize="14" FontWeight="Bold"
+                            Foreground="{Resource CuiTextBrush}" AccessibleName="Page title" />
+                      <Repeat Source="{Binding card.Previews}" As="preview" Key="{Binding preview}" Panel="Vertical Stack">
+                        <Text ID="DonorCardCell" Text="{Binding preview}" FontSize="13"
+                              Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Page detail" />
                       </Repeat>
                     </Container>
                   </Container>
                   <Container Type="Horizontal Stack" ID="DonorCardAccessories" CellGap="2" Padding="3"
                              HorizontalAlignment="Right" VerticalAlignment="Top" Active="{Binding card.Hovered}">
                     <Button ID="DonorCardEdit" Width="20" Height="20" Padding="3" Background="Transparent"
-                            BorderWidth="0" Action="OpenDonorCard" AccessibleName="Edit this card">
-                      <Image Source="icon:more" Width="14" Height="14" AccessibleName="Edit this card" />
+                            BorderWidth="0" Action="OpenDonorCard" AccessibleName="Open this page">
+                      <Image Source="icon:more" Width="14" Height="14" AccessibleName="Open this page" />
                     </Button>
                     <Button ID="DonorCardMoreOptions" Width="20" Height="20" Padding="3" Background="Transparent"
-                            BorderWidth="0" AccessibleName="More card options">
-                      <Image Source="icon:more" Width="14" Height="14" AccessibleName="More card options" />
+                            BorderWidth="0" AccessibleName="More page options">
+                      <Image Source="icon:more" Width="14" Height="14" AccessibleName="More page options" />
                     </Button>
                   </Container>
                 </Container>
@@ -186,15 +218,20 @@
             </Container>
 
             <!-- Donor: BoardColumnFooter. -->
-            <Container Type="Horizontal Stack" ID="DonorGroupFooter" Column="0" Row="2" Height="36" CellGap="4"
-                       VerticalAlignment="Center">
-              <Button ID="DonorGroupNewCardAtTop" Width="20" Height="20" Padding="0" Action="CreateCardAtTop"
-                      Background="Transparent" BorderWidth="0" ToolTip="Add card to the top of the column"
-                      AccessibleName="Add card to the top of the column">
-                <Image Source="icon:chevron-down" Width="14" Height="14" AccessibleName="Add card to the top" />
-              </Button>
-              <Button ID="DonorGroupNewCard" Content="New" Action="CreateCardInGroup" Height="26"
-                      Interactive="{Binding group.CanCreateCard}" AccessibleName="Add a card to this group" />
+            <!-- Donor footer padding is horizontal 12 (board.dart:32); the footer follows the last card rather
+                 than sitting at the window foot, so the column's 1fr body row is scrollable and the footer keeps
+                 its own Auto row. -->
+            <Container Type="Horizontal Stack" ID="DonorGroupFooter" Column="0" Row="2" Height="36" Padding="12 0"
+                       CellGap="4" VerticalAlignment="Center">
+              <If Condition="{Binding group.NotCreating}">
+                <Button ID="DonorGroupNewCard" Content="New page" Action="BeginCreateCard" Height="26"
+                        Interactive="{Binding group.CanCreateCard}" AccessibleName="Add a page to this section" />
+              </If>
+              <If Condition="{Binding group.Creating}">
+                <Input ID="DonorGroupNewCardField" Type="Text" Width="200" PlaceholderText="Page title"
+                       Value="{Binding group.NewPageDraft}" SubmitAction="CommitNewPage"
+                       AccessibleName="New page title" />
+              </If>
             </Container>
           </Container>
         </Repeat>
@@ -204,8 +241,8 @@
              new group; otherwise the donor spends that space on a 40-wide spacer, which is reproduced here. -->
         <Container Type="Vertical Stack" ID="DonorBoardTrailing" Width="256" CellGap="8"
                    Active="{Binding DonorCanCreateGroup}">
-          <Button ID="DonorCreateGroup" Content="New group" Action="CreateGroup" Height="26"
-                  HorizontalAlignment="Left" AccessibleName="Create a new group" />
+          <Button ID="DonorCreateGroup" Content="New section" Action="CreateGroup" Height="26"
+                  HorizontalAlignment="Left" AccessibleName="Create a new section" />
         </Container>
         <Container Type="Horizontal Stack" ID="DonorBoardTrailingSpacer" Width="40"
                    Active="{Binding DonorShowsTrailingSpacer}" />
