@@ -1,4 +1,4 @@
-# libreoffice-writer Stage A mirror gaps - constructs CUI cannot express yet
+# libreoffice-writer Stage A mirror records - CUI framework gaps plus donor plumbing
 
 Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
 reason to keep donor markup. Nothing here is rendered or accepted evidence.
@@ -6,6 +6,13 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 - donor UI constructs translated: 11539
 - donor nodes dropped: 1621
 - gap reports: 1683
+- CUI framework gaps: 1683
+- donor plumbing recorded (not a CUI gap): 0
+
+## CUI constructs still needed
+
+| CUI construct needed / rejected | occurrences | donor constructs seen |
+|---|---|---|
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|

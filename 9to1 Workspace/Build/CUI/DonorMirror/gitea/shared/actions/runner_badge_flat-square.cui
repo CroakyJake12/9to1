@@ -1,6 +1,6 @@
 <Cui id="actions-runner-badge-flat-square" product="9-1" version="1">
   <Page id="actions-runner-badge-flat-square-root">
-    <Image id="svg" height="20" role="img">
+    <Image id="svg" height="20" role="img" accessible-name="[value]: [value]">
       <Container id="title" Type="Vertical Stack" />
       <Container id="g" Type="Vertical Stack">
         <Container id="rect" Type="Vertical Stack" height="20" />

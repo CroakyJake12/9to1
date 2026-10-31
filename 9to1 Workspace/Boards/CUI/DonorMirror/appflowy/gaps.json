@@ -1,11 +1,15 @@
 {
   "translated": 2855,
   "dropped_nodes": 0,
-  "gap_count": 9896,
+  "gap_count": 9898,
+  "cui_gap_count": 9898,
+  "gap_kinds": {
+    "cui-construct": 9898
+  },
   "gap_constructs": {
     "custom donor widget": 1365,
     "donor icon asset (FlowySvg)": 754,
-    "n/a": 700,
+    "n/a": 702,
     "theme colour token": 579,
     "fixed vertical spacer": 579,
     "fixed horizontal spacer": 510,
@@ -3275,6 +3279,13 @@
       "donor": "no widget constructor found",
       "construct": "n/a",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/env/cloud_env.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/env/cloud_env_test.dart",
       "line": 0,
       "why": "no translatable UI"
     },
@@ -18558,6 +18569,13 @@
       "file": "widgets-board_shortcut_container",
       "line": 0,
       "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/board/tests/integrate_test/card_test.dart",
+      "line": 0,
+      "why": "no translatable UI"
     },
     {
       "donor": "no widget constructor found",
@@ -69336,6 +69354,6 @@
   "app": "Boards",
   "source": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib",
   "translated_files": 824,
-  "untranslated_files": 700,
+  "untranslated_files": 702,
   "unsupported_suffixes": {}
 }

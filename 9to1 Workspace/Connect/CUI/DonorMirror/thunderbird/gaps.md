@@ -1,19 +1,27 @@
-# thunderbird Stage A mirror gaps - constructs CUI cannot express yet
+# thunderbird Stage A mirror records - CUI framework gaps plus donor plumbing
 
 Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
 reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 854
 - donor nodes dropped: 0
-- gap reports: 1068
+- gap reports: 1281
+- CUI framework gaps: 952
+- donor plumbing recorded (not a CUI gap): 329
+
+## CUI constructs still needed
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `property not modelled` | 506 | arrowscrollbox@orient, browser.action, browser@autocompletepopup, browser@disablehistory, browser@manualactiveness, browser@messagemanagergroup |
+
+| CUI construct needed / rejected | occurrences | donor constructs seen |
+|---|---|---|
 | `unknown donor construct` | 372 | b, body, code, commandset, dialog, head |
+| `property not modelled` | 227 | arrowscrollbox@orient, browser.action, browser@autocompletepopup, browser@disablehistory, browser@manualactiveness, browser@messagemanagergroup |
+| `localisation key binding` | 149 | checkbox@data-l10n-id, dialog@data-l10n-attrs, dialog@data-l10n-id, html:a@data-l10n-id, html:a@data-l10n-name, html:button@data-l10n-id |
 | `inline text run` | 36 | html:span |
+| `link action` | 35 | html:a, html:a@href |
 | `keyboard shortcut table` | 22 | key |
-| `link action` | 21 | html:a |
 | `typed command declaration` | 17 | command |
 | `preprocessor directives` | 11 | moz-build preprocessor |
 | `item collection (list/tree/table)` | 11 | html:li, html:ol, html:table, html:ul |
@@ -51,3 +59,10 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 | `parse error: junk after document element: line 18, column 0` | 1 | unparseable xul/xhtml |
 | `parse error: unbound prefix: line 3, column 2` | 1 | unparseable xul/xhtml |
 | `parse error: junk after document element: line 140, column 2` | 1 | unparseable xul/xhtml |
+
+## Donor plumbing recorded (not CUI framework gaps)
+
+| Recorded donor construct | Occurrences | Kind |
+|---|---|---|
+| `donor event or style hook` | 202 | donor-plumbing |
+| `donor web attribute` | 127 | donor-plumbing |

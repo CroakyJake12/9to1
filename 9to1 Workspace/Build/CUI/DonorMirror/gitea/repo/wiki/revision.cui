@@ -1,10 +1,10 @@
 <Cui id="wiki-revision" product="9-1" version="1">
   <Page id="wiki-revision-root">
-    <Container id="div" Type="Vertical Stack" role="main">
+    <Container id="div" Type="Vertical Stack" role="main" accessible-name="{Binding Unresolved}">
       <Container id="div-2" Type="Vertical Stack">
         <Container id="div-3" Type="Vertical Stack">
           <Container id="div-4" Type="Vertical Stack">
-            <Button id="a" text="{Binding Unresolved}" />
+            <Button id="a" tooltip="{Binding Unresolved}" />
             <Container id="div-5" Type="Vertical Stack">
               <Container id="div-6" Type="Vertical Stack" />
             </Container>

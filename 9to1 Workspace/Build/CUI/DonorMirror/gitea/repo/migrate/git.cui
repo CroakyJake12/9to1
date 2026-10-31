@@ -1,6 +1,6 @@
 <Cui id="migrate-git" product="9-1" version="1">
   <Page id="migrate-git-root">
-    <Container id="div" Type="Vertical Stack" role="main">
+    <Container id="div" Type="Vertical Stack" role="main" accessible-name="{Binding Unresolved}">
       <Container id="div-2" Type="Vertical Stack">
         <Text id="h3" text="{Binding Unresolved}" />
         <Container id="div-3" Type="Vertical Stack">
@@ -24,13 +24,11 @@
               <Text id="label-4" text="{Binding Unresolved}" />
               <Container id="div-9" Type="Vertical Stack">
                 <Input id="input-5" Type="Text" />
-                <Text id="span-2" text="{Binding Unresolved}" />
-                <Container id="div-10" Type="Vertical Stack">
-                  <Text id="div-label" text="{Binding Unresolved}" />
+                <Text id="span-2" tooltip="{Binding Unresolved}" text="[value]
+							[value]" />
+                <Container id="div-10" Type="Vertical Stack" tooltip="{Binding Unresolved}">
                   <Container id="div-11" Type="Vertical Stack" />
-                  <Container id="div-12" Type="Vertical Stack">
-                    <Text id="div-label-2" text="{Binding Unresolved}" />
-                  </Container>
+                  <Container id="div-12" Type="Vertical Stack" tooltip="{Binding Unresolved}" />
                 </Container>
               </Container>
             </Container>

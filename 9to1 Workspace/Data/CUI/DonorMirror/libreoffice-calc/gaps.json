@@ -2,6 +2,10 @@
   "translated": 8342,
   "dropped_nodes": 988,
   "gap_count": 1230,
+  "cui_gap_count": 1230,
+  "gap_kinds": {
+    "cui-construct": 1230
+  },
   "gap_constructs": {
     "menu button": 353,
     "optional section": 352,

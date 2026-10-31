@@ -1,12 +1,12 @@
 <Cui id="base-head-navbar" product="9-1" version="1">
   <Page id="base-head-navbar-root">
-    <Container id="navbar" Type="Vertical Stack">
+    <Container id="navbar" Type="Vertical Stack" accessible-name="{Binding Unresolved}">
       <Container id="div" Type="Vertical Stack">
-        <Button id="navbar-logo">
+        <Button id="navbar-logo" accessible-name="[value][value]">
           <Image id="img" />
         </Button>
         <Container id="div-2" Type="Vertical Stack">
-          <Button id="navbar-expand-toggle" />
+          <Button id="navbar-expand-toggle" accessible-name="{Binding Unresolved}" />
         </Container>
         <Button id="a" />
         <Button id="a-2" />

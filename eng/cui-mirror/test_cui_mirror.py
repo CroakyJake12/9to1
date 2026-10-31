@@ -530,3 +530,70 @@ class DartDialectTests(unittest.TestCase):
         text = cui_mirror.emit(result)
         self.assertIn('text="yes"', text)
         self.assertNotIn("nope", text)
+
+
+class GapAccountingTests(unittest.TestCase):
+    """A donor web attribute is plumbing; a missing CUI construct is a framework gap. They must not be counted together."""
+
+    def test_hyphenated_donor_attributes_really_do_map(self):
+        # Measured bug: the map keys kept their hyphens while the lookup stripped them, so 82 aria-label
+        # attributes were reported as unmapped and dropped.
+        result = self._xul('<xul:button xmlns:xul="urn:xul" id="b" label="Send" aria-label="Send message" '
+                           'title="Send this" accesskey="S"/>')
+        text = cui_mirror.emit(result)
+        self.assertIn('accessible-name="Send message"', text)
+        self.assertIn('tooltip="Send this"', text)
+        self.assertIn('shortcut="S"', text)
+        self.assertNotIn("aria-label", [g["donor"].split("@")[-1] for g in result.gaps])
+
+    def _xul(self, markup):
+        import tempfile
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            path = Path(tmp) / "c.xhtml"
+            path.write_text(markup)
+            return dialect_xul.translate(path, markup)
+
+    def test_localisation_keys_are_a_named_cui_gap(self):
+        result = self._xul('<h:span xmlns:h="http://www.w3.org/1999/xhtml" data-l10n-id="send-button">x</h:span>')
+        kinds = {g["construct"]: g.get("kind") for g in result.gaps}
+        self.assertEqual(kinds.get("localisation key binding"), "cui-construct")
+
+    def test_web_attributes_are_recorded_as_plumbing_not_as_cui_gaps(self):
+        result = self._xul('<form xmlns:h="http://www.w3.org/1999/xhtml" method="post" action="/x" '
+                           'class="row"><h:input type="text" data-custom="1"/></form>')
+        constructs = {g["construct"]: g.get("kind") for g in result.gaps}
+        self.assertEqual(constructs.get("donor web attribute"), "donor-plumbing")
+        summary = cui_mirror.summarise([result])
+        self.assertEqual(summary["gap_kinds"]["donor-plumbing"],
+                         sum(1 for g in result.gaps if g.get("kind") == "donor-plumbing"))
+        self.assertLessEqual(summary["cui_gap_count"], summary["gap_count"])
+
+    def test_the_gap_report_separates_the_two_sections(self):
+        import tempfile
+        result = self._xul('<form xmlns:h="http://www.w3.org/1999/xhtml" method="post" '
+                           'data-l10n-id="f"><h:button>x</h:button></form>')
+        summary = cui_mirror.summarise([result])
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            report = Path(tmp) / "gaps.md"
+            cui_mirror.write_gap_report(report, summary, "probe")
+            text = report.read_text()
+        self.assertIn("## CUI constructs still needed", text)
+        self.assertIn("Donor plumbing recorded (not CUI framework gaps)", text)
+
+
+class ExclusionTests(unittest.TestCase):
+    """Donor exclusion must match path segments, not substrings inside a file name."""
+
+    def test_a_test_directory_is_excluded_but_a_dialog_named_test_is_not(self):
+        self.assertTrue(mirror._excluded("uiconfig/scalc/ui/ztestdialog.ui", ["test"]) is False)
+        self.assertTrue(mirror._excluded("base/content/test/browser.xhtml", ["test"]))
+        self.assertTrue(mirror._excluded("uiconfig/swriter/ui/opttestpage.ui", ["test"]) is False)
+        self.assertTrue(mirror._excluded("uiconfig/swriter/ui/footnotesendnotestabpage.ui", ["test"]) is False)
+
+    def test_a_path_fragment_still_excludes_a_named_subtree(self):
+        self.assertTrue(mirror._excluded("frontend/tests/unit/x.dart", ["frontend/tests"]))
+        self.assertTrue(mirror._excluded("lib/plugins/board/x.dart", ["frontend/tests"]) is False)
+
+    def test_examples_are_excluded_by_segment_name(self):
+        self.assertTrue(mirror._excluded("packages/example/lib/x.dart", ["example"]))
+        self.assertTrue(mirror._excluded("packages/flowy_infra_ui/lib/simplewidgets/x.dart", ["example"]) is False)

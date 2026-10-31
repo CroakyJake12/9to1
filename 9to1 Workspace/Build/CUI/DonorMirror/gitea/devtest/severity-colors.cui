@@ -1,0 +1,124 @@
+<Cui id="devtest-severity-colors" product="9-1" version="1">
+  <Page id="devtest-severity-colors-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h1" text="Severity Colors" />
+      <Text id="h2" text="Messages" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack" />
+        <Text id="p" text="This is an error message using --color-error-* variables." />
+      </Container>
+      <Container id="div-4" Type="Vertical Stack">
+        <Container id="div-5" Type="Vertical Stack" />
+        <Text id="p-2" text="This is a warning message using --color-warning-* variables." />
+      </Container>
+      <Container id="div-6" Type="Vertical Stack">
+        <Container id="div-7" Type="Vertical Stack" />
+        <Text id="p-3" text="This is a success message using --color-success-* variables." />
+      </Container>
+      <Container id="div-8" Type="Vertical Stack">
+        <Container id="div-9" Type="Vertical Stack" />
+        <Text id="p-4" text="This is an info message using --color-info-* variables." />
+      </Container>
+      <Text id="h2-2" text="Markdown Attention Blocks" />
+      <Container id="div-10" Type="Vertical Stack">
+        <Container id="blockquote" Type="Vertical Stack">
+          <Text id="p-5">
+            <Text id="strong" text="Note" />
+          </Text>
+          <Text id="p-6" text="Useful information that users should know, even when skimming content." />
+        </Container>
+        <Container id="blockquote-2" Type="Vertical Stack">
+          <Text id="p-7">
+            <Text id="strong-2" text="Tip" />
+          </Text>
+          <Text id="p-8" text="Helpful advice for doing things better or more easily." />
+        </Container>
+        <Container id="blockquote-3" Type="Vertical Stack">
+          <Text id="p-9">
+            <Text id="strong-3" text="Important" />
+          </Text>
+          <Text id="p-10" text="Key information users need to know to achieve their goal." />
+        </Container>
+        <Container id="blockquote-4" Type="Vertical Stack">
+          <Text id="p-11">
+            <Text id="strong-4" text="Warning" />
+          </Text>
+          <Text id="p-12" text="Urgent info that needs immediate user attention to avoid problems." />
+        </Container>
+        <Container id="blockquote-5" Type="Vertical Stack">
+          <Text id="p-13">
+            <Text id="strong-5" text="Caution" />
+          </Text>
+          <Text id="p-14" text="Advises about risks or negative outcomes of certain actions." />
+        </Container>
+      </Container>
+      <Text id="h2-3" text="Form Fields" />
+      <Container id="div-11" Type="Vertical Stack">
+        <Container id="div-12" Type="Vertical Stack">
+          <Text id="label" text="Error Field" />
+          <Input id="input" Type="Text" />
+        </Container>
+      </Container>
+      <Text id="h2-4" text="Error Input" />
+      <Container id="div-13" Type="Vertical Stack">
+        <Input id="input-2" Type="Text" />
+      </Container>
+      <Text id="h2-5" text="Attached Section Boxes" />
+      <Text id="h3" text="Error Header" />
+      <Container id="div-14" Type="Vertical Stack" />
+      <Text id="h3-2" text="Warning Header" />
+      <Container id="div-15" Type="Vertical Stack" />
+      <Text id="h2-6" text="Banner Preview (info-tinted)" />
+      <Container id="div-16" Type="Vertical Stack">
+        <Container id="div-17" Type="Vertical Stack" />
+      </Container>
+      <Text id="h2-7" text="Labels" />
+      <Container id="div-18" Type="Vertical Stack">
+        <Container id="div-19" Type="Vertical Stack" />
+        <Container id="div-20" Type="Vertical Stack" />
+        <Container id="div-21" Type="Vertical Stack" />
+        <Container id="div-22" Type="Vertical Stack" />
+        <Container id="div-23" Type="Vertical Stack" />
+        <Container id="div-24" Type="Vertical Stack" />
+        <Container id="div-25" Type="Vertical Stack" />
+      </Container>
+      <Text id="h2-8" text="Color Swatches" />
+      <Text id="h3-3" text="Error" />
+      <Container id="div-26" Type="Vertical Stack">
+        <Container id="div-27" Type="Vertical Stack">
+          <Container id="div-28" Type="Vertical Stack" />
+          <Container id="code" Type="Vertical Stack" />
+        </Container>
+        <Container id="div-29" Type="Vertical Stack">
+          <Container id="div-30" Type="Vertical Stack" />
+          <Container id="code-2" Type="Vertical Stack" />
+        </Container>
+        <Container id="div-31" Type="Vertical Stack">
+          <Container id="div-32" Type="Vertical Stack" />
+          <Container id="code-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Text id="h3-4" text="Warning" />
+      <Container id="div-33" Type="Vertical Stack">
+        <Container id="div-34" Type="Vertical Stack">
+          <Container id="div-35" Type="Vertical Stack" />
+          <Container id="code-4" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Text id="h3-5" text="Success" />
+      <Container id="div-36" Type="Vertical Stack">
+        <Container id="div-37" Type="Vertical Stack">
+          <Container id="div-38" Type="Vertical Stack" />
+          <Container id="code-5" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Text id="h3-6" text="Info" />
+      <Container id="div-39" Type="Vertical Stack">
+        <Container id="div-40" Type="Vertical Stack">
+          <Container id="div-41" Type="Vertical Stack" />
+          <Container id="code-6" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

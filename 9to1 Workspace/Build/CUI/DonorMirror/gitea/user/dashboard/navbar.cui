@@ -21,7 +21,7 @@
                     <Container id="div-11" Type="Vertical Stack" />
                   </Text>
                 </Button>
-                <Button id="a-2" text="{Binding Unresolved}">
+                <Button id="a-2" tooltip="{Binding Unresolved}">
                   <Text id="span-6" text="{Binding Unresolved}" />
                   <Text id="span-7">
                     <Container id="div-12" Type="Vertical Stack" />
@@ -43,8 +43,8 @@
             <Container id="div-16" Type="Vertical Stack">
               <Container id="div-17" Type="Vertical Stack" />
               <Container id="div-18" Type="Vertical Stack">
-                <Button id="a-4" text="{Binding Unresolved}" />
-                <Button id="a-5" text="{Binding Unresolved}" />
+                <Button id="a-4" tooltip="{Binding Unresolved}" />
+                <Button id="a-5" tooltip="{Binding Unresolved}" />
               </Container>
             </Container>
           </Container>
@@ -55,7 +55,7 @@
           <Button id="a-8" />
           <Button id="a-9" />
           <Container id="div-20" Type="Vertical Stack">
-            <Button id="a-10" text="{Binding Unresolved}" />
+            <Button id="a-10" tooltip="{Binding Unresolved}" />
           </Container>
         </Container>
       </Container>

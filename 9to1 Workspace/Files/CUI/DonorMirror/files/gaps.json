@@ -2,6 +2,10 @@
   "translated": 310,
   "dropped_nodes": 58,
   "gap_count": 829,
+  "cui_gap_count": 829,
+  "gap_kinds": {
+    "cui-construct": 829
+  },
   "gap_constructs": {
     "property not modelled": 517,
     "unmodelled donor construct": 122,

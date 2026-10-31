@@ -78,7 +78,8 @@ GAP_CONSTRUCT = {
 }
 
 PROP_MAP = {"label": ("content", "Text"), "value": ("Text", "Value"), "src": ("IconSource", None),
-            "tooltiptext": ("Tooltip", None), "title": ("Text", None), "alt": ("AccessibleName", None),
+            # HTML `title` is a tooltip, not a caption; office/XUL captions arrive through `label`.
+            "tooltiptext": ("Tooltip", None), "title": ("Tooltip", None), "alt": ("AccessibleName", None),
             "aria-label": ("AccessibleName", None), "accesskey": ("Shortcut", None),
             "keyshortcuts": ("Shortcut", None), "placeholder": ("PlaceholderText", None),
             "type": (None, "Type"), "flex": ("Role", None), "width": ("Width", None),
@@ -92,6 +93,29 @@ PROP_MAP = {"label": ("content", "Text"), "value": ("Text", "Value"), "src": ("I
             "onkeydown": (None, None), "onmouseover": (None, None), "onblur": (None, None),
             "onfocus": (None, None), "oninput": (None, None), "onchange": (None, None),
             "href": (None, None), "data-l10n-id": (None, None), "hiddenfeature": (None, None)}
+
+# Keys in PROP_MAP are written the way the donor spells them ("aria-label"), but the lookup below
+# normalises the attribute (lower case, hyphens removed). Without normalising the map itself, every
+# hyphenated entry was unreachable - measured as 82 dropped aria-label and 58 dropped data-l10n-id
+# records for attributes that were mapped all along.
+PROP_MAP_NORM = {re.sub(r"-", "", key.lower()): value for key, value in PROP_MAP.items()}
+
+# Web/HTML attributes that carry no UI structure at all. They are donor plumbing: recording each one
+# as a "CUI framework gap" buried the real gaps in the queue, so they are kept visible under their
+# own kind instead.
+DONOR_PLUMBING_ATTRS = {"for", "method", "enctype", "defer", "async", "rel", "srcset", "sizes",
+                        "target", "autocomplete", "autocapitalize", "autocorrect", "spellcheck",
+                        "contenteditable", "tabindex", "popover", "popovertarget",
+                        "popovertargetaction", "part", "slot", "contextmenu"}
+LOCALISATION_PREFIXES = ("data-l10n",)
+LINK_ATTRS = {"href", "xul:href"}
+# Attributes the dialect maps to "no CUI target" on purpose: inline handlers, style/class hooks, element
+# identity and observer wiring. They are donor wiring, so they must not be counted as missing CUI constructs.
+DELIBERATE_PLUMBING = {"class", "style", "id", "anonid", "context", "consumer", "observes",
+                       "onkeydown", "onkeyup", "onkeypress", "onmouseover", "onmouseout", "onblur",
+                       "onfocus", "oninput", "onchange", "onsubmit", "onload", "dir", "lang",
+                       "hiddenfeature", "srcset", "loading", "decoding", "referrerpolicy", "aria-hidden",
+                       "aria-expanded", "aria-live", "role_"}
 
 WRAP_RE = re.compile(r"^\s*$")
 
@@ -203,11 +227,58 @@ def translate(path, source: str) -> Result:
             node.props["Type"] = ctype
         for attr, value in elem.attrib.items():
             key = attr.lower().replace("-", "")
-            pair = PROP_MAP.get(key)
-            if not pair:
-                if value:
+            pair = PROP_MAP_NORM.get(key)
+
+            def classify() -> None:
+                if not value:
+                    return
+                if attr in LINK_ATTRS:
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "link action",
+                                        "kind": "cui-construct", "file": str(path), "line": 0,
+                                        "why": "the donor navigates through this attribute; CUI needs the "
+                                              "typed link action, not a dropped value"})
+                elif attr in DELIBERATE_PLUMBING:
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "donor event or style hook",
+                                        "kind": "donor-plumbing", "file": str(path), "line": 0,
+                                        "why": "script/style/behaviour plumbing the donor attaches to this "
+                                              "element; no CUI structure is missing"})
+                elif attr.startswith(LOCALISATION_PREFIXES):
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "localisation key binding",
+                                        "kind": "cui-construct", "file": str(path), "line": 0,
+                                        "why": "the donor resolves this text through a localisation key; "
+                                              "CUI has no localisation-key contract yet"})
+                elif attr.startswith("data-") or attr in DONOR_PLUMBING_ATTRS:
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "donor web attribute",
+                                        "kind": "donor-plumbing", "file": str(path), "line": 0,
+                                        "why": "carries no UI structure; recorded rather than counted as a "
+                                              "CUI framework gap"})
+                else:
                     result.gaps.append({"donor": f"{tag}@{attr}", "construct": "property not modelled",
-                                        "file": str(path), "line": 0, "why": "dropped; record for Stage B"})
+                                        "kind": "cui-construct", "file": str(path), "line": 0,
+                                        "why": "dropped; record for Stage B"})
+
+            if not pair:
+                classify()
+                continue
+            if not pair[0] and not pair[1]:
+                # Mapped to "no CUI target" is a decision about the attribute, not evidence that CUI is
+                # missing anything: classify it so the queue only counts genuine framework gaps.
+                classify()
+                continue
+                if attr.startswith(LOCALISATION_PREFIXES):
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "localisation key binding",
+                                        "kind": "cui-construct", "file": str(path), "line": 0,
+                                        "why": "the donor resolves this text through a localisation key; "
+                                              "CUI has no localisation-key contract yet"})
+                elif attr.startswith("data-") or attr in DONOR_PLUMBING_ATTRS:
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "donor web attribute",
+                                        "kind": "donor-plumbing", "file": str(path), "line": 0,
+                                        "why": "carries no UI structure; recorded rather than counted as a "
+                                              "CUI framework gap"})
+                else:
+                    result.gaps.append({"donor": f"{tag}@{attr}", "construct": "property not modelled",
+                                        "kind": "cui-construct", "file": str(path), "line": 0,
+                                        "why": "dropped; record for Stage B"})
                 continue
             content_prop, type_prop = pair
             target = content_prop if element in ("Text", "Button", "Image", "Container") else (

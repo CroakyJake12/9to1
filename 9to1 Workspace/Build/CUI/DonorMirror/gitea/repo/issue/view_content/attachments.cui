@@ -4,7 +4,7 @@
       <Container id="div-2" Type="Vertical Stack" />
       <Container id="div-3" Type="Vertical Stack">
         <Container id="div-4" Type="Vertical Stack">
-          <Button id="a" text="{Binding Unresolved}">
+          <Button id="a" tooltip="{Binding Unresolved}">
             <Text id="span">
               <Text id="strong" text="{Binding Unresolved}" />
             </Text>

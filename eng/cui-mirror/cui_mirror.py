@@ -296,15 +296,20 @@ def summarise(results: Iterable[Result]) -> dict:
         translated += r.translated
         dropped += r.dropped
     by_construct: dict[str, int] = {}
+    by_kind: dict[str, int] = {}
     for g in gaps:
         by_construct[g["construct"]] = by_construct.get(g["construct"], 0) + 1
+        kind = g.get("kind", "cui-construct")
+        by_kind[kind] = by_kind.get(kind, 0) + 1
     return {"translated": translated, "dropped_nodes": dropped, "gap_count": len(gaps),
+            "cui_gap_count": by_kind.get("cui-construct", 0),
+            "gap_kinds": dict(sorted(by_kind.items(), key=lambda kv: -kv[1])),
             "gap_constructs": dict(sorted(by_construct.items(), key=lambda kv: -kv[1])),
             "gaps": gaps}
 
 
 def write_gap_report(path: Path, summary: dict, donor: str) -> None:
-    lines = [f"# {donor} Stage A mirror gaps - constructs CUI cannot express yet",
+    lines = [f"# {donor} Stage A mirror records - CUI framework gaps plus donor plumbing",
              "",
              "Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a",
              "reason to keep donor markup. Nothing here is rendered or accepted evidence.",
@@ -312,14 +317,30 @@ def write_gap_report(path: Path, summary: dict, donor: str) -> None:
              f"- donor UI constructs translated: {summary['translated']}",
              f"- donor nodes dropped: {summary['dropped_nodes']}",
              f"- gap reports: {summary['gap_count']}",
+             f"- CUI framework gaps: {summary.get('cui_gap_count', summary['gap_count'])}",
+             f"- donor plumbing recorded (not a CUI gap): " f"{summary['gap_count'] - summary.get('cui_gap_count', summary['gap_count'])}",
+             "",
+             "## CUI constructs still needed",
              "",
              "| CUI construct needed / rejected | occurrences | donor constructs seen |",
              "|---|---|---|"]
+    kinds: dict[str, str] = {}
     seen: dict[str, set] = {}
     for g in summary["gaps"]:
         seen.setdefault(g["construct"], set()).add(g["donor"])
+        kinds.setdefault(g["construct"], g.get("kind", "cui-construct"))
+    lines += ["", "| CUI construct needed / rejected | occurrences | donor constructs seen |", "|---|---|---|"]
     for construct, count in summary["gap_constructs"].items():
+        if kinds.get(construct, "cui-construct") != "cui-construct":
+            continue
         examples = ", ".join(sorted(seen.get(construct, set()))[:6])
         lines.append(f"| `{construct}` | {count} | {examples} |")
+    plumbing = [(c, n) for c, n in summary["gap_constructs"].items()
+                if kinds.get(c, "cui-construct") != "cui-construct"]
+    if plumbing:
+        lines += ["", "## Donor plumbing recorded (not CUI framework gaps)", "",
+                  "| Recorded donor construct | Occurrences | Kind |", "|---|---|---|"]
+        for construct, count in plumbing:
+            lines.append(f"| `{construct}` | {count} | {kinds[construct]} |")
     path.write_text("\n".join(lines) + "\n")
     (path.with_suffix(".json")).write_text(json.dumps(summary, indent=2) + "\n")

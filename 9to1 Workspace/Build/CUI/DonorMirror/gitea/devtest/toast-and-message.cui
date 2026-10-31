@@ -1,0 +1,18 @@
+<Cui id="devtest-toast-and-message" product="9-1" version="1">
+  <Page id="devtest-toast-and-message-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack" />
+      <Container id="div-3" Type="Vertical Stack">
+        <Text id="h1" text="Toast" />
+        <Container id="div-4" Type="Vertical Stack">
+          <Button id="button" />
+          <Button id="button-2" />
+          <Button id="button-3" />
+          <Button id="button-4" />
+          <Button id="button-5" />
+          <Button id="button-6" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

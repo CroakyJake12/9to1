@@ -3,6 +3,10 @@
     "translated": 303,
     "dropped_nodes": 12,
     "gap_count": 186,
+    "cui_gap_count": 186,
+    "gap_kinds": {
+      "cui-construct": 186
+    },
     "gap_constructs": {
       "custom donor widget": 56,
       "shortcut browser": 48,
@@ -35,8 +39,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "185e49ac1dfdad390c9cd5ec90144522a8a366541561c76df64da062dcc4af25",
-      "refreshed": true
+      "donor_sha256": "c55babe3badb8290912e9f6345720ed0cd3c68d3f00a4a5d596ed49b6fc5c1a3",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/appwindow.ui",
@@ -45,8 +49,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "e402baeec0c5ccef6c1a5f3ad0bab015b4d4a4c06ed5fc745df6a53bfc964280",
-      "refreshed": true
+      "donor_sha256": "dc8aaa08233d479bf1a065b1ca2e4fb28ec8cfee9a646877aeef3e76a841e08d",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/canvasmenu.ui",
@@ -55,8 +59,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "501398ccd94369220e16828c7adeb9ebdc66a544a7f08b59b708fe0584eb35f6",
-      "refreshed": true
+      "donor_sha256": "c3822fad9bfc1ac767028c0ecfc12ed58dbb2f3335c1b162f2d1fed81fa6d010",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/canvaswrapper.ui",
@@ -65,8 +69,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "8f55fbc7ee7b1ebe3261a586d31837984b9e839fd3a3b444a2f5828d28cffb3d",
-      "refreshed": true
+      "donor_sha256": "11ca8a5c7d3abc1ee6a8662f1c8cc80caf9ac2953b0c46a123ddc279d470656f",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/colorpicker.ui",
@@ -75,8 +79,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "4e60c96083f7b15c600e0b5157311fbbf60f22cd0e6332e6b4ba6480734866a3",
-      "refreshed": true
+      "donor_sha256": "6271f73cfd205e1f099f450e86b3122d46f6f0dd73272afba1eda4602d0f900d",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/contextmenu.ui",
@@ -85,8 +89,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "70a3511aaa8da160a4ef1d80174e5673a5a2d5270aad75577ddf16f0adaf61d3",
-      "refreshed": true
+      "donor_sha256": "23ba12500214f4acf96399fecd6cd80d605cfa6cba5f13813da0609bef300c56",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/dialogs/dialogs.ui",
@@ -95,8 +99,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 5,
-      "donor_sha256": "d9b2579c209ba1109be3d911a78fb3ef8becdea15e2922042c9d73ec8cef4223",
-      "refreshed": true
+      "donor_sha256": "aa419d8c534bbca2fbb475af08eaea77ec1a6cc572d13a95cf404e019c07a876",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/dialogs/export.ui",
@@ -105,8 +109,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "f2afa83deae9759f36e6c0308aecbd8c8b96f17077df284c2ac383fc2a211d66",
-      "refreshed": true
+      "donor_sha256": "a86faddae0f591555d39f68c50a59238c55a251ed12ab17187a3c3a66921e0e5",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/dialogs/import.ui",
@@ -115,8 +119,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 2,
-      "donor_sha256": "0747e274a57bc162be91d014d17d75dc424adaf590f963617e6c78c8782e2187",
-      "refreshed": true
+      "donor_sha256": "6a37d4f8ed2c8a62cb53e3fbb7cca7b9c0e57765c88fa6d3a5cb60438b391051",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/filerow.ui",
@@ -125,8 +129,8 @@
       "dialect": "gtk",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "72325d53b57cd5da9a28ba1178e07842bb7bc96c15d095dba64fd0647af481b2",
-      "refreshed": true
+      "donor_sha256": "c76b98752e189eb577e46aeb5ea657d6de4f9a11e053c8b2101f4518137cb2bb",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/groupediconpicker/groupediconpicker.ui",
@@ -135,8 +139,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "9df0e5160698f95758288e7f76e713f070644131a3b3de2ef03636da58c81271",
-      "refreshed": true
+      "donor_sha256": "8309112c085ecba165478db9675027e6c73eacd532a229478a6b55802f47c864",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/groupediconpicker/groupediconpickergroup.ui",
@@ -145,8 +149,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "86623b762083ea8d33459270d43bd0bd958338dfe596ea8cac1ad306231a2ab9",
-      "refreshed": true
+      "donor_sha256": "37524ebba8f32b3d6141fa4f3898092f5c411b916cca5154b5169ad597d8c3f1",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/iconpicker.ui",
@@ -155,8 +159,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "ae0cb6dba329019e7ca7b46a1743d85077d448a99e1de1a18de395907c734a7e",
-      "refreshed": true
+      "donor_sha256": "cba6d225c60e4a5d21aaae46609c72ae99841acae5141eadb7372139fd8a294a",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/mainheader.ui",
@@ -165,8 +169,8 @@
       "dialect": "gtk",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "4b672f16f47163b7be1926ac24202cb918cedefc09177eb7458017975b7c2464",
-      "refreshed": true
+      "donor_sha256": "aa59b5e2de024812bd0f4bff22fa65e66e6460a2e05f20296ede82905df61c65",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/overlays.ui",
@@ -175,8 +179,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "0a79d00a6fcee5d1463ec0be824fa3e1cfb8b9217eee2fbdf93e3039071f63ba",
-      "refreshed": true
+      "donor_sha256": "aad5333b3c36f67c175b4b82b36c4b138c3c153d1da1f4332b2ec33ef5ec6b4b",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penpicker.ui",
@@ -185,8 +189,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "aed268f3d758620b9a78f79694930055dd1f26dfeabf1f0e50e2731f869716b1",
-      "refreshed": true
+      "donor_sha256": "d175ad92053d72ddc7f05946340f3f9fed0062e1513cc55f1ae749d27ac3edc3",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penshortcutrow.ui",
@@ -195,8 +199,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "88a5be33625d9169bcd0812e72355f705f6a60e4855ce31378083f1ba7aa996d",
-      "refreshed": true
+      "donor_sha256": "0f338bc5cdfa5ac66cb80d5f29e8d353fae9f07d4c5111a806b707a7e69ce92c",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
@@ -205,8 +209,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "56896fafb118378fa7915f3afb4f2497d240d6d4be005640a3c487a4462dee4d",
-      "refreshed": true
+      "donor_sha256": "10d6b543ecf88a67b11013444306137fe04f5b3dce7d4cfeb405883ae6bc7c83",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
@@ -215,8 +219,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "bbda36b0b0c7ef680743bbad4476a1156073cbdb84019c6fa766d3e06b0e26dc",
-      "refreshed": true
+      "donor_sha256": "dc862aa6129c4d393f326b3cee9db9b4ea6b99393bf9c18a48533e4e79faaae1",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
@@ -225,8 +229,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "0484600edbb1776a0b7091ff343ceddfb62822dfb66b1f4073e0f2c53a453dda",
-      "refreshed": true
+      "donor_sha256": "dd54146f3a181b903186354b969c09e8e1ce09492df5d280722c4bc3ac1eb54b",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
@@ -235,8 +239,8 @@
       "dialect": "gtk",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "4b5101f0425a745be4ddec1c2eb731e2b31cbcf37a7642be12efacb3dd36c2d8",
-      "refreshed": true
+      "donor_sha256": "66dc7597ea19ce50cf8e656d860eca86d83a95af18bb014ab94ed63a7ac82fb1",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
@@ -245,8 +249,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "ab3875142e5c792318a17c1a438f9837364dfd422b5f33b73ec482a3f3251c03",
-      "refreshed": true
+      "donor_sha256": "41e4afff74e0955900193440881bd93e314a4112ce6e3ce62f4b1fe25ac2e0a9",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
@@ -255,8 +259,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "820e6f1c20db8eb72a45805471a8dadadb056f34fb456f7d98a3ca49dd362068",
-      "refreshed": true
+      "donor_sha256": "f54782947838d04a1563526bdf83a0968c37667fa96cc9cd5c3fc4a7f4e4b5ec",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
@@ -265,8 +269,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "e4920b7a6c8992238ea8325cee829357ea8871ec5448a8c7b4d88969a9e5a5f1",
-      "refreshed": true
+      "donor_sha256": "806b71d3cbff6ca8210c2aa76ceae6a6bb8c1ddd74a47938efc16ebd1da339a5",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/settingspanel.ui",
@@ -275,8 +279,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "7e2a8c4db5cb97674c77f833b1d4a49e0bffc7d7beff29d57016f173f8ccc865",
-      "refreshed": true
+      "donor_sha256": "2e01f714d0bba2ac564130b357890e12cc22bd3d98894e423e04b5502ad860b5",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/shortcuts.ui",
@@ -285,8 +289,8 @@
       "dialect": "gtk",
       "nodes": 48,
       "actions": 0,
-      "donor_sha256": "30bf5eab93dbc34fd41fea394fc8f1c8f728454dbb7eaeb2fe3623e29c244d93",
-      "refreshed": true
+      "donor_sha256": "ecc8e195efd79c14f4a17ce4078e0b7e35bce699cadebde930f0b0565c27183c",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/sidebar.ui",
@@ -295,8 +299,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "4c2993c2ad9933e3612189bcb7dad9fcd8e7c6625d209dde2deac46ee88a4998",
-      "refreshed": true
+      "donor_sha256": "9ceca83fd8278473da857bfc93586778ca9f22da7028a201e019b6e1f485b0c4",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/strokecontentpreview.ui",
@@ -305,8 +309,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "f406140fa797557a62952d3e8a6be7e4d62832c654de2da1224d865061ba496e",
-      "refreshed": true
+      "donor_sha256": "8019a1c629dca1bb90a622cb62a33cd873f57cc14868c023499aaf56ddea2939",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/strokewidthpicker.ui",
@@ -315,8 +319,8 @@
       "dialect": "gtk",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "e564270346b45724e6494812728407bb9658dc6e424eee48d73ea8dacde59cca",
-      "refreshed": true
+      "donor_sha256": "c41f7a70845da9350bb99da25b08080f3d643e65386b99579fba1ba94c0b6a88",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/unitentry.ui",
@@ -325,8 +329,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "fdcfc8fc928f3d0c14827ba50450853a4529e39a85cbb87b29cfc52f7738a309",
-      "refreshed": true
+      "donor_sha256": "82fe7be5fac5faacd32ccaea835c4ea0fd56ff570ee580cd2e1d6210deb44c71",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/workspacebrowser.ui",
@@ -335,8 +339,8 @@
       "dialect": "gtk",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "863e92aeca9d8654f05b6090d51fad854e51345ba32180710bf1946500c40499",
-      "refreshed": true
+      "donor_sha256": "2826bcb7e01f92fc9faaac46ba964844149d79db47cdd6e7e80d7403430c371c",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/workspacesbar/workspacerow.ui",
@@ -345,8 +349,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "fc671381fc3f361cfe3b0b579527e9ae11cf83d9fb78763834d42c6f028981d3",
-      "refreshed": true
+      "donor_sha256": "6a5b067d6fc616fa8e2ae70974835021c0e768dc62d910f607532367bd4793a9",
+      "refreshed": false
     },
     {
       "donor_file": "crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
@@ -355,8 +359,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "87fe61deb74d0dc4b2db6f629a140bd70a67f51d5eaf243ce60196907a7f00ca",
-      "refreshed": true
+      "donor_sha256": "da77bdccb156c98c445df0f307dee406ab59826baacbfb9ebb745d2e77c14758",
+      "refreshed": false
     }
   ]
 }

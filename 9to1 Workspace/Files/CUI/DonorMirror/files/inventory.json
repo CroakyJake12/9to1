@@ -3,6 +3,10 @@
     "translated": 310,
     "dropped_nodes": 58,
     "gap_count": 829,
+    "cui_gap_count": 829,
+    "gap_kinds": {
+      "cui-construct": 829
+    },
     "gap_constructs": {
       "property not modelled": 517,
       "unmodelled donor construct": 122,
@@ -99,8 +103,8 @@
       "dialect": "xaml",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "5df56dc952014f2669dbc55f97eb92da59406d74972343ad3df83b0c90c9aac9",
-      "refreshed": true
+      "donor_sha256": "f579926a40032cbef58e876146280a43f52124945c130a90957bbb814a0314ea",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/AddItemDialog.xaml",
@@ -109,8 +113,8 @@
       "dialect": "xaml",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "ad4520da69e1ba30b46e4454a7a91a4d096be67ad951454293d83ae6e20e2dd9",
-      "refreshed": true
+      "donor_sha256": "78d7f12aab9b56bede03cd7800268e627b3ab22015d0b160cbaf7cb14f07c304",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/BulkRenameDialog.xaml",
@@ -119,8 +123,8 @@
       "dialect": "xaml",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "1ff35da468463eb93a9db6db148aa545d7a7772f18373d644f88e6eb2caa3d8b",
-      "refreshed": true
+      "donor_sha256": "cb24d14b66221e422a643590b65eb26167d72dc9ced1d45d0a5b044338f61608",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/CloneRepoDialog.xaml",
@@ -129,8 +133,8 @@
       "dialect": "xaml",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "7037b925f3a755ed5761c2622e40e0791256caf4b712372e2081709f2bf29133",
-      "refreshed": true
+      "donor_sha256": "f4ae0d781ca729ec581cad33f628effdf976a8bba31d3c8431a71db0e8cfc54b",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/CompressSkippedItemsDialog.xaml",
@@ -139,8 +143,8 @@
       "dialect": "xaml",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "44e4667e4db64dac72544ed57e0150d9b02f510d16ce4f4530f1a331d3559406",
-      "refreshed": true
+      "donor_sha256": "16e2b21803db8475151e066a65e7e894da625edda8ef01e20d46837242684b75",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/CreateArchiveDialog.xaml",
@@ -149,8 +153,8 @@
       "dialect": "xaml",
       "nodes": 47,
       "actions": 0,
-      "donor_sha256": "634fb8f70c7d15f0bf4d89a6fb5d87e6380e93bb6e8e81f44829088969a6bc84",
-      "refreshed": true
+      "donor_sha256": "4069933ec29b47e81517690965924a4d6157558272f7d4928733bef95a166f99",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/CreateShortcutDialog.xaml",
@@ -159,8 +163,8 @@
       "dialect": "xaml",
       "nodes": 18,
       "actions": 1,
-      "donor_sha256": "4bbddfb344558d0b4478a52873ad241620dfadfb713807ff1495256d993c8885",
-      "refreshed": true
+      "donor_sha256": "4a6ce08839a8e9c21915b70844c62093aabd7da3f46151f861f70ddc3252ee97",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/CredentialDialog.xaml",
@@ -169,8 +173,8 @@
       "dialect": "xaml",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "40746e2a94363c8e34878f1204777e48387be8507096b126e5a4d5e1ec76f664",
-      "refreshed": true
+      "donor_sha256": "6b722fba7921e9c48a1f59f4a59d3e4ac8125735fbbe3c174aece1b08aa4d4bd",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/DecompressArchiveDialog.xaml",
@@ -179,8 +183,8 @@
       "dialect": "xaml",
       "nodes": 21,
       "actions": 1,
-      "donor_sha256": "db0f5e467ca7b72c1c472ead0bc9ff42ec1417e150fbe5d122ccb80934c2b220",
-      "refreshed": true
+      "donor_sha256": "f560180485d0d119558f0c000e2253de738de57bffeb66d6e23ab02cc2d64939",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/DynamicDialog.xaml",
@@ -189,8 +193,8 @@
       "dialect": "xaml",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "0fe66091ac108c0e6c9a9d20ed4301a1546761c2a72ea12fd7899cf04f2f43ed",
-      "refreshed": true
+      "donor_sha256": "e325a85a2c71678f5a0b69bdcd889c836b149075759528b9d4f0ebe2b8661c2f",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/ElevateConfirmDialog.xaml",
@@ -199,8 +203,8 @@
       "dialect": "xaml",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "c50e9be66fb7b18d134b5b8738861c85c341a594a060f0dae9258a4f4bea30a1",
-      "refreshed": true
+      "donor_sha256": "79903713efe19e223226d0978f9d2cc7d8a1ebf66f592b8f1ed51b1a8ef9092a",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/FileTooLargeDialog.xaml",
@@ -209,8 +213,8 @@
       "dialect": "xaml",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "01c9724245e683f96dbd85ec485aa294530466fcdbd254a23615f542ee14afcd",
-      "refreshed": true
+      "donor_sha256": "bf18990e3806c8ae0cb64ff72d1f86fa83fa721291f7d96e29a825f507d23b3b",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/FilesystemOperationDialog.xaml",
@@ -225,8 +229,8 @@
       "dialect": "xaml",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "9997c32a30f38ba999e3b2d1d0e7b4fba1dc030ee8cf05cf48a71967eee8583b",
-      "refreshed": true
+      "donor_sha256": "af7fef1d20c692712fd0838e3706ddb74e961cc2f7bd1aa317b633889d0bcf62",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Dialogs/KeyBindingEditorDialog.xaml",
@@ -241,8 +245,8 @@
       "dialect": "xaml",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "4ddfae630d03e231a3044be18e9051512a36a6c2070fd5c25410dae9ff070eed",
-      "refreshed": true
+      "donor_sha256": "fef9d8cbfc93c6d79295960d3717a08a8467a2e5e043fb0cc6388d59008731b3",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/MainWindow.xaml",
@@ -251,8 +255,8 @@
       "dialect": "xaml",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "e061d2e6ff0486302d200ea1041ba64a4c6e7c78d7d8451c79e669e95c314eba",
-      "refreshed": true
+      "donor_sha256": "4b5fa4699dbc86620cbdbffaed61026db05ceeef4e7a6dd8e622f9a761fd0c3f",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Styles/DefaultGridSplitterStyle.xaml",
@@ -333,8 +337,8 @@
       "dialect": "xaml",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "2244e60fc12de4e216d9614143cacc38e7fea09e0f8034630a49459d462d11b2",
-      "refreshed": true
+      "donor_sha256": "407bae529c613bce5ce5cb9cff6ec79b0c9dcb7e9260f6dc4419754d73abf3be",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/BasicPreview.xaml",
@@ -343,8 +347,8 @@
       "dialect": "xaml",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "348062c63fae2f610bcbcba72de1aeb38ee80ad1bd42bc2c5e6ec16ff5dccb5f",
-      "refreshed": true
+      "donor_sha256": "c764e92ed385f29d70ca106cd6fb9b42eae6afee0d1eb2c02aa169791bdb816d",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/CodePreview.xaml",
@@ -353,8 +357,8 @@
       "dialect": "xaml",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "d8670755e277df0507eae162416d2d552ce0ba0da460703359376d30f2d4a365",
-      "refreshed": true
+      "donor_sha256": "1907f268da7cd36197efb2cbbff1369755e79d4561d790dc9b58e9f4005ba0f2",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/FolderPreview.xaml",
@@ -363,8 +367,8 @@
       "dialect": "xaml",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "c4bdae225a9f2a42ac3660154a1d9e605f48d65fac35d06103277579d21742e1",
-      "refreshed": true
+      "donor_sha256": "d7f94e31398729cd1a51d5dbbfc490c5faa9640376c112de089242e3233cb073",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/HtmlPreview.xaml",
@@ -373,8 +377,8 @@
       "dialect": "xaml",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "ca3340da905a8c83202aac32da235ad2116f7a22987679e82192cb8fa9ebfe76",
-      "refreshed": true
+      "donor_sha256": "db4ef51d94243852aac03e76d50a73155b09e0efa97858245c9f8a5cdec3022d",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/ImagePreview.xaml",
@@ -383,8 +387,8 @@
       "dialect": "xaml",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "674aedfdc81eeb075553f7df311bf05c4d8ea0c98475569df97e30d6396f1a4c",
-      "refreshed": true
+      "donor_sha256": "5d4a82159a9119afbaa339f1ca724cb579b50e9cc17082645b0b9111452bb95a",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/MarkdownPreview.xaml",
@@ -393,8 +397,8 @@
       "dialect": "xaml",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "83b14a3f2cafd520a2635771b76f1ae0c98c86c783cc4d38f1c5204d15695b5e",
-      "refreshed": true
+      "donor_sha256": "99a716668c08cf80e2fc1ffd27eeb3bcf91abd10a5608265a837754cdc0e3d4c",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/MediaPreview.xaml",
@@ -403,8 +407,8 @@
       "dialect": "xaml",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "18387f969461137d660ee78e9535b36233c5cfd4c06ca286341764e325490fa2",
-      "refreshed": true
+      "donor_sha256": "03e5702d2b7b6d79987b47d09a67f0d3b64e4cf88407242d023380bbad6f8037",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/PDFPreview.xaml",
@@ -413,8 +417,8 @@
       "dialect": "xaml",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "0cb8ca0d3d62daec2f11e3fcaa321d824ec7ae1f7e778b98cbcb07b73c48e47c",
-      "refreshed": true
+      "donor_sha256": "52b3ba02c4ef391b34e874b5462bffba6f69da88645b7855ee3fb85bcdf06ac0",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/RichTextPreview.xaml",
@@ -423,8 +427,8 @@
       "dialect": "xaml",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "b04e1e06ca26b9214af4471ef905c4c40964feeefc53268f2632ef74643da3ad",
-      "refreshed": true
+      "donor_sha256": "a493656feca1814ef695ce6b7c5fcebfe727b805a0ca564f467529ee1217f0d9",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/ShellPreview.xaml",
@@ -433,8 +437,8 @@
       "dialect": "xaml",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "5f7cbcdc0bf183338ae55d8ff339d9d08e6847c062f64e6abb70f46870e35cff",
-      "refreshed": true
+      "donor_sha256": "7d6375dd7ae2bca29997753759a110651a043476f3fbc8f53007975fc732cd26",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FilePreviews/TextPreview.xaml",
@@ -443,8 +447,8 @@
       "dialect": "xaml",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "af614f7b9dc84de00e731316abb3fcd2e9bc9727113219ab7d57e2b13e543a4b",
-      "refreshed": true
+      "donor_sha256": "ed85077e5169948f902110934b60ac866ee0414d171bf8a1559051c2b033d146",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/FolderEmptyIndicator.xaml",
@@ -465,8 +469,8 @@
       "dialect": "xaml",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "a8ac028f35990749a6060c9f290aadf7aea6804a0321f65dd99322fc5f9866ac",
-      "refreshed": true
+      "donor_sha256": "05b2137f9c881a8f38f341153d021f6769d738966e1f4a5fd3ff49cda0b0a0d1",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Menus/MenuFlyoutHeaderItem.xaml",
@@ -475,8 +479,8 @@
       "dialect": "xaml",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "bf54872822ed6c972a86174ab19effba1115e56b8c8c4520c4b99ab56e945166",
-      "refreshed": true
+      "donor_sha256": "5bd5f0bca769b9a2c76cf19e659d2a1d54c92993d243304a32703079c9625f71",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Menus/MenuFlyoutItemWithImage.xaml",
@@ -485,8 +489,8 @@
       "dialect": "xaml",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "a7bff91b2c1bb060deae189b27aa20bffbc2bf100617f15f3bbba66de0f2eb4b",
-      "refreshed": true
+      "donor_sha256": "a579c17a4ff5cf3aa92738656668f9351f8b33c756a3be0d5e3014c0ef23399a",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Menus/MenuFlyoutItemWithThemedIcon.xaml",
@@ -495,8 +499,8 @@
       "dialect": "xaml",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "96fa452c10c64df31d66e75b3f36e272e51a945d0a45610c6cb16b29c8baa6d0",
-      "refreshed": true
+      "donor_sha256": "0897ee5ce15a27029c0343b57aae1bdb94d7ed274086994e88a255d4b1af20c9",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Menus/ToggleMenuFlyoutItemWithThemedIcon.xaml",
@@ -505,8 +509,8 @@
       "dialect": "xaml",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "65a587166a26a2c8b29bdceca9f1c1841ad6dec1d56d61a577f64a8315baf3d0",
-      "refreshed": true
+      "donor_sha256": "f61159e020864d3890de8627a12627074727f5244fd1e7c9e01e8d1359d5da8c",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/NavigationToolbar.xaml",
@@ -539,8 +543,8 @@
       "dialect": "xaml",
       "nodes": 12,
       "actions": 1,
-      "donor_sha256": "42d65458fc4712df257822d0f45837c32161ac7a7473f7dab34dcba2137d677b",
-      "refreshed": true
+      "donor_sha256": "972d22a4738e5a0deeb927fe3ea01cc27c266ebbb619c3950f254d0f7e1bf7e8",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/TabBar/TabBar.xaml",
@@ -561,8 +565,8 @@
       "dialect": "xaml",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "978c9b051bef0c26cbd84c7976561525cac644b6eeddf180497c477f089b79c7",
-      "refreshed": true
+      "donor_sha256": "651e8908a037fa5810ab9bfca2022f084288f4cbe3396f10d1b43e65ae6d6672",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Widgets/FileTagsWidget.xaml",
@@ -577,8 +581,8 @@
       "dialect": "xaml",
       "nodes": 13,
       "actions": 1,
-      "donor_sha256": "07a749894f86b7d79ef195d7c7af917bf15297c3e9a4023c7f56e4faa705e003",
-      "refreshed": true
+      "donor_sha256": "1c895edfc79209b1a45d6d89273796357fc37e863a0fc296878d3ff828f75f6a",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Widgets/QuickAccessWidget.xaml",
@@ -587,8 +591,8 @@
       "dialect": "xaml",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "852771436e8821967dbf36078b5c514db88e6a7707d829c3e9738647044da73e",
-      "refreshed": true
+      "donor_sha256": "00bb3fa655db05def1cf30a6fd27a2889dd4248f40237067dd1df9064d38fdda",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/UserControls/Widgets/RecentFilesWidget.xaml",
@@ -597,8 +601,8 @@
       "dialect": "xaml",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "cad95131260c521a6cdc7491b086306ec1b6317d354cce0344323a8d59af36be",
-      "refreshed": true
+      "donor_sha256": "ce7f92c19537f2d9ba64df6f8581961f71a6e7666f84fe0ed21e67cda767a79d",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Views/HomePage.xaml",
@@ -709,8 +713,8 @@
       "dialect": "xaml",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "f7465d4e05d46bb6aa57ac52901b0e9fa057bb57cbaf7ad0ca1a8f20d8a4626c",
-      "refreshed": true
+      "donor_sha256": "f6f74c293a069c878befc189f1a23183f9cf798c6c0ff495f4f86a82dcc0717f",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App/Views/Settings/AboutPage.xaml",
@@ -803,8 +807,8 @@
       "dialect": "xaml",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "43fa52da8e3d9840359dadcaa50750d597b0922ed51e1f7d09eed9e5d46e09b5",
-      "refreshed": true
+      "donor_sha256": "c6c23ab9f4c81871b7d0808f1259f0ff8c0725b86d91a131f67ecb43ba993a12",
+      "refreshed": false
     },
     {
       "donor_file": "Files.App.Controls/BladeView/BladeView.xaml",

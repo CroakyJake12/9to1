@@ -1,6 +1,6 @@
 <Cui id="auth-link-account" product="9-1" version="1">
   <Page id="auth-link-account-root">
-    <Container id="div" Type="Vertical Stack" role="main">
+    <Container id="div" Type="Vertical Stack" role="main" accessible-name="{Binding Unresolved}">
       <Container id="overflow-menu" Type="Vertical Stack">
         <Container id="div-2" Type="Vertical Stack">
           <Button id="a" />

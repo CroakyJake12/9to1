@@ -72,7 +72,24 @@ limitation rather than a fudge: `GroupLabel` is emitted **0** times today, becau
 carry no `label` property — the donor puts the caption in a sibling `GtkLabel`, so hoisting it into
 `GroupLabel` is Stage B adaptation.
 
-- Measured effect on the corpora: gap reports **33,014 → 25,113 → 21,067** across the three steps; `toolbar with overflow` and `separator`
+**Two accounting corrections found by measurement, both recorded rather than absorbed.**
+
+- `--exclude test` matched **substrings**, silently dropping 20 genuine donor UI files, including
+  `swriter/ui/footnotesendnotestabpage.ui`, `scalc/ui/chisquaretestdialog.ui`, `scalc/ui/ttestdialog.ui` and
+  `scalc/ui/ztestdialog.ui` - not test fixtures at all ('test' inside 'sendnoTESTabpage'). Exclusion now
+  matches path segments (or an explicit `dir/subtree` fragment). Documents **1,764 → 1,784**, all compiling
+  clean.
+- Gap records are now classified by **kind**: of **25,376** records, **20,767** are genuine CUI framework
+  gaps and **4,609** are donor plumbing (web attributes like `form`/`method`/`defer`/`data-*`, and inline
+  script/style/observer hooks). The earlier single figure conflated them and overstated the queue; the
+  tables below now separate them, and `gaps.md` in each corpus has its own plumbing section.
+- A real emitter bug surfaced on the way: hyphenated keys in the XUL property map were **unreachable**
+  because the lookup strips hyphens, so 82 mapped `aria-label` and 58 `data-l10n-id` attributes were being
+  reported as unmapped and dropped. Accessibility name, tooltip and accesskey map through now, and
+  localisation keys are recorded as their own CUI gap instead of being swallowed.
+
+- Measured effect on the corpora: gap records **33,014 → 25,113 → 21,067 → 25,376**, the last rise being
+  the newly-visible plumbing records, while the **CUI-only** queue fell to **20,767**; `toolbar with overflow` and `separator`
   are now **zero** and **433 Toolbar**, **1,639 Separator** and **4,046 Ribbon Group** elements are emitted. Documents **1,758 →
   1,764**, all compiling clean (`--strict`, 0 errors, exit 0, registry 2.0).
 - Relabelling is counted, not hidden: `menu button` rose 459 → 1,537 because LibreOffice's

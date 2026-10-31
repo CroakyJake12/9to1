@@ -1,6 +1,6 @@
 <Cui id="auth-grant-error" product="9-1" version="1">
   <Page id="auth-grant-error-root">
-    <Container id="div" Type="Vertical Stack" role="main">
+    <Container id="div" Type="Vertical Stack" role="main" accessible-name="{Binding Unresolved}">
       <Container id="div-2" Type="Vertical Stack">
         <Text id="h1" text="{Binding Unresolved}" />
         <Text id="h3" text="{Binding Unresolved}" />

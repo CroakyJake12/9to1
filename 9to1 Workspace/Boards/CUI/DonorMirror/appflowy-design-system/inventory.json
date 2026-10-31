@@ -3,6 +3,10 @@
     "translated": 129,
     "dropped_nodes": 0,
     "gap_count": 362,
+    "cui_gap_count": 362,
+    "gap_kinds": {
+      "cui-construct": 362
+    },
     "gap_constructs": {
       "n/a": 97,
       "custom donor widget": 58,
@@ -124,8 +128,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 1,
-      "donor_sha256": "5d1b3873ec9ce3a1578c8e0c6f539b573356e53e59ece7e57c34d6bf26e0e930",
-      "refreshed": true
+      "donor_sha256": "4f794f9c7d7f524f724665d8eaa6beac209e4f84718cd030c89b7b8bdbb5b176",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_popover/lib/src/mutex.dart",
@@ -140,8 +144,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 3,
-      "donor_sha256": "09dbd448bcf8be195637da83512575e21aa264df09575ffe3795eb838f2e2de7",
-      "refreshed": true
+      "donor_sha256": "83f0fbc8271766165f1d37cf64f2834ea2bda29729103b3228b6ddcc9abd4862",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_result/lib/appflowy_result.dart",
@@ -174,8 +178,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "33929c5f37f67e548f9c8097aa3d98b3f6173e8ec3d7632bf830a55c5afeec22",
-      "refreshed": true
+      "donor_sha256": "78e75ed37fa6f21fb48c8f51ef471d85f47a7cae1c7833509cceca337c609eef",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/base_button/base.dart",
@@ -190,8 +194,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 2,
-      "donor_sha256": "0a6633091a1bf22bfe72b849f6b3ada72f6b29964af2096163a9e9269751c9b2",
-      "refreshed": true
+      "donor_sha256": "45a630a599d0b7931dd6e5d8b6b92720b124f4f28669606e6ccc17a15ba1b647",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/base_button/base_text_button.dart",
@@ -218,8 +222,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "cb2b2a654a4c48f7f1e92980408092706f33c63df47bafdb0b39f9b647b87f6d",
-      "refreshed": true
+      "donor_sha256": "e0464a1df00bed3c2203c64582f511a65eff9a198dcbddae15c54c37190f6213",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/filled_button/filled_text_button.dart",
@@ -228,8 +232,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "4d5ca93abdc364d66f82ebee22d756df9b509d530be698af942b56cf83f4f2bd",
-      "refreshed": true
+      "donor_sha256": "fee90b0eba69bf7b878575622cc7b2c7da63e21b07384752abd56c5b0f04ecda",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/ghost_button/ghost_button.dart",
@@ -244,8 +248,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "3dbeee2d34dd444e73ac806e7d27578f386e2c64cf32bd6ea967f7cbf7c1f62a",
-      "refreshed": true
+      "donor_sha256": "a393374eba2014eb0ab8ccf5bfb1df84eb6ba1d1eded7fe9fc66831586b5392c",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/ghost_button/ghost_text_button.dart",
@@ -254,8 +258,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "5fb73f067624c29f527994913ae50920a39df82a14baa28842e24b95b41eb6fb",
-      "refreshed": true
+      "donor_sha256": "9f224e775e16f6f1df70d9587ee221b30f9a96470102bb7fa6d51b5e300b78a7",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/outlined_button/outlined_button.dart",
@@ -270,8 +274,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "e95303098678d508af1caacccc25ec4ffaa89bb8c602f78a1e17de409bc06d27",
-      "refreshed": true
+      "donor_sha256": "3c35489732c62f39ddf08bee26a3bfeb9e3c3d37ed534f56c3745a6f594e4d74",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/button/outlined_button/outlined_text_button.dart",
@@ -280,8 +284,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "b1e20ebb7a8755a0d4b550253c404ae3e9af81cd72f6d0ffebdb945e75ffd42f",
-      "refreshed": true
+      "donor_sha256": "9b3c6e8f5e2dfdfcf745da2f81010d0472c367fe6d3193d73a855fac14e869ad",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/component.dart",
@@ -296,8 +300,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 2,
-      "donor_sha256": "b6887367f5535d1238c90df6d15dca4809a49f99d4d81c0a422d7d0725a7cf4c",
-      "refreshed": true
+      "donor_sha256": "cc2369a72e16b7f26da08e7eb56849d15407157648a7722debf076aa20acaacc",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/menu/menu.dart",
@@ -306,8 +310,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "31820ebbe935743f8e85f22aedf37422d33c6d6f0a8be30aba935b3f6a6971b7",
-      "refreshed": true
+      "donor_sha256": "2d4128a9df02c563beb06ba8d41ce037c94795cb3d63ba01c1dab3502b33f82c",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/menu/menu_item.dart",
@@ -316,8 +320,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "c862a46aa671d675e5a7394be4676276558b55fe7a9e0c554bc41f72f076b07d",
-      "refreshed": true
+      "donor_sha256": "6917029a1fc8851d99e687ed288768e1b938903f9a7f4c518d01a9d2817cabbf",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/menu/section.dart",
@@ -326,8 +330,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "a0116ac4c849f45583cedc56caf25656a17e5a09deef9172e176ebcb8bc6bbe0",
-      "refreshed": true
+      "donor_sha256": "940ff95a29e9c03ca783f8c54c1edef1e9d934e61cc9f5eb5e860c733bf8b4ff",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/menu/text_menu_item.dart",
@@ -336,8 +340,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "f8ae44591ab4459ec114ff676301effe277d298f9d198e27d686d7392b33c9e5",
-      "refreshed": true
+      "donor_sha256": "0d33b58ef3dbb6c7f6e8e4d19fe297e1a7954c4979e676d7dce63f9000551cb4",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/modal/dimension.dart",
@@ -352,8 +356,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "7970e17d4b241254163d2cc7576fb22a85329935057a73647695259f36c19c22",
-      "refreshed": true
+      "donor_sha256": "9ee75204813cc76fe3ac1e07bf9f33078f9ad7ab3f24b75d87de07d6fbff75c2",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/popover/anchor.dart",
@@ -368,8 +372,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "c71631c646095f7fa92c005e1bdd2297600b127d2f988150e04c71276a0a1d95",
-      "refreshed": true
+      "donor_sha256": "ac6d974ba4d4fd972338feec459d07ec520fdefaa89da8ed5d5bf8362b1e9631",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/popover/shadcn/_mouse_area.dart",
@@ -384,8 +388,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "6dc5fc12ae8ceff487a16fb255614c197dca65bd10e45a0707f30cce4319d992",
-      "refreshed": true
+      "donor_sha256": "fd31715de3777f161a8ea0af3362c109c1b442c1319cf2cce9e98317fac1253a",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/separator/divider.dart",
@@ -394,8 +398,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "121091090fa9401b60b60bf1c135d03cbcd1df35142786c529b882874b410561",
-      "refreshed": true
+      "donor_sha256": "35158af9e1f2952cb0a73c66baf337d5853c6a8194ee6ff16cfa33e76c6af8e9",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/component/textfield/textfield.dart",
@@ -404,8 +408,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 2,
-      "donor_sha256": "204cf22d531cdbf1e06ef3d8d4dc12dceb56bfd54d05285a44e1fb0a6633d109",
-      "refreshed": true
+      "donor_sha256": "6e03c36e01972f0042fc7b2eb199bb75e9fcfde9d14288f3953c13dead733c55",
+      "refreshed": false
     },
     {
       "donor_file": "appflowy_ui/lib/src/theme/appflowy_theme.dart",
@@ -756,8 +760,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "6bd8d94ed9d3f24781b094ee67eb6a9f7118454c19111540a8c17ecc9c5da97b",
-      "refreshed": true
+      "donor_sha256": "5b945156827cfbc5f31cd08ee370c7a33877c5ad96e774a21d09a197fca04bde",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.dart",
@@ -766,8 +770,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "e568c30561a1e1ce8dd4d48fd6873c4016942a4343404135a1365e8342649437",
-      "refreshed": true
+      "donor_sha256": "0c158e93f682a49df84056f7105c26567f54b54a8e397ab0f5014cce93bf7903",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
@@ -776,8 +780,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 1,
-      "donor_sha256": "6efa57a0827b83215382277d87f8752cb087e1a304d2ae2592e6085d427e672a",
-      "refreshed": true
+      "donor_sha256": "f5563f8178be714927b51284f0ff2417381af635cba659fd3e9c56c964200979",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/flowy_popover_layout.dart",
@@ -798,8 +802,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "c4dd444abfd46ad2bfd61c6b7110a4b78a582ce3fd763d166c6dd788cb9abd0e",
-      "refreshed": true
+      "donor_sha256": "00f4b050104ab0ce6e26ea5f0043f9d22b47320e4b415a324ff0f8b4b185ea84",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/option_overlay.dart",
@@ -808,8 +812,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 1,
-      "donor_sha256": "55ba1f7090d38248b3a499ac7c0509a7b8d64155a0175bee56139f4ddecae0a9",
-      "refreshed": true
+      "donor_sha256": "2f30e0d9f8dfe56c5e7ea9512721550ae89e2162bd2acc5e206b5bec3bb6bdce",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/src/focus/auto_unfocus_overlay.dart",
@@ -818,8 +822,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 1,
-      "donor_sha256": "a1b4a2a3f81a6d7fe663de261271cbc88c40ac0b5ecf4479b598e9c9fb006b5c",
-      "refreshed": true
+      "donor_sha256": "87a3967488c207d0ae4c89f58eaa79eae5c7ea44c23696a54d97947e24edfb15",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/src/keyboard/keyboard_visibility_detector.dart",
@@ -834,8 +838,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "f8d23e56110b43f006d48e79a307a085a415353cce7d3992ff4c944cd42a82fa",
-      "refreshed": true
+      "donor_sha256": "1e815c276b351cd24738e190fffba81bcd96c05539f1fda38e449847705bfdd1",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/button.dart",
@@ -844,8 +848,8 @@
       "dialect": "dart",
       "nodes": 23,
       "actions": 3,
-      "donor_sha256": "2b9c3d0f7b9bd59c56e429e256e8d5a04b691ce543e0e4ee77c1dd5e2f9e3b38",
-      "refreshed": true
+      "donor_sha256": "ce44a444634a4f32e34d6d22a74547808011d2c6248f60ac7fc9efeff5efdf6a",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/close_button.dart",
@@ -854,8 +858,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 1,
-      "donor_sha256": "4681b6b6da8577eb49372b184a06d8633ce4406b289f66aa0445a5c77c2dc580",
-      "refreshed": true
+      "donor_sha256": "fe5aead155e198c2bf5ee896f542ee309959a9c96ff3760b1585aaddfc11a918",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/color_picker.dart",
@@ -864,8 +868,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 1,
-      "donor_sha256": "991c57d2de2c08f000db5f8c4cd33db148ed201bf133da674858a9bb555c609d",
-      "refreshed": true
+      "donor_sha256": "066d6bd0742c8502c0c44ab0e1985725ae312393a9f7ec0c02fc449762306125",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/container.dart",
@@ -874,8 +878,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "fede6b5b56699b830322b5f6ba2c246476064efe096ef4f2ebd9db64bc3d423e",
-      "refreshed": true
+      "donor_sha256": "307338005fea66a582f44000be2b40ae07c1db57f1d24569d07a3fde18d612c9",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/decoration.dart",
@@ -890,8 +894,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "a3b4f67a3decdec7c024e73f412badf0893852a6176c7c515509037ced4c28f9",
-      "refreshed": true
+      "donor_sha256": "ebf26c973ac3715da89aadff9215d949d556e1d5f052344374b5835987e52a2a",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/extension.dart",
@@ -900,8 +904,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "b1083ae7a3091309a9de1acfb3d64325ea642887dbab91446d39ca4aee038f38",
-      "refreshed": true
+      "donor_sha256": "2d9a055df7b3d2287403a992976ba8bbeeccbcd2cb669897203bbed8fed56ce3",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/hover.dart",
@@ -910,8 +914,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 1,
-      "donor_sha256": "72b62a9f3757a31579438becfe4480e1c161197ed76a3d68cd6c0863a407c559",
-      "refreshed": true
+      "donor_sha256": "1091ac901fc6efb082897af086e0153587aab517bda21340a6225f8c0924db74",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/icon_button.dart",
@@ -920,8 +924,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 1,
-      "donor_sha256": "c007a373c31624505df9e90a58c3954b23660c25f15538b6fe07eb9b5cc320ee",
-      "refreshed": true
+      "donor_sha256": "2ac19aee7ed0609b8c6571b18c69e39c66dbfd260abaef3225fbdc610501e650",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/image_icon.dart",
@@ -936,8 +940,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 1,
-      "donor_sha256": "9a3f066e9bd666069226fa13844b4d0df1569fa2107b7650692974e92b8cdbf2",
-      "refreshed": true
+      "donor_sha256": "c9b1456782cc6b73d9f8ee15da7631cf8d88aeb71d144f60d9f49fb3d59f52d2",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/progress_indicator.dart",
@@ -946,8 +950,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "9003174134545021415f8fc2284a7e8be217f6628b10971d166673551a7a8fca",
-      "refreshed": true
+      "donor_sha256": "7d8c4a27e8daa4ff7fd16eefede3c241e828b266978a78ea2970bfbf07e6c065",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/scrollbar.dart",
@@ -956,8 +960,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "64b37066c61169b20cd50626b2febf53f9d9cd3ef8ce19021f8379f97f33212c",
-      "refreshed": true
+      "donor_sha256": "23a9c562d17b8fb01a33a3c85d8edd667629bf53118e9c35991549055e0c0ae0",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/scrolling/styled_list.dart",
@@ -972,8 +976,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "88b0fd795b70add4897426ca4b05bee99a78bfd2e883bd0714676fdf4e1b8050",
-      "refreshed": true
+      "donor_sha256": "ec7772819c102b545a1243b28d965cc0e84b6e629747aae5abe12ff80da5ad02",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.dart",
@@ -982,8 +986,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "b94ffc0b39e98f5cda435a02742faddaa360d8b767fe466eef5c5234815250da",
-      "refreshed": true
+      "donor_sha256": "d640fa17844c232ad4d6c3fbb85ea83741e58e1af940b1c4c8a6c99f21252f89",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/snap_bar.dart",
@@ -992,8 +996,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "259cb3827283ff09b8389af1e660af8063667fe01140d347e4f5b4c127b48977",
-      "refreshed": true
+      "donor_sha256": "0884f71f0ec284af964d67dc6969041f74df09fd9cd1b5cf9a1d6602c8a1be80",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/text.dart",
@@ -1002,8 +1006,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "55d8c3dc42bbdd1dd4b8916f622a8f25169ebb7bb7f7ab4460ed5ffad1aa1cc5",
-      "refreshed": true
+      "donor_sha256": "5144ea915d7bb2ee1b2259dd64e21a43584ad51fe1194aa2c7f4643628e97766",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/text_field.dart",
@@ -1012,8 +1016,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 3,
-      "donor_sha256": "738a7370775ca0525fff4909c95d2e2d8b97efe405da6a4f9874ec1d20e4963a",
-      "refreshed": true
+      "donor_sha256": "dbc725e20e032f64194c58146b3af5a291cf9121658894fcb74f4590a9c7356d",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/text_input.dart",
@@ -1022,8 +1026,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 2,
-      "donor_sha256": "a9b966f994afc9b967fe2992fa51a2bcdc4e79272efb829bb56a00101b110020",
-      "refreshed": true
+      "donor_sha256": "a71baec7c0a50fe805301b96e85f3bb7285bafc560efe62d8bf39f9667f21af0",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/style_widget/toolbar_button.dart",
@@ -1032,8 +1036,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "9ddbbec94b4e1b71e5e347e7f450221ee05232f81a8e36db6ce5658f19ea99ff",
-      "refreshed": true
+      "donor_sha256": "55fc2c446f50806f564f5a42d3a2273c09aa969415313d54b11af66c38b48986",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/buttons/base_styled_button.dart",
@@ -1042,8 +1046,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "8ea16a4477e575fa1d6b7ef28beef23d165d8c9bbe9c4c6dd92f5e9a72662825",
-      "refreshed": true
+      "donor_sha256": "ad0c9cd844e0e85802eb7eb324efd5813fddabf8a9ccbabcf5557ade1081075e",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/buttons/primary_button.dart",
@@ -1064,8 +1068,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "757b776a30e09244f1ca5671312adc42840bc3db7047c38fd8714f0b599bfdfa",
-      "refreshed": true
+      "donor_sha256": "5158fc980599d0f89515dd0882ae73284c6c745037d7faaa6387f2e14e29ec05",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/dialog/dialog_size.dart",
@@ -1080,8 +1084,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "70c970c8b7c64ccde4bf5f226582f1bc90633cc9297af8dee08f4d155c11fb56",
-      "refreshed": true
+      "donor_sha256": "6f7b5705b8c4f628f5412382af7434dafab07d83b29b3d1f3c3cd65559398d37",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/flowy_tooltip.dart",
@@ -1090,8 +1094,8 @@
       "dialect": "dart",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "de4a2839adedffda18698b53eb26b9f92529b2bd5f1fa7037154af083ef6e465",
-      "refreshed": true
+      "donor_sha256": "589bb74b893096119a9ee3745d85d820ea2bdd8910f2f8cd08362b5d2aec39c6",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/ignore_parent_gesture.dart",
@@ -1106,8 +1110,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 1,
-      "donor_sha256": "6ec21802d4de2ca919e84538c864999ec20d43c09a6a8b9be6cb79f83f0e907f",
-      "refreshed": true
+      "donor_sha256": "c09f1118bcfa5921ff7a28657e9f2a4d0637bfeeb612cbd2d9395e57091fbfc2",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/rounded_button.dart",
@@ -1116,8 +1120,8 @@
       "dialect": "dart",
       "nodes": 1,
       "actions": 1,
-      "donor_sha256": "67da930530c684b75474989a0a07ee59c4606c7689b89a419a6f88f4205f03c3",
-      "refreshed": true
+      "donor_sha256": "bbd5fdfbc2d5ab79d4014d6bd0277f1b935a163f4808d294ebe8d21eaae87f2e",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/rounded_input_field.dart",
@@ -1126,8 +1130,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 1,
-      "donor_sha256": "270b480f19ca2a607b9fda85514447fda51334230c68473ed246291a5a2702dc",
-      "refreshed": true
+      "donor_sha256": "bf01e116741a04d685cb824d47844fb3930e0a8247a0336a4769e2c0b5b0f288",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/route/animation.dart",
@@ -1142,8 +1146,8 @@
       "dialect": "dart",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "ba182115dcecbb2c86af669b6f257d4a0cd0c5b2bdcbbbb4967fd6a57532d2d1",
-      "refreshed": true
+      "donor_sha256": "8301ddbd92a20c2e094029b5d1872e6f5069927adcdb8591e057ed1876c41ee4",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_infra_ui/lib/widget/spacing.dart",
@@ -1152,8 +1156,8 @@
       "dialect": "dart",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "8b07228080e5b3ea579990d320749a26b97ae39941aad8a6f79157f8af18c71c",
-      "refreshed": true
+      "donor_sha256": "52b4ddbf8cc053ee578b2197fd41907a5339dfb0102504a958cc4b95ed6c3458",
+      "refreshed": false
     },
     {
       "donor_file": "flowy_svg/bin/flowy_svg.dart",
@@ -1180,8 +1184,8 @@
       "dialect": "dart",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "46c7d55a1489dc045f1c5e2aa506f8fd6d470f8d43caebdfd5f3630a125746d7",
-      "refreshed": true
+      "donor_sha256": "b55952c2843813764d10343b9c56493c90a54ae19949eb24174259c2df7809da",
+      "refreshed": false
     }
   ]
 }

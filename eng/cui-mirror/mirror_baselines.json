@@ -1,11 +1,11 @@
 {
   "_purpose": "Ratchet for the Stage A donor-UI mirror corpora. documents/without-errors are measured by eng/cui-mirror/probe under --strict; any CUI compile error fails. A fall in `documents` means mirrors were lost and must be explained, not absorbed.",
   "_measured_on": "2026-10-31",
-  "_measured_at_source": "62492b40",
-  "_mirror_tool_version": "090fe48fd6d527c3f594d980cd880b78eec9437491f71b85a1e021c82bc8eb7a",
+  "_measured_at_source": "2ac667b4",
+  "_mirror_tool_version": "24c2ee456eafdc05ab42deb2f5dd0a6a60caffb1a19606580872446732ec9c96",
   "_probe_command": "dotnet eng/cui-mirror/probe/bin/Release/net10.0/CuiMirrorProbe.dll --strict <corpus>...",
-  "documents": 1764,
-  "without_errors": 1764,
+  "documents": 1784,
+  "without_errors": 1784,
   "compile_errors_allowed": 0,
   "corpora": [
     "9to1 Workspace/Boards/CUI/DonorMirror/appflowy",
@@ -21,6 +21,7 @@
   ],
   "evidence_label": "CUI compile evidence only. Nothing here is rendered, run natively, packaged or accepted.",
   "_change_reason": "2026-10-31 second pass (1050 -> 1758 documents): the owner's correction that Boards' UI donor is AppFlowy, not rnote. Added the Dart/Flutter dialect, which reads widget constructor calls because AppFlowy has no markup UI, and mirrored 824 files from AppFlowy's lib plus 55 from its design-system packages (all compiling clean). Retired Boards' rnote UI mirror: 31 of its 33 documents were byte-identical to Canvas's, 2 differed, and the two donor checkouts drift in 8 UI files - one shared drawing surface must be pinned once, and the owner's single-implementation requirement forbids keeping two revisions of it. Also fixed an emitter bug that emitted space-only donor text runs as empty CUI values (CUI030, 4 documents).",
-  "gap_reports_recorded": 21067,
-  "_gap_ratchet": "Measured across three framework steps today: gap reports 33,014 -> 25,113 -> 21067 as CUI gained Toolbar (with measured collapse-to-overflow), Separator, and Ribbon Group. Now-zero constructs: 'toolbar with overflow' (6,878), 'separator' (1,626), 'notebook bar (ribbon) group' (4,046). Emission counts: 433 Toolbar, 1,639 Separator, 4,046 Ribbon Group elements. Honest limitation recorded: GroupLabel captions are currently emitted ZERO times, because the office .ui tool boxes do not carry a label property - the donor puts the caption in a sibling GtkLabel, so hoisting that into GroupLabel is a Stage B adaptation, not something to fake here. Renamed rather than removed: 'menu button' 459 -> 1,537 (the office priority/dropdown boxes named for what they are). Remaining top items: optional section 2,263, property not modelled 2,910, custom donor widget 1,479."
+  "gap_reports_recorded": 25376,
+  "_gap_ratchet": "Two corrections, both found by measurement and recorded rather than absorbed. (1) EXCLUSION BUG: '--exclude test' matched SUBSTRINGS of a path, so it silently dropped 20 genuine donor UI files across the corpora, including swriter/ui/footnotesendnotestabpage.ui, scalc/ui/chisquaretestdialog.ui, scalc/ui/ttestdialog.ui and scalc/ui/ztestdialog.ui - none of which is a test fixture (the match came from 'test' inside 'sendnoTESTabpage' and 'chiSQUARETESTdialog'). Exclusion now matches path segments (or an explicit 'dir/subtree' fragment), and documents rose 1,764 -> 1,784 with all 1,784 compiling clean. The intermediate 1,758 figure measured a moment ago was the over-excluded state, and the ratchet refused to accept a falling count without a reason - which is exactly what it is for. (2) GAP KINDS: gap records are now classified. Of 25376 records, 20767 are genuine CUI framework gaps and 4609 are donor plumbing (web attributes such as form/method/defer/data-*, and inline script/style/observer hooks). The single number before conflated them and overstated the framework queue; the queue in docs/development/cui-framework-extension-queue-2026-10-31.md now separates them. Also fixed a real emitter bug: hyphenated keys in the XUL property map were unreachable because the lookup strips hyphens, so 82 mapped aria-label attributes and 58 data-l10n-id attributes were being reported as unmapped and dropped; accessibility name, tooltip and accesskey now map through, and localisation keys are recorded as their own CUI gap rather than swallowed.",
+  "cui_gap_reports_recorded": 20767
 }

@@ -1,19 +1,27 @@
-# firefox Stage A mirror gaps - constructs CUI cannot express yet
+# firefox Stage A mirror records - CUI framework gaps plus donor plumbing
 
 Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
 reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 662
 - donor nodes dropped: 0
-- gap reports: 672
+- gap reports: 852
+- CUI framework gaps: 679
+- donor plumbing recorded (not a CUI gap): 173
+
+## CUI constructs still needed
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `property not modelled` | 426 | checkbox@aria-describedby, checkbox@data-l10n-id, checkbox@preference, circle@cx, circle@cy, circle@r |
+
+| CUI construct needed / rejected | occurrences | donor constructs seen |
+|---|---|---|
+| `localisation key binding` | 233 | checkbox@data-l10n-id, description@data-l10n-args, description@data-l10n-attrs, description@data-l10n-id, html:a@data-l10n-name, html:button@data-l10n-attrs |
+| `property not modelled` | 157 | checkbox@aria-describedby, checkbox@preference, circle@cx, circle@cy, circle@r, deck@orient |
 | `unknown donor construct` | 155 | b, circle, commandset, dialog, groupbox, html:body |
+| `link action` | 51 | html:a, html:a@href, html:label@href, html:link@href |
 | `item collection (list/tree/table)` | 16 | html:li, html:table, html:ul, tree, treechildren |
 | `keyboard shortcut table` | 8 | key |
-| `link action` | 8 | html:a |
 | `preprocessor directives` | 7 | moz-build preprocessor |
 | `inline text run` | 7 | html:span |
 | `split view` | 6 | splitter |
@@ -39,3 +47,10 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 | `parse error: unbound prefix: line 3, column 0` | 1 | unparseable xul/xhtml |
 | `transient tooltip host` | 1 | tooltip |
 | `transient overlay host` | 1 | panel |
+
+## Donor plumbing recorded (not CUI framework gaps)
+
+| Recorded donor construct | Occurrences | Kind |
+|---|---|---|
+| `donor event or style hook` | 138 | donor-plumbing |
+| `donor web attribute` | 35 | donor-plumbing |

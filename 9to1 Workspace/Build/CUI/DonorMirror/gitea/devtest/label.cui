@@ -1,0 +1,32 @@
+<Cui id="devtest-label" product="9-1" version="1">
+  <Page id="devtest-label-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Text id="h1" text="Label" />
+        <Container id="div-3" Type="Vertical Stack">
+          <Text id="span" text="simple label" />
+          <Text id="span-2" text="red label" />
+          <Text id="span-3" text="green label" />
+        </Container>
+        <Container id="div-4" Type="Vertical Stack">
+          <Text id="span-4" text="basic label" />
+          <Text id="span-5" text="basic red label" />
+          <Text id="span-6" text="basic green label" />
+        </Container>
+        <Container id="div-5" Type="Vertical Stack">
+          <Text id="span-7" text="long content must be in a non-flex &quot;gt-ellipsis&quot; element, otherwise it won't get ellipsis. very looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong label" />
+        </Container>
+        <Container id="div-6" Type="Vertical Stack">
+          <Text id="span-8">
+            <Text id="span-9" text="very looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong label" />
+          </Text>
+        </Container>
+        <Container id="div-7" Type="Vertical Stack">
+          <Text id="span-10">
+            <Text id="span-11" text="very looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong label" />
+          </Text>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

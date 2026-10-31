@@ -1,9 +1,9 @@
 <Cui id="view-content-add-reaction" product="9-1" version="1">
   <Page id="view-content-add-reaction-root">
-    <Container id="div" Type="Vertical Stack">
+    <Container id="div" Type="Vertical Stack" accessible-name="{Binding Unresolved}">
       <Button id="a" />
       <Container id="div-2" Type="Vertical Stack">
-        <Button id="a-2" />
+        <Button id="a-2" accessible-name="{Binding Unresolved}" />
       </Container>
     </Container>
   </Page>

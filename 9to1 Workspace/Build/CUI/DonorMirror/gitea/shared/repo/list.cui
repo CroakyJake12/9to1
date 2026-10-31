@@ -21,15 +21,15 @@
                 <Container id="i" Type="Vertical Stack" />
               </Button>
               <Button id="a-4">
-                <Text id="span-7" text="{Binding Unresolved}" />
+                <Text id="span-7" accessible-name="{Binding Unresolved}" text="{Binding Unresolved}" />
                 <Text id="span-8" text="{Binding Unresolved}" />
               </Button>
               <Button id="a-5">
-                <Text id="span-9" text="{Binding Unresolved}" />
+                <Text id="span-9" accessible-name="{Binding Unresolved}" text="{Binding Unresolved}" />
                 <Text id="span-10" text="{Binding Unresolved}" />
               </Button>
               <Button id="a-6">
-                <Text id="span-11" text="{Binding Unresolved}" />
+                <Text id="span-11" accessible-name="{Binding Unresolved}" text="{Binding Unresolved}" />
                 <Text id="span-12" text="{Binding Unresolved}" />
               </Button>
               <Button id="button" />

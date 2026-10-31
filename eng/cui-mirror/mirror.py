@@ -56,6 +56,27 @@ def tool_version() -> str:
     return digest.hexdigest()
 
 
+def _excluded(rel: str, patterns: list[str]) -> bool:
+    """Exclude donor build/test paths by NAME SEGMENT, not by substring.
+
+    Measured defect of the substring form: `--exclude test` silently dropped genuine product UI -
+    swriter/ui/testmailsettings.ui and opttestpage.ui (test pages, fair enough) but also
+    footnotesendnotestabpage.ui, chisquaretestdialog.ui, ttestdialog.ui and ztestdialog.ui, none of which
+    is a test fixture at all. A pattern with a slash still matches a path fragment so a caller can name a
+    subtree explicitly.
+    """
+    parts = [segment.lower() for segment in rel.replace("\\", "/").split("/")]
+    for raw in patterns:
+        needle = raw.lower()
+        if "/" in needle:
+            if needle in rel.lower().replace("\\", "/"):
+                return True
+        elif any(part == needle or part.startswith(needle + ".") or part.startswith(needle + "-")
+                 for part in parts):
+            return True
+    return False
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--app", required=True, help="owning 9to1 app, for the output path and report")
@@ -92,7 +113,7 @@ def main(argv=None):
         if not path.is_file():
             continue
         rel = str(path.relative_to(src))
-        if any(x in rel.lower() for x in args.exclude):
+        if _excluded(rel, args.exclude):
             continue
         suffix = path.suffix.lower()
         if args.dialect != "auto":

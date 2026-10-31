@@ -1,6 +1,6 @@
 <Cui id="wiki-start" product="9-1" version="1">
   <Page id="wiki-start-root">
-    <Container id="div" Type="Vertical Stack" role="main">
+    <Container id="div" Type="Vertical Stack" role="main" accessible-name="{Binding Unresolved}">
       <Container id="div-2" Type="Vertical Stack">
         <Container id="div-3" Type="Vertical Stack">
           <Text id="h2" text="{Binding Unresolved}" />

@@ -17,7 +17,7 @@
           <Container id="tbody" Type="Grid">
             <Container id="tr" Type="Horizontal Stack">
               <Container id="td" Type="Vertical Stack">
-                <Button id="a-2" text="{Binding Unresolved}" />
+                <Button id="a-2" tooltip="{Binding Unresolved}" />
                 <Text id="span" text="{Binding Unresolved}" />
                 <Text id="span-2" text="{Binding Unresolved}" />
               </Container>

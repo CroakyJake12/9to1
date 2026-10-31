@@ -1,6 +1,6 @@
 <Cui id="pulls-fork" product="9-1" version="1">
   <Page id="pulls-fork-root">
-    <Container id="div" Type="Vertical Stack" role="main">
+    <Container id="div" Type="Vertical Stack" role="main" accessible-name="{Binding Unresolved}">
       <Container id="div-2" Type="Vertical Stack">
         <Text id="h3" text="{Binding Unresolved}" />
         <Container id="div-3" Type="Vertical Stack">
@@ -9,14 +9,11 @@
               <Text id="label" text="{Binding Unresolved}" />
               <Container id="div-5" Type="Vertical Stack">
                 <Input id="input" Type="Text" />
-                <Text id="span" text="{Binding Unresolved}" />
+                <Text id="span" tooltip="{Binding Unresolved}" text="[value]
+							[value]" />
                 <Container id="div-6" Type="Vertical Stack">
-                  <Container id="div-7" Type="Vertical Stack">
-                    <Text id="div-label" text="{Binding Unresolved}" />
-                  </Container>
-                  <Container id="div-8" Type="Vertical Stack">
-                    <Text id="div-label-2" text="{Binding Unresolved}" />
-                  </Container>
+                  <Container id="div-7" Type="Vertical Stack" tooltip="{Binding Unresolved}" />
+                  <Container id="div-8" Type="Vertical Stack" tooltip="{Binding Unresolved}" />
                 </Container>
               </Container>
             </Container>
@@ -40,16 +37,10 @@
               <Text id="label-6" text="{Binding Unresolved}" />
               <Container id="div-14" Type="Vertical Stack">
                 <Input id="input-4" Type="Text" />
-                <Container id="div-15" Type="Vertical Stack">
-                  <Text id="div-label-3" text="{Binding Unresolved}" />
-                </Container>
+                <Container id="div-15" Type="Vertical Stack" tooltip="{Binding Unresolved}" />
                 <Container id="div-16" Type="Vertical Stack">
-                  <Container id="div-17" Type="Vertical Stack">
-                    <Text id="div-label-4" text="{Binding Unresolved}" />
-                  </Container>
-                  <Container id="div-18" Type="Vertical Stack">
-                    <Text id="div-label-5" text="{Binding Unresolved}" />
-                  </Container>
+                  <Container id="div-17" Type="Vertical Stack" tooltip="{Binding Unresolved}" />
+                  <Container id="div-18" Type="Vertical Stack" tooltip="{Binding Unresolved}" />
                 </Container>
               </Container>
             </Container>

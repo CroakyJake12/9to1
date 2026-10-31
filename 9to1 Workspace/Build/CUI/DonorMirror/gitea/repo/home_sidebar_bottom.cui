@@ -9,7 +9,7 @@
       <Container id="div-4" Type="Vertical Stack">
         <Container id="div-5" Type="Vertical Stack">
           <Container id="div-6" Type="Vertical Stack" />
-          <Button id="a-2" text="{Binding Unresolved}">
+          <Button id="a-2" tooltip="{Binding Unresolved}">
             <Text id="strong" text="{Binding Unresolved}" />
           </Button>
           <Container id="div-7" Type="Vertical Stack" />

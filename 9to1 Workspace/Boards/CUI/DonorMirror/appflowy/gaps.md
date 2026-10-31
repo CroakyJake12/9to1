@@ -1,17 +1,24 @@
-# appflowy Stage A mirror gaps - constructs CUI cannot express yet
+# appflowy Stage A mirror records - CUI framework gaps plus donor plumbing
 
 Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
 reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 2855
 - donor nodes dropped: 0
-- gap reports: 9896
+- gap reports: 9898
+- CUI framework gaps: 9898
+- donor plumbing recorded (not a CUI gap): 0
+
+## CUI constructs still needed
+
+| CUI construct needed / rejected | occurrences | donor constructs seen |
+|---|---|---|
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
 | `custom donor widget` | 1365 | AFBaseButton, AFCallbackShortcuts, AFDropDownMenu, AFFilledButton.disabled, AFFilledButton.primary, AFFocusManager |
 | `donor icon asset (FlowySvg)` | 754 | FlowySvg |
-| `n/a` | 700 | no widget constructor found |
+| `n/a` | 702 | no widget constructor found |
 | `theme colour token` | 579 | AFThemeExtension.of(context)
                                , AFThemeExtension.of(context).borderColor, AFThemeExtension.of(context).greyHover, AFThemeExtension.of(context).lightIconColor, AFThemeExtension.of(context).onBackground, AFThemeExtension.of(context).secondaryTextColor |
 | `fixed vertical spacer` | 579 | VSpace |

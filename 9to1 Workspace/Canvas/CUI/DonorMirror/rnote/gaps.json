@@ -2,6 +2,10 @@
   "translated": 303,
   "dropped_nodes": 12,
   "gap_count": 186,
+  "cui_gap_count": 186,
+  "gap_kinds": {
+    "cui-construct": 186
+  },
   "gap_constructs": {
     "custom donor widget": 56,
     "shortcut browser": 48,
