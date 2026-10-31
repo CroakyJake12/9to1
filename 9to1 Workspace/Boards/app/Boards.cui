@@ -116,16 +116,16 @@
              the open page title - because 9to1 Boards has no open-pages tab stack in the host yet, so nothing
              unwired is drawn. The "+" calls the surface's existing AddPage handler. Next host wiring item: a real
              multi-tab stack with switch and close. -->
-        <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" CellGap="6" Row="0" Height="40" ID="BoardsTabBar">
+        <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" CellGap="6" Row="0" Height="40" ID="BoardsTabBar" Background="{Resource CuiPanelBrush}">
           <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="6" Width="200" Height="40" Padding="10 0"
-                     ID="BoardNameTab" VerticalAlignment="Center">
+                     Column="0" ID="BoardNameTab" VerticalAlignment="Center">
             <Image Column="0" Source="ownerbrand:boards" Width="16" Height="16" VerticalAlignment="Center"
                    AccessibleName="Board" />
             <Text Column="1" Text="{Binding BoardTitle, fallback=Board}" FontSize="13" VerticalAlignment="Center"
                   TextTrimming="CharacterEllipsis" AccessibleName="Board name" />
           </Container>
           <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="6" Width="200" Height="40" Padding="10 0"
-                     ID="CurrentPageTab" VerticalAlignment="Center">
+                     Column="1" ID="CurrentPageTab" VerticalAlignment="Center">
             <Text Column="0" Text="{Binding PageTypeLabel, fallback=Page}" FontSize="11" VerticalAlignment="Center"
                   AccessibleName="Page type" />
             <Text Column="1" Text="{Binding PageTitle, fallback=Page}" FontSize="13" VerticalAlignment="Center"
