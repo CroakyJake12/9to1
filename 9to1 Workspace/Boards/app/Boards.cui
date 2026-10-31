@@ -60,7 +60,8 @@
            Gated with the board surface: while the Boards splash is showing there is no current
            board, so its title, save state and page list must not remain on screen (owner report
            28 October: the sidebar kept showing the last board's name and pages on the splash). -->
-      <Container padding="8 8" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="Transparent" BorderWidth="0" Active="{Binding ShowEditor}">
+      <Container padding="8 8" Type="Overlay" ID="NavPane" Row="1" Column="0"
+                   Background="{Resource CuiPanelBrush}" BorderThickness="0 0 1 0" BorderBrush="{Resource CuiLineBrush}" Active="{Binding ShowEditor}">
         <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="6">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Current Board" />
