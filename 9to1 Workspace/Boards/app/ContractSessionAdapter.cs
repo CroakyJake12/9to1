@@ -233,7 +233,8 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
                     LineSpacing = s.LineSpacing,
                     Foreground = s.Foreground,
                     Background = s.Background,
-                    Alignment = s.Alignment.ToString().ToLowerInvariant()
+                    Alignment = s.Alignment.ToString().ToLowerInvariant(),
+                    IndentLevel = s.IndentLevel
                 }).ToArray()
             : [];
 

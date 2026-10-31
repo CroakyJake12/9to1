@@ -6,27 +6,27 @@
   <Page>
     <Container ID="AdaptiveToolbar" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" HorizontalAlignment="Stretch">
       <Container ID="AdaptivePill" Type="Toolbar" Column="0" CellGap="2" Padding="7 4" CornerRadius="15" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Interactive="{Binding CanEditToolbar}">
-        <Container ID="AdaptiveFontSection" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" Active="{Binding TextMode}">
-          <Input ID="AdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" />
-          <Input ID="AdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="Type a font family and press Enter" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" />
-          <Container Type="Menu" ID="AdaptiveFontSection_Menu">
-            <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="AdaptiveFontSection_Menu_Choose_font_family">
-              <Button Content="Default" Action="FontDefault" Type="Menu Item" AccessibleName="Default" ID="AdaptiveFontSection_Menu_Choose_font_family_FontDefault" />
-              <Button Content="Inter" Action="FontInter" Type="Menu Item" AccessibleName="Inter" ID="AdaptiveFontSection_Menu_Choose_font_family_FontInter" />
-              <Button Content="Georgia" Action="FontGeorgia" Type="Menu Item" AccessibleName="Georgia" ID="AdaptiveFontSection_Menu_Choose_font_family_FontGeorgia" />
-              <Button Content="Cascadia Mono" Action="FontMono" Type="Menu Item" AccessibleName="Cascadia Mono" ID="AdaptiveFontSection_Menu_Choose_font_family_FontMono" />
-              <Button Content="Segoe UI" Action="FontSegoe" Type="Menu Item" AccessibleName="Segoe UI" ID="AdaptiveFontSection_Menu_Choose_font_family_FontSegoe" />
-              <Button Content="Times New Roman" Action="FontTimes" Type="Menu Item" AccessibleName="Times New Roman" ID="AdaptiveFontSection_Menu_Choose_font_family_FontTimes" />
+        <Container ID="AdaptiveFontSection" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" Active="{Binding TextMode}" Tooltip="{Binding TypographyGroupHint}">
+          <Input ID="AdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding StyleControlHint}" />
+          <Input ID="AdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="{Binding FontControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
+          <Container Type="Menu" ID="AdaptiveFontSection_Menu" Tooltip="{Binding FontControlHint}">
+            <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="AdaptiveFontSection_Menu_Choose_font_family" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}">
+              <Button Content="Default" Action="FontDefault" Type="Menu Item" AccessibleName="Default" ID="AdaptiveFontSection_Menu_Choose_font_family_FontDefault" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+              <Button Content="Inter" Action="FontInter" Type="Menu Item" AccessibleName="Inter" ID="AdaptiveFontSection_Menu_Choose_font_family_FontInter" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+              <Button Content="Georgia" Action="FontGeorgia" Type="Menu Item" AccessibleName="Georgia" ID="AdaptiveFontSection_Menu_Choose_font_family_FontGeorgia" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+              <Button Content="Cascadia Mono" Action="FontMono" Type="Menu Item" AccessibleName="Cascadia Mono" ID="AdaptiveFontSection_Menu_Choose_font_family_FontMono" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+              <Button Content="Segoe UI" Action="FontSegoe" Type="Menu Item" AccessibleName="Segoe UI" ID="AdaptiveFontSection_Menu_Choose_font_family_FontSegoe" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+              <Button Content="Times New Roman" Action="FontTimes" Type="Menu Item" AccessibleName="Times New Roman" ID="AdaptiveFontSection_Menu_Choose_font_family_FontTimes" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
             </Button>
           </Container>
-          <Button Content="−" Action="FontSmaller" AccessibleName="Decrease font size" Width="26" Height="32" Padding="0" ID="AdaptiveFontSection_FontSmaller" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="Decrease font size" />
-          <Input ID="AdaptiveSize" Type="Text" Width="43" Height="32" Value="{Binding SizeDraft, mode=TwoWay}" SubmitAction="ApplySize" AccessibleName="Font size" Tooltip="Type a font size from 8 to 96 and press Enter" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" />
+          <Button Content="−" Action="FontSmaller" AccessibleName="Decrease font size" Width="26" Height="32" Padding="0" ID="AdaptiveFontSection_FontSmaller" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="{Binding FontControlHint}" IsEnabled="{Binding CanUseTypography}" />
+          <Input ID="AdaptiveSize" Type="Text" Width="43" Height="32" Value="{Binding SizeDraft, mode=TwoWay}" SubmitAction="ApplySize" AccessibleName="Font size" Tooltip="{Binding SizeControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
           <Text Text="px" VerticalAlignment="Center" FontSize="11" ID="AdaptiveFontSection_px" />
-          <Button Content="+" Action="FontBigger" AccessibleName="Increase font size" Width="26" Height="32" Padding="0" ID="AdaptiveFontSection_FontBigger" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="Increase font size" />
+          <Button Content="+" Action="FontBigger" AccessibleName="Increase font size" Width="26" Height="32" Padding="0" ID="AdaptiveFontSection_FontBigger" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="{Binding FontControlHint}" IsEnabled="{Binding CanUseTypography}" />
           <Container Type="Menu" ID="AdaptiveFontSection_Menu_2">
-            <Button Type="Menu Item" Content="Aa ▾" Height="32" Padding="7 0" AccessibleName="Text case" ID="AdaptiveFontSection_Menu_2_Text_case">
-              <Button Content="UPPERCASE" Action="CaseUpper" Type="Menu Item" AccessibleName="UPPERCASE" ID="AdaptiveFontSection_Menu_2_Text_case_CaseUpper" />
-              <Button Content="lowercase" Action="CaseLower" Type="Menu Item" AccessibleName="lowercase" ID="AdaptiveFontSection_Menu_2_Text_case_CaseLower" />
+            <Button Type="Menu Item" Content="Aa ▾" Height="32" Padding="7 0" AccessibleName="Text case" ID="AdaptiveFontSection_Menu_2_Text_case" Tooltip="Change text case">
+              <Button Content="UPPERCASE" Action="CaseUpper" Type="Menu Item" AccessibleName="UPPERCASE" ID="AdaptiveFontSection_Menu_2_Text_case_CaseUpper" Tooltip="Change text case" />
+              <Button Content="lowercase" Action="CaseLower" Type="Menu Item" AccessibleName="lowercase" ID="AdaptiveFontSection_Menu_2_Text_case_CaseLower" Tooltip="Change text case" />
             </Button>
           </Container>
           <Container Type="Separator" Width="1" Height="22" Margin="5 0" Background="{Resource CuiLineBrush}" ID="AdaptiveFontSection_Separator" />
@@ -62,16 +62,16 @@
           </Container>
           <Container Type="Overlay" Width="12" Height="4" Background="{Binding TextColor}" VerticalAlignment="Center" Active="{Binding TextColorUniform}" ID="AdaptiveFormatSection_Overlay" />
           <Text Text="—" Width="12" VerticalAlignment="Center" Active="{Binding TextColorMixed}" Tooltip="Mixed text colours" ID="AdaptiveFormatSection_Text" />
-          <Container Type="Menu" ID="AdaptiveFormatSection_Menu_2">
-            <Button Type="Menu Item" Content="" Height="32" Padding="7 0" AccessibleName="Highlight colour" ID="AdaptiveHighlight" IconSource="icon:highlighter" IconSize="18" IconOnly="True" Width="32" Tooltip="{Binding HighlightColorLabel}">
-              <Button Content="None" Action="HighlightNone" Type="Menu Item" AccessibleName="None" ID="AdaptiveHighlight_HighlightNone" />
-              <Button Content="Yellow" Action="Highlight#FFFFFF00" Type="Menu Item" AccessibleName="Yellow" ID="AdaptiveHighlight_Highlight_FFFFFF00" />
-              <Button Content="Green" Action="Highlight#FFCCFF90" Type="Menu Item" AccessibleName="Green" ID="AdaptiveHighlight_Highlight_FFCCFF90" />
-              <Button Content="Blue" Action="Highlight#FFB3E5FC" Type="Menu Item" AccessibleName="Blue" ID="AdaptiveHighlight_Highlight_FFB3E5FC" />
-              <Button Content="Pink" Action="Highlight#FFF8BBD0" Type="Menu Item" AccessibleName="Pink" ID="AdaptiveHighlight_Highlight_FFF8BBD0" />
-              <Button Content="Orange" Action="Highlight#FFFFE0B2" Type="Menu Item" AccessibleName="Orange" ID="AdaptiveHighlight_Highlight_FFFFE0B2" />
-              <Button Content="Grey" Action="Highlight#FFE0E0E0" Type="Menu Item" AccessibleName="Grey" ID="AdaptiveHighlight_Highlight_FFE0E0E0" />
-              <Button Content="Peach" Action="Highlight#FFFFF3C4" Type="Menu Item" AccessibleName="Peach" ID="AdaptiveHighlight_Highlight_FFFFF3C4" />
+          <Container Type="Menu" ID="AdaptiveFormatSection_Menu_2" Tooltip="{Binding HighlightControlHint}">
+            <Button Type="Menu Item" Content="" Height="32" Padding="7 0" AccessibleName="Highlight colour" ID="AdaptiveHighlight" IconSource="icon:highlighter" IconSize="18" IconOnly="True" Width="32" Tooltip="{Binding HighlightControlHint}" IsEnabled="{Binding CanUseTypography}">
+              <Button Content="None" Action="HighlightNone" Type="Menu Item" AccessibleName="None" ID="AdaptiveHighlight_HighlightNone" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Yellow" Action="Highlight#FFFFFF00" Type="Menu Item" AccessibleName="Yellow" ID="AdaptiveHighlight_Highlight_FFFFFF00" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Green" Action="Highlight#FFCCFF90" Type="Menu Item" AccessibleName="Green" ID="AdaptiveHighlight_Highlight_FFCCFF90" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Blue" Action="Highlight#FFB3E5FC" Type="Menu Item" AccessibleName="Blue" ID="AdaptiveHighlight_Highlight_FFB3E5FC" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Pink" Action="Highlight#FFF8BBD0" Type="Menu Item" AccessibleName="Pink" ID="AdaptiveHighlight_Highlight_FFF8BBD0" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Orange" Action="Highlight#FFFFE0B2" Type="Menu Item" AccessibleName="Orange" ID="AdaptiveHighlight_Highlight_FFFFE0B2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Grey" Action="Highlight#FFE0E0E0" Type="Menu Item" AccessibleName="Grey" ID="AdaptiveHighlight_Highlight_FFE0E0E0" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Peach" Action="Highlight#FFFFF3C4" Type="Menu Item" AccessibleName="Peach" ID="AdaptiveHighlight_Highlight_FFFFF3C4" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
             </Button>
           </Container>
           <Container Type="Overlay" Width="12" Height="4" Background="{Binding HighlightColor}" VerticalAlignment="Center" Active="{Binding HighlightColorUniform}" ID="AdaptiveFormatSection_Overlay_2" />
@@ -79,28 +79,28 @@
           <Container Type="Separator" Width="1" Height="22" Margin="5 0" Background="{Resource CuiLineBrush}" ID="AdaptiveFormatSection_Separator" />
         </Container>
         <Container ID="AdaptiveParagraphSection" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" Active="{Binding TextMode}">
-          <Container Type="Menu" ID="AdaptiveParagraphSection_Menu">
-            <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="Alignment" IconSource="{Binding AlignIcon}" IconOnly="True" IconSize="18" Width="32" Tooltip="{Binding AlignLabel}" ID="AdaptiveParagraphSection_Menu_Alignment">
-              <Button Content="Left" Action="AlignLeft" Type="Menu Item" AccessibleName="Left" ID="AdaptiveParagraphSection_Menu_Alignment_AlignLeft" />
-              <Button Content="Center" Action="AlignCenter" Type="Menu Item" AccessibleName="Center" ID="AdaptiveParagraphSection_Menu_Alignment_AlignCenter" />
-              <Button Content="Right" Action="AlignRight" Type="Menu Item" AccessibleName="Right" ID="AdaptiveParagraphSection_Menu_Alignment_AlignRight" />
-              <Button Content="Justify" Action="AlignJustify" Type="Menu Item" AccessibleName="Justify" ID="AdaptiveParagraphSection_Menu_Alignment_AlignJustify" />
+          <Container Type="Menu" ID="AdaptiveParagraphSection_Menu" Tooltip="{Binding AlignmentControlHint}">
+            <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="Alignment" IconSource="{Binding AlignIcon}" IconOnly="True" IconSize="18" Width="32" Tooltip="{Binding AlignmentControlHint}" ID="AdaptiveParagraphSection_Menu_Alignment" IsEnabled="{Binding CanUseParagraphAlignment}">
+              <Button Content="Left" Action="AlignLeft" Type="Menu Item" AccessibleName="Left" ID="AdaptiveParagraphSection_Menu_Alignment_AlignLeft" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Center" Action="AlignCenter" Type="Menu Item" AccessibleName="Center" ID="AdaptiveParagraphSection_Menu_Alignment_AlignCenter" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Right" Action="AlignRight" Type="Menu Item" AccessibleName="Right" ID="AdaptiveParagraphSection_Menu_Alignment_AlignRight" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Justify" Action="AlignJustify" Type="Menu Item" AccessibleName="Justify" ID="AdaptiveParagraphSection_Menu_Alignment_AlignJustify" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
             </Button>
           </Container>
-          <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_2">
-            <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="List" IconSource="{Binding ListIcon}" IconOnly="True" IconSize="18" Width="32" Tooltip="{Binding ListLabel}" ID="AdaptiveParagraphSection_Menu_2_List">
-              <Button Content="None" Action="ListNone" Type="Menu Item" AccessibleName="None" ID="AdaptiveParagraphSection_Menu_2_List_ListNone" />
-              <Button Content="Bulleted list" Action="ListBullets" Type="Menu Item" AccessibleName="Bulleted list" ID="AdaptiveParagraphSection_Menu_2_List_ListBullets" />
-              <Button Content="Numbered list" Action="ListNumbered" Type="Menu Item" AccessibleName="Numbered list" ID="AdaptiveParagraphSection_Menu_2_List_ListNumbered" />
-              <Button Content="Checklist" Action="ListChecklist" Type="Menu Item" AccessibleName="Checklist" ID="AdaptiveParagraphSection_Menu_2_List_ListChecklist" />
+          <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_2" Tooltip="{Binding ListControlHint}">
+            <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="List" IconSource="{Binding ListIcon}" IconOnly="True" IconSize="18" Width="32" Tooltip="{Binding ListControlHint}" ID="AdaptiveParagraphSection_Menu_2_List" IsEnabled="{Binding CanChangeListKind}">
+              <Button Content="None" Action="ListNone" Type="Menu Item" AccessibleName="None" ID="AdaptiveParagraphSection_Menu_2_List_ListNone" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
+              <Button Content="Bulleted list" Action="ListBullets" Type="Menu Item" AccessibleName="Bulleted list" ID="AdaptiveParagraphSection_Menu_2_List_ListBullets" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
+              <Button Content="Numbered list" Action="ListNumbered" Type="Menu Item" AccessibleName="Numbered list" ID="AdaptiveParagraphSection_Menu_2_List_ListNumbered" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
+              <Button Content="Checklist" Action="ListChecklist" Type="Menu Item" AccessibleName="Checklist" ID="AdaptiveParagraphSection_Menu_2_List_ListChecklist" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
             </Button>
           </Container>
-          <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_3">
-            <Button Type="Menu Item" Content="{Binding CompactSpacing}" Height="32" Padding="2 0" AccessibleName="Line spacing" Width="48" Tooltip="{Binding SpacingLabel}" ID="AdaptiveParagraphSection_Menu_3_Line_spacing">
-              <Button Content="1" Action="Spacing1" Type="Menu Item" AccessibleName="1" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1" />
-              <Button Content="1.25" Action="Spacing1.25" Type="Menu Item" AccessibleName="1.25" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_25" />
-              <Button Content="1.5" Action="Spacing1.5" Type="Menu Item" AccessibleName="1.5" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_5" />
-              <Button Content="2" Action="Spacing2" Type="Menu Item" AccessibleName="2" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing2" />
+          <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_3" Tooltip="{Binding SpacingControlHint}">
+            <Button Type="Menu Item" Content="{Binding CompactSpacing}" Height="32" Padding="2 0" AccessibleName="Line spacing" Width="48" Tooltip="{Binding SpacingControlHint}" ID="AdaptiveParagraphSection_Menu_3_Line_spacing" IsEnabled="{Binding CanUseTypography}">
+              <Button Content="1" Action="Spacing1" Type="Menu Item" AccessibleName="1" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="1.25" Action="Spacing1.25" Type="Menu Item" AccessibleName="1.25" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_25" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="1.5" Action="Spacing1.5" Type="Menu Item" AccessibleName="1.5" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_5" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="2" Action="Spacing2" Type="Menu Item" AccessibleName="2" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
             </Button>
           </Container>
           <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_4">
@@ -199,27 +199,27 @@
         <Container Type="Menu" OverflowHost="True" ID="AdaptivePill_Menu_2">
           <Button Type="Menu Item" Content="…" Height="32" Padding="0" AccessibleName="More formatting tools" ID="OverflowAdaptiveOverflow" Width="32">
             <Button Type="Menu Item" Content="Font and style" ID="OverflowAdaptiveOverflow_Font_and_style">
-              <Container Type="Vertical Stack" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack">
-                <Input ID="OverflowAdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" />
-                <Input ID="OverflowAdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="Type a font family and press Enter" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" />
-                <Container Type="Menu" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu">
-                  <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family">
-                    <Button Content="Default" Action="FontDefault" Type="Menu Item" AccessibleName="Default" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontDefault" />
-                    <Button Content="Inter" Action="FontInter" Type="Menu Item" AccessibleName="Inter" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontInter" />
-                    <Button Content="Georgia" Action="FontGeorgia" Type="Menu Item" AccessibleName="Georgia" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontGeorgia" />
-                    <Button Content="Cascadia Mono" Action="FontMono" Type="Menu Item" AccessibleName="Cascadia Mono" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontMono" />
-                    <Button Content="Segoe UI" Action="FontSegoe" Type="Menu Item" AccessibleName="Segoe UI" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontSegoe" />
-                    <Button Content="Times New Roman" Action="FontTimes" Type="Menu Item" AccessibleName="Times New Roman" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontTimes" />
+              <Container Type="Vertical Stack" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack" Tooltip="{Binding TypographyGroupHint}">
+                <Input ID="OverflowAdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding StyleControlHint}" />
+                <Input ID="OverflowAdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="{Binding FontControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
+                <Container Type="Menu" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu" Tooltip="{Binding FontControlHint}">
+                  <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}">
+                    <Button Content="Default" Action="FontDefault" Type="Menu Item" AccessibleName="Default" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontDefault" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+                    <Button Content="Inter" Action="FontInter" Type="Menu Item" AccessibleName="Inter" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontInter" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+                    <Button Content="Georgia" Action="FontGeorgia" Type="Menu Item" AccessibleName="Georgia" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontGeorgia" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+                    <Button Content="Cascadia Mono" Action="FontMono" Type="Menu Item" AccessibleName="Cascadia Mono" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontMono" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+                    <Button Content="Segoe UI" Action="FontSegoe" Type="Menu Item" AccessibleName="Segoe UI" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontSegoe" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
+                    <Button Content="Times New Roman" Action="FontTimes" Type="Menu Item" AccessibleName="Times New Roman" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family_FontTimes" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}" />
                   </Button>
                 </Container>
-                <Button Content="−" Action="FontSmaller" AccessibleName="Decrease font size" Width="26" Height="32" Padding="0" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_FontSmaller" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="Decrease font size" />
-                <Input ID="OverflowAdaptiveSize" Type="Text" Width="43" Height="32" Value="{Binding SizeDraft, mode=TwoWay}" SubmitAction="ApplySize" AccessibleName="Font size" Tooltip="Type a font size from 8 to 96 and press Enter" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" />
+                <Button Content="−" Action="FontSmaller" AccessibleName="Decrease font size" Width="26" Height="32" Padding="0" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_FontSmaller" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="{Binding FontControlHint}" IsEnabled="{Binding CanUseTypography}" />
+                <Input ID="OverflowAdaptiveSize" Type="Text" Width="43" Height="32" Value="{Binding SizeDraft, mode=TwoWay}" SubmitAction="ApplySize" AccessibleName="Font size" Tooltip="{Binding SizeControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
                 <Text Text="px" VerticalAlignment="Center" FontSize="11" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_px" />
-                <Button Content="+" Action="FontBigger" AccessibleName="Increase font size" Width="26" Height="32" Padding="0" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_FontBigger" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="Increase font size" />
+                <Button Content="+" Action="FontBigger" AccessibleName="Increase font size" Width="26" Height="32" Padding="0" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_FontBigger" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="{Binding FontControlHint}" IsEnabled="{Binding CanUseTypography}" />
                 <Container Type="Menu" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2">
-                  <Button Type="Menu Item" Content="Aa ▾" Height="32" Padding="7 0" AccessibleName="Text case" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2_Text_case">
-                    <Button Content="UPPERCASE" Action="CaseUpper" Type="Menu Item" AccessibleName="UPPERCASE" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2_Text_case_CaseUpper" />
-                    <Button Content="lowercase" Action="CaseLower" Type="Menu Item" AccessibleName="lowercase" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2_Text_case_CaseLower" />
+                  <Button Type="Menu Item" Content="Aa ▾" Height="32" Padding="7 0" AccessibleName="Text case" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2_Text_case" Tooltip="Change text case">
+                    <Button Content="UPPERCASE" Action="CaseUpper" Type="Menu Item" AccessibleName="UPPERCASE" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2_Text_case_CaseUpper" Tooltip="Change text case" />
+                    <Button Content="lowercase" Action="CaseLower" Type="Menu Item" AccessibleName="lowercase" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_2_Text_case_CaseLower" Tooltip="Change text case" />
                   </Button>
                 </Container>
                 <Container Type="Separator" Width="1" Height="22" Margin="5 0" Background="{Resource CuiLineBrush}" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Separator" />
@@ -231,23 +231,23 @@
               <Button Content="Underline" Action="ToggleUnderline" Type="Menu Item" AccessibleName="Underline" ID="OverflowRangeUnderline" />
               <Button Content="Strikethrough" Action="ToggleStrike" Type="Menu Item" AccessibleName="Strikethrough" ID="OverflowRangeStrike" />
               <Button Content="Text properties" Action="Properties" Type="Menu Item" AccessibleName="Text properties" Interactive="{Binding CanUseProperties}" ID="OverflowAdaptiveOverflow_Text_Properties" />
-              <Button Content="Align left" Action="AlignLeft" Type="Menu Item" AccessibleName="Align left" ID="OverflowAdaptiveOverflow_Text_AlignLeft" />
-              <Button Content="Align center" Action="AlignCenter" Type="Menu Item" AccessibleName="Align center" ID="OverflowAdaptiveOverflow_Text_AlignCenter" />
-              <Button Content="Align right" Action="AlignRight" Type="Menu Item" AccessibleName="Align right" ID="OverflowAdaptiveOverflow_Text_AlignRight" />
-              <Button Content="Align justify" Action="AlignJustify" Type="Menu Item" AccessibleName="Align justify" ID="OverflowAdaptiveOverflow_Text_AlignJustify" />
-              <Button Content="Bulleted list" Action="ListBullets" Type="Menu Item" AccessibleName="Bulleted list" ID="OverflowAdaptiveOverflow_Text_ListBullets" />
-              <Button Content="Numbered list" Action="ListNumbered" Type="Menu Item" AccessibleName="Numbered list" ID="OverflowAdaptiveOverflow_Text_ListNumbered" />
-              <Button Content="Checklist" Action="ListChecklist" Type="Menu Item" AccessibleName="Checklist" ID="OverflowAdaptiveOverflow_Text_ListChecklist" />
+              <Button Content="Align left" Action="AlignLeft" Type="Menu Item" AccessibleName="Align left" ID="OverflowAdaptiveOverflow_Text_AlignLeft" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align center" Action="AlignCenter" Type="Menu Item" AccessibleName="Align center" ID="OverflowAdaptiveOverflow_Text_AlignCenter" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align right" Action="AlignRight" Type="Menu Item" AccessibleName="Align right" ID="OverflowAdaptiveOverflow_Text_AlignRight" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align justify" Action="AlignJustify" Type="Menu Item" AccessibleName="Align justify" ID="OverflowAdaptiveOverflow_Text_AlignJustify" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Bulleted list" Action="ListBullets" Type="Menu Item" AccessibleName="Bulleted list" ID="OverflowAdaptiveOverflow_Text_ListBullets" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
+              <Button Content="Numbered list" Action="ListNumbered" Type="Menu Item" AccessibleName="Numbered list" ID="OverflowAdaptiveOverflow_Text_ListNumbered" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
+              <Button Content="Checklist" Action="ListChecklist" Type="Menu Item" AccessibleName="Checklist" ID="OverflowAdaptiveOverflow_Text_ListChecklist" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
               <Button Content="Increase indent" Action="IndentInc" Type="Menu Item" AccessibleName="Increase indent" ID="OverflowAdaptiveOverflow_Text_IndentInc" />
               <Button Content="Decrease indent" Action="IndentDec" Type="Menu Item" AccessibleName="Decrease indent" ID="OverflowAdaptiveOverflow_Text_IndentDec" />
-              <Button Content="Line spacing 1.5" Action="Spacing1.5" Type="Menu Item" AccessibleName="Line spacing 1.5" ID="OverflowAdaptiveOverflow_Text_Spacing1_5" />
+              <Button Content="Line spacing 1.5" Action="Spacing1.5" Type="Menu Item" AccessibleName="Line spacing 1.5" ID="OverflowAdaptiveOverflow_Text_Spacing1_5" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
               <Button Content="Subscript" Action="ToggleSub" Type="Menu Item" AccessibleName="Subscript" ID="OverflowAdaptiveOverflow_Text_ToggleSub" />
               <Button Content="Superscript" Action="ToggleSup" Type="Menu Item" AccessibleName="Superscript" ID="OverflowAdaptiveOverflow_Text_ToggleSup" />
               <Button Content="Clear formatting" Action="ClearFormat" Type="Menu Item" AccessibleName="Clear formatting" ID="OverflowAdaptiveOverflow_Text_ClearFormat" />
               <Button Content="Manage styles…" Action="ManageStyles" Type="Menu Item" AccessibleName="Manage styles…" ID="OverflowAdaptiveOverflow_Text_ManageStyles" />
-              <Button Content="Line spacing 1" Action="Spacing1" Type="Menu Item" AccessibleName="Line spacing 1" ID="OverflowAdaptiveOverflow_Text_Spacing1" />
-              <Button Content="Line spacing 1.25" Action="Spacing1.25" Type="Menu Item" AccessibleName="Line spacing 1.25" ID="OverflowAdaptiveOverflow_Text_Spacing1_25" />
-              <Button Content="Line spacing 2" Action="Spacing2" Type="Menu Item" AccessibleName="Line spacing 2" ID="OverflowAdaptiveOverflow_Text_Spacing2" />
+              <Button Content="Line spacing 1" Action="Spacing1" Type="Menu Item" AccessibleName="Line spacing 1" ID="OverflowAdaptiveOverflow_Text_Spacing1" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="Line spacing 1.25" Action="Spacing1.25" Type="Menu Item" AccessibleName="Line spacing 1.25" ID="OverflowAdaptiveOverflow_Text_Spacing1_25" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="Line spacing 2" Action="Spacing2" Type="Menu Item" AccessibleName="Line spacing 2" ID="OverflowAdaptiveOverflow_Text_Spacing2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
             </Button>
             <Button Type="Menu Item" Content="Colours" ID="OverflowAdaptiveOverflow_Colours">
               <Button Content="Black" Action="TextColor#FF111111" Type="Menu Item" AccessibleName="Black" ID="OverflowAdaptiveOverflow_Colours_TextColor_FF111111" />
@@ -262,14 +262,14 @@
               <Button Content="Yellow" Action="TextColor#FFF9AB00" Type="Menu Item" AccessibleName="Yellow" ID="OverflowAdaptiveOverflow_Colours_TextColor_FFF9AB00" />
               <Button Content="Navy" Action="TextColor#FF1B4F72" Type="Menu Item" AccessibleName="Navy" ID="OverflowAdaptiveOverflow_Colours_TextColor_FF1B4F72" />
               <Button Content="Brown" Action="TextColor#FF795548" Type="Menu Item" AccessibleName="Brown" ID="OverflowAdaptiveOverflow_Colours_TextColor_FF795548" />
-              <Button Content="Highlight None" Action="HighlightNone" Type="Menu Item" AccessibleName="Highlight None" ID="OverflowAdaptiveOverflow_Colours_HighlightNone" />
-              <Button Content="Highlight Yellow" Action="Highlight#FFFFFF00" Type="Menu Item" AccessibleName="Highlight Yellow" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFFFFF00" />
-              <Button Content="Highlight Green" Action="Highlight#FFCCFF90" Type="Menu Item" AccessibleName="Highlight Green" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFCCFF90" />
-              <Button Content="Highlight Blue" Action="Highlight#FFB3E5FC" Type="Menu Item" AccessibleName="Highlight Blue" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFB3E5FC" />
-              <Button Content="Highlight Pink" Action="Highlight#FFF8BBD0" Type="Menu Item" AccessibleName="Highlight Pink" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFF8BBD0" />
-              <Button Content="Highlight Orange" Action="Highlight#FFFFE0B2" Type="Menu Item" AccessibleName="Highlight Orange" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFFFE0B2" />
-              <Button Content="Highlight Grey" Action="Highlight#FFE0E0E0" Type="Menu Item" AccessibleName="Highlight Grey" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFE0E0E0" />
-              <Button Content="Highlight Peach" Action="Highlight#FFFFF3C4" Type="Menu Item" AccessibleName="Highlight Peach" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFFFF3C4" />
+              <Button Content="Highlight None" Action="HighlightNone" Type="Menu Item" AccessibleName="Highlight None" ID="OverflowAdaptiveOverflow_Colours_HighlightNone" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Yellow" Action="Highlight#FFFFFF00" Type="Menu Item" AccessibleName="Highlight Yellow" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFFFFF00" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Green" Action="Highlight#FFCCFF90" Type="Menu Item" AccessibleName="Highlight Green" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFCCFF90" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Blue" Action="Highlight#FFB3E5FC" Type="Menu Item" AccessibleName="Highlight Blue" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFB3E5FC" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Pink" Action="Highlight#FFF8BBD0" Type="Menu Item" AccessibleName="Highlight Pink" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFF8BBD0" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Orange" Action="Highlight#FFFFE0B2" Type="Menu Item" AccessibleName="Highlight Orange" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFFFE0B2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Grey" Action="Highlight#FFE0E0E0" Type="Menu Item" AccessibleName="Highlight Grey" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFE0E0E0" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
+              <Button Content="Highlight Peach" Action="Highlight#FFFFF3C4" Type="Menu Item" AccessibleName="Highlight Peach" ID="OverflowAdaptiveOverflow_Colours_Highlight_FFFFF3C4" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding HighlightControlHint}" />
             </Button>
             <Button Type="Menu Item" Content="Table" Active="{Binding TableMode}" ID="OverflowAdaptiveOverflow_Table">
               <Container Type="Menu" ID="OverflowAdaptiveOverflow_Table_Menu">

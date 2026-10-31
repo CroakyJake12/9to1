@@ -245,6 +245,7 @@ public sealed class RichStyleView
     public string Foreground { get; set; } = string.Empty;
     public string Background { get; set; } = string.Empty;
     public string Alignment { get; set; } = "inherit";
+    public int IndentLevel { get; set; } = -1;
 }
 
 /// <summary>

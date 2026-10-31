@@ -1,3 +1,4 @@
+using CakeOS.Apps.Boards.Contract;
 using Avalonia;
 using Avalonia.Controls;
 using System.Globalization;
@@ -32,9 +33,7 @@ public sealed partial class BoardsViewModel
         var selection = CurrentTextRange();
         if (block is null || block.Runs.Count == 0)
             return (family, size.ToString("0.##", CultureInfo.InvariantCulture));
-        var start = selection is null ? 0 : Math.Min(selection.Anchor, selection.Caret);
-        var end = selection is null ? block.Text.Length : Math.Max(selection.Anchor, selection.Caret);
-        if (start == end) { start = Math.Max(0, Math.Min(start, block.Text.Length - 1)); end = start + 1; }
+        var (start, end) = AdaptiveReadBounds(block, selection);
         var offset = 0;
         var families = new HashSet<string>(StringComparer.Ordinal);
         var sizes = new HashSet<double>();
@@ -61,9 +60,7 @@ public sealed partial class BoardsViewModel
             : !string.IsNullOrEmpty(style?.Background) ? style.Background : "#00000000";
         var selection = CurrentTextRange();
         if (block is null || block.Runs.Count == 0) return (foreground, background, false, false);
-        var start = selection is null ? 0 : Math.Min(selection.Anchor, selection.Caret);
-        var end = selection is null ? block.Text.Length : Math.Max(selection.Anchor, selection.Caret);
-        if (start == end) { start = Math.Max(0, Math.Min(start, block.Text.Length - 1)); end = start + 1; }
+        var (start, end) = AdaptiveReadBounds(block, selection);
         static string Normalized(string color) => Avalonia.Media.Color.TryParse(color, out var parsed) ? parsed.ToString() : color;
         var foregrounds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var backgrounds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -80,6 +77,22 @@ public sealed partial class BoardsViewModel
         return (foregrounds.Count > 1 ? "#00000000" : foregrounds.FirstOrDefault() ?? foreground,
             backgrounds.Count > 1 ? "#00000000" : backgrounds.FirstOrDefault() ?? background,
             foregrounds.Count > 1, backgrounds.Count > 1);
+    }
+
+    private (int Start, int End) AdaptiveReadBounds(RichBoardBlock block, BoardTextSelection? selection)
+    {
+        if (selection is not null) return (Math.Min(selection.Anchor, selection.Caret), Math.Max(selection.Anchor, selection.Caret));
+        var input = _textRangeControl;
+        if (!_disposed && !EditorLifetimeEnded && !_textRangeDetached && input is not null &&
+            !input.IsReadOnly && input.IsEffectivelyEnabled && TopLevel.GetTopLevel(input) is not null &&
+            input.SelectionStart == input.SelectionEnd && string.Equals(input.Text ?? string.Empty, block.Text, StringComparison.Ordinal) &&
+            _textRangePage == SelectedPageId && _textRangeBlock == SelectedBlockId && block.Id == SelectedBlockId)
+        {
+            var caret = Math.Clamp(input.CaretIndex, 0, block.Text.Length);
+            var start = caret > 0 ? caret - 1 : 0;
+            return (start, Math.Min(start + 1, block.Text.Length));
+        }
+        return (0, block.Text.Length);
     }
 
     private string AdaptiveDefaultFont()

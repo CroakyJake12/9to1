@@ -7,6 +7,7 @@ using CakeOS.Cui.Runtime;
 using CakeOS.Apps.Boards.Contract;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -118,8 +119,8 @@ public sealed class BoardsAdaptiveToolbarTests
                 var block = seed.Document.Sections[0].Pages[0].Blocks[0];
                 block.Text = "aabb";
                 block.Runs = [
-                    new HavenRichTextRun { Text = "aa", Foreground = "#FFFF0000", Background = "#FFFFFF00" },
-                    new HavenRichTextRun { Text = "bb", Foreground = "#FF0000FF", Background = "#FF00FF00" }
+                    new HavenRichTextRun { Text = "aa", FontFamily = "Inter", FontSize = 11, Foreground = "#FFFF0000", Background = "#FFFFFF00" },
+                    new HavenRichTextRun { Text = "bb", FontFamily = "Georgia", FontSize = 19, Foreground = "#FF0000FF", Background = "#FF00FF00" }
                 ];
                 seed.MarkDirty(); await seed.SaveAsync();
             }
@@ -153,6 +154,32 @@ public sealed class BoardsAdaptiveToolbarTests
                     Assert.True(projection.TryGetValue("TextColor", out foreground));
                     Assert.Equal(Color.Parse("#FF0000FF"), Assert.IsAssignableFrom<ISolidColorBrush>(foreground).Color);
                     Assert.True(projection.TryGetValue("TextColorMixed", out mixed)); Assert.Equal(false, mixed);
+                    foreach (var (caret, family, size, color) in new[]
+                    {
+                        (0, "Inter", "11", "#FFFF0000"), (2, "Inter", "11", "#FFFF0000"),
+                        (3, "Georgia", "19", "#FF0000FF"), (4, "Georgia", "19", "#FF0000FF")
+                    })
+                    {
+                        input.SelectionStart = caret; input.SelectionEnd = caret; input.CaretIndex = caret;
+                        Assert.True(projection.TryGetValue("FontDraft", out var font)); Assert.Equal(family, font);
+                        Assert.True(projection.TryGetValue("SizeDraft", out var fontSize)); Assert.Equal(size, fontSize);
+                        Assert.True(projection.TryGetValue("TextColor", out foreground));
+                        Assert.Equal(Color.Parse(color), Assert.IsAssignableFrom<ISolidColorBrush>(foreground).Color);
+                        Assert.True(projection.TryGetValue("TextColorMixed", out mixed)); Assert.Equal(false, mixed);
+                    }
+                    // A stale nonempty selection cannot be presented as a caret just
+                    // because the current range ticket cannot be captured.
+                    var projectedBlock = vm.FindBlock(vm.SelectedBlockId)!;
+                    input.SelectionStart = 0; input.SelectionEnd = 2;
+                    projectedBlock.Runs[0].Text = "zz";
+                    Assert.True(projection.TryGetValue("FontDraft", out var staleFont)); Assert.Equal("Mixed", staleFont);
+                    Assert.True(projection.TryGetValue("TextColorMixed", out mixed)); Assert.Equal(true, mixed);
+                    projectedBlock.Runs[0].Text = "aa";
+                    input.SelectionStart = 3; input.SelectionEnd = 3; input.CaretIndex = 3;
+                    projectedBlock.Text = "zzzz";
+                    Assert.True(projection.TryGetValue("FontDraft", out staleFont)); Assert.Equal("Mixed", staleFont);
+                    Assert.True(projection.TryGetValue("TextColorMixed", out mixed)); Assert.Equal(true, mixed);
+                    projectedBlock.Text = "aabb";
                 }
                 finally { window.Close(); }
             });
@@ -178,6 +205,87 @@ public sealed class BoardsAdaptiveToolbarTests
             Assert.True(context.TryGetValue("RangeBoldSelected", out var current));
             Assert.Equal(true, current);
         });
+    }
+
+    [Fact]
+    public async Task Mounted_list_row_keeps_supported_formatting_and_refuses_unstored_properties()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "boards-list-toolbar-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            using var documents = new BoardsLocalDocuments("list-toolbar", directory);
+            var id = await documents.CreateAsync();
+            await using (var seed = await documents.OpenAsync(id))
+            {
+                var page = seed.Document.Sections[0].Pages[0];
+                var block = page.Blocks[0]; block.Text = "Durable list row"; seed.MarkDirty();
+                Assert.True(await seed.ConvertBlockKindAsync(page.Id, block.Id, HavenRichBlockKind.BulletList));
+                await seed.SaveAsync();
+            }
+            var opening = TestUiThread.Run(() => BoardsWritablePresentation.OpenLocalDocumentAsync(documents, id, (_, _) => Task.CompletedTask));
+            BoardsTabberInsertionTests.OnUi(() => opening);
+            var presentation = await opening;
+            Window? window = null;
+            try
+            {
+                TestUiThread.Run(() =>
+                {
+                    var vm = presentation.ViewModel;
+                    window = new Window { Content = presentation.Content, Width = 1500, Height = 700 };
+                    window.Show(); window.UpdateLayout();
+                    var row = vm.PageBlocks.Single(block => block.Kind == "bulleted");
+                    vm.FocusBlock(row.Id); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                    foreach (var controlId in new[] { "AdaptiveStyle", "AdaptiveFont", "AdaptiveSize", "AdaptiveHighlight" })
+                    {
+                        var control = BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, controlId)!;
+                        Assert.NotNull(control); Assert.True(control.IsEffectivelyVisible);
+                        Assert.False(control.IsEffectivelyEnabled);
+                        Assert.Contains("individual list", ToolTip.GetTip(control)?.ToString());
+                    }
+                    var fontGroup = BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, "AdaptiveFontSection")!;
+                    Assert.True(fontGroup.IsEffectivelyEnabled);
+                    Assert.Contains("Font, style and size unavailable", ToolTip.GetTip(fontGroup)?.ToString());
+                    var caseMenu = presentation.Content.GetLogicalDescendants().OfType<MenuItem>().First(item =>
+                        Avalonia.Automation.AutomationProperties.GetName(item) == "Text case");
+                    Assert.True(caseMenu.IsEffectivelyEnabled);
+                    Assert.Equal("Change text case", ToolTip.GetTip(caseMenu));
+                    Assert.True(BoardsCuiControlFinder.FindByAutomationId<Button>(presentation.Content, "RangeBold")!.IsEffectivelyEnabled);
+                    Assert.True(BoardsCuiControlFinder.FindByAutomationId<MenuItem>(presentation.Content, "AdaptiveTextColor")!.IsEffectivelyEnabled);
+                    using var context = new AdaptiveToolbar.Context(vm);
+                    var before = vm.Session.Snapshot;
+                    Assert.False(context.TrySetValue("FontDraft", "Georgia"));
+                    Assert.False(context.TrySetValue("SizeDraft", "24"));
+                    Assert.False(context.TrySetValue("StyleIndex", 0));
+                    foreach (var command in new[] { "FontGeorgia", "Size24", "Highlight#FFFFFF00", "Spacing2", "AlignRight", "ListNumbered" })
+                    {
+                        var refused = context.DispatchAsync(command, null).AsTask(); BoardsTabberInsertionTests.Await(refused);
+                        Assert.Equal(before, vm.Session.Snapshot);
+                        Assert.Contains("individual list", vm.Get("StatusText")?.ToString());
+                    }
+                    foreach (var command in new[] { "ToggleBold", "TextColor#FFD32F2F", "ToggleSub", "CaseUpper", "IndentInc" })
+                    {
+                        var applied = context.DispatchAsync(command, null).AsTask(); BoardsTabberInsertionTests.Await(applied);
+                    }
+                    var updated = vm.PageBlocks.Single(block => block.Kind == "bulleted");
+                    Assert.True(updated.Bold); Assert.Equal("#FFD32F2F", updated.Foreground);
+                    Assert.Equal("subscript", updated.Baseline); Assert.Equal("DURABLE LIST ROW", updated.Text);
+                    Assert.Equal(1, updated.Level);
+                });
+                BoardsTabberInsertionTests.OnUi(() => presentation.SaveAsync().AsTask());
+            }
+            finally
+            {
+                TestUiThread.Run(() => window?.Close());
+                BoardsTabberInsertionTests.OnUi(() => presentation.DisposeAsync().AsTask());
+            }
+            await using var reopened = await documents.OpenAsync(id);
+            var saved = reopened.Document.Sections[0].Pages[0].Blocks.Single(block => block.Kind == "bulleted");
+            Assert.True(saved.Bold); Assert.Equal("#FFD32F2F", saved.Foreground);
+            Assert.Equal("subscript", saved.Baseline); Assert.Equal("DURABLE LIST ROW", saved.Text);
+            Assert.Equal(1, saved.Level);
+        }
+        finally { Directory.Delete(directory, true); }
     }
 
 }

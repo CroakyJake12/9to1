@@ -60,6 +60,23 @@ internal static class AdaptiveToolbar
         }
 
         private BoardsViewModel Target => _owner.ToolbarTarget;
+        private bool IsListRow => Target.FindBlock(Target.SelectedBlockId)?.Kind is "checklist" or "bulleted" or "numbered";
+        private const string ListSettingUnavailable = "Unavailable for individual list items.";
+
+        private bool RefuseUnsupportedListCommand(string command)
+        {
+            if (!IsListRow) return false;
+            if (command is "ApplyFont" or "ApplySize" or "FontSmaller" or "FontBigger" or
+                "ListNone" or "ListBullets" or "ListNumbered" or "ListChecklist" ||
+                command.StartsWith("Font", StringComparison.Ordinal) || command.StartsWith("Size", StringComparison.Ordinal) ||
+                command.StartsWith("Highlight", StringComparison.Ordinal) || command.StartsWith("Spacing", StringComparison.Ordinal) ||
+                command.StartsWith("Align", StringComparison.Ordinal))
+            {
+                Target.Set("StatusText", ListSettingUnavailable);
+                return true;
+            }
+            return false;
+        }
         private void Changed(object? sender, PropertyChangedEventArgs args) => QueueRefresh();
         private void QueueRefresh()
         {
@@ -103,6 +120,10 @@ internal static class AdaptiveToolbar
             double? lineSpacing = block?.LineSpacing > 0 ? block.LineSpacing
                 : style?.LineSpacing > 0 ? style.LineSpacing : null;
             var spacingLabel = lineSpacing?.ToString("0.##", CultureInfo.InvariantCulture) ?? "Auto";
+            var listRow = block?.Kind is "checklist" or "bulleted" or "numbered";
+            var alignment = block?.Alignment is null or "" or "inherit" ? style?.Alignment : block.Alignment;
+            if (alignment is null or "" or "inherit") alignment = "left";
+            var indent = listRow ? block!.Level : block?.IndentLevel >= 0 ? block.IndentLevel : Math.Max(0, style?.IndentLevel ?? 0);
             var identity = target.SelectedPageId + "\0" + target.SelectedBlockId;
             if (_draftIdentity != identity) { _draftIdentity = identity; _fontDraft = _sizeDraft = null; }
             var text = !target.IsDrawMode && (block is null || block.Kind is "paragraph" or "heading" or "bulleted" or "numbered" or "checklist");
@@ -114,6 +135,17 @@ internal static class AdaptiveToolbar
                 "OtherMode" => !target.IsDrawMode && !text && block?.Kind is not ("table" or "image"),
                 "DrawingMode" => target.IsDrawMode,
                 "CanEditToolbar" => target.CanEdit && target.IsEditMode,
+                "CanUseTypography" => !listRow && target.CanEdit && target.IsEditMode,
+                "CanUseParagraphAlignment" => !listRow && target.CanEdit && target.IsEditMode,
+                "CanChangeListKind" => !listRow && target.CanEdit && target.IsEditMode,
+                "TypographyGroupHint" => listRow ? "Font, style and size unavailable for individual list items." : "Font, paragraph style and size",
+                "FontControlHint" => listRow ? ListSettingUnavailable : "Type a font family and press Enter",
+                "SizeControlHint" => listRow ? ListSettingUnavailable : "Type a font size from 8 to 96 and press Enter",
+                "StyleControlHint" => listRow ? ListSettingUnavailable : "Paragraph style",
+                "HighlightControlHint" => listRow ? ListSettingUnavailable : colors.BackgroundMixed ? "Mixed highlight colours" : "Highlight colour " + colors.Background,
+                "SpacingControlHint" => listRow ? ListSettingUnavailable : "Line spacing " + spacingLabel,
+                "AlignmentControlHint" => listRow ? ListSettingUnavailable : "Alignment: " + alignment,
+                "ListControlHint" => listRow ? "List type changes are unavailable for individual list items." : "List type",
                 "CanUseProperties" => target.CanEdit && target.IsEditMode,
                 "PropertiesSelected" => _owner.Get("AdaptivePropertiesVisible") is true,
                 "StyleNames" => target.StyleList.Select(item => item.Id == "normal" ? "Paragraph" : item.Id.StartsWith("heading-", StringComparison.Ordinal) ? "Heading " + item.Id[8..] : item.Name).ToArray(),
@@ -128,13 +160,13 @@ internal static class AdaptiveToolbar
                 "HighlightColorUniform" => !colors.BackgroundMixed,
                 "TextColorLabel" => colors.ForegroundMixed ? "Mixed text colours" : "Text colour " + colors.Foreground,
                 "HighlightColorLabel" => colors.BackgroundMixed ? "Mixed highlight colours" : "Highlight colour " + colors.Background,
-                "AlignIcon" => block?.Alignment switch { "center" => "icon:align-center", "right" => "icon:align-right", "justify" => "icon:align-justify", _ => "icon:align-left" },
+                "AlignIcon" => alignment switch { "center" => "icon:align-center", "right" => "icon:align-right", "justify" => "icon:align-justify", _ => "icon:align-left" },
                 "ListIcon" => block?.Kind switch { "numbered" => "icon:numbered-list", "checklist" => "icon:check", _ => "icon:bulleted-list" },
                 "CompactSpacing" => spacingLabel + " ↕",
-                "AlignLabel" => (block?.Alignment is null or "inherit" ? "Left" : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(block.Alignment)) + " ▾",
+                "AlignLabel" => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(alignment) + " ▾",
                 "ListLabel" => (block?.Kind switch { "bulleted" => "Bullets", "numbered" => "Numbered", "checklist" => "Checklist", _ => "List" }) + " ▾",
                 "SpacingLabel" => "Spacing " + spacingLabel + " ▾",
-                "IndentLabel" => "Indent " + Math.Max(0, block?.IndentLevel ?? 0).ToString(CultureInfo.InvariantCulture) + " ▾",
+                "IndentLabel" => "Indent " + indent.ToString(CultureInfo.InvariantCulture) + " ▾",
                 "ObjectLabel" => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(block?.Kind ?? "Block"),
                 "ImageFitLabel" => "Fit: " + (block?.Image?.FitMode ?? "contain"),
                 "InkLabel" => target.InkTool + " ▾",
@@ -154,6 +186,11 @@ internal static class AdaptiveToolbar
         {
             if (_disposed || !Target.CanEdit || !Target.IsEditMode) return false;
             var key = path[(path.LastIndexOf('.') + 1)..];
+            if (IsListRow && (key is "FontDraft" or "SizeDraft" or "StyleIndex"))
+            {
+                Target.Set("StatusText", ListSettingUnavailable);
+                return false;
+            }
             switch (key)
             {
                 case "FontDraft": _fontDraft = value as string; return true;
@@ -168,7 +205,7 @@ internal static class AdaptiveToolbar
         {
             if (_disposed) return;
             var target = Target;
-            if (!target.CanEdit || !target.IsEditMode) return;
+            if (!target.CanEdit || !target.IsEditMode || RefuseUnsupportedListCommand(command)) return;
             var block = target.FindBlock(target.SelectedBlockId);
             switch (command)
             {
@@ -184,6 +221,8 @@ internal static class AdaptiveToolbar
                 case "Properties": _owner.SetAdaptiveProperties(_owner.Get("AdaptivePropertiesVisible") is not true); break;
                 case "CaseUpper": target.ChangeAdaptiveCase("upper"); break;
                 case "CaseLower": target.ChangeAdaptiveCase("lower"); break;
+                case "IndentInc" when IsListRow: target.ChecklistIndent(target.SelectedBlockId, 1); target.RequestRebuild(); break;
+                case "IndentDec" when IsListRow: target.ChecklistIndent(target.SelectedBlockId, -1); target.RequestRebuild(); break;
                 case "ListNone": await target.ConvertSelectedKindAsync("paragraph"); break;
                 case "ListBullets": await target.ConvertSelectedKindAsync("bulleted"); break;
                 case "ListNumbered": await target.ConvertSelectedKindAsync("numbered"); break;
