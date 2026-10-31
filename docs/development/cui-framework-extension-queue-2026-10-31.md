@@ -88,6 +88,39 @@ _Regenerated from the committed gaps.json files; the per-corpus plumbing lists l
 - **Values and state**: live variable/binding 647, computed size 437, flex share sizing 433, conditional rebuild 332, theme colour token 596. The owner's guidance is that CUI's live-variable system is the ideal end state for these, not a hard gate yet, which is why they rank below the structural work.
 - **Donor-specific residue**: custom donor widget 1,479 and unknown donor construct 1,003 are decisions, not gaps: each names a control the donor defines itself. They must be reviewed one by one; 'approximate as container' is a Stage A holding place.
 
+## Known framework defect, diagnosed but deliberately not patched yet
+
+`framework/CUI/Runtime.Tests` fails 6-14 of 753 tests depending on the run (pinned by
+`eng/development/cui_test_baselines.json`, enforced by `eng/development/cui_test_ratchet.py`). Measured cause:
+
+- `CuiControlLoader.ThemePreferenceChanged` (file `framework/CUI/Runtime/CuiControlLoader.cs`, the tail of the
+  method, around the `Dispatcher.UIThread.CheckAccess()` decision near line 178) refreshes every control the
+  loader owns through the **ambient static** `Dispatcher.UIThread`.
+- Under the headless test host, parallel `HeadlessUnitTestSession` instances each own a separate UI thread and
+  a separate ambient dispatcher. When a global palette/preference event is raised while another session's
+  dispatcher is ambient, `Dispatcher.UIThread.Invoke(RefreshTheme)` runs the refresh on the **wrong UI thread**,
+  and touching controls owned by a different session throws
+  `InvalidOperationException: The calling thread cannot access this object because a different thread owns it`,
+  which the loader re-wraps as `AggregateException("One or more CUI controls could not apply the theme.")`.
+- Why the count moves between runs: it depends purely on which session happens to be ambient when the global
+  event fires. Same binary, seven runs: 6, 8, 9, 10, 12, 13, 14.
+
+What a correct fix must do, and what it must not:
+- Resolve the dispatcher **per control** (the dispatcher of the control's owning top level), not the ambient
+  static, and refresh each control on its own owner's thread - or hold the existing single-dispatcher
+  assumption explicitly and make the test host enforce it. Both are defensible; silently changing the
+  guarantee is not.
+- Keep the existing failure custody. The current code deliberately re-throws so a retried identical revision
+  re-visits failed controls (`_appliedThemeKeys.Remove(control)`), and the comments state that fire-and-forget
+  posting would wrongly mark the observer successful. Any fix has to preserve that, which is why the test
+  names in the baseline are about admission, retry and custody rather than plain rendering.
+- Do not shrink the baseline by deleting or skipping tests: the ratchet treats a falling test count as a
+  breach, and the baseline is only lowered with a stated reason after the defect is actually fixed.
+
+Deferred here on purpose, with the reason: it is the product's global theme path, the change is a threading
+change in the most concurrency-sensitive area, and it deserves a focused unit with the ratchet watching - not
+a patch at the tail end of a long session. Everything else in this queue is structural by comparison.
+
 ## Verification plan for each unit
 
 1. Register the construct in `framework/CUI/Runtime/CuiControlRegistry.cs` (Container Type and any new typed properties) — the mirror emitter reads this contract live, so the mirror gains the construct in the same change.
