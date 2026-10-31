@@ -1,0 +1,62 @@
+{
+  "_purpose": "Pinned failure baseline for the CUI test projects. The suites are currently red in a known way; this records exactly which tests fail so no NEW failure can slip in and no test count can quietly drop. It is not acceptance: these are compile/test results, and none of the framework suite is on-screen or release evidence.",
+  "_measured_on": "2026-10-31",
+  "_measured_at_source": "56a0642f765850544a1eba1827774275e461cae5",
+  "_measured_by": "eng/development/cui_test_ratchet.py",
+  "_flakiness_note": "The runtime suite reported Failed = 8, 9, 10, 12 and 13 from identical binaries on repeated runs, with the moving names all inside the theme-refresh family; the recorded failure list is the UNION of those runs, so it is deliberately wider than any single run. Every entry needs a real fix, not a smaller list. Runtime.Tests known list is the union of six runs of the same binaries on 31 October 2026 (Failed = 8, 9, 10, 12, 13, 14): 12 distinct names. Three names from my own new toolbar class appeared in early runs only because my test expectations were wrong; they pass now and are deliberately NOT recorded, so the baseline stays honest about what the framework actually fails.",
+  "projects": [
+    {
+      "project": "framework/CUI/tests/NineToOne.Cui.Markup.Tests.csproj",
+      "total": 34,
+      "passed": 34,
+      "failed": 0,
+      "known_failures": []
+    },
+    {
+      "project": "framework/CUI/Compiler.Tests/CakeOS.Cui.Compiler.Tests.csproj",
+      "total": 204,
+      "passed": 204,
+      "failed": 0,
+      "known_failures": []
+    },
+    {
+      "project": "framework/CUI/AI.Tests/NineToOne.Cui.AI.Tests.csproj",
+      "total": 9,
+      "passed": 8,
+      "failed": 1,
+      "known_failures": [
+        "Message:",
+        "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests.SharedBarKeepsPersistentModeControlAndSemanticModelPickerInCui"
+      ]
+    },
+    {
+      "project": "framework/CUI/DevTools.Tests/Haven.CUI.DevTools.Tests.csproj",
+      "total": 47,
+      "passed": 47,
+      "failed": 0,
+      "known_failures": []
+    },
+    {
+      "project": "framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "total": 753,
+      "passed": 739,
+      "failed": 14,
+      "known_failures": [
+        "CakeOS.Cui.Runtime.Tests.CuiAppearancePreferenceTests.Inherited_global_refresh_waits_for_admission_and_retries_after_callback_failure",
+        "CakeOS.Cui.Runtime.Tests.CuiAppearancePreferenceTests.Owned_appearance_refreshes_existing_scopes_and_preserves_document_controls_and_exact_global_mode",
+        "CakeOS.Cui.Runtime.Tests.CuiAppearancePreferenceTests.Retained_inherited_scene_tracks_global_bright_dark_bright_and_keeps_explicit_appearance",
+        "CakeOS.Cui.Runtime.Tests.CuiInputSubmitRuntimeTests.Active_ime_preedit_disabled_and_readonly_inputs_never_dispatch_submit",
+        "CakeOS.Cui.Runtime.Tests.CuiRecordedSurfaceLayoutTests.Home_library_labels_and_folder_name_field_flow_and_survive_live_branch_updates",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes",
+        "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes(appearance:",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.Busy_gate_retheme_and_release_restore_enabled_presentation",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.CUI_templates_render_and_edit_without_a_donor_theme_and_retheme_preserves_input",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.Global_palette_refresh_publishes_complete_resources_without_per_token_notifications",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeAuthorityTests.Private_scrollbar_parts_are_compact_and_follow_real_scroll_position",
+        "CakeOS.Cui.Runtime.Tests.CuiThemeTests.Applying_global_theme_updates_active_theme_for_subsequent_surface_loads",
+        "Message:",
+        "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests.SharedBarKeepsPersistentModeControlAndSemanticModelPickerInCui"
+      ]
+    }
+  ]
+}
