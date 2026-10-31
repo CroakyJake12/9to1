@@ -145,3 +145,25 @@ class CoverageFixtureTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DonorKeyMappingTests(unittest.TestCase):
+    """A binding named for the whole application still satisfies a designation written for the product."""
+
+    def test_the_application_level_donor_satisfies_the_specification_designation(self):
+        # Measured drift: adding the whole-app AppFlowy binding as donor key `appflowy` made the audit
+        # report an unmapped binding, even though the specification names the product at line 9383.
+        self.assertIn("appflowy", coverage.SYNONYMS["appflowy-board"])
+
+    def test_the_mapping_still_requires_the_specification_wording_to_be_present(self):
+        repo = Path(__file__).resolve().parents[2]
+        lines = (repo / coverage.SPEC).read_text().splitlines()
+        row = next(d for d in coverage.DESIGNATIONS if d["donor"] == "appflowy-board")
+        self.assertLess(abs(row["line"] - 9383), 60, "the recorded designation line has drifted")
+        self.assertTrue(coverage.find_fragment(lines, row["fragment"]),
+                        "the AppFlowy designation wording must still exist where it is recorded")
+
+    def test_an_unmapped_donor_key_is_still_reported(self):
+        designated = {k for d in coverage.DESIGNATIONS
+                      for k in set(coverage.SYNONYMS.get(d["donor"], set())) | {d["donor"]}}
+        self.assertNotIn("totally-invented-donor", designated)

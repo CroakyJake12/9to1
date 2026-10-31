@@ -28,3 +28,15 @@ AppFlowy Board proof still uses its existing pin; Rnote freeform integration at 
 - Cross-donor note: Canvas pins the same donor at **v0.14.2** (`8cac558fa73e`), the version its bridge
   actually compiles against, while Boards records the **v0.15.0** line. That divergence is unresolved
   and is now visible in the pins rather than hidden in prose.
+
+## AppFlowy pinned snapshot (2026-10-31, Stage A UI mirror)
+
+- Upstream: https://github.com/AppFlowy-IO/AppFlowy and https://github.com/AppFlowy-IO/AppFlowy
+- Controlled fork: https://github.com/CroakyJake12/appflowy-9to1
+- Extracted from `refs/tags/0.14.11` at commit `5cf3a365dec0d59f64bad1ee4bb1050471a39b93` (fetch date 2026-10-31).
+- Local tree: `9to1 Workspace/Boards/Source/AppFlowy` - 4543 files, content digest `9f8d94e88ee5f5d94687d674583e304c0507298853f6900c9cf524b8749bcde4` (sha256 over every relative path plus that file's sha256). The digest is what makes a silent in-place edit of donor source detectable.
+- Modules kept: frontend/ (appflowy_flutter UI, including the board widget, + rust-lib engine)
+- Licence: AGPL-3.0-only (read from the pinned tree's LICENSE); notices read from the tree: `LICENSE`
+- Fork state: the exact pinned object is reachable in the controlled fork (measured with the GitHub API on this date). That is object reachability, **not** a submodule gitlink: the tree is not committed to this repository and recursive checkout cannot materialise it. Converting the snapshot into a fork submodule pin is a separate verified unit.
+- Why snapshot rather than submodule: Owner decision 2026-10-31: fork the newest AppFlowy rather than the old stand-alone board widget package, because the board view lives inside the application and the shared engine comes from frontend/rust-lib. The previously pinned appflowy-board package stays in history and remains what the app itself depends on (pubspec pins e8317c0d1af8).
+- Evidence level: source materialisation and licence custody only. Nothing here is built, run, rendered, packaged or accepted.

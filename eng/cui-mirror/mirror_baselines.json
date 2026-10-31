@@ -1,13 +1,14 @@
 {
   "_purpose": "Ratchet for the Stage A donor-UI mirror corpora. documents/without-errors are measured by eng/cui-mirror/probe under --strict; any CUI compile error fails. A fall in `documents` means mirrors were lost and must be explained, not absorbed.",
   "_measured_on": "2026-10-31",
-  "_measured_at_source": "e61ba7d3",
+  "_measured_at_source": "04a19137",
   "_mirror_tool_version": "e98dc48ca7ef0f6d671d9653d6dfcf6e6f6ad0635c7a21c2345f48f3f16f1469",
   "_probe_command": "dotnet eng/cui-mirror/probe/bin/Release/net10.0/CuiMirrorProbe.dll --strict <corpus>...",
-  "documents": 1049,
-  "without_errors": 1049,
+  "documents": 1050,
+  "without_errors": 1050,
   "compile_errors_allowed": 0,
   "corpora": [
+    "9to1 Workspace/Boards/CUI/DonorMirror/appflowy",
     "9to1 Workspace/Boards/CUI/DonorMirror/rnote",
     "9to1 Workspace/Browse/CUI/DonorMirror/firefox",
     "9to1 Workspace/Build/CUI/DonorMirror/gitea",
@@ -18,5 +19,6 @@
     "9to1 Workspace/Present/CUI/DonorMirror/libreoffice-impress",
     "9to1 Workspace/Write/CUI/DonorMirror/libreoffice-writer"
   ],
-  "evidence_label": "CUI compile evidence only. Nothing here is rendered, run natively, packaged or accepted."
+  "evidence_label": "CUI compile evidence only. Nothing here is rendered, run natively, packaged or accepted.",
+  "_change_reason": "2026-10-31: corpora regenerated from per-app donor trees (Data now mirrors Data/Source/LibreOffice/sc, Present mirrors Present/Source/LibreOffice/sd, instead of borrowing Write's checkout) after a bad rm -rf removed the Present and Data trees; each app's donor binding now owns its own path, pin and digest. +1 document from the first AppFlowy frontend pass (1 of 18 files: its board UI is Dart code-built widgets, so 17 files stay recorded untranslated until a Dart dialect exists). Gitea is 289 rather than 292 because the Go template handling changed: control tags no longer leak, and three files whose template branch tags leave an unbalanced tree are now reported untranslated instead of being mirrored with invented structure."
 }

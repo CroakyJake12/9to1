@@ -94,7 +94,7 @@ jobs:
               ('benchmark-streams', 22, ['python3', '-B', '-m', 'unittest', 'discover', '-s', '9to1 Workspace/Home/Source/Dulche/llamacpp/tests', '-p', 'test_benchmark.py', '-v']),
               ('donor-policy-census', 18, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_donor_policy.py', '-v']),
               ('donor-coverage-audit', 11, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_donor_coverage.py', '-v']),
-              ('donor-pin-resolution', 13, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_check_donor_sources.py', '-v']),
+              ('donor-pin-resolution', 25, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_check_donor_sources.py', '-v']),
               ('donor-fork-equivalence', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_donor_fork_equivalence.py', '-v']),
               ('donor-audit-ratchet', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_record_donor_audit_baselines.py', '-v']),
               ('cui-donor-mirror', 39, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/cui-mirror', '-p', 'test_*.py', '-v']),

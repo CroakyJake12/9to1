@@ -1,0 +1,5 @@
+<Cui id="html-simple" product="9-1" version="1">
+  <Page id="html-simple-root">
+    <Text id="span" text="This is a paragraph" />
+  </Page>
+</Cui>

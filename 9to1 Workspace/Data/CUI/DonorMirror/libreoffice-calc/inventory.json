@@ -29,7 +29,7 @@
     "pruned_stale": 0,
     "donor": "libreoffice-calc",
     "app": "Data",
-    "source": "9to1 Workspace/Write/Source/LibreOffice/sc",
+    "source": "9to1 Workspace/Data/Source/LibreOffice/sc",
     "translated_files": 188,
     "untranslated_files": 0,
     "unsupported_suffixes": {}

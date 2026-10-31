@@ -1,0 +1,134 @@
+{
+  "summary": {
+    "translated": 1,
+    "dropped_nodes": 0,
+    "gap_count": 18,
+    "gap_constructs": {
+      "parse error: junk after document element: line 1, column 7": 14,
+      "parse error: mismatched tag: line 86, column 2": 2,
+      "parse error: not well-formed (invalid token): line 28, column 32": 1,
+      "inline text run": 1
+    },
+    "pruned_stale": 0,
+    "donor": "appflowy",
+    "app": "Boards",
+    "source": "9to1 Workspace/Boards/Source/AppFlowy/frontend",
+    "translated_files": 1,
+    "untranslated_files": 17,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "appflowy_flutter/packages/appflowy_popover/example/web/index.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "appflowy_flutter/packages/flowy_infra_ui/example/web/index.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "appflowy_flutter/web/index.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/bulleted_list.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/callout.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/code.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/divider.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/google_docs.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/heading.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/image.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/math_equation.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/notion.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/numbered_list.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/paragraph.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/quote.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/simple.html",
+      "cui": "rust-lib/flowy-document/tests/assets/html/simple.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "14372e0d5d2b01065c1bef8943eb1249cf7d8d37826c7e6f5bcb711d7e8fef4d",
+      "refreshed": true
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/todo_list.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "rust-lib/flowy-document/tests/assets/html/toggle_list.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    }
+  ]
+}

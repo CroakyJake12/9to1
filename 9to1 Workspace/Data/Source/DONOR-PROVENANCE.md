@@ -25,3 +25,15 @@ Compatibility with the newest sources is **not proven**. See `eng/donor-sources.
   dependency currently comes from whatever DuckDB the environment provides - the same
   "depends on what the user has" pattern flagged for the browser engine. Closing it needs either a
   versioned, digest-verified Python dependency or a build of the vendored source into a bundled library.
+
+## LibreOffice pinned snapshot (2026-10-31, Stage A UI mirror)
+
+- Upstream: https://github.com/LibreOffice/core and https://github.com/LibreOffice/core
+- Controlled fork: https://github.com/CroakyJake12/libreoffice
+- Extracted from `refs/heads/master` at commit `7528c0d406012e10c6ce34c3f24bf277302ec695` (fetch date 2026-10-31).
+- Local tree: `9to1 Workspace/Data/Source/LibreOffice` - 488 files, content digest `eafb3acb76abffac7de4abd56cf501c77fbea51f5bf72aa0afa1bbfa8f9a6929` (sha256 over every relative path plus that file's sha256). The digest is what makes a silent in-place edit of donor source detectable.
+- Modules kept: sc/uiconfig (Calc), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices
+- Licence: MPL-2.0-or-later / LGPL-3.0-or-later (LibreOffice is triple-licensed; notices read from the pinned tree); notices read from the tree: `COPYING`, `COPYING.LGPL`, `COPYING.MPL`
+- Fork state: the exact pinned object is reachable in the controlled fork (measured with the GitHub API on this date). That is object reachability, **not** a submodule gitlink: the tree is not committed to this repository and recursive checkout cannot materialise it. Converting the snapshot into a fork submodule pin is a separate verified unit.
+- Why snapshot rather than submodule: Stage A mirror of the Calc UI. DuckDB stays the analytical engine the specification names; LibreOffice Calc is the spreadsheet-compatibility donor and the UI reference for it.
+- Evidence level: source materialisation and licence custody only. Nothing here is built, run, rendered, packaged or accepted.

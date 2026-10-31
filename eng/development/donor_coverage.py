@@ -73,7 +73,12 @@ SYNONYMS = {
     "firefox-gecko": {"firefox-gecko", "firefox"},
     "libreoffice-writer": {"libreoffice"}, "libreofficekit": {"libreoffice"},
     "libreoffice-impress-draw": {"libreoffice"}, "libreoffice-calc": {"libreoffice"},
-    "appflowy-board": {"appflowy-board"}, "element-matrix": {"element", "matrix"},
+    # The specification names the product ("AppFlowy is the primary donor for applicable workspace/page/
+    # database/block behaviours"), not the Flutter package. Owner decision of 31 October 2026 is to fork
+    # the whole AppFlowy application rather than only the board widget package, because the board view
+    # lives inside the app and the engine comes from its rust-lib. Both keys therefore satisfy the same
+    # designation, whose wording is still re-checked at line 9383.
+    "appflowy-board": {"appflowy-board", "appflowy"}, "element-matrix": {"element", "matrix"},
     "gnome-system-monitor": {"gnome-shell", "mutter"}, "code-oss": {"code-oss", "vscodium"},
 }
 

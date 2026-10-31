@@ -7,6 +7,7 @@ materialisation while explicitly withholding recursive-checkout acceptance.
 
 import argparse
 import configparser
+import hashlib
 import json
 import re
 import subprocess
@@ -129,6 +130,116 @@ def aspirational_binding(entry):
     return missing
 
 
+def snapshot_verification_problems(entry, record, path, source):
+    """Checks for a donor deliberately materialised as an extracted snapshot, not a submodule.
+
+    Some donors are needed only as a UI reference for the Stage A mirrors. Vendoring them as a loose
+    snapshot at an exact upstream revision is honest as long as three things are recorded and re-checked:
+    the revision the snapshot came from, a content digest that detects silent edits, and the licence files
+    read from that tree. It is never presented as a recursive checkout: the snapshot is local, and the
+    fork/submodule conversion is a separate unit.
+    """
+    problems = []
+    # Each app has its own donor tree, so each tree has its own digest. A block recorded on the shared
+    # upstream entry cannot describe three different trees: the first binding would overwrite the second.
+    snap = entry.get("snapshot") or {}
+    if not snap and record.get("snapshot"):
+        problems.append("snapshot pin is recorded on the shared upstream entry rather than on this app's "
+                        "binding, so it cannot be true for every consumer of that donor")
+        snap = record["snapshot"]
+    for field in ("ref", "commit", "fetched"):
+        if not snap.get(field):
+            problems.append(f"snapshot record is missing {field}")
+    if not snap.get("reason"):
+        problems.append("snapshot record has no reason for not being a pinned submodule")
+    digest = snapshot_digest(source)
+    if digest is None:
+        problems.append("snapshot source cannot be read")
+        return problems
+    if snap.get("contentDigest") and snap["contentDigest"] != digest:
+        problems.append(f"snapshot content digest disagrees with the tree on disk "
+                        f"({str(snap['contentDigest'])[:12]} recorded, {digest[:12]} present) - "
+                        "a donor snapshot must not be edited in place")
+    if snap.get("fileCount") is not None:
+        counted = sum(1 for _ in Path(source).rglob("*") if _.is_file())
+        if counted != int(snap["fileCount"]):
+            problems.append(f"snapshot file count disagrees: recorded {snap['fileCount']}, present {counted}")
+    return problems
+
+
+def snapshot_digest(source):
+    """sha256 over every file path and content digest in the snapshot, order-stable."""
+    try:
+        entries = []
+        for path in sorted(Path(source).rglob("*")):
+            if not path.is_file():
+                continue
+            try:
+                digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            except OSError:
+                return None
+            entries.append(f"{path.relative_to(source)}\t{digest}")
+        return hashlib.sha256("\n".join(entries).encode("utf-8")).hexdigest()
+    except OSError:
+        return None
+
+
+def dependency_lock_problems(entry, record, app, donor):
+    """Checks for a donor consumed as a pinned build from a lock file rather than as vendored source.
+
+    llama.cpp is the real case: the inference host FetchContents an exact upstream commit and the lock
+    records its tree. That is honest only while the lock, the registry and the licence say the same thing,
+    so those are what get checked - an absent lock or a disagreeing revision is a failure, not a waiver.
+    """
+    problems = []
+    lock_rel = entry.get("binaryLock")
+    if not lock_rel:
+        return [f"{app}/{donor}: pinned-binary verification claims a lock file but none is recorded"]
+    lock_path = ROOT / lock_rel
+    if not lock_path.is_file():
+        return [f"{app}/{donor}: recorded dependency lock does not exist at {lock_rel}"]
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return [f"{app}/{donor}: dependency lock cannot be read: {exc}"]
+    commit, _unused, pin_problems = resolved_pin(entry, record)
+    problems.extend(f"{app}/{donor}: {x}" for x in pin_problems)
+    if lock.get("pinnedCommit") != commit:
+        problems.append(f"{app}/{donor}: dependency lock pins {lock.get('pinnedCommit')} but the donor "
+                        f"registry pins {commit} - one of them is wrong, and the build follows the lock")
+    if not lock.get("license"):
+        problems.append(f"{app}/{donor}: dependency lock records no licence")
+    elif record.get("license") and lock.get("license") and lock["license"] not in record["license"]:
+        problems.append(f"{app}/{donor}: licence disagrees between dependency lock ({lock['license']}) and "
+                        f"donor registry ({record['license']})")
+    if not lock.get("tree"):
+        problems.append(f"{app}/{donor}: dependency lock records no upstream tree digest")
+    if not entry.get("consumer") or "runtimeRequirement" not in entry:
+        problems.append(f"{app}/{donor}: integration boundary or runtime requirement not recorded")
+    return problems
+
+
+def snapshot_gitlink_problems(stage_line, recorded_commit):
+    """Cross-checks a committed gitlink against a recorded snapshot pin.
+
+    A snapshot donor is deliberately not a submodule today, which is honest only while it is described
+    that way. If someone later converts the tree into a submodule without updating the pin, gitlink and
+    recorded pin would silently disagree, so a gitlink that exists has to match the recorded commit.
+    """
+    if not stage_line:
+        return []            # no gitlink: the caller already reports that recursive checkout cannot work
+    if not stage_line.startswith("160000 "):
+        return ["path carries loose committed files rather than a gitlink, so the snapshot record and "
+                "the committed tree disagree"]
+    # `git ls-files --stage` prints: mode SP sha SP stage TAB path
+    parts = stage_line.replace("\t", " ").split()
+    linked = parts[1] if len(parts) > 1 else ""
+    if linked != recorded_commit:
+        return [f"committed gitlink {linked[:12]} disagrees with the recorded snapshot pin "
+                f"{str(recorded_commit)[:12]}: a converted submodule must update its pin, not keep it"]
+    return []
+
+
 def failures(local_only=False):
     data = json.loads(LOCK.read_text(encoding="utf-8"))
     upstreams = data["upstreams"]
@@ -137,6 +248,13 @@ def failures(local_only=False):
     # Aspirational donors are reported separately and never counted as issues: they are named future
     # work, not a gate failure over product that has not been built.
     aspirational = []
+    # Donors consumed as a pinned build from a lock file (llama.cpp): legitimate without vendored
+    # source, but only while the lock and the registry name the same revision, so they are reported
+    # here and cross-checked rather than waved through.
+    pinned_binary = []
+    # Snapshots are recorded as deliberately-not-submodules, so the gate must never claim that a fresh
+    # recursive checkout can materialise them - the old summary line did exactly that.
+    unconverted_snapshots = []
     modules = configparser.ConfigParser(interpolation=None)
     modules.read(ROOT / ".gitmodules", encoding="utf-8")
     paths_in_modules = {modules[s]["path"]: modules[s]["url"].removesuffix(".git")
@@ -165,14 +283,26 @@ def failures(local_only=False):
             errors.append(f"{app}/{donor}: source must be inside its owning Source/ tree")
             continue
         source = ROOT / path
+        if entry.get("verification") == "dependency-lock-pinned-binary":
+            problems = dependency_lock_problems(entry, record, app, donor)
+            if problems:
+                errors.extend(problems)
+            else:
+                pinned_binary.append(
+                    f"{app}/{donor}: consumed as a pinned build from "
+                    f"{entry.get('binaryLock')} at {record.get('commit', '')[:12]} "
+                    f"({record.get('license')}). No vendored source, no source build here; the runtime "
+                    "binary identity still has to match this commit, which this gate cannot observe.")
+            continue
         if not source.is_dir() or not source.resolve().is_relative_to(ROOT.resolve()):
             status = str(entry.get("status", ""))
             missing_fields = aspirational_binding(entry) if status else ["status"]
             if status and not missing_fields:
                 aspirational.append(
                     f"{app}/{donor}: declared donor with no materialised source "
-                    f"(status {status}; planned {entry['plannedVerdict']}; spec line "
-                    f"{entry['specLine']}) - {entry['reason']}")
+                    f"(status {status}; planned {entry['plannedVerdict']}; requirement reference "
+                    f"{entry['specLine']} [{entry.get('requirementKind', 'specification line')}]) - "
+                    f"{entry['reason']}")
             else:
                 errors.append(f"{app}/{donor}: no app-local source tree at {path}")
                 if status:
@@ -196,6 +326,16 @@ def failures(local_only=False):
                 errors.append("Files: imported code/test trees disagree with the verified upstream snapshot")
             if git("diff", "--name-only", "--", path):
                 errors.append("Files: working source differs from the pinned imported snapshot")
+        elif scope == "snapshot":
+            # An extracted donor snapshot at an exact revision: no gitlink, so what is enforceable is
+            # the recorded revision, a content digest that catches silent in-place edits, and the licence
+            # files read from that tree. Recursive-checkout acceptance is explicitly withheld.
+            errors.extend(snapshot_verification_problems(entry, record, path, source))
+            stage = git("ls-files", "--stage", "--", path)
+            errors.extend(f"{app}/{donor}: {x}" for x in
+                          snapshot_gitlink_problems(stage, (entry.get("snapshot") or {}).get("commit")))
+            if not stage:
+                unconverted_snapshots.append(f"{app}/{donor} ({path})")
         elif scope == "framework":
             # No gitlink yet, so the enforceable claim is the recorded blob-level equivalence.
             if not record.get("repository", "").startswith("https://") or not record.get("fork", "").startswith("https://github.com/CroakyJake12/"):
@@ -229,6 +369,15 @@ def failures(local_only=False):
                 errors.append(f"{app}/{donor}: controlled fork missing from app-local provenance")
         if not entry.get("consumer") or "runtimeRequirement" not in entry:
             errors.append(f"{app}/{donor}: integration boundary or runtime requirement not recorded")
+    consumers: dict[str, list] = {}
+    for entry in bindings:
+        if (ROOT / entry.get("path", "")).is_dir():
+            consumers.setdefault(entry.get("donor", ""), []).append(entry.get("app", ""))
+    for record_name, record in data.get("upstreams", {}).items():
+        if record.get("snapshot") and len(consumers.get(record_name, [])) > 1:
+            errors.append(f"{record_name}: one shared snapshot block serves "
+                          f"{len(consumers[record_name])} app bindings "
+                          f"({', '.join(sorted(consumers[record_name]))}); record the pin per binding")
     for app, donors in REQUIRED.items():
         for missing in donors - {donor for owner, donor in seen if owner == app}:
             errors.append(f"{app}/{missing}: declared external donor omitted from source registry")
@@ -239,25 +388,39 @@ def failures(local_only=False):
     # rather than inventing external source obligations for them.
     if not data.get("firstPartyOrInternal"):
         errors.append("first-party/internal dependency classification missing")
-    return errors, len(bindings), aspirational
+    return errors, len(bindings), aspirational, pinned_binary, unconverted_snapshots
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--local-only", action="store_true", help="Inspect current materialisation; do NOT claim recursive-checkout acceptance")
     args = parser.parse_args()
-    errors, count, aspirational = failures(args.local_only)
+    errors, count, aspirational, pinned_binary, unconverted = failures(args.local_only)
     for issue in errors:
         print("FAIL:", issue)
+    for note in pinned_binary:
+        print("PINNED BINARY:", note)
     for note in aspirational:
         print("ASPIRATIONAL:", note)
+    if pinned_binary:
+        print(f"Donors consumed as pinned builds from lock files (no vendored source): "
+              f"{len(pinned_binary)}")
     if aspirational:
         print(f"Recorded aspirational donors (named future work, not gate failures): {len(aspirational)}")
     if errors:
         print(f"Donor-source audit FAIL: {len(errors)} issue(s) across {count} bindings")
         return 1
+    if unconverted:
+        print(f"SNAPSHOT DONORS WITHOUT A GITLINK ({len(unconverted)}): extracted at an exact revision "
+              "and verified by recorded digest, but a fresh recursive checkout CANNOT materialise them. "
+              "Converting each into a controlled-fork submodule pin is outstanding work: "
+              + "; ".join(unconverted))
     if args.local_only:
         print(f"LOCAL SOURCE ONLY: {count} donor bindings materialised and pinned; committed gitlinks NOT checked")
+    elif unconverted:
+        print(f"PASS EXCEPT RECURSIVE CHECKOUT: {count} donor bindings carry source, provenance and "
+              f"licence custody, but {len(unconverted)} are extracted snapshots with no committed "
+              "gitlink, so a fresh recursive checkout would not reproduce them")
     else:
         print(f"PASS: {count} donor bindings, source, provenance and committed recursive-checkout gitlinks")
     return 0

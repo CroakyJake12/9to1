@@ -1,0 +1,146 @@
+{
+  "translated": 1,
+  "dropped_nodes": 0,
+  "gap_count": 18,
+  "gap_constructs": {
+    "parse error: junk after document element: line 1, column 7": 14,
+    "parse error: mismatched tag: line 86, column 2": 2,
+    "parse error: not well-formed (invalid token): line 28, column 32": 1,
+    "inline text run": 1
+  },
+  "gaps": [
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: not well-formed (invalid token): line 28, column 32",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/example/web/index.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: mismatched tag: line 86, column 2",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/example/web/index.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: mismatched tag: line 86, column 2",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/web/index.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/bulleted_list.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/callout.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/code.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/divider.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/google_docs.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/heading.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/image.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/math_equation.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/notion.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/numbered_list.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/paragraph.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/quote.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "html:span",
+      "construct": "inline text run",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/simple.html",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/todo_list.html",
+      "line": 0,
+      "why": "not translated"
+    },
+    {
+      "donor": "unparseable xul/xhtml",
+      "construct": "parse error: junk after document element: line 1, column 7",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/rust-lib/flowy-document/tests/assets/html/toggle_list.html",
+      "line": 0,
+      "why": "not translated"
+    }
+  ],
+  "pruned_stale": 0,
+  "donor": "appflowy",
+  "app": "Boards",
+  "source": "9to1 Workspace/Boards/Source/AppFlowy/frontend",
+  "translated_files": 1,
+  "untranslated_files": 17,
+  "unsupported_suffixes": {}
+}

@@ -26,7 +26,7 @@
     "pruned_stale": 0,
     "donor": "libreoffice-impress",
     "app": "Present",
-    "source": "9to1 Workspace/Write/Source/LibreOffice/sd",
+    "source": "9to1 Workspace/Present/Source/LibreOffice/sd",
     "translated_files": 89,
     "untranslated_files": 0,
     "unsupported_suffixes": {}

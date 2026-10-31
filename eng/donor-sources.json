@@ -44,19 +44,22 @@
     },
     "libreoffice": {
       "project": "LibreOffice (GitHub mirror of LibreOffice core)",
-      "canonicalRepository": "https://git.libreoffice.org/core",
+      "canonicalRepository": "https://github.com/LibreOffice/core",
       "repository": "https://github.com/LibreOffice/core",
       "branch": "master",
-      "commit": "d3fca73f81dfb19a72a0da41598b7390eaf5845b",
+      "commit": "7528c0d406012e10c6ce34c3f24bf277302ec695",
       "fork": "https://github.com/CroakyJake12/libreoffice",
-      "forkCommit": "d3fca73f81dfb19a72a0da41598b7390eaf5845b",
-      "license": "MPL-2.0 / LGPL-3.0-or-later (see source)",
+      "forkCommit": "7528c0d406012e10c6ce34c3f24bf277302ec695",
+      "license": "MPL-2.0-or-later / LGPL-3.0-or-later (LibreOffice is triple-licensed; notices read from the pinned tree)",
       "licenseFiles": [
         "COPYING",
-        "COPYING.MPL",
-        "COPYING.LGPL"
+        "COPYING.LGPL",
+        "COPYING.MPL"
       ],
-      "tag": null
+      "tag": null,
+      "scope": "snapshot",
+      "ref": "refs/heads/master",
+      "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x713b47907cb0> with the GitHub API: the exact pinned object 7528c0d406012e10c6ce34c3f24bf277302ec695 is reachable in https://github.com/CroakyJake12/libreoffice. This is object reachability in the controlled fork, not a claim that the fork's default branch or a submodule gitlink sits on it - that conversion is still outstanding."
     },
     "duckdb": {
       "project": "DuckDB",
@@ -131,14 +134,18 @@
       "project": "Code - OSS",
       "repository": "https://github.com/microsoft/vscode",
       "branch": "main",
-      "commit": "4212437dd11e9c7e728caa26a269540c87343930",
-      "fork": "https://github.com/CroakyJake12/vscode",
-      "forkCommit": "4212437dd11e9c7e728caa26a269540c87343930",
+      "commit": "2c33b50b16c472efe58357d1d2a8a5414bc23fbf",
+      "fork": "https://github.com/CroakyJake12/vscode-9to1",
+      "forkCommit": "2c33b50b16c472efe58357d1d2a8a5414bc23fbf",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE.txt"
       ],
-      "tag": null
+      "tag": null,
+      "canonicalRepository": "https://github.com/microsoft/vscode",
+      "scope": "snapshot",
+      "ref": "refs/tags/1.144.0",
+      "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x713b478c2490> with the GitHub API: the exact pinned object 2c33b50b16c472efe58357d1d2a8a5414bc23fbf is reachable in https://github.com/CroakyJake12/vscode-9to1. This is object reachability in the controlled fork, not a claim that the fork's default branch or a submodule gitlink sits on it - that conversion is still outstanding."
     },
     "glycin": {
       "project": "glycin/libglycin",
@@ -202,14 +209,30 @@
       "project": "llama.cpp",
       "repository": "https://github.com/ggml-org/llama.cpp",
       "branch": "master",
-      "commit": "53ed051ce5e8193652e449f43216ca3859454f49",
+      "commit": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
       "fork": "https://github.com/CroakyJake12/llama.cpp",
-      "forkCommit": "53ed051ce5e8193652e449f43216ca3859454f49",
+      "forkCommit": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
       ],
-      "tag": "b11157"
+      "tag": "b11157",
+      "canonicalRepository": "https://github.com/ggml-org/llama.cpp",
+      "consumedEvidence": {
+        "lockFile": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/llama.cpp-dependency-lock.json",
+        "lockTree": "d255198f04f9b8349f1dff24501d513f83cbfeda",
+        "lockTreeEntries": 3982,
+        "lockSha256": "88b3584ed245cd7f25ce849ac15a6964ee7b6fb400e9cb0b8e0f62f6922070eb",
+        "alsoNamedBy": [
+          "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/host-cache-v0.2.3.1/ggml-VERSION.txt",
+          ".github/workflows/haven-chat-model-ci.yml",
+          ".github/scripts/thunder-artifact-audit.py",
+          "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidatePlanTests.py"
+        ],
+        "forkReachability": "Measured 2026-10-31: 3cf03257f219afbe7334045ff7c6a06ac68c627d is reachable in https://github.com/CroakyJake12/llama.cpp"
+      },
+      "newerDeclaredRevision": "53ed051ce5e8193652e449f43216ca3859454f49",
+      "upgradeStatus": "NOT RUN. The donor plan designates b11157 (2026-09-24), four days newer. Upgrading the consumed pin to it requires a rebuild and a native run of the inference host, which must not be disturbed in this session; no upgrade is claimed. Owner rule is latest-unless-known-regression, so the upgrade is owed."
     },
     "wine": {
       "project": "Wine (GitHub mirror)",
@@ -334,14 +357,20 @@
     "gitea": {
       "repository": "https://github.com/go-gitea/gitea",
       "canonicalRepository": "https://github.com/go-gitea/gitea",
-      "fork": "https://github.com/CroakyJake12/gitea",
-      "license": "MIT (upstream-drawn today)",
-      "licenseFiles": [],
+      "fork": "https://github.com/CroakyJake12/gitea-9to1",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
       "status": "designated-by-specification, no pinned revision yet",
       "designationLine": 6768,
       "designationReason": "The specification says Gitea is the primary donor for source collaboration and must be forked from the latest appropriate source at implementation time; Build's source-collaboration workspace has no donor source vendored yet.",
       "upstreamSizeMb": 359,
-      "pinNote": "No commit is recorded because no source has been vendored or consumed yet; the absence is deliberate so that 'declared' can never be mistaken for 'integrated'."
+      "commit": "829b49c1ae96015e345f9d2a0eb1ea7acd5f31e1",
+      "forkCommit": "829b49c1ae96015e345f9d2a0eb1ea7acd5f31e1",
+      "scope": "snapshot",
+      "ref": "refs/tags/v28.2.0",
+      "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x713b478c1d70> with the GitHub API: the exact pinned object 829b49c1ae96015e345f9d2a0eb1ea7acd5f31e1 is reachable in https://github.com/CroakyJake12/gitea-9to1. This is object reachability in the controlled fork, not a claim that the fork's default branch or a submodule gitlink sits on it - that conversion is still outstanding."
     },
     "gitnuro": {
       "repository": "https://github.com/JetpackDuba/Gitnuro",
@@ -382,14 +411,21 @@
     "thunderbird": {
       "repository": "https://github.com/mozilla-thunderbird/thunderbird",
       "canonicalRepository": "https://github.com/mozilla-thunderbird/thunderbird",
-      "fork": "https://github.com/CroakyJake12/thunderbird",
-      "license": "UNVERIFIED - upstream reports NOASSERTION; expected MPL but must be read from the tree",
-      "licenseFiles": [],
+      "fork": "https://github.com/CroakyJake12/thunderbird-9to1",
+      "license": "MPL-2.0 (upstream notice: toolkit/content/license.html)",
+      "licenseFiles": [
+        "LICENSE",
+        "toolkit/content/license.html"
+      ],
       "status": "designated-by-specification, no pinned revision yet",
       "designationLine": 12221,
       "designationReason": "Mail keeps Thunderbird as its mature email-behaviour reference while rejecting its visual shell; the repository carries no such source today.",
       "upstreamSizeMb": 4703,
-      "pinNote": "No commit is recorded because no source has been vendored or consumed yet; the absence is deliberate so that 'declared' can never be mistaken for 'integrated'."
+      "commit": "86898fed4da61aa8b935a87a849b8052ebb9c98e",
+      "forkCommit": "86898fed4da61aa8b935a87a849b8052ebb9c98e",
+      "scope": "snapshot",
+      "ref": "refs/heads/main",
+      "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x713b47907510> with the GitHub API: the exact pinned object 86898fed4da61aa8b935a87a849b8052ebb9c98e is reachable in https://github.com/CroakyJake12/thunderbird-9to1. This is object reachability in the controlled fork, not a claim that the fork's default branch or a submodule gitlink sits on it - that conversion is still outstanding."
     },
     "strata": {
       "repository": "UNRESOLVED",
@@ -414,6 +450,20 @@
       "designationReason": "Task Manager is specified as a CUI.NET rebuild using GNOME system-monitor tooling as the donor baseline; that baseline source is not carried anywhere.",
       "upstreamSizeMb": null,
       "pinNote": "No commit is recorded because no source has been vendored or consumed yet; the absence is deliberate so that 'declared' can never be mistaken for 'integrated'."
+    },
+    "appflowy": {
+      "repository": "https://github.com/AppFlowy-IO/AppFlowy",
+      "canonicalRepository": "https://github.com/AppFlowy-IO/AppFlowy",
+      "fork": "https://github.com/CroakyJake12/appflowy-9to1",
+      "commit": "5cf3a365dec0d59f64bad1ee4bb1050471a39b93",
+      "forkCommit": "5cf3a365dec0d59f64bad1ee4bb1050471a39b93",
+      "license": "AGPL-3.0-only (read from the pinned tree's LICENSE)",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "scope": "snapshot",
+      "ref": "refs/tags/0.14.11",
+      "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x713b47907590> with the GitHub API: the exact pinned object 5cf3a365dec0d59f64bad1ee4bb1050471a39b93 is reachable in https://github.com/CroakyJake12/appflowy-9to1. This is object reachability in the controlled fork, not a claim that the fork's default branch or a submodule gitlink sits on it - that conversion is still outstanding."
     }
   },
   "bindings": [
@@ -457,24 +507,66 @@
       "owner": "9to1 Workspace/Write",
       "donor": "libreoffice",
       "path": "9to1 Workspace/Write/Source/LibreOffice",
-      "consumer": "LibreOfficeKit Writer prototype",
-      "runtimeRequirement": "Local LibreOfficeKit ABI/version not verified"
+      "consumer": "eng/cui-mirror corpus under Write/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "role": "donor UI mirrored into CUI at Stage A (sw/uiconfig (Writer), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices)",
+      "snapshot": {
+        "ref": "refs/heads/master",
+        "commit": "7528c0d406012e10c6ce34c3f24bf277302ec695",
+        "fetched": "2026-10-31",
+        "fileCount": 808,
+        "contentDigest": "481e6e474660135179a56a8938f3a70a2ea525bad25209e3b70e94486b964c0a",
+        "modules": "sw/uiconfig (Writer), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices",
+        "committedToGit": false,
+        "reason": "Stage A: Writer's UI is mirrored into CUI from the donor's own GTK Builder sets. Extracted at an exact revision rather than cloned with history because the mirror needs the UI declarations, not decades of commits. Fork/submodule conversion is a separate unit.",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     },
     {
       "app": "Present",
       "owner": "9to1 Workspace/Present",
       "donor": "libreoffice",
       "path": "9to1 Workspace/Present/Source/LibreOffice",
-      "consumer": "Impress LibreOfficeKit worker",
-      "runtimeRequirement": "Existing worker ABI/version not verified against newest source"
+      "consumer": "eng/cui-mirror corpus under Present/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "role": "donor UI mirrored into CUI at Stage A (sd/uiconfig (Impress), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices)",
+      "snapshot": {
+        "ref": "refs/heads/master",
+        "commit": "7528c0d406012e10c6ce34c3f24bf277302ec695",
+        "fetched": "2026-10-31",
+        "fileCount": 486,
+        "contentDigest": "8a13fd0e343e30d8ed827082911dd8ed862639702516a73291edf3e6fcc86254",
+        "modules": "sd/uiconfig (Impress), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices",
+        "committedToGit": false,
+        "reason": "Stage A mirror of the Impress UI from its own module tree. Owner decision 2026-10-31: Draw and Math are NOT donors, so this tree carries no sd/../draw or math module; Impress, Writer and Calc only. Kept as its own app-local tree so the binding path is real.",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     },
     {
       "app": "Data",
       "owner": "9to1 Workspace/Data",
       "donor": "libreoffice",
       "path": "9to1 Workspace/Data/Source/LibreOffice",
-      "consumer": "Calc Python UNO worker",
-      "runtimeRequirement": "Local soffice with Python UNO required for full harness; historical CI used 26.2.5.2"
+      "consumer": "eng/cui-mirror corpus under Data/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "role": "donor UI mirrored into CUI at Stage A (sc/uiconfig (Calc), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices)",
+      "snapshot": {
+        "ref": "refs/heads/master",
+        "commit": "7528c0d406012e10c6ce34c3f24bf277302ec695",
+        "fetched": "2026-10-31",
+        "fileCount": 488,
+        "contentDigest": "eafb3acb76abffac7de4abd56cf501c77fbea51f5bf72aa0afa1bbfa8f9a6929",
+        "modules": "sc/uiconfig (Calc), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices",
+        "committedToGit": false,
+        "reason": "Stage A mirror of the Calc UI. DuckDB stays the analytical engine the specification names; LibreOffice Calc is the spreadsheet-compatibility donor and the UI reference for it.",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     },
     {
       "app": "Data",
@@ -490,7 +582,13 @@
       "donor": "eds",
       "path": "9to1 Workspace/Planner/Source/EvolutionDataServer",
       "consumer": "Planner backend target, integration not built",
-      "runtimeRequirement": "EDS runtime not validated"
+      "runtimeRequirement": "EDS runtime not validated",
+      "status": "provisional-scope-not-yet-vendored",
+      "plannedVerdict": "VENDOR",
+      "reason": "Planner is provisional-if-time for this delivery (owner, 31 October 2026). The pin is recorded so that if Planner starts, it starts from an exact revision; nothing is vendored yet.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:60",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Planner",
@@ -498,7 +596,13 @@
       "donor": "libical",
       "path": "9to1 Workspace/Planner/Source/libical",
       "consumer": "Planner backend target, integration not built",
-      "runtimeRequirement": "libical runtime not validated"
+      "runtimeRequirement": "libical runtime not validated",
+      "status": "provisional-scope-not-yet-vendored",
+      "plannedVerdict": "VENDOR",
+      "reason": "Planner is provisional-if-time for this delivery; same treatment as eds.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:60",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Terminal",
@@ -506,7 +610,13 @@
       "donor": "libvterm",
       "path": "9to1 Workspace/Terminal/Source/libvterm",
       "consumer": "Terminal escape emulation donor; host PTY separate",
-      "runtimeRequirement": "libvterm adapter/runtime not validated"
+      "runtimeRequirement": "libvterm adapter/runtime not validated",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "VENDOR",
+      "reason": "Terminal is not in the owner's Shipmas MUST set, so libvterm is not vendored for this delivery. Pin retained.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:63",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Dev",
@@ -514,15 +624,35 @@
       "donor": "vscodium",
       "path": "9to1 Workspace/Dev/Source/VSCodium",
       "consumer": "Developer services target; no Code-OSS host built",
-      "runtimeRequirement": "VSCodium runtime not validated"
+      "runtimeRequirement": "VSCodium runtime not validated",
+      "status": "superseded-designation-2026-10-31",
+      "plannedVerdict": "RETIRED-IN-FAVOUR-OF-CODE-OSS",
+      "reason": "Owner decision 31 October 2026: Build's code workspace donor is Code - OSS (microsoft/vscode, forked as vscode-9to1), not the VSCodium repackaging wrapper. The row and its pin are kept as history; no source is vendored for it and it must not be revived without an owner decision.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:59",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Dev",
       "owner": "9to1 Workspace/Dev",
       "donor": "code-oss",
       "path": "9to1 Workspace/Dev/Source/CodeOSS",
-      "consumer": "Editor services target",
-      "runtimeRequirement": "Code-OSS runtime not validated"
+      "consumer": "eng/cui-mirror corpus under Dev/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "role": "donor UI mirrored into CUI at Stage A (whole release tag tree (workbench, editor, extensions))",
+      "snapshot": {
+        "ref": "refs/tags/1.144.0",
+        "commit": "2c33b50b16c472efe58357d1d2a8a5414bc23fbf",
+        "fetched": "2026-10-31",
+        "fileCount": 21264,
+        "contentDigest": "abf5007dae54e7c46b69bfc530debdcca3305aeb51358080ce818fc672b35504",
+        "modules": "whole release tag tree (workbench, editor, extensions)",
+        "committedToGit": false,
+        "reason": "Stage A reference for Build's code workspace. Its workbench UI is TypeScript-built custom elements, so the mirror pass for it is not written yet; the snapshot makes the pin and the licence real rather than implied.",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     },
     {
       "app": "Pictures",
@@ -530,7 +660,13 @@
       "donor": "glycin",
       "path": "9to1 Workspace/Picture/Source/glycin",
       "consumer": "Authoritative roadmap image-loader donor; current viewer does not load it",
-      "runtimeRequirement": "glycin loader not integrated or runtime-tested"
+      "runtimeRequirement": "glycin loader not integrated or runtime-tested",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped Picture out of this delivery. The donor designation and its pin are retained so the later surface starts from a recorded revision instead of a re-scout; no source is vendored because no application consumes it yet.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:61",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Pictures",
@@ -538,7 +674,13 @@
       "donor": "loupe",
       "path": "9to1 Workspace/Picture/Source/loupe",
       "consumer": "Declared viewer/UI parity reference; source and parity obligation retained",
-      "runtimeRequirement": "Loupe UI not integrated or runtime-tested"
+      "runtimeRequirement": "Loupe UI not integrated or runtime-tested",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped Picture out of this delivery; same treatment as glycin.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:61",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Wave",
@@ -546,7 +688,13 @@
       "donor": "gstreamer",
       "path": "9to1 Workspace/Wave/Source/GStreamer",
       "consumer": "Audio pipeline target; existing PCM reader retained",
-      "runtimeRequirement": "GStreamer audio runtime not validated"
+      "runtimeRequirement": "GStreamer audio runtime not validated",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped Wave out of this delivery. Specification line 13851 names GStreamer for the media stack, so the requirement still stands; only the delivery does not include it.",
+      "specLine": "13851",
+      "requirementKind": "specification line",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Wave",
@@ -554,7 +702,13 @@
       "donor": "ges",
       "path": "9to1 Workspace/Wave/Source/GES",
       "consumer": "Editing-services source; current integration unimplemented",
-      "runtimeRequirement": "Current GES is in GStreamer monorepo; standalone archive 1.19.2 is historical"
+      "runtimeRequirement": "Current GES is in GStreamer monorepo; standalone archive 1.19.2 is historical",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped Wave out of this delivery; GES is the editing layer over GStreamer.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:62",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Motion",
@@ -562,7 +716,13 @@
       "donor": "gstreamer",
       "path": "9to1 Workspace/Motion/Source/GStreamer",
       "consumer": "Video pipeline target; existing inspector retained",
-      "runtimeRequirement": "GStreamer video runtime not validated"
+      "runtimeRequirement": "GStreamer video runtime not validated",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped Motion out of this delivery. Same requirement reference as Wave.",
+      "specLine": "13851",
+      "requirementKind": "specification line",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Motion",
@@ -570,17 +730,26 @@
       "donor": "ges",
       "path": "9to1 Workspace/Motion/Source/GES",
       "consumer": "Editing-services source; existing timeline unavailable",
-      "runtimeRequirement": "Current GES is in GStreamer monorepo; standalone archive 1.19.2 is historical"
+      "runtimeRequirement": "Current GES is in GStreamer monorepo; standalone archive 1.19.2 is historical",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped Motion out of this delivery.",
+      "specLine": "docs/development/donor-plan-complete-2026-10-30.md:62",
+      "requirementKind": "donor-plan reference",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Dulche",
       "owner": "9to1 Workspace/Home/Source/Dulche",
       "donor": "llama-cpp",
       "path": "9to1 Workspace/Home/Source/Dulche/Source/llama.cpp",
-      "consumer": "Existing broker remains at Dulche/llamacpp; latest donor source is separate",
-      "runtimeRequirement": "Broker lock still targets v0.4.0 / 5266f24; new source 53ed051 compatibility not proven",
-      "verification": "prebuilt-pinned-binary",
-      "verificationNote": "No donor source is vendored by design: Home/Source/Dulche/llamacpp holds 0 upstream C/C++ files and its README says it holds broker code only. CI job build-pinned-llamacpp-cpu produces the binary from the pinned revision 53ed051ce5e8193652e449f43216ca3859454f49. Gap to close: that binary needs the same version-plus-digest artifact manifest as the planned Firefox engine; today the pin is a record, not a verified artifact receipt."
+      "consumer": "Dulche / NativeStrata host cache; audited by .github/scripts/thunder-artifact-audit.py",
+      "runtimeRequirement": "the exact pinned commit named in the lock must match the binary identity actually loaded at runtime; a lock that disagrees with the runtime is a defect",
+      "verification": "dependency-lock-pinned-binary",
+      "verificationNote": "No donor source is vendored by design: Home/Source/Dulche/llamacpp holds 0 upstream C/C++ files and its README says it holds broker code only. CI job build-pinned-llamacpp-cpu produces the binary from the pinned revision 53ed051ce5e8193652e449f43216ca3859454f49. Gap to close: that binary needs the same version-plus-digest artifact manifest as the planned Firefox engine; today the pin is a record, not a verified artifact receipt.",
+      "scope": "prebuilt-pinned-binary",
+      "binaryLock": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/llama.cpp-dependency-lock.json",
+      "role": "inference engine consumed as a pinned build from a lock file, not as vendored source"
     },
     {
       "app": "Wine",
@@ -588,7 +757,13 @@
       "donor": "wine",
       "path": "9to1 OS/compatibility/wine/Source/Wine",
       "consumer": "Managed Wine runtime source; broker currently requires separately installed runtime",
-      "runtimeRequirement": "Wine runtime/container acceptance not validated"
+      "runtimeRequirement": "Wine runtime/container acceptance not validated",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped the 9to1 OS distribution out of this delivery; specification line 16676 requires Wine compatibility there, so the designation is kept with its pin and no source is vendored.",
+      "specLine": "16676",
+      "requirementKind": "specification line",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "WinBoat",
@@ -596,7 +771,13 @@
       "donor": "winboat",
       "path": "9to1 OS/compatibility/winboat/Source/WinBoat",
       "consumer": "Reserved compatibility backend, no working host",
-      "runtimeRequirement": "WinBoat VM/container runtime not validated"
+      "runtimeRequirement": "WinBoat VM/container runtime not validated",
+      "status": "out-of-scope-for-2026-11-delivery",
+      "plannedVerdict": "FORK",
+      "reason": "Owner scoped the 9to1 OS distribution out of this delivery (specification lines 16791-16825 name the Windows-app surface).",
+      "specLine": "16791",
+      "requirementKind": "specification line",
+      "scopeDeferredTo": "after the 2026-11 delivery"
     },
     {
       "app": "Files",
@@ -700,9 +881,22 @@
       "plannedVerdict": "FORK",
       "reason": "The specification says Gitea is the primary donor for source collaboration and must be forked from the latest appropriate source at implementation time; Build's source-collaboration workspace has no donor source vendored yet.",
       "specLine": 6768,
-      "role": "designated donor recorded for traceability; nothing consumes it in this repository today",
-      "consumer": "none yet",
-      "runtimeRequirement": "not applicable until the donor is vendored/pinned and an app consumes it"
+      "role": "donor UI mirrored into CUI at Stage A (templates (Go html/template) and web_src)",
+      "consumer": "eng/cui-mirror corpus under Build/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "snapshot": {
+        "ref": "refs/tags/v28.2.0",
+        "commit": "829b49c1ae96015e345f9d2a0eb1ea7acd5f31e1",
+        "fetched": "2026-10-31",
+        "fileCount": 6366,
+        "contentDigest": "756481adff65dfc504d8c13175fb802359d6318ec184e00490ce70fb789c5d41",
+        "modules": "templates (Go html/template) and web_src",
+        "committedToGit": false,
+        "reason": "Stage A mirror of the source-collaboration web UI. Latest release, per the owner's always-the-latest rule.",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     },
     {
       "app": "Build",
@@ -752,9 +946,22 @@
       "plannedVerdict": "FORK",
       "reason": "Mail keeps Thunderbird as its mature email-behaviour reference while rejecting its visual shell; the repository carries no such source today.",
       "specLine": 12221,
-      "role": "designated donor recorded for traceability; nothing consumes it in this repository today",
-      "consumer": "none yet",
-      "runtimeRequirement": "not applicable until the donor is vendored/pinned and an app consumes it"
+      "role": "donor UI mirrored into CUI at Stage A (comm/mail (the email client UI), its themes, and the shared mail chrome)",
+      "consumer": "eng/cui-mirror corpus under Connect/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "snapshot": {
+        "ref": "refs/heads/main",
+        "commit": "86898fed4da61aa8b935a87a849b8052ebb9c98e",
+        "fetched": "2026-10-31",
+        "fileCount": 1774,
+        "contentDigest": "0c7add8f2ff578aeaeb041deb4ec0bcab7c4b2cab0425321cb506b7ebe370704",
+        "modules": "comm/mail (the email client UI), its themes, and the shared mail chrome",
+        "committedToGit": false,
+        "reason": "Owner scope decision 2026-10-31: Connect ships the email capabilities only, so this is the Mail donor. The GitHub mirror publishes `main`; the comm-esr release refs are not exposed on it, which is recorded instead of glossed over.",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     },
     {
       "app": "Dulche",
@@ -781,6 +988,28 @@
       "role": "designated donor recorded for traceability; nothing consumes it in this repository today",
       "consumer": "none yet",
       "runtimeRequirement": "not applicable until the donor is vendored/pinned and an app consumes it"
+    },
+    {
+      "app": "Boards",
+      "donor": "appflowy",
+      "owner": "9to1 Workspace/Boards",
+      "path": "9to1 Workspace/Boards/Source/AppFlowy",
+      "scope": "snapshot",
+      "verification": "extracted-snapshot-pinned-by-digest",
+      "role": "donor UI mirrored into CUI at Stage A (frontend/ (appflowy_flutter UI, including the board widget, + rust-lib engine))",
+      "consumer": "eng/cui-mirror corpus under Boards/CUI/DonorMirror",
+      "runtimeRequirement": "mirror only at Stage A; no donor binary is built or shipped by this record",
+      "snapshot": {
+        "ref": "refs/tags/0.14.11",
+        "commit": "5cf3a365dec0d59f64bad1ee4bb1050471a39b93",
+        "fetched": "2026-10-31",
+        "fileCount": 4543,
+        "contentDigest": "9f8d94e88ee5f5d94687d674583e304c0507298853f6900c9cf524b8749bcde4",
+        "modules": "frontend/ (appflowy_flutter UI, including the board widget, + rust-lib engine)",
+        "committedToGit": false,
+        "reason": "Owner decision 2026-10-31: fork the newest AppFlowy rather than the old stand-alone board widget package, because the board view lives inside the application and the shared engine comes from frontend/rust-lib. The previously pinned appflowy-board package stays in history and remains what the app itself depends on (pubspec pins e8317c0d1af8).",
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+      }
     }
   ],
   "firstPartyOrInternal": [
