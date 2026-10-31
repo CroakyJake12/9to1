@@ -17,7 +17,8 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
 | `optional section` | 1313 | VclOptionalBox |
-| `menu button` | 736 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox, svtlo-ManagedMenuButton |
+| `menu button` | 619 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, svtlo-ManagedMenuButton |
+| `menu items built by donor script` | 117 | sfxlo-PriorityMergedHBox |
 | `radio menu item` | 89 | GtkRadioMenuItem |
 | `button row` | 33 | GtkButtonBox |
 | `window and dialog chrome` | 27 | GtkDialog |

@@ -9,7 +9,8 @@
     },
     "gap_constructs": {
       "optional section": 1313,
-      "menu button": 736,
+      "menu button": 619,
+      "menu items built by donor script": 117,
       "radio menu item": 89,
       "button row": 33,
       "window and dialog chrome": 27,
@@ -39,8 +40,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "c2ad3e3902018db0e7beb3c2bc976ea8443db813cab09472dcfa7d08972d2c33",
-      "refreshed": false
+      "donor_sha256": "53244fff95c04716af7a4355dde21ed5493f6f14140ff3da2228213d4541211d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/bulletsandnumbering.ui",
@@ -49,8 +50,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "000c77b034533bbc877b2b667865295ab4a4d3703011637d229a1adf54b7735d",
-      "refreshed": false
+      "donor_sha256": "daa0a533a3ea9550206635512f6f687e8e1b60d48ef8f9a738ab8c61cea0dbdb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/copydlg.ui",
@@ -59,8 +60,8 @@
       "dialect": "gtk",
       "nodes": 41,
       "actions": 0,
-      "donor_sha256": "0a091d98f90bb6b5abad464ce9e7ffd91fefbd9424accfc864f2604c4e4e6179",
-      "refreshed": false
+      "donor_sha256": "1372da6cc2461781a84fa09ec30a0cf93aac3fee55230963282d17b33d1a8096",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/crossfadedialog.ui",
@@ -69,8 +70,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "3fe614c78d6046b76f19411b5922eb7a2e006ad4c6e5ddfcb944397f3ab9e9b0",
-      "refreshed": false
+      "donor_sha256": "a313a6323da69b7cb08977ef96ef0e99ea0f00d28cf30de47f3a68d3946abe6e",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/dlgsnap.ui",
@@ -79,8 +80,8 @@
       "dialect": "gtk",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "acca0f61339252828d7ebdaa47059b0431aaba8d2246778872b4b337467afa4e",
-      "refreshed": false
+      "donor_sha256": "3f48bad432a8ac447d06150808861e597cf4957857739bb49e4b856f945820dc",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/drawchardialog.ui",
@@ -89,8 +90,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "102a22c2a59d6d475462f0460cef15ee361d6c3284131bcb5a75ce9b5f293afb",
-      "refreshed": false
+      "donor_sha256": "9ea8760dd1429f7d2611fb50154249bac997150553b4d8f43581c64189634985",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/drawpagedialog.ui",
@@ -99,8 +100,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "f0f275e00dd28a6a3efa49e03594c1ed5ab7c352b03d4ab5916daee627f73f27",
-      "refreshed": false
+      "donor_sha256": "83c87217591cd34ce456541387c31ea0280a3b23d1f08595a6f810cba967f570",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/drawparadialog.ui",
@@ -109,8 +110,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "25ca3b003580fbfa0486d02da5619600d81ad93b0be7035c2b9204babb3f3b25",
-      "refreshed": false
+      "donor_sha256": "d2f95945519607899e9d1c66ea15379cdce448a7b5b3f40f29483aedb9ca887e",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/drawprinteroptions.ui",
@@ -119,8 +120,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "965301fae730ac233fe068a42ca2ed251f065c53618c055aee196320881b728a",
-      "refreshed": false
+      "donor_sha256": "b13a6956cbd1dbe82027abf046062d99462f88834816605bdb6ada9e14d469ab",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/drawprtldialog.ui",
@@ -129,8 +130,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "9df159e8e96d9f7f81f339df9a80d7d5fefbafd2e5cd833cd02cae66b6ee651e",
-      "refreshed": false
+      "donor_sha256": "ef16498536f924ee5d98b7f5f3b86438d4df7aa9f462c64b378b765178c31766",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/insertlayer.ui",
@@ -139,8 +140,8 @@
       "dialect": "gtk",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "7479730fb4636ba7dad8461ae60ea9880b36558dc5020c8874b3ab230072f0df",
-      "refreshed": false
+      "donor_sha256": "66b9a49f8626d2731cb65e31a93739864313e3985e74e8477798031ad9852788",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/insertslidesdialog.ui",
@@ -149,8 +150,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "ce231c3dc645910d2d9d8d12063356ff6be65bfcc8dc7a541bab8805ce317e69",
-      "refreshed": false
+      "donor_sha256": "2701a2b67a264793848eadad7c5e09fbff571e4d6de7260f582c5700f01484c0",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/namedesign.ui",
@@ -159,8 +160,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "afbc353f3d9e2a8aed5eed86470845df05ba848f9865de7863baa88653aa3796",
-      "refreshed": false
+      "donor_sha256": "b030e6960d97f62bd6b4e26a9544ffce5e42240ffea4bcc3dca40d35c1d3ea17",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/navigatorcontextmenu.ui",
@@ -169,8 +170,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "5bbdb69e5950ab44740cb2e299ab0d1e6962d1baa3a7376930c88c701be91317",
-      "refreshed": false
+      "donor_sha256": "0f61c455262e4772b008bd4a4e453cfb6483e7accfc23aea769065d79b90c975",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/notebookbar.ui",
@@ -179,8 +180,8 @@
       "dialect": "gtk",
       "nodes": 1201,
       "actions": 0,
-      "donor_sha256": "5199e7ba21afbe0004f0d70310f6960f7ff3431dec5876d5e11009a9e080b41a",
-      "refreshed": false
+      "donor_sha256": "34b63ca244bffa299f7d732f5c0f998a188cd971e5da0dfbf1dfad34a396dad4",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/notebookbar_compact.ui",
@@ -189,8 +190,8 @@
       "dialect": "gtk",
       "nodes": 1780,
       "actions": 0,
-      "donor_sha256": "e9484676205ec43c615572bea8ecd8c1564040595ad899af75d1a80c7452b2dc",
-      "refreshed": false
+      "donor_sha256": "b2381e7ceba24005628eb47259540d326a6cd2df884a1d81da6a796115e0cf06",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/notebookbar_groupedbar_compact.ui",
@@ -199,8 +200,8 @@
       "dialect": "gtk",
       "nodes": 1384,
       "actions": 0,
-      "donor_sha256": "b43e06780f3ebae775ef825ed2308103dc5e758e4d66478b85c1e0b6c59d5e2c",
-      "refreshed": false
+      "donor_sha256": "4eab3232f17f9a36f3f9869083023a3bff3b1906867b8b6dd44b16e66f391829",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/notebookbar_single.ui",
@@ -209,8 +210,8 @@
       "dialect": "gtk",
       "nodes": 931,
       "actions": 0,
-      "donor_sha256": "a05cea8b3cf29b333d6fb99bc58116f270329cc95d1236bc186b13bfd2ed0c30",
-      "refreshed": false
+      "donor_sha256": "ec73f9eced09161505e5883e4796faf457eb3ecac1e9690d5c5fc62c2092030a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/paranumberingtab.ui",
@@ -219,8 +220,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "ceb7327ef2d04395fa6f5db94be0425bcae44b1d4d7d63f32b75dce223ac65d4",
-      "refreshed": false
+      "donor_sha256": "38d537d505a3a679e156c84ea84333594878e2111aaddb9be4bff9fb0d228fcd",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/queryunlinkimagedialog.ui",
@@ -229,8 +230,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "542089585bf0db71418519fc3ce4f801e88ed949f94ea89d55a6b556f805e370",
-      "refreshed": false
+      "donor_sha256": "2adfe4c0066a5d0c70e9071314f6bd4d4e6521ebceef63971646b6993312efc7",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/selectlayerdialog.ui",
@@ -239,8 +240,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "e20d8639916b23a4d19fc4701085fa71ca3fff196b839e6be467e3fe26865a15",
-      "refreshed": false
+      "donor_sha256": "e7dfde5628a0f4b6648f6dbeccb1117cb02d07ead28d22b85c13619b939091ad",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/sdraw/ui/vectorize.ui",
@@ -249,8 +250,8 @@
       "dialect": "gtk",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "a0eaf9a5d7d949dea00f16406d27ef3fb76e7a54bc5b75a66fba99a8cd7ed372",
-      "refreshed": false
+      "donor_sha256": "f54ec3c73f557398002b57de42bd5e172760421c4925d536fe3ac7783b6784f5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/annotation.ui",
@@ -259,8 +260,8 @@
       "dialect": "gtk",
       "nodes": 17,
       "actions": 0,
-      "donor_sha256": "32005c83fbcc2e034b5b41a640775e21c34e9d4d0572a6d6dc6c7c742e708934",
-      "refreshed": false
+      "donor_sha256": "744a1883e5092def178a1d6f1b9c4d4d51b8e51c233e5aacf5077d5538d14abf",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/annotationtagmenu.ui",
@@ -269,8 +270,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "06ae362c6f3f12f8a792c786fd389a8c7e54c27f8dce509346fc7d039a963e07",
-      "refreshed": false
+      "donor_sha256": "a85fdf895775cd2140bcbcbb3f3a6c77930af857517854c6a055d202cae0220f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/clientboxfragment.ui",
@@ -279,8 +280,8 @@
       "dialect": "gtk",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "946dc3515cd4f58f4083ce9bd2bb5a3d41202d1b09429d0e74320ade07e0fa9c",
-      "refreshed": false
+      "donor_sha256": "7d27ae9b8b01eca943b6a08f4242e723eb9e4e592d77e300b5506ca34f1632ae",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/currentmastermenu.ui",
@@ -289,8 +290,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "2b66919cae74ac8a8d17e484bd9c88361ba6c88ffdf83b6270b2c777e54f5bdd",
-      "refreshed": false
+      "donor_sha256": "84146e8b31a6d6bf60158ccede21ef1d8d5a2e086a609a564bb3ebc5f7ccd2ab",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customanimationeffecttab.ui",
@@ -299,8 +300,8 @@
       "dialect": "gtk",
       "nodes": 27,
       "actions": 0,
-      "donor_sha256": "3cd6fca0663a7277bf1a8897965d3966ed2a274e39aafe78f1d00654c4c779b4",
-      "refreshed": false
+      "donor_sha256": "8b66dbd6723d7fa0ec589997ae8da5a7a68aaeddc56c32a4ff345712cc2c7d2d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customanimationfragment.ui",
@@ -309,8 +310,8 @@
       "dialect": "gtk",
       "nodes": 42,
       "actions": 0,
-      "donor_sha256": "e54edbdfc0d8794517107602cf64ca13fc1331e3f04d2914e0e4491f855091f3",
-      "refreshed": false
+      "donor_sha256": "4e851c84739f99ad39488c47ad3e5d0d4a4d561a888a1c0256aed454e798510a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customanimationproperties.ui",
@@ -319,8 +320,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "68bc956a3d1caa9952e9c257aff1a669a894dd2517a65207243a38bca6453295",
-      "refreshed": false
+      "donor_sha256": "b5eb5842fc98731196deffb8d2aa9fbbb8ef29f22f6a6850273e0734aa5dab2a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customanimationspanel.ui",
@@ -329,8 +330,8 @@
       "dialect": "gtk",
       "nodes": 45,
       "actions": 0,
-      "donor_sha256": "d6d6bd0d84e7cc238d7670db590d6d0f521cd00724dc0dcf52693aa8721445c6",
-      "refreshed": false
+      "donor_sha256": "7ae70e0c52620cc38777f1859c5821bbcd0b5c68934a575b19c9feb54b7d1ba8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customanimationtexttab.ui",
@@ -339,8 +340,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "21b7ef1cbfeb0afe97609532387585cc309fe3315390eeeccb564b05f32edc07",
-      "refreshed": false
+      "donor_sha256": "7243ff4bfdca8a36f0c66e957f52dae347c75c78f5eef92deaeef52b0143eb87",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customanimationtimingtab.ui",
@@ -349,8 +350,8 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "7723c2a3b92b42ab8364b37d39ad467846c1c426620e681c1b111e6d47ee21a1",
-      "refreshed": false
+      "donor_sha256": "c71d218879eea759b1d6168f116b3dd5fc175f72bda9a8be2627475996046fc6",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/customslideshows.ui",
@@ -359,8 +360,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "fcfd9917010bcb17998d4db190acb8939bfc30fc7273e7421c9395b8602f194b",
-      "refreshed": false
+      "donor_sha256": "d5a0e7b6f451eb4cd231f893f431030c62f2f3ea04bee371853782022468aaa8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/definecustomslideshow.ui",
@@ -369,8 +370,8 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "5d55115359b67358a939e89261e1a2d212419462f19f57c89b63bd0195c0c693",
-      "refreshed": false
+      "donor_sha256": "2ddb35a94ef1fa3106df16f01e378cd49766b06bffcd91ae238578d047f45f3e",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/displaywindow.ui",
@@ -379,8 +380,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "d0ad86f866a549b48f6e6c5600107bfe1bb5aa7648c093d5167b55f416424679",
-      "refreshed": false
+      "donor_sha256": "b1a9a01bd490b110facbef34e1313dbfb2a3f08cbfc0e481173548742f0d43a7",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/dlgfield.ui",
@@ -389,8 +390,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "1355e628e136205ad2d9eb093fe072e1340610fb8eadce7a5c34f48ea976bf4f",
-      "refreshed": false
+      "donor_sha256": "d3d3c093bea7dcf9a0214415fbc1c602b6e9e6135641ad08b14a019d5d60b29c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/dockinganimation.ui",
@@ -399,8 +400,8 @@
       "dialect": "gtk",
       "nodes": 46,
       "actions": 0,
-      "donor_sha256": "a187c136b7bb9515cae8e1f2388f4fe220b6a56568e2ceb83437a276c48717b5",
-      "refreshed": false
+      "donor_sha256": "634fb1cbc054a6cd35a3ddc4c1e29c831a8609d69cd43fcb947cfea35416cf13",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/effectmenu.ui",
@@ -409,8 +410,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "6a833cd4c46b4a42d1043496a62b7f70a96a6cce4a99080541c6b24dacd462d7",
-      "refreshed": false
+      "donor_sha256": "60e8d2658f82f2b8e7b9103ff840413b16538669eff0357713ae2577b8324978",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/fieldmenu.ui",
@@ -419,8 +420,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "6dedb8bdf76c7c376f31a7cf5c134f31c418db61daaf132eaeedc9d3ee471bd0",
-      "refreshed": false
+      "donor_sha256": "ffd6d1b2275bbcdb211199eb6c7e0e31f3eb8ca4c3fbdcc8715e1003cc216c85",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/fontsizemenu.ui",
@@ -429,8 +430,8 @@
       "dialect": "gtk",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "a4c17211d023c3db8821e0736857d7e19377f3816c1ade304a45176879194db3",
-      "refreshed": false
+      "donor_sha256": "380aa8e8e4a966311449d500f0c99f5153cb65631e9b78367ab30677cf6574b4",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/fontstylemenu.ui",
@@ -439,8 +440,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "39780503d14faf92c8c5d3ebdaeac344841dffaccd9d66cd8173efb071c2bf67",
-      "refreshed": false
+      "donor_sha256": "8802c75db1404063cc1cf2b89337caf98e980d98af83b715b24ebab87ebaff74",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/gluebox.ui",
@@ -449,8 +450,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "267709518d565f5574941799448509437f36565662bc3d31f904c283caaad020",
-      "refreshed": false
+      "donor_sha256": "5b7330f4c64392d601ebb8b02254bc01f56f7a3e37453c616402d4db48b69ead",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/headerfooterdialog.ui",
@@ -459,8 +460,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "12b7fc9f2186d4c28c64c9740eb49d47bd788b0c539fe689d6c885cf53e26544",
-      "refreshed": false
+      "donor_sha256": "a98d2a824669c410abb22cec6f4e8368928f277941b4dcf9e0dbee3e790c1650",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/headerfootertab.ui",
@@ -469,8 +470,8 @@
       "dialect": "gtk",
       "nodes": 31,
       "actions": 0,
-      "donor_sha256": "13a9d09835b2c50860c7f821d03fa47430f9c07db4eef2701b285cb7837af039",
-      "refreshed": false
+      "donor_sha256": "2126d2ce68ed12e3a0de49b7bae8a4618ba7a0d245950de554d36782c01d6988",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/impressprinteroptions.ui",
@@ -479,8 +480,8 @@
       "dialect": "gtk",
       "nodes": 29,
       "actions": 0,
-      "donor_sha256": "44b3fc1eea0fa2e2e27761d9fcf2e0e337e8dad132c483e13989cd98197947a4",
-      "refreshed": false
+      "donor_sha256": "89809fc5e9ddc50e6ec3ee21eb483803355c7878f483a3e562cff2684c8d14b9",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/insertslides.ui",
@@ -489,8 +490,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "3978666389eb88a450a1f589c5535120fa58400c7d5d6a01326c33fece066d24",
-      "refreshed": false
+      "donor_sha256": "e9ddcc89dcd944cf12c98b297b29e56f8d2fd3e6b02140bd0f1782e379460e9b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/interactiondialog.ui",
@@ -499,8 +500,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "b95181a7be87a0cca9c6fa7645c358e45c38f88f13fa9dbace56857320a85ba3",
-      "refreshed": false
+      "donor_sha256": "a28445c9a5050da2961e09cbbe0651d2caa049f23f8d7d03edaf84427b7be0c2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/interactionpage.ui",
@@ -509,8 +510,8 @@
       "dialect": "gtk",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "926294e0d85d7a2e4728b0ea588a1cfb8706b19f793c0c348f63f45b0476b06f",
-      "refreshed": false
+      "donor_sha256": "aec6929d00ad4b8e1097a2461fcfb311cec7d34451fe1ba0bbc428fda8bcc226",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/layoutmenu.ui",
@@ -519,8 +520,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "a07b7e6b9dbbb2246ad33eb21ed87365febad944280ce95ec743a2014b21fedc",
-      "refreshed": false
+      "donor_sha256": "3991b8c99c48d5852cf97a3ac89aa441487655e792b7b512e646ab9f0cf43c1b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/layoutpanel.ui",
@@ -529,8 +530,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "601919de9c7ef08c44085c3fbe63b9fa118bcfbca6ac1fcdbbe2e73d6a3aebe6",
-      "refreshed": false
+      "donor_sha256": "21798291c0a44db10fd74b644b1097edb8ff16732e0352770d9a1c593bbf7236",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/layoutwindow.ui",
@@ -539,8 +540,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "8563a366b031b603efc98e5bee559334f85d17cc22698de90454639b9ea3ad63",
-      "refreshed": false
+      "donor_sha256": "a6d92589608b7fdc8fba6d985c4773c410766078af419282a45330dd558f3034",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/masterlayoutdlg.ui",
@@ -549,8 +550,8 @@
       "dialect": "gtk",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "bbfb448211ce9e960342a094b75337ca4e28d7c12fd6607ff34ff59f0ea0bf82",
-      "refreshed": false
+      "donor_sha256": "492b56ea08fa3615e692219959b752d1bf2457ff00e6757714a229397e1d404a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/mastermenu.ui",
@@ -559,8 +560,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "444729afda47005154c782253afbc6f742dea9582b778e2c4ade500c56b265b5",
-      "refreshed": false
+      "donor_sha256": "7e926d9ff3a095c57a3c65a62355e25f5e58f5087c08198e5b5cc65cf2363414",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/masterpagemenu.ui",
@@ -569,8 +570,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "6dedb8bdf76c7c376f31a7cf5c134f31c418db61daaf132eaeedc9d3ee471bd0",
-      "refreshed": false
+      "donor_sha256": "ffd6d1b2275bbcdb211199eb6c7e0e31f3eb8ca4c3fbdcc8715e1003cc216c85",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/masterpagepanel.ui",
@@ -579,8 +580,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "097a686cac81af3fda7feb6378188165f751da3e2e692fe785e554345e1a4cd9",
-      "refreshed": false
+      "donor_sha256": "04d3d6c8a3160d109e6b3834cd682b629b6aac5e8bf48ac5ed8358e9368a0588",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/masterpagepanelall.ui",
@@ -589,8 +590,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "25245ea8157c880eeeaa98566549952c5c416c0ea022127935abfee6bfb2160e",
-      "refreshed": false
+      "donor_sha256": "f1a653da5076c0225751a881613a5fe256c9cb80c8de77cfe2003ef98a030ce8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/masterpagepanelrecent.ui",
@@ -599,8 +600,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "94a37149c2ebbff2899f4c7c5a48cc5500415c559517cfa3470aba88e87b47da",
-      "refreshed": false
+      "donor_sha256": "4734eae8c445fea1b1b247e28c7473a2affaaaebcbe4ff599e79ac083584fe5b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/navigatorpanel.ui",
@@ -609,8 +610,8 @@
       "dialect": "gtk",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "f788a2f8fbd2205b5bbb12b8c40cda6362cfed938fd0c81b33596df83223d9b5",
-      "refreshed": false
+      "donor_sha256": "9f73fab2646db0964b26201fba70cc44540db9dd56755e7103a45df462f2fc56",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notebookbar.ui",
@@ -619,8 +620,8 @@
       "dialect": "gtk",
       "nodes": 1280,
       "actions": 0,
-      "donor_sha256": "c86605d4d160f8881a3b8c0d3c8d312de69b2a77c6faa4e4b3628b287107f08b",
-      "refreshed": false
+      "donor_sha256": "1ee4d93ccd7e7c6d66a8920ad343ce1b939bcee7ed8214d8038e9c0e4cdb37ba",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notebookbar_compact.ui",
@@ -629,8 +630,8 @@
       "dialect": "gtk",
       "nodes": 1772,
       "actions": 0,
-      "donor_sha256": "62179ea65964d6bb5ff0e6e5950ddca581627115cbcd7382c7da2d8be9c58b32",
-      "refreshed": false
+      "donor_sha256": "2830c4ba822484a839d680bb085c581698615d3f8c64c30b5517fcd832fc4476",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notebookbar_groupedbar_compact.ui",
@@ -639,8 +640,8 @@
       "dialect": "gtk",
       "nodes": 1386,
       "actions": 0,
-      "donor_sha256": "a0347aab534c0d9398c0f4e7a63301f2d4e2a73a0050a8db34d1ff9e31079a85",
-      "refreshed": false
+      "donor_sha256": "540789df620c05d1dfc4c341096ce6e8b2decd0b222f8b3aa3a1ef2d76e225bf",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notebookbar_groupedbar_full.ui",
@@ -649,8 +650,8 @@
       "dialect": "gtk",
       "nodes": 1239,
       "actions": 0,
-      "donor_sha256": "0b3d19ee45cd006d2e56e776abf43de9242088dab2f3971a13d5a2676ad4e9e7",
-      "refreshed": false
+      "donor_sha256": "e01f241238e20f08b81c75b08714538754789933e8b44876cfc00e6da5fed908",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notebookbar_groups.ui",
@@ -659,8 +660,8 @@
       "dialect": "gtk",
       "nodes": 157,
       "actions": 0,
-      "donor_sha256": "6dfd052e43e556f78a0274c6b33e2b02be093372beca5844929970c86030e2ed",
-      "refreshed": false
+      "donor_sha256": "b383bd7cdcd630ca3a1f89b0612e4c543f44393cd98123680a9197b9bc4ef0f5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notebookbar_single.ui",
@@ -669,8 +670,8 @@
       "dialect": "gtk",
       "nodes": 908,
       "actions": 0,
-      "donor_sha256": "3ef0ebed2ad1e2b371c1291dcfdeae54bff2b35ad1d66003d5ddb6b58f031eae",
-      "refreshed": false
+      "donor_sha256": "1445850a460bf28615aa01e16099b743937454622cc0fd630057890555a76b38",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/noteschildwindow.ui",
@@ -679,8 +680,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "0496c2d55ae48daf690d9a988f277ec0810b9c18365ccf05b3876878d158dd28",
-      "refreshed": false
+      "donor_sha256": "e13bdb77119e5c0ea023fa0439038beee025d599b56df613089f5a8f9d491184",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/notespanelcontextmenu.ui",
@@ -689,8 +690,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "1982f482843804e9956af9474a1ac1cb761918b943a21d60d49c1bd36cefff0d",
-      "refreshed": false
+      "donor_sha256": "03a111a1ccc2b5f47517ae89d6bfc6365f8951dff5c3c5c328123a8d25048aa1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/optimpressgeneralpage.ui",
@@ -699,8 +700,8 @@
       "dialect": "gtk",
       "nodes": 54,
       "actions": 0,
-      "donor_sha256": "64d7c7c1d47d89da89f184a7afe975fe2dd5db972eacdf6089c49bbfa5aa238f",
-      "refreshed": false
+      "donor_sha256": "0d958faec5b28e467247bbbae00f19d805c2aa114c05ace09a8185ccac089c45",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pagesfieldbox.ui",
@@ -709,8 +710,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "1bdc3e5308711b6a9d2bbe3033c099ce14575b98c9dea16e13e5df79f8953c3f",
-      "refreshed": false
+      "donor_sha256": "6253530e4283cfa854f7a15e68453ceb519f0c72bb97e2a01e31c796260c6131",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/photoalbum.ui",
@@ -719,8 +720,8 @@
       "dialect": "gtk",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "0d6ea0d5982fb23bf216b1633a7713eba540aa2dae281a064b7aaca971f7d1a2",
-      "refreshed": false
+      "donor_sha256": "9055bf069963b50bb33d1010680cc41c2dacc43d73e04493a549334eb88bd33f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pmimagespage.ui",
@@ -729,8 +730,8 @@
       "dialect": "gtk",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "12625c966564b625f140a434dffa5c450b769f60e3b92d2eb48b6a194c1601d7",
-      "refreshed": false
+      "donor_sha256": "ba8b07ed4975891fe5c726519e3e2526e790001ebe726db50c680f618d0b8360",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pminfodialog.ui",
@@ -739,8 +740,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "3da05b1bbfa490b5a1f61681f9f6f5f24103d27c406308d61939373c75bbc3a3",
-      "refreshed": false
+      "donor_sha256": "aa23390ad7e7301eada2f3a34fa3ec53aa53d58aef61cef7ee57a3bf21376bd2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pmintropage.ui",
@@ -749,8 +750,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "0e665010a2edf31823342aea671ebfb9acc6d3ea2fbc25e6cf18a7d12433019d",
-      "refreshed": false
+      "donor_sha256": "2cafceb237738a5ada18ff5c4988cb92c8facc45a0f0b85c71b2359e1bdf9b3a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pmobjectspage.ui",
@@ -759,8 +760,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "9c09d0af641d3b816d8e1e76381758c40869da23552cb35a98b843405f189fcd",
-      "refreshed": false
+      "donor_sha256": "74807f59b024d36f50147a3ee2d2b3da891afc89985539672668d7a60eb1848c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pmslidespage.ui",
@@ -769,8 +770,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "2799d7dac74e7edfba1fe1eb5c0738e3f3c2952587724c8a3429d83e490f3462",
-      "refreshed": false
+      "donor_sha256": "a5dea52c31c666344541a04c0994df837796e05ec46e84af064344386cb06296",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/pmsummarypage.ui",
@@ -779,8 +780,8 @@
       "dialect": "gtk",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "cd0dac04d1a4dfa772db44bcc26c62fab90be694ff25d012240791e9e6aa1706",
-      "refreshed": false
+      "donor_sha256": "c930fd085619824f52a9153153112f4a06448fce2795ae4155682b832c7bf358",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/presentationdialog.ui",
@@ -789,8 +790,8 @@
       "dialect": "gtk",
       "nodes": 58,
       "actions": 0,
-      "donor_sha256": "0dc085cb82854cda7426864be237ff6d396e35aac76ae21d3c291a275be4c1dc",
-      "refreshed": false
+      "donor_sha256": "455ca7faaf9bd4b82549930fe931bbd5a8e14a7567bcef9b9184f74d1b1ff870",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/prntopts.ui",
@@ -799,8 +800,8 @@
       "dialect": "gtk",
       "nodes": 43,
       "actions": 0,
-      "donor_sha256": "81009ce9b95077ea13c0efbea0c5a3be2045ccf5bffb25044664b09746d26273",
-      "refreshed": false
+      "donor_sha256": "bfdb34623f34cf8b90c3d2538197ccfc1fb20001b52b0faf1fd1cd67c19728ea",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/remotedialog.ui",
@@ -809,8 +810,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "052668ee5b7a9ea3396e2ae13f051cfc3e19438448fc937dc58d2c0d8ec2df66",
-      "refreshed": false
+      "donor_sha256": "70840d62d868e09cc2cdffed70403374fed9fd2c8a16cde94ac954caf8808c27",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/rotatemenu.ui",
@@ -819,8 +820,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "844d005720aa6441bc73182891995435c59a044b44b0aa6667a79fe798e0d9d2",
-      "refreshed": false
+      "donor_sha256": "d43e12f6fb483a8d496b1f6f937b3e6f981795e94f13aeab4f1c4f9ba48cca44",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/scalemenu.ui",
@@ -829,8 +830,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "2fcf7d8b9dc1ad6efca1978fe451667de335ebc2963f2a414139141b1c3ae548",
-      "refreshed": false
+      "donor_sha256": "78834df4e092875c7beaf6131c8d032c8a61331c95fbad47fa64615b3c1344f2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/sdviewpage.ui",
@@ -839,8 +840,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "1d63cf7edd9f560a929f53f8e451461a5d4ff78ef1c0ecb66aef6e0ae05931f5",
-      "refreshed": false
+      "donor_sha256": "00ac0ab1ee46dec17d99c6954bc96ddf5d95f631e015a47d8f27f9a6aa3215f1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/sidebarslidebackground.ui",
@@ -849,8 +850,8 @@
       "dialect": "gtk",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "7b9e1a265103500829d3fdc1e1b0631455806ab6cd7f13e5366f3126fe9cd862",
-      "refreshed": false
+      "donor_sha256": "2c94aebd5eaa42dfb4ac627e763e47a0a9d73913bb0cb5c789516a85e3e67187",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/slidecontextmenu.ui",
@@ -859,8 +860,8 @@
       "dialect": "gtk",
       "nodes": 22,
       "actions": 0,
-      "donor_sha256": "e640f811398e900a3c82b5d5f7f85d8c00e18053c5a130c42c3a999974fa4ef4",
-      "refreshed": false
+      "donor_sha256": "a116930cf223b5839c8dc9c40668b4f182ef6ef9c2b322e2a4094eb789136788",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/slidedesigndialog.ui",
@@ -869,8 +870,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "e6511b1db14e5305a692b83b3b79ea2d91ee9a1a21578f0af6f1ab53e717e6fc",
-      "refreshed": false
+      "donor_sha256": "90b3425a59d51d9d17520d8fa9c9e844e22809fb661313a95503f85e3314d384",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/slidetransitionspanel.ui",
@@ -879,8 +880,8 @@
       "dialect": "gtk",
       "nodes": 34,
       "actions": 0,
-      "donor_sha256": "bdcee5d915f6582b3932e920a1588529b0af8362304cb3b0968a86b69458d848",
-      "refreshed": false
+      "donor_sha256": "7d565618608ab8300d2b8640259bc67d3c3af03deafcf4dfd221caa06a85be0c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/snapmenu.ui",
@@ -889,8 +890,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "6dedb8bdf76c7c376f31a7cf5c134f31c418db61daaf132eaeedc9d3ee471bd0",
-      "refreshed": false
+      "donor_sha256": "ffd6d1b2275bbcdb211199eb6c7e0e31f3eb8ca4c3fbdcc8715e1003cc216c85",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/tabledesignpanel.ui",
@@ -899,8 +900,8 @@
       "dialect": "gtk",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "714fbadcbc6417f51f319da52b488fc3a58bfc44251c19acbc3b2348d38ec0e9",
-      "refreshed": false
+      "donor_sha256": "a455a5b2023162938213d94e2ee33be8fa551a6751d113ae6cff3cfe71ee6cd4",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/tabviewbar.ui",
@@ -909,8 +910,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "ebacf1cefc8ea0ac03942c5c4dc037e4f1a2bbdc0c0d5dcbe7cc1e1cbc6ad6e3",
-      "refreshed": false
+      "donor_sha256": "a8e0ddb5d02bf51d5002500e16c5b87e97699a972e94859ed23d4f8f79904d34",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/simpress/ui/templatedialog.ui",
@@ -919,8 +920,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "ffed710eeacbac3b92308796a2109cf50052c9ab9796878616de9198c3981f3b",
-      "refreshed": false
+      "donor_sha256": "8fc0f2d12a3a45d9deac7fce0a530bebfd6d6873b5b4da8ef700b0ce1b761fc1",
+      "refreshed": true
     }
   ]
 }

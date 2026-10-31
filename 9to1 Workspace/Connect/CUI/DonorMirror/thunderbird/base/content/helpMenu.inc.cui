@@ -7,20 +7,20 @@
     <Action name="safe-mode-restart" command="safeModeRestart();" />
   </Actions>
   <Page id="content-help-menu.inc-root">
-    <Button id="helpMenu">
-      <Container id="menu_HelpPopup" Type="Menu">
-        <Button id="menu_openHelp" action="open-support-url" />
-        <Button id="menu_openReleaseHelp" action="open-link-text" />
-        <Button id="menu_keyboardShortcuts" action="open-link-text" />
+    <Button id="helpMenu" Type="Menu Item">
+      <Container id="menu_HelpPopup" Type="Context Menu">
+        <Button id="menu_openHelp" Type="Menu Item" action="open-support-url" />
+        <Button id="menu_openReleaseHelp" Type="Menu Item" action="open-link-text" />
+        <Button id="menu_keyboardShortcuts" Type="Menu Item" action="open-link-text" />
         <Container id="menuseparator" Type="Separator" />
-        <Button id="getInvolved" action="open-link-text" />
-        <Button id="donationsPage" action="open-link-text" />
-        <Button id="feedbackPage" action="open-link-text" />
+        <Button id="getInvolved" Type="Menu Item" action="open-link-text" />
+        <Button id="donationsPage" Type="Menu Item" action="open-link-text" />
+        <Button id="feedbackPage" Type="Menu Item" action="open-link-text" />
         <Container id="functionsSeparator" Type="Separator" />
-        <Button id="helpTroubleshootMode" action="safe-mode-restart" />
-        <Button id="aboutsupport_open" action="open-about-support" />
+        <Button id="helpTroubleshootMode" Type="Menu Item" action="safe-mode-restart" />
+        <Button id="aboutsupport_open" Type="Menu Item" action="open-about-support" />
         <Container id="aboutSeparator" Type="Separator" />
-        <Button id="aboutName" action="open-about-dialog" />
+        <Button id="aboutName" Type="Menu Item" action="open-about-dialog" />
       </Container>
     </Button>
   </Page>

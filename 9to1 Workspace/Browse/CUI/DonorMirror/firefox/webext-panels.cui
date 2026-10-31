@@ -42,7 +42,7 @@
       <Container id="mainPopupSet" Type="Vertical Stack">
         <Container id="aHTMLTooltip" Type="Floating" />
         <Container id="PopupAutoComplete" Type="Overlay" hidden="true" />
-        <Container id="contentAreaContextMenu" Type="Menu" />
+        <Container id="contentAreaContextMenu" Type="Context Menu" />
       </Container>
       <Container id="sidebar-panel-header" Type="Vertical Stack" />
     </Container>

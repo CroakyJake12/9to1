@@ -3,9 +3,9 @@
     <Container id="main-window" Type="Vertical Stack">
       <Container id="link" Type="Vertical Stack" />
       <Container id="popupset" Type="Vertical Stack">
-        <Container id="menu_mac_dockmenu" Type="Menu">
-          <Button id="macDockMenuNewWindow" />
-          <Button id="macDockMenuNewPrivateWindow" />
+        <Container id="menu_mac_dockmenu" Type="Context Menu">
+          <Button id="macDockMenuNewWindow" Type="Menu Item" />
+          <Button id="macDockMenuNewPrivateWindow" Type="Menu Item" />
         </Container>
       </Container>
     </Container>

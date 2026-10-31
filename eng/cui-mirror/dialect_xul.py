@@ -18,8 +18,13 @@ XUL_MAP = {
     "deck": ("Container", "Overlay"), "spacer": ("Container", "Vertical Stack"),
     "label": ("Text", None), "description": ("Text", None), "html:label": ("Text", None),
     "caption": ("Text", None), "button": ("Button", None), "toolbarbutton": ("Button", None),
-    "panelbutton": ("Button", None), "menubutton": ("Button", None), "menupopup": ("Container", "Menu"),
-    "popup": ("Container", "Menu"), "menu": ("Button", "Menu Item"), "menuitem": ("Button", "Menu Item"),
+    "panelbutton": ("Button", None), "menubutton": ("Button", None),
+    # The proven CUI idiom (pinned by CuiContextMenuActionTests) is a Button that owns a
+    # Container Type="Context Menu" holding typed menu items, so the donor popup nests that way instead of
+    # being reported as a construct CUI lacks.
+    "menupopup": ("Container", "Context Menu"),
+    "popup": ("Container", "Context Menu"), "menu": ("Button", "Menu Item"),
+    "menuitem": ("Button", "Menu Item"),
     "menuseparator": ("Container", "Separator"), "separator": ("Container", "Separator"),
     "toolbarseparator": ("Container", "Separator"), "checkbox": ("Input", "Checkbox"),
     "radio": ("Input", "Radio"), "radiogroup": ("Container", "Vertical Stack"),
@@ -223,7 +228,9 @@ def translate(path, source: str) -> Result:
         node.props["id"] = kebab(elem.get("id") or elem.get("anonid") or base)
         if element == "Container":
             node.props["Type"] = ctype or "Vertical Stack"
-        elif ctype and element in ("Input", "Button") and element != "Button":
+        elif ctype and element in ("Input", "Button"):
+            # Buttons DO carry a registered CUI Type ("Action" / "Menu Item"); an earlier guard excluded
+            # them, which silently dropped the typed menu-item distinction the framework already supports.
             node.props["Type"] = ctype
         for attr, value in elem.attrib.items():
             key = attr.lower().replace("-", "")

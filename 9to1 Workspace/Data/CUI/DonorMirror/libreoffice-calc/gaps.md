@@ -16,13 +16,14 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `menu button` | 353 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox, svtlo-ManagedMenuButton |
 | `optional section` | 352 | VclOptionalBox |
+| `menu button` | 306 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, svtlo-ManagedMenuButton |
 | `button row` | 134 | GtkButtonBox |
 | `window and dialog chrome` | 117 | GtkDialog |
 | `scroller with explicit bars` | 70 | GtkScrolledWindow |
 | `radio menu item` | 67 | GtkRadioMenuItem |
 | `item collection (list/tree/table)` | 47 | GtkTreeView |
+| `menu items built by donor script` | 47 | sfxlo-PriorityMergedHBox |
 | `tab strip` | 23 | GtkNotebook |
 | `toggle button` | 20 | GtkToggleButton, GtkToggleToolButton |
 | `clipped viewport` | 16 | GtkViewport |

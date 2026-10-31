@@ -89,8 +89,8 @@
       "dialect": "xul",
       "nodes": 89,
       "actions": 4,
-      "donor_sha256": "8220c46037d5a0aa0724b91ce729863041fbfe25f20e972516020896d9549b90",
-      "refreshed": false
+      "donor_sha256": "bf4b5699f4eb0f26a885644c6cf0b8c2f1177daa0267543a10e6e83d4b50bedb",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/aboutMessage.xhtml",
@@ -117,8 +117,8 @@
       "dialect": "xul",
       "nodes": 67,
       "actions": 0,
-      "donor_sha256": "d89089de4e6a01f4355c505559ef7203d555e2a12dad8207753328fe1a57cc90",
-      "refreshed": false
+      "donor_sha256": "59079a82dc8116d3eabf16e99b5a2cde4bb4fe4943d81c0a2edc98e53df11c50",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/commonDialog.xhtml",
@@ -127,8 +127,8 @@
       "dialect": "xul",
       "nodes": 45,
       "actions": 2,
-      "donor_sha256": "813985dd3a0e3713e7a307b04d2339daa8127b224350e3f106748b6ee4e9b385",
-      "refreshed": false
+      "donor_sha256": "8383567030ad989885b831f88946661a97901ad3dcf62cf95949069e11a2e07e",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/compactFoldersDialog.xhtml",
@@ -137,8 +137,8 @@
       "dialect": "xul",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "6cf6b5dcb58916ff6c80916038c077e0185054606bffcbe92cd191be23b51f93",
-      "refreshed": false
+      "donor_sha256": "7c5d8b1fcb6428f7a72c9def9a3bbe4dc7ec37fa3c5ff671fd619bb79943596e",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/customizeToolbar.xhtml",
@@ -165,8 +165,8 @@
       "dialect": "xul",
       "nodes": 21,
       "actions": 3,
-      "donor_sha256": "dd99174eece0badb56c8423d60f48512cc6d7461d17a7b857cad18d0968401b6",
-      "refreshed": false
+      "donor_sha256": "8c4a771babd46eec28397f4643f7de653188be9bffd821618950ea814ef6cd91",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/helpMenu.inc.xhtml",
@@ -175,8 +175,8 @@
       "dialect": "xul",
       "nodes": 14,
       "actions": 5,
-      "donor_sha256": "a6995541da0267669edad393534304d14a66e018fae9dcee429c23a05d965cd6",
-      "refreshed": false
+      "donor_sha256": "3c934d308ad40983eb2b0bbf91164340c8c5cc965b705a449dff69c12b347b79",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/hiddenWindowMac.xhtml",
@@ -185,8 +185,8 @@
       "dialect": "xul",
       "nodes": 52,
       "actions": 4,
-      "donor_sha256": "ddacb521d02611c387a69ccb2b50a6cda77503a92199437572dbc926a368aa10",
-      "refreshed": false
+      "donor_sha256": "68e81938f055c00e8aa654e5a916273737123273c7e8941984ec8928bfa61ec1",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/macWindowMenu.inc.xhtml",
@@ -195,8 +195,8 @@
       "dialect": "xul",
       "nodes": 6,
       "actions": 2,
-      "donor_sha256": "c0049b22fb91fc22823bb94b6040980f529bee904ee04b343c781b306c338e10",
-      "refreshed": false
+      "donor_sha256": "d3e58c6f286edfb881b160b9a97dde7a65b66d0a9d30d7060cda359f7fb07b6d",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/mailContext.inc.xhtml",
@@ -205,8 +205,8 @@
       "dialect": "xul",
       "nodes": 99,
       "actions": 0,
-      "donor_sha256": "771f70a3977c931b3fd4492c85d10224c97834d681bce6831a5acc5a2a31b9c1",
-      "refreshed": false
+      "donor_sha256": "639703a04ad80b5213eb611a046f05ec365966d398e77f2469de1252ca25fd1c",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/mainCommandSet.inc.xhtml",
@@ -245,8 +245,8 @@
       "dialect": "xul",
       "nodes": 6,
       "actions": 4,
-      "donor_sha256": "1b1eaef90ba508495d819620fbd087e382721688d21d0c3b54ee9968d7751faf",
-      "refreshed": false
+      "donor_sha256": "4fe7e73224f09a043cf0eea862f78debde6f585f4ebae66cbb34e6efa22b8dba",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/messenger.xhtml",
@@ -255,8 +255,8 @@
       "dialect": "xul",
       "nodes": 297,
       "actions": 9,
-      "donor_sha256": "2f2297f885db08d88155a58b8ed85c227b75c293441454d1b678b10372fec96b",
-      "refreshed": false
+      "donor_sha256": "15bba451953a89c399ae05cbb703d0629dd3dfbbaecfde2909812fae7505f95a",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/migrationProgress.xhtml",
@@ -265,8 +265,8 @@
       "dialect": "xul",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "8671ba390c22a0b5f56cb62e88c2813ccfb100dc20aab88ffa753c533cbc921f",
-      "refreshed": false
+      "donor_sha256": "3453802a457bd09bdabee2ab31eb8291cbf8f2db65407071b7b046404ba1c14e",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/msgAttachmentView.inc.xhtml",
@@ -299,8 +299,8 @@
       "dialect": "xul",
       "nodes": 44,
       "actions": 0,
-      "donor_sha256": "6601de9b552c269b73944ff553615fb83126b8972e77641baaf2e039c31343c7",
-      "refreshed": false
+      "donor_sha256": "f1b4da5ad5d1f732d18d6288b1bd8c4418013d5d4af0705413ac8446dbeb5e6d",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/newTagDialog.xhtml",
@@ -309,8 +309,8 @@
       "dialect": "xul",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "cc303d458585c0c008b7bd911181746b7c0724224a2e1fee6e65d465b156056d",
-      "refreshed": false
+      "donor_sha256": "6d5be258c2f0d133041c99da4d8785f784700de1f7e784f8c660fe73b07f549a",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/overrides/app-license-body.html",
@@ -337,8 +337,8 @@
       "dialect": "xul",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "1018535093cb0b3a0a263fab539ebde9375ebf15d5aba4d65e046f0f07286377",
-      "refreshed": false
+      "donor_sha256": "894310659d807aaf0a104e7ccbf34e1cd31a4520764a29ee0682635f6d42ffb4",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/profileDowngrade.xhtml",
@@ -371,8 +371,8 @@
       "dialect": "xul",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "b3510b8e9834db571d368747b5730f4a812deda40006f5491f4149db13733c3d",
-      "refreshed": false
+      "donor_sha256": "2036b3c1200b03444f9af74f0ec5ad4367d971b07963ae6adc1d468e4a9fd98a",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/systemIntegrationDialog.xhtml",
@@ -381,8 +381,8 @@
       "dialect": "xul",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "142f0d61ad869a8668cdef3c4279bcc236e4cd3d3477443d61d70eed7f4b5de4",
-      "refreshed": false
+      "donor_sha256": "6455f327fa12fc467990217a222a43392412abde262a9afb5e52895a5de4a688",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/tabDialogs.inc.xhtml",
@@ -433,8 +433,8 @@
       "dialect": "xul",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "78fb4327f019722718684574b80fee9381b51729f61a07f0d57b30cddbea3c81",
-      "refreshed": false
+      "donor_sha256": "f6bf7f55bd57779fb00ae0579e5d300338f60972c5b8c8983d146eefe9ada78a",
+      "refreshed": true
     },
     {
       "donor_file": "base/content/widgets/toolbarContext.inc.xhtml",
@@ -443,8 +443,8 @@
       "dialect": "xul",
       "nodes": 6,
       "actions": 3,
-      "donor_sha256": "6aa563b8f2fbb04d11b018ed40555612dbb11f0c35da4968b459d11e6045fe54",
-      "refreshed": false
+      "donor_sha256": "e4a38e3b76a0c80ed1d8762435d3d58e8aff5ebd00b76c83254c04c6082b38ac",
+      "refreshed": true
     }
   ]
 }

@@ -43,9 +43,9 @@
             <Container id="command-2" Type="Vertical Stack" />
           </Container>
           <Container id="contentAreaContextSet" Type="Vertical Stack">
-            <Container id="contentAreaContextMenu" Type="Menu">
-              <Button id="context-copy" action="cmd-copy" />
-              <Button id="context-selectall" action="cmd-select-all" />
+            <Container id="contentAreaContextMenu" Type="Context Menu">
+              <Button id="context-copy" Type="Menu Item" action="cmd-copy" />
+              <Button id="context-selectall" Type="Menu Item" action="cmd-select-all" />
             </Container>
           </Container>
           <Container id="div" Type="Vertical Stack">

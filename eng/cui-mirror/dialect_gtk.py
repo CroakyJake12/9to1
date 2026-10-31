@@ -198,7 +198,7 @@ GAP_CONSTRUCT.update({
     # The office's own priority boxes ARE toolbars with overflow: they drop items by priority into an
     # overflow menu when the width runs out, which is exactly the CUI Toolbar contract now. The dropdown
     # box is a menu button instead, and stays recorded under that name rather than being called a toolbar.
-    "sfxlo-PriorityMergedHBox": "menu button", "sfxlo-PriorityHBox": "menu button",
+    "sfxlo-PriorityMergedHBox": "menu items built by donor script", "sfxlo-PriorityHBox": "menu button",
     "sfxlo-DropdownBox": "menu button",
     "sfxlo-ContextVBox": "context toolbar", "sfxlo-NotebookbarTabControl": "notebook bar (ribbon) tab",
     "sfxlo-NotebookbarToolPanel": "notebook bar (ribbon) group", "sfxlo-Notebookbox": "notebook bar (ribbon) tab",

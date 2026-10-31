@@ -411,22 +411,22 @@
           </Container>
         </Container>
         <Container id="mainPopupSet" Type="Vertical Stack">
-          <Container id="aboutPagesContext" Type="Menu">
-            <Button id="aboutPagesContext-copy" action="cmd-copy" />
-            <Button id="aboutPagesContext-paste" action="cmd-paste" />
-            <Button id="aboutPagesContext-selectall" action="cmd-select-all" />
+          <Container id="aboutPagesContext" Type="Context Menu">
+            <Button id="aboutPagesContext-copy" Type="Menu Item" action="cmd-copy" />
+            <Button id="aboutPagesContext-paste" Type="Menu Item" action="cmd-paste" />
+            <Button id="aboutPagesContext-selectall" Type="Menu Item" action="cmd-select-all" />
           </Container>
           <Container id="PopupGlodaAutocomplete" Type="Overlay" />
           <Container id="attachmentListTooltip" Type="Floating" />
-          <Container id="tabContextMenu" Type="Menu">
-            <Button id="tabContextMenuOpenInWindow" content="{Binding moveToNewWindow.label}" shortcut="{Binding moveToNewWindow.accesskey}" />
+          <Container id="tabContextMenu" Type="Context Menu">
+            <Button id="tabContextMenuOpenInWindow" Type="Menu Item" content="{Binding moveToNewWindow.label}" shortcut="{Binding moveToNewWindow.accesskey}" />
             <Container id="menuseparator" Type="Separator" />
-            <Button id="tabContextMenuCloseOtherTabs" content="{Binding closeOtherTabsCmd2.label}" shortcut="{Binding closeOtherTabsCmd2.accesskey}" />
+            <Button id="tabContextMenuCloseOtherTabs" Type="Menu Item" content="{Binding closeOtherTabsCmd2.label}" shortcut="{Binding closeOtherTabsCmd2.accesskey}" />
             <Container id="menuseparator-2" Type="Separator" />
-            <Button id="tabContextMenuRecentlyClosed" content="{Binding recentlyClosedTabsCmd.label}" shortcut="{Binding recentlyClosedTabsCmd.accesskey}">
-              <Container id="menupopup" Type="Menu" />
+            <Button id="tabContextMenuRecentlyClosed" Type="Menu Item" content="{Binding recentlyClosedTabsCmd.label}" shortcut="{Binding recentlyClosedTabsCmd.accesskey}">
+              <Container id="menupopup" Type="Context Menu" />
             </Button>
-            <Button id="tabContextMenuClose" content="{Binding closeTabCmd2.label}" shortcut="{Binding closeTabCmd2.accesskey}" />
+            <Button id="tabContextMenuClose" Type="Menu Item" content="{Binding closeTabCmd2.label}" shortcut="{Binding closeTabCmd2.accesskey}" />
           </Container>
           <Container id="aHTMLTooltip" Type="Floating" />
           <Container id="notification-popup" Type="Overlay" role="alert" />
@@ -479,7 +479,7 @@
                 </Container>
               </Container>
               <Button id="alltabs-button" tooltip="{Binding listAllTabs.label}">
-                <Container id="alltabs-popup" Type="Menu" />
+                <Container id="alltabs-popup" Type="Context Menu" />
               </Button>
             </Container>
           </Container>

@@ -15,14 +15,14 @@
           <Image id="script-icon-2" source="chrome://browser/content/webrtcIndicator.js" />
         </Container>
       </Container>
-      <Button id="webRTC-sharingCamera-menu">
-        <Container id="menupopup" Type="Menu" />
+      <Button id="webRTC-sharingCamera-menu" Type="Menu Item">
+        <Container id="menupopup" Type="Context Menu" />
       </Button>
-      <Button id="webRTC-sharingMicrophone-menu">
-        <Container id="menupopup-2" Type="Menu" />
+      <Button id="webRTC-sharingMicrophone-menu" Type="Menu Item">
+        <Container id="menupopup-2" Type="Context Menu" />
       </Button>
-      <Button id="webRTC-sharingScreen-menu">
-        <Container id="menupopup-3" Type="Menu" />
+      <Button id="webRTC-sharingScreen-menu" Type="Menu Item">
+        <Container id="menupopup-3" Type="Context Menu" />
       </Button>
       <Container id="body" Type="Vertical Stack" role="alert">
         <Container id="drag-indicator" Type="Vertical Stack" />

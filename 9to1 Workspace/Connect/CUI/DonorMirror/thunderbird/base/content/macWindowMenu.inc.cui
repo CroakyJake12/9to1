@@ -4,11 +4,11 @@
     <Action name="zoom-window" command="zoomWindow();" />
   </Actions>
   <Page id="content-mac-window-menu.inc-root">
-    <Button id="windowMenu" content="{Binding windowMenu.label}">
-      <Container id="windowPopup" Type="Menu">
+    <Button id="windowMenu" Type="Menu Item" content="{Binding windowMenu.label}">
+      <Container id="windowPopup" Type="Context Menu">
         <Container id="menuseparator" Type="Separator" />
-        <Button id="minimizeWindow" content="{Binding minimizeWindow.label}" action="window.minimize" />
-        <Button id="zoomWindow" content="{Binding zoomWindow.label}" action="zoom-window" />
+        <Button id="minimizeWindow" Type="Menu Item" content="{Binding minimizeWindow.label}" action="window.minimize" />
+        <Button id="zoomWindow" Type="Menu Item" content="{Binding zoomWindow.label}" action="zoom-window" />
         <Container id="sep-window-list" Type="Separator" />
       </Container>
     </Button>

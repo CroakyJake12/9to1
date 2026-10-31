@@ -145,8 +145,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "d3bba5e878f20113fb3376e3dc63ebbdb314171a2e05c69891af731d07f71cd0",
-      "refreshed": false
+      "donor_sha256": "681e5fd277340e962668a07747c6c4fd8c3498c1f059aeac18567852905d5886",
+      "refreshed": true
     },
     {
       "donor_file": "admin/applications/list.tmpl",
@@ -155,8 +155,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "e2b3b88740afa98f6d16fa66affc673b6be9e6d4982a2e9c5789db24d3f67ec4",
-      "refreshed": false
+      "donor_sha256": "791cace5e63d007f321589431ea01c3cc411c0926744da65789eead340f3bf75",
+      "refreshed": true
     },
     {
       "donor_file": "admin/applications/oauth2_edit.tmpl",
@@ -165,8 +165,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "f19417519d85425b96155b57180b86bfc6531a5151155458ac7d4cb5a34fda14",
-      "refreshed": false
+      "donor_sha256": "7879b15893d91995e888198e67c62ad169219fa0526928771d267c93ceff5e03",
+      "refreshed": true
     },
     {
       "donor_file": "admin/audit/list.tmpl",
@@ -175,8 +175,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "53f188fdbca8cb2250a7370250fd5292775920c0e34b806baed39e7e7e79a1a2",
-      "refreshed": false
+      "donor_sha256": "72f2ed30811855afb247185741d20cdf63a4a2466773700c22fa1748e2635514",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/edit.tmpl",
@@ -185,8 +185,8 @@
       "dialect": "html",
       "nodes": 299,
       "actions": 0,
-      "donor_sha256": "35656a866cfbb9f0fb8aebfe0260a7d6efa079422aac52b4fd2fbe1179b498c9",
-      "refreshed": false
+      "donor_sha256": "8816d0232daf11e0cd3fb3bc1e7ea581480cec71e5483d14448ff5231ae3fee4",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/list.tmpl",
@@ -195,8 +195,8 @@
       "dialect": "html",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "0c952247ad2e536969d61189d506b707ddd4c8107537e86b055e2e48d8c67d9c",
-      "refreshed": false
+      "donor_sha256": "5e1b6902cc0db2e66eae7c6d51bf57d557911b408595c4d52cffd1914f368d4e",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/new.tmpl",
@@ -205,8 +205,8 @@
       "dialect": "html",
       "nodes": 79,
       "actions": 0,
-      "donor_sha256": "c6654e381c9cb7ca9145b48a01abc52d4e193569b604e6731606e29a19f575c0",
-      "refreshed": false
+      "donor_sha256": "efd983c53529b3d2296c289fd060ac3266520528f8031dac17cbb5c9f94aa843",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/source/ldap.tmpl",
@@ -215,8 +215,8 @@
       "dialect": "html",
       "nodes": 107,
       "actions": 0,
-      "donor_sha256": "013b4b468fdfe091e48bbc3f2a38134d88512b0bf8cfe03cd68a97e5b6cda523",
-      "refreshed": false
+      "donor_sha256": "8c1edeaa73b9174d992d0ba7d0bafe9f28c853b09ee1110f7f7cfc869ad70904",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/source/oauth.tmpl",
@@ -225,8 +225,8 @@
       "dialect": "html",
       "nodes": 89,
       "actions": 0,
-      "donor_sha256": "4ea69646d9d26f71cf068846a6db7fea523677a73830625ee6aa8ac670cc05b1",
-      "refreshed": false
+      "donor_sha256": "9f3ad428eefd59971856a79a52eb7155de077103c93d4b6bb885a9a9e67c2e8d",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/source/smtp.tmpl",
@@ -235,8 +235,8 @@
       "dialect": "html",
       "nodes": 44,
       "actions": 0,
-      "donor_sha256": "95b2a81a05d2bdfa9f69d1fdf38589b852ea3db91f230c54c78bd86dbb25871a",
-      "refreshed": false
+      "donor_sha256": "7216a2f71c806929a8ce5b3586e570fce827974cafbbe37c38e70da008478c3a",
+      "refreshed": true
     },
     {
       "donor_file": "admin/auth/source/sspi.tmpl",
@@ -245,8 +245,8 @@
       "dialect": "html",
       "nodes": 32,
       "actions": 0,
-      "donor_sha256": "5d43cdf3f378c83b4b1313b826867a1aaad93f22a08c88ceecbbd1f25a5fbb37",
-      "refreshed": false
+      "donor_sha256": "5d03d9281d198ed452fc7b71882c0686424bc2c9db3eb8b1f45f1e5bf807a228",
+      "refreshed": true
     },
     {
       "donor_file": "admin/badge/edit.tmpl",
@@ -261,8 +261,8 @@
       "dialect": "html",
       "nodes": 33,
       "actions": 0,
-      "donor_sha256": "540beed35245758416ad03f4a117d36d5079e4663dbbf208ad907c15889847be",
-      "refreshed": false
+      "donor_sha256": "ae4617862b253663a770c104ef3350f3d531081d5b6deed1a076d5dfffc3a51c",
+      "refreshed": true
     },
     {
       "donor_file": "admin/badge/new.tmpl",
@@ -277,8 +277,8 @@
       "dialect": "html",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "1dd67766fbf3f9ca290b46eb99389c68f4bd5d4c0cf3d4b00eb6ce6cd1c77c5c",
-      "refreshed": false
+      "donor_sha256": "b9a1772c915ee306e51d44780043666f6b12ce047156b46afba920bf6f933b9d",
+      "refreshed": true
     },
     {
       "donor_file": "admin/badge/view.tmpl",
@@ -287,8 +287,8 @@
       "dialect": "html",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "e0f188d426da743318edf08f97eb0d758d650055e18ba47b5426983d2fef37d8",
-      "refreshed": false
+      "donor_sha256": "448d0f8ec6d46ebeddbb0be0872da9e69dd3d946d02650136ade721d651972cc",
+      "refreshed": true
     },
     {
       "donor_file": "admin/config.tmpl",
@@ -297,8 +297,8 @@
       "dialect": "html",
       "nodes": 221,
       "actions": 0,
-      "donor_sha256": "b7f0ab2ebec7ba59f2d860fddfb812ee0e8f4ba1105c30c305a6362bbf6dedda",
-      "refreshed": false
+      "donor_sha256": "46f4683ac9da3c3057f5b144f06ae2a8356f5c2b5982c9028b58cb20e8208e89",
+      "refreshed": true
     },
     {
       "donor_file": "admin/config_settings/avatars.tmpl",
@@ -331,8 +331,8 @@
       "dialect": "html",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "85384077e299b3607b28eb034c4a1b3bbb27e1a53bcb1ef7f18fe56242ff5f69",
-      "refreshed": false
+      "donor_sha256": "5e1916cc5826c02c936f24e34ad26fd814ffebc800454af9aeaaed2c1cd33f9a",
+      "refreshed": true
     },
     {
       "donor_file": "admin/dashboard.tmpl",
@@ -341,8 +341,8 @@
       "dialect": "html",
       "nodes": 62,
       "actions": 0,
-      "donor_sha256": "b76abd31b645b73915967039bb1497bb23cc8afeeca395fc1c59bd4b14620b39",
-      "refreshed": false
+      "donor_sha256": "b8ef26d27e37e9cb292cd31811d21d54b8a476f76a1a46aa39c0960240e3e9da",
+      "refreshed": true
     },
     {
       "donor_file": "admin/emails/list.tmpl",
@@ -357,8 +357,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "2c49cb45f620179a635eede5601dedee1ff65cf0418465a9dee8ee4c0e2193db",
-      "refreshed": false
+      "donor_sha256": "4ae0a1363ff70b7a9207ece94958d874d09cbcc99a3ff11c17777ff6eb775c06",
+      "refreshed": true
     },
     {
       "donor_file": "admin/hooks.tmpl",
@@ -367,8 +367,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "326e7c3da2f15ff321bbf6874df59045c0f891c1b9019071e47b3c348759e554",
-      "refreshed": false
+      "donor_sha256": "d5abe723e4b728d1f1525126e7a25cb10665dc6e46a186310966303a92fe1421",
+      "refreshed": true
     },
     {
       "donor_file": "admin/layout_footer.tmpl",
@@ -383,8 +383,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "274ebb2712acec12c39f379f2f58c243c0c33932b85fc5a99423a05d57fdfc4c",
-      "refreshed": false
+      "donor_sha256": "795375c9d6750c6994514c625660e16a55efa8a8b978f0b937c37b8dbd431984",
+      "refreshed": true
     },
     {
       "donor_file": "admin/navbar.tmpl",
@@ -405,8 +405,8 @@
       "dialect": "html",
       "nodes": 44,
       "actions": 0,
-      "donor_sha256": "97c1e9ea1e5ee872f0296232938d048ca9f0078f184a1394a4a5676c287328d5",
-      "refreshed": false
+      "donor_sha256": "f5b77bae78cbdc80fa9d68fb66a5e793b043e5afc4c7e51bffb9c2926e2a0475",
+      "refreshed": true
     },
     {
       "donor_file": "admin/packages/list.tmpl",
@@ -421,8 +421,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "828ee6e97cb8f9bb8afae53e2aca2e1aad7e92d5083df987f89e47847aac6f04",
-      "refreshed": false
+      "donor_sha256": "9f8189d4804989945e095a268906ca472d57b331aa785cf879731071e1b6e98c",
+      "refreshed": true
     },
     {
       "donor_file": "admin/queue.tmpl",
@@ -431,8 +431,8 @@
       "dialect": "html",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "7d6083671a509da0db27da961e44d1b63858b8e4bfe6714a64ac8186c56cf913",
-      "refreshed": false
+      "donor_sha256": "eb77ed40ee8507139840ac4a80a699cbec3a7d96affcac74bc0053f6104fc855",
+      "refreshed": true
     },
     {
       "donor_file": "admin/queue_manage.tmpl",
@@ -441,8 +441,8 @@
       "dialect": "html",
       "nodes": 33,
       "actions": 0,
-      "donor_sha256": "fe89161c2081eec3c47628162d170f7c44904a20fbb9ddea5396c79e026b370a",
-      "refreshed": false
+      "donor_sha256": "446d8a3863f9a563a7f7d63dff26fd0a6355f9ba732ce9083cc643431ac896a5",
+      "refreshed": true
     },
     {
       "donor_file": "admin/repo/list.tmpl",
@@ -457,8 +457,8 @@
       "dialect": "html",
       "nodes": 37,
       "actions": 0,
-      "donor_sha256": "ea0eef7dbb31c21ecc33ed4004776d6a8c340db8d55c478bc85589b1c18bfbe5",
-      "refreshed": false
+      "donor_sha256": "4f20ff9fce3444fc32f6aa2e96f8e435fe88d2aa196329909b6f457d604dcf95",
+      "refreshed": true
     },
     {
       "donor_file": "admin/runners/edit.tmpl",
@@ -467,8 +467,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "883e5e9d82869a2f4d1e8341e5f18bf97c425533b9627b6625b04aed1fbfe423",
-      "refreshed": false
+      "donor_sha256": "06c155070208346a42631f6447d8b380716c9e86565809b3c38483ba11db2031",
+      "refreshed": true
     },
     {
       "donor_file": "admin/self_check.tmpl",
@@ -477,8 +477,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "998348275ce05ad322eb1cff09a883dce0a8efe257ab7596c160892712ef9e16",
-      "refreshed": false
+      "donor_sha256": "b1a36f26304557dc0b0f6599f107a199443fb56fb822deeb573f587751ebbf8e",
+      "refreshed": true
     },
     {
       "donor_file": "admin/shared/owner.tmpl",
@@ -493,8 +493,8 @@
       "dialect": "html",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "144f43d101aaaea3b30c76e7db7ff8c0a8b5430737aadd9c26bdfbab6cdc65e5",
-      "refreshed": false
+      "donor_sha256": "af3aa978f7b81b4d71dc6c92079e6402c55156961fcc868471b07ed1ce40de4e",
+      "refreshed": true
     },
     {
       "donor_file": "admin/stacktrace.tmpl",
@@ -503,8 +503,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "ffb886274d08eed6f67551aae21a5d22808a320639de92742c72acffa56a2679",
-      "refreshed": false
+      "donor_sha256": "0795c0eef18766022eb898cca9a39de013df7ad79d74ef0dea42875cc0a8b106",
+      "refreshed": true
     },
     {
       "donor_file": "admin/stats.tmpl",
@@ -513,8 +513,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "d6de0e5c700231d61ac256d577cbaa3016639d3683e75ff7d78e26607776d115",
-      "refreshed": false
+      "donor_sha256": "667d501086fdfc6b3f37c6ec8f0b063f7466214ac6dd6d5f64fc6ddfa39dcf3e",
+      "refreshed": true
     },
     {
       "donor_file": "admin/system_status.tmpl",
@@ -523,8 +523,8 @@
       "dialect": "html",
       "nodes": 63,
       "actions": 0,
-      "donor_sha256": "b2d34ec1c54ceffea758a2474befc7dd04a450af8a966fe2faacd925d8b9abcd",
-      "refreshed": false
+      "donor_sha256": "5a175df598c42453d63f930bfd6b2581facdadaa7b07387e18f087b85d736239",
+      "refreshed": true
     },
     {
       "donor_file": "admin/trace_tabs.tmpl",
@@ -545,8 +545,8 @@
       "dialect": "html",
       "nodes": 90,
       "actions": 0,
-      "donor_sha256": "faed2cf9b47723cbdff0143900ab096bfd8aefb83fbcd472a407b8f196b205c8",
-      "refreshed": false
+      "donor_sha256": "15e9b8db9857ba9084fd9120051edff6b8de6eff1bb9514738e0b916a3bdca56",
+      "refreshed": true
     },
     {
       "donor_file": "admin/user/new.tmpl",
@@ -555,8 +555,8 @@
       "dialect": "html",
       "nodes": 53,
       "actions": 0,
-      "donor_sha256": "859358e730163ac84bd4b770c8716b904ed34d5452c50ed23bdc6893b05d595d",
-      "refreshed": false
+      "donor_sha256": "23bd420f368a316fdadb58337a322a957debcad327110f4a89a4e77ee3ba85cb",
+      "refreshed": true
     },
     {
       "donor_file": "admin/user/view.tmpl",
@@ -565,8 +565,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "19777fe736989b89d4c7bbb22e8782ef3a1d4322713571072f5d1dbf01840316",
-      "refreshed": false
+      "donor_sha256": "cf6bd7ba9633b937673561675fa0440b9fcee215584f50e8944b60d0410d29e5",
+      "refreshed": true
     },
     {
       "donor_file": "admin/user/view_details.tmpl",
@@ -575,8 +575,8 @@
       "dialect": "html",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "d572b0acc13a4721052e1601e1b3ae937611291f9c425c4e8f23a1288eabe8c1",
-      "refreshed": false
+      "donor_sha256": "110680f66fa6c432a7433e7d1d106ce9d084b29439ba3b66bf8acb4008ef1972",
+      "refreshed": true
     },
     {
       "donor_file": "admin/user/view_emails.tmpl",
@@ -585,8 +585,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "1d365d9031c3a5272a87b5e3308263def109e4424e60ddbd1fb1ae916a1963bb",
-      "refreshed": false
+      "donor_sha256": "ed28ca0f8bdb3f14b45a9c9495cc9b9bb660df56ebc080712105f2d18ea267b2",
+      "refreshed": true
     },
     {
       "donor_file": "admin/user/view_orgs.tmpl",
@@ -601,8 +601,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "f1b9883ad89f1cdf7110652e558a7734f255d788fd07deacde898483f5b4669a",
-      "refreshed": false
+      "donor_sha256": "5fda9f61dca2954f155797dc095531e17de6974a36cc8ee67af0f472fa45968b",
+      "refreshed": true
     },
     {
       "donor_file": "base/alert.tmpl",
@@ -635,8 +635,8 @@
       "dialect": "html",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "2fe766ca9f55d8c7289af2053692f7b246ec51a9344553b777880df3e5711ee4",
-      "refreshed": false
+      "donor_sha256": "b5bc350ebfa697be9cb5834528a57da010a567c957d476eebc2fbe677c46ff05",
+      "refreshed": true
     },
     {
       "donor_file": "base/head.tmpl",
@@ -645,8 +645,8 @@
       "dialect": "html",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "a2dfa8c463019635d967a116e473151e53deca903db657618b85905dfcb1ea86",
-      "refreshed": false
+      "donor_sha256": "141d89c3ecaa8f2871e4fa28013d4866879633abd09abe797518dc65f1f919ff",
+      "refreshed": true
     },
     {
       "donor_file": "base/head_banner.tmpl",
@@ -667,8 +667,8 @@
       "dialect": "html",
       "nodes": 62,
       "actions": 0,
-      "donor_sha256": "ca0873a6b27f12826a17ad89082936273abc8cf70d0792573d491d6407cb31ae",
-      "refreshed": false
+      "donor_sha256": "b4c71c293357d35be8f5e2e4b64b1f0b4696cf4671e5273a0a3faa615bb4322d",
+      "refreshed": true
     },
     {
       "donor_file": "base/head_navbar_icons.tmpl",
@@ -701,8 +701,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "19f2b8718e2edf07c5c2747539f8a86fe2dad423c09cf1b7944d472705c6dbe0",
-      "refreshed": false
+      "donor_sha256": "e43e0897feb43a32212a272bf4bb65629da1e796507047c2976b40893b57be1a",
+      "refreshed": true
     },
     {
       "donor_file": "base/modal_actions_confirm.tmpl",
@@ -777,7 +777,7 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "1be1ce846c5f5edb1fd04de5bc9483f5cd919af0dd46318a6f4ad5fb96263253",
+      "donor_sha256": "23fc14152fbbbf9917ae3e9c3d460282f824ae673f13a72788c5e7f2d2846276",
       "refreshed": true
     },
     {
@@ -787,7 +787,7 @@
       "dialect": "html",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "5e17e09a204f54398380f54b199d02443ca90dd989fb8970092d82079fa8e497",
+      "donor_sha256": "5536c04b10d7a7d1e0ca4c4317eed77cd22e3bd79b18be9b383f3383ea063724",
       "refreshed": true
     },
     {
@@ -797,7 +797,7 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "9ad69496004ef5440ec4a31c10264084d0d246cbe2abfa3c94d3efe4e712ee48",
+      "donor_sha256": "307b1bae8fbf59fe24c7f0100beb774fed09ae273e32485351a7fc0bb66dc27b",
       "refreshed": true
     },
     {
@@ -807,7 +807,7 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "f88d6f67a579e68b063a78fe69010162787786f4f42299be44fe79e96f9cf591",
+      "donor_sha256": "a82e639d7301eff44537156cf3b2ca69221d9ce5f8c185e224f05f5818969492",
       "refreshed": true
     },
     {
@@ -835,7 +835,7 @@
       "dialect": "html",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "4b26ad5073c19e0817c1f4c42ecebc34e72e58a221ad4576de1f55f553cb53b8",
+      "donor_sha256": "b62de56698c6fd9106d56ae0e73b01402cfa15851f77ec3c171fe4fe6af5bb73",
       "refreshed": true
     },
     {
@@ -845,7 +845,7 @@
       "dialect": "html",
       "nodes": 79,
       "actions": 0,
-      "donor_sha256": "1e6a910893da0950f647c5bc8cfd23ca0ad71a549b41168b171395763b9c0d6d",
+      "donor_sha256": "81500ac5e580edd70cea34677cb16a1e9427e912a72addca20436a91188bc54d",
       "refreshed": true
     },
     {
@@ -855,7 +855,7 @@
       "dialect": "html",
       "nodes": 85,
       "actions": 0,
-      "donor_sha256": "a34fe19e2ffeee940852b8c660582b3d3bb41ff96bfc7d9002e24b3e31526b99",
+      "donor_sha256": "345f0602bdcd99f67a2d00cbaeb4c07a12cd708e7580d73400491870057da82d",
       "refreshed": true
     },
     {
@@ -877,7 +877,7 @@
       "dialect": "html",
       "nodes": 136,
       "actions": 0,
-      "donor_sha256": "a397dda0d0592e843ecd8a6da966e999b35d38e62a768e43fb8a71a90dbd5757",
+      "donor_sha256": "a37d411349732b1f31c30d6e0815a207296f480528dea7bf2d68d0471537b1d9",
       "refreshed": true
     },
     {
@@ -887,7 +887,7 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "ea8ccb4d747a8bacb6811252d53059f80df4cf4be6ccb5a2e3c8539ade43e7fd",
+      "donor_sha256": "e83783391401e0fb2d0b59394ff4331b69da3b2a92ce1d9aa00c859be97084fd",
       "refreshed": true
     },
     {
@@ -897,7 +897,7 @@
       "dialect": "html",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "01143518e909f230762b985316c66db4b246756dd68144a8cb0ca54eb4241b5f",
+      "donor_sha256": "6a6aeff07cd665000096a2b4c4163df7f11c1e17790a564bc83fcb9d83c9e330",
       "refreshed": true
     },
     {
@@ -907,7 +907,7 @@
       "dialect": "html",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "a63ae7847d8ca0739d8c3ff903aa1c9b5ae48a93d801812442925d594a3dfd56",
+      "donor_sha256": "e1b2b8e2b4d60ed6b7f4807fc321f7b2d9c33fef50265fd3a27c58edc033b04b",
       "refreshed": true
     },
     {
@@ -917,7 +917,7 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "a98392556f23f6d1f5973c903dc95d0553f9988c84f27756d6bd9ceb632bc023",
+      "donor_sha256": "511ede59b44fc3eb015ffca6450bcb1d18e28a156e0a7b890d5e269c6b1d9c20",
       "refreshed": true
     },
     {
@@ -927,7 +927,7 @@
       "dialect": "html",
       "nodes": 42,
       "actions": 0,
-      "donor_sha256": "67f70f61a10ba705ec0480edca59de53bf99e6873bedcb99f62f52fb9ce382d4",
+      "donor_sha256": "87f12a1e1c0a8cdb9bc8dd676a71cff6eb3999467cfeeeac332d67ebc95e3981",
       "refreshed": true
     },
     {
@@ -937,7 +937,7 @@
       "dialect": "html",
       "nodes": 85,
       "actions": 0,
-      "donor_sha256": "e78b577beaeb96315ffc7c5b859c4482a0a11ad98c1f59e56b3c08d24ac68f76",
+      "donor_sha256": "bf2d43de3fb0c8aab0051535f0f44d78d298f5bb48514f6a989ddf415eb5d550",
       "refreshed": true
     },
     {
@@ -947,7 +947,7 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "f47fda9384c846f2a40b2997dd9409baea974f1c11286ef83349592ec4053fc1",
+      "donor_sha256": "5f62016b1bd4215648992b98e7034a264cc8e6d24170863b423dcc1ed3d76047",
       "refreshed": true
     },
     {
@@ -957,7 +957,7 @@
       "dialect": "html",
       "nodes": 89,
       "actions": 0,
-      "donor_sha256": "3f9566837d58acb5c2a8057cb18a84f79976fdaa20423406e63083bd36cd7f9d",
+      "donor_sha256": "bd8f5a5cf6190f9f3480b7c2d660665695aa1375ee7e43908d6df9b4ddf96995",
       "refreshed": true
     },
     {
@@ -973,7 +973,7 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "895ae2d105456f7b5fddeda18981f7189d627224ce5c4d4c3545171f0255c36c",
+      "donor_sha256": "97e6ce1c7064b35f0d20a47acf6873002d341ca9f7ee5e3c180af00eb4bc3d4c",
       "refreshed": true
     },
     {
@@ -983,7 +983,7 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "d7e81edb97b6ec667cf1886a13977ddb18b285d3f2002ee2b081becfcf583765",
+      "donor_sha256": "8dda54f3d2f20d91e380b5c0017db2115935f089287641d4595aee12bef53425",
       "refreshed": true
     },
     {
@@ -993,7 +993,7 @@
       "dialect": "html",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "77aff06e3f667293e71da491b91c94c078ad52676516288495e9151fa02d736e",
+      "donor_sha256": "2ff641123ad2a68bde0ecd479a0a1dbe2f738c6c50753fc33c4e111b33f3c962",
       "refreshed": true
     },
     {
@@ -1003,8 +1003,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "b0c9985e6725e98bb9eee3cc1b955288620949f1e6c65c7d4a4696f88ede8aeb",
-      "refreshed": false
+      "donor_sha256": "a5ff03e179a9cc4dcc53849340c3ad2d8eddad82f9777e968c0f86c9a5484eb3",
+      "refreshed": true
     },
     {
       "donor_file": "explore/navbar.tmpl",
@@ -1013,8 +1013,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "4355972e0013c7139884c5d0e6a4fd4d4aa9c8861853f5459ed28d810ab8f543",
-      "refreshed": false
+      "donor_sha256": "9e343201a92055a17a3581a040719847e09b8fc97317e3400ffbff12adaa7d86",
+      "refreshed": true
     },
     {
       "donor_file": "explore/repos.tmpl",
@@ -1023,8 +1023,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "fe0744873a9dab8b1a36303624f16879cac096b4faf5e477ce33d5ad123335c9",
-      "refreshed": false
+      "donor_sha256": "90c5fdb8cabcf436ebc0448398d7b17d9b2c320e7cb7ec61b8bbcdcd5c6ba79c",
+      "refreshed": true
     },
     {
       "donor_file": "explore/search.tmpl",
@@ -1039,8 +1039,8 @@
       "dialect": "html",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "f9b23b901935b1138d698b4abb8077ee3b04586bbf7990386cec578990650ae7",
-      "refreshed": false
+      "donor_sha256": "49fd46797be7390922cac543710f00f7cfa3fe27080bb1ffddea88339139a617",
+      "refreshed": true
     },
     {
       "donor_file": "explore/users.tmpl",
@@ -1049,8 +1049,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "566c753544b1a84b104282420d5b7cbc577dc771ed210ba5e0410f29cd4973c1",
-      "refreshed": false
+      "donor_sha256": "8d5b2598624701df19841fbf340f98e216b8ecfebeb963a03946627b028a55f6",
+      "refreshed": true
     },
     {
       "donor_file": "home.tmpl",
@@ -1059,8 +1059,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "c196a833b87b6b75a13550486078e988000deeae88fcea1cac9c0e424ce27b35",
-      "refreshed": false
+      "donor_sha256": "4e1e8682e70da4b9526753b7aa38ce3a84e8ba73631edc7a6e58983c4f7262d5",
+      "refreshed": true
     },
     {
       "donor_file": "install.tmpl",
@@ -1075,8 +1075,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "710d88447f4d9680cb0a3134512118085d2b353b1b390c4e6ddfa577ff1e73b8",
-      "refreshed": false
+      "donor_sha256": "f68602f8bb24630b8f4f6b010889e736b1f7195af963d920ad4f7b2b8e91a690",
+      "refreshed": true
     },
     {
       "donor_file": "mail/base/head.tmpl",
@@ -1091,8 +1091,8 @@
       "dialect": "html",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "fd776d690f0f2c7dca9e8866c146b4d751992ccde90d50476e5e7236c564989f",
-      "refreshed": false
+      "donor_sha256": "8950828f0c4c8249361d48a8edc2fe8e2894c61a41c30b669e0c5f014b25e5a6",
+      "refreshed": true
     },
     {
       "donor_file": "mail/repo/actions/workflow_run.tmpl",
@@ -1101,8 +1101,8 @@
       "dialect": "html",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "0f4a5bbabace754be05354ff516aa7141998e7654cad90b6ec45a627c324596b",
-      "refreshed": false
+      "donor_sha256": "b4d98e2fce06c1ad375cfa5869e8903b4a7864c9a170ad660bf76649faabc694",
+      "refreshed": true
     },
     {
       "donor_file": "mail/repo/collaborator.tmpl",
@@ -1111,8 +1111,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "df799474960ec2a8e29da5f59aba3037daf5f33fab1c441faff63f3c4eaa9d47",
-      "refreshed": false
+      "donor_sha256": "52565b03cf35bce0637f736cb5fa88151d7a5fb69b8a46a3e909f1b3092a899b",
+      "refreshed": true
     },
     {
       "donor_file": "mail/repo/issue/assigned.tmpl",
@@ -1121,8 +1121,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "345a2b8a45589f523da9dfec1ff4caf670c0784c683cf1c7a9babc46160632cc",
-      "refreshed": false
+      "donor_sha256": "1c3a858a909b19fa0084cd6b14634d5a5fc06b2a2f10f0b7385463e5ecbfd11c",
+      "refreshed": true
     },
     {
       "donor_file": "mail/repo/issue/default.tmpl",
@@ -1131,8 +1131,8 @@
       "dialect": "html",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "45ae8b1ec87642a853aac40fe9d34e1244c50790d0860bd6b9fa252ee5a9ad3e",
-      "refreshed": false
+      "donor_sha256": "764c6ad64be44922e3a07f190245c2cce809b4f532e94eaa58d464299148417b",
+      "refreshed": true
     },
     {
       "donor_file": "mail/repo/release.tmpl",
@@ -1141,8 +1141,8 @@
       "dialect": "html",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "d0ab5030d4dc2f349be576e127df8eed3f9a369ac4cc5720127e3dfe2fdd5016",
-      "refreshed": false
+      "donor_sha256": "6e326b1cead87146d225d766d0df1801b4ca03982d60621f4fe950a6b74b393f",
+      "refreshed": true
     },
     {
       "donor_file": "mail/repo/transfer.tmpl",
@@ -1151,8 +1151,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "78e830bb11f38ee016939f6585c7b422fa43d923fcba3343a06af7f12ab397b1",
-      "refreshed": false
+      "donor_sha256": "e54eba90f5b475edf2b6883c74d5daffd86138a020643d240b828cc9e1c9a291",
+      "refreshed": true
     },
     {
       "donor_file": "mail/user/auth/activate.tmpl",
@@ -1161,8 +1161,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "4ae2bb78a15b7b0cd216dfb35dbe0b893860e6cd23a18b8fa3fdd80d5e322924",
-      "refreshed": false
+      "donor_sha256": "9a9b1b8c963fd8b21134d171bca4f252be29c68bf45773929a4614af85412253",
+      "refreshed": true
     },
     {
       "donor_file": "mail/user/auth/activate_email.tmpl",
@@ -1171,8 +1171,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "495b32c85ad436b8ccbf067e20d0766dbf86109e5b756aa26650d908cb714a38",
-      "refreshed": false
+      "donor_sha256": "b4e25c586036099f38f2f5b8fdb6f5ff2c28110d599f8ea2cf85dbf2dbc8edad",
+      "refreshed": true
     },
     {
       "donor_file": "mail/user/auth/register_notify.tmpl",
@@ -1181,8 +1181,8 @@
       "dialect": "html",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "5272ade80704e1998d3059372e50bd811380d36b27fe6ff88efa7c8de6019e62",
-      "refreshed": false
+      "donor_sha256": "8efaa86f40957921ceec174d0df2e785b3580e8703e44d2bfe88f14bccc4a7e6",
+      "refreshed": true
     },
     {
       "donor_file": "mail/user/auth/reset_passwd.tmpl",
@@ -1191,8 +1191,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "992e2f8bba090dc785c31b17d85e56afbb486fe59b4f29eded0c0d747058ce71",
-      "refreshed": false
+      "donor_sha256": "0ecd51f3c6212e0aace7408ad4baf8567a8ff1b1e8cd49d3be7c04e60d4ec7fc",
+      "refreshed": true
     },
     {
       "donor_file": "org/create.tmpl",
@@ -1201,8 +1201,8 @@
       "dialect": "html",
       "nodes": 29,
       "actions": 0,
-      "donor_sha256": "0e3d363e579562a80eeb9db345afbb2453230afebd0e955b63afcb4e6dcd68bc",
-      "refreshed": false
+      "donor_sha256": "28ac2976721359fd58eb41974f41b99c70e8e23cd29fa40c2bb66ca169f7a767",
+      "refreshed": true
     },
     {
       "donor_file": "org/follow_unfollow.tmpl",
@@ -1211,8 +1211,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "18e1453b93a307a11d873c3ee44d09ce427f5c32dade24fe0d1eb1afd9fcee9d",
-      "refreshed": false
+      "donor_sha256": "81bbe4a341ca740c1f3b5a94196b059f079c682c168bebef0aedd384b8b828e7",
+      "refreshed": true
     },
     {
       "donor_file": "org/header.tmpl",
@@ -1221,8 +1221,8 @@
       "dialect": "html",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "31080ec3943470ee31382b2a50a0c69ae612ed30937f44c3407bebf52caeef8b",
-      "refreshed": false
+      "donor_sha256": "cbf7f1858d8e023adfa6fb3afab7c05dda45d3517cd888a2ae5c7ba482127ab3",
+      "refreshed": true
     },
     {
       "donor_file": "org/home.tmpl",
@@ -1231,8 +1231,8 @@
       "dialect": "html",
       "nodes": 42,
       "actions": 0,
-      "donor_sha256": "f360d518240a9e13111a608926624fb81bb260864d028bd550b3222f14613015",
-      "refreshed": false
+      "donor_sha256": "a3619e92761916aabb46ff9fc2ce202ecc961f1c8f2aa63fb23d924d6b74a804",
+      "refreshed": true
     },
     {
       "donor_file": "org/member/members.tmpl",
@@ -1247,8 +1247,8 @@
       "dialect": "html",
       "nodes": 17,
       "actions": 0,
-      "donor_sha256": "7e616f0a29256fd73105af351aa64e66d1f71d039caa4a84e5d50dcff9553621",
-      "refreshed": false
+      "donor_sha256": "1585429140f2450e7301cefd1790541b90fb375716581209b2e56275cd7866a5",
+      "refreshed": true
     },
     {
       "donor_file": "org/projects/list.tmpl",
@@ -1269,8 +1269,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "5a1a0d04e51f917512d38ddeaf395b5558098358eac08cdefd40e13dc3ad1c51",
-      "refreshed": false
+      "donor_sha256": "aa2b729332b3c1b09af39609b003fd7f2995a74ff4dd82fb7602d6bf71148f10",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/actions.tmpl",
@@ -1279,8 +1279,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "b0ae234e526937519683581a9ed7d214fcb561f3c311686a972e8ce466f29dfe",
-      "refreshed": false
+      "donor_sha256": "717030dfc4aae9c0556c3b390f4fa81f36c34723423f9d14cf8fd3d8355a2eab",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/actions_general.tmpl",
@@ -1289,8 +1289,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "6f6175742b349bab7c98a4913f8487920b6a8bf4f3042dad93298c7d36605566",
-      "refreshed": false
+      "donor_sha256": "8ad062b96e4819fe814bcff9048b72d94aef8b803e06a3b0f73b8f31e54e5fbb",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/applications.tmpl",
@@ -1299,8 +1299,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "430132a378baaff5a0430faaca83a16c70a5254e7c3007d873d6ba9642dbef3d",
-      "refreshed": false
+      "donor_sha256": "d630806d766e0c1e63012949cc5140603df7bbf38b726efce145156bc220b230",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/applications_oauth2_edit.tmpl",
@@ -1309,8 +1309,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "fbd3deb0da4b383b7e578b99403817d4a02c355d834aa05b6144ecdf51aa28af",
-      "refreshed": false
+      "donor_sha256": "a18cf8554d0bcfb8f865277148a29cef2e5e6599102e86e7fe0ace96bfa18af3",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/audit_logs.tmpl",
@@ -1319,8 +1319,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "856744c687369c1b80386af40f3303b6d03b83ef5fe8be8ccef20b8e0eef3260",
-      "refreshed": false
+      "donor_sha256": "a81525487c4748c762a9cea285f7f2580dade3a0f600f708ebf6b977b764e9be",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/blocked_users.tmpl",
@@ -1329,8 +1329,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "7b5c1479ba672393d69945fd54ffcf7edd69046dfe623a71035485679ee06859",
-      "refreshed": false
+      "donor_sha256": "571b8125ffaa7708c3bd8c79c9d0e5ceb967a6873b663549a5de7e968b4646e9",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/hook_new.tmpl",
@@ -1339,8 +1339,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "3c3191a87a47cbdd6180db24a464473f9649300d978a53ec2a226f6563e0d47f",
-      "refreshed": false
+      "donor_sha256": "f3abb38d310867119257a1b4e8b9226ab080dc80f086fdae71dd3660308a0ea1",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/hooks.tmpl",
@@ -1349,8 +1349,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "26e3e9f4406b885aee0bac147d574c6d837a49049d631a4d745caf46e5fe01d1",
-      "refreshed": false
+      "donor_sha256": "8b0468a4f9fa99d0950fbeb6424064bab30e646837710cf15ce79099c03f869b",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/labels.tmpl",
@@ -1359,8 +1359,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "d8dc94586d2bb784276592add3e8cf717463ee93dfa02e2e9226162feca0cf48",
-      "refreshed": false
+      "donor_sha256": "8476312b8eebf7351d7c5c295c51f52d2a68d80c745ab2ee8afaa6b18e01beac",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/layout_footer.tmpl",
@@ -1375,8 +1375,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "58597d874a537f2fe2e65af7e720b7ec56000e8f4160800807a1324b2d05623a",
-      "refreshed": false
+      "donor_sha256": "d69eef257f593c0fe276f014a8df14718678d48a113a55374e865759a662331d",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/navbar.tmpl",
@@ -1391,8 +1391,8 @@
       "dialect": "html",
       "nodes": 38,
       "actions": 0,
-      "donor_sha256": "819cc78bd2612102e503c5aa96420e8ede354f73336d4cabedefce37b24b5bae",
-      "refreshed": false
+      "donor_sha256": "40982b471fef77686d1db2b907870dc65928bc0ef40b442b6b72c49f9ca2f0ed",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/options_dangerzone.tmpl",
@@ -1407,8 +1407,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "09337f68bfae5726c5215df685d6ab400cf41061fb4889ff61bbb600f24b1124",
-      "refreshed": false
+      "donor_sha256": "c6cbade9bf2732a2a4f0a98832cf42ac30d7430265cca2b15f8b5ae843ed782a",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/packages_cleanup_rules_edit.tmpl",
@@ -1417,8 +1417,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "fa60a8025b8e4f20e0484197bbe227f70845df2b7ecacad0901e88e5cfceb1a6",
-      "refreshed": false
+      "donor_sha256": "5af7bf00e27d3236cd69d2bf2144630ae124199077cda210b3c6e4a21ad7a63d",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/packages_cleanup_rules_preview.tmpl",
@@ -1427,8 +1427,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "ac31642e7cccab5068852d1ba748d4c4288b92aedac727e8657bd6b0b3f335bb",
-      "refreshed": false
+      "donor_sha256": "044a3ec8ce1398189343a217bbc52b1a18e8db1ee3468a5d5ded6a13c21ba240",
+      "refreshed": true
     },
     {
       "donor_file": "org/settings/runners_edit.tmpl",
@@ -1437,8 +1437,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "9a026ff8bb36136dfa2bfae8db4f9beb479387ae9578bbd24d7f226ad434f3b2",
-      "refreshed": false
+      "donor_sha256": "b76de9ba3d7b5be03708150919155a0c7c0656078208cd7575df7e0f724945d8",
+      "refreshed": true
     },
     {
       "donor_file": "org/team/invite.tmpl",
@@ -1447,8 +1447,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "17eda7ca8597c7098600575fdaa1006b63b1b1ab0d02b04355d0e4b94ebeb306",
-      "refreshed": false
+      "donor_sha256": "61d84accd41163c77b661cd109d74b077cd13e600c6ecf11d90c23e3b95193e7",
+      "refreshed": true
     },
     {
       "donor_file": "org/team/members.tmpl",
@@ -1463,8 +1463,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "119a2720c852372ce8a177b4b0e34f6e761965aea8107b924c688584a6010355",
-      "refreshed": false
+      "donor_sha256": "7d83c31b145392090235bdfc7524af749d0e597694e6ef94d6b5032e1b07db9b",
+      "refreshed": true
     },
     {
       "donor_file": "org/team/new.tmpl",
@@ -1479,8 +1479,8 @@
       "dialect": "html",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "f742a6edf1e4618ebb8fd1ebdbe5ba2d3c6663887cde3d59f1738a42d802553d",
-      "refreshed": false
+      "donor_sha256": "e0fad0a8537d6387dd907fc4fb27918f445d19e581c04deac40fd7ddb54487cb",
+      "refreshed": true
     },
     {
       "donor_file": "org/team/sidebar.tmpl",
@@ -1501,8 +1501,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "827cd87dd99570621299cf3089fdcbc41cced106d3d2ba49bab3a286dfbd791c",
-      "refreshed": false
+      "donor_sha256": "acc35d19e193c036b54a7c8f3588f4725cbaab8c4629b098fc9a6909130159bd",
+      "refreshed": true
     },
     {
       "donor_file": "org/worktime/table_members.tmpl",
@@ -1511,8 +1511,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "23f9722dcdaf18eb55b63f8560248d822f4cb3f6feecbf003f3e0b889508629e",
-      "refreshed": false
+      "donor_sha256": "5a3c2105c4edfee4d3f89184b75e818be10b8a33ebb7bb36636659650d6be71b",
+      "refreshed": true
     },
     {
       "donor_file": "org/worktime/table_milestones.tmpl",
@@ -1521,8 +1521,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "0693c27b2403e503167b9e2b0e6dc8b88484debb91e8d8ba9f1502a78a9195b5",
-      "refreshed": false
+      "donor_sha256": "505b19878fabd79b1d4d303cc43b070031da0d9c15ddb68d415196908e8e0dd1",
+      "refreshed": true
     },
     {
       "donor_file": "org/worktime/table_repos.tmpl",
@@ -1531,8 +1531,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "5e08ce0a3a9d8e626a675b1b8d6710d5aea4afa094e6fbcf50b7565c6537652d",
-      "refreshed": false
+      "donor_sha256": "29ab31f77a0f743791154612eca9856ac1bde4cac3fc55eb444ea0b17bb4d0a4",
+      "refreshed": true
     },
     {
       "donor_file": "org/worktime.tmpl",
@@ -1541,8 +1541,8 @@
       "dialect": "html",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "6f608380d141809ed66c9cbd5e959c38d9e09819609c55aa41be9e525c78a6a1",
-      "refreshed": false
+      "donor_sha256": "feedceefbdd511f526b0154f6e7cf64c50856ac1e05267f70b725dae53c6e2ff",
+      "refreshed": true
     },
     {
       "donor_file": "package/content/alpine.tmpl",
@@ -1839,8 +1839,8 @@
       "dialect": "html",
       "nodes": 43,
       "actions": 0,
-      "donor_sha256": "a5bd954c3bbf100b0879b38dad81a7aaa405c4c9e27ab5fd4808ee040928c3d3",
-      "refreshed": false
+      "donor_sha256": "0b217ad978606bb0c3a5d9eb69c38d37f48a04920547887d20faadd742b05be2",
+      "refreshed": true
     },
     {
       "donor_file": "package/shared/cargo.tmpl",
@@ -1903,8 +1903,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "be33425be36606b37f868a80da82a81163ec9bc5f6311348cf202a273c243df1",
-      "refreshed": false
+      "donor_sha256": "6df7bf0c6d2fa66d381309463fb766d888c3e3b46e94c3e1c72810ffa782544e",
+      "refreshed": true
     },
     {
       "donor_file": "projects/list.tmpl",
@@ -1937,8 +1937,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "177e1e5628fb84b8fdd4d18b1d71a38bab969870967b526e3cc59e7e1219c4b1",
-      "refreshed": false
+      "donor_sha256": "3a1f7e8579502bbcdf0ea775262279e853a3245b5a03b5b312727e3e62fe4f2a",
+      "refreshed": true
     },
     {
       "donor_file": "repo/actions/list.tmpl",
@@ -1953,8 +1953,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "781acfeb1b657fdca70421cee6033f9b5febcf777483e4aa60b9e19804a1b11f",
-      "refreshed": false
+      "donor_sha256": "75551d47e4a38d40c284ffcde06145aa7759fbaa864afb4f25693a3ab4f0018d",
+      "refreshed": true
     },
     {
       "donor_file": "repo/actions/runs_list.tmpl",
@@ -1975,8 +1975,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "4a461e1b7db88ca18b03c1a91bb701af6e2ee084a90971d195fb54c2950b1bb0",
-      "refreshed": false
+      "donor_sha256": "eaada2a3304aac0e4ca25bd26f7917c3b502e6dede53aae075f45f47130543bd",
+      "refreshed": true
     },
     {
       "donor_file": "repo/actions/view_component.tmpl",
@@ -1985,8 +1985,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "dbf0e87f6202577f47111ab7ca40ebaeabd1002e9af1e3c42ed04fd19594215b",
-      "refreshed": false
+      "donor_sha256": "4c32880873821b962cfcdaeafbf51998d04736a657f3f573c0dbe78a9b0e1f4d",
+      "refreshed": true
     },
     {
       "donor_file": "repo/actions/workflow_dispatch.tmpl",
@@ -2037,8 +2037,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "112d9124eea9a739050369bdc782e664351e1377cc857910ada36266716f5142",
-      "refreshed": false
+      "donor_sha256": "d959964cc0bcbcbb3b34c1fe5ad997603eff6c493bea22b96c26c3a1fa22c9d2",
+      "refreshed": true
     },
     {
       "donor_file": "repo/clone_buttons.tmpl",
@@ -2065,8 +2065,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "8ddf2a2cdc3bd55fe5c2531c9e15ae6c6670ffaddb41ea57b50f872c89fdfe1e",
-      "refreshed": false
+      "donor_sha256": "d79a381c69a50976e0c49b646ecc63ce52b263ecf5e4f2f84f2a8fce62bf0353",
+      "refreshed": true
     },
     {
       "donor_file": "repo/code_frequency.tmpl",
@@ -2075,8 +2075,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "811ed4dff50fcab5388d63c90e5f78e0fe6fe631a051b10e1c06ce196fd1c524",
-      "refreshed": false
+      "donor_sha256": "33e86ee788577201e41bac616327c5f3d4c5b89c3a975afd0609f506f78546f3",
+      "refreshed": true
     },
     {
       "donor_file": "repo/commit_load_branches_and_tags.tmpl",
@@ -2085,8 +2085,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "07a67af5a5b3223d25aa10a4a532e79500030b71ac6c90dd18577f2d7a0173b4",
-      "refreshed": false
+      "donor_sha256": "7912fe5825ad54e72ab48d387f7603db0236b2b96aa8ebb38c2717b24aec9a87",
+      "refreshed": true
     },
     {
       "donor_file": "repo/commit_page.tmpl",
@@ -2113,8 +2113,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "911841dc28bc486b546989c01d79e72556bdf809f42097620011bf34aa57566f",
-      "refreshed": false
+      "donor_sha256": "3ab26eac51e53c3bb47bbac06b845992ce3ac6e6527fb5ceeb4b59979d757188",
+      "refreshed": true
     },
     {
       "donor_file": "repo/commits_list.tmpl",
@@ -2123,8 +2123,8 @@
       "dialect": "html",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "04cd257c59830a23c74c8b7e3e68b8fa66ff23cdc8076416801a60270915daeb",
-      "refreshed": false
+      "donor_sha256": "53ce473a728c41ffe85e595f56be2dbb95c68c7aa82de9a4e133fa2ba4f3083b",
+      "refreshed": true
     },
     {
       "donor_file": "repo/commits_list_small.tmpl",
@@ -2145,8 +2145,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "1334b7a0ea78a2b55ad78f68b42503de757ddeedeb6ae13f3cdef621f4675209",
-      "refreshed": false
+      "donor_sha256": "de6e65d477174c81fff01e35653ed822eec26e048174eec5dee7b5a187bb9429",
+      "refreshed": true
     },
     {
       "donor_file": "repo/commits_table.tmpl",
@@ -2161,8 +2161,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "73c61fc4d1ac1ebf8e5976ae79a1b1673b49a33744a2e3baeafd180ec1349a6f",
-      "refreshed": false
+      "donor_sha256": "58063ccc6a692ba94475e93323e55a66b7e881a5e8a4c65ac460bf4fdb868977",
+      "refreshed": true
     },
     {
       "donor_file": "repo/create.tmpl",
@@ -2177,8 +2177,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "2b4559eb3b94b03efd9c6a126a0d0d1f71da606541ca169764903fed2e0726c2",
-      "refreshed": false
+      "donor_sha256": "de6d0b4b73c225d8471f722dd194c0b70872eda151c99cf8a0385bd05c52c808",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/blob_excerpt.tmpl",
@@ -2199,8 +2199,8 @@
       "dialect": "html",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "9049fa6db38c0fa78c9723fad0fe2f3a0f2a2770ae929ec720aaa3b430dcc5c4",
-      "refreshed": false
+      "donor_sha256": "b4c56ae76796c1a72d379584d50c7e35ca53459b4cede03b0eaad6113df82398",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/comment_form_datahandler.tmpl",
@@ -2221,8 +2221,8 @@
       "dialect": "html",
       "nodes": 70,
       "actions": 0,
-      "donor_sha256": "b3ba8407830df245aafd7f4aa6a963672e0a24e62a23e668f26febe248c8a7b0",
-      "refreshed": false
+      "donor_sha256": "4db6e5b332b8dac65f8e4f706843af7ef257974cab76d539d121feb90941c03d",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/conversation.tmpl",
@@ -2237,8 +2237,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "d70e09058f8aca1300a385371d619d0fc816484da906778d3c3feea6cd620134",
-      "refreshed": false
+      "donor_sha256": "66313dde1d12f7d7e72f4a1f38c26f6b491245045be85c19bc38877a5eeabaf5",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/csv_diff.tmpl",
@@ -2259,8 +2259,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "83a2d00853fbb0349c15f2937f7ecf37c3749520b6c78288d909752062feef77",
-      "refreshed": false
+      "donor_sha256": "f05cbbe9c9870545d8687edd3e186f5296e888e64be3644aceba91c3d68c5ff4",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/new_review.tmpl",
@@ -2275,8 +2275,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "65f9ce3a6cf2adc3d0cdff6e57bf942f5f0e563225fd9fcd6d00afe41fd13091",
-      "refreshed": false
+      "donor_sha256": "c435c7671d85ba3bbb3ed481d19b4f96fd5f97526142d05a34241b04bd4fd746",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/section_code.tmpl",
@@ -2285,8 +2285,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "ff09a38c1ee9444033d8a5fd3856564923abee98330d7cbea55b91e1e3b90d5b",
-      "refreshed": false
+      "donor_sha256": "87aa344f0afd1c6e0395530789f7925114cc4c4c37e10fb60bce23c9c0d4bda6",
+      "refreshed": true
     },
     {
       "donor_file": "repo/diff/section_split.tmpl",
@@ -2319,8 +2319,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "59443db31d5c21d388390cc5ce6bb0f4621e71cd4254fdb94152797b19986bed",
-      "refreshed": false
+      "donor_sha256": "f64d875b274aa1cce2eb911d2fb08311716d4972d1eb8b19101243a21a156569",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/commit_form.tmpl",
@@ -2335,8 +2335,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "cc7a5fee2385834333092b5db6a5b8380bc796bd70d3e2bdb276a8073302b2de",
-      "refreshed": false
+      "donor_sha256": "4a8f378a2ea5f65d75785386c93af1c0fa375263b907143f1408ce94726e1ca3",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/common_top.tmpl",
@@ -2345,8 +2345,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "68ce6f95a779f3c92cbf6187cb902fd5045e43f2dbebd6f50a39e755a6a4d22d",
-      "refreshed": false
+      "donor_sha256": "2f68845161a391342d3215d0d4b4e019d0df31e2c5e30ff9cf6b5c20cb0d005e",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/delete.tmpl",
@@ -2355,8 +2355,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "98c86a0762faabe1c1cf508b55ba51b56ea79ee68109b359ffe9b67ac214ac58",
-      "refreshed": false
+      "donor_sha256": "4aed053dae21b1f9ae70fdfb8945f3212c704e70d5759bcdfb0405642f60ea23",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/diff_preview.tmpl",
@@ -2371,8 +2371,8 @@
       "dialect": "html",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "3570de2c0d56e33d3a048b179b379f82c4fe80a277c71869caef9b37f3257477",
-      "refreshed": false
+      "donor_sha256": "003b66d080e744a2b846ebb55b8bd2ae088cff7895f9af05b3e2168b085bf481",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/fork.tmpl",
@@ -2381,8 +2381,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "d74ca95992b01b8445d5c2daf75d9bb33dd264c7925a673e368506feb28d8605",
-      "refreshed": false
+      "donor_sha256": "15dcac209cd9bb2945ef0c1c759345e4b02dc58ab6ea44635bb830c1e5fc5efc",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/options.tmpl",
@@ -2397,8 +2397,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "ac10aac14bc021eadf7fe6f1dddf6b33ce749727524d10310676c106b74ee634",
-      "refreshed": false
+      "donor_sha256": "f9a62bcaff53e0721b1ec4d302b3d64284d31ddedba0f92f07865c86fee86f04",
+      "refreshed": true
     },
     {
       "donor_file": "repo/editor/upload.tmpl",
@@ -2407,8 +2407,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "3bd3e41f3b61e65ee4162f0054624239fb8df0af7bacc75b1a26f14d7e4bd3ed",
-      "refreshed": false
+      "donor_sha256": "a4754fca057d37cf67465429e7dc167614e2ca5d9ec453d76f5362a8a1d42a09",
+      "refreshed": true
     },
     {
       "donor_file": "repo/empty.tmpl",
@@ -2417,8 +2417,8 @@
       "dialect": "html",
       "nodes": 30,
       "actions": 0,
-      "donor_sha256": "0d12188882a0e5bad01d2a0cec0a6c63628c944668e9e64cd8ef44c0263b2885",
-      "refreshed": false
+      "donor_sha256": "67ccd83be363772f5912a1da10342aa1aa10c1b058eeef1248c1c56509ecb452",
+      "refreshed": true
     },
     {
       "donor_file": "repo/file_info.tmpl",
@@ -2427,8 +2427,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "44e3804dd908b1799c8a2493c1159e4e42a1a91be9f09fbe4a49d56c3395f3ae",
-      "refreshed": false
+      "donor_sha256": "0e8a238b1cf43172c489b4f2761ce79a2d4ebb960cb618edcb720e7b1d4f63da",
+      "refreshed": true
     },
     {
       "donor_file": "repo/forks.tmpl",
@@ -2437,8 +2437,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "b2b0abd2bdf76fba78dcd6d54aaa9a412594e2e9d189c9f093bc0534f40d3a7f",
-      "refreshed": false
+      "donor_sha256": "afafdf62c1079a30b90db9ba759182ec7573e8f87c5e93eeb509678abf485e1c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/graph/commits.tmpl",
@@ -2447,8 +2447,8 @@
       "dialect": "html",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "5eb1a475a27a5a92c9dbd6f4d5e09eaa1f3fd2876abee89631a28b7511a25ae9",
-      "refreshed": false
+      "donor_sha256": "522460fad8f56c12b60ffb38878a31ffc5d5916c182e6a0f867f5ce5f487d6e1",
+      "refreshed": true
     },
     {
       "donor_file": "repo/graph/div.tmpl",
@@ -2463,8 +2463,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "de89a2688e4bc60b3618d6163508e9fcb762143d191406b3c07ceedde59db431",
-      "refreshed": false
+      "donor_sha256": "132c1de00f610b5f937af0eadd101135a81362cfc41509fdc796a376ab70a143",
+      "refreshed": true
     },
     {
       "donor_file": "repo/graph.tmpl",
@@ -2473,8 +2473,8 @@
       "dialect": "html",
       "nodes": 22,
       "actions": 0,
-      "donor_sha256": "9facc69a959402ac201ea78f977228b702be3ce161201fff0c1858dc9d4d37ac",
-      "refreshed": false
+      "donor_sha256": "82372aa4b02c32346cc762cddcf0c0e87a53321c6c07d82934ba893a700d89b0",
+      "refreshed": true
     },
     {
       "donor_file": "repo/header/fork.tmpl",
@@ -2513,8 +2513,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "987534d71e1e2bc20d65236dfdc01e8d0af1516425d2bd0c81c2b5a56036733f",
-      "refreshed": false
+      "donor_sha256": "491cfd72f3efabe17e0a856e8f8e6d8ab6f3c9b3863d3da106b4f8139abfd499",
+      "refreshed": true
     },
     {
       "donor_file": "repo/home_sidebar_top.tmpl",
@@ -2559,8 +2559,8 @@
       "dialect": "html",
       "nodes": 29,
       "actions": 0,
-      "donor_sha256": "030e2dc05c93a66c918030d760af8ff28f1608115a24a1706d00b7ae24467744",
-      "refreshed": false
+      "donor_sha256": "b49bde958c58a4657aeef8a3771b78091277b4529ba899cbe8339d7d18b95a6c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/comment_tab.tmpl",
@@ -2575,8 +2575,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "3252315c51157e0c577ae6fd18c8a38605fb4cbdcc57cfc5b1aaf4e5ba024248",
-      "refreshed": false
+      "donor_sha256": "94abd0f963e9d1ddf93ec2f7b1a8b7201a764cb7c7c1bd628604166e1ec8e013",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/fields/dropdown.tmpl",
@@ -2585,8 +2585,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "fca59b724e547aa1415737e1dcc12647b33edbb5c508fc00765366f223f7f3a8",
-      "refreshed": false
+      "donor_sha256": "4376665e53f2d56d2591b0e93a7dc445650db4f5e4f2ce90a27018ac404b5002",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/fields/header.tmpl",
@@ -2601,8 +2601,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "bd04f43c30f5b861ec015280001dd6ab4d644364cd1ca79e0a2823f2e0476c5f",
-      "refreshed": false
+      "donor_sha256": "765357065d8d16c0cb00445bbf48b58d4a100ec7351435537f2b3a3611e2a2ee",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/fields/markdown.tmpl",
@@ -2611,8 +2611,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "13d35e12bd8ce4a72b2275d2e481c99b719ae42b46aaf3336af60ba089ea3a8f",
-      "refreshed": false
+      "donor_sha256": "e2f5a6f3b40a71f962b6f4c968614afc4fec48cdc30f1c8669365f5b9c665612",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/fields/textarea.tmpl",
@@ -2627,8 +2627,8 @@
       "dialect": "html",
       "nodes": 35,
       "actions": 0,
-      "donor_sha256": "fd337cc3741f9233371ddd1eb9eb41baadbe8e3419617986978b7f9766ae20c7",
-      "refreshed": false
+      "donor_sha256": "01155334857291282b784901deb8462c3107abdd73cb6dcbb96f53e227aa1382",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/filter_item_label.tmpl",
@@ -2667,8 +2667,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "e1bf76c4043bddab4abf8e9bee178f5e34d6a378aa7c12d90ab1a81230874914",
-      "refreshed": false
+      "donor_sha256": "548d024939f264761eebbef2e53a4a02f221c1c9fedc95cef830b89d8a30d7d6",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/label_precolors.tmpl",
@@ -2677,8 +2677,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "c602e81cd01351cc2d5aa123ec3519e5324d7f423a08f4484fba98e55e28dd74",
-      "refreshed": false
+      "donor_sha256": "63dcc402f4b73fe88572b3c9806688a17f469a1810963096556babf6525f85ec",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/labels/label_archived.tmpl",
@@ -2687,8 +2687,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "296650e4cc49823aca4a2cccd39f7cf2cefea6475edf9c1edafe3c238610f07e",
-      "refreshed": false
+      "donor_sha256": "1060961537ead27e4d8d6f15b53cbcdbe033c3c046ff3846313872fe7c7309f4",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/labels/label_edit_modal.tmpl",
@@ -2709,8 +2709,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "d058aa273de4aed5fa04f152b6f8e61245ba689483ce127b37eb08fa9937b480",
-      "refreshed": false
+      "donor_sha256": "c9b3f1fefdf4f4b731651d0433b7d6b349410965e6d94ce47bfd79fbe20d6559",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/labels.tmpl",
@@ -2719,8 +2719,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "59610e2ef32b590d78c2ac16b582254eabe700783c3cee67bedb1688acf510b1",
-      "refreshed": false
+      "donor_sha256": "9541659ac818ee68ac90f1adb0292932ca8b3881fda4437615bbae72f795719f",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/list.tmpl",
@@ -2735,8 +2735,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "af4ef90d66cd325010845bedb71732512a449598cf55f9f33bc5191faf9568d6",
-      "refreshed": false
+      "donor_sha256": "8a550e58a507a7df304c747a41a77e79f619f0ea80e2029cca05825cc80d4124",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/milestone_issues.tmpl",
@@ -2751,8 +2751,8 @@
       "dialect": "html",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "34dfae1bf025fae8540fdd47f497c69a8c158ca719792985aa64d7099a4d57c9",
-      "refreshed": false
+      "donor_sha256": "0098a1c8a3526b88099db23e36aeffed5b8d88ac4bd0b212c1698ae7c4632887",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/milestones.tmpl",
@@ -2767,8 +2767,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "4f16507ebdd597054526f5cbc4f97cc64dff65514b32943775f164749d1d5c34",
-      "refreshed": false
+      "donor_sha256": "db3843d368a1d91712858bdc2b718c73bc9835fac3f245eb7d438599670fd6cf",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/new.tmpl",
@@ -2777,8 +2777,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "76da3827383af2bcf2263c84e054a230325430f8b7e6c6b1ac51fc47bd744a27",
-      "refreshed": false
+      "donor_sha256": "79aeb6fd3eab73bc8b5c1d6d886b5da599b95018bb20ff6d0703ed120ef694df",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/new_form.tmpl",
@@ -2787,8 +2787,8 @@
       "dialect": "html",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "84465eaef7ef64e0a7352cb2960170475473f67cb19454907b7e356fe319711a",
-      "refreshed": false
+      "donor_sha256": "1c6784f500770d05839773016a85b2acfba0a274aec1bce63d98d3ee1d88c72f",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/openclose.tmpl",
@@ -2803,8 +2803,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "2779d72aca021def1900756e40e0e72fe5baeb42d6f5e83dfca0cc473efaa3c2",
-      "refreshed": false
+      "donor_sha256": "0406a404b5898513b51ec2e933691b5a0d512763799171e4f953cf0643bb1f9e",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/sidebar/allow_maintainer_edit.tmpl",
@@ -2897,8 +2897,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "8663b01617669bb4a0318371b1225c8ac9c307bbbe7efc0586872694f02d781c",
-      "refreshed": false
+      "donor_sha256": "b3243ad9f3d8bf352613d81e6ffd27df25599821a143f42e83b52b1f20814802",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view.tmpl",
@@ -2907,8 +2907,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "49383ec214a73ac45c482eb1c5d8d96079db3bb44d9974d0b694d82b6c64ece2",
-      "refreshed": false
+      "donor_sha256": "f87c9411c50d6607de82e0015016879d0a54ae82488068e11c835fb6be78293a",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view_content/add_reaction.tmpl",
@@ -2917,8 +2917,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "b33efee4910c650cb29d2673d8ffb77118616223c93120c0a0eb458d6089e998",
-      "refreshed": false
+      "donor_sha256": "2cab3fd56ed297369dfedefd961bcb39b88dbd955987d4114df7bb830d8455a7",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view_content/attachments.tmpl",
@@ -2927,8 +2927,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "723d3508349c775e235ca77f577ede000d51259d6506be9589a43c92f0f477db",
-      "refreshed": false
+      "donor_sha256": "2d97b592468681247c28a37ff72dba25eace5f529c84e21804fc03bcfb39a4be",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view_content/comments.tmpl",
@@ -2991,8 +2991,8 @@
       "dialect": "html",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "de544817674610e8025bf39b80ba7998c42054ad2e27d55909bc0536f8d4a1c9",
-      "refreshed": false
+      "donor_sha256": "5395d23d8a00453cb2a4e05f6dbb3cc90cf9092261eb0b6b40b24c9852ffee4c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view_content/show_role.tmpl",
@@ -3007,8 +3007,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "b60b31d6b8b3afdda7265fb81fbf650407c8834916921869a7d452724db6eb6f",
-      "refreshed": false
+      "donor_sha256": "e6a311831d5a7c00c53697748efc8b5af70b935e833e319a9a9dbe36481545e4",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view_content/update_branch_by_merge.tmpl",
@@ -3023,8 +3023,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "22f852bc2744b038d1a7393dd90555f303e767e0776603fb47c02e6ea73ac79b",
-      "refreshed": false
+      "donor_sha256": "97ab3712e3aadd3d7c47a0f23771d064fae7a71b0f94ff68c1d89475ee90f8a2",
+      "refreshed": true
     },
     {
       "donor_file": "repo/issue/view_content.tmpl",
@@ -3045,7 +3045,7 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "ef832e18b5b039b27aac169a7e5d1d243af67a50aee4781dd6b9cfe24221ea3d",
+      "donor_sha256": "adbeb8b149128a3dcab942c75cf1805b487e9cc74bddaccfa498be64418cc313",
       "refreshed": true
     },
     {
@@ -3055,8 +3055,8 @@
       "dialect": "html",
       "nodes": 58,
       "actions": 0,
-      "donor_sha256": "c33aead2372f86f90891bd137aa35bf4ca4244d2a01a0ed28bb628b8459ce5ee",
-      "refreshed": false
+      "donor_sha256": "45282ba3c98973416c08c7f988f25840f2f7a7c46c966e62e781439ffcf7a082",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/codecommit.tmpl",
@@ -3065,8 +3065,8 @@
       "dialect": "html",
       "nodes": 58,
       "actions": 0,
-      "donor_sha256": "40d2dc110c7890bb07045ffcf15c02113bb7b422b1246e95718719f0de2b18bc",
-      "refreshed": false
+      "donor_sha256": "fb6ae538538c4fc3400067436f3e430c5c1771be6de272d96ad7ec3753a299da",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/git.tmpl",
@@ -3075,8 +3075,8 @@
       "dialect": "html",
       "nodes": 41,
       "actions": 0,
-      "donor_sha256": "49bd1d6b669787d6a1bf217a33e6d3487afc0bc2aed3bcb00c4d8d6a4280215e",
-      "refreshed": false
+      "donor_sha256": "4bd8d7c8cef77d3ae7451f795b6dcbe0076950decd82ac0e6ef54433942670dd",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/gitbucket.tmpl",
@@ -3085,8 +3085,8 @@
       "dialect": "html",
       "nodes": 69,
       "actions": 0,
-      "donor_sha256": "faee217fbb2c1dc80c0d21bd098400eec163d3eb4039bd39619273165889d6cb",
-      "refreshed": false
+      "donor_sha256": "4b3ac696516c291cc3862a1b3604fce3eb97a113ef87589f0e4b2613afaa39db",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/gitea.tmpl",
@@ -3095,8 +3095,8 @@
       "dialect": "html",
       "nodes": 67,
       "actions": 0,
-      "donor_sha256": "53e33cacae59ab554af5d865f0a13e55b47d7201abeb3b5a0fde2962ba2d683a",
-      "refreshed": false
+      "donor_sha256": "fff036f41c376139b58a28ee69e0a81de8f032429098713f0a7a7265f4de7874",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/github.tmpl",
@@ -3105,8 +3105,8 @@
       "dialect": "html",
       "nodes": 68,
       "actions": 0,
-      "donor_sha256": "bde56f4bafa4f634427660c1ef8ad6b0db1e51d791d1bf77d183f4e0950d9cec",
-      "refreshed": false
+      "donor_sha256": "6e5ae3c8e536d2b070f696c179e3fb531db05e48d56474f2a1c35fd7fdf110c2",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/gitlab.tmpl",
@@ -3115,8 +3115,8 @@
       "dialect": "html",
       "nodes": 67,
       "actions": 0,
-      "donor_sha256": "28da497ae39ade15872c30fc8752cf76fafdc41c168978242a90d1a5ebfc08b1",
-      "refreshed": false
+      "donor_sha256": "f48662880528d16bbf0b25f5fee04b658106b8970f3120c87f62d4bb221df1ad",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/gogs.tmpl",
@@ -3137,8 +3137,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "fa7e0bbaa81f920cdbc38a579584be320e3f07316e92dc5bbf17b37eea70cf2b",
-      "refreshed": false
+      "donor_sha256": "497648c320049a91c9ed460b10ad5d008d9775e8b052583e5b57f35a104b2e10",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/migrating.tmpl",
@@ -3153,8 +3153,8 @@
       "dialect": "html",
       "nodes": 59,
       "actions": 0,
-      "donor_sha256": "070175e1b9c6e8fa6a1636c3286a0b7f2c112ea7d6937cd7fddb3a05c81d2bb8",
-      "refreshed": false
+      "donor_sha256": "5f77f6143bfe0d126eca768f453525b0aa7d69323bb60c7ff25847cb70213cf5",
+      "refreshed": true
     },
     {
       "donor_file": "repo/migrate/options.tmpl",
@@ -3175,8 +3175,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "7497d0c15ecf4075736a03ad8fecd3b6b959691f1e4206c341a4cf7fa841d88b",
-      "refreshed": false
+      "donor_sha256": "70fa214df99f4230763b64466c700c5e55e3f681e30d3bcfecac0e15084edbfb",
+      "refreshed": true
     },
     {
       "donor_file": "repo/projects/list.tmpl",
@@ -3185,8 +3185,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "13a58df8d38cf0b8cf4972432d167d495ea2ba660af76c53d76632d14732f782",
-      "refreshed": false
+      "donor_sha256": "eae878e1d5c0abb412fb8e9c41cde3130eefd45c9dd99681f1cb41ed6ac174a7",
+      "refreshed": true
     },
     {
       "donor_file": "repo/projects/new.tmpl",
@@ -3195,8 +3195,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "d4a036866cba0eb41c2f3af89d2e219162e02941ae3a8eb8955af0316db7aa90",
-      "refreshed": false
+      "donor_sha256": "a644647fb46195550a7b4537293f083392fb4dd23b867de216edc70c04c9b08b",
+      "refreshed": true
     },
     {
       "donor_file": "repo/projects/view.tmpl",
@@ -3205,8 +3205,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "ed8507e00c38290d15bd6a9049280789fbe40171f57821e932695f90dcd18416",
-      "refreshed": false
+      "donor_sha256": "819ad431bc1f2c3bdb40879a8e16ecfb31e5d09608a191629055965932634591",
+      "refreshed": true
     },
     {
       "donor_file": "repo/pulls/commits.tmpl",
@@ -3215,8 +3215,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "b40b4c4815a98be90fe86a6d7668eca5bf7cd782e2352731a250e49b1cc700bc",
-      "refreshed": false
+      "donor_sha256": "40153eb57fb814af7042589716e5ba99b4553aa92ab219ba5e2c7e0abac63d5c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/pulls/files.tmpl",
@@ -3225,8 +3225,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "8eaf7c85c0e9fa86a871bfc7a35502ec730fd4136ba3a5c29cd53958f446c768",
-      "refreshed": false
+      "donor_sha256": "9ee953089d8e3caf563815ff28b99758066021954142d18f234144a248c9ddda",
+      "refreshed": true
     },
     {
       "donor_file": "repo/pulls/fork.tmpl",
@@ -3235,8 +3235,8 @@
       "dialect": "html",
       "nodes": 39,
       "actions": 0,
-      "donor_sha256": "b641d6b06f4bcbdad5633624409816603726f7b10e0014efc8ea3ea3bf07f061",
-      "refreshed": false
+      "donor_sha256": "d06c73c2ad24db7fe651ed726767444cff3bb458bda556115606530da154736c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/pulls/status_items.tmpl",
@@ -3251,8 +3251,8 @@
       "dialect": "html",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "9ecdf986fc4a72d713f8990b9477049baf058c7cae8709e1065475d52b3b0fa4",
-      "refreshed": false
+      "donor_sha256": "87c480277730a82f4989e1495b5b2d832b930a487183d19a0d22acf1d389c786",
+      "refreshed": true
     },
     {
       "donor_file": "repo/pulse.tmpl",
@@ -3267,8 +3267,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "1436511cbadf9f4740f66cefcd21bd24b5d13d4180ceea31b323b6d3dcea19f7",
-      "refreshed": false
+      "donor_sha256": "bdce67ca25ae7681da3d4006ac8010b7cec727d6e24f454b1f565eabff380545",
+      "refreshed": true
     },
     {
       "donor_file": "repo/release/label.tmpl",
@@ -3301,8 +3301,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "8ba4496be252bc2ce54951c56049a31eaef1bbf5a89614c9b6c72583b621ee84",
-      "refreshed": false
+      "donor_sha256": "30beec6c8680894ef00381a85c40aef4e0e71d4c62ac235188e90dfbf0546f1a",
+      "refreshed": true
     },
     {
       "donor_file": "repo/search_name.tmpl",
@@ -3311,8 +3311,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "d42ed6d5c0590344236f3a9bf34e1c0f4dfaaa18a184f52d2bf7d9d9be39fdf6",
-      "refreshed": false
+      "donor_sha256": "5cdbe097b3ecb086ff281afcbc414cb520f8282b14f9d954ef0eb4f1824b43f0",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/actions.tmpl",
@@ -3321,8 +3321,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "61b8d2ae1eba958172514e19663821440cd9cc96a4f40ca8c06042ff1920d12a",
-      "refreshed": false
+      "donor_sha256": "d011d3875440a9215b4ff3356d419a3fd1c7d732db75b14e11678882a34cba58",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/actions_general.tmpl",
@@ -3337,8 +3337,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "6358c543528372189aba8eb3bd5eea7e8a73ad9f2ff26429a29f5de54a199c5d",
-      "refreshed": false
+      "donor_sha256": "691edc08d5f5061bd7ce234a920ee2702d869e9c39bfc65f8ae188cdd235cb77",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/branches.tmpl",
@@ -3377,8 +3377,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "5e977e8b71dbc2903cae46b259f837b84b00e4d7bf53f385a46d2bee80368940",
-      "refreshed": false
+      "donor_sha256": "e784052dff77fff703fce25b71b09ee2f475bd344c322021b748c1a87c0e8d14",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/githooks.tmpl",
@@ -3387,8 +3387,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "960bcfecb46a84047ee038be16bd7bfb9d814d3d1afb4e15f2b6ba32094bffde",
-      "refreshed": false
+      "donor_sha256": "3d76cd7c35c092671bec723e3d91d0e7581c25f51d57045d94e851f454ffc794",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/layout_footer.tmpl",
@@ -3403,8 +3403,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "126a1d3aa12fb2d6dff88e9e2c3a5dbe2fdd01d24dde95e2e6d14704b85d8265",
-      "refreshed": false
+      "donor_sha256": "78cac096c2878ac4f817ac6651a153dbd73a2bec3b8a4a73d93cbd98f84c154f",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/lfs.tmpl",
@@ -3413,8 +3413,8 @@
       "dialect": "html",
       "nodes": 22,
       "actions": 0,
-      "donor_sha256": "33f31be45e454bd977b1707f6fb423b2ee77e01e9291b09109828fe4b5483d04",
-      "refreshed": false
+      "donor_sha256": "a0209abab336a8bf35df0cc492692b73af1a4f4f4e3cc94170a63ca6673475ef",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/lfs_file.tmpl",
@@ -3429,8 +3429,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "f395f75c11346cf79d38fed427607e72a9bd5f13e9e95f588fee9a983502294d",
-      "refreshed": false
+      "donor_sha256": "1ff329e43ecc5db8c9f1319d9bb4884746da63dd65f21aa7c1c685d8fd9fa364",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/lfs_locks.tmpl",
@@ -3439,8 +3439,8 @@
       "dialect": "html",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "1c1581df769bb432f921ea8e12ec3df8db9638e973043a0c3666251ae1ba2d67",
-      "refreshed": false
+      "donor_sha256": "6294da46a88c98225b34f92a72945430ac3712ba33b4c06c6810b743e3bac114",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/lfs_pointers.tmpl",
@@ -3449,8 +3449,8 @@
       "dialect": "html",
       "nodes": 27,
       "actions": 0,
-      "donor_sha256": "4e4c287b504993e55634f739129c9e93b34581e8e8481c4a97b8bfa780711a72",
-      "refreshed": false
+      "donor_sha256": "2774b8598a1689df9515a512d814e18c402f9546bc558dc4d0383679b9e858b3",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/navbar.tmpl",
@@ -3471,8 +3471,8 @@
       "dialect": "html",
       "nodes": 229,
       "actions": 0,
-      "donor_sha256": "5ec128998138cb300b485beac97f1726bd25a089f06c4c4310e1abf616491399",
-      "refreshed": false
+      "donor_sha256": "88360907bdbb03b1ae38a9c4d4689e67b60f565a5bed0e95117b86f6025cf8e5",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/public_access.tmpl",
@@ -3481,8 +3481,8 @@
       "dialect": "html",
       "nodes": 34,
       "actions": 0,
-      "donor_sha256": "ec6574fde4efca281c5e8a85cb8e585ae89f9e8a8e1086c89d61c477cbf296c5",
-      "refreshed": false
+      "donor_sha256": "7dac775a2bac197c1f53fbaf8850d7066d1b89a8e3e5e2106c516f5dc3518132",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/push_mirror_sync_modal.tmpl",
@@ -3491,8 +3491,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "f03210cfd4ec93b3a075c647aee9beeca5b1df8c734cc8805016628d1d305a2d",
-      "refreshed": false
+      "donor_sha256": "758f449897a0c12f078eb80f742f64e546f9e7309c668143defc78f46dcddfbc",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/runner_edit.tmpl",
@@ -3501,8 +3501,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "4e82f67c25ffc870dd96ea8866840f17adcdfb431b61e40e31dff35f5bf5a591",
-      "refreshed": false
+      "donor_sha256": "cef05bdcdb105a2c2ba5d5b136b79cf54667ada0580068ad2852c3dadca04d6d",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/secrets.tmpl",
@@ -3511,8 +3511,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "c3008c5cfd6c92487bd3806ec655316e0970dc1cf36249cc730ac875393a66fd",
-      "refreshed": false
+      "donor_sha256": "db296a60c8d6d03d65bdec0e191be79ef185e1940189ecf1ead8d6fdba3ac60c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/tags.tmpl",
@@ -3521,8 +3521,8 @@
       "dialect": "html",
       "nodes": 52,
       "actions": 0,
-      "donor_sha256": "06ec7bbf54173b51be4f2838e7616624dff92244b29af1eda5d26dedab0ca773",
-      "refreshed": false
+      "donor_sha256": "05a5016aa4b608d289a915e900e4cf7a228b61832f8c9765ba45d53ec036c4e1",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/webhook/base.tmpl",
@@ -3531,8 +3531,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "9a9eab4e155a4d83b5b036d3b26c1061c4a2474c4b18517fb53f828bc3558f98",
-      "refreshed": false
+      "donor_sha256": "b51a289151446a80cc179ad7b22a4b2db3b53cf18fcb61cddbd5a71165736341",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/webhook/base_list.tmpl",
@@ -3601,8 +3601,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "8cb2588c1b1376a9513712ae70d37f80b3869398ef9643a7e2db141240dd65cf",
-      "refreshed": false
+      "donor_sha256": "2677a5e6874d14597949044ccebb4bfe6cc69f20466f3dcd5c3f73e94e83f5fa",
+      "refreshed": true
     },
     {
       "donor_file": "repo/settings/webhook/packagist.tmpl",
@@ -3641,8 +3641,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "ec0eca1c39f53d1b17a8e98d02c3396e6e6909ed2d3e492ee8466cf77a62e11c",
-      "refreshed": false
+      "donor_sha256": "7c4b0ccf9263fd68912b9997d8f1abdf21eca0864b5b4c1636799d558d19cecc",
+      "refreshed": true
     },
     {
       "donor_file": "repo/tag/list.tmpl",
@@ -3657,8 +3657,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "a158605cf61b0b6defc39253f29d2063bbc7c18fc8736362c81c8fef08038bd1",
-      "refreshed": false
+      "donor_sha256": "b18219226f3a74d56d963e890c4254cda636de1edec0c598d7a86bfe654e1ddd",
+      "refreshed": true
     },
     {
       "donor_file": "repo/unicode_escape_prompt.tmpl",
@@ -3685,8 +3685,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "045e0bdf37bb699c49f501e2b965c3fddd74f6e83d1404ad8dbb2f901a0aa0e2",
-      "refreshed": false
+      "donor_sha256": "084810fcff359e167daac943ca886eba9e061a22660e5f19c9242b3468b7999c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/view_content.tmpl",
@@ -3707,8 +3707,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "992b6b5d0310813553d9ff56c4b0222a5b2eb6ae85892d2fa14cdf3a28de0660",
-      "refreshed": false
+      "donor_sha256": "5e682a834e05bc9548a660eed39d822f212c32ae692f413d6cb71772530bba83",
+      "refreshed": true
     },
     {
       "donor_file": "repo/view_file_tree_toggle_button.tmpl",
@@ -3717,8 +3717,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "8ed41613baa0bec2cfd6ab34504537f6dc98bf3eea21ffcd84e55c20c3f3a4e6",
-      "refreshed": false
+      "donor_sha256": "94efa98c8c513592e6a5204838a544457ebf8e361d62105d176eeed79b63827a",
+      "refreshed": true
     },
     {
       "donor_file": "repo/view_list.tmpl",
@@ -3733,8 +3733,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "5bb640b020e757c5451ba1d3fc77073fd9d86b5af3ce28d1d42f3306b1a2cb88",
-      "refreshed": false
+      "donor_sha256": "1a192cd4750fff7dfa96f97341829542b7bde3d01aad0d950bd6dfc0f0e710bb",
+      "refreshed": true
     },
     {
       "donor_file": "repo/watchers.tmpl",
@@ -3743,8 +3743,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "64f9c9a07927ba40068b885d30ff6878e11773654d016b277d4289504853393d",
-      "refreshed": false
+      "donor_sha256": "5e0d6feb83dc359f0c0e98a0e8d53934dc4557d7585a76ef29ea4242a2301c3f",
+      "refreshed": true
     },
     {
       "donor_file": "repo/wiki/new.tmpl",
@@ -3753,8 +3753,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "e969a532e84990ee96751bc07d3569f27337d3aef42b1a9a661a5bdcad2904cb",
-      "refreshed": false
+      "donor_sha256": "6024e8a573e88a466684c2258c4212d429468b4066b3a657c3acaca338f2b07c",
+      "refreshed": true
     },
     {
       "donor_file": "repo/wiki/pages.tmpl",
@@ -3763,8 +3763,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "d56fff8fb865546d011494d710160454d688cf42581ccb6737a7ebc65b3d4df1",
-      "refreshed": false
+      "donor_sha256": "d9a8a33e8e10078bdcfedd0982a757abce5ee84910420090d6390b1a44d50d3f",
+      "refreshed": true
     },
     {
       "donor_file": "repo/wiki/revision.tmpl",
@@ -3773,8 +3773,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "6ed39a6d264b312db625b7ce18b7d4cee4de7d2388e29e2cd06760cd78c55693",
-      "refreshed": false
+      "donor_sha256": "9bf9f16ed666b9587241af70807edc45f160ba647de0353836ca0b07e6586a52",
+      "refreshed": true
     },
     {
       "donor_file": "repo/wiki/start.tmpl",
@@ -3783,8 +3783,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "2c14c37f1f29c7f93301540e7a73acd0c0d92639bf63715e28ac9e5c4dffdc94",
-      "refreshed": false
+      "donor_sha256": "f4f83f95169476972d33f7f2d77efa6f77451692fe1052482dcc94749d08d549",
+      "refreshed": true
     },
     {
       "donor_file": "repo/wiki/view.tmpl",
@@ -3799,8 +3799,8 @@
       "dialect": "html",
       "nodes": 54,
       "actions": 0,
-      "donor_sha256": "8d1d6e573af35c9e3185642374091dca62f6c039350ba776f60810112b2f875a",
-      "refreshed": false
+      "donor_sha256": "dc6d6bebf77909f0c7242dffd7f26322df36fb4e9740ca378181932668fe3c54",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/owner_general_settings.tmpl",
@@ -3815,8 +3815,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "c9807de2953da75925e97f33d82e82f65f8dce59a8f157fad50689ff1f509c32",
-      "refreshed": false
+      "donor_sha256": "1c5475668f70fec9e852fd258b552f9b9d2af4416106a048d8a87381e9b038bc",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/permissions_table.tmpl",
@@ -3825,8 +3825,8 @@
       "dialect": "html",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "42eaf5dd8cd3d2b9132a38062e306628470c0a74da23a3b0f69047cb7f5866ae",
-      "refreshed": false
+      "donor_sha256": "18e409de641a18d6d43069bbde94afe7c0e0b7c86dab0c90d955751f59208132",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/permissions_table_unit.tmpl",
@@ -3835,8 +3835,8 @@
       "dialect": "html",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "66b4350a6d08174249d6e7fab15070ebdef3a711238bdb73eba994f87f2dfe15",
-      "refreshed": false
+      "donor_sha256": "378556f5e7830f8e82dd839e150e55eb6782e54e13a9ac9a8329e70ed5f61e26",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/runner_badge_flat-square.tmpl",
@@ -3845,8 +3845,8 @@
       "dialect": "html",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "8a21cb4808542291e8b2cdf43ab479d181719471138bfa14d3fd3aa6ae714bef",
-      "refreshed": false
+      "donor_sha256": "fb775cf8cb09ffede6263064c11de49ec0a0bf81a665ee34dc2e41f4e209368d",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/runner_badge_flat.tmpl",
@@ -3855,8 +3855,8 @@
       "dialect": "html",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "99698e6ec723f1bcdce241af59214a4cdb27b8eb87296cb00115977ca857f87f",
-      "refreshed": false
+      "donor_sha256": "cb26d6d9212869f8a0a0a263f2d713e7c09f5207fe08beabf0a108df39da5677",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/runner_edit.tmpl",
@@ -3865,8 +3865,8 @@
       "dialect": "html",
       "nodes": 58,
       "actions": 0,
-      "donor_sha256": "4605f64c639c08c7079e7613bb4a0d90cc3ba08f678bfde1ed0b4429a876ab07",
-      "refreshed": false
+      "donor_sha256": "06857e68266b90c7a263581fcf7d9c5f1126dd63990a1c136288ad106f420584",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/runner_list.tmpl",
@@ -3875,8 +3875,8 @@
       "dialect": "html",
       "nodes": 63,
       "actions": 0,
-      "donor_sha256": "9c9f6c1e9a53eb3b4c93b3965562ca1c8d8ef68dcfe0a73ab12302fabc487f41",
-      "refreshed": false
+      "donor_sha256": "47f7bcaf5de93fac60c87f27750484b0e13d2398e0c1804150f5f439f65e6bfa",
+      "refreshed": true
     },
     {
       "donor_file": "shared/actions/scoped_workflows.tmpl",
@@ -3909,8 +3909,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "eaa8c31028b0b98becaa786dd1e0a954e3abd2ac9b7042e874c4c8f272e125e1",
-      "refreshed": false
+      "donor_sha256": "1a9040b9ab7d5287755342e8e781fc84c8b19257bbadf3a503e854ba539c5c26",
+      "refreshed": true
     },
     {
       "donor_file": "shared/filetoolarge.tmpl",
@@ -3919,8 +3919,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "fdd6250fe5922d8f6f974dfba749b624470379347d41572e38c98cd3a4b021a2",
-      "refreshed": false
+      "donor_sha256": "5b45b48e467096f205c0e4d1b83a666a0b744b83d95da80865ff633835c9fef2",
+      "refreshed": true
     },
     {
       "donor_file": "shared/issueicon.tmpl",
@@ -3941,8 +3941,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "71b85b61565b7b6ca1e7c02b2fb47ba5b27ea62cfaa30f52fc4ba43a3b9aee1d",
-      "refreshed": false
+      "donor_sha256": "ca851b46d4d5f61991ed8b7185b226cf18a5756de885a3978eeef7f6af46a7a4",
+      "refreshed": true
     },
     {
       "donor_file": "shared/repo/list.tmpl",
@@ -3951,8 +3951,8 @@
       "dialect": "html",
       "nodes": 32,
       "actions": 0,
-      "donor_sha256": "3224fd3f28feee60afe5019ea24d3bec56e138b45d3080bfd754b04d3c466c9c",
-      "refreshed": false
+      "donor_sha256": "3badf52c86831864dc342c2a10acd9d04d6903f44d86d25887fac83c82662a4e",
+      "refreshed": true
     },
     {
       "donor_file": "shared/repo/search.tmpl",
@@ -3997,8 +3997,8 @@
       "dialect": "html",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "a96bc8d34da47649c4dceee9b4548a0cb2313d08ac5941dad1be50f36108c293",
-      "refreshed": false
+      "donor_sha256": "e7c6e5584a9b15795a71b02294c8267555e2b43530f19aa869e1ea442ac66bc3",
+      "refreshed": true
     },
     {
       "donor_file": "shared/searchfile.tmpl",
@@ -4007,8 +4007,8 @@
       "dialect": "html",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "b97856b44ca0335547880109c6af9ebe7661e18279b201d0693f6e096a665aba",
-      "refreshed": false
+      "donor_sha256": "d9d73ed850fc61bfa0b52e2c4211dc642f378571442f474874ac5998415f8c75",
+      "refreshed": true
     },
     {
       "donor_file": "shared/secrets/add_list.tmpl",
@@ -4029,8 +4029,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "0d8de8af41291fa4140df59e8334f2235eac69e5cd345498d5f41c45352ff4fa",
-      "refreshed": false
+      "donor_sha256": "ff5d280ed9fb3af561e02f595fb31e9c979b414d3bf4a8265f479968083d6e61",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/avatarlink.tmpl",
@@ -4039,8 +4039,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "f8414420cebfa78ec61092526947301ba788f857e5edb6b26643f3c5268592de",
-      "refreshed": false
+      "donor_sha256": "aa7fd0e1449bb2df5a0ee9e952c9585d8e132ad43f4991a9df8c620607f0ba65",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/block_user_dialog.tmpl",
@@ -4049,8 +4049,8 @@
       "dialect": "html",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "cd46e30abf152b70c861ebe25b8751ecef1d6209e2c4157f9556a0b24eb52620",
-      "refreshed": false
+      "donor_sha256": "0f6a21dbd614e4121f1f400fb92dded0e63c567953e937e768c0f1b448dd4b66",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/blocked_users.tmpl",
@@ -4065,8 +4065,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "254ba2ad979097a0916f9321df5009cfa744de58e035378404d2b7d4b0912a1f",
-      "refreshed": false
+      "donor_sha256": "b69921ac5d79d8e399ab6e8604be40a36f3f5ff08222e1a4a20935323afc4de2",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/namelink.tmpl",
@@ -4075,8 +4075,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "8703431b94b4d65a21e5558062147527b7805ad222d6c8bfb1937a7d08708faf",
-      "refreshed": false
+      "donor_sha256": "55b5cc4d6e975a9dc9e68af735b6d5fac8107b75001e3946268072ca1ffd3f39",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/org_profile_avatar.tmpl",
@@ -4085,8 +4085,8 @@
       "dialect": "html",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "d2a18527169c81ee0f7296160818127d2edc0fb6aaa121a988582766bab6123f",
-      "refreshed": false
+      "donor_sha256": "42dd6f5c6705c96b3c0dba21c518c98b07c29e3073f7b19b49a8c5e84914d37d",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/profile_big_avatar.tmpl",
@@ -4095,8 +4095,8 @@
       "dialect": "html",
       "nodes": 45,
       "actions": 0,
-      "donor_sha256": "8c9f3a6f0caa51307a16a110f9936c77007da7a8912b1bf43e97f97e52e59618",
-      "refreshed": false
+      "donor_sha256": "6ec2f86380a4e736e28d8d2d44c391e2e901be8bb0831a13995d912ca176375c",
+      "refreshed": true
     },
     {
       "donor_file": "shared/user/user_type_label.tmpl",
@@ -4105,8 +4105,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "4da8cc948e58ae3d6f14fda37576b2a972e493624f98a20233c5cea984218f23",
-      "refreshed": false
+      "donor_sha256": "ee5aa38b2c1ec4ae742588e729d549d8bc9d0030b0f35028e37fadf90fddf476",
+      "refreshed": true
     },
     {
       "donor_file": "shared/variables/variable_list.tmpl",
@@ -4127,8 +4127,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "f119057da182382dfb96b3f0290950e01a98cf6dd4786f02cbdfd0daa9305875",
-      "refreshed": false
+      "donor_sha256": "8be30a5bf0652784b3bc2c1feb8a041c442b05846e5af875e183f58c7dfab8d8",
+      "refreshed": true
     },
     {
       "donor_file": "status/500.tmpl",
@@ -4143,8 +4143,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "4db2805a094aae646e055677d8fac272f8941e459bdaac1ee7846df117c8d0b1",
-      "refreshed": false
+      "donor_sha256": "c99cbc0e01a13a39c4b27cdc80647b0d1e22b0c91856dbc958b992021530cc17",
+      "refreshed": true
     },
     {
       "donor_file": "swagger/openapi-viewer.tmpl",
@@ -4153,8 +4153,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "a587ad4e12db5ce96589a1b56fe236f72ecee0b8911272f6cca26efdf8c25a2e",
-      "refreshed": false
+      "donor_sha256": "b3eb09ea94e6bd07313d3ee5834d93adc4b7046ba864de2db2bbedf36f57d61f",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/activate.tmpl",
@@ -4163,8 +4163,8 @@
       "dialect": "html",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "1e84b2620b78c663144ef2819b2490f0b45ad6286e99582669e7d55f188ce00b",
-      "refreshed": false
+      "donor_sha256": "af59e9b62f9292600dabd462df107a9ed608cd46b7288384b07c507a816be30f",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/activate_prompt.tmpl",
@@ -4173,8 +4173,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "3186f4b34e8e1959604f26893dcb92a1986366e4386f28d45954be8cd1d0dcad",
-      "refreshed": false
+      "donor_sha256": "827a38cab7216bc32c9ed41b7eed6e9fe365abb8fc4a1aa825449782fc63b8a9",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/captcha.tmpl",
@@ -4189,8 +4189,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "6dca6fd952ce65d6b58173732140afa290c4224d94ad4afe83b72020c0bd9e73",
-      "refreshed": false
+      "donor_sha256": "2de60f478b75644f4a650cb67cf029a5293e792f7387272bc26a0c1ac5a09896",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/change_passwd_inner.tmpl",
@@ -4205,8 +4205,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "cd259a7eda6f764b15d3f8336e3857a2452d9e94118fe03542508be8bfd3025b",
-      "refreshed": false
+      "donor_sha256": "90f4ef4896b1b75ae3fcc88149068c4c3bdc9e64161b2875f4545cab21f3e219",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/forgot_passwd.tmpl",
@@ -4215,8 +4215,8 @@
       "dialect": "html",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "d069e1f0270dc25e47f427e9ed5552a41e69568a3e338e5853d87dbe04ad3943",
-      "refreshed": false
+      "donor_sha256": "ff55573c031ca1b5e6d280be3d38f6d9f1721fc73026d487f070e5c918c7f7df",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/grant.tmpl",
@@ -4225,8 +4225,8 @@
       "dialect": "html",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "c82ba7484a929aa6bba5ab6ce0bba6f50e79ff49e69db9f06dca3aa2106a3d20",
-      "refreshed": false
+      "donor_sha256": "cda66fdee8bee2d0342eb70fc0645f16d12104138a592c1ace40432a3147a924",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/grant_error.tmpl",
@@ -4235,8 +4235,8 @@
       "dialect": "html",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "05e93d45f96cfa4207ebb46682d86210dc32ae5a935a1fae1df0c6390cd6b3f7",
-      "refreshed": false
+      "donor_sha256": "0d7b91344f1d8b27fcdba46ffcc84762526488e7cedff0743a47bba63ffd9c48",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/link_account.tmpl",
@@ -4245,8 +4245,8 @@
       "dialect": "html",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "ee86f4ad3cdbbe68e85a1cbe66076cc95933f192fe62c6b42e98809b396a6f28",
-      "refreshed": false
+      "donor_sha256": "ab3b983bc343536d48c73ece7be15af3c6900c8aac281011b58ae7af1880baad",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/prohibit_login.tmpl",
@@ -4255,8 +4255,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "afc82f2f1fa6b8ce5f032fac50d893d41142c1e58ad8cff3a059bacca1b30725",
-      "refreshed": false
+      "donor_sha256": "f545cc849aa9c48d50f93fb5cb887b5d5b0739a507f6001f577ea02c6ccc2f62",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/reset_passwd.tmpl",
@@ -4265,8 +4265,8 @@
       "dialect": "html",
       "nodes": 31,
       "actions": 0,
-      "donor_sha256": "a08d348e7eb3ce7450adc557201922b3b5f9bb0569500f9d784c4713ffb18685",
-      "refreshed": false
+      "donor_sha256": "8afbc3c0e27b861b296eeffcbe5369e647355109df6b0f6e85f8dc9d23cc002a",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/signin.tmpl",
@@ -4275,8 +4275,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "e5cd0be211b580b08d13af4c47f8ec86f6ddf037f02383a6c2779d7a8992836e",
-      "refreshed": false
+      "donor_sha256": "4f561fe8b4815ee145e05140f2161a7b1882da3c130f459b463f905873edea0c",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/signin_inner.tmpl",
@@ -4291,8 +4291,8 @@
       "dialect": "html",
       "nodes": 22,
       "actions": 0,
-      "donor_sha256": "506cc661fd7ab87897e85cac667525cdd69e959d4c4b266d7b407dc87beacd6f",
-      "refreshed": false
+      "donor_sha256": "3cf6509ac3e0733b1e792164b615b219c4e830dc75798a898bb602e125c7f745",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/signup.tmpl",
@@ -4301,8 +4301,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "54a02f6285227ea9fd136d7e2b76a9e1faf03c138a8ed3099c12d9787c388971",
-      "refreshed": false
+      "donor_sha256": "7b3b9d676ce6f347dc3e7efd9e7547e6b9e177fd2a282de8eb54c4bbb8eb958c",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/signup_inner.tmpl",
@@ -4317,8 +4317,8 @@
       "dialect": "html",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "f28d674ca75b5953adc0f599df67915a3701a80b3eb0c3973243db2780c71ff8",
-      "refreshed": false
+      "donor_sha256": "ac5089b56d232e8f427c276697888165c86315368e94f9ab56997ae003904400",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/signup_openid_navbar.tmpl",
@@ -4327,8 +4327,8 @@
       "dialect": "html",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "2c8a9db4d1e8cb9b4aa215269264437addd4065168d92fe36c05b1907579ff41",
-      "refreshed": false
+      "donor_sha256": "7832a911ae91d87f7714fd39e55989e00ad409fe7f8346a1b2d43540182aa2d0",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/signup_openid_register.tmpl",
@@ -4337,8 +4337,8 @@
       "dialect": "html",
       "nodes": 17,
       "actions": 0,
-      "donor_sha256": "e6ea4f383fa8db16592c9d58406e5adad6e5f4ef2480235250202b18df119b21",
-      "refreshed": false
+      "donor_sha256": "da6e6e76160913f9a465f034450d26c38abbf4995005d836bf1bc09b432c299b",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/twofa.tmpl",
@@ -4347,8 +4347,8 @@
       "dialect": "html",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "a9ce9080b3d1ef60c5c0dd11ebc75fecef575ce78cb6e85cd61f89cf7a05a65c",
-      "refreshed": false
+      "donor_sha256": "3a9541254ba3f1173c2c71725484554354ec92a36670b0991b5b3410647de66f",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/twofa_scratch.tmpl",
@@ -4357,8 +4357,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "18037ec123d7d13970f743f4705abebbbaae82c544061e0beab0d85014db0139",
-      "refreshed": false
+      "donor_sha256": "c834a33976678f9fceb4112fa7129a9df1e5ee0a78e4672b4c567fa789295bbd",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/webauthn.tmpl",
@@ -4367,8 +4367,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "899dd84179616b6d288097d2c8114a8d787f2e9366cfef768b7ff55dce8b45e8",
-      "refreshed": false
+      "donor_sha256": "26084ca171b9abe55833307d1f88edf53e33728ab1a20174987ad9619f8dfaa8",
+      "refreshed": true
     },
     {
       "donor_file": "user/auth/webauthn_error.tmpl",
@@ -4377,8 +4377,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "df0986ef05a7330192ff8850330df57dd4edbf0c521345a90d5ba67cc251a0b5",
-      "refreshed": false
+      "donor_sha256": "87342bc2f9cfde7745027e0fa5c644dcd922a0f24c9e48093c39b14c9bed8ee4",
+      "refreshed": true
     },
     {
       "donor_file": "user/code.tmpl",
@@ -4393,8 +4393,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "ede719f066987ead7b859885b201402e70bd846951462d6a60eef189e3b6dde2",
-      "refreshed": false
+      "donor_sha256": "6c569396d08a6f50c3be50f5e12242b14d9455e91946e3f4b88dbe2cc9eb564f",
+      "refreshed": true
     },
     {
       "donor_file": "user/dashboard/feeds.tmpl",
@@ -4409,8 +4409,8 @@
       "dialect": "html",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "f98763c79f7b0255ac4946c3e04f0b695a4a154eff0816b3ed6508d724262b57",
-      "refreshed": false
+      "donor_sha256": "8475c8d42ff5221798278f46939f7e5b6b39975bdd74fd5fa78fb5589999e6d6",
+      "refreshed": true
     },
     {
       "donor_file": "user/dashboard/issues.tmpl",
@@ -4419,8 +4419,8 @@
       "dialect": "html",
       "nodes": 38,
       "actions": 0,
-      "donor_sha256": "617452bdad301bf96567ad6cad0fc7c176a4f006176df97f9428ee76998f14dd",
-      "refreshed": false
+      "donor_sha256": "2ec4a795ade0a710ce9ec2461ef1d43aa9562f0f8c078d70b7eddced30188a9f",
+      "refreshed": true
     },
     {
       "donor_file": "user/dashboard/milestones.tmpl",
@@ -4429,8 +4429,8 @@
       "dialect": "html",
       "nodes": 50,
       "actions": 0,
-      "donor_sha256": "c00728aa03e00b3b6f5864e0bb8ee644279689bd94145acebfccdaa80d9f7474",
-      "refreshed": false
+      "donor_sha256": "050a750f64cf467602b86272177cdbca734cee49b8eb744a6bd2513088e84690",
+      "refreshed": true
     },
     {
       "donor_file": "user/dashboard/navbar.tmpl",
@@ -4439,8 +4439,8 @@
       "dialect": "html",
       "nodes": 38,
       "actions": 0,
-      "donor_sha256": "d1077dea4a3a3df8fc3c53ba57fae21e2616cf278b3572a16091356f2cbd17cb",
-      "refreshed": false
+      "donor_sha256": "6cfcdac0157037981381ef8ffcab7ba9be7cf552354b9299c5e20a8c0a2ad664",
+      "refreshed": true
     },
     {
       "donor_file": "user/dashboard/repolist.tmpl",
@@ -4467,8 +4467,8 @@
       "dialect": "html",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "defb6e7713a5278dd09ec76016dd222b49585222a4c0ede94953b647b3ae6ee7",
-      "refreshed": false
+      "donor_sha256": "57eb48a870a21a8ff91c7b466c027b4fc1c546c26bd9bee0096269263bcb57eb",
+      "refreshed": true
     },
     {
       "donor_file": "user/notification/notification_subscriptions.tmpl",
@@ -4477,8 +4477,8 @@
       "dialect": "html",
       "nodes": 32,
       "actions": 0,
-      "donor_sha256": "0fbd9caa09536c2b9552b8b11e309c3524de4f62e035808381ea2bdd8cafcc67",
-      "refreshed": false
+      "donor_sha256": "94b993a887e230617b2e3a5397d3ac8d54bf9c00d98e31f4f1c7f85483ac581c",
+      "refreshed": true
     },
     {
       "donor_file": "user/overview/header.tmpl",
@@ -4487,8 +4487,8 @@
       "dialect": "html",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "87863695c02364bd3baffe535ed297758e17d8f957ee8b2b85e88cfa0772a0ab",
-      "refreshed": false
+      "donor_sha256": "7dd92ae83c56ab1eb3d9c67c4535b07a75363068cb82645601785f81e9ec3bfd",
+      "refreshed": true
     },
     {
       "donor_file": "user/overview/package_versions.tmpl",
@@ -4509,8 +4509,8 @@
       "dialect": "html",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "6fd90d3b4c5df81588c086843471c8dfaaec90aafc4de91e6075c4ca4a3e4609",
-      "refreshed": false
+      "donor_sha256": "e59a229990b9e32929c4695e83df9eae7c5e3264c2ec7c4c318658b8ce9f32c1",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/account.tmpl",
@@ -4525,8 +4525,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "9dda78a313a4b673eda08ed3be775a30ee372f0582ad99a35678f6028b89fb7f",
-      "refreshed": false
+      "donor_sha256": "077b7856b0a84b55447fee4bfb95a3e5f04f486329e91a236b9dc9fc066f34c0",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/actions_general.tmpl",
@@ -4541,8 +4541,8 @@
       "dialect": "html",
       "nodes": 89,
       "actions": 0,
-      "donor_sha256": "a589d9f8ab1fb46a8b6a43b7ae95c8acb55fbe42c97c04f5533cd65c8232dccf",
-      "refreshed": false
+      "donor_sha256": "9651a3e1590a97f9f0c05b575479942c38b1bcf7c379c8741d6b0ac6e696b9a7",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/applications.tmpl",
@@ -4551,8 +4551,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "b4ed83a5d6126a6e206eb2fe52a9004031137d4ea9b7ebc89479b96ce6450b27",
-      "refreshed": false
+      "donor_sha256": "32521d6cf0908d501a3138c62f80abab955b6abfbff77b50c0a8a47ca3d85295",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/applications_oauth2.tmpl",
@@ -4561,8 +4561,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "6cedec38f48ecb8a5a71876d8107e264368de805152b307d54e2f3488d5a0f68",
-      "refreshed": false
+      "donor_sha256": "f32fce1ef0d2f1e38c2508520c610ea87eb82b8d134713145fb5441334acf8b2",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/applications_oauth2_edit.tmpl",
@@ -4571,8 +4571,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "8fbca97a1f3588bab53574b71d4ff0af31d0c88a57b324dbb97784c3b6311960",
-      "refreshed": false
+      "donor_sha256": "852bdf41b9a3eab0bc342cb5bc8cec609ae2eefa2f7899aa928634d8daa1ea39",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/applications_oauth2_edit_form.tmpl",
@@ -4593,8 +4593,8 @@
       "dialect": "html",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "497e47867c3ea9fb2b9ac6f55480d8a4bd1df2e504ce91f01bbcde84ff2a9df5",
-      "refreshed": false
+      "donor_sha256": "4d40daddf53e015d8521d5a7b577abe04b3a4d6a43a2b7e5254f3ef07188e841",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/blocked_users.tmpl",
@@ -4603,8 +4603,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "de2e753ed29f450e048e80066e1eb81b4ec95855534351c514720b52d3d05615",
-      "refreshed": false
+      "donor_sha256": "419bace07af7b5d8bf43081f9200345e803bcad2352146a4683d0a98e3d840d1",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/grants_oauth2.tmpl",
@@ -4619,8 +4619,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "b542206ab45a79b4224dfe2ca8c1b04171c2f4836e8f379751ea830dfa51535e",
-      "refreshed": false
+      "donor_sha256": "8d899e9d37c420295fb9936f6f357ca6f5fc5bff394524f875bb6c9ec41da66d",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/hooks.tmpl",
@@ -4629,8 +4629,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "40b48118648ef4a64d6ed85aef0e0b7bd9b0bfb7e647ea4c106138b38d4b827d",
-      "refreshed": false
+      "donor_sha256": "bccadf2d1fc6f2b29f7c455132eef60f1528040479830f67393073899ddd9c34",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/keys.tmpl",
@@ -4639,8 +4639,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "aa308216691132baa7d869fe8351219f6749cf4482b104299172c521c97d9fc6",
-      "refreshed": false
+      "donor_sha256": "35743ea76d69c3d767c0fd7eb1ff361df5a3c0c78be4a7514c2366ba50a8de60",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/keys_gpg.tmpl",
@@ -4673,8 +4673,8 @@
       "dialect": "html",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "5bd628147742ed5e9bf5f4d917a8b4cd3c846db82ec6598e3cc348cd912901b3",
-      "refreshed": false
+      "donor_sha256": "8636ba81f039bebefd124e26eaec1ec58a5c7fdc7b8d837fcf5940a7cb573353",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/navbar.tmpl",
@@ -4689,8 +4689,8 @@
       "dialect": "html",
       "nodes": 34,
       "actions": 0,
-      "donor_sha256": "c98406fa28697a272f737fdbf7f22ddf5e70964441fab0d96767639172dbd598",
-      "refreshed": false
+      "donor_sha256": "1443733e5a4c78217df1cf35fcf57c2ed495fcb86d7ab18705821ddc87226607",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/organization.tmpl",
@@ -4705,8 +4705,8 @@
       "dialect": "html",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "4c1e2c9bc6358defce5ea3c96066c01f6014c68d9554d41377817776b5c60496",
-      "refreshed": false
+      "donor_sha256": "6a30071180fc672fae20c69b4a56e89a22572da3e4b103642ab4128d9497e035",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/packages_cleanup_rules_edit.tmpl",
@@ -4715,8 +4715,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "32f81a33a0827bc441d588a11401455f89fff2720b1f1fbefe3052c499f3bbc1",
-      "refreshed": false
+      "donor_sha256": "8d095a4b389a7253365a73619283a1c973e328569dd70290c9a7ed05c2e3e7c3",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/packages_cleanup_rules_preview.tmpl",
@@ -4725,8 +4725,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "7e440bbfe27d6d81c6b404e249bd596d72870d7ae9ab0e1436453080c46a4a08",
-      "refreshed": false
+      "donor_sha256": "c136426c0df877c3d34045475a5a632ab3e75f04a11a11a8a739bd55bea27dce",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/profile.tmpl",
@@ -4735,8 +4735,8 @@
       "dialect": "html",
       "nodes": 72,
       "actions": 0,
-      "donor_sha256": "5fe485e58e8ebc1156d3d920417bc2505719ba8a5d2a35ef6963dc4dce7a036e",
-      "refreshed": false
+      "donor_sha256": "18da21550f8e7f0823db9b3513a649fad045f73262bdbc709bcea63cd826d82b",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/repos.tmpl",
@@ -4751,8 +4751,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "cfbdb5dc6357ed618223baa0a042710b9ae904f592636a98f5463eed73401356",
-      "refreshed": false
+      "donor_sha256": "d5c03a1caf5344c33ba40d7ff9a1e712b6ef356b5a152089289e40d46efcceba",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/security/accountlinks.tmpl",
@@ -4773,8 +4773,8 @@
       "dialect": "html",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "50eabcf40f669f8962a7a496e1672fc08b0ed71f8e2c1939e951bcf2ba619016",
-      "refreshed": false
+      "donor_sha256": "f2c84802d56a642846e20128488d6e75a286d61d7914c1cc6e23de84ecd44e83",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/security/twofa.tmpl",
@@ -4789,8 +4789,8 @@
       "dialect": "html",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "f011bf5f2a465536a5e78044800216091e3c87a6766681a67830c29ae4091564",
-      "refreshed": false
+      "donor_sha256": "549f9f6db3acac0b526edb3918dd2e6c5e6bd73859adcf51bf05240b63585b64",
+      "refreshed": true
     },
     {
       "donor_file": "user/settings/security/webauthn.tmpl",

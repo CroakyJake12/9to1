@@ -23,13 +23,13 @@
         <Container id="SanitizeDurationBox" Type="Horizontal Stack" vertical-alignment="Center">
           <Text id="sanitizeDurationLabel" />
           <Container id="sanitizeDurationChoice" Type="Vertical Stack" role="Grow">
-            <Container id="sanitizeDurationPopup" Type="Menu">
-              <Button id="menuitem" text="1" />
-              <Button id="menuitem-2" text="2" />
-              <Button id="menuitem-3" text="3" />
-              <Button id="sanitizeSinceMidnight" text="4" />
+            <Container id="sanitizeDurationPopup" Type="Context Menu">
+              <Button id="menuitem" Type="Menu Item" text="1" />
+              <Button id="menuitem-2" Type="Menu Item" text="2" />
+              <Button id="menuitem-3" Type="Menu Item" text="3" />
+              <Button id="sanitizeSinceMidnight" Type="Menu Item" text="4" />
               <Container id="menuseparator" Type="Separator" />
-              <Button id="menuitem-4" text="0" />
+              <Button id="menuitem-4" Type="Menu Item" text="0" />
             </Container>
           </Container>
           <Text id="sanitizeDurationSuffixLabel" />

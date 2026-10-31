@@ -8,12 +8,13 @@
   },
   "gap_constructs": {
     "optional section": 598,
-    "menu button": 448,
+    "menu button": 387,
     "button row": 133,
     "scroller with explicit bars": 103,
     "window and dialog chrome": 100,
     "radio menu item": 95,
     "item collection (list/tree/table)": 69,
+    "menu items built by donor script": 61,
     "custom drawing surface": 35,
     "unmodelled donor construct": 27,
     "clipped viewport": 25,
@@ -2639,7 +2640,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2681,301 +2682,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3038,6 +2745,244 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
       "construct": "menu button",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
@@ -3094,6 +3039,20 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
       "construct": "menu button",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
@@ -3136,6 +3095,13 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
       "construct": "menu button",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
@@ -3171,7 +3137,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3206,6 +3172,13 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
       "construct": "menu button",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
@@ -3234,14 +3207,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3269,7 +3235,42 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
       "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3332,7 +3333,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3479,7 +3480,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3710,7 +3711,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3871,7 +3872,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4039,7 +4040,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4172,1491 +4173,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5803,7 +4320,98 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5831,7 +4439,1400 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
       "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "optional section",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6230,7 +6231,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6419,7 +6420,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6594,7 +6595,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6776,7 +6777,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6916,7 +6917,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7028,7 +7029,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7084,7 +7085,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7133,7 +7134,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7210,7 +7211,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7574,7 +7575,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7749,7 +7750,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7959,7 +7960,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8036,7 +8037,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8134,7 +8135,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8295,7 +8296,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8449,7 +8450,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8561,7 +8562,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8652,7 +8653,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8715,7 +8716,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8974,7 +8975,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -9156,7 +9157,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -9415,7 +9416,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -9590,7 +9591,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -9807,7 +9808,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -9926,7 +9927,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -10094,7 +10095,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -10241,7 +10242,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -10339,7 +10340,7 @@
     },
     {
       "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu button",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/notebookbar_single.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"

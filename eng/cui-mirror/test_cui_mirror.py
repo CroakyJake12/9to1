@@ -597,3 +597,34 @@ class ExclusionTests(unittest.TestCase):
     def test_examples_are_excluded_by_segment_name(self):
         self.assertTrue(mirror._excluded("packages/example/lib/x.dart", ["example"]))
         self.assertTrue(mirror._excluded("packages/flowy_infra_ui/lib/simplewidgets/x.dart", ["example"]) is False)
+
+
+class MenuButtonEmissionTests(unittest.TestCase):
+    """A donor menu button is emitted with CUI's proven button-owns-menu idiom, not reported as a gap."""
+
+    def test_xul_menubutton_nests_a_context_menu_of_typed_items(self):
+        import tempfile
+        src = ('<xul:menubutton xmlns:xul="urn:xul" id="events" label="Events">'
+               '<xul:menupopup id="pop"><xul:menuitem id="mi1" label="One"/>'
+               '<xul:menuitem id="mi2" label="Two"/></xul:menupopup></xul:menubutton>')
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            path = Path(tmp) / "c.xhtml"; path.write_text(src)
+            result = dialect_xul.translate(path, src)
+        text = cui_mirror.emit(result)
+        self.assertIn("<Button id=\"events\"", text)
+        self.assertIn('<Container id="pop" Type="Context Menu">', text)
+        self.assertIn('<Button id="mi1" Type="Menu Item"', text)
+        self.assertNotIn("menu button", [g["construct"] for g in result.gaps])
+
+    def test_gtk_menu_button_with_a_literal_popover_is_not_reported_as_missing(self):
+        import tempfile
+        src = ('<interface><object class="GtkMenuButton" id="mb">'
+               '<child><object class="GtkPopoverMenu" id="pop">'
+               '<child><object class="GtkModelButton" id="m1"><property name="text">One</property>'
+               '</object></child></object></child></object></interface>')
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            path = Path(tmp) / "w.ui"; path.write_text(src)
+            result = dialect_gtk.translate(path, src)
+        text = cui_mirror.emit(result)
+        self.assertIn('<Container id="pop" Type="Context Menu">', text)
+        self.assertNotIn("menu button", [g["construct"] for g in result.gaps])

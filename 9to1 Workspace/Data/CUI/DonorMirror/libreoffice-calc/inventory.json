@@ -8,13 +8,14 @@
       "cui-construct": 1230
     },
     "gap_constructs": {
-      "menu button": 353,
       "optional section": 352,
+      "menu button": 306,
       "button row": 134,
       "window and dialog chrome": 117,
       "scroller with explicit bars": 70,
       "radio menu item": 67,
       "item collection (list/tree/table)": 47,
+      "menu items built by donor script": 47,
       "tab strip": 23,
       "toggle button": 20,
       "clipped viewport": 16,
@@ -42,8 +43,8 @@
       "dialect": "gtk",
       "nodes": 29,
       "actions": 0,
-      "donor_sha256": "7acc7342d9dabd54941947ccab394d342a7cc8f52b2b8120022f7d74dc935e7a",
-      "refreshed": false
+      "donor_sha256": "efdb69b0c652ea6a23ed745e083c5a41aaba6adfd22bf7f36fc6d300d59ee6c5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/aggregatefunctionentry.ui",
@@ -52,8 +53,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "2c05655aa95a85e31dbee9789a859871e247982866b61346ef3313bdf6047982",
-      "refreshed": false
+      "donor_sha256": "5f636e092d637e88355263e409c25cd65b75a0a0d3a33a59632d58a4fb6bcc9d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/allheaderfooterdialog.ui",
@@ -62,8 +63,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "f512a8dc26faebe2aaf023282eff9a06528faec064760a782408dafc801f7d63",
-      "refreshed": false
+      "donor_sha256": "6b9d37d5d33a5857f43d16b053ece7a0aa822f02727fe9b7078cdeef2bb1198f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/analysisofvariancedialog.ui",
@@ -72,8 +73,8 @@
       "dialect": "gtk",
       "nodes": 32,
       "actions": 0,
-      "donor_sha256": "4796c49fd2f4b933df51f69d9710735d1f35bacaa59042a8b786774845cc67e7",
-      "refreshed": false
+      "donor_sha256": "c68fbf45ada297fc42134bbd14b688368a0e640e17e28afd3962482204f39ee2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/autoformattable.ui",
@@ -82,8 +83,8 @@
       "dialect": "gtk",
       "nodes": 27,
       "actions": 0,
-      "donor_sha256": "da3d96c810a6c1f2d8d993394f4af518859d96b3f98554de7d715029dcfa2828",
-      "refreshed": false
+      "donor_sha256": "b13e196d9b0dbe7ca66c77b742c0b32e176180997cb089c3817a3ba6c27d114c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/autosum.ui",
@@ -92,8 +93,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "096275971f50c5e133e621623ad084d0717f7e15bcd781af0d47fff3f61deb6e",
-      "refreshed": false
+      "donor_sha256": "adfb824e793058fd69aaa92fe0f63ca69362a282a7dd3cc647910a7cead59ca8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/cellprotectionpage.ui",
@@ -102,8 +103,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "661457cea478e5b8e7659db932dcee27ec9a18bd6d1c36c5bed117b0ee9fcea5",
-      "refreshed": false
+      "donor_sha256": "68f16058aa14095cf9e0f48d9e5b4de9615f23b49e5d07ff107f635f00000622",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/changesourcedialog.ui",
@@ -112,8 +113,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "b3e4c066213d402c089fe179bd9aeb43cd9ad90f2a2e80d1828287fbb97f1db8",
-      "refreshed": false
+      "donor_sha256": "c9168f420ab61792ccd2d2b6edfd1c14bfd68df03ae4f85f8eb7a869bbb9effb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/chardialog.ui",
@@ -122,8 +123,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "c16deb37e46edc7968f04f7ab747044def7ff916a6d9c01975875d7fc65adafa",
-      "refreshed": false
+      "donor_sha256": "a90d19f571e39f7c05a894c1972cf020549ab0dfee6516070c045a8ce15cee7b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/checkwarningdialog.ui",
@@ -132,8 +133,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "1914ec6d4737a7dff889829df7e66528f50e9536dea002b6d324c8b9d66e678c",
-      "refreshed": false
+      "donor_sha256": "464672ae0acda3c56df2ffa47ef0a8daf0cd8b2751477f0b3b05cef4ff05022b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/chisquaretestdialog.ui",
@@ -142,7 +143,7 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "b9cf22697d58d503323a93b5ed63463e54dff9345dd9ca8a5f979c65f828b27d",
+      "donor_sha256": "0e306258110814845edfe5533b4a0c83297c1974869e7bcbdf37ca149cfc8183",
       "refreshed": true
     },
     {
@@ -152,8 +153,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "54af343a0a76ddd720480fd1f0efd19c2ca8dc1a611f44bca8c1b31763d7fa35",
-      "refreshed": false
+      "donor_sha256": "cd273058c87aa3fe34c0492b7c254b672423afff5963210522bfea41eca8b447",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/colorrowdialog.ui",
@@ -162,8 +163,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "014c9ecada4be93e314ed477c610b522cf47a0ddfd31238e71105ba9882922b6",
-      "refreshed": false
+      "donor_sha256": "0d33268af2c67244cd289cf214c1f2b3b0470bf8b009c8c7d8916a6fbe92dcec",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/colwidthdialog.ui",
@@ -172,8 +173,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "1cdca26d49d5cf14b4616a11ce72e75f56e54f15652d6d994088893b88942abd",
-      "refreshed": false
+      "donor_sha256": "9661366d7619fad8c00ee84dd1257a6c58230ecf155cddc5484149bab2b601be",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/condformatmanager.ui",
@@ -182,8 +183,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "6be883e98e03c3af0cd8b2e74c030f2025dabd21ef201dd64c0b9be3674bd26f",
-      "refreshed": false
+      "donor_sha256": "e5833401a771f5d5e80f38ba010f914966a76ab1c887db1b547874e0a57dcb7e",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/conditionaleasydialog.ui",
@@ -192,8 +193,8 @@
       "dialect": "gtk",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "1a44b8eab3b988a3f91cd9d603c9a9d017adcf8530f86465132e7a94ba671c94",
-      "refreshed": false
+      "donor_sha256": "7163ebac816d8594af597d1025797074cb71a59c13f19dfdcbb81f4081a2b91c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/conditionalentry.ui",
@@ -202,8 +203,8 @@
       "dialect": "gtk",
       "nodes": 36,
       "actions": 0,
-      "donor_sha256": "b4e97da3838f891ef9f62c667c759cdbd402b049c20fb7bd8a98251f81d24ccb",
-      "refreshed": false
+      "donor_sha256": "530129e63961c9d7e0022b72e5940cb7e74aa5895a8a9f633a63b850a95f0428",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/conditionalformatdialog.ui",
@@ -212,8 +213,8 @@
       "dialect": "gtk",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "016fa4ce445ef256e0bcf3403e3f8b60fdbcefda339535e2263c66a5d2427968",
-      "refreshed": false
+      "donor_sha256": "77a81aa41037ea5dba196d08889289bb6680cd2cd9f5b1722f4ec9ba4fb4e260",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/conditionaliconset.ui",
@@ -222,8 +223,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "f214070476ac2474d5c8f82ed43b957da790e8c3a2fc75bafded4e9d37795492",
-      "refreshed": false
+      "donor_sha256": "d58d5763348825fc616f65ebe4a344a02017442e67addbda6dde99ae299c8431",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/conflictsdialog.ui",
@@ -232,8 +233,8 @@
       "dialect": "gtk",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "cdab819c8cbd0080612a5694b3595689b43993dc479ae0cef62e52730831e5eb",
-      "refreshed": false
+      "donor_sha256": "fd07dd6c77884570d3812629719e538bd48fe280f2d8cc8d76f44d22141c610a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/consolidatedialog.ui",
@@ -242,8 +243,8 @@
       "dialect": "gtk",
       "nodes": 37,
       "actions": 0,
-      "donor_sha256": "2beb3f4ac7a22ca0c79a3d475775fa6be92549f153027aa922f24414cbf0edec",
-      "refreshed": false
+      "donor_sha256": "a2617df83dddc9ad4cd37fc5263cd401f0ec1a60e1af808cc10667b7cb525903",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/correlationdialog.ui",
@@ -252,8 +253,8 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "cdb62f3a0fd413a10c58c135c2508b4589b4bd83f32deb67aea631eb22194bb3",
-      "refreshed": false
+      "donor_sha256": "0196fa74b981cedb2d88c1d48cc8eac6dc14393c0478df10f6185cb08403b83f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/covariancedialog.ui",
@@ -262,8 +263,8 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "9956f1078a5c850182d84b26109006644e3c7a5b2d31013716a83e6f1429992a",
-      "refreshed": false
+      "donor_sha256": "fc1f109b8ddd7f6300654449a6706a83a88210d5159d7efa97c61599128c4e71",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/createnamesdialog.ui",
@@ -272,8 +273,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "aadc7ee75efd9c53419ed6024e3c3c6eaa02f890fcc45f7743c903e2ab858f80",
-      "refreshed": false
+      "donor_sha256": "801845be35cda00c7d5563747504de6c05f51d9dcca3b96f201e4fbf5764d3c4",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/dapiservicedialog.ui",
@@ -282,8 +283,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "a6299e29cdb658cbd35a7e8d15c0d0591d96d06045ca75bb331b47e6e64056b6",
-      "refreshed": false
+      "donor_sha256": "43582bece144142720f5e1954baf9ec60b0bac81aec41f21cc5c8ff3c4a0c617",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/databaroptions.ui",
@@ -292,8 +293,8 @@
       "dialect": "gtk",
       "nodes": 41,
       "actions": 0,
-      "donor_sha256": "a9735c80c40dc2972264711c5ebb551f3a6f29c633b568f9def55d51d35f2379",
-      "refreshed": false
+      "donor_sha256": "04349d116d91fb43839e64ebee0a213d7bf5e8b7a227994a2c12f58178926a5f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/datafielddialog.ui",
@@ -302,8 +303,8 @@
       "dialect": "gtk",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "7fd6656817c06cb0e3bc121fff22e390b482c095416514b711f66e16c74d4a5f",
-      "refreshed": false
+      "donor_sha256": "6f0d1640a0ef894867f10960365c2fb0ac96f25f7fdef15bfd04cd1a4bca56d1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/datafieldoptionsdialog.ui",
@@ -312,8 +313,8 @@
       "dialect": "gtk",
       "nodes": 39,
       "actions": 0,
-      "donor_sha256": "be1f7c49a0228d47b72b8d6a19642ddadd3df0e9c09de284108b6a026374e7cc",
-      "refreshed": false
+      "donor_sha256": "706b84c931a0d5df1a1125ac26299f8c56b477b0285a70bdc5569a5364bec2e5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/dataform.ui",
@@ -322,8 +323,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "c8f6f24ade73e1f430917977774e028b44bd0c3b5e6f473ff761a1342101693b",
-      "refreshed": false
+      "donor_sha256": "b6db55741bf14abe8a835400411273abbfcd66d662985b4a78d35ffeeec6f404",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/dataformfragment.ui",
@@ -332,8 +333,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "c7f54853c38a2c56f98fe00bf7014d77be0ba042bf2e478bfccdc865eb994f77",
-      "refreshed": false
+      "donor_sha256": "510d8ca043d29952986aafd243f8db243d3f4427d83be00f3bab30ea3a947454",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/dataproviderdlg.ui",
@@ -342,8 +343,8 @@
       "dialect": "gtk",
       "nodes": 33,
       "actions": 0,
-      "donor_sha256": "fce65e8d4432345dbc2eee078eae8a6a278e16edc78579d73aca0360da1c9946",
-      "refreshed": false
+      "donor_sha256": "59b58fcbe4a06405175aa06473a9def13fd4d84da21acac1ec90109a824480fa",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/datastreams.ui",
@@ -352,8 +353,8 @@
       "dialect": "gtk",
       "nodes": 35,
       "actions": 0,
-      "donor_sha256": "51eec1e78acb8e51a596264c9cc8b25a93e7f8c9f7ec386e0a6078a27d1c9036",
-      "refreshed": false
+      "donor_sha256": "16e06634b724218b9474ee5441a1504514083626c69e0f4152179a1270c834a5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/datetimetransformationentry.ui",
@@ -362,8 +363,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "560ccff6dec2d65334952d0341d15425c708e255a83f08e3cb9763452a610a26",
-      "refreshed": false
+      "donor_sha256": "39ed083932f446cd16ebd1bc197ca0638bb6cc66c5c30cba1f43b8b5290234f1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/definedatabaserangedialog.ui",
@@ -372,8 +373,8 @@
       "dialect": "gtk",
       "nodes": 33,
       "actions": 0,
-      "donor_sha256": "314fd04db5dfdbb9611b431baf14e3870c230fd34a2b4f1cc258a05b8e555c19",
-      "refreshed": false
+      "donor_sha256": "4d8c9837c6e8dd1422e35a551d0627e229d2f36a8ef21cc63eefd0e039946f5f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/definename.ui",
@@ -382,8 +383,8 @@
       "dialect": "gtk",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "fd7071fef6b17d90fdca1d6b2eecf6aa21676ef0f1c6325b4bcb91d75010270e",
-      "refreshed": false
+      "donor_sha256": "8fbaa9061abb382c0764be135f91ef45a28589f6c203c0911b31d712f2a7837a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/definetablerangedialog.ui",
@@ -392,8 +393,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "d85d1d8d1353c7fa0497c37f2031acc035c5920314f4e7d14a9fe2b91567d3dc",
-      "refreshed": false
+      "donor_sha256": "3381b04525c56508ba7cf449bb00217a52249129d4bd695a000985df3ca52830",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/deletecells.ui",
@@ -402,8 +403,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "8921b0f67b5a2eb96d29aaf4a93ef1e824056c73686fd045eda351397f8b2d64",
-      "refreshed": false
+      "donor_sha256": "4689c5c1c1ee667a1978bd4d98e786c9200ee18730e43ecd247e32071f9bfc50",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/deletecolumnentry.ui",
@@ -412,8 +413,8 @@
       "dialect": "gtk",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "bf451820d93f8d4c2e7a20269d47590d1388a89bac3c5e4be055871520659b02",
-      "refreshed": false
+      "donor_sha256": "0b9568dba5e2a7fcec6339165a382354997c6a942da300b86c6b75a5a1140e9d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/deletecontents.ui",
@@ -422,8 +423,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "8795c9b1889d1a09270ab2a1984141a5849b54d2478275658a85f46369c78b8e",
-      "refreshed": false
+      "donor_sha256": "ff4932a8a06fd4b7e4c0c71f9855dfca62899fbc3a9d2d63344f677d5d431b6b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/deleterowentry.ui",
@@ -432,8 +433,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "8e7f498a6528a4f47c84b79097a7a521b3d57b52951d90178dc9657839662765",
-      "refreshed": false
+      "donor_sha256": "62ff7773fff71c9a000b61c1940098d29d3dbbcf64d7393f14c012cdd7b97baf",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/descriptivestatisticsdialog.ui",
@@ -442,8 +443,8 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "08de0fcf089b20dd9c5a16038b3f7b5666b29a088f5bf43af7d8f02f368a4af2",
-      "refreshed": false
+      "donor_sha256": "abd545c6801961b5fc14360909e7447cfebf06b49bd5b89ba3af85e18ef18441",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/doubledialog.ui",
@@ -452,8 +453,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "59d75f7d2e6db3f7d49f6e6af969edca51dae40f01fc2c54116b43db2395c8e0",
-      "refreshed": false
+      "donor_sha256": "ec8537169023ba533df772dae1ee1e87694ba6e8b0dda119137e5fc92de16ac2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/drawtemplatedialog.ui",
@@ -462,8 +463,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "b2c3601760f3a391e012c4062e291a9a111611e12d0e1946de5e025711b36aa7",
-      "refreshed": false
+      "donor_sha256": "7984c7bfa863fc2edd067303a46bcb1d984574d5342e99aecc0360a5bbfcadda",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/dropmenu.ui",
@@ -472,8 +473,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "8360fdecf64ab7b9c3836fb462f974a510ef1569cf3250b04efba8d38409e21e",
-      "refreshed": false
+      "donor_sha256": "9cdb3e57bca485823f83f8fda4066422cb3adbe98482848ceab9cc89572fe4c5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/duplicaterecordsdlg.ui",
@@ -482,8 +483,8 @@
       "dialect": "gtk",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "c26a12f979686c5519f4c627911190d4c2f6668096e2a5c6ec6f7ba47a68247a",
-      "refreshed": false
+      "donor_sha256": "cade0d3aeca34abbdfb15e5acbb973b7d284dac533c1b2eae4d1f15cebcf60c4",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/erroralerttabpage.ui",
@@ -492,8 +493,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "b91e88225959f361a20bf093d399093ab22f8aa316d63d55aef9ce98c518e157",
-      "refreshed": false
+      "donor_sha256": "d1f7dbd4057656e26a0edf443d04c98df7ab0dee26d2efdb479a92461a4eaea7",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/exponentialsmoothingdialog.ui",
@@ -502,8 +503,8 @@
       "dialect": "gtk",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "59b17f8a658eb95b811ef8ea3d601340eb9f57cc4b9093f86f36b438188a0884",
-      "refreshed": false
+      "donor_sha256": "efbb9728bdeaa3f8f28a08e854ef18c16f5d0c31e8c0ec6d44de717c2f94ca6b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/externaldata.ui",
@@ -512,8 +513,8 @@
       "dialect": "gtk",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "d5dab90d46620768f5dd0f6be14b056b22f45d74eed893e9ba6c00f99335572b",
-      "refreshed": false
+      "donor_sha256": "6513fc19d020e8886905e4d5e3eef2f8b36dce50d926e98ec6d6f43b3d5e33e3",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/filldlg.ui",
@@ -522,8 +523,8 @@
       "dialect": "gtk",
       "nodes": 35,
       "actions": 0,
-      "donor_sha256": "26ad8f692c36edd016812cb0f3072223a841771f94d87712ed5e1f658681f1cb",
-      "refreshed": false
+      "donor_sha256": "572fc6c386fcbc167236065dad0362ee0e168a7fca4a8c0bd34cc025d2a2a510",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/filterdropdown.ui",
@@ -532,8 +533,8 @@
       "dialect": "gtk",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "873d922351dcb4dd2d9c1e43d6700ce49a0a8a94009465d731106cc71ba18451",
-      "refreshed": false
+      "donor_sha256": "9fb2f4a949419c1ced3de7c082a5967533dd97c81866cc68152a130f31300ffb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/filterlist.ui",
@@ -542,8 +543,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "169988253c306d8dff8bfbfe6f8654bf34e4b81baac91d91a582654dbf0d00cd",
-      "refreshed": false
+      "donor_sha256": "124c036b8026ce36deac3264741b474508bb904106cab406b74193c87aa5063f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/filtersubdropdown.ui",
@@ -552,8 +553,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "2f44877e82af3f77aa4172f0cdc620de0278ba8194c786064a4c3453d101329b",
-      "refreshed": false
+      "donor_sha256": "1aca071915cdf64b64fc8ec302985e307670c3a28e92761ebb642dcd15b052d8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/findreplaceentry.ui",
@@ -562,8 +563,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "79ef7f8e4bba97f247b912d461a810f8a81a1a408244e3aae3a350fa99a9973a",
-      "refreshed": false
+      "donor_sha256": "6fc841e089107b78ee6855a2a90f55ebef471b8f38c95e999c602fc05f8fc2cb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/floatingborderstyle.ui",
@@ -572,8 +573,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "fc938c9d657cd9e28c1af93b39dc3574681a109bd3ef9184780142be4da091bb",
-      "refreshed": false
+      "donor_sha256": "eb9112ee9ff23cfaf0b971cc1cff82a656f61e8cf971b10507b2ecfd374122fe",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/floatinglinestyle.ui",
@@ -582,8 +583,8 @@
       "dialect": "gtk",
       "nodes": 5,
       "actions": 0,
-      "donor_sha256": "d6ec21de183dd33969d73e34e47896d828421fe1ff0af810711f2f2622366aaa",
-      "refreshed": false
+      "donor_sha256": "b45c1b62a077b578992458e348a6aafc10c2bbdd5a131f2cd027d24eb605ce68",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/footerdialog.ui",
@@ -592,8 +593,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "e166c6a310b50e9f7c9ecb6f5b94e7b0402843e1d4d2c1d189da8c0c2e416109",
-      "refreshed": false
+      "donor_sha256": "5ec01dbcac93c181fbd32ff62107ea66a09fee3c9f8f021c7e6ec6dcc852b2dd",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/formatcellsdialog.ui",
@@ -602,8 +603,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "0c9bf3cc9faffac028643456198e9d823486d2c92af252b1edbd28f46a2e31d1",
-      "refreshed": false
+      "donor_sha256": "1706ed55e6f7b584fae6031523b7ad5ab78a1995644f97de0a2a9ce5bc9fdac6",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/formulacalculationoptions.ui",
@@ -612,8 +613,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "40f6c1c54ac5678fae089c998d7cc2e74d21e34ddb4a59bc8fd478541f0afe64",
-      "refreshed": false
+      "donor_sha256": "0af659f9e1ebc46cb79cc23b28441b552799c3ed046dac9800e01e730a56c86d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/fourieranalysisdialog.ui",
@@ -622,8 +623,8 @@
       "dialect": "gtk",
       "nodes": 29,
       "actions": 0,
-      "donor_sha256": "512d36233d13e5de0b6ef7734ad82eeadc344b55ab4ede57b569dcfa38ba5172",
-      "refreshed": false
+      "donor_sha256": "6a27bc3fdb11e24684b7e631b556630e0f6752d7f32b8836fd1d75918d7ecd70",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/functionpanel.ui",
@@ -632,8 +633,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "e395beda5a23c9eabf8f4ffe0d402e40c7ef79fbd89c0971784c8515d493c463",
-      "refreshed": false
+      "donor_sha256": "d9f5a73542ac8055feb422dad18b98d4c7b9f9fb3724830ce88996311b505dfc",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/goalseekdlg.ui",
@@ -642,8 +643,8 @@
       "dialect": "gtk",
       "nodes": 17,
       "actions": 0,
-      "donor_sha256": "fb088da9b7a526d5d595d1b17d84d708c967b8a0ab8dc5e8d5e8abff7a791e19",
-      "refreshed": false
+      "donor_sha256": "3f02786061f583f1154ff8dfe85bc49114c4c47e9889b22e26602f21506ffce2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/gotosheetdialog.ui",
@@ -652,8 +653,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "48897f7f20e3334915c5f609a6c6109b2124609fd23f23f178ff844a28f88acf",
-      "refreshed": false
+      "donor_sha256": "9c93f45e891700308abd8d6b73c2a5cf53f145d0f18453d69a702b3a20dec16d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/groupbydate.ui",
@@ -662,8 +663,8 @@
       "dialect": "gtk",
       "nodes": 27,
       "actions": 0,
-      "donor_sha256": "0912a7819759464103d07209558387d44d283b19ad7d1438d5f59822f9f17012",
-      "refreshed": false
+      "donor_sha256": "61ca2b6610e487e1eaba0c64972ba83814ed51b614def044edf3ddbb86467108",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/groupbynumber.ui",
@@ -672,8 +673,8 @@
       "dialect": "gtk",
       "nodes": 22,
       "actions": 0,
-      "donor_sha256": "a9890bdaf463c491f1a6b420893f728e0b5f4156ee804f3bad2bdd85c043fa62",
-      "refreshed": false
+      "donor_sha256": "847a4f64d99df83f36a13a84420a90db9862287a571021f50b0867fa5cc7a88b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/groupdialog.ui",
@@ -682,8 +683,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "e87e6a27f6fe1bbf6807b8a16e4abe0acbba9535669e7e3772637b82f406e286",
-      "refreshed": false
+      "donor_sha256": "be13cfd553620f5f810ac346bad055a1950a3e7b6b87470a2976ac2b0dba783e",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/headerdialog.ui",
@@ -692,8 +693,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "fc6232e8061da024a9def9673cd232dcb351a1f1784ae05645a0b7dd1693eb70",
-      "refreshed": false
+      "donor_sha256": "216469b2dad5b0cbfda049eb2a341a6577e45c5c8ec3e83fefaf8a3a11477ec4",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/headerfootercontent.ui",
@@ -702,8 +703,8 @@
       "dialect": "gtk",
       "nodes": 60,
       "actions": 0,
-      "donor_sha256": "3e041ed7b5d41f2f895dff495ffa4f33271222198a01ef0b15b40617d92ccbe8",
-      "refreshed": false
+      "donor_sha256": "b0989ee3a012b53e6e85842c6a8525c0ba62a9f65293e04b353a6f98ff249dfc",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/headerfooterdialog.ui",
@@ -712,8 +713,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "cc5706cb2cac993efbdb0544dffeccc25f83b935b3cb354dbf47ddf9ec17c9e5",
-      "refreshed": false
+      "donor_sha256": "ac14d8a12e4b99ff565a6f8410895e968620e3058e58bb7b0eb3e4d011569624",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/imoptdialog.ui",
@@ -722,8 +723,8 @@
       "dialect": "gtk",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "85022bf99e76266150668d393b74166390aec888c2d63106e9cb6ec17e14cb44",
-      "refreshed": false
+      "donor_sha256": "0eb08cada6603812948407e5d3dbb5c8e3e90086d12050284e11485055ff8907",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/inputbar.ui",
@@ -732,8 +733,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "090b11b911594d3641de11b6eace42f78a84bb8f1c2ef5694472b418bf34dbff",
-      "refreshed": false
+      "donor_sha256": "47a1a40c9a959c2f30d13c40adf7b15d860f3a78ed080c85fc2aec3d7887e080",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/inputstringdialog.ui",
@@ -742,8 +743,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "4cad6e392597a93cc994f533b8ac229d2363a5e6d0fa1b5e9f6022f12fac1bbe",
-      "refreshed": false
+      "donor_sha256": "0677974d4f31dd0a952ae4b7ff902c832861290d30109923f54c7f6f3a36ee90",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/insertcells.ui",
@@ -752,8 +753,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "b22354a2e6acc1f06946a39a3adc7c4230969df69170b969a71f0c0960742fb7",
-      "refreshed": false
+      "donor_sha256": "d6e8418c4152330f43d36d362c6f57c8daa77c3b0adc6597163398be8ea27dd5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/insertname.ui",
@@ -762,8 +763,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "eaf711a5917c5c51fb6dd2da0b03e2e460ed10c5b2869abdcb7a0312d1a43d04",
-      "refreshed": false
+      "donor_sha256": "fbcfa64ca6895d472fd9c6c788ceab8f45fe366b863452aff671bbb579d28e65",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/insertsheet.ui",
@@ -772,8 +773,8 @@
       "dialect": "gtk",
       "nodes": 31,
       "actions": 0,
-      "donor_sha256": "95d64fc20e067fa72cdd3f5df8ac7b2c5b73643ac1b31d4fb99d5142ee0a0901",
-      "refreshed": false
+      "donor_sha256": "c013436eb3ddc6657a27ad15d9d056656b70b089809391f07e22a4e7d08dd394",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/integerdialog.ui",
@@ -782,8 +783,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "37be336912096cb5c46b6a1bf12bed05c5a31ae8359287d87d7485bee4808bda",
-      "refreshed": false
+      "donor_sha256": "bd9b73418df7e8f589026fd5cd048b0fb1e645d336ccd7075332328b414f9f92",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/leftfooterdialog.ui",
@@ -792,8 +793,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "3fc9b40b1e711aa80be366633cfa6c090e7a08052eaf434967882b7d0cf060b5",
-      "refreshed": false
+      "donor_sha256": "c95dd8b3e7f228b5e01e4bddedee548d0b6a21b46c0cc03fd0db64dd61f850cb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/leftheaderdialog.ui",
@@ -802,8 +803,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "3029806691ed40c45ed1c614c9d1d2c15910efed0d0b48674db339bf9bb14245",
-      "refreshed": false
+      "donor_sha256": "8185bd329b5fe68467c487718f5fa5cb3792188be467fa4b154d473c90f6ef45",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/listmenu.ui",
@@ -812,8 +813,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "bb009706ca7febc7a221ccca78b775b9b0066fa9f83bb117e349fac2ca5c48ce",
-      "refreshed": false
+      "donor_sha256": "a04175cb57834a85ad2126284dc516b2a12e3ace3997c3286110719f54beff36",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/managenamesdialog.ui",
@@ -822,8 +823,8 @@
       "dialect": "gtk",
       "nodes": 30,
       "actions": 0,
-      "donor_sha256": "1a72782203c463c81e7ebd53cc24c92568003c654cad15c621d251d5c5ab7bed",
-      "refreshed": false
+      "donor_sha256": "647bd21e860050cbd78d96791241e45411fa82f9500a1915d54317b46359c157",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/mergecellsdialog.ui",
@@ -832,8 +833,8 @@
       "dialect": "gtk",
       "nodes": 14,
       "actions": 0,
-      "donor_sha256": "dc16aeca9ca1e7448a9a46752676fd6993fb6b015f454093d5a9683d77fc71f9",
-      "refreshed": false
+      "donor_sha256": "f62018a147af207adfc92bcd30d1acab6ca21daefec2e3111ae06066e41e04c7",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/mergecolumnentry.ui",
@@ -842,8 +843,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "11d5157a2866dd61da2f9d73857b6583beddf2d372d5203243772d569c4a53b0",
-      "refreshed": false
+      "donor_sha256": "4b51be7a886b5b25423fa4c6f28a6b00a6614052c6bf3adb36a0d4ede0c4c752",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/movecopysheet.ui",
@@ -852,8 +853,8 @@
       "dialect": "gtk",
       "nodes": 30,
       "actions": 0,
-      "donor_sha256": "9b7a397b7e6578f01f5fdf67bc89cdc338307f7a808745e0940662ad41902f6b",
-      "refreshed": false
+      "donor_sha256": "d100bdcd99d49b5e2c18c7e370f0a204825ddce3190738a75900525975e51a09",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/movingaveragedialog.ui",
@@ -862,8 +863,8 @@
       "dialect": "gtk",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "ddac145dafc2f5961cb340b1d13d51f872d1977dc936247bee4c51762e9a452d",
-      "refreshed": false
+      "donor_sha256": "b432994c814c188628d40430190615dfa6507036f4b264500da74c40e8789f53",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/multipleoperationsdialog.ui",
@@ -872,8 +873,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "3097b1f85f8901e4f3976b8d01ab8de589787282532e6b9c21a502856c085bd4",
-      "refreshed": false
+      "donor_sha256": "d723bfddae6e8e9c142f5e698a4665a55f1fee04497bea468741fe0e402b75f0",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/namerangesdialog.ui",
@@ -882,8 +883,8 @@
       "dialect": "gtk",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "30409e986c6de8fade30fa62a942cebb32159a48a6a753132b401b53a6437a28",
-      "refreshed": false
+      "donor_sha256": "335ff8f6e8969c16ff772e02c638ba0bb69f15a5eb5f45a25be6ef710be3df80",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/navigatorpanel.ui",
@@ -892,8 +893,8 @@
       "dialect": "gtk",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "8d65b1dae5a4942a01ec0c57537cae39d33bd6fd39c50cc53843fbfe56108523",
-      "refreshed": false
+      "donor_sha256": "d45e86548f01932976e0f45a91b766f73135b84972594bda4f84a6a333aa015a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/nosolutiondialog.ui",
@@ -902,8 +903,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "2987878e031bfedf2531ae311f2379a718429b4ddd22351b36dfcb33a89a7f0f",
-      "refreshed": false
+      "donor_sha256": "6d5deea4c4f4f8eeb34fcea1db6919b7a025fcf1a0452aefa0eb29b458ad0dfb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/notebookbar.ui",
@@ -912,8 +913,8 @@
       "dialect": "gtk",
       "nodes": 1209,
       "actions": 0,
-      "donor_sha256": "15c5b8835592532139c729eb93066b0b11e4f4643b84e7d3ee476735ccb3cc39",
-      "refreshed": false
+      "donor_sha256": "5204c41818bae92cf4c888e6eb31baf0a264b5e7ead480ff468e5ca3958e0f08",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/notebookbar_compact.ui",
@@ -922,8 +923,8 @@
       "dialect": "gtk",
       "nodes": 1461,
       "actions": 0,
-      "donor_sha256": "85236684710f30ec169eabf599e9d08173509baafa590b0a4afcf05d83741c13",
-      "refreshed": false
+      "donor_sha256": "cb1161c4dd1df703b00e847cab33f64f055374b150e28c00de845c8fe1942aed",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
@@ -932,8 +933,8 @@
       "dialect": "gtk",
       "nodes": 1208,
       "actions": 0,
-      "donor_sha256": "4862fed7891fde490efaea10bf051e4d23a799cd380f04fbed1e676c64102120",
-      "refreshed": false
+      "donor_sha256": "57453d4501958cbc911d7bbe8ba169256e980b6f281fc3b96ed7eb9905939835",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
@@ -942,8 +943,8 @@
       "dialect": "gtk",
       "nodes": 1124,
       "actions": 0,
-      "donor_sha256": "18ca0b337d7e52e9c0d727d5d74d0b9147a6a68c8bf440aee20aa0a94d59eb82",
-      "refreshed": false
+      "donor_sha256": "786def2154810aafafe2fbaa26aa761012d985d56e94f6499297a98b8b242fc3",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/notebookbar_groups.ui",
@@ -952,8 +953,8 @@
       "dialect": "gtk",
       "nodes": 175,
       "actions": 0,
-      "donor_sha256": "20b3d9036b8ae0554a40dd49a1320d1a6f2fbb3e01c4d88f3bbb8a526a2e0f69",
-      "refreshed": false
+      "donor_sha256": "e539c5dc57c8e5697412f1d545f6ec08c3a0922a19300426070497e4e86d2584",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/numberbox.ui",
@@ -962,8 +963,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "3716475ac38b23da57dcda72a124b3755a379e258dedfe59f08694e5ded6e837",
-      "refreshed": false
+      "donor_sha256": "e7ab3274ced8cfb5a011aa76ac975ee8b009a2c1606619a6ebd292a52f292170",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/numbertransformationentry.ui",
@@ -972,8 +973,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "c1018d4d7263860f00657175e028b0f78f8005b936e143bea352c083209172e2",
-      "refreshed": false
+      "donor_sha256": "b3e3d78d07365038a46c95a1e6b2eeb45eebcbc0304e67ea7b794e5fe17282f8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optcalculatepage.ui",
@@ -982,8 +983,8 @@
       "dialect": "gtk",
       "nodes": 51,
       "actions": 0,
-      "donor_sha256": "f81f4547bbd97df40daaf1a94b680f9c1c3eab4ce2c31c4e64fe2e4cc3eb19b8",
-      "refreshed": false
+      "donor_sha256": "22f8c029df65315a17fe3959c07f339ec8a2b14a79e15c9500c8afa8464c35ab",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optchangespage.ui",
@@ -992,8 +993,8 @@
       "dialect": "gtk",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "bf2abfa0ecb081012535c48899e7332a50213ce1ed5dd75296286ad7031cf1b0",
-      "refreshed": false
+      "donor_sha256": "21949020d281a2ea9a8057c0b73113fb879d3afd080aea3eaeeffa75e67cb151",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optcompatibilitypage.ui",
@@ -1002,8 +1003,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "cb9121a06cad51d6a5a9e3fa471f4ba574cc425786c98e85ed6ad5a3703f7b57",
-      "refreshed": false
+      "donor_sha256": "1a01a3414dad62dff4ef4342253b04aed8c92f6056f3ddafed390916786f9a13",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optdefaultpage.ui",
@@ -1012,8 +1013,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "98386d41ac9d086b2d622837160f8bc4348d790c876f2b3e2051f87c8dd99c22",
-      "refreshed": false
+      "donor_sha256": "6987d87c10ec28db1cc3b0e71093c3bfb7e3b0013eb81a99685efbc8d3a5222a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optdlg.ui",
@@ -1022,8 +1023,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "bc33af76b07c477ccb479d1715a311c36e938cd3a2b48096fd0c5fbe6ca5a46e",
-      "refreshed": false
+      "donor_sha256": "f57c05be13572dd9beeb8535abef7f4444dface6eccf743fb5ef03e58c4bb32f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optformula.ui",
@@ -1032,8 +1033,8 @@
       "dialect": "gtk",
       "nodes": 34,
       "actions": 0,
-      "donor_sha256": "c3b38b901a341b05e6b3eeb998a0a7ddaba97423c90ad1fc6641a5c9a1cae78a",
-      "refreshed": false
+      "donor_sha256": "e17b026ce94c9106427138d1df036cd846eed15201bfed6ea1ebc575ea7bd5d1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optimalcolwidthdialog.ui",
@@ -1042,8 +1043,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "aac9a71eaad62318621714dd2ffe06ed79dc83f68d939c8b75ca3107c7c64015",
-      "refreshed": false
+      "donor_sha256": "f8bf36dbfb32d594122b99b1fc9b49f9d8ea2e4a59d0eea2d037514d50e1a836",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optimalrowheightdialog.ui",
@@ -1052,8 +1053,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "b3ebb8548658d672ee3906615b43be02ee7f30bfcdebe4852a8b6453b6254191",
-      "refreshed": false
+      "donor_sha256": "1aa21277f4239374a415109f2386e475b97d192f7811f0f74da3094fdc0dc794",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/optsortlists.ui",
@@ -1062,8 +1063,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "4c1ca1541c074f67565ed08413ea6ee09f3b107d53fcc945c0cffe157325a2e6",
-      "refreshed": false
+      "donor_sha256": "7f66eb2c43e95ccead2ea00f3a04ce3647337ab2f9e954b59a92945285fcf39c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pagelistmenu.ui",
@@ -1072,8 +1073,8 @@
       "dialect": "gtk",
       "nodes": 1,
       "actions": 0,
-      "donor_sha256": "0611e6ef6035a2055dc3ef3bac5888de2e50a1e16c3e9fa88d6dc5f3e6e1b9b4",
-      "refreshed": false
+      "donor_sha256": "99b89f9f920b588143b2262583b77f5a1a1bfe34d5bd43883fe9f28f456d1f57",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pagetemplatedialog.ui",
@@ -1082,8 +1083,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "d080548bcd83e4952cfeb0eaf03216327ab3cb184c7c53835bd262a2ba3051fa",
-      "refreshed": false
+      "donor_sha256": "735c236ad6f0112d202d8eb8fab2671f3bfe8714705e111ccb841549af112ac9",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/paradialog.ui",
@@ -1092,8 +1093,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "c4402748e1f50bff15f4b49b9a420eaa4434265df6e3cabf0b50fd9b57f6894a",
-      "refreshed": false
+      "donor_sha256": "42a270b6cc64bca54d9e9ade4b6bc5f580db86f16b2ec60605dfe1e3091a7492",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/paratemplatedialog.ui",
@@ -1102,8 +1103,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "b0768ac08145ecd38e80744885c59f0747c1cdfa34966eb9a8709bbd0263fa4e",
-      "refreshed": false
+      "donor_sha256": "d59bee3819c5652f56838d72ac64dce670e6d3b814d3fc28146ea461dee91a61",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/passfragment.ui",
@@ -1112,8 +1113,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "d6915f9eec4f245b06bd5493fd0b51b54e913ad5ba2d3e16650d501ab39cb080",
-      "refreshed": false
+      "donor_sha256": "2c47c40ce78c11f4a827d915e51e06a8dd063047c6b9a83ce444a9340341578a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pastespecial.ui",
@@ -1122,8 +1123,8 @@
       "dialect": "gtk",
       "nodes": 53,
       "actions": 0,
-      "donor_sha256": "20beed43f6054f43519235a1c5d7591392abd2cef8d1afb8825f2814d158c926",
-      "refreshed": false
+      "donor_sha256": "c7d8e9f304c86ba05c2a152ed75f90588fb7a806f6c87c52a4c7ab8634239bb9",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pivotcalcfielddialog.ui",
@@ -1132,8 +1133,8 @@
       "dialect": "gtk",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "143cb0dc5d99372d8639372fb4dbcef594e9900e9cb10bde983f79053beba597",
-      "refreshed": false
+      "donor_sha256": "7d2a621106bb5f2d685bd70559a69d2c9fa50f15645b2927e2f3cd3d39ddea94",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pivotfielddialog.ui",
@@ -1142,8 +1143,8 @@
       "dialect": "gtk",
       "nodes": 20,
       "actions": 0,
-      "donor_sha256": "849b25ee5c5acc4818ff1552d8816dd6c55ede2fc6d294ca725723f513d89d05",
-      "refreshed": false
+      "donor_sha256": "d5d073268a121e86e847590990c66076c906bf1c18f903408facab36e168992b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pivotfilterdialog.ui",
@@ -1152,8 +1153,8 @@
       "dialect": "gtk",
       "nodes": 37,
       "actions": 0,
-      "donor_sha256": "78fce0034c5b1ac762f09d1183ff3484732719458b2c897e5dec2f163ddbdf11",
-      "refreshed": false
+      "donor_sha256": "aea2e492a548a483364e6f5f001542e83ede6954f5e7e51d0c9c71bc73d9b8e6",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/pivottablelayoutdialog.ui",
@@ -1162,8 +1163,8 @@
       "dialect": "gtk",
       "nodes": 62,
       "actions": 0,
-      "donor_sha256": "2b8ef3c082a84acbdf214afd821153f104e5ee5f899ef4bcf635668eadf9b5a2",
-      "refreshed": false
+      "donor_sha256": "97082ab7e3316bf10d0eb641b0afd8e8232e08aaadcdcd548ff7634c37da3421",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/posbox.ui",
@@ -1172,8 +1173,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "9a6374fd54031515e76c9e830694b0279d1adc46403993069aafb0b84cf41892",
-      "refreshed": false
+      "donor_sha256": "880eb9e5c8e91ff0b0a0c39fb153c311ddec3a73afc18659fb789433d7baa269",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/printareasdialog.ui",
@@ -1182,8 +1183,8 @@
       "dialect": "gtk",
       "nodes": 25,
       "actions": 0,
-      "donor_sha256": "abfa7354a73b68fa32adc55d2f3af5c5932e573d6a6f4ba9bbc8767b657e5f27",
-      "refreshed": false
+      "donor_sha256": "3fea5cade403988f48df1a3e37e4411e03e5519bcfec66691e5d6968ec42ad73",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/printeroptions.ui",
@@ -1192,8 +1193,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "29861f654e1d86f3a17bfcba26e054b526094d6ea61669d171738e5e46c87d1f",
-      "refreshed": false
+      "donor_sha256": "f3e32205582d2fa85d857c8c7d4ba6748f204c5d935a714be5d60edcacd29105",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/protectsheetdlg.ui",
@@ -1202,8 +1203,8 @@
       "dialect": "gtk",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "ff93409bccd7b5740d825c3c69ec31ab6607bb86d820bd4324cf58b59d42441e",
-      "refreshed": false
+      "donor_sha256": "5547bcb2425f6968db837f61212b69d2ae616bef192ad78534b74f97455825c5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/queryrunstreamscriptdialog.ui",
@@ -1212,8 +1213,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "4ca9cec951967e4ec2b31d5b5dd3c2305fb96880a0a37f19242f0666f0111bcb",
-      "refreshed": false
+      "donor_sha256": "f6e343a0a9b8e7421f06dd15321fd2d6bd6523990760fbc3f5e4aac1c09a9934",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/randomnumbergenerator.ui",
@@ -1222,8 +1223,8 @@
       "dialect": "gtk",
       "nodes": 31,
       "actions": 0,
-      "donor_sha256": "a3ab753391cf1d0c66db22b7aa48c620a4c1546a853bb012392d832879c4ef39",
-      "refreshed": false
+      "donor_sha256": "23f37eb508c764a6298fa47a8fc5534fe2aaa3980bf4f90e9d9e6b8e042771dc",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/recalcquerydialog.ui",
@@ -1232,8 +1233,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "e2cd0613087413c39f0603cd6dbf57d4de352b5e471a7179e1c7ace244dacddb",
-      "refreshed": false
+      "donor_sha256": "71c67c564d167a771496063fb3222a7e788829064e79d2058a2d4cc8e22cfc39",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/regressiondialog.ui",
@@ -1242,8 +1243,8 @@
       "dialect": "gtk",
       "nodes": 38,
       "actions": 0,
-      "donor_sha256": "3297d785818dfe233dff0132be5871d00501139d51e71b7c5663d551896a6ee1",
-      "refreshed": false
+      "donor_sha256": "bc6ec6b3f71ab088ac4c265cb82d9a9c71e3f804ba608547440b8d9383991835",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/replacenulltransformationentry.ui",
@@ -1252,8 +1253,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "5ba372e6a01dfd681667c87079b134a5c28a9108a2c1381d5d3d370ef0787eec",
-      "refreshed": false
+      "donor_sha256": "9eab9d48fc065cd773d5f3081723c14632ffc56db34228bfa146d429ec3a1354",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/retypepassdialog.ui",
@@ -1262,8 +1263,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "61b3a3acbd310add7f4caa7846ec189960e5956cab6b2cbb65a8998034c6d7dc",
-      "refreshed": false
+      "donor_sha256": "187472585d369560e0530128e62c08654ae7918ec1d7c384cb56f3fc7fa22606",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/retypepassworddialog.ui",
@@ -1272,8 +1273,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "e82b0ea8a35fcfc29444a33cef5ee32d5667eda028f25b9cf8a097c92a2a0533",
-      "refreshed": false
+      "donor_sha256": "914cfc6ff709538558d46d83c437e5ddde823d4a3c6e745ed1825edd8c727587",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/rightfooterdialog.ui",
@@ -1282,8 +1283,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "2b6dc28c336d099c54ffc98f577ecbe397787f94d0b4ed6762350f92b838aa26",
-      "refreshed": false
+      "donor_sha256": "786d5b1451956718618d0418317c7d249fb03e00159a78dea27b22ae7cf0ec41",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/rightheaderdialog.ui",
@@ -1292,8 +1293,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "37bba9b4d31c25b77316de9a9c69f35e173c343710fa68764f5bba6bf213d130",
-      "refreshed": false
+      "donor_sha256": "bd31d4adc20d5e4f24e7008ea1a7c4bceae135a7015a1ae499dad76b42978fb1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/rowheightdialog.ui",
@@ -1302,8 +1303,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "f011c1e70248d2d15417355e15361094e586eebc21b80314b542dbaa8080747a",
-      "refreshed": false
+      "donor_sha256": "6ab9a96464b5caade64bd3632c27a7390bc6a3280bae78711cc26feff285ebc3",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/samplingdialog.ui",
@@ -1312,8 +1313,8 @@
       "dialect": "gtk",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "dd3fb6f2d1b6546151251db8d189eb346aae7c2b05d9b0ae404d5471fbcbc970",
-      "refreshed": false
+      "donor_sha256": "ddcda643b37d267ddbe7d39195c63692ef9690ac752dc096d0a93f6e3cee6b8d",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/scenariodialog.ui",
@@ -1322,8 +1323,8 @@
       "dialect": "gtk",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "895586dabaf01d06b1e419590148f4f3d039981703cf4ef3097ff02217f87b5a",
-      "refreshed": false
+      "donor_sha256": "1cb1e4dbd127b41a20e82a23585b1a174396ad795a764094fe8400b9b791b385",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/scenariomenu.ui",
@@ -1332,8 +1333,8 @@
       "dialect": "gtk",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "08a64d70b8807e083839ca692fa3bce9795f637cd80b015d602bb5c0c167eafa",
-      "refreshed": false
+      "donor_sha256": "66f69d1c2d8635061d6844172596bb346b6ee97df35a1621968f013cfe7328e7",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/scgeneralpage.ui",
@@ -1342,8 +1343,8 @@
       "dialect": "gtk",
       "nodes": 44,
       "actions": 0,
-      "donor_sha256": "04845510e76c386cc8e4e0b2dc95205c45a2c43893ae0c89e69773ea9e24fd51",
-      "refreshed": false
+      "donor_sha256": "d1b273cd3616a88a756b0234db87acc264e1e10e026547c518a5929b81630111",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/searchresults.ui",
@@ -1352,8 +1353,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "28aede780f10854fbe1e91a2776438ae25e2a1dd13b18e22e9b20622b86e3372",
-      "refreshed": false
+      "donor_sha256": "ce0de1562ccef9ddb7eb73bae9d80c1ee627e0250280dd0c717e4204cfb413b1",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/selectdatasource.ui",
@@ -1362,8 +1363,8 @@
       "dialect": "gtk",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "edc0a40e6a7fb42307931c9e07580301a5d2b20cdde8d8880592fabf75b8e4cd",
-      "refreshed": false
+      "donor_sha256": "45b1be8c23232be3e9db1cce46642229c9362ed79f4659a75c3d424f3e62d15f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/selectrange.ui",
@@ -1372,8 +1373,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "ba98ca85a6bed9b0179ef1aa8ed2e2bed51467a68a77499801aaf3326d5fe65a",
-      "refreshed": false
+      "donor_sha256": "0ce991b3ee07c9d54852250766f0a5a5a992184c752ea72cca5c5a9c471eaac8",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/selectsheetviewdialog.ui",
@@ -1382,8 +1383,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "d577ddd4789d07262f775fae2cf31363bdef86b230ec7092a67f8c2ff0965dc0",
-      "refreshed": false
+      "donor_sha256": "ba7517d90dd496edacd5861bd73af2722990bcaf23d170f4a1619f027a5761ba",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/selectsource.ui",
@@ -1392,8 +1393,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "dc95c9985fe3e971cadc71501c7f415bc4fcbc6f25edf1ade0232ca80d8b7c53",
-      "refreshed": false
+      "donor_sha256": "34d1057ccf581db8857a25dd9f12ffb202be95a32f69a25e9f382983f9dc19c3",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedfirstfooterdialog.ui",
@@ -1402,8 +1403,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "a1810e3f6346fb5ecc129a8d6bb771dad23e36071dafb3c9b032b600377d6261",
-      "refreshed": false
+      "donor_sha256": "f3a897c601972086d38de8f60ce998ef029d30d1c8de0b3fdbdbd8141e865bcd",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedfirstheaderdialog.ui",
@@ -1412,8 +1413,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "03f3eb661c3fdedc72b3283a4de86a50f488efd324c1c5c37d75e48160037aeb",
-      "refreshed": false
+      "donor_sha256": "783002ddc41a6de3430870981c9ed6363cfbb71f295a5b6f0c97242bc124fcce",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedfooterdialog.ui",
@@ -1422,8 +1423,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "e04198fbf2abfb6dceca5440a4079c1a96d7782d45a52f07651dbe659a0ea1d4",
-      "refreshed": false
+      "donor_sha256": "f252dd7b0c88f4b77c58dcc91492bc6ef51eab8a9ce8ee5f455310ae4793cb15",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedheaderdialog.ui",
@@ -1432,8 +1433,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "be569d53315c6733ffb179d3f49883bd4df9534c320e2f08041bb43506a52a97",
-      "refreshed": false
+      "donor_sha256": "6eff18d57d8b6e64d6d74ce5925e85b4ebd8cdc4fa6b46b6a66dff6699c77e73",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedleftfooterdialog.ui",
@@ -1442,8 +1443,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "cb0202bbfb9840a053a75cbe54169360d3a57fad26bd0255f136966f5c6c4710",
-      "refreshed": false
+      "donor_sha256": "cc44930f3c2e83065e9c13634b8d66c6f6c7a41654ad93cf7909c5f2cd6c883a",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedleftheaderdialog.ui",
@@ -1452,8 +1453,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "981962e5938783e692102763d85b1ee6bf482749c9d031069c3a2d996dbbc581",
-      "refreshed": false
+      "donor_sha256": "7fbb9784f438ef3827226d4c170a76bc0a02c154d870c9cee9fafedbff528c77",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedocumentdlg.ui",
@@ -1462,8 +1463,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "292de4bbe7e735d34fad7a143e0683903a4435fd04ce374df6223617064947f6",
-      "refreshed": false
+      "donor_sha256": "a874ec5957888f31964f0981d4768bb8de786cd254449a18e5a3e7ab056c7189",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sharedwarningdialog.ui",
@@ -1472,8 +1473,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "e1003ab34b9fea77e7ee188b21b098b3ce88b2ebd6cc6e8028af05b486380243",
-      "refreshed": false
+      "donor_sha256": "ef619548beec02eadc28cef0c1429c763d8f0a49783be409622553d93c6f6917",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sheetprintpage.ui",
@@ -1482,8 +1483,8 @@
       "dialect": "gtk",
       "nodes": 39,
       "actions": 0,
-      "donor_sha256": "da07c734c454062ab501548e7555421718968afc4608646f8ad3e02c5f0107ca",
-      "refreshed": false
+      "donor_sha256": "acbb5d63948d82655813f5d6416e9d1fa9e070f14ab35a62afcc98ecac5cd271",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sheetviewbox.ui",
@@ -1492,8 +1493,8 @@
       "dialect": "gtk",
       "nodes": 2,
       "actions": 0,
-      "donor_sha256": "5f7d2ca7df9866e4cb3c67945be032ebb40422fb4b3677a03b83eae3102a4583",
-      "refreshed": false
+      "donor_sha256": "bddfcadbe237cadcca5c139c7217ce59c2219e1df0d0eb80c4c203e6f8b4e765",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/showchangesdialog.ui",
@@ -1502,8 +1503,8 @@
       "dialect": "gtk",
       "nodes": 18,
       "actions": 0,
-      "donor_sha256": "081b73a71c76e0a23348179b026026eb3017bb2c25f8a57f891ec63277c5ae48",
-      "refreshed": false
+      "donor_sha256": "6facc08cfa8399cc799ee323ce7edac7df017fe6fe51d89db048dbeb749c4b0b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/showdetaildialog.ui",
@@ -1512,8 +1513,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "09ceb764c98dad60875006f1d4b3a6c60715761288893ea6096c49e691ba6d46",
-      "refreshed": false
+      "donor_sha256": "60288f1d9060e1e104d65d19d57d6ef88af36dd8c63edce5607ee9dc9724b738",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/showsheetdialog.ui",
@@ -1522,8 +1523,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "6eb7ebc1cb62a8bea9820f555dca83a82cfa4c1c9779413aeb1f802fd08e27e2",
-      "refreshed": false
+      "donor_sha256": "fde726b18583d63ad94144d26b54f5dcf482fc96586f2b18e4d85bd78f8d1ce0",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sidebaralignment.ui",
@@ -1532,8 +1533,8 @@
       "dialect": "gtk",
       "nodes": 32,
       "actions": 0,
-      "donor_sha256": "520f564ae1a4593cb25a2ca827299b564944fbcff5be6e184492c74c8f5566b6",
-      "refreshed": false
+      "donor_sha256": "48382cb9ae47c7766dca273497650b385c3e0c60466fb7fe78fafa48d0634784",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sidebarcellappearance.ui",
@@ -1542,8 +1543,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "4f6210b9588b95600aa770a128b364f75cd08ba52ae8f1ab6a7699513b499a1c",
-      "refreshed": false
+      "donor_sha256": "75465451cd93fd954702352788ec4b3ef8439a2f2d8a859f15bf09bde610fa6f",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sidebardatabase.ui",
@@ -1552,8 +1553,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "be67048e16ed8941de7814f2556030d18b3f263fe283d2808fc556723f3c3a8f",
-      "refreshed": false
+      "donor_sha256": "aabb87d1f71256447426cd5211bfa009a7aaf8c6e53395239a1329b6dcee68b0",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sidebarnumberformat.ui",
@@ -1562,8 +1563,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "1fccd01d6b58499765835de0720fd06b79a50d50c0bcb1f87501c74e1e531b76",
-      "refreshed": false
+      "donor_sha256": "e06c14cee1b343a6b7a71d9ce3a8b8f780696a2a8b9a603498aca9a16413eedd",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/simplerefdialog.ui",
@@ -1572,8 +1573,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "b94801c9680426d3390a5cc2ea1704ada6719d1a070adc7d1abbf7c3218143d9",
-      "refreshed": false
+      "donor_sha256": "9589194e424eca82aa533a166ee999a7609cdbd324d7627c911bb8c1812c5b95",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/solverdlg.ui",
@@ -1582,8 +1583,8 @@
       "dialect": "gtk",
       "nodes": 59,
       "actions": 0,
-      "donor_sha256": "5529050e89fc4c4f754c5eb0f72506ba2d343fe33f0b59ee84222308b536568a",
-      "refreshed": false
+      "donor_sha256": "e5aac67e453e07bb8bd313e9f57aed3426b2b0c9885884f4691746b00569b6ca",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/solveroptionsdialog.ui",
@@ -1592,8 +1593,8 @@
       "dialect": "gtk",
       "nodes": 15,
       "actions": 0,
-      "donor_sha256": "c72e6e4a959d449a33414bfb28461b8d5b845ad697eecb8dce7d8178a7d1e0b6",
-      "refreshed": false
+      "donor_sha256": "958edd284e09c825a6b52e41fdf5df3f48f408eb9a71fd4df86178c8b1fdd395",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/solverprogressdialog.ui",
@@ -1602,8 +1603,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "a0f8ad3933a901f7c232bbc564c8bc682bc11fd28123087b30b882284e8c334d",
-      "refreshed": false
+      "donor_sha256": "2994508c11f23d6bd12b0c97b611140dfc4a9617ba398b49256260c22b72e230",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/solversuccessdialog.ui",
@@ -1612,8 +1613,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "4a4c21d9130a0fadb2030399331085a15e0a163e1c46bfdc8f06ada476b2da39",
-      "refreshed": false
+      "donor_sha256": "9c09dcee51f279302c893ee1476a94ac3bfa30317fcf0d371ef466b0172a8e7c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sortcriteriapage.ui",
@@ -1622,8 +1623,8 @@
       "dialect": "gtk",
       "nodes": 13,
       "actions": 0,
-      "donor_sha256": "6d64ff23c7a8a002cfaff3ee5b9b3914ef101788fef191109b2eeb05c2efb033",
-      "refreshed": false
+      "donor_sha256": "88a4e8e5de09cf535dfcaf2273faa27ef074491090998c2fb5bef9ee79e5740e",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sortdialog.ui",
@@ -1632,8 +1633,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "b8fb0c87ad35777c85f3aea6ae7414eb630cbb70901bd931d115fddf00e85ea6",
-      "refreshed": false
+      "donor_sha256": "fd943d710a3d544234b04b2935b71b08a93acc9bced7c4ff1e08c53c206a0a05",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sortkey.ui",
@@ -1642,8 +1643,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "8a798527e1c051d45d07225f4d17b4ffa542925e15ee10efed8fe97d55b37500",
-      "refreshed": false
+      "donor_sha256": "363c674bbf522c8d00f9c4c24b94159e4fee6d16bb1b93deceb4420131f85dd2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sortoptionspage.ui",
@@ -1652,8 +1653,8 @@
       "dialect": "gtk",
       "nodes": 24,
       "actions": 0,
-      "donor_sha256": "c6cefa5fea486e6c9c7b83ab31b53ab6ac1325c273767a52266209621709f86a",
-      "refreshed": false
+      "donor_sha256": "b74ee2431cf31a2d96009b180a728866041fedb3e0a85c00b553977289397852",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sorttransformationentry.ui",
@@ -1662,8 +1663,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "cb77ba9724ff619975e75b38f37c4e130b2919b21c854f0cc1dbca0e90e66ea6",
-      "refreshed": false
+      "donor_sha256": "109063166c292a869c6196c78f880f846c0c73c57ed68d86ec9f2bb85f623079",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sortwarning.ui",
@@ -1672,8 +1673,8 @@
       "dialect": "gtk",
       "nodes": 8,
       "actions": 0,
-      "donor_sha256": "a5ecc25a3d32269a1d94ae1af1e265818f7ded178d33a5d69955203692d69f13",
-      "refreshed": false
+      "donor_sha256": "ba25623cf7a26920e50e51eff6dbdd121d68fddb84c06e0f097690b6fe40e903",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sparklinedatarangedialog.ui",
@@ -1682,8 +1683,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "caecdfca463ff37dfd4c86bef2b91c871bad79d0c15d99128f9256c89827e48f",
-      "refreshed": false
+      "donor_sha256": "7fa94473f872e3104cccae9f3a749bd150cd62aba6e34480f76feb733527a893",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/sparklinedialog.ui",
@@ -1692,8 +1693,8 @@
       "dialect": "gtk",
       "nodes": 54,
       "actions": 0,
-      "donor_sha256": "4a296a4ff2c7670b34f8277cbe1d2707e049de3c12c886681e770fb03e6aeab7",
-      "refreshed": false
+      "donor_sha256": "5b9da3c44411855a09aa4d49dbeaa97ebe757300b56e2eddaa012f1e50e76996",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/splitcolumnentry.ui",
@@ -1702,8 +1703,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "b68449e68b43d40a9e381c8dc6709af6af506f8f5f713bd1ac54e1a6d04b2231",
-      "refreshed": false
+      "donor_sha256": "5dc2018e2888cec3b2d81a4976bbf2eafb867745001d5125782b647c3d7ee6dc",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/standardfilterdialog.ui",
@@ -1712,8 +1713,8 @@
       "dialect": "gtk",
       "nodes": 70,
       "actions": 0,
-      "donor_sha256": "6910276b73bcf141907dc46bab0c5e3ab8f11e2b3acbe1fe8ce70045bd3c5970",
-      "refreshed": false
+      "donor_sha256": "51d92abb4e8fe7b81172f93522c422b3df39c1cfcfb6ff7935608b48d62e52a5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/statisticsinfopage.ui",
@@ -1722,8 +1723,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "22a57d8db630ac4dc98a3df2836c4ea2e5b6ab8a3ba9ec9540613345fbcf84f4",
-      "refreshed": false
+      "donor_sha256": "5f8e609ad1cc63fa4d08e4761db59ffef7cd9a349e7cabbf2407545cea79a667",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/subtotaldialog.ui",
@@ -1732,8 +1733,8 @@
       "dialect": "gtk",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "64a7366a050ec65ed2d4dfe54389215c17af1bc4a1d26282859e29b27bb386f0",
-      "refreshed": false
+      "donor_sha256": "61b8b0466b381a9ad21e94ce55b74e1ecead1ebcca41ca873f049b6ec81044da",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/subtotalgrppage.ui",
@@ -1742,8 +1743,8 @@
       "dialect": "gtk",
       "nodes": 12,
       "actions": 0,
-      "donor_sha256": "d264c334d564958c46515284ddb505ef56e94e040aec4eba7924f355e01fee60",
-      "refreshed": false
+      "donor_sha256": "4ab0463e06c79a9823064db0a224de1813fe72f11d50924b58199675ff807579",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/subtotaloptionspage.ui",
@@ -1752,8 +1753,8 @@
       "dialect": "gtk",
       "nodes": 16,
       "actions": 0,
-      "donor_sha256": "182d29af0f9bf2d5b64a8832372f757b7e2470c8ef7716f57986c057db05fbec",
-      "refreshed": false
+      "donor_sha256": "e1226bef44175b0b9eb88f2d1d1a60cb53945022e90a9ca1a9df426ddad75d6c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/swaprowsentry.ui",
@@ -1762,8 +1763,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "7ff5b3f0414d88c20017e14e69db584cf9827aae165107f1eee75e89b992e729",
-      "refreshed": false
+      "donor_sha256": "62aa40d1365309f4707d24a95c27c83bad481e80bc80679c9cb8adff66d951b2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/tabcolordialog.ui",
@@ -1772,8 +1773,8 @@
       "dialect": "gtk",
       "nodes": 7,
       "actions": 0,
-      "donor_sha256": "567d11456e60b49958b8bf33087b7029c07aaa58d345335c53dd911614ba5e93",
-      "refreshed": false
+      "donor_sha256": "8901f6792f4ba6efe5cfbc2836dbb41daae7146f12faf5bc490d04285f05df35",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/tablestylesbox.ui",
@@ -1782,8 +1783,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "6c7c0be13efc01ef96da9aed899c77249edd9b3e42453273b4d23a94f018f8b4",
-      "refreshed": false
+      "donor_sha256": "006ff4598d936a108e74e08a9815bd5509876483d5076d42a113d452c5ddb5b5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/textimportcsv.ui",
@@ -1792,8 +1793,8 @@
       "dialect": "gtk",
       "nodes": 61,
       "actions": 0,
-      "donor_sha256": "e8a893ea6e86a8122c6a3c3e8346c697581701161e1af05570040cc0a4aee5b8",
-      "refreshed": false
+      "donor_sha256": "6bc72be8751960607a135b4dc7f265d3f3276ce26082a1ba05cb98511aa482cb",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/textimportoptions.ui",
@@ -1802,8 +1803,8 @@
       "dialect": "gtk",
       "nodes": 17,
       "actions": 0,
-      "donor_sha256": "b470a01dfa4ad452cf61b8f6442b3e74da01f61af4388716c116fa23cb9a6b35",
-      "refreshed": false
+      "donor_sha256": "f7497d80b1e0b6be210d11a206801004c6fd740616daa715d3628a26a02a7017",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/texttransformationentry.ui",
@@ -1812,8 +1813,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "b4641c7c4c927295e39b6fd4bee8a03ab055ed7af31a688c6e72f4dc18a53220",
-      "refreshed": false
+      "donor_sha256": "86f1a7abcc6e83d9ef66bf835c896abd7a1b3864b7155b0a4ce12f64d5721a45",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/tpviewpage.ui",
@@ -1822,8 +1823,8 @@
       "dialect": "gtk",
       "nodes": 71,
       "actions": 0,
-      "donor_sha256": "21751129b5445e2dba53d0ee77e1e4055f340344fa15563543972676ffeea08d",
-      "refreshed": false
+      "donor_sha256": "e5c3f0679ff488bf8fce1f3aebbb6fd41b7849410c2fa09311c1d65d33422aa2",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/ttestdialog.ui",
@@ -1832,7 +1833,7 @@
       "dialect": "gtk",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "80b95830341c0dd7be1e998ab94d9c57a0d9b3e75779f973f961a0d998c20e7b",
+      "donor_sha256": "fdf7542e99548285482e52f14e836922d0dad38972de8ce41f38dc7cb5fb2196",
       "refreshed": true
     },
     {
@@ -1842,8 +1843,8 @@
       "dialect": "gtk",
       "nodes": 11,
       "actions": 0,
-      "donor_sha256": "3289440dad973c596c4f4131a6dde64fefb254046a908797dae3d0635a76df17",
-      "refreshed": false
+      "donor_sha256": "909df69c2d2da886280884f24587b9880b1fe2f17d3f29818579964fc4fe74a9",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/validationcriteriapage.ui",
@@ -1852,8 +1853,8 @@
       "dialect": "gtk",
       "nodes": 19,
       "actions": 0,
-      "donor_sha256": "e03e161cb0718909e9a2434d603f68b6fb5f6a01eca4395b7762b68ed27dd572",
-      "refreshed": false
+      "donor_sha256": "c428e918b36aaf89e61619a68f0ed619a37c835177e7a624a69731a7828736f5",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/validationdialog.ui",
@@ -1862,8 +1863,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "283784e48dd741ca7281c8a8cec9bab849b08cc6949818e8dd3f013a8b0e3b37",
-      "refreshed": false
+      "donor_sha256": "5b8b2dba0b64c6bce80cb9b04ec15be3193b1578647ab7f3faa382f83c824148",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/validationhelptabpage.ui",
@@ -1872,8 +1873,8 @@
       "dialect": "gtk",
       "nodes": 10,
       "actions": 0,
-      "donor_sha256": "edbccdbb0f68651e4630d16f2fef0feec6259b88152bd5343bab273c7f8621b1",
-      "refreshed": false
+      "donor_sha256": "df6e28ad55caa05a418f072b8b9a0eb02fd4ec668edeff57d926af189be19c1c",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/warnautocorrect.ui",
@@ -1882,8 +1883,8 @@
       "dialect": "gtk",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "300c639df896a75a9a134d4ab2604bf8dc7884aa3162a67e5730cef94ab65b39",
-      "refreshed": false
+      "donor_sha256": "f2f002423dfe9552804ff7f2ee8be4e3644c209a92b9fbbfdd05218a8c459b57",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/xmlsourcedialog.ui",
@@ -1892,8 +1893,8 @@
       "dialect": "gtk",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "ab70db57c361e549715da14b3f8d27d70ad607c86020a272db28506a2d2bcd9e",
-      "refreshed": false
+      "donor_sha256": "55267bce994bdf6fe638f47ae6ebbd7abe9f33acd703e15931ef043bc13a7b38",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/zoombox.ui",
@@ -1902,8 +1903,8 @@
       "dialect": "gtk",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "194e3f72616a43a416420bdaee32e7152c94f4af4ccbc6968c92e8e811332dbe",
-      "refreshed": false
+      "donor_sha256": "133d063ee0edd733887f26aa76256882735cf0557c4ee746bc183df791e8e12b",
+      "refreshed": true
     },
     {
       "donor_file": "uiconfig/scalc/ui/ztestdialog.ui",
@@ -1912,7 +1913,7 @@
       "dialect": "gtk",
       "nodes": 23,
       "actions": 0,
-      "donor_sha256": "badfbf342050e435cc5b7d64068d1a38e0f89d1420eb3a40c9a65c1483b6087a",
+      "donor_sha256": "09a80c624c0fd261dddc5e18f186996184b41ed7ec62b79f4dd5bf6753f0359a",
       "refreshed": true
     }
   ]

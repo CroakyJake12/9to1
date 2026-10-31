@@ -95,10 +95,10 @@
           </Container>
         </Container>
         <Container id="popupset" Type="Vertical Stack">
-          <Container id="menu_mac_dockmenu" Type="Menu">
-            <Button id="tasksWriteNewMessage" content="{Binding writeNewMessageDock.label}" action="write-new-message-dock" />
-            <Button id="tasksOpenAddressBook" content="{Binding openAddressBookDock.label}" action="open-address-book-dock" />
-            <Button id="tasksMenuDockOptions" content="{Binding dockOptions.label}" action="open-dock-options" />
+          <Container id="menu_mac_dockmenu" Type="Context Menu">
+            <Button id="tasksWriteNewMessage" Type="Menu Item" content="{Binding writeNewMessageDock.label}" action="write-new-message-dock" />
+            <Button id="tasksOpenAddressBook" Type="Menu Item" content="{Binding openAddressBookDock.label}" action="open-address-book-dock" />
+            <Button id="tasksMenuDockOptions" Type="Menu Item" content="{Binding dockOptions.label}" action="open-dock-options" />
           </Container>
         </Container>
         <Container id="navigation-toolbox" Type="Vertical Stack">

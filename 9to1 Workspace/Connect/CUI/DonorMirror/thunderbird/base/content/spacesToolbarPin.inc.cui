@@ -1,17 +1,17 @@
 <Cui id="content-spaces-toolbar-pin.inc" product="9-1" version="1">
   <Page id="content-spaces-toolbar-pin.inc-root">
     <Button id="spacesPinnedButton">
-      <Container id="spacesButtonMenuPopup" Type="Menu">
-        <Button id="spacesPopupButtonMail" />
-        <Button id="spacesPopupButtonAddressBook" />
-        <Button id="spacesPopupButtonCalendar" />
-        <Button id="spacesPopupButtonTasks" />
-        <Button id="spacesPopupButtonChat" />
+      <Container id="spacesButtonMenuPopup" Type="Context Menu">
+        <Button id="spacesPopupButtonMail" Type="Menu Item" />
+        <Button id="spacesPopupButtonAddressBook" Type="Menu Item" />
+        <Button id="spacesPopupButtonCalendar" Type="Menu Item" />
+        <Button id="spacesPopupButtonTasks" Type="Menu Item" />
+        <Button id="spacesPopupButtonChat" Type="Menu Item" />
         <Container id="spacesPopupSettingsSeparator" Type="Separator" />
-        <Button id="spacesPopupButtonSettings" />
+        <Button id="spacesPopupButtonSettings" Type="Menu Item" />
         <Container id="spacesPopupAddonsSeparator" Type="Separator" />
         <Container id="spacesPopupRevealSeparator" Type="Separator" />
-        <Button id="spacesPopupButtonReveal" />
+        <Button id="spacesPopupButtonReveal" Type="Menu Item" />
       </Container>
     </Button>
   </Page>

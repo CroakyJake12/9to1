@@ -57,9 +57,9 @@
         <Container id="key-6" Type="Vertical Stack" />
         <Container id="key-7" Type="Vertical Stack" />
       </Container>
-      <Container id="picontext" Type="Menu">
-        <Button id="menu_selectall" action="cmd-select-all" />
-        <Button id="menu_copy" action="cmd-copy" />
+      <Container id="picontext" Type="Context Menu">
+        <Button id="menu_selectall" Type="Menu Item" action="cmd-select-all" />
+        <Button id="menu_copy" Type="Menu Item" action="cmd-copy" />
       </Container>
       <Container id="topBar" Type="Vertical Stack">
         <Container id="viewGroup" Type="Vertical Stack">
