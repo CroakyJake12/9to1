@@ -245,6 +245,15 @@ public sealed partial class BoardsViewModel
     {
         if (_disposed || EditorLifetimeEnded) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
+        if (key == "TabViewEnabled" && value is bool tabView)
+        {
+            // Owner 31 October 2026: the tab strip is an option, default off; switching it only changes the
+            // presentation, so nothing is written to the board.
+            _tabViewEnabled = tabView;
+            Set("TabViewEnabled", _tabViewEnabled);
+            Set("ShowTabBar", _tabViewEnabled);
+            return true;
+        }
         if (key == "IsEditMode" && value is bool editMode)
         {
             SetEditMode(editMode);

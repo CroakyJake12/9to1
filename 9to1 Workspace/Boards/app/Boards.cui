@@ -41,6 +41,14 @@
               <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
               <Input ID="EditViewToggle" Type="Switch" Padding="0" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
             </Container>
+            <Container Type="Horizontal Stack" ID="TabViewToggleGroup" CellGap="6" VerticalAlignment="Center"
+                       Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10"
+                       AccessibleName="Tab view option">
+              <Text ID="TabViewModeLabel" Text="Tab view" FontSize="12" FontWeight="SemiBold"
+                    VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input ID="TabViewToggle" Type="Switch" Padding="0" Checked="{Binding TabViewEnabled, mode=TwoWay}"
+                     AccessibleName="Show or hide the page tab strip" />
+            </Container>
             <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10" AccessibleName="Page layout mode">
               <Text ID="LayoutModeLabel" Text="{Binding LayoutModeLabel}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
               <Input ID="LayoutModeToggle" Type="Switch" Padding="0" Checked="{Binding IsFreeLayout, mode=TwoWay}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="{Binding LayoutModeAccessibleName}" />
@@ -61,7 +69,7 @@
            board, so its title, save state and page list must not remain on screen (owner report
            28 October: the sidebar kept showing the last board's name and pages on the splash). -->
       <Container padding="8 8" Type="Overlay" ID="NavPane" Row="1" Column="0"
-                   Background="{Resource CuiPanelBrush}" BorderThickness="0 0 1 0" BorderBrush="{Resource CuiLineBrush}" Active="{Binding ShowEditor}">
+                   Background="{Resource CuiPanel2Brush}" BorderThickness="0 0 1 0" BorderBrush="{Resource CuiLineBrush}" Active="{Binding ShowEditor}">
         <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="6">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Current Board" />
@@ -90,7 +98,7 @@
             </Button>
             </Container>
           </Container>
-          <Input id="NavSearchBox" Row="1" Height="30" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" padding="14 11" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
+          <Input id="NavSearchBox" Row="1" Height="38" MinHeight="38" accessible-name="Search this Board" placeholdertext="Search this Board" margin="0 0 4 0" padding="12 9" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
           <Button ID="NavNewPageButton" Row="2" Content="+ New page" Action="AddPage" Height="30" Padding="6 0"
                   HorizontalAlignment="Stretch" AccessibleName="New page" ToolTip="Add a page to the current section"
                   IsEnabled="{Binding CanEdit}" />
@@ -111,22 +119,28 @@
         </Container>
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
-        <Container Type="Grid" ID="EditorHost" Row="1" Column="1" RowSizes="40 Auto Auto 1fr" Active="{Binding ShowEditor}">
+        <Container Type="Grid" ID="EditorHost" Row="1" Column="1" RowSizes="Auto Auto Auto 1fr" Active="{Binding ShowEditor}">
         <!-- Donor: the content pane's tab row (home_sizes.dart tabBarHeight 40, tabBarWidth 200;
              tab_bar_item.dart = icon + title + close). Rendered from state that exists here - the board title and
              the open page title - because 9to1 Boards has no open-pages tab stack in the host yet, so nothing
              unwired is drawn. The "+" calls the surface's existing AddPage handler. Next host wiring item: a real
              multi-tab stack with switch and close. -->
-        <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" CellGap="6" Row="0" Height="40" ID="BoardsTabBar" Background="{Resource CuiPanelBrush}">
+        <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" CellGap="6" Row="0" Height="40" ID="BoardsTabBar"
+                     Active="{Binding ShowTabBar}" Background="{Resource CuiPanelBrush}">
           <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="6" Width="200" Height="40" Padding="10 0"
-                     Column="0" ID="BoardNameTab" VerticalAlignment="Center">
+                     Column="0" ID="BoardNameTab" VerticalAlignment="Center" Background="{Resource CuiPanelBrush}"
+                     CornerRadius="6" BorderThickness="1" BorderBrush="{Resource CuiLineBrush}">
             <Image Column="0" Source="ownerbrand:boards" Width="16" Height="16" VerticalAlignment="Center"
                    AccessibleName="Board" />
             <Text Column="1" Text="{Binding BoardTitle, fallback=Board}" FontSize="13" VerticalAlignment="Center"
                   TextTrimming="CharacterEllipsis" AccessibleName="Board name" />
           </Container>
+          <!-- Selected state comes from real state, not decoration: IsPageTabSelected is the view model's own
+               current-page identity, so the highlighted tab is the page that is actually open. -->
           <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="6" Width="200" Height="40" Padding="10 0"
-                     Column="1" ID="CurrentPageTab" VerticalAlignment="Center">
+                     Column="1" ID="CurrentPageTab" VerticalAlignment="Center"
+                     Background="{Resource CuiPanel2Brush}"
+                     BorderThickness="1" BorderBrush="{Resource CuiLineBrush}" CornerRadius="6">
             <Text Column="0" Text="{Binding PageTypeLabel, fallback=Page}" FontSize="11" VerticalAlignment="Center"
                   AccessibleName="Page type" />
             <Text Column="1" Text="{Binding PageTitle, fallback=Page}" FontSize="13" VerticalAlignment="Center"

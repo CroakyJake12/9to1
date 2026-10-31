@@ -51,6 +51,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private long _tableSelectionEpoch;
     private bool _syncing;
     private bool _isEditMode = true;
+    // Owner correction 31 October 2026: "Tab view should be an option and disabled by default for abstraction."
+    // The AppFlowy-style content tab strip is therefore OFF unless the user turns it on from the top bar. It is a
+    // presentation option only: toggling it changes no data. Persisting it across launches is a follow-up (the other
+    // top-bar switches are per-session too), recorded rather than quietly skipped.
+    private bool _tabViewEnabled;
     private Control? _attachedRoot;
     private readonly Dictionary<TextBox, Action> _textRangeBindings = [];
     private readonly Dictionary<TextBox, (string Page, string Block)> _formattedTextBindings = [];
@@ -101,6 +106,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("ShowEditor", true);
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
+        Set("TabViewEnabled", _tabViewEnabled);
+        Set("ShowTabBar", _tabViewEnabled);
         Set("CanToggleEditMode", CanToggleEditMode);
         Set("CanChangeLayoutMode", CanChangeLayoutMode);
         Set("LayoutModeLabel", LayoutModeLabel);
@@ -339,6 +346,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public string InkColor { get; set; } = "#FF111111";
     public bool IsDrawMode { get; private set; }
     public bool IsEditMode => _isEditMode;
+    public bool TabViewEnabled => _tabViewEnabled;
+    public bool ShowTabBar => _tabViewEnabled;
     public bool CanEdit => !_disposed && !EditorLifetimeEnded &&
         (_paneOwner is null || _paneOwner.IsEditMode && _paneOwner.SelectedPageId == _paneIdentity!.ParentPageId && PaneIsSelected) &&
         _session is not IBoardSessionCapabilities { CanEdit: false };
