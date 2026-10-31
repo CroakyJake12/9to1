@@ -203,7 +203,12 @@ GAP_CONSTRUCT.update({
     "sfxlo-ContextVBox": "context toolbar", "sfxlo-NotebookbarTabControl": "notebook bar (ribbon) tab",
     "sfxlo-NotebookbarToolPanel": "notebook bar (ribbon) group", "sfxlo-Notebookbox": "notebook bar (ribbon) tab",
     "sfxlo-NotebookbarListBox": "item collection (list/tree/table)",
-    "VclOptionalBox": "optional section", "VclFrame": "framed section", "VclScrolledWindow": "scroller with explicit bars",
+    # VclOptionalBox is a box the office shows or hides by model state. CUI has the layout already
+    # (IsVisible with a binding is exercised by 13 runtime tests and used by the authored
+    # SpacesHome/MailWorkspace surfaces), so what is missing is the donor's condition SOURCE, not a region
+    # construct - recorded under the live-variable family so the queue does not send someone to build a
+    # container that exists.
+    "VclOptionalBox": "conditional visibility binding (live variable)", "VclFrame": "framed section", "VclScrolledWindow": "scroller with explicit bars",
     "VclTreeView": "item collection (list/tree/table)", "VclButtonBox": "button row",
     "VclExpander": "expander section", "VclNotebook": "tab strip", "VclMenuBar": "menu bar",
     "VclToggleButton": "toggle button", "VclPushButton": "button",

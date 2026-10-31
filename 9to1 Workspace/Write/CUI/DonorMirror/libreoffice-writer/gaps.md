@@ -16,7 +16,7 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `optional section` | 598 | VclOptionalBox |
+| `conditional visibility binding (live variable)` | 598 | VclOptionalBox |
 | `menu button` | 387 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, svtlo-ManagedMenuButton |
 | `button row` | 133 | GtkButtonBox |
 | `scroller with explicit bars` | 103 | GtkScrolledWindow |

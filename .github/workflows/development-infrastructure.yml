@@ -97,7 +97,7 @@ jobs:
               ('donor-pin-resolution', 25, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_check_donor_sources.py', '-v']),
               ('donor-fork-equivalence', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_donor_fork_equivalence.py', '-v']),
               ('donor-audit-ratchet', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_record_donor_audit_baselines.py', '-v']),
-              ('cui-donor-mirror', 60, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/cui-mirror', '-p', 'test_*.py', '-v']),
+              ('cui-donor-mirror', 61, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/cui-mirror', '-p', 'test_*.py', '-v']),
               ('cui-framework-test-ratchet', 8, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_cui_test_ratchet.py', '-v']),
           ]
           failed = False

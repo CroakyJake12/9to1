@@ -628,3 +628,21 @@ class MenuButtonEmissionTests(unittest.TestCase):
         text = cui_mirror.emit(result)
         self.assertIn('<Container id="pop" Type="Context Menu">', text)
         self.assertNotIn("menu button", [g["construct"] for g in result.gaps])
+
+
+class GapLabelAccuracyTests(unittest.TestCase):
+    """A gap name must point at the framework need that is actually missing, not at a construct CUI has."""
+
+    def test_vcl_optional_box_is_recorded_as_a_binding_need_not_a_missing_layout_region(self):
+        import tempfile
+        src = ('<interface><object class="VclOptionalBox" id="optional1">'
+               '<child><object class="GtkButton" id="b"><property name="label">x</property></object></child>'
+               '</object></interface>')
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            path = Path(tmp) / "w.ui"; path.write_text(src)
+            result = dialect_gtk.translate(path, src)
+        constructs = [g["construct"] for g in result.gaps]
+        self.assertIn("conditional visibility binding (live variable)", constructs)
+        self.assertNotIn("optional section", constructs)
+        # the record is preserved, never dropped: relabelling must not reduce evidence
+        self.assertEqual(len([c for c in constructs if "conditional visibility" in c]), 1)

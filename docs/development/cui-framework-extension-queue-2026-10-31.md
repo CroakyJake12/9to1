@@ -36,6 +36,35 @@ Nothing in this document is accepted, rendered or run. It is a queue with eviden
 | 29 | `window and dialog chrome` | 240 | Data/DonorMirror (114), Write/DonorMirror (99), Present/DonorMirror (27) |  |  |
 | 30 | `scroller with explicit bars` | 212 | Write/DonorMirror (102), Data/DonorMirror (70), Present/DonorMirror (27) |  |  |
 
+## Measured tally, refreshed
+
+Total records **25,376** across the corpora; CUI framework gaps **20,767**, donor plumbing **4,609**.
+
+| CUI construct needed | Occurrences |
+|---|---:|
+| `conditional visibility binding (live variable)` | 2,263 |
+| `property not modelled` | 1,616 |
+| `custom donor widget` | 1,479 |
+| `menu button` | 1,312 |
+| `unknown donor construct` | 1,070 |
+| `link action` | 858 |
+| `n/a` | 825 |
+| `donor icon asset (FlowySvg)` | 758 |
+| `live variable / binding expression` | 667 |
+| `theme colour token` | 596 |
+| `fixed vertical spacer` | 581 |
+| `fixed horizontal spacer` | 517 |
+| `inline text run` | 509 |
+| `computed size` | 437 |
+| `flex share sizing` | 433 |
+| `donor text wrapper (FlowyText)` | 428 |
+| `distributor alignment` | 399 |
+| `localisation key binding` | 382 |
+| `fixed zero-size spacer` | 366 |
+| `conditional rebuild on state` | 332 |
+
+_Regenerated from the committed gaps.json files; the per-corpus plumbing lists live in each corpus's own gaps.md._
+
 ## Grouped picture
 
 - **Command surfaces dominate**: toolbar-with-overflow 7,401 combined, ribbon/notebook group 4,046, menu button 459, tab strip ~50, toggle button — this is the office-suite command bar family and it is one design problem, not five.

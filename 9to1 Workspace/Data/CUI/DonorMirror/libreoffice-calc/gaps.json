@@ -7,7 +7,7 @@
     "cui-construct": 1230
   },
   "gap_constructs": {
-    "optional section": 352,
+    "conditional visibility binding (live variable)": 352,
     "menu button": 306,
     "button row": 134,
     "window and dialog chrome": 117,
@@ -2472,7 +2472,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2486,14 +2486,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2507,14 +2507,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2528,63 +2528,63 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2619,7 +2619,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2633,49 +2633,49 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2689,7 +2689,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2710,49 +2710,49 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2766,7 +2766,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2780,35 +2780,35 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2822,21 +2822,21 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2871,77 +2871,77 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -2955,42 +2955,42 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3025,70 +3025,70 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3102,14 +3102,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3144,112 +3144,112 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3291,217 +3291,98 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu items built by donor script",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3536,224 +3417,91 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3788,21 +3536,21 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3816,28 +3564,28 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3851,77 +3599,77 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3935,56 +3683,56 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3997,22 +3745,15 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4047,21 +3788,21 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4075,28 +3816,28 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4110,77 +3851,77 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4194,14 +3935,84 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4236,21 +4047,21 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4264,28 +4075,28 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4299,42 +4110,98 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4369,119 +4236,21 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-DropdownBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityHBox",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu items built by donor script",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4495,21 +4264,28 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4523,126 +4299,350 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-DropdownBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityHBox",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4705,119 +4705,119 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5048,7 +5048,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5069,7 +5069,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5104,7 +5104,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5118,21 +5118,21 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5153,7 +5153,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5167,7 +5167,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5181,7 +5181,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5195,7 +5195,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5209,7 +5209,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5223,7 +5223,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5244,7 +5244,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5265,7 +5265,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5300,7 +5300,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5314,14 +5314,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5342,7 +5342,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5356,14 +5356,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5377,14 +5377,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5398,14 +5398,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5419,14 +5419,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5440,7 +5440,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5475,7 +5475,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5489,7 +5489,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5503,7 +5503,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5524,7 +5524,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5538,14 +5538,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5559,14 +5559,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5580,14 +5580,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5601,7 +5601,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5622,7 +5622,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5643,7 +5643,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5664,7 +5664,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5678,14 +5678,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5699,14 +5699,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5720,77 +5720,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu items built by donor script",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5811,7 +5748,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5825,14 +5762,77 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5846,14 +5846,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5867,14 +5867,14 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5888,42 +5888,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu items built by donor script",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5944,7 +5909,42 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5958,42 +5958,42 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6259,7 +6259,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6280,7 +6280,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6322,7 +6322,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6343,7 +6343,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6357,7 +6357,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6371,7 +6371,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6385,7 +6385,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6399,7 +6399,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6413,7 +6413,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6434,7 +6434,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6448,35 +6448,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6496,6 +6468,34 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
       "donor": "GtkMenuToolButton",
       "construct": "menu button",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
@@ -6518,7 +6518,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6539,7 +6539,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6553,7 +6553,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6567,7 +6567,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6581,7 +6581,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6595,140 +6595,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "sfxlo-PriorityMergedHBox",
-      "construct": "menu items built by donor script",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "svtlo-ManagedMenuButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VclOptionalBox",
-      "construct": "optional section",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkMenuToolButton",
-      "construct": "menu button",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6749,7 +6616,140 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkMenuToolButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "svtlo-ManagedMenuButton",
+      "construct": "menu button",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "sfxlo-PriorityMergedHBox",
+      "construct": "menu items built by donor script",
+      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VclOptionalBox",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6784,7 +6784,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6840,7 +6840,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6868,7 +6868,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6903,7 +6903,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6924,7 +6924,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6938,7 +6938,7 @@
     },
     {
       "donor": "VclOptionalBox",
-      "construct": "optional section",
+      "construct": "conditional visibility binding (live variable)",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"

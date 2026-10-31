@@ -16,7 +16,7 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `optional section` | 352 | VclOptionalBox |
+| `conditional visibility binding (live variable)` | 352 | VclOptionalBox |
 | `menu button` | 306 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, svtlo-ManagedMenuButton |
 | `button row` | 134 | GtkButtonBox |
 | `window and dialog chrome` | 117 | GtkDialog |
