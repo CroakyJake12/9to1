@@ -279,3 +279,83 @@ class DeferredDonorClassificationTests(unittest.TestCase):
             if str(row.get("status", "")).startswith("out-of-scope"):
                 record = self.registry["upstreams"][row["donor"]]
                 self.assertRegex(record.get("commit", ""), r"^[0-9a-f]{40}$")
+
+
+class SourceLockEngineTests(unittest.TestCase):
+    """A maintained engine fork vendored under a source lock is checked harder, not waived."""
+
+    ENGINE = "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata"
+
+    def setUp(self):
+        self.registry = json.loads((Path(gate.ROOT) / "eng" / "donor-sources.json").read_text())
+        self.record = self.registry["upstreams"]["strata"]
+        self.entry = next(b for b in self.registry["bindings"] if b.get("donor") == "strata")
+
+    def _copy_engine(self, tmp, mutate=None):
+        import shutil
+        tree = Path(tmp) / "engine"
+        shutil.copytree(Path(gate.ROOT) / self.ENGINE, tree)
+        lock = tree / "strata-source-lock.json"
+        data = json.loads(lock.read_text())
+        if mutate:
+            mutate(data)
+        lock.write_text(json.dumps(data))
+        doc = tree / "MAINTAINED-FORK.md"
+        return tree, doc, lock
+
+    def test_the_real_engine_passes_every_source_lock_check(self):
+        problems = gate.vendored_source_lock_problems(self.entry, self.record, self.ENGINE,
+                                                      Path(gate.ROOT) / self.ENGINE)
+        self.assertEqual(problems, [])
+
+    def test_a_lock_that_disagrees_with_the_registry_pin_is_a_failure(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            tree, _doc, _lock = self._copy_engine(tmp, lambda d: d.update(commit="f" * 40))
+            record = dict(self.record)
+            problems = gate.vendored_source_lock_problems({"path": str(tree)}, record, str(tree), tree)
+        self.assertTrue(any("source lock commit" in x for x in problems), problems)
+
+    def test_a_manifest_whose_rows_do_not_match_its_own_counts_is_a_failure(self):
+        import tempfile
+        def break_counts(d):
+            d["blobCount"] = d["blobCount"] + 5
+            d["sourceBytes"] = d["sourceBytes"] + 1
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            tree, _doc, _lock = self._copy_engine(tmp, break_counts)
+            problems = gate.vendored_source_lock_problems({}, self.record, str(tree), tree)
+        self.assertTrue(any("declares" in x and "rows" in x for x in problems), problems)
+        self.assertTrue(any("byte total" in x for x in problems), problems)
+
+    def test_a_row_without_a_digest_is_a_failure(self):
+        import tempfile
+        def strip(d):
+            d["rows"][0]["sha256"] = "not-a-digest"
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            tree, _doc, _lock = self._copy_engine(tmp, strip)
+            problems = gate.vendored_source_lock_problems({}, self.record, str(tree), tree)
+        self.assertTrue(any("lack a sha256" in x for x in problems), problems)
+
+    def test_a_missing_licence_notice_in_the_engine_tree_is_a_failure(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            tree, _doc, _lock = self._copy_engine(tmp)
+            (tree / "LICENSE.strata").unlink()
+            problems = gate.vendored_source_lock_problems({}, self.record, str(tree), tree)
+        self.assertTrue(any("licence notice absent" in x for x in problems), problems)
+
+    def test_an_engine_vendored_outside_the_model_tree_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            tree, _doc, _lock = self._copy_engine(tmp)
+            problems = gate.vendored_source_lock_problems({}, self.record, "9to1 Workspace/Boards/Source/Strata",
+                                                          tree)
+        self.assertTrue(any("must sit in the model/engine tree" in x for x in problems), problems)
+
+    def test_the_lock_binds_upstream_blobs_without_claiming_they_are_all_vendored_here(self):
+        # The registry says plainly which half was verified; a claim of a complete upstream checkout would
+        # be false, because this repository carries the fork's bridge files, not all 303 upstream blobs.
+        evidence = self.record["provenanceEvidence"]
+        self.assertGreater(evidence["sourceLockBlobs"], 0)
+        vendored = [x for x in (Path(gate.ROOT) / self.ENGINE).rglob("*") if x.is_file()]
+        self.assertLess(len(vendored), evidence["sourceLockBlobs"])

@@ -329,7 +329,7 @@
     {
       "id": "OPEN-2026-10-31-BOARDS-UI-DONOR",
       "at": "2026-10-31T10:20:00Z",
-      "status": "answered by owner 31 October 2026 (AppFlowy is Boards' UI donor); one sub-question still open",
+      "status": "ANSWERED by owner 31 October 2026 - engine yes, pen toolbar/UI no; the action already taken matches that answer and is confirmed rather than reversed",
       "title": "Boards UI mirror was built from Rnote's application UI instead of AppFlowy's UI",
       "verbatim_owner_request": "Owner, 31 October 2026: 'wait rnote ui for boards? should be appflowy ui, unless you were just referring to the drawing tools within boards. anyway resume and sort that if that's a mistake'",
       "measured_facts": [
@@ -338,7 +338,9 @@
         "AppFlowy has no markup UI at all: 1,524 Dart files under frontend/appflowy_flutter/lib, 824 of which contain widget trees. There was no mirror pass for Dart, so Boards effectively had no UI mirror of its own donor."
       ],
       "action_taken": "Retired the duplicate rnote UI mirror with a recorded reason, corpus digest (c2892b9c4b401d5a) and recovery path (git checkout 04a19137 -- <path>): '9to1 Workspace/Boards/CUI/DonorMirror/rnote-retired-2026-10-31.md'. Kept the Boards->rnote binding as the shared drawing/ink ENGINE the specification requires (lines 1400, 9120, 9459, 10107). Wrote eng/cui-mirror/dialect_dart.py, which mirrors Flutter widget constructor calls into CUI: 824 documents from AppFlowy's lib plus 55 from its design-system packages, all compiling clean (corpus now 1,758 documents, 0 errors).",
-      "still_open": "If your 'unless you were just referring to the drawing tools' clause means something specific: should the shared ink tool SURFACE (rnote's toolbar/sidebar presentation) inform Boards' drawing toolbar in Stage B, or should Boards' drawing toolbar come only from AppFlowy plus the 9to1 spec presentation? Today the engine is shared and the surface is not decided."
+      "still_open": "If your 'unless you were just referring to the drawing tools' clause means something specific: should the shared ink tool SURFACE (rnote's toolbar/sidebar presentation) inform Boards' drawing toolbar in Stage B, or should Boards' drawing toolbar come only from AppFlowy plus the 9to1 spec presentation? Today the engine is shared and the surface is not decided.",
+      "verbatim_owner_answer": "Owner, 31 October 2026, on 'rnote ink presentation': 'not sure what you mean by rnote ink presentation. if you mean like the actual drawing engine, yes. if you mean the pen toolbar/ui, no.' My question was badly framed; the answer is unambiguous once separated: Boards consumes the shared Rnote-derived drawing ENGINE, and its pen toolbar and command UI come from AppFlowy plus the specification presentation, never from rnote's UI.",
+      "confirmed_consequence": "The retired rnote UI mirror stays retired. The still-open engineering item is the SHARED ENGINE itself: Boards does not consume the Rnote-derived ink engine at any revision yet, which is what specification lines 1400/9120/9459/10107 require. That is the real gap, not a UI gap."
     },
     {
       "id": "OPEN-2026-10-31-SHIPMAS-SCOPE-CUTS",
@@ -382,7 +384,7 @@
     {
       "id": "OPEN-2026-10-31-STRATA-IDENTITY-AND-LLAMA-CPP-PIN",
       "at": "2026-10-31T10:20:00Z",
-      "status": "policy answered, identity still unknown; llama.cpp inconsistency found and corrected in the record",
+      "status": "partly self-corrected 31 October 2026: Strata's fork IS pinned in-repo (origin ro99/strata, commit 015b075079c5, tree 491a4a74e538, 303-blob source lock). The two genuinely open items are the original Marlin/vLLM commit inside Strata, and verifying that the resident host binary matches this pin (NOT RUN). llama.cpp consumed-vs-declared correction stands as recorded.",
       "title": "Strata upstream identity is still unresolved, and the llama.cpp registry pin did not match what the build consumes",
       "owner_intent": "Owner, 31 October 2026: 'always the latest for llama.cpp and strata unless there's a significant known regression'; 'I think we fork both'; engine auto-selected with a manual override; Rust donor backends are acceptable 'for the sake of speed'.",
       "measured_facts": [
@@ -427,6 +429,16 @@
         "No PLE-GGUF support in that component, so it does not serve the Dulche/Thunder packing path."
       ],
       "still_open": "Recommendation is to take the idea (a hub layout and job queue) rather than the code, and to keep llama.cpp/Strata as the training and serving path. Needs your yes/no before Spaces' model-management surface is designed."
+    },
+    {
+      "id": "OPEN-2026-10-31-PER-APP-MEASURED-PERCENTAGES",
+      "at": "2026-10-31T12:45:00Z",
+      "status": "owner requested - instrument being built; no percentage is quoted until it is measured",
+      "title": "Per-app implementation and accepted percentages must be MEASURED, not estimated",
+      "verbatim_owner_request": "Owner, 31 October 2026: 'yes for per app measured percentages'.",
+      "requirement": "Replace the rough ranges currently in the progress report with measured per-app numbers. A measured number needs three things, and they must not be conflated: (1) an exact per-app denominator of normative MUST requirements, parsed from the canonical specification with the section each sits in; (2) an explicit state per MUST with an evidence pointer (implemented / partial / not implemented / not assessed); (3) a separate acceptance state, which stays almost entirely NOT RUN because independent acceptance is paused.",
+      "measured_position": "Denominators are computable exactly from the specification text and are being instrumented now. Implementation STATE per requirement cannot be inferred from file counts or test counts; any percentage produced before the state pass is labelled an estimate, and I have been quoting those as ranges until today.",
+      "what_would_make_it_false": "A MUST counted against the wrong app because section headings are ambiguous; a requirement counted twice under two headings; counting illustrative or propositional text as MUST; or treating a compiled mirror as implementation evidence. All four are checked explicitly by the instrument's tests."
     }
   ]
 }

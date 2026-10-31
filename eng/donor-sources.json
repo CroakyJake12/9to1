@@ -428,16 +428,35 @@
       "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x713b47907510> with the GitHub API: the exact pinned object 86898fed4da61aa8b935a87a849b8052ebb9c98e is reachable in https://github.com/CroakyJake12/thunderbird-9to1. This is object reachability in the controlled fork, not a claim that the fork's default branch or a submodule gitlink sits on it - that conversion is still outstanding."
     },
     "strata": {
-      "repository": "UNRESOLVED",
-      "canonicalRepository": "UNRESOLVED",
+      "repository": "https://github.com/ro99/strata",
+      "canonicalRepository": "https://github.com/ro99/strata",
       "fork": "https://github.com/CroakyJake12/strata",
-      "license": "UNRESOLVED - no upstream identity established; a same-named MIT project exists on GitHub and must not be assumed to be the same product",
-      "licenseFiles": [],
+      "license": "Apache-2.0 (upstream LICENSE.strata; additive bridge also Apache-2.0)",
+      "licenseFiles": [
+        "LICENSE.strata",
+        "MARLIN-UPSTREAM-README.md"
+      ],
       "status": "designated-by-specification, no pinned revision yet",
       "designationLine": 4515,
       "designationReason": "The specification requires Dulche to carry a maintained Strata fork rather than depend on a separately installed Strata application. This PC currently runs a Strata build as the resident model host, which must not be stopped, replaced or commandeered while this gap is investigated. Establishing which upstream and revision that host came from is the first step.",
       "upstreamSizeMb": null,
-      "pinNote": "No commit is recorded because no source has been vendored or consumed yet; the absence is deliberate so that 'declared' can never be mistaken for 'integrated'."
+      "pinNote": "No commit is recorded because no source has been vendored or consumed yet; the absence is deliberate so that 'declared' can never be mistaken for 'integrated'.",
+      "commit": "015b075079c51a7aec670ee24924f920f5e7bb2b",
+      "commitTree": "491a4a74e538bd469f83811c8a907cc7d6118db9",
+      "provenanceEvidence": {
+        "document": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/MAINTAINED-FORK.md",
+        "documentSha256": "8555428187a9d1b59be2a6d20fe16ced51751267121733eb3e7bc1d857bc283e",
+        "archiveSha256": "5b89b7b61a21cb6bee50f3a15b0f904a3c9324fdacc05f105128db69ebb3a62e",
+        "sourceLock": "strata-source-lock.json",
+        "sourceLockBlobs": 303,
+        "sourceLockBytes": 7805688,
+        "bridgeFiles": "additive native bridge only (dulche_strata.{cpp,h}, workers, CMakeLists); 'There are no upstream body edits'"
+      },
+      "provenanceLimitsStated": "Recorded honestly in the same document: the vendored Marlin CUDA subset comes from vLLM 2.3.8 and its ORIGINAL IST-DASLab/Marlin commit was NOT recorded, and whether ro99/strata is itself an origin or a further fork of another Strata project is not established. No stronger provenance is claimed. The remote archive's checksum roundtrip was not verified; only the local SHA is.",
+      "correction": "On 31 October 2026 an open-decisions record and a progress report stated that Strata's 'upstream identity/revision is unknown'. That was wrong: the fork pins origin, commit, commit tree, archive digest and a 303-blob source lock in-repo. The genuinely open questions are only (a) the original Marlin/vLLM commit inside Strata, and (b) whether the resident inference host on this PC runs THIS pinned source - a runtime identity question that cannot be answered by restarting the host, because the host is this session.",
+      "forkCommit": "015b075079c51a7aec670ee24924f920f5e7bb2b",
+      "forkCommitEvidence": "Measured <built-in method isoformat of datetime.date object at 0x7f73220236f0>: the pinned object 015b075079c51a7aec670ee24924f920f5e7bb2b is reachable in https://github.com/CroakyJake12/strata (GitHub API). Upstream ro99/strata default branch 'main', last pushed 2026-09-08, SPDX Apache-2.0, also measured. Reachability is object custody in the controlled fork, not a submodule gitlink and not a claim that the fork is patched.",
+      "originQuestionStillOpen": "Whether ro99/strata is the origin project or a further fork of another Strata is still not established from the record; the pin is exact either way."
     },
     "gnome-system-monitor": {
       "repository": "https://gitlab.gnome.org/GNOME/gnome-system-monitor",
@@ -480,8 +499,10 @@
       "owner": "9to1 Workspace/Boards",
       "donor": "rnote",
       "path": "9to1 Workspace/Boards/Source/Rnote",
-      "consumer": "Freeform reference; no latest-engine adapter proven",
-      "runtimeRequirement": null
+      "consumer": "shared productivity engine (still NOT consumed by Boards at any revision - the owed work is the engine integration, not a UI mirror)",
+      "runtimeRequirement": null,
+      "role": "shared Rnote-derived drawing/ink ENGINE only, per the owner's decision of 31 October 2026: 'if you mean like the actual drawing engine, yes. if you mean the pen toolbar/ui, no.' Specification lines 1400 / 9120 / 9459 / 10107 require the engine to be exposed as a reusable shared object/layer.",
+      "uiDonorExplicitlyExcluded": "Rnote's UI is NOT Boards' UI presentation and must not be mirrored for Boards. Boards' pen toolbar and command surface come from AppFlowy plus the canonical specification presentation. The duplicate rnote UI mirror was retired on 2026-10-31 for this reason (9to1 Workspace/Boards/CUI/DonorMirror/rnote-retired-2026-10-31.md)."
     },
     {
       "app": "Canvas",
@@ -966,15 +987,17 @@
     {
       "app": "Dulche",
       "donor": "strata",
-      "owner": "9to1 Workspace/Home",
-      "path": "9to1 Workspace/Home/Source/Strata",
-      "status": "aspirational-designated-not-yet-vendored",
+      "owner": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata",
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata",
+      "status": null,
       "plannedVerdict": "UNRESOLVED",
       "reason": "The specification requires Dulche to carry a maintained Strata fork rather than depend on a separately installed Strata application. This PC currently runs a Strata build as the resident model host, which must not be stopped, replaced or commandeered while this gap is investigated. Establishing which upstream and revision that host came from is the first step.",
       "specLine": 4515,
-      "role": "designated donor recorded for traceability; nothing consumes it in this repository today",
-      "consumer": "none yet",
-      "runtimeRequirement": "not applicable until the donor is vendored/pinned and an app consumes it"
+      "role": "Dulche's maintained Strata fork: the embedded inference engine (Thunder) behind the Dulche runtime contract, specification line 4515",
+      "consumer": "Dulche native host (NativeStrata); the resident host process on this PC is a build of an inference host whose exact source identity is NOT yet verified against this pin",
+      "runtimeRequirement": "the loaded native host binary MUST be shown to match this pinned source and source lock before any Strata behaviour claim is made; that check has NOT RUN",
+      "scope": "vendored-source-locked",
+      "verification": "source-lock-pinned-vendored-source"
     },
     {
       "app": "9to1 OS",

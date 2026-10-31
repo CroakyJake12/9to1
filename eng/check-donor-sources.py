@@ -240,6 +240,71 @@ def snapshot_gitlink_problems(stage_line, recorded_commit):
     return []
 
 
+def vendored_source_lock_problems(entry, record, path, source):
+    """Checks a donor engine vendored as a pinned SOURCE LOCK rather than an app-local checkout.
+
+    Strata is the real case: the maintained fork lives with the model/engine it drives, and its upstream
+    identity is bound by a manifest (origin, commit, commit tree, archive digest, and one row per upstream
+    blob with its sha256). That is a stronger claim than a loose tree, so it gets checked as such: the pin
+    must agree everywhere, the manifest must be internally consistent, and the licence must be present.
+
+    It does NOT claim that every upstream blob is vendored in this repository. The lock binds them; the
+    repository carries the fork's own bridge files. The gate says which of the two it verified.
+    """
+    problems = []
+    if not path.startswith("9to1 Models/"):
+        problems.append("a source-lock engine must sit in the model/engine tree it drives (9to1 Models/...), "
+                        "not an app Source tree, and that location must be recorded deliberately")
+    evidence = record.get("provenanceEvidence") or {}
+    doc_rel = evidence.get("document")
+    if not doc_rel:
+        problems.append("no provenance document recorded for the source-lock engine")
+        return problems
+    doc = ROOT / doc_rel
+    if not doc.is_file():
+        problems.append(f"provenance document absent: {doc_rel}")
+        return problems
+    text = doc.read_text(encoding="utf-8", errors="ignore")
+    commit = record.get("commit", "")
+    if commit and commit not in text:
+        problems.append(f"provenance document does not name the recorded commit {commit[:12]}")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        problems.append("source-lock engine has no exact 40-character upstream commit")
+
+    lock_rel = evidence.get("sourceLock")
+    lock_path = (source / lock_rel) if lock_rel else None
+    if not lock_rel or lock_path is None or not lock_path.is_file():
+        problems.append(f"source lock file absent: {lock_rel or '(none recorded)'}")
+        return problems
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        problems.append(f"source lock cannot be read: {exc}")
+        return problems
+    for field, expected in (("commit", commit), ("origin", record.get("repository"))):
+        value = lock.get(field)
+        if expected and value != expected:
+            problems.append(f"source lock {field} '{str(value)[:16]}' disagrees with the donor registry "
+                            f"'{str(expected)[:16]}'")
+    rows = lock.get("rows") or []
+    if lock.get("blobCount") != len(rows):
+        problems.append(f"source lock declares {lock.get('blobCount')} blobs but contains {len(rows)} rows")
+    if evidence.get("sourceLockBlobs") not in (None, lock.get("blobCount")):
+        problems.append(f"registry records {evidence.get('sourceLockBlobs')} locked blobs, the lock itself "
+                        f"declares {lock.get('blobCount')}")
+    if lock.get("sourceBytes") != sum(int(row.get("bytes", 0)) for row in rows):
+        problems.append("source lock byte total does not equal the sum of its rows")
+    bad = [row.get("path") for row in rows
+           if not re.fullmatch(r"[0-9a-f]{64}", str(row.get("sha256", "")))
+           or not re.fullmatch(r"[0-9a-f]{40}", str(row.get("gitBlobSha", "")))]
+    if bad:
+        problems.append(f"{len(bad)} lock row(s) lack a sha256 or git blob id, first: {bad[0]}")
+    for name in record.get("licenseFiles", []):
+        if not (source / name).is_file():
+            problems.append(f"licence notice absent from the engine tree: {name}")
+    return problems
+
+
 def failures(local_only=False):
     data = json.loads(LOCK.read_text(encoding="utf-8"))
     upstreams = data["upstreams"]
@@ -279,6 +344,11 @@ def failures(local_only=False):
             if not path.startswith(owner + "/vendor/"):
                 errors.append(f"{app}/{donor}: framework donor source must sit under {owner}/vendor/")
                 continue
+        elif scope == "vendored-source-locked":
+            # A maintained engine fork lives with the model directory it drives, and its pin is enforced
+            # through a source lock instead of an app-local checkout. The dedicated check below validates
+            # that layout, including where the source is allowed to sit.
+            pass
         elif not path.startswith(owner + "/Source/"):
             errors.append(f"{app}/{donor}: source must be inside its owning Source/ tree")
             continue
@@ -326,6 +396,10 @@ def failures(local_only=False):
                 errors.append("Files: imported code/test trees disagree with the verified upstream snapshot")
             if git("diff", "--name-only", "--", path):
                 errors.append("Files: working source differs from the pinned imported snapshot")
+        elif scope == "vendored-source-locked":
+            errors.extend(f"{app}/{donor}: {x}" for x in
+                          vendored_source_lock_problems(entry, record, path, source))
+            notes_ok = True
         elif scope == "snapshot":
             # An extracted donor snapshot at an exact revision: no gitlink, so what is enforceable is
             # the recorded revision, a content digest that catches silent in-place edits, and the licence
