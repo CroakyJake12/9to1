@@ -97,3 +97,36 @@ Until then: rendering claims are on-screen; behaviour claims are compile/test-le
 
 * `0c804890` chrome transcription + header fix + the two corrections above;
 * `3f045894` `drive_window.py --window-id/--list`, xlib name fix, and the honest input A/B record.
+
+## Owner direction received after this handoff was written (31 Oct, late evening)
+
+*"…literally just rebuild the interface in cui"*, *"and make it work"*, *"but you can do stuff in the native
+rust"*, *"rather than forcing it inside of cui actions"*, *"just wire up the existing code to new ui"*.
+
+Consequence for this file's blocker: **do not spend another unit on synthetic-input archaeology in the parallel
+preview host.** The port target is the working `Boards.cui` surface, and the wiring reuses existing code. Full
+route and the measured handler/adapter mapping (with file:line citations) are now in
+`docs/development/boards-appflowy-reui-plan-2026-10-31.md` under "Owner direction, 31 October 2026 late evening";
+the owner decision is recorded as `OPEN-2026-10-31-BOARDS-WIRE-EXISTING-CODE` (commit `e0046fad`).
+
+### Executable recipe for the next unit (no re-reading required)
+
+1. In `9to1 Workspace/Boards/app/Boards.cui`, wrap the current board presentation in
+   `<Container Type="Grid" ColumnSizes="268 1fr">` and insert the sidebar block already authored and measured in
+   `AppFlowyBoardStageOne.cui` (sidebar width 268; workspace row 32; Search 30; `+ New page` 30; tree rows 30 at
+   padding 16; footer 28) re-using **Boards.cui's existing bindings/actions** — do not copy the `Donor*` actions.
+2. Add the tab row above the board: height 40, each tab width 200, contents emoji/title/close, and a `+` tab at
+   the right end calling the existing `AddPage` case.
+3. Keep the section column geometry already measured: column 256, header 50 with `ColumnSizes="Auto 1fr Auto Auto
+   Auto"`, card width 226 with `CuiFloatingSurfaceMaterial` + `CuiLineBrush` 1px border, card margin `3 4`, footer
+   directly under the cards (grid rows `Auto Auto Auto`, column top-aligned).
+4. Grid placement attributes do NOT reach children of `<If>` branches — wrap conditional content in one `Container`
+   that carries `Column=`/`Row=` (this fixed the header icon/title overlap; see the header note above).
+5. Registered palette names only: `CuiAccentBrush CuiAccentInkBrush CuiFloatingSurfaceMaterial CuiLineBrush
+   CuiMutedBrush CuiPanel2Brush CuiPanelBrush CuiSurfaceMaterial CuiTextBrush CuiTextSoftBrush
+   CuiWorkspaceMaterial`.
+6. Compile after each edit unit with the guarded dotnet entrypoint, then capture on `DISPLAY=:1` and compare bytes
+   against the pre-change frame to prove the change rendered.
+7. Only after the ported surface renders: add the two missing view-model dispatch cases for `RenameSectionAsync`
+   and `DeleteSectionAsync` (host-side, C#), then remove the preview seam and `AppFlowyBoardStageOneSurface.cs`
+   duplicates.
