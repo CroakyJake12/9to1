@@ -1,0 +1,128 @@
+<Cui id="home-home-stack" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-widget.page-manager-.show-secondary-plugin-notifier.value-=-true" command="() =&gt; widget.pageManager
+                              .showSecondaryPluginNotifier.value = true" />
+    <Action name="()-{-get-it&lt;tabs-bloc&gt;().add(const-tabs-event.close-secondary-plugin());-}" command="() {
+                getIt&lt;TabsBloc&gt;().add(const TabsEvent.closeSecondaryPlugin());
+              }" />
+    <Action name="()-{-get-it&lt;tabs-bloc&gt;().add(const-tabs-event.expand-secondary-plugin());-}" command="() {
+                getIt&lt;TabsBloc&gt;().add(const TabsEvent.expandSecondaryPlugin());
+              }" />
+    <Action name="(-)-{-show-hover-timer-=-timer(const-duration(milliseconds:-500),-()-{-set-state(()-=&gt;-is-hover-=-true);-});-}" command="(_) {
+                showHoverTimer = Timer(const Duration(milliseconds: 500), () {
+                  setState(() =&gt; isHover = true);
+                });
+              }" />
+    <Action name="(-)-{-show-hover-timer?.cancel();-set-state(()-=&gt;-is-hover-=-false);-}" command="(_) {
+                showHoverTimer?.cancel();
+                setState(() =&gt; isHover = false);
+              }" />
+  </Actions>
+  <Page id="home-home-stack-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="expanded-2" Type="Vertical Stack">
+              <Container id="column-2" Type="Vertical Stack">
+                <Container id="expanded-3" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" />
+    </Text>
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="container" Type="Vertical Stack" width="24" padding="4">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" />
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="align" Type="Vertical Stack">
+        <Container id="shrink-2" Type="Vertical Stack" />
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="container-3" Type="Vertical Stack" width="36" height="36" background="#1F1F2329">
+            <Container id="center" Type="Vertical Stack">
+              <Image id="flowy-svg-2" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-4" Type="Vertical Stack">
+      <Container id="value-listenable-builder-2" Type="Vertical Stack">
+        <Container id="container-5" Type="Vertical Stack">
+          <Container id="column-3" Type="Vertical Stack">
+            <Container id="expanded-4" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="center-2" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="gesture-detector-2" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" width="11">
+            <Container id="center-3" Type="Vertical Stack">
+              <Container id="container-6" Type="Vertical Stack" width="2" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="container-7" Type="Vertical Stack" width="1" />
+      <Container id="flexible" Type="Vertical Stack" />
+    </Container>
+    <Container id="selector" Type="Vertical Stack" />
+    <Container id="consumer" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="value-listenable-builder-3" Type="Vertical Stack">
+      <Container id="shrink-3" Type="Vertical Stack" />
+      <Container id="selector-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="value-listenable-builder-4" Type="Vertical Stack">
+      <Container id="shrink-4" Type="Vertical Stack" />
+      <Container id="selector-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-8" Type="Vertical Stack">
+      <Container id="padding-3" Type="Vertical Stack">
+        <Container id="row-3" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="consumer-2" Type="Vertical Stack">
+            <Container id="shrink-5" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-9" Type="Vertical Stack">
+      <Container id="padding-4" Type="Vertical Stack">
+        <Container id="row-4" Type="Horizontal Stack">
+          <Button id="flowy-icon-button" Type="Action" action="()-{-get-it&lt;tabs-bloc&gt;().add(const-tabs-event.close-secondary-plugin());-}" width="24">
+            <Image id="flowy-svg-3" />
+          </Button>
+          <Container id="hspace-3" Type="Horizontal Stack" />
+          <Button id="flowy-icon-button-2" Type="Action" action="()-{-get-it&lt;tabs-bloc&gt;().add(const-tabs-event.expand-secondary-plugin());-}" width="24">
+            <Image id="flowy-svg-4" />
+          </Button>
+          <Container id="expanded-5" Type="Vertical Stack">
+            <Container id="align-2" Type="Vertical Stack">
+              <Container id="consumer-3" Type="Vertical Stack">
+                <Container id="shrink-6" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="align-3" Type="Vertical Stack" />
+  </Page>
+</Cui>

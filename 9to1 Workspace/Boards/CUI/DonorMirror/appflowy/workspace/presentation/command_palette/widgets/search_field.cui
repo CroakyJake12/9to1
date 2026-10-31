@@ -1,0 +1,30 @@
+<Cui id="widgets-search-field" product="9-1" version="1">
+  <Actions>
+    <Action name="(value)-=&gt;-context-.read&lt;command-palette-bloc&gt;()-.add" command="(value) =&gt; context
+                .read&lt;CommandPaletteBloc&gt;()
+                .add" />
+    <Action name="clear-search" command="_clearSearch" />
+  </Actions>
+  <Page id="widgets-search-field-root">
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Container id="mouse-region" Type="Vertical Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="center" Type="Vertical Stack">
+              <Image id="flowy-svg" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="44">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Input id="flowy-text-field" Type="Text">
+          <Container id="padding-2" Type="Vertical Stack" padding="12 8">
+            <Image id="flowy-svg-2" />
+          </Container>
+        </Input>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

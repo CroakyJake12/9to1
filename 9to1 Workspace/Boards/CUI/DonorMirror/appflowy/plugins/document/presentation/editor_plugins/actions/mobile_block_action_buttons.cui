@@ -1,0 +1,15 @@
+<Cui id="actions-mobile-block-action-buttons" product="9-1" version="1">
+  <Actions>
+    <Action name="show-bottom-sheet" command="_showBottomSheet" />
+  </Actions>
+  <Page id="actions-mobile-block-action-buttons-root">
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="stack" Type="Absolute">
+      <Container id="positioned" Type="Vertical Stack">
+        <Button id="flowy-icon-button" Type="Action" action="show-bottom-sheet" width="20.0">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

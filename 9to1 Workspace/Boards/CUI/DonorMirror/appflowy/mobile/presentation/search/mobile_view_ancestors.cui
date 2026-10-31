@@ -1,0 +1,16 @@
+<Cui id="search-mobile-view-ancestors" product="9-1" version="1">
+  <Page id="search-mobile-view-ancestors-root">
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Text id="text" max-lines="2" />
+    <Text id="text-span" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Text id="text-2" text="-" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="flexible" Type="Vertical Stack">
+        <Text id="text-3" max-lines="1" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

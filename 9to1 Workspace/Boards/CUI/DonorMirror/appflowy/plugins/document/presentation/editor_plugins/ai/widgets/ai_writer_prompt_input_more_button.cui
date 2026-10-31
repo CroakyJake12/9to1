@@ -1,0 +1,29 @@
+<Cui id="widgets-ai-writer-prompt-input-more-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-select-command" command="onSelectCommand" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="widgets-ai-writer-prompt-input-more-button-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6 6 4 6">
+          <Container id="row" Type="Horizontal Stack">
+            <Text id="flowy-text" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="8.0">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="divider" Type="Vertical Stack" height="1.0" />
+    <Container id="builder" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="on-select-command" padding="8.0 6.0">
+        <Image id="flowy-svg-2" />
+        <Text id="flowy-text-2" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

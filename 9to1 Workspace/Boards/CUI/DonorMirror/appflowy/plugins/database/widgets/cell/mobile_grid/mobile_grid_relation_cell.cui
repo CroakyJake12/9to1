@@ -1,0 +1,25 @@
+<Cui id="mobile-grid-mobile-grid-relation-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-show-mobile-bottom-sheet(-context,-background-color:-theme.of(context).color-scheme.secondary-container,-builder:-(context)-{-return-const-flowy-text(&quot;coming-soon&quot;);-},-);-}" command="() {
+        showMobileBottomSheet(
+          context,
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          builder: (context) {
+            return const FlowyText(&quot;Coming soon&quot;);
+          },
+        );
+      }" />
+  </Actions>
+  <Page id="mobile-grid-mobile-grid-relation-cell-root">
+    <Button id="flowy-button" Type="Action" action="()-{-show-mobile-bottom-sheet(-context,-background-color:-theme.of(context).color-scheme.secondary-container,-builder:-(context)-{-return-const-flowy-text(&quot;coming-soon&quot;);-},-);-}">
+      <Container id="align" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack" padding="12 10">
+          <Container id="row" Type="Horizontal Stack">
+            <Text id="flowy-text" />
+          </Container>
+        </Container>
+      </Container>
+      <Text id="flowy-text-2" text="Coming soon" />
+    </Button>
+  </Page>
+</Cui>

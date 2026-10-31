@@ -1,0 +1,109 @@
+<Cui id="widgets-notification-item-v2" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-view-=-state.view;-if-(view-==-null)-{-return;-}-home-setting-.add(home-setting-event.collapse-notification-panel());-final-document-future-=-document-service().open-document(-document-id:-reminder.object-id,-);-final-block-id-=-reminder.meta[reminder-meta-keys.block-id];-int?-path;-if-(block-id-!=-null)-{-final-node-=-await-get-node-from-document(document-future,-block-id);-path-=-node?.path.first;-}-reminder-bloc.add(-reminder-event.press-reminder(-reminder-id:-reminder.id,-path:-path,-),-);-}" command="() async {
+                    final view = state.view;
+                    if (view == null) {
+                      return;
+                    }
+
+                    homeSetting
+                        .add(HomeSettingEvent.collapseNotificationPanel());
+
+                    final documentFuture = DocumentService().openDocument(
+                      documentId: reminder.objectId,
+                    );
+
+                    final blockId = reminder.meta[ReminderMetaKeys.blockId];
+
+                    int? path;
+                    if (blockId != null) {
+                      final node =
+                          await _getNodeFromDocument(documentFuture, blockId);
+                      path = node?.path.first;
+                    }
+
+                    reminderBloc.add(
+                      ReminderEvent.pressReminder(
+                        reminderId: reminder.id,
+                        path: path,
+                      ),
+                    );
+                  }" />
+    <Action name="()-{-context.read&lt;reminder-bloc&gt;().add(-reminder-event.update(-reminder-update(-id:-reminder.id,-is-archived:-false,-),-),-);-}" command="() {
+            context.read&lt;ReminderBloc&gt;().add(
+                  ReminderEvent.update(
+                    ReminderUpdate(
+                      id: reminder.id,
+                      isArchived: false,
+                    ),
+                  ),
+                );
+          }" />
+    <Action name="()-{-context.read&lt;reminder-bloc&gt;().add(-reminder-event.update(-reminder-update(-id:-reminder.id,-is-archived:-true,-is-read:-true,-),-),-);-show-toast-notification(-message:-locale-keys.notification-hub-mark-as-archived-succeed-toast-.tr(),-);-}" command="() {
+                context.read&lt;ReminderBloc&gt;().add(
+                      ReminderEvent.update(
+                        ReminderUpdate(
+                          id: reminder.id,
+                          isArchived: true,
+                          isRead: true,
+                        ),
+                      ),
+                    );
+
+                showToastNotification(
+                  message: LocaleKeys.notificationHub_markAsArchivedSucceedToast
+                      .tr(),
+                );
+              }" />
+    <Action name="()-{-context.read&lt;reminder-bloc&gt;().add(-reminder-event.update(-reminder-update(-id:-reminder.id,-is-read:-true,-),-),-);-show-toast-notification(-message:-locale-keys.notification-hub-mark-as-read-succeed-toast.tr(),-);-}" command="() {
+                  context.read&lt;ReminderBloc&gt;().add(
+                        ReminderEvent.update(
+                          ReminderUpdate(
+                            id: reminder.id,
+                            isRead: true,
+                          ),
+                        ),
+                      );
+
+                  showToastNotification(
+                    message:
+                        LocaleKeys.notificationHub_markAsReadSucceedToast.tr(),
+                  );
+                }" />
+  </Actions>
+  <Page id="widgets-notification-item-v2-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="shrink-2" Type="Vertical Stack" />
+        <Container id="padding" Type="Vertical Stack" padding="16 14 14 10" />
+        <Container id="padding-2" Type="Vertical Stack" padding="8">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="stack" Type="Absolute" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="32" height="28">
+      <Button id="flowy-icon-button" Type="Action" action="()-{-context.read&lt;reminder-bloc&gt;().add(-reminder-event.update(-reminder-update(-id:-reminder.id,-is-archived:-false,-),-),-);-}" width="24" height="24">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="4 2 4 2">
+      <Container id="row" Type="Horizontal Stack">
+        <Button id="flowy-icon-button-2" Type="Action" action="()-{-context.read&lt;reminder-bloc&gt;().add(-reminder-event.update(-reminder-update(-id:-reminder.id,-is-read:-true,-),-),-);-show-toast-notification(-message:-locale-keys.notification-hub-mark-as-read-succeed-toast.tr(),-);-}" width="24" height="24">
+          <Image id="flowy-svg-2" />
+        </Button>
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button-3" Type="Action" action="()-{-context.read&lt;reminder-bloc&gt;().add(-reminder-event.update(-reminder-update(-id:-reminder.id,-is-archived:-true,-is-read:-true,-),-),-);-show-toast-notification(-message:-locale-keys.notification-hub-mark-as-archived-succeed-toast-.tr(),-);-}" width="24" height="24">
+          <Image id="flowy-svg-3" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="positioned" Type="Vertical Stack" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="expanded" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

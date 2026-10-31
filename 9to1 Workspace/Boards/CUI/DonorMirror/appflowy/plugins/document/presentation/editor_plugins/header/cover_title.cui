@@ -1,0 +1,6 @@
+<Cui id="header-cover-title" product="9-1" version="1">
+  <Page id="header-cover-title-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

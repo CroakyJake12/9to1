@@ -1,0 +1,12 @@
+<Cui id="mobile-row-detail-mobile-row-detail-checkbox-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="bloc.add" command="bloc.add" />
+  </Actions>
+  <Page id="mobile-row-detail-mobile-row-detail-checkbox-cell-root">
+    <Container id="ink-well" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="12 13">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

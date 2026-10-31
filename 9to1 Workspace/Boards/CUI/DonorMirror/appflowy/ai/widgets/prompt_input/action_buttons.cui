@@ -1,0 +1,17 @@
+<Cui id="prompt-input-action-buttons" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="prompt-input-action-buttons-root">
+    <Container id="flowy-tooltip" Type="Floating">
+      <Button id="flowy-icon-button" Type="Action" action="on-tap">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="flowy-tooltip-2" Type="Floating">
+      <Button id="flowy-icon-button-2" Type="Action" action="on-tap">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

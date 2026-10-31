@@ -1,0 +1,15 @@
+<Cui id="todo-list-todo-list-icon" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-haptic-feedback.light-impact();-on-check();-}" command="() {
+        HapticFeedback.lightImpact();
+        onCheck();
+      }" />
+  </Actions>
+  <Page id="todo-list-todo-list-icon-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="8.0">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

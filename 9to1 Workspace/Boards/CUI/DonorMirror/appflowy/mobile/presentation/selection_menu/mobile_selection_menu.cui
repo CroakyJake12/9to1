@@ -1,0 +1,18 @@
+<Cui id="selection-menu-mobile-selection-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="dismiss" command="dismiss" />
+  </Actions>
+  <Page id="selection-menu-mobile-selection-menu-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="stack" Type="Absolute">
+          <Container id="value-listenable-builder" Type="Vertical Stack">
+            <Container id="positioned" Type="Vertical Stack">
+              <Container id="single-child-scroll-view" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

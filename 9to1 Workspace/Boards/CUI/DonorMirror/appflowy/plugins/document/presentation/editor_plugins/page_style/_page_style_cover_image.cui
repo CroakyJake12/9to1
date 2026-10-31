@@ -1,0 +1,39 @@
+<Cui id="page-style-page-style-cover-image" product="9-1" version="1">
+  <Page id="page-style-page-style-cover-image-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="4.0">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="colored-box" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Text id="flowy-text" />
+      <Container id="container-3" Type="Vertical Stack" width="40" height="28" background="#1F222533" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="16.0" />
+    <Container id="column-2" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Text id="flowy-text-2" />
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Image id="flowy-svg-2" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Text id="flowy-text-3" />
+    </Container>
+    <Container id="column-4" Type="Vertical Stack">
+      <Image id="flowy-svg-3" />
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Text id="flowy-text-4" />
+    </Container>
+    <Container id="expanded" Type="Vertical Stack">
+      <Container id="animated-container" Type="Vertical Stack" height="64" CornerRadius="12" background="#141AC3F2" />
+    </Container>
+  </Page>
+</Cui>

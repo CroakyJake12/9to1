@@ -1,0 +1,28 @@
+<Cui id="published-page-published-view-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-final-url-=-share-constants.build-publish-url(-name-space:-publish-info-view.info.namespace,-publish-name:-publish-info-view.info.publish-name,-);-af-launch-url-string(url);-}" command="() {
+          final url = ShareConstants.buildPublishUrl(
+            nameSpace: publishInfoView.info.namespace,
+            publishName: publishInfoView.info.publishName,
+          );
+          afLaunchUrlString(url);
+        }" />
+  </Actions>
+  <Page id="published-page-published-view-item-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="expanded-2" Type="Vertical Stack" />
+      <Container id="expanded-3" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Text id="flowy-text" />
+    <Container id="container" Type="Vertical Stack" padding="48.0">
+      <Button id="flowy-button" Type="Action" action="()-{-final-url-=-share-constants.build-publish-url(-name-space:-publish-info-view.info.namespace,-publish-name:-publish-info-view.info.publish-name,-);-af-launch-url-string(url);-}">
+        <Container id="flowy-tooltip" Type="Floating">
+          <Text id="flowy-text-2" />
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

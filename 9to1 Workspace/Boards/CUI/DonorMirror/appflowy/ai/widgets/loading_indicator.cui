@@ -1,0 +1,11 @@
+<Cui id="widgets-loading-indicator" product="9-1" version="1">
+  <Page id="widgets-loading-indicator-root">
+    <Container id="sized-box" Type="Vertical Stack" height="20">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="4.0">
+        <Text id="flowy-text" />
+      </Container>
+    </Container>
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="2" />
+  </Page>
+</Cui>

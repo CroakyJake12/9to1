@@ -1,0 +1,13 @@
+<Cui id="section-folder-mobile-home-section-folder" product="9-1" version="1">
+  <Page id="section-folder-mobile-home-section-folder-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" />
+          <Container id="padding" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

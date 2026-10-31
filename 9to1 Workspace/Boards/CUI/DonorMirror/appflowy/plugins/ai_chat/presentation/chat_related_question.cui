@@ -1,0 +1,18 @@
+<Cui id="presentation-chat-related-question" product="9-1" version="1">
+  <Actions>
+    <Action name="on-question-selected" command="onQuestionSelected" />
+  </Actions>
+  <Page id="presentation-chat-related-question-root">
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="4.0">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="align" Type="Vertical Stack" />
+    <Button id="flowy-button" Type="Action" action="on-question-selected" padding="8.0 4.0 8.0">
+      <Container id="flexible" Type="Vertical Stack">
+        <Text id="flowy-text-2" max-lines="2" />
+      </Container>
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

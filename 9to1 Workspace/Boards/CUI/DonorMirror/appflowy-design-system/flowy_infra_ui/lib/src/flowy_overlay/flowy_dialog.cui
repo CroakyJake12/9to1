@@ -1,0 +1,5 @@
+<Cui id="flowy-overlay-flowy-dialog" product="9-1" version="1">
+  <Page id="flowy-overlay-flowy-dialog-root">
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,8 @@
+<Cui id="ai-ai-settings-group" product="9-1" version="1">
+  <Page id="ai-ai-settings-group-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+    <Container id="column" Type="Vertical Stack" />
+  </Page>
+</Cui>

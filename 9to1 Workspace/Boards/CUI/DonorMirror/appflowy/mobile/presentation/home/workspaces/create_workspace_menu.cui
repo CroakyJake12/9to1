@@ -1,0 +1,11 @@
+<Cui id="workspaces-create-workspace-menu" product="9-1" version="1">
+  <Page id="workspaces-create-workspace-menu-root">
+    <Container id="column" Type="Vertical Stack">
+      <Input id="text-form-field" Type="Text" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

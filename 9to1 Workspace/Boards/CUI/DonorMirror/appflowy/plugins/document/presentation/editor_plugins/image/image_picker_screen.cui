@@ -1,0 +1,7 @@
+<Cui id="image-image-picker-screen" product="9-1" version="1">
+  <Page id="image-image-picker-screen-root">
+    <Page id="scaffold">
+      <Container id="app-bar" Type="Horizontal Stack" />
+    </Page>
+  </Page>
+</Cui>

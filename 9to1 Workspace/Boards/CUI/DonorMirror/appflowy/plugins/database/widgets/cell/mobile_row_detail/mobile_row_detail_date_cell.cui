@@ -1,0 +1,23 @@
+<Cui id="mobile-row-detail-mobile-row-detail-date-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-mobile-date-cell-edit-screen(-controller:-bloc.cell-controller,-show-as-full-screen:-false,-);-},-)" command="() =&gt; showMobileBottomSheet(
+        context,
+        builder: (context) {
+          return MobileDateCellEditScreen(
+            controller: bloc.cellController,
+            showAsFullScreen: false,
+          );
+        },
+      )" />
+  </Actions>
+  <Page id="mobile-row-detail-mobile-row-detail-date-cell-root">
+    <Container id="ink-well" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="12 13">
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="flowy-svg" />
+          <Container id="hspace" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

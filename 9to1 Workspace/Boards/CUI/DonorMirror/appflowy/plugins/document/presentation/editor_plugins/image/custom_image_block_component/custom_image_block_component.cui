@@ -1,0 +1,19 @@
+<Cui id="custom-image-block-component-custom-image-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="(-)-{-if-(!always-show-menu)-{-show-actions-notifier.value-=-false;-}-}" command="(_) {
+            if (!alwaysShowMenu) {
+              showActionsNotifier.value = false;
+            }
+          }" />
+  </Actions>
+  <Page id="custom-image-block-component-custom-image-block-component-root">
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="stack" Type="Absolute" />
+      </Container>
+    </Container>
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+  </Page>
+</Cui>

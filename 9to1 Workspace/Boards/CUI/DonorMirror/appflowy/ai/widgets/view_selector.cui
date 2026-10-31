@@ -1,0 +1,5 @@
+<Cui id="widgets-view-selector" product="9-1" version="1">
+  <Page id="widgets-view-selector-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+  </Page>
+</Cui>

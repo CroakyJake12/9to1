@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cui_mirror
+import dialect_dart
 import dialect_gtk
 import dialect_xaml
 import dialect_xul
@@ -33,9 +34,11 @@ DIALECT_BY_SUFFIX[".templ"] = ("html", dialect_xul)
 DIALECT_BY_SUFFIX[".cshtml"] = ("html", dialect_xul)
 DIALECT_BY_SUFFIX[".inc"] = ("xul", dialect_xul)
 DIALECT_BY_SUFFIX[".svg"] = ("vector", None)
+DIALECT_BY_SUFFIX[".dart"] = ("dart", dialect_dart)
+DIALECT_BY_SUFFIX[".arb"] = ("localisation", None)
+DIALECT_BY_SUFFIX[".g.dart"] = ("generated", None)
 
-NOT_YET = {".dart": "flutter widget tree (needs a Dart expression pass)",
-           ".jsx": "React/TSX component", ".tsx": "React/TSX component",
+NOT_YET = {".jsx": "React/TSX component", ".tsx": "React/TSX component",
            ".ts": "code-built workbench UI (TypeScript views)", ".js": "custom elements in JS",
            ".qrc": "Qt resource/QML", ".ui.qml": "QML", ".vala": "Vala/GTK code-built UI",
            ".py": "code-built UI (Tk/GTK python)", ".cs": "code-built UI (see C# constructions list)"}
@@ -45,7 +48,8 @@ def tool_version() -> str:
     """Digest of the emitter and dialect sources, so mirrors refresh when the tool changes."""
     here = Path(__file__).resolve().parent
     digest = hashlib.sha256()
-    for name in sorted(("cui_mirror.py", "dialect_gtk.py", "dialect_xaml.py", "dialect_xul.py")):
+    for name in sorted(("cui_mirror.py", "dialect_dart.py", "dialect_gtk.py", "dialect_xaml.py",
+                        "dialect_xul.py")):
         path = here / name
         if path.is_file():
             digest.update(path.read_bytes())
@@ -58,7 +62,7 @@ def main(argv=None):
     ap.add_argument("--donor", required=True, help="donor name used in the mirror id and report")
     ap.add_argument("--src", required=True, help="donor source directory to scan")
     ap.add_argument("--out", required=True, help="directory for the mirrored .cui corpus")
-    ap.add_argument("--dialect", default="auto", choices=["auto", "gtk", "xaml", "xul"])
+    ap.add_argument("--dialect", default="auto", choices=["auto", "dart", "gtk", "xaml", "xul"])
     ap.add_argument("--limit", type=int, default=0, help="cap files (smoke runs)")
     ap.add_argument("--exclude", action="append", default=[],
                     help="substring exclusion (repeat), e.g. test, help, print")

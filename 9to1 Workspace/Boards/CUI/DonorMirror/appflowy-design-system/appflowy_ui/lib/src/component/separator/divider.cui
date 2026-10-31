@@ -1,0 +1,6 @@
+<Cui id="separator-divider" product="9-1" version="1">
+  <Page id="separator-divider-root">
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

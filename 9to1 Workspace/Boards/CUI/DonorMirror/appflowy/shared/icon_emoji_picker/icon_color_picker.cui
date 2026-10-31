@@ -1,0 +1,12 @@
+<Cui id="icon-emoji-picker-icon-color-picker" product="9-1" version="1">
+  <Actions>
+    <Action name="on-selected" command="onSelected" />
+  </Actions>
+  <Page id="icon-emoji-picker-icon-color-picker-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" width="34" height="34" padding="5.0">
+        <Container id="container-2" Type="Vertical Stack" CornerRadius="8" background="#2D333333" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

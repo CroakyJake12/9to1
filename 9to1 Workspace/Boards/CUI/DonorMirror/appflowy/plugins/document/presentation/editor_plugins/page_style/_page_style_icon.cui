@@ -1,0 +1,22 @@
+<Cui id="page-style-page-style-icon" product="9-1" version="1">
+  <Page id="page-style-page-style-icon-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" height="52" CornerRadius="12.0">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Text id="flowy-text" />
+              <Text id="flowy-text-2" />
+              <Container id="hspace-2" Type="Horizontal Stack" />
+              <Image id="flowy-svg" />
+              <Container id="hspace-3" Type="Horizontal Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

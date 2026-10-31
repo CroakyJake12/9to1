@@ -1,0 +1,25 @@
+<Cui id="code-block-code-block-language-selector" product="9-1" version="1">
+  <Actions>
+    <Action name="(-)-=&gt;-set-state(()-{-filtered-languages-=-widget.supported-languages-.where(-(e)-=&gt;-e.contains(search-controller.text.to-lower-case()),-)-.map((e)-=&gt;-e.capitalize())-.to-list();-selected-index-=-widget.supported-languages.index-of(widget.language-??-'');-})" command="(_) =&gt; setState(() {
+                filteredLanguages = widget.supportedLanguages
+                    .where(
+                      (e) =&gt; e.contains(searchController.text.toLowerCase()),
+                    )
+                    .map((e) =&gt; e.capitalize())
+                    .toList();
+                selectedIndex =
+                    widget.supportedLanguages.indexOf(widget.language ?? '');
+              })" />
+  </Actions>
+  <Page id="code-block-code-block-language-selector-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="padding" Type="Vertical Stack" padding="4.0 4.0" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="column" Type="Vertical Stack">
+      <Input id="flowy-text-field" Type="Text" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="flexible" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

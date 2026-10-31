@@ -1,0 +1,9 @@
+<Cui id="widgets-notification-tab-bar" product="9-1" version="1">
+  <Page id="widgets-notification-tab-bar-root">
+    <Container id="container" Type="Vertical Stack" padding="16">
+      <Container id="tab-bar" Type="Horizontal Stack">
+        <Button id="tab" Type="Menu Item" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

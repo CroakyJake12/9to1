@@ -1,0 +1,14 @@
+<Cui id="icon-emoji-picker-emoji-skin-tone" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="icon-emoji-picker-emoji-skin-tone-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="row" Type="Horizontal Stack" />
+      <Container id="flowy-tooltip" Type="Floating" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="36" height="36" CornerRadius="8">
+      <Button id="flowy-button" Type="Action" action="on-pressed" />
+    </Container>
+  </Page>
+</Cui>

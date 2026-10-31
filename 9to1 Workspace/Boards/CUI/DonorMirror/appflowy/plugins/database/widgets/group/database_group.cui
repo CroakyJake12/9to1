@@ -1,0 +1,63 @@
+<Cui id="group-database-group" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-list&lt;int&gt;-setting-content-=-[];-switch-(field-info.field-type)-{-case-field-type.date-time:-final-config-=-date-group-configuration-pb()-..condition-=-date-condition-pb.values[condition];-setting-content-=-config.write-to-buffer();-break;-default:-}-context.read&lt;database-group-bloc&gt;().add(-database-group-event.set-group-by-field(-field-info.id,-field-info.field-type,-setting-content,-),-);-on-selected();-}" command="() {
+            List&lt;int&gt; settingContent = [];
+            switch (fieldInfo.fieldType) {
+              case FieldType.DateTime:
+                final config = DateGroupConfigurationPB()
+                  ..condition = DateConditionPB.values[condition];
+                settingContent = config.writeToBuffer();
+                break;
+              default:
+            }
+            context.read&lt;DatabaseGroupBloc&gt;().add(
+                  DatabaseGroupEvent.setGroupByField(
+                    fieldInfo.id,
+                    fieldInfo.fieldType,
+                    settingContent,
+                  ),
+                );
+            onSelected();
+          }" />
+    <Action name="()-{-update-layout-settings(-state.layout-settings,-!state.layout-settings.hide-ungrouped-column,-);-}" command="() {
+                      _updateLayoutSettings(
+                        state.layoutSettings,
+                        !state.layoutSettings.hideUngroupedColumn,
+                      );
+                    }" />
+  </Actions>
+  <Page id="group-database-group-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6">
+          <Container id="sized-box" Type="Vertical Stack">
+            <Button id="flowy-button" Type="Action" action="()-{-update-layout-settings(-state.layout-settings,-!state.layout-settings.hide-ungrouped-column,-);-}">
+              <Text id="flowy-text" />
+            </Button>
+          </Container>
+        </Container>
+        <Container id="sized-box-2" Type="Vertical Stack">
+          <Container id="padding-2" Type="Vertical Stack" padding="12 4">
+            <Text id="flowy-text-2" text-alignment="Left" />
+          </Container>
+        </Container>
+        <Container id="sized-box-3" Type="Vertical Stack">
+          <Container id="padding-3" Type="Vertical Stack" padding="12 4">
+            <Text id="flowy-text-3" text-alignment="Left" />
+          </Container>
+        </Container>
+        <Container id="vspace" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding-4" Type="Vertical Stack" padding="2.0">
+      <Image id="flowy-svg" />
+    </Container>
+    <Container id="sized-box-4" Type="Vertical Stack">
+      <Container id="padding-5" Type="Vertical Stack" padding="6.0">
+        <Button id="flowy-button-2" Type="Action" action="()-{-list&lt;int&gt;-setting-content-=-[];-switch-(field-info.field-type)-{-case-field-type.date-time:-final-config-=-date-group-configuration-pb()-..condition-=-date-condition-pb.values[condition];-setting-content-=-config.write-to-buffer();-break;-default:-}-context.read&lt;database-group-bloc&gt;().add(-database-group-event.set-group-by-field(-field-info.id,-field-info.field-type,-setting-content,-),-);-on-selected();-}">
+          <Text id="flowy-text-4" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

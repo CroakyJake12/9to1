@@ -1,0 +1,9 @@
+<Cui id="feature-flags-mobile-feature-flag-screen" product="9-1" version="1">
+  <Page id="feature-flags-mobile-feature-flag-screen-root">
+    <Page id="scaffold">
+      <Container id="app-bar" Type="Horizontal Stack">
+        <Text id="text" text="Feature Flags" />
+      </Container>
+    </Page>
+  </Page>
+</Cui>

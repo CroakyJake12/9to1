@@ -1,0 +1,39 @@
+<Cui id="setting-database-layout-selector" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-database-controller.set-compact-mode(-!database-controller.compact-mode-notifier.value,-);-}" command="() {
+                        databaseController.setCompactMode(
+                          !databaseController.compactModeNotifier.value,
+                        );
+                      }" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="setting-database-layout-selector-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6.0">
+          <Container id="column" Type="Vertical Stack">
+            <Container id="vspace" Type="Vertical Stack" />
+            <Container id="container" Type="Vertical Stack" height="1" padding="8 4 8 0" />
+            <Container id="padding-2" Type="Vertical Stack" padding="8 4 8 2">
+              <Container id="sized-box" Type="Vertical Stack" height="30">
+                <Button id="flowy-button" Type="Action" action="()-{-database-controller.set-compact-mode(-!database-controller.compact-mode-notifier.value,-);-}">
+                  <Text id="flowy-text" />
+                  <Container id="value-listenable-builder" Type="Vertical Stack" />
+                </Button>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="6">
+      <Container id="sized-box-2" Type="Vertical Stack" height="30">
+        <Button id="flowy-button-2" Type="Action" action="on-tap">
+          <Text id="flowy-text-2" />
+          <Image id="flowy-svg" />
+          <Image id="flowy-svg-2" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

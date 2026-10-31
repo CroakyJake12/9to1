@@ -1,0 +1,10 @@
+<Cui id="aa-menu-popup-menu" product="9-1" version="1">
+  <Page id="aa-menu-popup-menu-root">
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="colored-box" Type="Vertical Stack">
+        <Container id="value-listenable-builder" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

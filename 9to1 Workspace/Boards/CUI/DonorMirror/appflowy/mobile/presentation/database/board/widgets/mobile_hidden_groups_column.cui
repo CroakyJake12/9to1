@@ -1,0 +1,62 @@
+<Cui id="widgets-mobile-hidden-groups-column" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;board-bloc&gt;()-.add" command="() =&gt; context
+            .read&lt;BoardBloc&gt;()
+            .add" />
+    <Action name="()-=&gt;-show-flowy-mobile-confirm-dialog(-context,-title:-flowy-text(locale-keys.board-mobile-show-group.tr()),-content:-flowy-text(-locale-keys.board-mobile-show-group-content.tr(),-),-action-button-title:-locale-keys.button-yes.tr(),-action-button-color:-theme.of(context).color-scheme.primary,-on-action-button-pressed:-()-=&gt;-context-.read&lt;board-bloc&gt;()-.add(board-event.set-group-visibility(group,-true)),-)" command="() =&gt; showFlowyMobileConfirmDialog(
+              context,
+              title: FlowyText(LocaleKeys.board_mobile_showGroup.tr()),
+              content: FlowyText(
+                LocaleKeys.board_mobile_showGroupContent.tr(),
+              ),
+              actionButtonTitle: LocaleKeys.button_yes.tr(),
+              actionButtonColor: Theme.of(context).colorScheme.primary,
+              onActionButtonPressed: () =&gt; context
+                  .read&lt;BoardBloc&gt;()
+                  .add(BoardEvent.setGroupVisibility(group, true)),
+            )" />
+    <Action name="()-{-context.push(-mobile-row-detail-page.route-name,-extra:-{-mobile-row-detail-page.arg-row-id:-item.id,-mobile-row-detail-page.arg-database-controller:-context.read&lt;board-bloc&gt;().database-controller,-},-);-}" command="() {
+            context.push(
+              MobileRowDetailPage.routeName,
+              extra: {
+                MobileRowDetailPage.argRowId: item.id,
+                MobileRowDetailPage.argDatabaseController:
+                    context.read&lt;BoardBloc&gt;().databaseController,
+              },
+            );
+          }" />
+  </Actions>
+  <Page id="widgets-mobile-hidden-groups-column-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="50" />
+      <Container id="sized-box-2" Type="Vertical Stack" width="180">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack" />
+          <Text id="text" />
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Button id="icon-button" Type="Action" action="()-=&gt;-context-.read&lt;board-bloc&gt;()-.add">
+      <Image id="flowy-svg" />
+    </Button>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink-2" Type="Vertical Stack" />
+    </Container>
+    <Button id="text-button" Type="Action" action="()-{-context.push(-mobile-row-detail-page.route-name,-extra:-{-mobile-row-detail-page.arg-row-id:-item.id,-mobile-row-detail-page.arg-database-controller:-context.read&lt;board-bloc&gt;().database-controller,-},-);-}" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Text id="text-2" max-lines="2" />
+      </Container>
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="4">
+          <Image id="flowy-svg-2" />
+        </Container>
+        <Text id="flowy-text" />
+        <Text id="flowy-text-2" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

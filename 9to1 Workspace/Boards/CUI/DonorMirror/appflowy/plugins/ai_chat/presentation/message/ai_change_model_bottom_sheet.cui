@@ -1,0 +1,20 @@
+<Cui id="message-ai-change-model-bottom-sheet" product="9-1" version="1">
+  <Page id="message-ai-change-model-bottom-sheet-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="44.0">
+      <Container id="stack" Type="Absolute">
+        <Container id="align" Type="Vertical Stack" />
+        <Container id="align-2" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack">
+            <Text id="flowy-text" />
+          </Container>
+        </Container>
+        <Container id="align-3" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

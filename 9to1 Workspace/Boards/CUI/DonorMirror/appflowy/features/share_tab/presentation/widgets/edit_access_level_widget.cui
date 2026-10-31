@@ -1,0 +1,9 @@
+<Cui id="widgets-edit-access-level-widget" product="9-1" version="1">
+  <Page id="widgets-edit-access-level-widget-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Text id="text" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Image id="flowy-svg" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,11 @@
+<Cui id="application-document-collab-adapter" product="9-1" version="1">
+  <Page id="application-document-collab-adapter-root">
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="colored-box" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="2.0 1.0">
+          <Text id="flowy-text" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

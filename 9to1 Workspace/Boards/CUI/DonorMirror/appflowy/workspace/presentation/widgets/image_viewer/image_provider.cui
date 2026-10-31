@@ -1,0 +1,5 @@
+<Cui id="image-viewer-image-provider" product="9-1" version="1">
+  <Page id="image-viewer-image-provider-root">
+    <Image id="image" />
+  </Page>
+</Cui>

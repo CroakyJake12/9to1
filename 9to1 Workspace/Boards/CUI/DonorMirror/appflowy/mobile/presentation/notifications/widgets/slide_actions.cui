@@ -1,0 +1,9 @@
+<Cui id="widgets-slide-actions" product="9-1" version="1">
+  <Page id="widgets-slide-actions-root">
+    <Container id="column" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Image id="flowy-svg-2" />
+      <Image id="flowy-svg-3" />
+    </Container>
+  </Page>
+</Cui>

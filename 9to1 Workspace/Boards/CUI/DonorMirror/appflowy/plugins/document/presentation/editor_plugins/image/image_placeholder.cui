@@ -1,0 +1,30 @@
+<Cui id="image-image-placeholder" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-editor-state.update-selection-with-reason(null,-extra-info:-{});-show-upload-image-menu();-}" command="() {
+            editorState.updateSelectionWithReason(null, extraInfo: {});
+            showUploadImageMenu();
+          }" />
+  </Actions>
+  <Page id="image-image-placeholder-root">
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="4">
+      <Container id="sized-box" Type="Vertical Stack" height="52">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Image id="flowy-svg" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="flexible" Type="Vertical Stack">
+      <Text id="flowy-text" max-lines="3" />
+    </Container>
+    <Text id="flowy-text-2" />
+    <Container id="hspace-3" Type="Horizontal Stack" />
+    <Container id="flexible-2" Type="Vertical Stack">
+      <Text id="flowy-text-3" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="12.0" />
+  </Page>
+</Cui>

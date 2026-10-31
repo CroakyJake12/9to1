@@ -1,0 +1,5 @@
+<Cui id="feature-flags-feature-flag-page" product="9-1" version="1">
+  <Page id="feature-flags-feature-flag-page-root">
+    <Text id="flowy-text" />
+  </Page>
+</Cui>

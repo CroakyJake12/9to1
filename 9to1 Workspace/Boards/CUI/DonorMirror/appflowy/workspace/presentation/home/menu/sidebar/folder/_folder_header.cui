@@ -1,0 +1,24 @@
+<Cui id="folder-folder-header" product="9-1" version="1">
+  <Actions>
+    <Action name="widget.on-added" command="widget.onAdded" />
+    <Action name="widget.on-pressed" command="widget.onPressed" />
+  </Actions>
+  <Page id="folder-folder-header-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="widget.on-pressed" padding="6.0 4.0">
+          <Container id="value-listenable-builder" Type="Vertical Stack">
+            <Button id="flowy-icon-button" Type="Action" action="widget.on-added" width="24">
+              <Image id="flowy-svg" />
+            </Button>
+          </Container>
+          <Container id="row" Type="Horizontal Stack">
+            <Text id="flowy-text" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Image id="flowy-svg-2" />
+          </Container>
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

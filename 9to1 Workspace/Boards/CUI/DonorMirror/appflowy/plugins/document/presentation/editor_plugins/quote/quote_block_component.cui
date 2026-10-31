@@ -1,0 +1,23 @@
+<Cui id="quote-quote-block-component" product="9-1" version="1">
+  <Page id="quote-quote-block-component-root">
+    <Container id="stack" Type="Absolute">
+      <Container id="container" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-2" Type="Vertical Stack">
+      <Container id="intrinsic-height" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="value-listenable-builder" Type="Vertical Stack" />
+          <Container id="flexible" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" padding="6.0">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="container-5" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

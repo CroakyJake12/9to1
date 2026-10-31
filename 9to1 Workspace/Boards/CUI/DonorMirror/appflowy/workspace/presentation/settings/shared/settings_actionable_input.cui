@@ -1,0 +1,16 @@
+<Cui id="shared-settings-actionable-input" product="9-1" version="1">
+  <Actions>
+    <Action name="on-save" command="onSave" />
+  </Actions>
+  <Page id="shared-settings-actionable-input-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" height="48">
+          <Input id="flowy-text-field" Type="Text" />
+        </Container>
+      </Container>
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

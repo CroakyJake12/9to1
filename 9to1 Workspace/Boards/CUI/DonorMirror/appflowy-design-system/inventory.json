@@ -1,0 +1,1188 @@
+{
+  "summary": {
+    "translated": 129,
+    "dropped_nodes": 0,
+    "gap_count": 365,
+    "gap_constructs": {
+      "n/a": 97,
+      "custom donor widget": 58,
+      "computed size": 32,
+      "insets expression": 27,
+      "property not modelled": 20,
+      "theme colour token": 17,
+      "distributor alignment": 14,
+      "gesture handling (tap/drag/long-press)": 11,
+      "hover pointer state": 7,
+      "flex share sizing": 7,
+      "fixed horizontal spacer": 7,
+      "scroller": 6,
+      "donor tooltip wrapper (FlowyTooltip)": 6,
+      "border spec": 5,
+      "text overflow mode": 5,
+      "layered stack with positioned children": 4,
+      "donor icon set": 4,
+      "donor button wrapper (FlowyButton)": 4,
+      "donor icon asset (FlowySvg)": 4,
+      "donor text wrapper (FlowyText)": 4,
+      "separator": 3,
+      "transient anchored popover": 2,
+      "fixed vertical spacer": 2,
+      "donor icon button wrapper (FlowyIconButton)": 2,
+      "inline handler block": 2,
+      "validated form field": 2,
+      "tooltip surface": 2,
+      "computed subtree": 1,
+      "donor popover wrapper (AppFlowyPopover)": 1,
+      "ripple/press visual state": 1,
+      "inline text run": 1,
+      "animated property transition": 1,
+      "live variable / binding expression": 1,
+      "sliver-based scrolling": 1,
+      "transient banner": 1,
+      "donor text field wrapper (FlowyTextField)": 1,
+      "intrinsic sizing": 1,
+      "fixed zero-size spacer": 1
+    },
+    "pruned_stale": 0,
+    "donor": "appflowy-design-system",
+    "app": "Boards",
+    "source": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages",
+    "translated_files": 55,
+    "untranslated_files": 97,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "appflowy_backend/lib/appflowy_backend.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/appflowy_backend_method_channel.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/appflowy_backend_platform_interface.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/dispatch/dispatch.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/dispatch/error.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/ffi.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/log.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_backend/lib/rust_stream.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_popover/lib/appflowy_popover.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_popover/lib/src/follower.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_popover/lib/src/layout.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_popover/lib/src/mask.dart",
+      "cui": "appflowy_popover/lib/src/mask.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 1,
+      "donor_sha256": "8897925074f0290f5fc0061c9036d07d47f2a490648904348b1b61bcb64ddad0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_popover/lib/src/mutex.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_popover/lib/src/popover.dart",
+      "cui": "appflowy_popover/lib/src/popover.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 3,
+      "donor_sha256": "9b55bc6a5e5891b5bbdda5b61f72bb170a6432f11bcd005efe668410d6fff591",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_result/lib/appflowy_result.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_result/lib/src/async_result.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_result/lib/src/result.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/appflowy_ui.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/avatar/avatar.dart",
+      "cui": "appflowy_ui/lib/src/component/avatar/avatar.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "d0873993a1fd9b6a1b71850ee3211a4bc5fc137fe8a0536fb806e540a24348a3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/base_button/base.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/base_button/base_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 2,
+      "donor_sha256": "95aa4aaa19e8f2c90fa222ae0b603a7f7e158920564fa63d3cc296b0bf8e3480",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/base_button/base_text_button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/filled_button/filled_button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/filled_button/filled_icon_text_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/filled_button/filled_icon_text_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "f88b0d4f4f174223f21ef56c6a910c460355a0aaa84a18d04086d84a6577d3c5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/filled_button/filled_text_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/filled_button/filled_text_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "c8f1cf3a06709a3d61e04cbb6ec6e8f83677f32f7087fb7b38bb7503452f8045",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/ghost_button/ghost_button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/ghost_button/ghost_icon_text_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/ghost_button/ghost_icon_text_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "fa8b7f340ff7b4ec804c80b54a6762220c40ac3cc7c9a293f90531d749e4824a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/ghost_button/ghost_text_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/ghost_button/ghost_text_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "05ebb22bd1b9bcaf09df2c4b82c056f6f7878aba415ff4b104cb87ca21b49d33",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/outlined_button/outlined_button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/outlined_button/outlined_icon_text_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/outlined_button/outlined_icon_text_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "33d0dcb1b843f2b4a816e82f8d332b745f4353a267292f98f660f2860881563d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/button/outlined_button/outlined_text_button.dart",
+      "cui": "appflowy_ui/lib/src/component/button/outlined_button/outlined_text_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "d8ed2b3bb91b75e41f57423d2861f063decda01f9d3127b9a4988ee8f6a71815",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/component.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "cui": "appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 2,
+      "donor_sha256": "af47c15a5c1b96b835a8561639d73eab23228592f876d7cf820e8b495ad74d8a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/menu/menu.dart",
+      "cui": "appflowy_ui/lib/src/component/menu/menu.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "ba00b6c8d0df1d457c97b65ce1c399e04edd2f7425ff710b41f0fb26db27ad2b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/menu/menu_item.dart",
+      "cui": "appflowy_ui/lib/src/component/menu/menu_item.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "ee7d866242925d3d4298e553de2dd7600f5ade82d219797483f81f49be5d89df",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/menu/section.dart",
+      "cui": "appflowy_ui/lib/src/component/menu/section.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "df84daecbb02615763f23bf670080e4255160f4b24576407f06cd84a5c6bae18",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/menu/text_menu_item.dart",
+      "cui": "appflowy_ui/lib/src/component/menu/text_menu_item.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "ed1875e5371fcd154d986d311e310e4877b4fdf09ab827d87e200cbe1ceeb435",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/modal/dimension.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/modal/modal.dart",
+      "cui": "appflowy_ui/lib/src/component/modal/modal.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "3f598bc190fc4528ddc3a91fcc3aab7ad42aafc0bc9e0982dca2143097d171ca",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/popover/anchor.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/popover/popover.dart",
+      "cui": "appflowy_ui/lib/src/component/popover/popover.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "e05852f9d9d8248335001a6db715b11e889895d02e9695dd8abbe65ec427b624",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/popover/shadcn/_mouse_area.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/popover/shadcn/_portal.dart",
+      "cui": "appflowy_ui/lib/src/component/popover/shadcn/_portal.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "183b8adf4f0afec554b520727b39dd195e48bb317b45cb9367bae146b30648e9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/separator/divider.dart",
+      "cui": "appflowy_ui/lib/src/component/separator/divider.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "7b79eb3eb59bbe87242067fa3697709f334051003cb64b2d33f74421a126728b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/component/textfield/textfield.dart",
+      "cui": "appflowy_ui/lib/src/component/textfield/textfield.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 2,
+      "donor_sha256": "fb3f51c9e54823d501ca9191b52a4bad06842a24f8701d6efa682b20ef33a41e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/appflowy_theme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/data/appflowy_default/primitive.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/data/appflowy_default/semantic.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/data/built_in_themes.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/data/custom/custom_theme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/data/shared.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/border_radius/border_radius.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/background_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/badge_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/border_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/brand_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/fill_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/icon_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/other_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/surface_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/surface_container_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/color_scheme/text_color_scheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/shadow/shadow.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/spacing/spacing.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/text_style/base/default_text_style.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/text_style/text_style.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/definition/theme_data.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/lib/src/theme/theme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "appflowy_ui/script/generate_theme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/colorscheme/colorscheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/colorscheme/dandelion.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/colorscheme/default_colorscheme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/colorscheme/lavender.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/colorscheme/lemonade.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/file_picker/file_picker_impl.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/file_picker/file_picker_service.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/icon_data.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/language.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/notifier.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/platform_extension.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/bloc/dynamic_plugin_bloc.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/bloc/dynamic_plugin_event.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/bloc/dynamic_plugin_state.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/service/location_service.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/service/models/exceptions.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/service/models/flowy_dynamic_plugin.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/service/models/plugin_type.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/plugins/service/plugin_service.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/size.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/theme.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/theme_extension.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/time/duration.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/time/prelude.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/utils/color_converter.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra/lib/uuid.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/flowy_infra_ui_platform_interface/lib/flowy_infra_ui_platform_interface.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/flowy_infra_ui_platform_interface/lib/src/method_channel_flowy_infra_ui.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/flowy_infra_ui_web/lib/flowy_infra_ui_web.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/basis.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/flowy_infra_ui.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/flowy_infra_ui_web.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/appflowy_popover.dart",
+      "cui": "flowy_infra_ui/lib/src/flowy_overlay/appflowy_popover.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "2a160c99eb5f142294cdcc9e75d7a8c89f7c0cb4f0cf1bc84e0937237501f546",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.dart",
+      "cui": "flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "1b70ab5a242cee2e26ddec256889da832222d4904c3ec1d9bcb592e91957dc54",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
+      "cui": "flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 1,
+      "donor_sha256": "04457c68f2bafbf580d83be5d4d9163dbbf794d2b098cb1612044fef4381907c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/flowy_popover_layout.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/layout.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "cui": "flowy_infra_ui/lib/src/flowy_overlay/list_overlay.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "28b59a10ab8ac871e3e12b1359769f73827a50c49cb37ae30eb531df033dbff1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/flowy_overlay/option_overlay.dart",
+      "cui": "flowy_infra_ui/lib/src/flowy_overlay/option_overlay.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 1,
+      "donor_sha256": "e0b7e61195d128d84a26f2575d30c119db9a9745fcd34539aad0e4a424dfd1b0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/focus/auto_unfocus_overlay.dart",
+      "cui": "flowy_infra_ui/lib/src/focus/auto_unfocus_overlay.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 1,
+      "donor_sha256": "6e645317dde3060b8686ab491e9f3991131d82fc80c501b9d447aaa095a3d5b0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/src/keyboard/keyboard_visibility_detector.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/bar_title.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/bar_title.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "7837d6c8e7e9d90685afa7fc8e61eecfd5e56b7c87e00f46f6dd59981c0ae85a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/button.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 23,
+      "actions": 3,
+      "donor_sha256": "66db4e830a2bf98df30597c4ebc458c22fd781f17165685c9d91cc5bc429edf5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/close_button.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/close_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 1,
+      "donor_sha256": "d3c4abb544d85776087576e2d21583bc3bd5b1bb86e8a0a04898a52436d6ec2d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/color_picker.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 1,
+      "donor_sha256": "761b1eb7202b0c858055b49ee21810d16c05601471734f7cde0d4bca8199de50",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/container.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/container.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "a82d21640ff74280035ddf619a06c429bd2316794041d480a6e4a0d7385b7959",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/decoration.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/divider.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/divider.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "953b3e566f8e6e2b9d5d89c1b0e2c2ce083a9b3c4dacfd88bc8ca7ca78aff5e7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/extension.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/extension.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "6b343c1ac80fbc5df5d300d487639667d75ab102271c33fc357c814267c06e4a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/hover.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/hover.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 1,
+      "donor_sha256": "79053145a49fcdbd1a5c7d0519012af3c4e93744b44c979b815c435f416a5dfc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/icon_button.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/icon_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 1,
+      "donor_sha256": "260c0e2d6724e8db67a8b42156db824303030ee1a3e4d643bfd3c8b94fb77577",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/image_icon.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/primary_rounded_button.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/primary_rounded_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 1,
+      "donor_sha256": "e62deb17a138ff849f2799f481094603528f3a23ff148721a2340019cfcdcd01",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/progress_indicator.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/progress_indicator.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "3dc3eddcc5d4ad73b574da34599a70dcf791d4175bda05e42d612be21d8737c4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/scrollbar.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/scrollbar.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "8f44c1d7e0b13de0ce4d4473f78e0d82501656691fbbbf2e168015d1b58eeafa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/scrolling/styled_list.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "828fb62652edb56d046710037dfddfe90cf900d2efd53302fa553188bab736ba",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "2c53f3d9cee316a4a94c0454272bff7376cd09171bfb0ce1c90de9a8911c5da1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/snap_bar.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/snap_bar.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "099ee738e6d1d14b4601983a27210d17b45706772df42f1bdc932e7e71df37ef",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/text.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/text.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "6df59503367cc8642551666aff8235614de6fd184e5665688da2cbc95d94398b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/text_field.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/text_field.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 3,
+      "donor_sha256": "13ea1a45f852864445e1242d53eb6a2b1f5da886d0824f8b2e9a767d65e91a9a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/text_input.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/text_input.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 2,
+      "donor_sha256": "a464705f7f19991acfc594761a797891e459a8eb8398667d996378e3bc91299a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/style_widget/toolbar_button.dart",
+      "cui": "flowy_infra_ui/lib/style_widget/toolbar_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "a41c1ca741578158e9dc9e6650edd977d59030206a829030288953c66122a907",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/buttons/base_styled_button.dart",
+      "cui": "flowy_infra_ui/lib/widget/buttons/base_styled_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "1651dfe5714b2ada82d174a167626dabce1c6fc733d77646ba12ce58bd150934",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/buttons/primary_button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/buttons/secondary_button.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/constraint_flex_view.dart",
+      "cui": "flowy_infra_ui/lib/widget/constraint_flex_view.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "46b288c961dcb4162fe7c8465531b064fd070e8995c07951f122429fed6bc5b0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/dialog/dialog_size.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "cui": "flowy_infra_ui/lib/widget/dialog/styled_dialogs.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "d443821aaaa17fff3dc2f384b87182738196e7d8833708c6a7056ba1bd61f9b1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/flowy_tooltip.dart",
+      "cui": "flowy_infra_ui/lib/widget/flowy_tooltip.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "ba82b4d0da33de7dcf75cb76293cd58736251e7a6e9ae22cbb12dcd7b5f99703",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/ignore_parent_gesture.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/mouse_hover_builder.dart",
+      "cui": "flowy_infra_ui/lib/widget/mouse_hover_builder.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 1,
+      "donor_sha256": "149fab861bf3f47eb10aa23f8fce925cd44d42858fa137866ccc00e326f8c166",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/rounded_button.dart",
+      "cui": "flowy_infra_ui/lib/widget/rounded_button.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 1,
+      "actions": 1,
+      "donor_sha256": "cf4cb60b1222e00f4651018d4ac9316dde343cfaac84f51ff0f5f2bc91ebf5cd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "cui": "flowy_infra_ui/lib/widget/rounded_input_field.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 1,
+      "donor_sha256": "9115a838968b0f08283c11c8d0cbf0c7c9a03d1f58aa434a07da242d6844b003",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/route/animation.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/separated_flex.dart",
+      "cui": "flowy_infra_ui/lib/widget/separated_flex.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "ba7381d0d29dd8d1d0568c24d90ea9d2d706087bf24ae1c7f1d5d28dc59d8089",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_infra_ui/lib/widget/spacing.dart",
+      "cui": "flowy_infra_ui/lib/widget/spacing.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "cb8a116245159d4dbd769660f6cf00d1d9d872d4ea737e612623d3f8db5873b4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "flowy_svg/bin/flowy_svg.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_svg/bin/options.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_svg/lib/flowy_svg.dart",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "dart"
+    },
+    {
+      "donor_file": "flowy_svg/lib/src/flowy_svg.dart",
+      "cui": "flowy_svg/lib/src/flowy_svg.cui",
+      "status": "translated",
+      "dialect": "dart",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "3249cc0bb505e8f17aa81137121b3c6b6e9a660c243ac0beeed57d1474e56b49",
+      "refreshed": false
+    }
+  ]
+}

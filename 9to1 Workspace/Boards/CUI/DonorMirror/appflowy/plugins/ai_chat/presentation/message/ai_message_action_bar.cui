@@ -1,0 +1,118 @@
+<Cui id="message-ai-message-action-bar" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-document-id-=-get-opened-document-id();-if-(document-id-!=-null)-{-await-on-add-to-existing-page(context,-document-id);-await-force-reload(document-id);-await-future.delayed(const-duration(milliseconds:-500));-await-update-selection(document-id);-}-else-{-widget.on-override-visibility?.call(true);-if-(space-view-!=-null)-{-unawaited(-context-.read&lt;view-selector-cubit&gt;()-.refresh-sources([space-view],-space-view),-);-}-popover-controller.show();-}-}" command="() async {
+          final documentId = getOpenedDocumentId();
+          if (documentId != null) {
+            await onAddToExistingPage(context, documentId);
+            await forceReload(documentId);
+            await Future.delayed(const Duration(milliseconds: 500));
+            await updateSelection(documentId);
+          } else {
+            widget.onOverrideVisibility?.call(true);
+            if (spaceView != null) {
+              unawaited(
+                context
+                    .read&lt;ViewSelectorCubit&gt;()
+                    .refreshSources([spaceView], spaceView),
+              );
+            }
+            popoverController.show();
+          }
+        }" />
+    <Action name="()-async-{-final-message-text-=-text-message.text.trim();-final-document-=-custom-markdown-to-document(-message-text,-table-width:-250.0,-);-await-get-it&lt;clipboard-service&gt;().set-data(-clipboard-service-data(-plain-text:-strip-markdown-if-necessary(message-text),-in-app-json:-json-encode(document.to-json()),-),-);-if-(context.mounted)-{-show-toast-notification(-message:-locale-keys.message-copy-success.tr(),-);-}-}" command="() async {
+          final messageText = textMessage.text.trim();
+          final document = customMarkdownToDocument(
+            messageText,
+            tableWidth: 250.0,
+          );
+          await getIt&lt;ClipboardService&gt;().setData(
+            ClipboardServiceData(
+              plainText: _stripMarkdownIfNecessary(messageText),
+              inAppJson: jsonEncode(document.toJson()),
+            ),
+          );
+          if (context.mounted) {
+            showToastNotification(
+              message: LocaleKeys.message_copy_success.tr(),
+            );
+          }
+        }" />
+    <Action name="()-{-if-(predefined-format-!=-null)-{-widget.on-regenerate?.call(predefined-format!);-}-}" command="() {
+                  if (predefinedFormat != null) {
+                    widget.onRegenerate?.call(predefinedFormat!);
+                  }
+                }" />
+    <Action name="()-{-widget.on-override-visibility?.call(true);-popover-controller.show();-}" command="() {
+          widget.onOverrideVisibility?.call(true);
+          popoverController.show();
+        }" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="message-ai-message-action-bar-root">
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Container id="container" Type="Vertical Stack" background="#1F1F2329" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Button id="flowy-icon-button" Type="Action" action="()-async-{-final-message-text-=-text-message.text.trim();-final-document-=-custom-markdown-to-document(-message-text,-table-width:-250.0,-);-await-get-it&lt;clipboard-service&gt;().set-data(-clipboard-service-data(-plain-text:-strip-markdown-if-necessary(message-text),-in-app-json:-json-encode(document.to-json()),-),-);-if-(context.mounted)-{-show-toast-notification(-message:-locale-keys.message-copy-success.tr(),-);-}-}">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="flowy-tooltip-2" Type="Floating">
+      <Button id="flowy-icon-button-2" Type="Action" action="on-tap">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="flowy-tooltip-3" Type="Floating">
+      <Button id="flowy-icon-button-3" Type="Action" action="()-{-widget.on-override-visibility?.call(true);-popover-controller.show();-}" width="32.0">
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="flowy-svg-3" />
+          <Image id="flowy-svg-4" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="2.0" background="#1F1F2329">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="bloc-builder" Type="Vertical Stack" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Container id="flowy-tooltip-4" Type="Floating">
+          <Container id="mouse-region" Type="Vertical Stack">
+            <Container id="gesture-detector" Type="Vertical Stack">
+              <Container id="center" Type="Vertical Stack">
+                <Image id="flowy-svg-5" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover-2" Type="Context Menu" />
+    <Container id="flowy-tooltip-5" Type="Floating">
+      <Button id="flowy-icon-button-4" Type="Action" action="()-{-widget.on-override-visibility?.call(true);-popover-controller.show();-}" width="32.0">
+        <Container id="row-3" Type="Horizontal Stack">
+          <Image id="flowy-svg-6" />
+          <Image id="flowy-svg-7" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="app-flowy-popover-3" Type="Context Menu" />
+    <Container id="flowy-tooltip-6" Type="Floating">
+      <Button id="flowy-icon-button-5" Type="Action" action="()-async-{-final-document-id-=-get-opened-document-id();-if-(document-id-!=-null)-{-await-on-add-to-existing-page(context,-document-id);-await-force-reload(document-id);-await-future.delayed(const-duration(milliseconds:-500));-await-update-selection(document-id);-}-else-{-widget.on-override-visibility?.call(true);-if-(space-view-!=-null)-{-unawaited(-context-.read&lt;view-selector-cubit&gt;()-.refresh-sources([space-view],-space-view),-);-}-popover-controller.show();-}-}">
+        <Image id="flowy-svg-8" />
+      </Button>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="container-3" Type="Vertical Stack" height="24" padding="12 8 12 4">
+          <Container id="align" Type="Vertical Stack">
+            <Text id="text" />
+          </Container>
+        </Container>
+        <Container id="padding" Type="Vertical Stack" padding="12 12 8" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Container id="list-view" Type="Vertical Stack" padding="8 4 8 12" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

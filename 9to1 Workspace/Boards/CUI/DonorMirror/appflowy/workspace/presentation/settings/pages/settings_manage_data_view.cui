@@ -1,0 +1,35 @@
+<Cui id="pages-settings-manage-data-view" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-{-af-launch-uri(uri.file(widget.path)),-}" command="() =&gt; {
+                    afLaunchUri(Uri.file(widget.path)),
+                  }" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="pages-settings-manage-data-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="expanded" Type="Vertical Stack">
+          <Container id="flowy-tooltip" Type="Floating">
+            <Container id="gesture-detector" Type="Vertical Stack">
+              <Container id="mouse-region" Type="Vertical Stack">
+                <Text id="text" max-lines="2" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="container" Type="Vertical Stack" CornerRadius="8">
+          <Text id="text-2" />
+        </Container>
+        <Container id="flowy-tooltip-2" Type="Floating">
+          <Image id="flowy-svg-2" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

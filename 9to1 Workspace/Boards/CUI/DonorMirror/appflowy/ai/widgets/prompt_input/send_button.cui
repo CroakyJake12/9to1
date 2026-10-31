@@ -1,0 +1,27 @@
+<Cui id="prompt-input-send-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-switch-(state)-{-case-send-button-state.enabled:-on-send-pressed();-break;-case-send-button-state.streaming:-on-stop-streaming();-break;-case-send-button-state.disabled:-break;-}-}" command="() {
+        switch (state) {
+          case SendButtonState.enabled:
+            onSendPressed();
+            break;
+          case SendButtonState.streaming:
+            onStopStreaming();
+            break;
+          case SendButtonState.disabled:
+            break;
+        }
+      }" />
+  </Actions>
+  <Page id="prompt-input-send-button-root">
+    <Button id="flowy-icon-button" Type="Action" action="()-{-switch-(state)-{-case-send-button-state.enabled:-on-send-pressed();-break;-case-send-button-state.streaming:-on-stop-streaming();-break;-case-send-button-state.disabled:-break;-}-}">
+      <Text id="text-span">
+        <Text id="text-span-2" />
+        <Text id="text-span-3" text="ESC" />
+      </Text>
+      <Image id="flowy-svg" />
+      <Image id="flowy-svg-2" />
+      <Image id="flowy-svg-3" />
+    </Button>
+  </Page>
+</Cui>

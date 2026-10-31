@@ -1,0 +1,89 @@
+<Cui id="share-publish-tab" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-widget.on-submitted(widget.controller.text);-focus-node.unfocus();-}" command="() {
+          widget.onSubmitted(widget.controller.text);
+          focusNode.unfocus();
+        }" />
+    <Action name="on-tap" command="onTap" />
+    <Action name="on-un-publish" command="onUnPublish" />
+    <Action name="widget.on-copy" command="widget.onCopy" />
+  </Actions>
+  <Page id="share-publish-tab-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" width="108" height="36">
+      <Button id="flowy-button" Type="Action" action="on-un-publish" CornerRadius="10" />
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Container id="vspace-5" Type="Vertical Stack" />
+      <Container id="vspace-6" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Image id="flowy-svg" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Text id="flowy-text" />
+      </Container>
+      <Container id="vspace-7" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" height="36">
+      <Input id="flowy-text-field" Type="Text" />
+    </Container>
+    <Container id="row-3" Type="Horizontal Stack">
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="flexible" Type="Vertical Stack" />
+      <Container id="hspace-4" Type="Horizontal Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="2.0">
+        <Container id="vertical-divider" Type="Vertical Stack" width="1.0" />
+      </Container>
+      <Container id="hspace-5" Type="Horizontal Stack" />
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" padding="6 6">
+      <Button id="flowy-button-2" Type="Action" action="()-{-widget.on-submitted(widget.controller.text);-focus-node.unfocus();-}" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" width="32" height="32" padding="6" background="#141F2329">
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="container-2" Type="Vertical Stack" CornerRadius="8">
+        <Container id="column-4" Type="Vertical Stack">
+          <Container id="vspace-8" Type="Vertical Stack" />
+          <Container id="vspace-9" Type="Vertical Stack" />
+          <Container id="vspace-10" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="12">
+      <Container id="divider" Type="Vertical Stack" height="1" />
+    </Container>
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="padding-4" Type="Vertical Stack" padding="12">
+        <Text id="flowy-text-2" />
+      </Container>
+    </Container>
+    <Container id="value-listenable-builder-2" Type="Vertical Stack" />
+    <Container id="gesture-detector-2" Type="Vertical Stack" />
+    <Container id="flowy-tooltip-2" Type="Floating">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding-5" Type="Vertical Stack" padding="4 2" />
+    <Container id="container-3" Type="Vertical Stack" height="30" padding="8">
+      <Container id="row-4" Type="Horizontal Stack">
+        <Image id="flowy-svg-3" />
+        <Container id="hspace-6" Type="Horizontal Stack" />
+        <Image id="flowy-svg-4" />
+        <Container id="hspace-7" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

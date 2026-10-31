@@ -1,16 +1,16 @@
 {
-  "translated": 8342,
-  "dropped_nodes": 988,
-  "gap_count": 3507,
+  "translated": 8276,
+  "dropped_nodes": 982,
+  "gap_count": 3501,
   "gap_constructs": {
     "toolbar with overflow": 1309,
     "notebook bar (ribbon) group": 798,
     "optional section": 352,
     "separator": 304,
-    "button row": 134,
+    "button row": 131,
     "toolbar overflow": 118,
-    "window and dialog chrome": 117,
     "menu button": 115,
+    "window and dialog chrome": 114,
     "scroller with explicit bars": 70,
     "radio menu item": 67,
     "item collection (list/tree/table)": 47,
@@ -177,20 +177,6 @@
       "donor": "GtkButtonBox",
       "construct": "button row",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/checkwarningdialog.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkDialog",
-      "construct": "window and dialog chrome",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/chisquaretestdialog.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkButtonBox",
-      "construct": "button row",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/chisquaretestdialog.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
@@ -24445,20 +24431,6 @@
     {
       "donor": "GtkDialog",
       "construct": "window and dialog chrome",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/ttestdialog.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkButtonBox",
-      "construct": "button row",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/ttestdialog.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkDialog",
-      "construct": "window and dialog chrome",
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/ungroupdialog.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -24560,27 +24532,13 @@
       "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/zoombox.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkDialog",
-      "construct": "window and dialog chrome",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/ztestdialog.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkButtonBox",
-      "construct": "button row",
-      "file": "9to1 Workspace/Data/Source/LibreOffice/sc/uiconfig/scalc/ui/ztestdialog.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     }
   ],
-  "pruned_stale": 0,
+  "pruned_stale": 3,
   "donor": "libreoffice-calc",
   "app": "Data",
   "source": "9to1 Workspace/Data/Source/LibreOffice/sc",
-  "translated_files": 188,
+  "translated_files": 185,
   "untranslated_files": 0,
   "unsupported_suffixes": {}
 }

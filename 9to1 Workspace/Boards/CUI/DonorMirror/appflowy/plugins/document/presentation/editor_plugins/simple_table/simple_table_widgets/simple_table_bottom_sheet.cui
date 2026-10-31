@@ -1,0 +1,42 @@
+<Cui id="simple-table-widgets-simple-table-bottom-sheet" product="9-1" version="1">
+  <Page id="simple-table-widgets-simple-table-bottom-sheet-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="column-2" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="vspace-2" Type="Vertical Stack" />
+    <Container id="vspace-3" Type="Vertical Stack" />
+    <Container id="vspace-4" Type="Vertical Stack" />
+    <Container id="vspace-5" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="16.0">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="vspace-6" Type="Vertical Stack" />
+    <Container id="padding-2" Type="Vertical Stack" padding="8.0" />
+    <Container id="padding-3" Type="Vertical Stack" padding="16.0">
+      <Text id="flowy-text-2" />
+    </Container>
+    <Container id="vspace-7" Type="Vertical Stack" />
+    <Container id="padding-4" Type="Vertical Stack" padding="8.0" />
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="sized-box-2" Type="Vertical Stack">
+        <Container id="single-child-scroll-view-2" Type="Vertical Stack">
+          <Container id="column-4" Type="Vertical Stack">
+            <Container id="vspace-8" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="vspace-9" Type="Vertical Stack" />
+    <Container id="padding-5" Type="Vertical Stack" padding="16.0">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

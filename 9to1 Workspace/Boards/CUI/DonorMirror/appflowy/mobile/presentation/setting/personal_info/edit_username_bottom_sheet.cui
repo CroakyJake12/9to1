@@ -1,0 +1,8 @@
+<Cui id="personal-info-edit-username-bottom-sheet" product="9-1" version="1">
+  <Page id="personal-info-edit-username-bottom-sheet-root">
+    <Container id="column" Type="Vertical Stack">
+      <Input id="text-form-field" Type="Text" />
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

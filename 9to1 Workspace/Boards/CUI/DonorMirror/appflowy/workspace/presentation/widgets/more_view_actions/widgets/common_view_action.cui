@@ -1,0 +1,15 @@
+<Cui id="widgets-common-view-action" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="widgets-common-view-action-root">
+    <Container id="container" Type="Vertical Stack" height="34" padding="2.0">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Button id="flowy-button" Type="Action" action="on-tap" padding="6">
+          <Image id="flowy-svg" />
+          <Text id="flowy-text" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

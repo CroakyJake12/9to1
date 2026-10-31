@@ -1,0 +1,6 @@
+<Cui id="desktop-toolbar-desktop-floating-toolbar" product="9-1" version="1">
+  <Page id="desktop-toolbar-desktop-floating-toolbar-root">
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="positioned" Type="Vertical Stack" />
+  </Page>
+</Cui>

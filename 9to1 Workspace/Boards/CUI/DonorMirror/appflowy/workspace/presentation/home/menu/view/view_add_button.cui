@@ -1,0 +1,15 @@
+<Cui id="view-view-add-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-editing(true);-popover.show();-}" command="() {
+            onEditing(true);
+            popover.show();
+          }" />
+  </Actions>
+  <Page id="view-view-add-button-root">
+    <Button id="flowy-icon-button" Type="Action" action="()-{-on-editing(true);-popover.show();-}" width="24">
+      <Image id="flowy-svg" />
+    </Button>
+    <Image id="flowy-svg-2" />
+    <Image id="flowy-svg-3" />
+  </Page>
+</Cui>

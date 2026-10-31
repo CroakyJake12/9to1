@@ -1,0 +1,29 @@
+<Cui id="message-user-message-bubble" product="9-1" version="1">
+  <Page id="message-user-message-bubble-root">
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="padding-2" Type="Vertical Stack" padding="32" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="flexible" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="16.0 8.0" />
+    </Container>
+    <Container id="wrap" Type="Wrap" />
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="10" background="#00000000">
+      <Container id="padding-3" Type="Vertical Stack" padding="10 16">
+        <Container id="row-2" Type="Horizontal Stack">
+          <Image id="flowy-svg" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="flexible-2" Type="Vertical Stack">
+            <Text id="flowy-text" max-lines="6" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

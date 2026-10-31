@@ -1,0 +1,18 @@
+<Cui id="container-accessory" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-accessory.on-tap(context);-on-tap-accessory(accessory.type);-}" command="() {
+          accessory.onTap(context);
+          onTapAccessory(accessory.type);
+        }" />
+  </Actions>
+  <Page id="container-accessory-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="vertical-divider" Type="Vertical Stack" width="1" background="#FF1F2329" />
+    <Container id="intrinsic-height" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" width="24" height="22" />
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

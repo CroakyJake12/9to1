@@ -1,0 +1,7 @@
+<Cui id="presentation-collaborator-avatar-stack" product="9-1" version="1">
+  <Page id="presentation-collaborator-avatar-stack-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

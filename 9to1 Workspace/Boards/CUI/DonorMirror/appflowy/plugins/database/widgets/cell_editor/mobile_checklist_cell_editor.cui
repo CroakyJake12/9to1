@@ -1,0 +1,81 @@
+<Cui id="cell-editor-mobile-checklist-cell-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;checklist-cell-bloc&gt;()-.add" command="() =&gt; context
+                  .read&lt;ChecklistCellBloc&gt;()
+                  .add" />
+    <Action name="()-{-context-.read&lt;checklist-cell-bloc&gt;()-.add(const-checklist-cell-event.update-phantom-index(-1));-context-.read&lt;checklist-cell-bloc&gt;()-.add(const-checklist-cell-event.create-new-task(&quot;&quot;));-}" command="() {
+          context
+              .read&lt;ChecklistCellBloc&gt;()
+              .add(const ChecklistCellEvent.updatePhantomIndex(-1));
+          context
+              .read&lt;ChecklistCellBloc&gt;()
+              .add(const ChecklistCellEvent.createNewTask(&quot;&quot;));
+        }" />
+    <Action name="()-{-context.read&lt;checklist-cell-bloc&gt;().add(-checklist-cell-event.delete-task(widget.task.data.id),-);-context.pop();-}" command="() {
+                context.read&lt;ChecklistCellBloc&gt;().add(
+                      ChecklistCellEvent.deleteTask(widget.task.data.id),
+                    );
+                context.pop();
+              }" />
+    <Action name="(description)-{-submit-update-task-description(description);-}" command="(description) {
+                _submitUpdateTaskDescription(description);
+              }" />
+    <Action name="debounce-on-changed-text" command="_debounceOnChangedText" />
+    <Action name="show-delete-task-bottom-sheet" command="_showDeleteTaskBottomSheet" />
+  </Actions>
+  <Page id="cell-editor-mobile-checklist-cell-editor-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="8.0" />
+      <Container id="divider" Type="Vertical Stack" />
+      <Container id="expanded" Type="Vertical Stack" />
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="sized-box" Type="Vertical Stack" height="44.0">
+        <Container id="align" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" padding="5 4">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="ink-well" Type="Vertical Stack">
+          <Container id="center" Type="Vertical Stack">
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+        <Container id="expanded-2" Type="Vertical Stack">
+          <Input id="text-field" Type="Text" />
+        </Container>
+        <Container id="ink-well-2" Type="Vertical Stack">
+          <Container id="center-2" Type="Vertical Stack">
+            <Image id="flowy-svg-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="8.0">
+        <Container id="ink-well-3" Type="Vertical Stack">
+          <Container id="container-2" Type="Vertical Stack" height="44" padding="8">
+            <Container id="row-2" Type="Horizontal Stack">
+              <Image id="flowy-svg-3" />
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Text id="flowy-text" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="divider-2" Type="Vertical Stack" height="9" />
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="8.0">
+      <Container id="ink-well-4" Type="Vertical Stack">
+        <Container id="padding-4" Type="Vertical Stack" padding="8 13">
+          <Container id="row-3" Type="Horizontal Stack">
+            <Image id="flowy-svg-4" />
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Text id="flowy-text-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

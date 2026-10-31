@@ -1,0 +1,18 @@
+<Cui id="widgets-switch-sign-in-sign-up-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="widgets-switch-sign-in-sign-up-button-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Text id="flowy-text" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Text id="flowy-text-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

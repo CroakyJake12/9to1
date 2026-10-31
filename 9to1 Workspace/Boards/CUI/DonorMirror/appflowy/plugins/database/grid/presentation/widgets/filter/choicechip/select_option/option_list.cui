@@ -1,0 +1,10 @@
+<Cui id="select-option-option-list" product="9-1" version="1">
+  <Page id="select-option-option-list-root">
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="6">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

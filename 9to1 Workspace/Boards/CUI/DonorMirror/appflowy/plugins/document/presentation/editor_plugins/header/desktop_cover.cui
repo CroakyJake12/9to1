@@ -1,0 +1,19 @@
+<Cui id="header-desktop-cover" product="9-1" version="1">
+  <Page id="header-desktop-cover-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" />
+        <Container id="sized-box-2" Type="Vertical Stack" />
+        <Container id="container" Type="Vertical Stack" />
+        <Container id="container-2" Type="Vertical Stack" />
+        <Container id="sized-box-3" Type="Vertical Stack" />
+        <Container id="shrink" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="shrink-3" Type="Vertical Stack" />
+    <Container id="shrink-4" Type="Vertical Stack" />
+    <Container id="container-3" Type="Vertical Stack" />
+    <Container id="shrink-5" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,22 @@
+<Cui id="accessory-cell-accessory" product="9-1" version="1">
+  <Actions>
+    <Action name="accessory.on-tap" command="accessory.onTap" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="accessory-cell-accessory-root">
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="container" Type="Vertical Stack" width="26" height="26">
+        <Container id="center" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="decorated-box" Type="Vertical Stack" background="#00000000" />
+    <Container id="padding" Type="Vertical Stack" padding="6" />
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="hspace" Type="Horizontal Stack" />
+  </Page>
+</Cui>

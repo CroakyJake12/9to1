@@ -1,0 +1,23 @@
+<Cui id="mobile-row-detail-mobile-row-detail-checklist-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-background-color:-aftheme-extension.of(context).background,-builder:-(context)-{-return-bloc-provider.value(-value:-bloc,-child:-const-mobile-checklist-cell-edit-screen(),-);-},-)" command="() =&gt; showMobileBottomSheet(
+            context,
+            backgroundColor: AFThemeExtension.of(context).background,
+            builder: (context) {
+              return BlocProvider.value(
+                value: bloc,
+                child: const MobileChecklistCellEditScreen(),
+              );
+            },
+          )" />
+  </Actions>
+  <Page id="mobile-row-detail-mobile-row-detail-checklist-cell-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="ink-well" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" padding="12 13">
+          <Text id="flowy-text" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

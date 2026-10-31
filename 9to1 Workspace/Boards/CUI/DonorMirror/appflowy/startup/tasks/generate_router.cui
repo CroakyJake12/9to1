@@ -1,0 +1,5 @@
+<Cui id="tasks-generate-router" product="9-1" version="1">
+  <Page id="tasks-generate-router-root">
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

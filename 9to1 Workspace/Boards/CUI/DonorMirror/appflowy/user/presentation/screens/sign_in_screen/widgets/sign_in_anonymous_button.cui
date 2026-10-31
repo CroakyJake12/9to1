@@ -1,0 +1,12 @@
+<Cui id="widgets-sign-in-anonymous-button" product="9-1" version="1">
+  <Page id="widgets-sign-in-anonymous-button-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="bloc-provider" Type="Vertical Stack">
+        <Container id="bloc-builder-2" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+    <Image id="flowy-svg-2" />
+  </Page>
+</Cui>

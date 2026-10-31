@@ -1,0 +1,13 @@
+<Cui id="filter-condition-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="filter-condition-button-root">
+    <Image id="flowy-svg" />
+    <Container id="sized-box" Type="Vertical Stack" height="20">
+      <Button id="flowy-button" Type="Action" action="on-tap" padding="4">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

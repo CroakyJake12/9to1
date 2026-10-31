@@ -1,0 +1,7 @@
+<Cui id="widgets-turn-into-member-widget" product="9-1" version="1">
+  <Page id="widgets-turn-into-member-widget-root">
+    <Container id="flowy-tooltip" Type="Floating">
+      <Image id="flowy-svg" />
+    </Container>
+  </Page>
+</Cui>

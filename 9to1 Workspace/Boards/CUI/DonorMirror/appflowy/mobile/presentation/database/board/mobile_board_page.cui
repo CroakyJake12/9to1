@@ -1,0 +1,21 @@
+<Cui id="board-mobile-board-page" product="9-1" version="1">
+  <Page id="board-mobile-board-page-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack" />
+        <Container id="center-2" Type="Vertical Stack" />
+        <Container id="shrink" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="shrink-2" Type="Vertical Stack" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="42">
+      <Image id="flowy-svg" />
+      <Text id="text" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,9 @@
+<Cui id="continue-with-title-logo" product="9-1" version="1">
+  <Page id="continue-with-title-logo-root">
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack">
+      <Text id="text" />
+      <Text id="text-2" text-alignment="Center" />
+    </Container>
+  </Page>
+</Cui>

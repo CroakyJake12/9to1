@@ -1,0 +1,17 @@
+<Cui id="row-action" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-action.perform-action(context,-view-id,-row-id);-popover-container.of(context).close();-}" command="() {
+          action.performAction(context, viewId, rowId);
+          PopoverContainer.of(context).close();
+        }" />
+  </Actions>
+  <Page id="row-action-root">
+    <Container id="vspace" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-action.perform-action(context,-view-id,-row-id);-popover-container.of(context).close();-}">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

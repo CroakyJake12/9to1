@@ -1,0 +1,10 @@
+<Cui id="theme-upload-upload-new-theme-widget" product="9-1" version="1">
+  <Page id="theme-upload-upload-new-theme-widget-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Image id="flowy-svg" />
+        <Container id="divider" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

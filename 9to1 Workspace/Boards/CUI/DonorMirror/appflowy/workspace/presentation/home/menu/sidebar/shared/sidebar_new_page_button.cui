@@ -1,0 +1,12 @@
+<Cui id="shared-sidebar-new-page-button" product="9-1" version="1">
+  <Actions>
+    <Action name="create-new-page" command="_createNewPage" />
+  </Actions>
+  <Page id="shared-sidebar-new-page-button-root">
+    <Container id="container" Type="Vertical Stack" padding="8">
+      <Button id="flowy-button" Type="Action" action="create-new-page" padding="4.0">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,60 @@
+<Cui id="row-row" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-final-row-bloc-=-context.read&lt;row-bloc&gt;();-if-(context.read&lt;grid-bloc&gt;().state.sorts.is-not-empty)-{-show-cancel-and-delete-dialog(-context:-context,-title:-locale-keys.grid-sort-sorts-active.tr(-named-args:-{-'intention':-locale-keys.grid-row-create-row-below-description.tr(),-},-),-description:-locale-keys.grid-sort-remove-sorting.tr(),-confirm-label:-locale-keys.button-remove.tr(),-close-on-action:-true,-on-delete:-()-{-sort-backend-service(view-id:-view-id).delete-all-sorts();-row-bloc.add(const-row-event.create-row());-},-);-}-else-{-row-bloc.add(const-row-event.create-row());-}-}" command="() {
+        final rowBloc = context.read&lt;RowBloc&gt;();
+        if (context.read&lt;GridBloc&gt;().state.sorts.isNotEmpty) {
+          showCancelAndDeleteDialog(
+            context: context,
+            title: LocaleKeys.grid_sort_sortsActive.tr(
+              namedArgs: {
+                'intention': LocaleKeys.grid_row_createRowBelowDescription.tr(),
+              },
+            ),
+            description: LocaleKeys.grid_sort_removeSorting.tr(),
+            confirmLabel: LocaleKeys.button_remove.tr(),
+            closeOnAction: true,
+            onDelete: () {
+              SortBackendService(viewId: viewId).deleteAllSorts();
+              rowBloc.add(const RowEvent.createRow());
+            },
+          );
+        } else {
+          rowBloc.add(const RowEvent.createRow());
+        }
+      }" />
+    <Action name="widget.open-menu" command="widget.openMenu" />
+  </Actions>
+  <Page id="row-row-root">
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" padding="6 8">
+      <Container id="consumer" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack" />
+    <Button id="flowy-icon-button" Type="Action" action="()-{-final-row-bloc-=-context.read&lt;row-bloc&gt;();-if-(context.read&lt;grid-bloc&gt;().state.sorts.is-not-empty)-{-show-cancel-and-delete-dialog(-context:-context,-title:-locale-keys.grid-sort-sorts-active.tr(-named-args:-{-'intention':-locale-keys.grid-row-create-row-below-description.tr(),-},-),-description:-locale-keys.grid-sort-remove-sorting.tr(),-confirm-label:-locale-keys.button-remove.tr(),-close-on-action:-true,-on-delete:-()-{-sort-backend-service(view-id:-view-id).delete-all-sorts();-row-bloc.add(const-row-event.create-row());-},-);-}-else-{-row-bloc.add(const-row-event.create-row());-}-}" width="20" height="30">
+      <Image id="flowy-svg" />
+    </Button>
+    <Button id="flowy-icon-button-2" Type="Action" action="widget.open-menu" width="20" height="30">
+      <Text id="text-span">
+        <Text id="text-span-2" />
+        <Text id="text-span-3" />
+      </Text>
+      <Image id="flowy-svg-2" />
+    </Button>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="intrinsic-height" Type="Vertical Stack">
+        <Container id="row-3" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="mouse-region-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

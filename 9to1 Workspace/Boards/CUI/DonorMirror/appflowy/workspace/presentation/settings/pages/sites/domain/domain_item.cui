@@ -1,0 +1,51 @@
+<Cui id="domain-domain-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context.read&lt;settings-sites-bloc&gt;().add(-const-settings-sites-event.remove-home-page(),-);-}" command="() {
+                context.read&lt;SettingsSitesBloc&gt;().add(
+                      const SettingsSitesEvent.removeHomePage(),
+                    );
+              }" />
+    <Action name="()-{-final-namespace-url-=-share-constants.build-namespace-url(-name-space:-namespace,-with-https:-true,-);-af-launch-url-string(namespace-url);-}" command="() {
+            final namespaceUrl = ShareConstants.buildNamespaceUrl(
+              nameSpace: namespace,
+              withHttps: true,
+            );
+            afLaunchUrlString(namespaceUrl);
+          }" />
+  </Actions>
+  <Page id="domain-domain-item-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="expanded-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="12.0">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Button id="flowy-button" Type="Action" action="()-{-final-namespace-url-=-share-constants.build-namespace-url(-name-space:-namespace,-with-https:-true,-);-af-launch-url-string(namespace-url);-}">
+          <Text id="flowy-text" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="app-flowy-popover" Type="Context Menu" padding="14.0 12.0" />
+      </Container>
+      <Container id="flowy-tooltip-2" Type="Floating">
+        <Button id="flowy-button-2" Type="Action" action="()-{-context.read&lt;settings-sites-bloc&gt;().add(-const-settings-sites-event.remove-home-page(),-);-}" padding="4.0">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip-3" Type="Floating" />
+    <Button id="flowy-button-3" Type="Action">
+      <Image id="flowy-svg-2" />
+      <Text id="flowy-text-2" />
+    </Button>
+    <Container id="container-3" Type="Vertical Stack">
+      <Container id="flowy-tooltip-4" Type="Floating" />
+    </Container>
+  </Page>
+</Cui>

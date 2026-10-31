@@ -1,0 +1,12 @@
+<Cui id="widgets-m-shared-section-header" product="9-1" version="1">
+  <Page id="widgets-m-shared-section-header-root">
+    <Container id="sized-box" Type="Vertical Stack" height="48">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Image id="flowy-svg" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Container id="hspace-3" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

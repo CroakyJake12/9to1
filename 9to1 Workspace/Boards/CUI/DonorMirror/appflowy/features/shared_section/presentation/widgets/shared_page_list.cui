@@ -1,0 +1,16 @@
+<Cui id="widgets-shared-page-list" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-set-editing(context,-true);-controller.show();-}" command="() {
+          onSetEditing(context, true);
+          controller.show();
+        }" />
+  </Actions>
+  <Page id="widgets-shared-page-list-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" width="4.0" />
+    </Container>
+    <Button id="flowy-icon-button" Type="Action" action="()-{-on-set-editing(context,-true);-controller.show();-}" width="24">
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

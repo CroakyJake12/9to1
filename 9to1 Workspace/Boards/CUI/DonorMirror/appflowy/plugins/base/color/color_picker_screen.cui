@@ -1,0 +1,5 @@
+<Cui id="color-color-picker-screen" product="9-1" version="1">
+  <Page id="color-color-picker-screen-root">
+    <Page id="scaffold" />
+  </Page>
+</Cui>

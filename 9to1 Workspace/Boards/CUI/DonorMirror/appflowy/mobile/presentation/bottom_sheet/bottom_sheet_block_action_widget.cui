@@ -1,0 +1,12 @@
+<Cui id="bottom-sheet-bottom-sheet-block-action-widget" product="9-1" version="1">
+  <Page id="bottom-sheet-bottom-sheet-block-action-widget-root">
+    <Container id="column" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Image id="flowy-svg-2" />
+      <Container id="padding" Type="Vertical Stack" padding="2">
+        <Image id="flowy-svg-3" />
+      </Container>
+      <Image id="flowy-svg-4" />
+    </Container>
+  </Page>
+</Cui>

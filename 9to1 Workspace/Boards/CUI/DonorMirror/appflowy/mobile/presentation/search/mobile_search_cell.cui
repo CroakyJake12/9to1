@@ -1,0 +1,25 @@
+<Cui id="search-mobile-search-cell" product="9-1" version="1">
+  <Page id="search-mobile-search-cell-root">
+    <Container id="padding" Type="Vertical Stack" padding="8 12">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="center" Type="Vertical Stack" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="flexible" Type="Vertical Stack">
+          <Container id="column" Type="Vertical Stack">
+            <Text id="rich-text" max-lines="1" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Text id="text" max-lines="1" />
+      </Container>
+    </Container>
+    <Container id="vspace" Type="Vertical Stack" />
+    <Text id="rich-text-2" max-lines="3" />
+    <Text id="text-span" />
+    <Text id="text-span-2" />
+  </Page>
+</Cui>

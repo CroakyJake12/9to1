@@ -1,0 +1,24 @@
+<Cui id="link-preview-custom-link-preview-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="(-)-{-is-hovering-=-false;-future.delayed(const-duration(milliseconds:-200),-()-{-if-(is-menu-showing-||-is-hovering)-return;-if-(mounted)-show-actions-notifier.value-=-false;-});-}" command="(_) {
+        isHovering = false;
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (isMenuShowing || isHovering) return;
+          if (mounted) showActionsNotifier.value = false;
+        });
+      }" />
+    <Action name="(-)-{-is-hovering-=-true;-show-actions-notifier.value-=-true;-}" command="(_) {
+        isHovering = true;
+        showActionsNotifier.value = true;
+      }" />
+  </Actions>
+  <Page id="link-preview-custom-link-preview-block-component-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack" />
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="positioned" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,20 @@
+<Cui id="app-bar-app-bar-actions" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="app-bar-app-bar-actions-root">
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+    <Image id="flowy-svg-3" />
+    <Text id="flowy-text" />
+    <Text id="flowy-text-2" text-alignment="Right" />
+    <Text id="flowy-text-3" text-alignment="Right" />
+    <Container id="padding" Type="Vertical Stack" padding="8 4 8 8">
+      <Button id="text-button" Type="Action" action="on-tap" />
+    </Container>
+    <Image id="flowy-svg-4" />
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="12" />
+    </Container>
+  </Page>
+</Cui>

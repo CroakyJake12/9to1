@@ -1,0 +1,6 @@
+<Cui id="bulleted-list-bulleted-list-icon" product="9-1" version="1">
+  <Page id="bulleted-list-bulleted-list-icon-root">
+    <Image id="flowy-svg" />
+    <Container id="container" Type="Vertical Stack" padding="8.0" />
+  </Page>
+</Cui>

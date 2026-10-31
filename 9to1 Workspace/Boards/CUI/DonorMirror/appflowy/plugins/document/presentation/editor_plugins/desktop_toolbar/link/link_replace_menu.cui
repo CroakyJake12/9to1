@@ -1,0 +1,16 @@
+<Cui id="link-link-replace-menu" product="9-1" version="1">
+  <Page id="link-link-replace-menu-root">
+    <Container id="container" Type="Vertical Stack" width="330" padding="8">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="expanded" Type="Vertical Stack" />
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="column" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="32">
+        <Input id="text-form-field" Type="Text" />
+      </Container>
+      <Container id="padding" Type="Vertical Stack" padding="4" />
+    </Container>
+  </Page>
+</Cui>

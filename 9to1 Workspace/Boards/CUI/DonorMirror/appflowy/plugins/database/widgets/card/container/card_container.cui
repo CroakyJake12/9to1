@@ -1,0 +1,30 @@
+<Cui id="container-card-container" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(hardware-keyboard.instance.is-shift-pressed)-{-on-shift-tap?.call(context);-}-else-{-on-tap(context);-}-}" command="() {
+              if (HardwareKeyboard.instance.isShiftPressed) {
+                onShiftTap?.call(context);
+              } else {
+                onTap(context);
+              }
+            }" />
+    <Action name="(p)-=&gt;-provider.of&lt;-card-container-notifier&gt;(context,-listen:-false)-.on-enter-=-false" command="(p) =&gt;
+              Provider.of&lt;_CardContainerNotifier&gt;(context, listen: false)
+                  .onEnter = false" />
+    <Action name="(p)-=&gt;-provider.of&lt;-card-container-notifier&gt;(context,-listen:-false)-.on-enter-=-true" command="(p) =&gt;
+              Provider.of&lt;_CardContainerNotifier&gt;(context, listen: false)
+                  .onEnter = true" />
+  </Actions>
+  <Page id="container-card-container-root">
+    <Container id="consumer" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack" />
+    </Container>
+    <Container id="selector" Type="Vertical Stack">
+      <Container id="positioned" Type="Vertical Stack" />
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="intrinsic-height" Type="Vertical Stack">
+          <Container id="stack" Type="Absolute" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

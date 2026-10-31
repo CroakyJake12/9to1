@@ -1,0 +1,17 @@
+<Cui id="shared-setting-action" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="shared-setting-action-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="26">
+        <Container id="padding" Type="Vertical Stack" padding="4 2">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="hspace" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating" />
+  </Page>
+</Cui>

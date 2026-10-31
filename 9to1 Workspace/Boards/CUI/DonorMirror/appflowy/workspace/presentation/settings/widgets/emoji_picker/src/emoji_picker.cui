@@ -1,0 +1,7 @@
+<Cui id="src-emoji-picker" product="9-1" version="1">
+  <Page id="src-emoji-picker-root">
+    <Container id="center" Type="Vertical Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+  </Page>
+</Cui>

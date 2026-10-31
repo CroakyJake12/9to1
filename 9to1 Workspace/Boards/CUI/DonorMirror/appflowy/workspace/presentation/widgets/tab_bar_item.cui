@@ -1,0 +1,8 @@
+<Cui id="widgets-tab-bar-item" product="9-1" version="1">
+  <Page id="widgets-tab-bar-item-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="flexible" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

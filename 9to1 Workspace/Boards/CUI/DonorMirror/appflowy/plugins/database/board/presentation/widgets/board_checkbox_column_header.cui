@@ -1,0 +1,15 @@
+<Cui id="widgets-board-checkbox-column-header" product="9-1" version="1">
+  <Page id="widgets-board-checkbox-column-header-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Image id="flowy-svg" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="align" Type="Vertical Stack">
+          <Container id="flowy-tooltip" Type="Floating" />
+        </Container>
+      </Container>
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="hspace-3" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,33 @@
+<Cui id="toggle-toggle-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="on-add-content" command="onAddContent" />
+    <Action name="on-collapsed" command="onCollapsed" />
+  </Actions>
+  <Page id="toggle-toggle-block-component-root">
+    <Container id="stack" Type="Absolute">
+      <Container id="container" Type="Vertical Stack" />
+      <Container id="provider" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="container-2" Type="Vertical Stack" background="#00000000" />
+    </Container>
+    <Container id="container-3" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="flexible" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="padding-2" Type="Vertical Stack" padding="26.0">
+      <Button id="flowy-button" Type="Action" action="on-add-content" padding="3.0 8">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+    <Container id="container-4" Type="Vertical Stack">
+      <Button id="flowy-button-2" Type="Action" action="on-collapsed" padding="2.0">
+        <Image id="icon" source="arrow_right" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

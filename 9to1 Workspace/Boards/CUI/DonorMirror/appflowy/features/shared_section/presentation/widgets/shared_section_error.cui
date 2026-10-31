@@ -1,0 +1,7 @@
+<Cui id="widgets-shared-section-error" product="9-1" version="1">
+  <Page id="widgets-shared-section-error-root">
+    <Container id="padding" Type="Vertical Stack" padding="16.0">
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

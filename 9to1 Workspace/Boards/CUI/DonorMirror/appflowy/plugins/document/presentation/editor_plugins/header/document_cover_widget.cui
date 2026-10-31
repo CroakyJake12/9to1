@@ -1,0 +1,113 @@
+<Cui id="header-document-cover-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-widget.on-icon-or-cover-changed(-cover:-universal-platform.is-desktop-or-web-?-(cover-type.asset,-'1')-:-(cover-type.color,-'0xffe8e0ff'),-)" command="() =&gt; widget.onIconOrCoverChanged(
+            cover: UniversalPlatform.isDesktopOrWeb
+                ? (CoverType.asset, '1')
+                : (CoverType.color, '0xffe8e0ff'),
+          )" />
+    <Action name="()-async-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-uri(-path:-mobile-emoji-picker-screen.route-name,-query-parameters:-{-mobile-emoji-picker-screen.icon-selected-type:-widget.icon.type.name,-},-).to-string(),-);-if-(result-!=-null)-{-widget.on-change-icon(result);-}-}" command="() async {
+          final result = await context.push&lt;EmojiIconData&gt;(
+            Uri(
+              path: MobileEmojiPickerScreen.routeName,
+              queryParameters: {
+                MobileEmojiPickerScreen.iconSelectedType: widget.icon.type.name,
+              },
+            ).toString(),
+          );
+          if (result != null) {
+            widget.onChangeIcon(result);
+          }
+        }" />
+    <Action name="(event)-=&gt;-set-overlay-buttons-hidden" command="(event) =&gt;
+            setOverlayButtonsHidden" />
+    <Action name="is-popover-open-?-null-:" command="isPopoverOpen ? null :" />
+    <Action name="on-tap" command="onTap" />
+    <Action name="set-hidden" command="setHidden" />
+    <Action name="set-overlay-buttons-hidden" command="setOverlayButtonsHidden" />
+    <Action name="universal-platform.is-desktop-?-null-:-()-async-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-mobile-emoji-picker-screen.route-name,-);-if-(result-!=-null)-{-widget.on-icon-or-cover-changed(icon:-result);-}-}" command="UniversalPlatform.isDesktop
+            ? null
+            : () async {
+                final result = await context.push&lt;EmojiIconData&gt;(
+                  MobileEmojiPickerScreen.routeName,
+                );
+                if (result != null) {
+                  widget.onIconOrCoverChanged(icon: result);
+                }
+              }" />
+    <Action name="widget.on-icon-or-cover-changed" command="widget.onIconOrCoverChanged" />
+  </Actions>
+  <Page id="header-document-cover-widget-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Container id="sized-box" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="44">
+        <Container id="mouse-region" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="center-2" Type="Vertical Stack">
+        <Container id="container-2" Type="Vertical Stack" padding="44">
+          <Container id="row" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack">
+      <Container id="sized-box-2" Type="Vertical Stack" height="28">
+        <Container id="value-listenable-builder" Type="Vertical Stack">
+          <Container id="visibility" Type="Vertical Stack">
+            <Container id="row-2" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region-2" Type="Vertical Stack" />
+    <Button id="flowy-button" Type="Action" action="()-=&gt;-widget.on-icon-or-cover-changed(-cover:-universal-platform.is-desktop-or-web-?-(cover-type.asset,-'1')-:-(cover-type.color,-'0xffe8e0ff'),-)">
+      <Image id="flowy-svg" />
+    </Button>
+    <Button id="flowy-button-2" Type="Action" action="widget.on-icon-or-cover-changed">
+      <Image id="flowy-svg-2" />
+    </Button>
+    <Button id="flowy-button-3" Type="Action" action="universal-platform.is-desktop-?-null-:-()-async-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-mobile-emoji-picker-screen.route-name,-);-if-(result-!=-null)-{-widget.on-icon-or-cover-changed(icon:-result);-}-}">
+      <Image id="flowy-svg-3" />
+    </Button>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="sized-box-3" Type="Vertical Stack">
+      <Container id="mouse-region-3" Type="Vertical Stack">
+        <Container id="stack-2" Type="Absolute">
+          <Container id="sized-box-4" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-5" Type="Vertical Stack">
+      <Container id="stack-3" Type="Absolute">
+        <Container id="sized-box-6" Type="Vertical Stack" />
+        <Container id="positioned-2" Type="Vertical Stack">
+          <Container id="row-3" Type="Horizontal Stack">
+            <Container id="padding" Type="Vertical Stack" padding="8.0" />
+            <Container id="hspace" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="shrink-3" Type="Vertical Stack" />
+    <Container id="shrink-4" Type="Vertical Stack" />
+    <Container id="container-4" Type="Vertical Stack" />
+    <Container id="shrink-5" Type="Vertical Stack" />
+    <Container id="positioned-3" Type="Vertical Stack">
+      <Container id="row-4" Type="Horizontal Stack">
+        <Container id="app-flowy-popover-2" Type="Context Menu" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Button id="flowy-icon-button" Type="Action" action="on-tap" width="28">
+      <Image id="flowy-svg-4" />
+    </Button>
+    <Container id="app-flowy-popover-3" Type="Context Menu" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

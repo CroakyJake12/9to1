@@ -1,0 +1,22 @@
+<Cui id="card-cell-skeleton-checkbox-card-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;checkbox-cell-bloc&gt;()-.add" command="() =&gt; context
+                      .read&lt;CheckboxCellBloc&gt;()
+                      .add" />
+  </Actions>
+  <Page id="card-cell-skeleton-checkbox-card-cell-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Button id="flowy-icon-button" Type="Action" action="()-=&gt;-context-.read&lt;checkbox-cell-bloc&gt;()-.add" width="20">
+              <Image id="flowy-svg" />
+            </Button>
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Text id="text" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

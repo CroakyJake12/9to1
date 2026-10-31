@@ -1,0 +1,12 @@
+<Cui id="shared-empty-placeholder" product="9-1" version="1">
+  <Page id="shared-empty-placeholder-root">
+    <Container id="padding" Type="Vertical Stack" padding="48.0">
+      <Container id="column" Type="Vertical Stack">
+        <Image id="flowy-svg" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+        <Container id="vspace-3" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

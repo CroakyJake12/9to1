@@ -1,0 +1,5 @@
+<Cui id="theme-upload-theme-upload-decoration" product="9-1" version="1">
+  <Page id="theme-upload-theme-upload-decoration-root">
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

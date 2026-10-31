@@ -1,0 +1,15 @@
+<Cui id="setting-self-host-setting-group" product="9-1" version="1">
+  <Page id="setting-self-host-setting-group-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="4.0">
+      <Text id="flowy-text" />
+    </Container>
+    <Text id="flowy-text-2" />
+    <Image id="icon" source="chevron_right" />
+    <Container id="padding-2" Type="Vertical Stack" padding="4.0">
+      <Text id="flowy-text-3" />
+    </Container>
+    <Text id="flowy-text-4" />
+    <Image id="icon-2" source="chevron_right" />
+  </Page>
+</Cui>

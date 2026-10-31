@@ -1,0 +1,17 @@
+<Cui id="widgets-dialog-v2" product="9-1" version="1">
+  <Page id="widgets-dialog-v2-root">
+    <Container id="column" Type="Vertical Stack">
+      <Text id="text" />
+      <Image id="flowy-svg" />
+      <Container id="flexible" Type="Vertical Stack">
+        <Text id="text-2" />
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Text id="text-3" />
+      <Image id="flowy-svg-2" />
+      <Container id="flexible-2" Type="Vertical Stack" />
+      <Container id="value-listenable-builder" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

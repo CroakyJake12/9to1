@@ -1,0 +1,9 @@
+<Cui id="simple-table-widgets-simple-table-basic-button" product="9-1" version="1">
+  <Page id="simple-table-widgets-simple-table-basic-button-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

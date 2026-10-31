@@ -1,0 +1,78 @@
+<Cui id="widgets-cancel-plan-survey-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="(value)-=&gt;-set-state(()-{-answer-=-value;-widget.on-answer-changed(value);-})" command="(value) =&gt; setState(() {
+              answer = value;
+              widget.onAnswerChanged(value);
+            })" />
+    <Action name="can-proceed()-?-()-=&gt;-widget.on-answer-selected(-answer-??-widget.qa.answers[-selected-index],-)-:-null" command="canProceed()
+                    ? () =&gt; widget.onAnswerSelected(
+                          answer ?? widget.qa.answers[_selectedIndex],
+                        )
+                    : null" />
+    <Action name="navigator.of" command="Navigator.of" />
+    <Action name="on-tap" command="onTap" />
+    <Action name="widget.on-previous" command="widget.onPrevious" />
+  </Actions>
+  <Page id="widgets-cancel-plan-survey-dialog-root">
+    <Container id="dialog" Type="Floating">
+      <Container id="sized-box" Type="Vertical Stack" width="674">
+        <Container id="padding" Type="Vertical Stack" padding="20 20">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="expanded" Type="Vertical Stack">
+              <Container id="column" Type="Vertical Stack">
+                <Container id="row-2" Type="Horizontal Stack">
+                  <Container id="expanded-2" Type="Vertical Stack">
+                    <Text id="flowy-text" />
+                  </Container>
+                  <Button id="flowy-button" Type="Action" action="navigator.of">
+                    <Image id="flowy-svg" />
+                  </Button>
+                </Container>
+                <Container id="vspace" Type="Vertical Stack" />
+                <Text id="flowy-text-2" max-lines="3" />
+                <Container id="vspace-2" Type="Vertical Stack" />
+                <Container id="divider" Type="Vertical Stack" />
+                <Container id="vspace-3" Type="Vertical Stack" />
+                <Container id="sized-box-2" Type="Vertical Stack" width="650" height="400" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Text id="flowy-text-3" />
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Container id="vspace-5" Type="Vertical Stack" />
+      <Container id="vspace-6" Type="Vertical Stack" />
+      <Input id="flowy-text-field" Type="Text" />
+      <Container id="vspace-7" Type="Vertical Stack" />
+      <Container id="row-3" Type="Horizontal Stack">
+        <Container id="decorated-box" Type="Vertical Stack" CornerRadius="8" background="#1E14171B">
+          <Button id="flowy-button-2" Type="Action" action="widget.on-previous" padding="16.0 9.0" />
+        </Container>
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="decorated-box-2" Type="Vertical Stack" CornerRadius="8">
+          <Button id="flowy-button-3" Type="Action" action="can-proceed()-?-()-=&gt;-widget.on-answer-selected(-answer-??-widget.qa.answers[-selected-index],-)-:-null" padding="16.0 9.0" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" padding="8 4">
+          <Container id="row-4" Type="Horizontal Stack">
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Container id="container-2" Type="Vertical Stack" width="24" height="24">
+              <Container id="center" Type="Vertical Stack">
+                <Text id="flowy-text-4" />
+              </Container>
+            </Container>
+            <Container id="hspace-3" Type="Horizontal Stack" />
+            <Text id="flowy-text-5" />
+            <Container id="hspace-4" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

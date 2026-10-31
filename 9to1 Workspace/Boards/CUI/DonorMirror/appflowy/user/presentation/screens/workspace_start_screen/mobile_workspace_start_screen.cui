@@ -1,0 +1,37 @@
+<Cui id="workspace-start-screen-mobile-workspace-start-screen" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(selected-workspace-==-null)-{-pop-to-workspace(-context,-widget.workspace-state.workspaces.first,-);-return;-}-pop-to-workspace(-context,-selected-workspace!,-);-}" command="() {
+                  if (selectedWorkspace == null) {
+                    
+                    _popToWorkspace(
+                      context,
+                      widget.workspaceState.workspaces.first,
+                    );
+                    return;
+                  }
+                  
+                  _popToWorkspace(
+                    context,
+                    selectedWorkspace!,
+                  );
+                }" />
+  </Actions>
+  <Page id="workspace-start-screen-mobile-workspace-start-screen-root">
+    <Container id="padding" Type="Vertical Stack" padding="50 0 50 30">
+      <Container id="column" Type="Vertical Stack">
+        <Image id="flowy-svg" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Text id="text" text-alignment="Center" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+        <Text id="text-2" text="Workspace" />
+        <Container id="vspace-3" Type="Vertical Stack" />
+        <Button id="elevated-button" Type="Action" action="()-{-if-(selected-workspace-==-null)-{-pop-to-workspace(-context,-widget.workspace-state.workspaces.first,-);-return;-}-pop-to-workspace(-context,-selected-workspace!,-);-}">
+          <Text id="text-3" />
+        </Button>
+        <Container id="vspace-4" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="center" Type="Vertical Stack" />
+    <Page id="scaffold" />
+  </Page>
+</Cui>

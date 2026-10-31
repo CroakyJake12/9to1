@@ -1,0 +1,8 @@
+<Cui id="desktop-row-detail-desktop-row-detail-time-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="focus-node.unfocus" command="focusNode.unfocus" />
+  </Actions>
+  <Page id="desktop-row-detail-desktop-row-detail-time-cell-root">
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

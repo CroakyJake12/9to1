@@ -138,6 +138,14 @@ def normalise(result: Result, repo_root: Path | None = None) -> None:
     def visit(node: Node) -> None:
         for key in ("order", "Order"):
             node.props.pop(key, None)
+        # CUI rejects an empty value (CUI030), and a donor space-only run is exactly that: a real but
+        # insignificant text run. Keep the element, drop the value, record the run.
+        for key, value in list(node.props.items()):
+            if isinstance(value, str) and value and not value.strip():
+                result.gaps.append({"donor": node.donor, "construct": "whitespace-only text run",
+                                    "file": result.cui_id, "line": 0,
+                                    "why": "the donor renders a space between runs; CUI has no empty value"})
+                node.props.pop(key, None)
         # A donor length unit (XAML "12px", CSS numbers) is not a CUI length: CUI takes bare device
         # values, so the unit is stripped and recorded rather than left for the compiler to reject.
         for key in ("Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"):

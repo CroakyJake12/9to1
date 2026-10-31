@@ -1,0 +1,7 @@
+<Cui id="bottom-sheet-bottom-sheet-drag-handler" product="9-1" version="1">
+  <Page id="bottom-sheet-bottom-sheet-drag-handler-root">
+    <Container id="padding" Type="Vertical Stack" padding="10.0">
+      <Container id="container" Type="Vertical Stack" width="60" height="4" CornerRadius="2.0" />
+    </Container>
+  </Page>
+</Cui>

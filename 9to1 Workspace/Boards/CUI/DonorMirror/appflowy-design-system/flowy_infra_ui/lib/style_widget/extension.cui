@@ -1,0 +1,5 @@
+<Cui id="style-widget-extension" product="9-1" version="1">
+  <Page id="style-widget-extension-root">
+    <Container id="decorated-box" Type="Vertical Stack" />
+  </Page>
+</Cui>

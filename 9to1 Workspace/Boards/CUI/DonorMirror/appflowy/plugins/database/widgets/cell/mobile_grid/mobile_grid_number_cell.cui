@@ -1,0 +1,5 @@
+<Cui id="mobile-grid-mobile-grid-number-cell" product="9-1" version="1">
+  <Page id="mobile-grid-mobile-grid-number-cell-root">
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

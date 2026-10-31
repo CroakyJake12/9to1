@@ -1,0 +1,9 @@
+<Cui id="shared-settings-subcategory" product="9-1" version="1">
+  <Page id="shared-settings-subcategory-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

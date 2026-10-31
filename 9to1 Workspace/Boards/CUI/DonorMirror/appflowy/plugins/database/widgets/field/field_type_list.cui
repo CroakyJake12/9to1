@@ -1,0 +1,16 @@
+<Cui id="field-field-type-list" product="9-1" version="1">
+  <Actions>
+    <Action name="on-select-field" command="onSelectField" />
+  </Actions>
+  <Page id="field-field-type-list-root">
+    <Container id="sized-box" Type="Vertical Stack" width="140">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="on-select-field">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

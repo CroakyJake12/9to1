@@ -1,0 +1,6 @@
+<Cui id="permission-permission-checker" product="9-1" version="1">
+  <Page id="permission-permission-checker-root">
+    <Text id="flowy-text" text-alignment="Center" max-lines="5" />
+    <Text id="flowy-text-2" text-alignment="Center" max-lines="5" />
+  </Page>
+</Cui>

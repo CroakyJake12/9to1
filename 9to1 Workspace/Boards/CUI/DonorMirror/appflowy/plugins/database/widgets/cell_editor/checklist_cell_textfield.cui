@@ -1,0 +1,17 @@
+<Cui id="cell-editor-checklist-cell-textfield" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;checklist-cell-bloc&gt;().add(-checklist-cell-event.select-task(task.data.id),-)" command="() =&gt; context.read&lt;ChecklistCellBloc&gt;().add(
+              ChecklistCellEvent.selectTask(task.data.id),
+            )" />
+    <Action name="widget.on-pressed" command="widget.onPressed" />
+  </Actions>
+  <Page id="cell-editor-checklist-cell-textfield-root">
+    <Button id="flowy-icon-button" Type="Action" action="()-=&gt;-context.read&lt;checklist-cell-bloc&gt;().add(-checklist-cell-event.select-task(task.data.id),-)" width="32">
+      <Image id="flowy-svg" />
+    </Button>
+    <Input id="text-field" Type="Text" />
+    <Button id="text-button" Type="Action" action="widget.on-pressed">
+      <Image id="flowy-svg-2" />
+    </Button>
+  </Page>
+</Cui>

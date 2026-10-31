@@ -1,0 +1,18 @@
+<Cui id="published-page-published-view-more-action" product="9-1" version="1">
+  <Page id="published-page-published-view-more-action-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="34" padding="2.0">
+      <Image id="flowy-svg-2" />
+    </Container>
+    <Container id="dialog" Type="Floating">
+      <Container id="sized-box-2" Type="Vertical Stack" width="440" />
+    </Container>
+  </Page>
+</Cui>

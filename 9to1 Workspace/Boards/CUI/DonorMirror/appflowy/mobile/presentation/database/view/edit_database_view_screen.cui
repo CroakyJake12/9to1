@@ -1,0 +1,21 @@
+<Cui id="view-edit-database-view-screen" product="9-1" version="1">
+  <Page id="view-edit-database-view-screen-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="vspace" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Container id="row" Type="Horizontal Stack">
+      <Text id="flowy-text" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Image id="flowy-svg-2" />
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Text id="flowy-text-2" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Image id="flowy-svg-3" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="24 46" />
+  </Page>
+</Cui>

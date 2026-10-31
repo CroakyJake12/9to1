@@ -1,0 +1,47 @@
+<Cui id="dropdown-menu-dropdown-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(widget.is-disabled)-{-return;-}-if-(controller.is-open)-{-controller.hide();-}-else-{-controller.show();-}-}" command="() {
+                if (widget.isDisabled) {
+                  return;
+                }
+                if (controller.isOpen) {
+                  controller.hide();
+                } else {
+                  controller.show();
+                }
+              }" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="dropdown-menu-dropdown-menu-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="expanded" Type="Vertical Stack" />
+            <Image id="icon" source="arrow_drop_down" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="container-2" Type="Vertical Stack" padding="1.0 1.0">
+          <Container id="row-3" Type="Horizontal Stack">
+            <Container id="flexible" Type="Vertical Stack">
+              <Text id="text" />
+            </Container>
+            <Image id="icon-2" source="cancel" />
+          </Container>
+        </Container>
+        <Input id="text-field" Type="Text" />
+      </Container>
+    </Container>
+    <Text id="text-2" max-lines="1" />
+    <Container id="row-4" Type="Horizontal Stack">
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Text id="text-3" />
+      </Container>
+      <Image id="icon-3" source="check" />
+    </Container>
+  </Page>
+</Cui>

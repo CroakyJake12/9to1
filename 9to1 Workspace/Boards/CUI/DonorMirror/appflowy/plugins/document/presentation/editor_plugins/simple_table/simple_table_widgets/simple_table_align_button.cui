@@ -1,0 +1,7 @@
+<Cui id="simple-table-widgets-simple-table-align-button" product="9-1" version="1">
+  <Page id="simple-table-widgets-simple-table-align-button-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

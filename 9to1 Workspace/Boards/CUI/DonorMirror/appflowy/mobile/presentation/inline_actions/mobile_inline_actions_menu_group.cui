@@ -1,0 +1,27 @@
+<Cui id="inline-actions-mobile-inline-actions-menu-group" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="_onPressed" />
+  </Actions>
+  <Page id="inline-actions-mobile-inline-actions-menu-group-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="36">
+        <Container id="padding" Type="Vertical Stack" padding="12">
+          <Container id="align" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Container id="gesture-detector" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="36" CornerRadius="6.0">
+      <Button id="flowy-button" Type="Action" action="on-pressed">
+        <Container id="padding-2" Type="Vertical Stack" padding="12">
+          <Container id="align-2" Type="Vertical Stack">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="sized-box-2" Type="Vertical Stack" width="12" />
+              <Container id="flexible" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

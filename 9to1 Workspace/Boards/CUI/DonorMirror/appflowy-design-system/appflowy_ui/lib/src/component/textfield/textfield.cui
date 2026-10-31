@@ -1,0 +1,13 @@
+<Cui id="textfield-textfield" product="9-1" version="1">
+  <Actions>
+    <Action name="widget.on-changed" command="widget.onChanged" />
+    <Action name="widget.on-submitted" command="widget.onSubmitted" />
+  </Actions>
+  <Page id="textfield-textfield-root">
+    <Input id="text-field" Type="Text" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" />
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

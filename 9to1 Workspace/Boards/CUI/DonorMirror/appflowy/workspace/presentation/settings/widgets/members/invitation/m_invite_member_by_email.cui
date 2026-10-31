@@ -1,0 +1,7 @@
+<Cui id="invitation-m-invite-member-by-email" product="9-1" version="1">
+  <Page id="invitation-m-invite-member-by-email-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

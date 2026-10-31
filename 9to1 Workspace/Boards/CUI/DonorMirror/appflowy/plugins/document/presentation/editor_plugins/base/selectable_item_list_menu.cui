@@ -1,0 +1,10 @@
+<Cui id="base-selectable-item-list-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="base-selectable-item-list-menu-root">
+    <Container id="sized-box" Type="Vertical Stack" height="32">
+      <Button id="flowy-button" Type="Action" action="on-tap" />
+    </Container>
+  </Page>
+</Cui>

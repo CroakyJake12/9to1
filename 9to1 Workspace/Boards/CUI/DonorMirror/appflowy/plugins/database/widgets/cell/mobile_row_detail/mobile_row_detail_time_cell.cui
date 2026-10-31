@@ -1,0 +1,5 @@
+<Cui id="mobile-row-detail-mobile-row-detail-time-cell" product="9-1" version="1">
+  <Page id="mobile-row-detail-mobile-row-detail-time-cell-root">
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

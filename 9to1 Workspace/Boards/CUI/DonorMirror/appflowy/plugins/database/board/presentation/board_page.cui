@@ -1,0 +1,69 @@
+<Cui id="presentation-board-page" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context-.read&lt;board-actions-cubit&gt;()-.start-create-bottom-row(widget.column-data.id);-}" command="() {
+              context
+                  .read&lt;BoardActionsCubit&gt;()
+                  .startCreateBottomRow(widget.columnData.id);
+            }" />
+    <Action name="(group-name)-=&gt;-context-.read&lt;board-bloc&gt;()-.add" command="(groupName) =&gt; context
+                        .read&lt;BoardBloc&gt;()
+                        .add" />
+    <Action name="(name)-{-context.read&lt;board-bloc&gt;().add(-board-event.create-row(-widget.column-data.id,-order-object-position-type-pb.end,-name,-null,-),-);-widget.scroll-manager.scroll-to-bottom(widget.column-data.id);-text-controller.clear();-focus-node.request-focus();-}" command="(name) {
+          context.read&lt;BoardBloc&gt;().add(
+                BoardEvent.createRow(
+                  widget.columnData.id,
+                  OrderObjectPositionTypePB.End,
+                  name,
+                  null,
+                ),
+              );
+          widget.scrollManager.scrollToBottom(widget.columnData.id);
+          _textController.clear();
+          _focusNode.requestFocus();
+        }" />
+    <Action name="set-state" command="setState" />
+    <Action name="text-controller.clear" command="_textController.clear" />
+  </Actions>
+  <Page id="presentation-board-page-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+      <Container id="center-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="8.0">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="bloc-provider" Type="Vertical Stack" />
+        <Container id="bloc-builder-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" />
+    <Input id="flowy-text-field" Type="Text" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="sized-box" Type="Vertical Stack" height="36">
+        <Button id="flowy-button" Type="Action" action="()-{-context-.read&lt;board-actions-cubit&gt;()-.start-create-bottom-row(widget.column-data.id);-}">
+          <Image id="flowy-svg" />
+          <Text id="flowy-text" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" padding="8.0 12 40">
+      <Container id="sized-box-2" Type="Vertical Stack" width="256">
+        <Container id="padding-3" Type="Vertical Stack" padding="8.0">
+          <Input id="text-field" Type="Text" background="#00000000">
+            <Container id="padding-4" Type="Vertical Stack" padding="4 8.0">
+              <Button id="flowy-icon-button" Type="Action" action="text-controller.clear">
+                <Image id="flowy-svg-2" />
+              </Button>
+            </Container>
+          </Input>
+        </Container>
+      </Container>
+      <Container id="flowy-tooltip-2" Type="Floating">
+        <Button id="flowy-icon-button-2" Type="Action" action="set-state" width="26">
+          <Image id="flowy-svg-3" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

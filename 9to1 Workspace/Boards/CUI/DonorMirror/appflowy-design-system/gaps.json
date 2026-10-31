@@ -1,0 +1,2609 @@
+{
+  "translated": 129,
+  "dropped_nodes": 0,
+  "gap_count": 365,
+  "gap_constructs": {
+    "n/a": 97,
+    "custom donor widget": 58,
+    "computed size": 32,
+    "insets expression": 27,
+    "property not modelled": 20,
+    "theme colour token": 17,
+    "distributor alignment": 14,
+    "gesture handling (tap/drag/long-press)": 11,
+    "hover pointer state": 7,
+    "flex share sizing": 7,
+    "fixed horizontal spacer": 7,
+    "scroller": 6,
+    "donor tooltip wrapper (FlowyTooltip)": 6,
+    "border spec": 5,
+    "text overflow mode": 5,
+    "layered stack with positioned children": 4,
+    "donor icon set": 4,
+    "donor button wrapper (FlowyButton)": 4,
+    "donor icon asset (FlowySvg)": 4,
+    "donor text wrapper (FlowyText)": 4,
+    "separator": 3,
+    "transient anchored popover": 2,
+    "fixed vertical spacer": 2,
+    "donor icon button wrapper (FlowyIconButton)": 2,
+    "inline handler block": 2,
+    "validated form field": 2,
+    "tooltip surface": 2,
+    "computed subtree": 1,
+    "donor popover wrapper (AppFlowyPopover)": 1,
+    "ripple/press visual state": 1,
+    "inline text run": 1,
+    "animated property transition": 1,
+    "live variable / binding expression": 1,
+    "sliver-based scrolling": 1,
+    "transient banner": 1,
+    "donor text field wrapper (FlowyTextField)": 1,
+    "intrinsic sizing": 1,
+    "fixed zero-size spacer": 1
+  },
+  "gaps": [
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/appflowy_backend.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/appflowy_backend_method_channel.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/appflowy_backend_platform_interface.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/dispatch/dispatch.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/dispatch/error.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/ffi.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/log.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_backend/lib/rust_stream.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/appflowy_popover.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/follower.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/layout.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/mask.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "src-mask",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/mutex.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Popover",
+      "construct": "transient anchored popover",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Stack",
+      "construct": "layered stack with positioned children",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FocusScope",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/popover.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "CallbackShortcuts",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_popover/lib/src/popover.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "MouseRegion.action",
+      "construct": "property not modelled",
+      "file": "src-popover",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "src-popover",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_result/lib/appflowy_result.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_result/lib/src/async_result.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_result/lib/src/result.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/appflowy_ui.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "SizedBox.width=avatarSize",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/avatar/avatar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=avatarSize",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/avatar/avatar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.width=avatarSize",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/avatar/avatar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=avatarSize",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/avatar/avatar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "ClipOval",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/avatar/avatar.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "DecoratedBox.decoration.border",
+      "construct": "border spec",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "the donor carries width+colour+side in one decoration object; CUI's border properties are separate"
+    },
+    {
+      "donor": "DecoratedBox.decoration.border",
+      "construct": "border spec",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "the donor carries width+colour+side in one decoration object; CUI's border properties are separate"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Focus",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "Actions",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "MouseRegion.action",
+      "construct": "property not modelled",
+      "file": "base_button-base_button",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "base_button-base_button",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/base_button/base_text_button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/filled_button/filled_button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "SizedBox.width=theme.spacing.s",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/filled_button/filled_icon_text_button.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/filled_button/filled_icon_text_button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/filled_button/filled_icon_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/filled_button/filled_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ConstrainedBox",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/filled_button/filled_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/ghost_button/ghost_button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "SizedBox.width=theme.spacing.m",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/ghost_button/ghost_icon_text_button.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/ghost_button/ghost_icon_text_button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/ghost_button/ghost_icon_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/ghost_button/ghost_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ConstrainedBox",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/ghost_button/ghost_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/outlined_button/outlined_button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "SizedBox.width=theme.spacing.s",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/outlined_button/outlined_icon_text_button.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/outlined_button/outlined_icon_text_button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/outlined_button/outlined_icon_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/outlined_button/outlined_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ConstrainedBox",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/button/outlined_button/outlined_text_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/component.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Expanded",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Icons.arrow_drop_down",
+      "construct": "donor icon set",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "Flutter Material icon code; CUI resolves icons through the approved icon family"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "BoxDecoration(\n                  border: Border.all(\n       ",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "Container.decoration.border",
+      "construct": "border spec",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "the donor carries width+colour+side in one decoration object; CUI's border properties are separate"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Flexible",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Icons.cancel",
+      "construct": "donor icon set",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "Flutter Material icon code; CUI resolves icons through the approved icon family"
+    },
+    {
+      "donor": "theme.iconColorScheme.tertiary",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "BoxDecoration(\n                  borderRadius: BorderRadius.",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "InputDecoration(\n                hintText: items.isEmpty ? e",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "SingleChildScrollView.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "SingleChildScrollView",
+      "construct": "scroller",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Text.overflow",
+      "construct": "text overflow mode",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "donor ellipsis/clipping mode; CUI's TextTrimming domain is checked by the emitter, no value guessed"
+    },
+    {
+      "donor": "Text.overflow",
+      "construct": "text overflow mode",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "donor ellipsis/clipping mode; CUI's TextTrimming domain is checked by the emitter, no value guessed"
+    },
+    {
+      "donor": "Expanded",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Icons.check",
+      "construct": "donor icon set",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "Flutter Material icon code; CUI resolves icons through the approved icon family"
+    },
+    {
+      "donor": "theme.fillColorScheme.themeThick",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "SizedBox.square",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AFPopover",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "LayoutBuilder",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "items.map",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/dropdown_menu/dropdown_menu.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "MouseRegion.action",
+      "construct": "property not modelled",
+      "file": "dropdown_menu-dropdown_menu",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "dropdown_menu-dropdown_menu",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "Container.width=width",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "BoxDecoration(\n        color: backgroundColor ?? theme.surfa",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "Container.decoration.border",
+      "construct": "border spec",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu.dart",
+      "line": 0,
+      "why": "the donor carries width+colour+side in one decoration object; CUI's border properties are separate"
+    },
+    {
+      "donor": "SizedBox.width=theme.spacing.m",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu_item.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Column.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu_item.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "Expanded",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu_item.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AFBaseButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/menu_item.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/section.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "SingleChildScrollView",
+      "construct": "scroller",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/section.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Column.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/section.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "AFMenuItem",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/menu/text_menu_item.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/dimension.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "BoxDecoration(\n              boxShadow: theme.shadow.medium,",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "Expanded",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "ConstrainedBox",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "DefaultTextStyle",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/modal/modal.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/anchor.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Builder",
+      "construct": "computed subtree",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/popover.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "DefaultTextStyle",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/popover.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ShadMouseArea",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/popover.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/shadcn/_mouse_area.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Material",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/shadcn/_portal.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "OverlayPortal",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/shadcn/_portal.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "CompositedTransformTarget",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/popover/shadcn/_portal.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "Container.height=thickness",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/separator/divider.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.margin",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/separator/divider.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "Container.width=thickness",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/separator/divider.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.margin",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/separator/divider.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "InputDecoration(\n        hintText: widget.hintText,\n        ",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/textfield/textfield.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "SizedBox.height=theme.spacing.xs",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/textfield/textfield.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Column.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/component/textfield/textfield.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "TextField.action",
+      "construct": "property not modelled",
+      "file": "textfield-textfield",
+      "line": 0,
+      "why": "CUI does not accept action on Input"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/appflowy_theme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/data/appflowy_default/primitive.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/data/appflowy_default/semantic.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/data/built_in_themes.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/data/custom/custom_theme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/data/shared.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/border_radius/border_radius.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/background_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/badge_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/border_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/brand_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/fill_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/icon_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/other_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/surface_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/surface_container_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/color_scheme/text_color_scheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/shadow/shadow.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/spacing/spacing.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/text_style/base/default_text_style.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/text_style/text_style.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/definition/theme_data.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/lib/src/theme/theme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/appflowy_ui/script/generate_theme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/colorscheme/colorscheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/colorscheme/dandelion.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/colorscheme/default_colorscheme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/colorscheme/lavender.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/colorscheme/lemonade.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/file_picker/file_picker_impl.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/file_picker/file_picker_service.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/icon_data.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/language.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/notifier.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/platform_extension.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/bloc/dynamic_plugin_bloc.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/bloc/dynamic_plugin_event.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/bloc/dynamic_plugin_state.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/service/location_service.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/service/models/exceptions.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/service/models/flowy_dynamic_plugin.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/service/models/plugin_type.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/plugins/service/plugin_service.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/size.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/theme.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/theme_extension.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/time/duration.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/time/prelude.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/utils/color_converter.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra/lib/uuid.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/flowy_infra_ui_platform_interface/lib/flowy_infra_ui_platform_interface.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/flowy_infra_ui_platform_interface/lib/src/method_channel_flowy_infra_ui.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/flowy_infra_ui_web/lib/flowy_infra_ui_web.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/basis.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/flowy_infra_ui.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/flowy_infra_ui_web.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "AppFlowyPopover",
+      "construct": "donor popover wrapper (AppFlowyPopover)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/appflowy_popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Popover",
+      "construct": "transient anchored popover",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/appflowy_popover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/appflowy_popover.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "Material",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/appflowy_popover.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "Container.width=width ?? size.width",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.height=expandHeight ? size.height : null",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Material",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "SimpleDialog",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_dialog.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Stack",
+      "construct": "layered stack with positioned children",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "_overlayList.map",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "MaterialApp",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_overlay.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "flowy_overlay-flowy_overlay",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "flowy_overlay-flowy_overlay",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/flowy_popover_layout.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/layout.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "SingleChildScrollView",
+      "construct": "scroller",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "FlowyDecoration.decoration(\n          Theme.of(context).colo",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "IntrinsicWidth",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "OverlayContainer",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "Material",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/list_overlay.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/option_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/option_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "ListOverlay",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/flowy_overlay/option_overlay.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "flowy_overlay-option_overlay",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/focus/auto_unfocus_overlay.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "focus-auto_unfocus_overlay",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/src/keyboard/keyboard_visibility_detector.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Expanded",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Row.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "FlowyButton",
+      "construct": "donor button wrapper (FlowyButton)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "InkWell",
+      "construct": "ripple/press visual state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Expanded",
+      "construct": "flex share sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Row.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Row.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "FlowyTooltip",
+      "construct": "donor tooltip wrapper (FlowyTooltip)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RichText",
+      "construct": "inline text run",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Row.crossAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "cross-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "Row.mainAxisAlignment",
+      "construct": "distributor alignment",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "main-axis distribution has no CUI container property yet"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "FlowyTooltip",
+      "construct": "donor tooltip wrapper (FlowyTooltip)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "children.add",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "10 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ConstrainedBox",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "style_widget-button",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "InkWell.action",
+      "construct": "property not modelled",
+      "file": "style_widget-button",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "GestureDetector.action",
+      "construct": "property not modelled",
+      "file": "style_widget-button",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "Icons.close",
+      "construct": "donor icon set",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/close_button.dart",
+      "line": 0,
+      "why": "Flutter Material icon code; CUI resolves icons through the approved icon family"
+    },
+    {
+      "donor": "VSpace",
+      "construct": "fixed vertical spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowySvg",
+      "construct": "donor icon asset (FlowySvg)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowyText",
+      "construct": "donor text wrapper (FlowyText)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowyButton",
+      "construct": "donor button wrapper (FlowyButton)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.height=itemHeight",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "DecoratedBox.decoration.border",
+      "construct": "border spec",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "the donor carries width+colour+side in one decoration object; CUI's border properties are separate"
+    },
+    {
+      "donor": "ListView.separated",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "SizedBox.square",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/color_picker.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AnimatedContainer.width=width",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/container.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "AnimatedContainer.height=height",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/container.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "AnimatedContainer.margin",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/container.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "AnimatedContainer",
+      "construct": "animated property transition",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/container.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/decoration.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "AFThemeExtension.of(context).borderColor",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/divider.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "Divider",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/divider.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/divider.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/hover.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Container.margin",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/hover.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "BoxDecoration(\n        border: style.border,\n        color: ",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/hover.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "MouseRegion.action",
+      "construct": "property not modelled",
+      "file": "style_widget-hover",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "FlowyIconButton",
+      "construct": "donor icon button wrapper (FlowyIconButton)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/icon_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/icon_button.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "FlowyTooltip",
+      "construct": "donor tooltip wrapper (FlowyTooltip)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/icon_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowySvg",
+      "construct": "donor icon asset (FlowySvg)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/icon_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowyIconButton",
+      "construct": "donor icon button wrapper (FlowyIconButton)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/icon_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/image_icon.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "FlowyText.overflow",
+      "construct": "text overflow mode",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/primary_rounded_button.dart",
+      "line": 0,
+      "why": "donor ellipsis/clipping mode; CUI's TextTrimming domain is checked by the emitter, no value guessed"
+    },
+    {
+      "donor": "textColor ?? Theme.of(context).colorScheme.onPrimary",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/primary_rounded_button.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "FlowyText",
+      "construct": "donor text wrapper (FlowyText)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/primary_rounded_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowyButton",
+      "construct": "donor button wrapper (FlowyButton)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/primary_rounded_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowyButton",
+      "construct": "donor button wrapper (FlowyButton)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/primary_rounded_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.expand",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/progress_indicator.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ValueListenableBuilder",
+      "construct": "live variable / binding expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrollbar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseRegion.onEnter",
+      "construct": "inline handler block",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrollbar.dart",
+      "line": 0,
+      "why": "the donor handler is a block with no single command; CUI needs a typed action, so it is recorded not invented"
+    },
+    {
+      "donor": "MouseRegion.onExit",
+      "construct": "inline handler block",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrollbar.dart",
+      "line": 0,
+      "why": "the donor handler is a block with no single command; CUI needs a typed action, so it is recorded not invented"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrollbar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_list.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Container.width=widget.axis == Axis.vertical\n           ",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.height=widget.axis == Axis.horizontal\n         ",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.width=widget.axis == Axis.vertical\n           ",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.height=widget.axis == Axis.horizontal\n         ",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "GestureDetector",
+      "construct": "gesture handling (tap/drag/long-press)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Stack",
+      "construct": "layered stack with positioned children",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "Stack",
+      "construct": "layered stack with positioned children",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseHoverBuilder",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "LayoutBuilder",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scroll_bar.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "SingleChildScrollView",
+      "construct": "scroller",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "CustomScrollView",
+      "construct": "sliver-based scrolling",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "ScrollbarListStack",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ScrollConfiguration",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/scrolling/styled_scrollview.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "FlowyText",
+      "construct": "donor text wrapper (FlowyText)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/snap_bar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SnackBar",
+      "construct": "transient banner",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/snap_bar.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "showSnackBar",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/snap_bar.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "FlowyText.overflow",
+      "construct": "text overflow mode",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text.dart",
+      "line": 0,
+      "why": "donor ellipsis/clipping mode; CUI's TextTrimming domain is checked by the emitter, no value guessed"
+    },
+    {
+      "donor": "FlowyText",
+      "construct": "donor text wrapper (FlowyText)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Text.overflow",
+      "construct": "text overflow mode",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text.dart",
+      "line": 0,
+      "why": "donor ellipsis/clipping mode; CUI's TextTrimming domain is checked by the emitter, no value guessed"
+    },
+    {
+      "donor": "FlowyTooltip",
+      "construct": "donor tooltip wrapper (FlowyTooltip)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowyTextField",
+      "construct": "donor text field wrapper (FlowyTextField)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text_field.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "widget.decoration ??\n          InputDecoration(\n            ",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text_field.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "TextField.action",
+      "construct": "property not modelled",
+      "file": "style_widget-text_field",
+      "line": 0,
+      "why": "CUI does not accept action on Input"
+    },
+    {
+      "donor": "widget.inputDecoration ??\n            InputDecoration(\n     ",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text_input.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "TextFormField",
+      "construct": "validated form field",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text_input.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text_input.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "InputDecoration",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/text_input.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "TextFormField.action",
+      "construct": "property not modelled",
+      "file": "style_widget-text_input",
+      "line": 0,
+      "why": "CUI does not accept action on Input"
+    },
+    {
+      "donor": "FlowyTooltip.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/toolbar_button.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "FlowyTooltip",
+      "construct": "donor tooltip wrapper (FlowyTooltip)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/toolbar_button.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/buttons/base_styled_button.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "BoxDecoration(\n        color: widget.bgColor ?? Theme.of(con",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/buttons/base_styled_button.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "Opacity",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/buttons/base_styled_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "RawMaterialButton",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/buttons/base_styled_button.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/buttons/primary_button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/buttons/secondary_button.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "SingleChildScrollView",
+      "construct": "scroller",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/constraint_flex_view.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Padding.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/constraint_flex_view.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "LayoutBuilder",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/constraint_flex_view.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/dialog_size.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "bgColor ?? Theme.of(context).colorScheme.surface",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "IntrinsicHeight",
+      "construct": "intrinsic sizing",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SingleChildScrollView",
+      "construct": "scroller",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "IntrinsicWidth",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ClipRRect",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "ConstrainedBox",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "FocusTraversalGroup",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/dialog/styled_dialogs.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "FlowyTooltip",
+      "construct": "donor tooltip wrapper (FlowyTooltip)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/flowy_tooltip.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.shrink",
+      "construct": "fixed zero-size spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/flowy_tooltip.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Tooltip",
+      "construct": "tooltip surface",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/flowy_tooltip.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Tooltip",
+      "construct": "tooltip surface",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/flowy_tooltip.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/ignore_parent_gesture.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "MouseRegion",
+      "construct": "hover pointer state",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/mouse_hover_builder.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "MouseRegion.action",
+      "construct": "property not modelled",
+      "file": "widget-mouse_hover_builder",
+      "line": 0,
+      "why": "CUI does not accept action on Container"
+    },
+    {
+      "donor": "SizedBox.width=size",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_button.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=size",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_button.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "InputDecoration(\n            contentPadding: widget.contentP",
+      "construct": "theme colour token",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "line": 0,
+      "why": "themed colour: CUI owns the value, no literal invented"
+    },
+    {
+      "donor": "TextFormField",
+      "construct": "validated form field",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "Container.height=widget.height",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Container.padding",
+      "construct": "insets expression",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "line": 0,
+      "why": "donor insets are not literal CUI padding"
+    },
+    {
+      "donor": "children.add",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "AnimatedSize",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/rounded_input_field.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    },
+    {
+      "donor": "TextFormField.action",
+      "construct": "property not modelled",
+      "file": "widget-rounded_input_field",
+      "line": 0,
+      "why": "CUI does not accept action on Input"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/route/animation.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "Divider",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/separated_flex.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "VerticalDivider",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/separated_flex.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.width=width",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=height",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "VSpace",
+      "construct": "fixed vertical spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.width=double.infinity",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=size",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "HSpace",
+      "construct": "fixed horizontal spacer",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.width=size",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=double.infinity",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/spacing.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/bin/flowy_svg.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/bin/options.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "no widget constructor found",
+      "construct": "n/a",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/lib/flowy_svg.dart",
+      "line": 0,
+      "why": "no translatable UI"
+    },
+    {
+      "donor": "FlowySvg",
+      "construct": "donor icon asset (FlowySvg)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/lib/src/flowy_svg.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "FlowySvg",
+      "construct": "donor icon asset (FlowySvg)",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/lib/src/flowy_svg.dart",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "SizedBox.width=size?.width",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/lib/src/flowy_svg.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "SizedBox.height=size?.height",
+      "construct": "computed size",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/lib/src/flowy_svg.dart",
+      "line": 0,
+      "why": "the donor size is an expression, not a CUI length"
+    },
+    {
+      "donor": "Transform.scale",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_svg/lib/src/flowy_svg.dart",
+      "line": 0,
+      "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
+    }
+  ],
+  "pruned_stale": 0,
+  "donor": "appflowy-design-system",
+  "app": "Boards",
+  "source": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages",
+  "translated_files": 55,
+  "untranslated_files": 97,
+  "unsupported_suffixes": {}
+}

@@ -1,0 +1,14 @@
+<Cui id="custom-image-block-component-unsupport-image-widget" product="9-1" version="1">
+  <Page id="custom-image-block-component-unsupport-image-widget-root">
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="4">
+      <Container id="sized-box" Type="Vertical Stack" height="52">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Image id="flowy-svg" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Text id="flowy-text" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

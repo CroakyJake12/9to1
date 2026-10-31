@@ -1,0 +1,9 @@
+<Cui id="shared-settings-dropdown" product="9-1" version="1">
+  <Page id="shared-settings-dropdown-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

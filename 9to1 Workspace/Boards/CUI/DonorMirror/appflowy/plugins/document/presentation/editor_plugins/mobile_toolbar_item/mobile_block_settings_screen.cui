@@ -1,0 +1,14 @@
+<Cui id="mobile-toolbar-item-mobile-block-settings-screen" product="9-1" version="1">
+  <Page id="mobile-toolbar-item-mobile-block-settings-screen-root">
+    <Page id="scaffold">
+      <Container id="app-bar" Type="Horizontal Stack" />
+      <Button id="flowy-button" Type="Action">
+        <Container id="padding" Type="Vertical Stack" padding="12.0 18.0">
+          <Text id="flowy-text" />
+        </Container>
+        <Image id="flowy-svg" />
+      </Button>
+      <Container id="divider" Type="Vertical Stack" height="1.0" />
+    </Page>
+  </Page>
+</Cui>

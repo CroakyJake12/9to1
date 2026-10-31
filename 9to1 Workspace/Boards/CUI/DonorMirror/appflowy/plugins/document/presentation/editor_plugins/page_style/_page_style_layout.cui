@@ -1,0 +1,47 @@
+<Cui id="page-style-page-style-layout" product="9-1" version="1">
+  <Actions>
+    <Action name="show-font-selector" command="_showFontSelector" />
+  </Actions>
+  <Page id="page-style-page-style-layout-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+        </Container>
+        <Container id="vspace" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="expanded" Type="Vertical Stack">
+      <Container id="decorated-box" Type="Vertical Stack">
+        <Container id="row-2" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="expanded-2" Type="Vertical Stack">
+      <Container id="animated-container" Type="Vertical Stack" CornerRadius="12" background="#141AC3F2" />
+    </Container>
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+    <Image id="flowy-svg-3" />
+    <Image id="flowy-svg-4" />
+    <Image id="flowy-svg-5" />
+    <Image id="flowy-svg-6" />
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" CornerRadius="12.0">
+          <Container id="row-3" Type="Horizontal Stack">
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Text id="flowy-text" />
+            <Text id="flowy-text-2" />
+            <Container id="hspace-3" Type="Horizontal Stack" />
+            <Image id="flowy-svg-7" />
+            <Container id="hspace-4" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-3" Type="Vertical Stack">
+      <Container id="expanded-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

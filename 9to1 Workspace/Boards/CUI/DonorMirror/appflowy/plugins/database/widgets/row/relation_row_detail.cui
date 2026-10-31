@@ -1,0 +1,9 @@
+<Cui id="row-relation-row-detail" product="9-1" version="1">
+  <Page id="row-relation-row-detail-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

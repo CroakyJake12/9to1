@@ -1,0 +1,17 @@
+<Cui id="widgets-mobile-fab" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="widgets-mobile-fab-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="decorated-box" Type="Vertical Stack" background="#FFE4EDF0">
+      <Container id="ink-well" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

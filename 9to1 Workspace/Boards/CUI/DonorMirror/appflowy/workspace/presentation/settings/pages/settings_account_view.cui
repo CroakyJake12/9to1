@@ -1,0 +1,7 @@
+<Cui id="pages-settings-account-view" product="9-1" version="1">
+  <Page id="pages-settings-account-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

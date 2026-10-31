@@ -1,0 +1,13 @@
+<Cui id="workspace-start-screen-desktop-workspace-start-screen" product="9-1" version="1">
+  <Page id="workspace-start-screen-desktop-workspace-start-screen-root">
+    <Page id="scaffold">
+      <Container id="padding" Type="Vertical Stack" padding="60.0">
+        <Container id="column" Type="Vertical Stack" />
+      </Container>
+    </Page>
+    <Container id="center" Type="Vertical Stack" />
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" height="46" />
+    <Container id="sized-box-2" Type="Vertical Stack" width="200" height="40" />
+  </Page>
+</Cui>

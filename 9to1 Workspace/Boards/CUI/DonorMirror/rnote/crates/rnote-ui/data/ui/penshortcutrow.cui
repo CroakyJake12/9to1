@@ -1,5 +1,0 @@
-<Cui id="ui-penshortcutrow" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack">
-    <Container id="mode-dropdown" Type="Vertical Stack" horizontal-alignment="Right" vertical-alignment="Center" />
-  </Container>
-</Cui>

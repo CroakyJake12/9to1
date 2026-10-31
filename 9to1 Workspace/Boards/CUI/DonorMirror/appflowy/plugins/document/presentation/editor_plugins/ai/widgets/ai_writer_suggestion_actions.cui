@@ -1,0 +1,13 @@
+<Cui id="widgets-ai-writer-suggestion-actions" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="widgets-ai-writer-suggestion-actions-root">
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Container id="sized-box" Type="Vertical Stack" height="28">
+      <Button id="flowy-button" Type="Action" action="on-tap" padding="6.0 4.0">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

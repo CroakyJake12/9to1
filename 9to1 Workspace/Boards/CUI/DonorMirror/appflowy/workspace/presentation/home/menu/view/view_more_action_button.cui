@@ -1,0 +1,19 @@
+<Cui id="view-view-more-action-button" product="9-1" version="1">
+  <Page id="view-view-more-action-button-root">
+    <Container id="app-flowy-popover" Type="Context Menu" padding="0" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="app-flowy-popover-2" Type="Context Menu" padding="14.0 12.0" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="8.0" />
+    <Container id="container" Type="Vertical Stack" height="40" padding="8.0">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" height="40" padding="8.0">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-3" Type="Vertical Stack" height="34" padding="2.0">
+      <Image id="flowy-svg" />
+    </Container>
+  </Page>
+</Cui>

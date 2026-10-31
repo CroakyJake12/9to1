@@ -1,0 +1,5 @@
+<Cui id="style-widget-toolbar-button" product="9-1" version="1">
+  <Page id="style-widget-toolbar-button-root">
+    <Container id="flowy-tooltip" Type="Floating" />
+  </Page>
+</Cui>

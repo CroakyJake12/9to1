@@ -1,7 +1,0 @@
-<Cui id="ui-settingspanel" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack">
-    <Container id="settings-scroller" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
-      <Container id="container-2" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow" />
-    </Container>
-  </Container>
-</Cui>

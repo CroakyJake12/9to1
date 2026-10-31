@@ -1,0 +1,7 @@
+<Cui id="buttons-base-styled-button" product="9-1" version="1">
+  <Page id="buttons-base-styled-button-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

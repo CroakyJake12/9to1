@@ -1,0 +1,5 @@
+<Cui id="base-drag-handler" product="9-1" version="1">
+  <Page id="base-drag-handler-root">
+    <Container id="container" Type="Vertical Stack" width="40" height="4" padding="6" CornerRadius="2" background="#FF808080" />
+  </Page>
+</Cui>

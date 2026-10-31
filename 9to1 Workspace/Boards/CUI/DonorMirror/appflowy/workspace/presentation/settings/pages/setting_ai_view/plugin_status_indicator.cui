@@ -1,0 +1,69 @@
+<Cui id="setting-ai-view-plugin-status-indicator" product="9-1" version="1">
+  <Page id="setting-ai-view-plugin-status-indicator-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="8.0" background="#80FFE7EE">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Text id="rich-text" max-lines="3">
+            <Text id="text-span">
+              <Text id="text-span-2" />
+              <Text id="text-span-3" />
+              <Text id="text-span-4" />
+            </Text>
+          </Text>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="8.0" background="#FFEDF7ED">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Image id="flowy-svg-2" background="#FF2E7D32" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Container id="expanded-2" Type="Vertical Stack">
+          <Text id="flowy-text" max-lines="3" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack" padding="8.0" background="#80FFE7EE">
+      <Container id="row-3" Type="Horizontal Stack">
+        <Image id="flowy-svg-3" />
+        <Container id="hspace-3" Type="Horizontal Stack" />
+        <Container id="expanded-3" Type="Vertical Stack">
+          <Container id="shrink-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Text id="rich-text-2" max-lines="3">
+      <Text id="text-span-5">
+        <Text id="text-span-6" />
+        <Text id="text-span-7" />
+      </Text>
+    </Text>
+    <Text id="rich-text-3" max-lines="3">
+      <Text id="text-span-8">
+        <Text id="text-span-9" />
+        <Text id="text-span-10" />
+      </Text>
+    </Text>
+    <Text id="rich-text-4" max-lines="3">
+      <Text id="text-span-11">
+        <Text id="text-span-12" />
+        <Text id="text-span-13" />
+        <Text id="text-span-14" />
+        <Text id="text-span-15" />
+        <Text id="text-span-16" />
+        <Text id="text-span-17" />
+        <Text id="text-span-18" />
+        <Text id="text-span-19" />
+      </Text>
+    </Text>
+    <Text id="text-span-20" />
+    <Text id="text-span-21" />
+    <Text id="text-span-22" />
+    <Text id="text-span-23" />
+    <Text id="text-span-24" />
+  </Page>
+</Cui>

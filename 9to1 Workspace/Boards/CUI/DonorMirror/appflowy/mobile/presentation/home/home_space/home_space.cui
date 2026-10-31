@@ -1,0 +1,7 @@
+<Cui id="home-space-home-space" product="9-1" version="1">
+  <Page id="home-space-home-space-root">
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

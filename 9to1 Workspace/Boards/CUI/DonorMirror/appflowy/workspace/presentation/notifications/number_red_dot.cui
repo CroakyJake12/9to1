@@ -1,0 +1,12 @@
+<Cui id="notifications-number-red-dot" product="9-1" version="1">
+  <Page id="notifications-number-red-dot-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack">
+          <Text id="text" text-alignment="Center" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,36 @@
+<Cui id="flutter-af-dropdown-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-handle-pressed(controller);-}" command="() {
+              handlePressed(controller);
+            }" />
+    <Action name="()-{-handle-pressed(controller);-}" command="() {
+            handlePressed(controller);
+          }" />
+    <Action name="(string-text)-{-controller.open();-set-state(()-{-filtered-entries-=-widget.dropdown-menu-entries;-enable-filter-=-widget.enable-filter;-});-}" command="(String text) {
+            controller.open();
+            setState(() {
+              filteredEntries = widget.dropdownMenuEntries;
+              _enableFilter = widget.enableFilter;
+            });
+          }" />
+  </Actions>
+  <Page id="flutter-af-dropdown-menu-root">
+    <Text id="text" />
+    <Container id="padding" Type="Vertical Stack" padding="6" />
+    <Container id="menu-anchor" Type="Context Menu">
+      <Container id="padding-2" Type="Vertical Stack" padding="4.0">
+        <Button id="icon-button" Type="Action" action="()-{-handle-pressed(controller);-}">
+          <Image id="icon" source="arrow_drop_down" />
+          <Image id="icon-2" source="arrow_drop_up" />
+        </Button>
+      </Container>
+      <Container id="padding-3" Type="Vertical Stack" padding="8.0">
+        <Container id="sized-box" Type="Vertical Stack" />
+      </Container>
+      <Input id="text-field" Type="Text">
+        <Container id="container" Type="Vertical Stack" />
+      </Input>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="0.0 0.0" />
+  </Page>
+</Cui>

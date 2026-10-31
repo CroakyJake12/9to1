@@ -1,0 +1,14 @@
+<Cui id="footer-sidebar-footer-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="footer-sidebar-footer-button-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="on-tap" padding="4.0">
+        <Container id="padding" Type="Vertical Stack" padding="6.0">
+          <Text id="flowy-text" />
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

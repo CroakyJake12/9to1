@@ -1,0 +1,10 @@
+<Cui id="presentation-banner" product="9-1" version="1">
+  <Page id="presentation-banner-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

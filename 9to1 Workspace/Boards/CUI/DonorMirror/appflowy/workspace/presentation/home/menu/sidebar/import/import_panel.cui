@@ -1,0 +1,24 @@
+<Cui id="import-import-panel" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-await-import-file(widget.parent-view-id,-e);-if-(context.mounted)-{-flowy-overlay.pop(context);-}-}" command="() async {
+                          await _importFile(widget.parentViewId, e);
+                          if (context.mounted) {
+                            FlowyOverlay.pop(context);
+                          }
+                        }" />
+  </Actions>
+  <Page id="import-import-panel-root">
+    <Container id="padding" Type="Vertical Stack" padding="10.0 20.0" />
+    <Container id="stack" Type="Absolute">
+      <Container id="card" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="()-async-{-await-import-file(widget.parent-view-id,-e);-if-(context.mounted)-{-flowy-overlay.pop(context);-}-}" />
+      </Container>
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="center" Type="Vertical Stack">
+          <Input id="circular-progress-indicator" Type="Progress" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,78 @@
+<Cui id="space-shared-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="on-confirm" command="onConfirm" />
+    <Action name="on-tap" command="onTap" />
+    <Action name="on-tap-blank-area" command="onTapBlankArea" />
+  </Actions>
+  <Page id="space-shared-widget-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="app-flowy-popover" Type="Context Menu">
+        <Container id="decorated-box" Type="Vertical Stack" CornerRadius="10" />
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" width="452">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Button id="flowy-button" Type="Action" action="on-tap" padding="14.0 12.0">
+      <Image id="flowy-svg" />
+      <Image id="flowy-svg-2" />
+      <Container id="column-3" Type="Vertical Stack">
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Button>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="decorated-box-2" Type="Vertical Stack" CornerRadius="8">
+        <Button id="flowy-button-2" Type="Action" action="on-confirm" padding="16.0 9.0" />
+      </Container>
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack" />
+    <Container id="container" Type="Vertical Stack">
+      <Container id="column-4" Type="Vertical Stack">
+        <Container id="vspace-3" Type="Vertical Stack" />
+        <Container id="vspace-4" Type="Vertical Stack" />
+        <Container id="vspace-5" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="row-3" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Text id="text" />
+      </Container>
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Image id="flowy-svg-3" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Text id="text-2" max-lines="5" />
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Container id="app-flowy-popover-2" Type="Context Menu">
+        <Button id="flowy-button-3" Type="Action" padding="3.0 4.0" />
+      </Container>
+    </Container>
+    <Container id="row-4" Type="Horizontal Stack">
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="flexible" Type="Vertical Stack" />
+      <Container id="hspace-4" Type="Horizontal Stack" />
+      <Image id="flowy-svg-4" />
+    </Container>
+    <Container id="row-5" Type="Horizontal Stack">
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="2.0" />
+      </Container>
+      <Container id="expanded-3" Type="Vertical Stack">
+        <Container id="flowy-tooltip" Type="Floating">
+          <Container id="gesture-detector" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column-5" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" height="30" CornerRadius="8" background="#FF00BCF0">
+      <Image id="flowy-svg-5" />
+      <Image id="icon" source="close" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,16 @@
+<Cui id="mobile-toolbar-v3-aa-toolbar-item" product="9-1" version="1">
+  <Page id="mobile-toolbar-v3-aa-toolbar-item-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="colored-box" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="16 20 12 12">
+          <Container id="column" Type="Vertical Stack">
+            <Container id="row" Type="Horizontal Stack" />
+            <Container id="row-2" Type="Horizontal Stack" />
+            <Container id="row-3" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

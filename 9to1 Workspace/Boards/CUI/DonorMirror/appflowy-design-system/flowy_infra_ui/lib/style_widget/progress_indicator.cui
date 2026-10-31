@@ -1,0 +1,7 @@
+<Cui id="style-widget-progress-indicator" product="9-1" version="1">
+  <Page id="style-widget-progress-indicator-root">
+    <Container id="center" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" width="60" />
+    </Container>
+  </Page>
+</Cui>

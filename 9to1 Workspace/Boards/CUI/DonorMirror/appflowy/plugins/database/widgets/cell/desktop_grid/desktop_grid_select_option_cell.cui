@@ -1,0 +1,25 @@
+<Cui id="desktop-grid-desktop-grid-select-option-cell" product="9-1" version="1">
+  <Page id="desktop-grid-desktop-grid-select-option-cell-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="align" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack">
+        <Container id="wrap" Type="Wrap">
+          <Container id="padding-2" Type="Vertical Stack" padding="4" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="value-listenable-builder-2" Type="Vertical Stack">
+        <Container id="padding-3" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="padding-4" Type="Vertical Stack" padding="4" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

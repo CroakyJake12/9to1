@@ -1,0 +1,22 @@
+<Cui id="desktop-tab-bar-add-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+    <Action name="popover-controller.show" command="popoverController.show" />
+  </Actions>
+  <Page id="desktop-tab-bar-add-button-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="padding" Type="Vertical Stack" padding="2.0 7.0 6.0">
+        <Button id="flowy-icon-button" Type="Action" action="popover-controller.show" width="26">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="on-tap">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,12 @@
+<Cui id="shared-af-dropdown-menu-entry" product="9-1" version="1">
+  <Page id="shared-af-dropdown-menu-entry-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Image id="flowy-svg" />
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

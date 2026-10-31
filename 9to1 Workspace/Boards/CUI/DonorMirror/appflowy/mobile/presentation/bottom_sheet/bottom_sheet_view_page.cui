@@ -1,0 +1,6 @@
+<Cui id="bottom-sheet-bottom-sheet-view-page" product="9-1" version="1">
+  <Page id="bottom-sheet-bottom-sheet-view-page-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" width="46" height="30" />
+  </Page>
+</Cui>

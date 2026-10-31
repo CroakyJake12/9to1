@@ -1,0 +1,13 @@
+<Cui id="widgets-sidebar-resizer" product="9-1" version="1">
+  <Page id="widgets-sidebar-resizer-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="value-listenable-builder" Type="Vertical Stack">
+          <Container id="value-listenable-builder-2" Type="Vertical Stack">
+            <Container id="container" Type="Vertical Stack" width="2" padding="2.0" background="#FF00B5FF" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

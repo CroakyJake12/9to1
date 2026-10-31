@@ -1,0 +1,56 @@
+<Cui id="mention-mention-link-preview" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-set-state(()-{-is-selected-=-true;-});-show-popover();-}" command="() {
+          setState(() {
+            isSelected = true;
+          });
+          showPopover();
+        }" />
+    <Action name="()-{-widget.on-open-link.call();-close-popover();-}" command="() {
+          widget.onOpenLink.call();
+          closePopover();
+        }" />
+    <Action name="widget.on-enter" command="widget.onEnter" />
+    <Action name="widget.on-exit" command="widget.onExit" />
+  </Actions>
+  <Page id="mention-mention-link-preview-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" width="280">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="padding" Type="Vertical Stack" padding="16" />
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="padding-2" Type="Vertical Stack" padding="16">
+            <Text id="flowy-text" max-lines="3" />
+          </Container>
+          <Container id="vspace-3" Type="Vertical Stack" />
+          <Container id="container-2" Type="Vertical Stack" height="28" padding="16">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Container id="expanded" Type="Vertical Stack">
+                <Text id="flowy-text-2" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="vspace-4" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region-2" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container-3" Type="Vertical Stack" height="20" background="#FFFFFFFF" />
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack" />
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Button id="flowy-icon-button" Type="Action" action="()-{-set-state(()-{-is-selected-=-true;-});-show-popover();-}" width="28" height="28">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="mouse-region-3" Type="Vertical Stack">
+      <Container id="padding-3" Type="Vertical Stack" padding="8.0">
+        <Container id="vspace-5" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

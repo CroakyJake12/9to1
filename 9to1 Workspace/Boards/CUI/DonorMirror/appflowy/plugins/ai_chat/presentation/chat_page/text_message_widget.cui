@@ -1,0 +1,6 @@
+<Cui id="chat-page-text-message-widget" product="9-1" version="1">
+  <Page id="chat-page-text-message-widget-root">
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

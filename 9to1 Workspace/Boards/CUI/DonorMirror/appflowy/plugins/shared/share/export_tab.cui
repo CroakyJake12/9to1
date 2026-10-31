@@ -1,0 +1,21 @@
+<Cui id="share-export-tab" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="share-export-tab-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Container id="vspace-4" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="vspace-5" Type="Vertical Stack" />
+      <Container id="vspace-6" Type="Vertical Stack" />
+    </Container>
+    <Button id="flowy-button" Type="Action" action="on-tap" padding="10 14">
+      <Text id="flowy-text" />
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

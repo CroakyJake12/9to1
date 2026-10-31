@@ -1,0 +1,12 @@
+<Cui id="base-built-in-page-widget" product="9-1" version="1">
+  <Page id="base-built-in-page-widget-root">
+    <Container id="center" Type="Vertical Stack">
+      <Text id="flowy-text" text="Cannot load the page" />
+    </Container>
+    <Container id="center-2" Type="Vertical Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" />
+  </Page>
+</Cui>

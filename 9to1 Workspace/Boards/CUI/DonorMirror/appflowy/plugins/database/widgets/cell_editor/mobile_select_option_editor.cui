@@ -1,0 +1,79 @@
+<Cui id="cell-editor-mobile-select-option-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="on-more-options" command="onMoreOptions" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="cell-editor-mobile-select-option-editor-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="divider" Type="Vertical Stack" height="0.5" />
+          <Container id="expanded" Type="Vertical Stack">
+            <Container id="padding" Type="Vertical Stack" padding="0.0 16.0" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="align" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack" height="44.0">
+        <Container id="align-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="sized-box-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="vspace-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box-3" Type="Vertical Stack" height="40">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="sized-box-4" Type="Vertical Stack" width="20" height="20" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="expanded-2" Type="Vertical Stack">
+            <Container id="align-3" Type="Vertical Stack" />
+          </Container>
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Button id="flowy-icon-button" Type="Action" action="on-more-options">
+            <Image id="flowy-svg" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-5" Type="Vertical Stack" height="44">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="row-2" Type="Horizontal Stack">
+          <Text id="flowy-text" />
+          <Container id="hspace-3" Type="Horizontal Stack" />
+          <Container id="expanded-3" Type="Vertical Stack">
+            <Container id="align-4" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="single-child-scroll-view-2" Type="Vertical Stack">
+      <Container id="column-3" Type="Vertical Stack">
+        <Container id="vspace-4" Type="Vertical Stack" />
+        <Container id="vspace-5" Type="Vertical Stack" />
+        <Container id="padding-2" Type="Vertical Stack" padding="12.0">
+          <Text id="flowy-text-2" />
+        </Container>
+        <Container id="vspace-6" Type="Vertical Stack" />
+        <Container id="padding-3" Type="Vertical Stack" padding="12.0 6.0" />
+      </Container>
+    </Container>
+    <Image id="flowy-svg-2" />
+    <Container id="decorated-box" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack">
+        <Image id="flowy-svg-3" />
+        <Container id="container" Type="Vertical Stack" width="7.5" height="7.5" />
+      </Container>
+    </Container>
+    <Container id="decorated-box-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

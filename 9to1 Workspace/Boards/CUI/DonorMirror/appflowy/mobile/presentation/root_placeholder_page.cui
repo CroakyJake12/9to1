@@ -1,0 +1,8 @@
+<Cui id="presentation-root-placeholder-page" product="9-1" version="1">
+  <Page id="presentation-root-placeholder-page-root">
+    <Page id="scaffold">
+      <Container id="app-bar" Type="Horizontal Stack" />
+      <Container id="shrink" Type="Vertical Stack" />
+    </Page>
+  </Page>
+</Cui>

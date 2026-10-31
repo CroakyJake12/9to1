@@ -1,0 +1,17 @@
+<Cui id="desktop-row-detail-desktop-row-detail-date-cell" product="9-1" version="1">
+  <Page id="desktop-row-detail-desktop-row-detail-date-cell-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="container" Type="Vertical Stack" padding="8 6">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="flexible" Type="Vertical Stack">
+            <Text id="flowy-text" />
+          </Container>
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="flowy-tooltip" Type="Floating">
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

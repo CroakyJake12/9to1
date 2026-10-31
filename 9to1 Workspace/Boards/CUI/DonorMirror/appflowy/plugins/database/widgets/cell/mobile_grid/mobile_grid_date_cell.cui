@@ -1,0 +1,28 @@
+<Cui id="mobile-grid-mobile-grid-date-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-mobile-date-cell-edit-screen(-controller:-bloc.cell-controller,-show-as-full-screen:-false,-);-},-);-}" command="() {
+        showMobileBottomSheet(
+          context,
+          builder: (context) {
+            return MobileDateCellEditScreen(
+              controller: bloc.cellController,
+              showAsFullScreen: false,
+            );
+          },
+        );
+      }" />
+  </Actions>
+  <Page id="mobile-grid-mobile-grid-date-cell-root">
+    <Button id="flowy-button" Type="Action" action="()-{-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-mobile-date-cell-edit-screen(-controller:-bloc.cell-controller,-show-as-full-screen:-false,-);-},-);-}">
+      <Container id="align" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack" padding="12 10">
+          <Container id="row" Type="Horizontal Stack">
+            <Image id="flowy-svg" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Text id="flowy-text" />
+          </Container>
+        </Container>
+      </Container>
+    </Button>
+  </Page>
+</Cui>

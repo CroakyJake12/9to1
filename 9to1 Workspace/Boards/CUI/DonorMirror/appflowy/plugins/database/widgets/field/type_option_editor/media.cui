@@ -1,0 +1,9 @@
+<Cui id="type-option-editor-media" product="9-1" version="1">
+  <Page id="type-option-editor-media-root">
+    <Container id="container" Type="Vertical Stack" padding="8">
+      <Button id="flowy-button" Type="Action">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

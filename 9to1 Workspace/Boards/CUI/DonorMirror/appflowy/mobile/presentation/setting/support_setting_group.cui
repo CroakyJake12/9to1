@@ -1,0 +1,7 @@
+<Cui id="setting-support-setting-group" product="9-1" version="1">
+  <Page id="setting-support-setting-group-root">
+    <Text id="flowy-text" max-lines="2" />
+    <Text id="flowy-text-2" max-lines="4" />
+    <Container id="column" Type="Vertical Stack" />
+  </Page>
+</Cui>

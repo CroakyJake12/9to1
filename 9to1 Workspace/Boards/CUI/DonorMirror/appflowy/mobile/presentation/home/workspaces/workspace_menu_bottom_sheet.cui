@@ -1,0 +1,44 @@
+<Cui id="workspaces-workspace-menu-bottom-sheet" product="9-1" version="1">
+  <Page id="workspaces-workspace-menu-bottom-sheet-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="12 10">
+      <Container id="divider" Type="Vertical Stack" height="0.5" />
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" padding="4.0">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="padding-3" Type="Vertical Stack" padding="16.0" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="36.0" height="36.0" padding="7.0" CornerRadius="12" background="#01717171">
+      <Image id="flowy-svg" />
+    </Container>
+    <Container id="expanded-2" Type="Vertical Stack">
+      <Container id="padding-4" Type="Vertical Stack">
+        <Text id="flowy-text" />
+      </Container>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="expanded-3" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding-5" Type="Vertical Stack" padding="12">
+      <Container id="column-2" Type="Vertical Stack">
+        <Text id="flowy-text-2" />
+        <Text id="flowy-text-3" />
+      </Container>
+    </Container>
+    <Container id="padding-6" Type="Vertical Stack" padding="4.0" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Image id="flowy-svg-2" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="padding-7" Type="Vertical Stack" padding="8.0">
+        <Image id="flowy-svg-3" />
+      </Container>
+    </Container>
+    <Text id="flowy-text-4" max-lines="10" />
+    <Text id="flowy-text-5" />
+    <Text id="flowy-text-6" />
+  </Page>
+</Cui>

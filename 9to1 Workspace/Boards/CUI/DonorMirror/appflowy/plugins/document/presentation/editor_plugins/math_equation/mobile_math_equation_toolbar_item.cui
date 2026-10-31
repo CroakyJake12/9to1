@@ -1,0 +1,7 @@
+<Cui id="math-equation-mobile-math-equation-toolbar-item" product="9-1" version="1">
+  <Page id="math-equation-mobile-math-equation-toolbar-item-root">
+    <Container id="sized-box" Type="Vertical Stack" width="22">
+      <Image id="flowy-svg" />
+    </Container>
+  </Page>
+</Cui>

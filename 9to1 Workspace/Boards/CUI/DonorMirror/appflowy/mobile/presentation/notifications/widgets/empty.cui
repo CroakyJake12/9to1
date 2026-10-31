@@ -1,0 +1,11 @@
+<Cui id="widgets-empty" product="9-1" version="1">
+  <Page id="widgets-empty-root">
+    <Container id="column" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Text id="flowy-text" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Text id="flowy-text-2" />
+    </Container>
+  </Page>
+</Cui>

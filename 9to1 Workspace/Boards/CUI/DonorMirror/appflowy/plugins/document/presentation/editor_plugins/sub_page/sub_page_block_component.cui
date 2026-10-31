@@ -1,0 +1,36 @@
+<Cui id="sub-page-sub-page-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="is-handling-paste-?-null-:" command="isHandlingPaste ? null :" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="sub-page-sub-page-block-component-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="2">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" CornerRadius="4">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="decorated-box" Type="Vertical Stack" CornerRadius="4">
+              <Container id="sized-box" Type="Vertical Stack" height="32">
+                <Container id="row" Type="Horizontal Stack">
+                  <Container id="hspace" Type="Horizontal Stack" />
+                  <Container id="hspace-2" Type="Horizontal Stack" />
+                  <Container id="flexible" Type="Vertical Stack">
+                    <Text id="flowy-text" />
+                  </Container>
+                  <Text id="flowy-text-2" />
+                  <Container id="hspace-3" Type="Horizontal Stack" />
+                  <Container id="sized-box-2" Type="Vertical Stack" width="16" height="16">
+                    <Input id="circular-progress-indicator" Type="Progress" />
+                  </Container>
+                  <Container id="hspace-4" Type="Horizontal Stack" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

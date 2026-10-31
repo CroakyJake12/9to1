@@ -1,0 +1,6 @@
+<Cui id="outlined-button-outlined-text-button" product="9-1" version="1">
+  <Page id="outlined-button-outlined-text-button-root">
+    <Text id="text" text-alignment="Center" />
+    <Container id="align" Type="Vertical Stack" />
+  </Page>
+</Cui>

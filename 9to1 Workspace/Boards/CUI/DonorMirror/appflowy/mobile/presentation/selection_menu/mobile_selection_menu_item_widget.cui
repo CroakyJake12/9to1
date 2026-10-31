@@ -1,0 +1,10 @@
+<Cui id="selection-menu-mobile-selection-menu-item-widget" product="9-1" version="1">
+  <Page id="selection-menu-mobile-selection-menu-item-widget-root">
+    <Container id="container" Type="Vertical Stack" padding="6">
+      <Container id="row" Type="Horizontal Stack">
+        <Text id="text" text-alignment="Left" />
+        <Image id="icon" source="keyboard_arrow_right_rounded" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

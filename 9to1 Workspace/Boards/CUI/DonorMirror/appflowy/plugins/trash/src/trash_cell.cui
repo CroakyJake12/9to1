@@ -1,0 +1,26 @@
+<Cui id="src-trash-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="on-delete" command="onDelete" />
+    <Action name="on-restore" command="onRestore" />
+  </Actions>
+  <Page id="src-trash-cell-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Text id="flowy-text" />
+      </Container>
+      <Container id="sized-box-2" Type="Vertical Stack">
+        <Text id="flowy-text-2" />
+      </Container>
+      <Container id="sized-box-3" Type="Vertical Stack">
+        <Text id="flowy-text-3" />
+      </Container>
+      <Button id="flowy-icon-button" Type="Action" action="on-restore">
+        <Image id="flowy-svg" />
+      </Button>
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Button id="flowy-icon-button-2" Type="Action" action="on-delete">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,14 @@
+<Cui id="widgets-date-type-option-button" product="9-1" version="1">
+  <Page id="widgets-date-type-option-button-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="padding" Type="Vertical Stack" padding="12.0">
+        <Container id="sized-box" Type="Vertical Stack">
+          <Button id="flowy-button" Type="Action">
+            <Text id="flowy-text" />
+            <Image id="flowy-svg" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

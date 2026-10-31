@@ -1,0 +1,24 @@
+<Cui id="editable-cell-skeleton-url" product="9-1" version="1">
+  <Actions>
+    <Action name="(-)-{-if-(text-editing-controller.value.composing.is-collapsed)-{-context-.read&lt;urlcell-bloc&gt;()-.add(urlcell-event.update-url(text-editing-controller.text));-}-}" command="(_) {
+              if (textEditingController.value.composing.isCollapsed) {
+                context
+                    .read&lt;URLCellBloc&gt;()
+                    .add(URLCellEvent.updateURL(textEditingController.text));
+              }
+            }" />
+    <Action name="(text)-=&gt;-context.read&lt;urlcell-bloc&gt;" command="(text) =&gt;
+                context.read&lt;URLCellBloc&gt;" />
+  </Actions>
+  <Page id="editable-cell-skeleton-url-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="16">
+        <Input id="flowy-text-field" Type="Text">
+          <Container id="shrink" Type="Vertical Stack" />
+        </Input>
+      </Container>
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

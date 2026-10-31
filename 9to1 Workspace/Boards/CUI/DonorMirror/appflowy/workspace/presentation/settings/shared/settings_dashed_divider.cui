@@ -1,0 +1,7 @@
+<Cui id="shared-settings-dashed-divider" product="9-1" version="1">
+  <Page id="shared-settings-dashed-divider-root">
+    <Container id="padding" Type="Vertical Stack" padding="0 0">
+      <Container id="wrap" Type="Wrap" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,19 @@
+<Cui id="favorite-folder-mobile-home-favorite-folder-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-set-state(()-{-turns-=-widget.is-expanded-?-0.25-:-0;-});-widget.on-pressed();-}" command="() {
+              setState(() {
+                _turns = widget.isExpanded ? -0.25 : 0;
+              });
+              widget.onPressed();
+            }" />
+  </Actions>
+  <Page id="favorite-folder-mobile-home-favorite-folder-header-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="()-{-set-state(()-{-turns-=-widget.is-expanded-?-0.25-:-0;-});-widget.on-pressed();-}" padding="8">
+          <Image id="icon" source="keyboard_arrow_down_rounded" background="#FF808080" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

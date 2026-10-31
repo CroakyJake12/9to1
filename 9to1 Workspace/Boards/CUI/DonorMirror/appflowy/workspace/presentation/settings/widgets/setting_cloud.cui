@@ -1,0 +1,61 @@
+<Cui id="widgets-setting-cloud" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-show-header:-true,-show-drag-handle:-true,-show-divider:-false,-title:-locale-keys.settings-menu-cloud-server-type.tr(),-builder:-(context)-=&gt;-column(-children:-values-.map-indexed(-(i,-e)-=&gt;-flowy-option-tile.checkbox(-text:-title-from-cloud-type(values[i]),-is-selected:-cloud-type-==-values[i],-on-tap:-()-{-on-selected(e);-context.pop();-},-show-bottom-border:-i-==-values.length-1,-),-)-.to-list(),-),-)" command="() =&gt; showMobileBottomSheet(
+              context,
+              showHeader: true,
+              showDragHandle: true,
+              showDivider: false,
+              title: LocaleKeys.settings_menu_cloudServerType.tr(),
+              builder: (context) =&gt; Column(
+                children: values
+                    .mapIndexed(
+                      (i, e) =&gt; FlowyOptionTile.checkbox(
+                        text: titleFromCloudType(values[i]),
+                        isSelected: cloudType == values[i],
+                        onTap: () {
+                          onSelected(e);
+                          context.pop();
+                        },
+                        showBottomBorder: i == values.length - 1,
+                      ),
+                    )
+                    .toList(),
+              ),
+            )" />
+    <Action name="()-{-if-(current-cloud-type-!=-cloud-type)-{-navigator-alert-dialog(-title:-locale-keys.settings-menu-change-server-tip.tr(),-confirm:-()-async-{-on-selected(cloud-type);-},-hide-cancel-button:-true,-).show(context);-}-popover-container.of(context).close();-}" command="() {
+          if (currentCloudType != cloudType) {
+            NavigatorAlertDialog(
+              title: LocaleKeys.settings_menu_changeServerTip.tr(),
+              confirm: () async {
+                onSelected(cloudType);
+              },
+              hideCancelButton: true,
+            ).show(context);
+          }
+          PopoverContainer.of(context).close();
+        }" />
+  </Actions>
+  <Page id="widgets-setting-cloud-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Button id="flowy-button" Type="Action" action="()-=&gt;-show-mobile-bottom-sheet(-context,-show-header:-true,-show-drag-handle:-true,-show-divider:-false,-title:-locale-keys.settings-menu-cloud-server-type.tr(),-builder:-(context)-=&gt;-column(-children:-values-.map-indexed(-(i,-e)-=&gt;-flowy-option-tile.checkbox(-text:-title-from-cloud-type(values[i]),-is-selected:-cloud-type-==-values[i],-on-tap:-()-{-on-selected(e);-context.pop();-},-show-bottom-border:-i-==-values.length-1,-),-)-.to-list(),-),-)">
+      <Text id="flowy-text" />
+      <Image id="icon" source="chevron_right" />
+      <Container id="column" Type="Vertical Stack" />
+    </Button>
+    <Container id="sized-box" Type="Vertical Stack" height="32">
+      <Button id="flowy-button-2" Type="Action" action="()-{-if-(current-cloud-type-!=-cloud-type)-{-navigator-alert-dialog(-title:-locale-keys.settings-menu-change-server-tip.tr(),-confirm:-()-async-{-on-selected(cloud-type);-},-hide-cancel-button:-true,-).show(context);-}-popover-container.of(context).close();-}">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="flexible" Type="Vertical Stack" />
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack" />
+  </Page>
+</Cui>

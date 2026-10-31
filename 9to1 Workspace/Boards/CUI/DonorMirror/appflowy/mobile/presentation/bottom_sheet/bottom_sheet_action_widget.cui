@@ -1,0 +1,12 @@
+<Cui id="bottom-sheet-bottom-sheet-action-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="bottom-sheet-bottom-sheet-action-widget-root">
+    <Button id="outlined-button" Type="Action" action="on-tap">
+      <Text id="flowy-text" text-alignment="Center" />
+    </Button>
+    <Image id="flowy-svg" />
+    <Text id="flowy-text-2" />
+  </Page>
+</Cui>

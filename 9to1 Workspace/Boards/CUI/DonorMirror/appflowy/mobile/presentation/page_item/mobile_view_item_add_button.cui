@@ -1,0 +1,13 @@
+<Cui id="page-item-mobile-view-item-add-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="page-item-mobile-view-item-add-button-root">
+    <Button id="flowy-icon-button" Type="Action" action="on-pressed">
+      <Image id="flowy-svg" />
+    </Button>
+    <Button id="flowy-icon-button-2" Type="Action" action="on-pressed">
+      <Image id="flowy-svg-2" />
+    </Button>
+  </Page>
+</Cui>

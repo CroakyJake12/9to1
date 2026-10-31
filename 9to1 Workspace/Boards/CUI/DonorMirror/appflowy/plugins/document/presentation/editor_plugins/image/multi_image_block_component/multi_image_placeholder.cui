@@ -1,0 +1,22 @@
+<Cui id="multi-image-block-component-multi-image-placeholder" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-editor-state.update-selection-with-reason(null,-extra-info:-{});-show-upload-image-menu();-}" command="() {
+            editorState.updateSelectionWithReason(null, extraInfo: {});
+            showUploadImageMenu();
+          }" />
+  </Actions>
+  <Page id="multi-image-block-component-multi-image-placeholder-root">
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="4">
+      <Container id="padding" Type="Vertical Stack" padding="10 12">
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="flowy-svg" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Text id="flowy-text" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" padding="12.0" />
+  </Page>
+</Cui>

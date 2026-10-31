@@ -1,0 +1,14 @@
+<Cui id="mobile-grid-mobile-grid-url-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="show-urleditor" command="_showURLEditor" />
+  </Actions>
+  <Page id="mobile-grid-mobile-grid-url-cell-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="12 10">
+        <Container id="single-child-scroll-view" Type="Vertical Stack">
+          <Text id="text" max-lines="1" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

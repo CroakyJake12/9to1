@@ -1,0 +1,5 @@
+<Cui id="share-shared" product="9-1" version="1">
+  <Page id="share-shared-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,33 @@
+<Cui id="type-option-editor-relation" product="9-1" version="1">
+  <Actions>
+    <Action name="on-select-database" command="onSelectDatabase" />
+  </Actions>
+  <Page id="type-option-editor-relation-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" padding="14 8" />
+          <Container id="app-flowy-popover" Type="Context Menu">
+            <Container id="container-2" Type="Vertical Stack" padding="8">
+              <Button id="flowy-button" Type="Action">
+                <Container id="bloc-builder" Type="Vertical Stack">
+                  <Text id="flowy-text" />
+                </Container>
+                <Image id="flowy-svg" />
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button-2" Type="Action" action="on-select-database">
+          <Text id="flowy-text-2" />
+          <Image id="flowy-svg-2" />
+        </Button>
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

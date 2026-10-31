@@ -1,0 +1,14 @@
+<Cui id="setting-ai-view-settings-ai-view" product="9-1" version="1">
+  <Page id="setting-ai-view-settings-ai-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="bloc-builder" Type="Vertical Stack">
+          <Container id="padding" Type="Vertical Stack" padding="6">
+            <Container id="sized-box" Type="Vertical Stack" width="26" height="26" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

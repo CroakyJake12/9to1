@@ -1,0 +1,7 @@
+<Cui id="menu-menu" product="9-1" version="1">
+  <Page id="menu-menu-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

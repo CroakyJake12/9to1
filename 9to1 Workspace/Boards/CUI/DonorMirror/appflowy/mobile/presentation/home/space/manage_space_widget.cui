@@ -1,0 +1,7 @@
+<Cui id="space-manage-space-widget" product="9-1" version="1">
+  <Page id="space-manage-space-widget-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

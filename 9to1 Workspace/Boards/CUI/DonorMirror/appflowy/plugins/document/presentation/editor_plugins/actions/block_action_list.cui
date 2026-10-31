@@ -1,0 +1,8 @@
+<Cui id="actions-block-action-list" product="9-1" version="1">
+  <Page id="actions-block-action-list-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

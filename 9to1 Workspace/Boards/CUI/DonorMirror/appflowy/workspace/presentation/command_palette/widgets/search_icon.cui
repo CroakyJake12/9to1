@@ -1,0 +1,10 @@
+<Cui id="widgets-search-icon" product="9-1" version="1">
+  <Page id="widgets-search-icon-root">
+    <Container id="sized-box" Type="Vertical Stack" width="16" />
+    <Image id="flowy-svg" />
+    <Container id="sized-box-2" Type="Vertical Stack" width="16">
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

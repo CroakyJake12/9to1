@@ -1,0 +1,89 @@
+<Cui id="widgets-view-title-bar" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;page-access-level-bloc&gt;().add(-const-page-access-level-event.lock(),-)" command="() =&gt; context.read&lt;PageAccessLevelBloc&gt;().add(
+              const PageAccessLevelEvent.lock(),
+            )" />
+    <Action name="()-=&gt;-context.read&lt;page-access-level-bloc&gt;().add(-const-page-access-level-event.unlock(),-)" command="() =&gt; context.read&lt;PageAccessLevelBloc&gt;().add(
+                const PageAccessLevelEvent.unlock(),
+              )" />
+    <Action name="()-{-get-it&lt;menu-shared-state&gt;().latest-open-view-=-null;-get-it&lt;tabs-bloc&gt;().add(-tabs-event.open-plugin(-plugin:-make-plugin(plugin-type:-plugin-type.trash),-),-);-}" command="() {
+          getIt&lt;MenuSharedState&gt;().latestOpenView = null;
+          getIt&lt;TabsBloc&gt;().add(
+            TabsEvent.openPlugin(
+              plugin: makePlugin(pluginType: PluginType.trash),
+            ),
+          );
+        }" />
+  </Actions>
+  <Page id="widgets-view-title-bar-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" height="24">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="hspace" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Image id="flowy-svg-2" />
+    <Container id="hspace-2" Type="Horizontal Stack" />
+    <Container id="bloc-builder-2" Type="Vertical Stack" />
+    <Image id="flowy-svg-3" />
+    <Container id="flowy-tooltip-2" Type="Floating" />
+    <Container id="shrink-3" Type="Vertical Stack" />
+    <Image id="flowy-svg-4" />
+    <Container id="flowy-tooltip-3" Type="Floating">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="hspace-3" Type="Horizontal Stack" />
+        <Container id="hspace-4" Type="Horizontal Stack" />
+        <Text id="text" />
+        <Container id="hspace-5" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" height="32">
+      <Button id="flowy-button" Type="Action" action="()-{-get-it&lt;menu-shared-state&gt;().latest-open-view-=-null;-get-it&lt;tabs-bloc&gt;().add(-tabs-event.open-plugin(-plugin:-make-plugin(plugin-type:-plugin-type.trash),-),-);-}" padding="6.0">
+        <Container id="row-3" Type="Horizontal Stack">
+          <Image id="flowy-svg-5" />
+          <Container id="hspace-6" Type="Horizontal Stack" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack">
+      <Container id="row-4" Type="Horizontal Stack">
+        <Container id="hspace-7" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="6.0" />
+    <Container id="sized-box-3" Type="Vertical Stack" height="32.0">
+      <Button id="flowy-button-2" Type="Action" padding="6.0" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="sized-box-4" Type="Vertical Stack" height="32.0">
+        <Button id="flowy-button-3" Type="Action" padding="6.0" />
+      </Container>
+    </Container>
+    <Container id="single-child-scroll-view-2" Type="Vertical Stack">
+      <Container id="row-5" Type="Horizontal Stack">
+        <Container id="hspace-8" Type="Horizontal Stack" />
+        <Container id="hspace-9" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip-4" Type="Floating">
+      <Container id="decorated-box" Type="Vertical Stack" CornerRadius="6">
+        <Button id="flowy-button-4" Type="Action" action="()-=&gt;-context.read&lt;page-access-level-bloc&gt;().add(-const-page-access-level-event.unlock(),-)" padding="4.0 4.0">
+          <Image id="flowy-svg-6" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="decorated-box-2" Type="Vertical Stack" CornerRadius="6">
+      <Button id="flowy-button-5" Type="Action" action="()-=&gt;-context.read&lt;page-access-level-bloc&gt;().add(-const-page-access-level-event.lock(),-)" padding="4.0 4.0">
+        <Image id="flowy-svg-7" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

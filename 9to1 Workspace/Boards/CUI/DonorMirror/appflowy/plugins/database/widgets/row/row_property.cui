@@ -1,0 +1,86 @@
+<Cui id="row-row-property" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;row-detail-bloc&gt;().add(-const-row-detail-event.toggle-hidden-field-visibility(),-)" command="() =&gt; context.read&lt;RowDetailBloc&gt;().add(
+              const RowDetailEvent.toggleHiddenFieldVisibility(),
+            )" />
+    <Action name="()-async-{-final-result-=-await-field-backend-service.create-field(-view-id:-view-id,-);-await-future.delayed(const-duration(milliseconds:-50));-result.fold(-(field)-=&gt;-context-.read&lt;row-detail-bloc&gt;()-.add(row-detail-event.start-editing-new-field(field.id)),-(err)-=&gt;-log.error(&quot;failed-to-create-field-type-option:-$err&quot;),-);-}" command="() async {
+          final result = await FieldBackendService.createField(
+            viewId: viewId,
+          );
+          await Future.delayed(const Duration(milliseconds: 50));
+          result.fold(
+            (field) =&gt; context
+                .read&lt;RowDetailBloc&gt;()
+                .add(RowDetailEvent.startEditingNewField(field.id)),
+            (err) =&gt; Log.error(&quot;Failed to create field type option: $err&quot;),
+          );
+        }" />
+    <Action name="(event)-{-is-field-hover.value-=-false;-cell.cell-container-notifier.is-hover-=-false;-}" command="(event) {
+          _isFieldHover.value = false;
+          cell.cellContainerNotifier.isHover = false;
+        }" />
+    <Action name="(event)-{-is-field-hover.value-=-true;-cell.cell-container-notifier.is-hover-=-true;-}" command="(event) {
+          _isFieldHover.value = true;
+          cell.cellContainerNotifier.isHover = true;
+        }" />
+    <Action name="cell.request-focus.notify" command="cell.requestFocus.notify" />
+  </Actions>
+  <Page id="row-row-property-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="reorderable-list-view" Type="Vertical Stack">
+        <Container id="stack" Type="Absolute">
+          <Container id="mouse-region" Type="Vertical Stack">
+            <Container id="sized-box" Type="Vertical Stack" width="16" height="30">
+              <Image id="flowy-svg" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="padding" Type="Vertical Stack" padding="20">
+          <Container id="column" Type="Vertical Stack">
+            <Container id="padding-2" Type="Vertical Stack" padding="4.0" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" padding="8">
+      <Container id="mouse-region-2" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="value-listenable-builder" Type="Vertical Stack" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region-3" Type="Vertical Stack">
+      <Container id="sized-box-2" Type="Vertical Stack" width="16" height="30">
+        <Container id="value-listenable-builder-2" Type="Vertical Stack">
+          <Container id="shrink" Type="Vertical Stack" />
+          <Text id="text-span" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="sized-box-3" Type="Vertical Stack" width="160" height="30">
+        <Container id="tooltip" Type="Floating" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack" />
+    <Container id="sized-box-4" Type="Vertical Stack" height="30">
+      <Button id="flowy-button" Type="Action" action="()-=&gt;-context.read&lt;row-detail-bloc&gt;().add(-const-row-detail-event.toggle-hidden-field-visibility(),-)" padding="4 6">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+    <Text id="flowy-text-2" />
+    <Image id="flowy-svg-3" />
+    <Container id="sized-box-5" Type="Vertical Stack" height="30">
+      <Button id="flowy-button-2" Type="Action" action="()-async-{-final-result-=-await-field-backend-service.create-field(-view-id:-view-id,-);-await-future.delayed(const-duration(milliseconds:-50));-result.fold(-(field)-=&gt;-context-.read&lt;row-detail-bloc&gt;()-.add(row-detail-event.start-editing-new-field(field.id)),-(err)-=&gt;-log.error(&quot;failed-to-create-field-type-option:-$err&quot;),-);-}" padding="4 6">
+        <Text id="flowy-text-3" />
+        <Image id="flowy-svg-4" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

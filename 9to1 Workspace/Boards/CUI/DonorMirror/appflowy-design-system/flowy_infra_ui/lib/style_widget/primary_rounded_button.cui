@@ -1,0 +1,13 @@
+<Cui id="style-widget-primary-rounded-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="style-widget-primary-rounded-button-root">
+    <Button id="flowy-button" Type="Action" action="on-tap" padding="14.0">
+      <Text id="flowy-text" text-alignment="Center" />
+    </Button>
+    <Container id="decorated-box" Type="Vertical Stack" background="#1E14171B">
+      <Button id="flowy-button-2" Type="Action" action="on-tap" padding="16.0 9.0" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,33 @@
+<Cui id="command-palette-command-palette" product="9-1" version="1">
+  <Page id="command-palette-command-palette-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="focusable-action-detector" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="0">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="flexible" Type="Vertical Stack" />
+          <Container id="flexible-2" Type="Vertical Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="expanded-2" Type="Vertical Stack">
+            <Container id="center" Type="Vertical Stack">
+              <Container id="center-2" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="center-3" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack">
+        <Image id="flowy-svg" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Text id="text" max-lines="1" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+        <Text id="rich-text" text-alignment="Center">
+          <Text id="text-span">
+            <Text id="text-span-2" />
+          </Text>
+        </Text>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

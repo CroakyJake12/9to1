@@ -1,0 +1,7 @@
+<Cui id="shared-settings-category-spacer" product="9-1" version="1">
+  <Page id="shared-settings-category-spacer-root">
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="divider" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,22 @@
+<Cui id="cells-cell-container" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(!is-focus)-{-child.request-focus.notify();-}-}" command="() {
+              if (!isFocus) {
+                child.requestFocus.notify();
+              }
+            }" />
+    <Action name="(p)-=&gt;-cell-container-notifier.of" command="(p) =&gt;
+              CellContainerNotifier.of" />
+  </Actions>
+  <Page id="cells-cell-container-root">
+    <Container id="selector" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute" />
+    </Container>
+  </Page>
+</Cui>

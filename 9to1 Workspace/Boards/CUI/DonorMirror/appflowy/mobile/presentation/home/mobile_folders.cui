@@ -1,0 +1,10 @@
+<Cui id="home-mobile-folders" product="9-1" version="1">
+  <Page id="home-mobile-folders-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="vspace-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

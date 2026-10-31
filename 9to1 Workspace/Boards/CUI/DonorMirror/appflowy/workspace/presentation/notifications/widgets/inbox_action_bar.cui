@@ -1,0 +1,12 @@
+<Cui id="widgets-inbox-action-bar" product="9-1" version="1">
+  <Page id="widgets-inbox-action-bar-root">
+    <Container id="decorated-box" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16 8">
+        <Container id="row" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Text id="text" />
+    <Text id="text-2" />
+    <Image id="flowy-svg" />
+  </Page>
+</Cui>

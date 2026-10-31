@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cui_mirror
+import dialect_dart
 import dialect_gtk
 import dialect_xaml
 import dialect_xul
@@ -108,6 +109,17 @@ class LengthGuardTests(unittest.TestCase):
         result = cui_mirror.Result(cui_id="d", root=root)
         self.assertIn('width="36"', cui_mirror.emit(result))
         self.assertTrue(any("length unit px" in g["construct"] for g in result.gaps), result.gaps)
+
+
+class WhitespaceRunTests(unittest.TestCase):
+    def test_a_space_only_donor_text_run_is_recorded_not_emitted_as_an_empty_value(self):
+        # Measured: four mirrored AppFlowy documents failed CUI030 "CUI values cannot be empty" because
+        # the donor put a literal space between text runs.
+        root = cui_mirror.Node("Text", props={"id": "t", "Text": " "})
+        result = cui_mirror.Result(cui_id="d", root=root)
+        text = cui_mirror.emit(result)
+        self.assertNotIn('text=" "', text)
+        self.assertTrue(any("whitespace-only text run" in g["construct"] for g in result.gaps), result.gaps)
 
 
 class ContractTests(unittest.TestCase):
@@ -401,3 +413,71 @@ class CorpusCheckTests(unittest.TestCase):
         found = check_corpora.corpora()
         self.assertTrue(found, "this repository carries committed mirror corpora")
         self.assertTrue(any("Canvas/CUI/DonorMirror" in path for path in found), found[:5])
+
+
+class DartDialectTests(unittest.TestCase):
+    """AppFlowy's UI is Dart code, so the mirror reads constructor calls, not tags."""
+
+    def translate(self, dart):
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            path = Path(tmp) / "widget.dart"
+            path.write_text(dart)
+            return dialect_dart.translate(path, dart)
+
+    def test_nesting_follows_the_donor_widget_tree(self):
+        result = self.translate(
+            "class C extends StatelessWidget { Widget build(BuildContext c) => Column("
+            "children: [Row(children: [FlowyText('Title', maxLines: 2)]), FlowyButton(label: 'Save', "
+            "onPressed: () => saveCard())]}); }")
+        text = cui_mirror.emit(result)
+        self.assertIn('<Container id="column" Type="Vertical Stack">', text)
+        self.assertIn('<Container id="row" Type="Horizontal Stack">', text)
+        self.assertIn('text="Title"', text)
+        self.assertIn('<Button id="flowy-button" Type="Action" content="Save"', text)
+        self.assertIn('action="save-card"', text)
+        self.assertIn('<Action name="save-card" command="saveCard" />', text)
+        self.assertNotIn("FlowyButton>", text)                 # donor control name never emitted
+        self.assertNotIn("Column>", text)
+
+    def test_value_objects_are_not_mistaken_for_ui(self):
+        result = self.translate("Widget b() => Container(decoration: BoxDecoration("
+                                "borderRadius: BorderRadius.circular(6), color: Color(0xFFF2F2F2)), "
+                                "padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), "
+                                "child: Text('x'));")
+        text = cui_mirror.emit(result)
+        self.assertNotIn("BoxDecoration", text)
+        self.assertIn('padding="8 4"', text)
+        self.assertNotIn('padding="8"', text)            # both axes are carried, not just the first
+        self.assertIn('CornerRadius="6"', text)
+        self.assertIn('background="#FFF2F2F2"', text)
+
+    def test_a_decoration_border_is_recorded_because_cui_split_it_apart(self):
+        result = self.translate("Widget b() => Container(decoration: BoxDecoration("
+                                "border: Border.all(color: Color(0xFF000000), width: 1)));")
+        self.assertTrue(any(g["construct"] == "border spec" for g in result.gaps), result.gaps)
+
+    def test_a_donor_wrapper_is_recorded_and_its_interior_survives(self):
+        result = self.translate("Widget b() => BoardCardHeader(child: Text('name'));")
+        text = cui_mirror.emit(result)
+        self.assertIn('text="name"', text)
+        self.assertTrue(any(g["construct"] == "custom donor widget" and g["donor"] == "BoardCardHeader"
+                            for g in result.gaps), result.gaps)
+
+    def test_interpolated_donor_text_is_not_passed_off_as_fixed_content(self):
+        result = self.translate("Widget b() => FlowyText('Total ${count} rows');")
+        text = cui_mirror.emit(result)
+        self.assertNotIn("Total ${count}", text)
+        self.assertTrue(any(g["construct"] == "inline text template" for g in result.gaps), result.gaps)
+
+    def test_a_block_handler_with_no_single_command_is_recorded_not_invented(self):
+        result = self.translate("Widget b() => FlowyButton(onPressed: () { a(); b(); });")
+        self.assertEqual(result.root.children[0].props.get("action"), None)
+        self.assertTrue(any(g["construct"] == "inline handler block" for g in result.gaps), result.gaps)
+
+    def test_comments_and_strings_cannot_break_the_call_scan(self):
+        result = self.translate("Widget b() => Column( // children: [Text('nope')]\n"
+                                "/* Row(children: [Text('also nope')]) */\n"
+                                "children: [Text('yes')]);")
+        text = cui_mirror.emit(result)
+        self.assertIn('text="yes"', text)
+        self.assertNotIn("nope", text)

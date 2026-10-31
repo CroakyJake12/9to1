@@ -1,0 +1,33 @@
+<Cui id="base-emoji-picker-button" product="9-1" version="1">
+  <Actions>
+    <Action name="enable-?-()-async-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-uri(-path:-mobile-emoji-picker-screen.route-name,-query-parameters:-{-mobile-emoji-picker-screen.page-title:-title,-mobile-emoji-picker-screen.icon-selected-type:-emoji.type.name,-mobile-emoji-picker-screen.upload-document-id:-document-id,-mobile-emoji-picker-screen.select-tabs:-tabs.map((e)-=&gt;-e.name).to-list().join('-'),-},-).to-string(),-);-if-(result-!=-null)-{-on-submitted(result.to-selected-result(),-null);-}-}-:-null" command="enable
+          ? () async {
+              final result = await context.push&lt;EmojiIconData&gt;(
+                Uri(
+                  path: MobileEmojiPickerScreen.routeName,
+                  queryParameters: {
+                    MobileEmojiPickerScreen.pageTitle: title,
+                    MobileEmojiPickerScreen.iconSelectedType: emoji.type.name,
+                    MobileEmojiPickerScreen.uploadDocumentId: documentId,
+                    MobileEmojiPickerScreen.selectTabs:
+                        tabs.map((e) =&gt; e.name).toList().join('-'),
+                  },
+                ).toString(),
+              );
+              if (result != null) {
+                onSubmitted(result.toSelectedResult(), null);
+              }
+            }
+          : null" />
+    <Action name="enable-?-popover-controller.show-:-null" command="enable ? popoverController.show : null" />
+  </Actions>
+  <Page id="base-emoji-picker-button-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="container" Type="Vertical Stack" padding="4.0" />
+      <Container id="container-2" Type="Vertical Stack" CornerRadius="8">
+        <Button id="flowy-button" Type="Action" action="enable-?-popover-controller.show-:-null" padding="2.0" />
+      </Container>
+    </Container>
+    <Button id="flowy-button-2" Type="Action" action="enable-?-()-async-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-uri(-path:-mobile-emoji-picker-screen.route-name,-query-parameters:-{-mobile-emoji-picker-screen.page-title:-title,-mobile-emoji-picker-screen.icon-selected-type:-emoji.type.name,-mobile-emoji-picker-screen.upload-document-id:-document-id,-mobile-emoji-picker-screen.select-tabs:-tabs.map((e)-=&gt;-e.name).to-list().join('-'),-},-).to-string(),-);-if-(result-!=-null)-{-on-submitted(result.to-selected-result(),-null);-}-}-:-null" padding="8.0 6.0" />
+  </Page>
+</Cui>

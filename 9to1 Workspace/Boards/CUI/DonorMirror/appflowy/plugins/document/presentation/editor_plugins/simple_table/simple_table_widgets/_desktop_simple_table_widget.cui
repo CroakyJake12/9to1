@@ -1,0 +1,32 @@
+<Cui id="simple-table-widgets-desktop-simple-table-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="(event)-=&gt;-simple-table-context.is-hovering-on-columns-and-rows.value-=-true" command="(event) =&gt;
+                    simpleTableContext.isHoveringOnColumnsAndRows.value = true" />
+    <Action name="(event)-=&gt;-simple-table-context.is-hovering-on-table-area.value-=-true" command="(event) =&gt;
+            simpleTableContext.isHoveringOnTableArea.value = true" />
+    <Action name="(event)-{-simple-table-context.is-hovering-on-columns-and-rows.value-=-false;-simple-table-context.hovering-table-cell.value-=-null;-}" command="(event) {
+                  simpleTableContext.isHoveringOnColumnsAndRows.value = false;
+                  simpleTableContext.hoveringTableCell.value = null;
+                }" />
+    <Action name="(event)-{-simple-table-context.is-hovering-on-table-area.value-=-false;-}" command="(event) {
+          simpleTableContext.isHoveringOnTableArea.value = false;
+        }" />
+  </Actions>
+  <Page id="simple-table-widgets-desktop-simple-table-widget-root">
+    <Container id="intrinsic-height" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="intrinsic-height-2" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Container id="mouse-region-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

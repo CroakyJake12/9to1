@@ -1,0 +1,76 @@
+<Cui id="screens-skip-log-in-screen" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(current-locale-!=-locale)-{-context.read&lt;appearance-settings-cubit&gt;().set-locale(context,-locale);-}-popover-container.of(context).close();-}" command="() {
+          if (currentLocale != locale) {
+            context.read&lt;AppearanceSettingsCubit&gt;().setLocale(context, locale);
+          }
+          PopoverContainer.of(context).close();
+        }" />
+    <Action name="()-{-if-(state.anon-users.is-not-empty)-{-final-bloc-=-context.read&lt;anon-user-bloc&gt;();-final-historical-user-=-state.anon-users.first;-bloc.add(-anon-user-event.open-anon-user(historical-user),-);-}-else-{-on-pressed();-}-}" command="() {
+                  if (state.anonUsers.isNotEmpty) {
+                    final bloc = context.read&lt;AnonUserBloc&gt;();
+                    final historicalUser = state.anonUsers.first;
+                    bloc.add(
+                      AnonUserEvent.openAnonUser(historicalUser),
+                    );
+                  } else {
+                    onPressed();
+                  }
+                }" />
+  </Actions>
+  <Page id="screens-skip-log-in-screen-root">
+    <Page id="scaffold">
+      <Container id="center" Type="Vertical Stack" />
+    </Page>
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="16">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="expanded" Type="Vertical Stack" />
+        <Container id="sized-box-2" Type="Vertical Stack" height="28">
+          <Container id="row-2" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="wrap" Type="Wrap">
+      <Container id="row-3" Type="Horizontal Stack" />
+      <Container id="row-4" Type="Horizontal Stack" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Button id="flowy-button" Type="Action">
+        <Container id="row-5" Type="Horizontal Stack">
+          <Image id="flowy-svg" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="builder" Type="Vertical Stack">
+            <Text id="flowy-text" />
+          </Container>
+          <Image id="flowy-svg-2" />
+        </Container>
+      </Button>
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box-3" Type="Vertical Stack" height="32">
+      <Button id="flowy-button-2" Type="Action" action="()-{-if-(current-locale-!=-locale)-{-context.read&lt;appearance-settings-cubit&gt;().set-locale(context,-locale);-}-popover-container.of(context).close();-}">
+        <Image id="flowy-svg-3" />
+      </Button>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="row-6" Type="Horizontal Stack">
+          <Container id="expanded-2" Type="Vertical Stack" />
+        </Container>
+        <Container id="sized-box-4" Type="Vertical Stack" width="340" height="48">
+          <Button id="flowy-button-3" Type="Action" action="()-{-if-(state.anon-users.is-not-empty)-{-final-bloc-=-context.read&lt;anon-user-bloc&gt;();-final-historical-user-=-state.anon-users.first;-bloc.add(-anon-user-event.open-anon-user(historical-user),-);-}-else-{-on-pressed();-}-}" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="row-7" Type="Horizontal Stack">
+      <Container id="expanded-3" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

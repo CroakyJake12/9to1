@@ -1,9 +1,0 @@
-<Cui id="ui-canvaswrapper" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
-    <Container id="scroller" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
-      <Container id="canvas" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Top">
-        <Container id="contextmenu" Type="Vertical Stack" />
-      </Container>
-    </Container>
-  </Container>
-</Cui>

@@ -1,0 +1,6 @@
+<Cui id="theme-upload-theme-upload-view" product="9-1" version="1">
+  <Page id="theme-upload-theme-upload-view-root">
+    <Container id="sized-box" Type="Vertical Stack" height="12" />
+    <Container id="center" Type="Vertical Stack" />
+  </Page>
+</Cui>

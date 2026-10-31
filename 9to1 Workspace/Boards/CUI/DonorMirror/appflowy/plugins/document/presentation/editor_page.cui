@@ -1,0 +1,15 @@
+<Cui id="presentation-editor-page" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-await-focus-on-last-empty-paragraph();-}" command="() async {
+            
+            await _focusOnLastEmptyParagraph();
+          }" />
+  </Actions>
+  <Page id="presentation-editor-page-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" />
+    </Container>
+    <Container id="center" Type="Vertical Stack" />
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="4" />
+  </Page>
+</Cui>

@@ -1,0 +1,5 @@
+<Cui id="tasks-auto-update-task" product="9-1" version="1">
+  <Page id="tasks-auto-update-task-root">
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

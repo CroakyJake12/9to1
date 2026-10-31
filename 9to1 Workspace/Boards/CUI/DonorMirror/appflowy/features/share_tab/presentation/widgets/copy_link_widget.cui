@@ -1,0 +1,13 @@
+<Cui id="widgets-copy-link-widget" product="9-1" version="1">
+  <Page id="widgets-copy-link-widget-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Text id="text" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,7 @@
+<Cui id="numbered-list-numbered-list-icon" product="9-1" version="1">
+  <Page id="numbered-list-numbered-list-icon-root">
+    <Container id="padding" Type="Vertical Stack" padding="6.0 10.0">
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

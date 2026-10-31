@@ -1,0 +1,21 @@
+<Cui id="toolbar-item-custom-link-toolbar-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-get-it&lt;floating-toolbar-controller&gt;().hide-toolbar();-if-(!is-href)-{-final-view-id-=-context.read&lt;document-bloc?&gt;()?.document-id-??-'';-show-link-create-menu(context,-editor-state,-selection,-view-id);-}-else-{-widgets-binding.instance.add-post-frame-callback((-)-{-get-it&lt;link-hover-triggers&gt;()-.call(hover-trigger-key(nodes.first.id,-selection));-});-}-}" command="() {
+        getIt&lt;FloatingToolbarController&gt;().hideToolbar();
+        if (!isHref) {
+          final viewId = context.read&lt;DocumentBloc?&gt;()?.documentId ?? '';
+          showLinkCreateMenu(context, editorState, selection, viewId);
+        } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            getIt&lt;LinkHoverTriggers&gt;()
+                .call(HoverTriggerKey(nodes.first.id, selection));
+          });
+        }
+      }" />
+  </Actions>
+  <Page id="toolbar-item-custom-link-toolbar-item-root">
+    <Button id="flowy-icon-button" Type="Action" action="()-{-get-it&lt;floating-toolbar-controller&gt;().hide-toolbar();-if-(!is-href)-{-final-view-id-=-context.read&lt;document-bloc?&gt;()?.document-id-??-'';-show-link-create-menu(context,-editor-state,-selection,-view-id);-}-else-{-widgets-binding.instance.add-post-frame-callback((-)-{-get-it&lt;link-hover-triggers&gt;()-.call(hover-trigger-key(nodes.first.id,-selection));-});-}-}" width="36" height="32">
+      <Image id="flowy-svg" background="#FF282E3A" />
+    </Button>
+  </Page>
+</Cui>

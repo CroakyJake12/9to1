@@ -1,0 +1,87 @@
+<Cui id="message-ai-message-bubble" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(is-selecting-messages)-{-context-.read&lt;chat-select-message-bloc&gt;()-.add(chat-select-message-event.toggle-select-message(message));-}-}" command="() {
+            if (isSelectingMessages) {
+              context
+                  .read&lt;ChatSelectMessageBloc&gt;()
+                  .add(ChatSelectMessageEvent.toggleSelectMessage(message));
+            }
+          }" />
+    <Action name="()-{-show-mobile-bottom-sheet(-context,-show-drag-handle:-true,-background-color:-aftheme-extension.of(context).background,-builder:-(bottom-sheet-context)-{-return-column(-main-axis-size:-main-axis-size.min,-children:-[-copy-button(context,-bottom-sheet-context),-divider(),-regenerate-button(context),-divider(),-change-format-button(context),-divider(),-change-model-button(context),-divider(),-save-to-page-button(context),-],-);-},-);-}" command="() {
+        showMobileBottomSheet(
+          context,
+          showDragHandle: true,
+          backgroundColor: AFThemeExtension.of(context).background,
+          builder: (bottomSheetContext) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _copyButton(context, bottomSheetContext),
+                _divider(),
+                _regenerateButton(context),
+                _divider(),
+                _changeFormatButton(context),
+                _divider(),
+                _changeModelButton(context),
+                _divider(),
+                _saveToPageButton(context),
+              ],
+            );
+          },
+        );
+      }" />
+    <Action name="(-)-{-if-(!hover-action-bar-&amp;&amp;-is-bottom-of-widget-visible(context))-{-set-state(()-=&gt;-hover-action-bar-=-true);-}-}" command="(_) {
+                  if (!hoverActionBar &amp;&amp; isBottomOfWidgetVisible(context)) {
+                    setState(() =&gt; hoverActionBar = true);
+                  }
+                }" />
+    <Action name="(-)-{-if-(!hover-bubble-&amp;&amp;-is-bottom-of-widget-visible(context))-{-set-state(()-=&gt;-hover-bubble-=-true);-}-}" command="(_) {
+        if (!hoverBubble &amp;&amp; isBottomOfWidgetVisible(context)) {
+          setState(() =&gt; hoverBubble = true);
+        }
+      }" />
+    <Action name="(-)-{-if-(hover-action-bar)-{-set-state(()-=&gt;-hover-action-bar-=-false);-}-}" command="(_) {
+                  if (hoverActionBar) {
+                    setState(() =&gt; hoverActionBar = false);
+                  }
+                }" />
+    <Action name="(-)-{-if-(hover-bubble)-{-set-state(()-=&gt;-hover-bubble-=-false);-}-}" command="(_) {
+        if (hoverBubble) {
+          setState(() =&gt; hoverBubble = false);
+        }
+      }" />
+  </Actions>
+  <Page id="message-ai-message-bubble-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="align" Type="Vertical Stack">
+        <Container id="mouse-region-2" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" width="784">
+            <Container id="align-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="decorated-box" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="expanded" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region-3" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

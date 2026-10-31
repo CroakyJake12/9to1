@@ -1,0 +1,84 @@
+<Cui id="card-detail-mobile-card-detail-screen" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-background-color:-aftheme-extension.of(context).background,-show-drag-handle:-true,-builder:-(-)-=&gt;-column(-main-axis-size:-main-axis-size.min,-children:-[-mobile-quick-action-button(-on-tap:-()-{-context-..pop()-..read&lt;row-detail-bloc&gt;()-.add(const-row-detail-event.remove-cover());-},-text:-locale-keys.button-delete.tr(),-text-color:-theme.of(context).color-scheme.error,-icon:-flowy-svgs.trash-s,-icon-color:-theme.of(context).color-scheme.error,-),-],-),-)" command="() =&gt; showMobileBottomSheet(
+                  context,
+                  backgroundColor: AFThemeExtension.of(context).background,
+                  showDragHandle: true,
+                  builder: (_) =&gt; Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      MobileQuickActionButton(
+                        onTap: () {
+                          context
+                            ..pop()
+                            ..read&lt;RowDetailBloc&gt;()
+                                .add(const RowDetailEvent.removeCover());
+                        },
+                        text: LocaleKeys.button_delete.tr(),
+                        textColor: Theme.of(context).colorScheme.error,
+                        icon: FlowySvgs.trash_s,
+                        iconColor: Theme.of(context).colorScheme.error,
+                      ),
+                    ],
+                  ),
+                )" />
+    <Action name="on-tap-next" command="onTapNext" />
+    <Action name="on-tap-previous" command="onTapPrevious" />
+  </Actions>
+  <Page id="card-detail-mobile-card-detail-screen-root">
+    <Page id="scaffold">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="shrink-2" Type="Vertical Stack" />
+      </Container>
+    </Page>
+    <Container id="column" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="12" />
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="shrink-3" Type="Vertical Stack" />
+      <Container id="container-2" Type="Vertical Stack" height="48" CornerRadius="26" background="#191F2329">
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="icon" source="chevron_left_outlined" />
+          <Container id="ink-well" Type="Vertical Stack">
+            <Image id="icon-2" source="chevron_left_outlined" />
+          </Container>
+          <Image id="icon-3" source="chevron_right_outlined" />
+          <Container id="ink-well-2" Type="Vertical Stack">
+            <Image id="icon-4" source="chevron_right_outlined" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder-3" Type="Vertical Stack">
+        <Container id="column-2" Type="Vertical Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="column-3" Type="Vertical Stack" />
+            <Container id="sized-box" Type="Vertical Stack" height="200">
+              <Container id="container-3" Type="Vertical Stack" />
+            </Container>
+          </Container>
+          <Container id="bloc-provider-2" Type="Vertical Stack">
+            <Container id="shrink-4" Type="Vertical Stack" />
+            <Container id="padding" Type="Vertical Stack" padding="16" />
+          </Container>
+          <Container id="expanded" Type="Vertical Stack">
+            <Container id="list-view" Type="Vertical Stack" padding="9 100">
+              <Container id="padding-2" Type="Vertical Stack" padding="16" />
+              <Container id="padding-3" Type="Vertical Stack" padding="6 6 16 0">
+                <Container id="column-4" Type="Vertical Stack">
+                  <Container id="vspace" Type="Vertical Stack" />
+                  <Container id="value-listenable-builder" Type="Vertical Stack">
+                    <Container id="shrink-5" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

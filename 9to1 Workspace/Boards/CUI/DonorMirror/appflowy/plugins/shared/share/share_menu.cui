@@ -1,0 +1,28 @@
+<Cui id="share-share-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="(index)-{-set-state(()-{-selected-tab-=-widget.tabs[index];-});-}" command="(index) {
+        setState(() {
+          selectedTab = widget.tabs[index];
+        });
+      }" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="share-share-menu-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack" height="28" />
+      <Container id="padding" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" />
+    <Container id="tab-bar" Type="Horizontal Stack" />
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Text id="text" text-alignment="Center" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Image id="flowy-svg" />
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

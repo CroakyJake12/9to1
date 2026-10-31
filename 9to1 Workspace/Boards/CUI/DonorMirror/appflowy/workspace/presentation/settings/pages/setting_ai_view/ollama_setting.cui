@@ -1,0 +1,55 @@
+<Cui id="setting-ai-view-ollama-setting" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(is-edited)-{-context-.read&lt;ollama-setting-bloc&gt;()-.add(const-ollama-setting-event.submit());-}-}" command="() {
+              if (isEdited) {
+                context
+                    .read&lt;OllamaSettingBloc&gt;()
+                    .add(const OllamaSettingEvent.submit());
+              }
+            }" />
+    <Action name="item.editable-?-(content)-{-context.read&lt;ollama-setting-bloc&gt;().add(-ollama-setting-event.on-edit(-content,-item.setting-type,-),-);-}-:-null" command="item.editable
+                  ? (content) {
+                      context.read&lt;OllamaSettingBloc&gt;().add(
+                            OllamaSettingEvent.onEdit(
+                              content,
+                              item.settingType,
+                            ),
+                          );
+                    }
+                  : null" />
+  </Actions>
+  <Page id="setting-ai-view-ollama-setting-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" padding="12">
+          <Container id="column" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Text id="flowy-text" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack" height="32">
+        <Container id="flowy-tooltip" Type="Floating">
+          <Input id="flowy-text-field" Type="Text" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="align" Type="Vertical Stack">
+      <Container id="flowy-tooltip-2" Type="Floating">
+        <Container id="sized-box-2" Type="Vertical Stack">
+          <Button id="flowy-button" Type="Action" action="()-{-if-(is-edited)-{-context-.read&lt;ollama-setting-bloc&gt;()-.add(const-ollama-setting-event.submit());-}-}" padding="16.0 6.0">
+            <Text id="flowy-text-2" text="Apply" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="sized-box-3" Type="Vertical Stack" />
+      <Container id="column-3" Type="Vertical Stack">
+        <Container id="vspace-2" Type="Vertical Stack" />
+        <Container id="sized-box-4" Type="Vertical Stack" height="40" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

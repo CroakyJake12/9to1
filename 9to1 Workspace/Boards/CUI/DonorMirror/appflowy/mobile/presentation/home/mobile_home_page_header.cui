@@ -1,0 +1,58 @@
+<Cui id="home-mobile-home-page-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-icon-=-await-context.push&lt;emoji-icon-data&gt;(-uri(-path:-mobile-emoji-picker-screen.route-name,-query-parameters:-{-mobile-emoji-picker-screen.page-title:-locale-keys.title-bar-user-icon.tr(),-mobile-emoji-picker-screen.select-tabs:-[picker-tab-type.emoji.name],-},-).to-string(),-);-if-(icon-!=-null)-{-if-(context.mounted)-{-context.read&lt;settings-user-view-bloc&gt;().add(-settings-user-event.update-user-icon(-icon-url:-icon.emoji,-),-);-}-}-}" command="() async {
+        final icon = await context.push&lt;EmojiIconData&gt;(
+          Uri(
+            path: MobileEmojiPickerScreen.routeName,
+            queryParameters: {
+              MobileEmojiPickerScreen.pageTitle:
+                  LocaleKeys.titleBar_userIcon.tr(),
+              MobileEmojiPickerScreen.selectTabs: [PickerTabType.emoji.name],
+            },
+          ).toString(),
+        );
+        if (icon != null) {
+          if (context.mounted) {
+            context.read&lt;SettingsUserViewBloc&gt;().add(
+                  SettingsUserEvent.updateUserIcon(
+                    iconUrl: icon.emoji,
+                  ),
+                );
+          }
+        }
+      }" />
+  </Actions>
+  <Page id="home-mobile-home-page-header-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="hspace" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="row-3" Type="Horizontal Stack">
+        <Container id="hspace-3" Type="Horizontal Stack" />
+        <Container id="hspace-4" Type="Horizontal Stack" />
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder-3" Type="Vertical Stack">
+      <Container id="shrink-2" Type="Vertical Stack" />
+    </Container>
+    <Button id="flowy-button" Type="Action" action="()-async-{-final-icon-=-await-context.push&lt;emoji-icon-data&gt;(-uri(-path:-mobile-emoji-picker-screen.route-name,-query-parameters:-{-mobile-emoji-picker-screen.page-title:-locale-keys.title-bar-user-icon.tr(),-mobile-emoji-picker-screen.select-tabs:-[picker-tab-type.emoji.name],-},-).to-string(),-);-if-(icon-!=-null)-{-if-(context.mounted)-{-context.read&lt;settings-user-view-bloc&gt;().add(-settings-user-event.update-user-icon(-icon-url:-icon.emoji,-),-);-}-}-}">
+      <Image id="flowy-svg" />
+      <Text id="flowy-text" />
+    </Button>
+  </Page>
+</Cui>

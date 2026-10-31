@@ -1,0 +1,23 @@
+<Cui id="simple-table-widgets-simple-table-column-resize-handle" product="9-1" version="1">
+  <Actions>
+    <Action name="on-enter-hover-area" command="_onEnterHoverArea" />
+    <Action name="on-exit-hover-area" command="_onExitHoverArea" />
+  </Actions>
+  <Page id="simple-table-widgets-simple-table-column-resize-handle-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="value-listenable-builder" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="gesture-detector-2" Type="Vertical Stack">
+      <Container id="value-listenable-builder-2" Type="Vertical Stack">
+        <Container id="container-2" Type="Vertical Stack" width="10">
+          <Container id="container-3" Type="Vertical Stack" width="2" />
+        </Container>
+        <Container id="container-4" Type="Vertical Stack" width="10" background="#00000000" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

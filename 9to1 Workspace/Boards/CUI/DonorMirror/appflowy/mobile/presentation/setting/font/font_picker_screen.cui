@@ -1,0 +1,6 @@
+<Cui id="font-font-picker-screen" product="9-1" version="1">
+  <Page id="font-font-picker-screen-root">
+    <Page id="scaffold" />
+    <Container id="padding" Type="Vertical Stack" padding="8.0 12.0" />
+  </Page>
+</Cui>

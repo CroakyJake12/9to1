@@ -1,0 +1,12 @@
+<Cui id="desktop-row-detail-desktop-row-detail-url-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(is-link-clickable)-{-open-url-cell-link(widget.controller.text);-}-}" command="() {
+        if (isLinkClickable) {
+          openUrlCellLink(widget.controller.text);
+        }
+      }" />
+  </Actions>
+  <Page id="desktop-row-detail-desktop-row-detail-url-cell-root">
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

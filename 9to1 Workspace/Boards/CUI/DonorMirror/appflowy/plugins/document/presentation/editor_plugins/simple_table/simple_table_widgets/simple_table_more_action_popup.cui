@@ -1,0 +1,12 @@
+<Cui id="simple-table-widgets-simple-table-more-action-popup" product="9-1" version="1">
+  <Page id="simple-table-widgets-simple-table-more-action-popup-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="value-listenable-builder" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+    </Container>
+  </Page>
+</Cui>

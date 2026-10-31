@@ -1,0 +1,5 @@
+<Cui id="widgets-database-view-widget" product="9-1" version="1">
+  <Page id="widgets-database-view-widget-root">
+    <Container id="value-listenable-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

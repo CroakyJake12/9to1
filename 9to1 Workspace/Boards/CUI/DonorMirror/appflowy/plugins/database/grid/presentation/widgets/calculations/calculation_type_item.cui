@@ -1,0 +1,15 @@
+<Cui id="calculations-calculation-type-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-tap();-popover-container.of(context).close();-}" command="() {
+          onTap();
+          PopoverContainer.of(context).close();
+        }" />
+  </Actions>
+  <Page id="calculations-calculation-type-item-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-on-tap();-popover-container.of(context).close();-}">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

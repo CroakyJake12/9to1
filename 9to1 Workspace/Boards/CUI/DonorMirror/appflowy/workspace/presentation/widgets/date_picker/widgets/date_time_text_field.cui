@@ -1,0 +1,37 @@
+<Cui id="widgets-date-time-text-field" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-states-controller.update(widget-state.pressed,-false);-}" command="() {
+        statesController.update(WidgetState.pressed, false);
+      }" />
+    <Action name="(value)-{-just-submitted-=-true;-on-date-text-field-submitted();-}" command="(value) {
+                          justSubmitted = true;
+                          onDateTextFieldSubmitted();
+                        }" />
+    <Action name="(value)-{-just-submitted-=-true;-on-date-text-field-submitted();-}" command="(value) {
+                      justSubmitted = true;
+                      onDateTextFieldSubmitted();
+                    }" />
+    <Action name="(value)-{-just-submitted-=-true;-on-time-text-field-submitted();-}" command="(value) {
+                          justSubmitted = true;
+                          onTimeTextFieldSubmitted();
+                        }" />
+  </Actions>
+  <Page id="widgets-date-time-text-field-root">
+    <Container id="padding" Type="Vertical Stack" padding="18.0">
+      <Container id="container" Type="Vertical Stack" background="#00000000" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Input id="text-field" Type="Text" />
+      </Container>
+      <Container id="vertical-divider" Type="Vertical Stack" width="1" />
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Input id="text-field-2" Type="Text" />
+      </Container>
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Input id="text-field-3" Type="Text" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

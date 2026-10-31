@@ -1,0 +1,11 @@
+<Cui id="widgets-restart-app-button" product="9-1" version="1">
+  <Page id="widgets-restart-app-button-root">
+    <Container id="padding" Type="Vertical Stack" padding="10">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="42" />
+    </Container>
+  </Page>
+</Cui>

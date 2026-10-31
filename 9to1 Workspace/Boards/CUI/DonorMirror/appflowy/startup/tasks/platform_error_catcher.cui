@@ -1,0 +1,8 @@
+<Cui id="tasks-platform-error-catcher" product="9-1" version="1">
+  <Page id="tasks-platform-error-catcher-root">
+    <Container id="container" Type="Vertical Stack" height="30" background="#FFFF0000">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

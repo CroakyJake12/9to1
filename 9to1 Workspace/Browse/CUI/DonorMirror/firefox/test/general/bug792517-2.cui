@@ -1,9 +1,0 @@
-<Cui id="general-bug792517-2" product="9-1" version="1">
-  <Page id="general-bug792517-2-root">
-    <Container id="html" Type="Vertical Stack">
-      <Container id="body" Type="Vertical Stack">
-        <Button id="fff" />
-      </Container>
-    </Container>
-  </Page>
-</Cui>

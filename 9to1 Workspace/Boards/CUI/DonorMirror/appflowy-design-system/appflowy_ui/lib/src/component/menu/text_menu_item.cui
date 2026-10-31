@@ -1,0 +1,6 @@
+<Cui id="menu-text-menu-item" product="9-1" version="1">
+  <Page id="menu-text-menu-item-root">
+    <Text id="text" />
+    <Text id="text-2" />
+  </Page>
+</Cui>

@@ -1,0 +1,44 @@
+<Cui id="link-preview-custom-link-preview" product="9-1" version="1">
+  <Actions>
+    <Action name="af-launch-url-string" command="afLaunchUrlString" />
+  </Actions>
+  <Page id="link-preview-custom-link-preview-root">
+    <Container id="container" Type="Vertical Stack" CornerRadius="16.0">
+      <Container id="sized-box" Type="Vertical Stack" height="96">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack">
+            <Container id="padding" Type="Vertical Stack" padding="20 12 58 12">
+              <Container id="column" Type="Vertical Stack">
+                <Container id="padding-2" Type="Vertical Stack" padding="4.0" />
+                <Container id="padding-3" Type="Vertical Stack" padding="16.0">
+                  <Text id="flowy-text" />
+                </Container>
+                <Text id="flowy-text-2" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack" />
+    </Container>
+    <Container id="gesture-detector-2" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack">
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Container>
+    <Container id="center-2" Type="Vertical Stack">
+      <Container id="sized-box-2" Type="Vertical Stack" width="16" height="16" />
+    </Container>
+    <Container id="center-3" Type="Vertical Stack">
+      <Container id="sized-box-3" Type="Vertical Stack" width="16" height="16">
+        <Image id="icon" source="error_outline" background="#FFFF0000" />
+      </Container>
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

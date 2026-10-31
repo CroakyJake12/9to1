@@ -1,0 +1,35 @@
+<Cui id="mention-mention-link-block" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-await-af-launch-url-string(url,-adding-http-scheme-when-failed:-true);-}" command="() async {
+        await afLaunchUrlString(url, addingHttpSchemeWhenFailed: true);
+      }" />
+    <Action name="on-enter" command="onEnter" />
+    <Action name="on-exit" command="onExit" />
+  </Actions>
+  <Page id="mention-mention-link-block-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Container id="flexible" Type="Vertical Stack">
+          <Text id="rich-text">
+            <Text id="text-span">
+              <Text id="text-span-2" />
+              <Container id="hspace-3" Type="Horizontal Stack" />
+              <Text id="text-span-3" />
+            </Text>
+          </Text>
+        </Container>
+        <Container id="hspace-4" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="padding" Type="Vertical Stack" padding="2.0">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" width="20" height="20" />
+  </Page>
+</Cui>

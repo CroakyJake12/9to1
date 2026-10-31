@@ -1,0 +1,8 @@
+<Cui id="ghost-button-ghost-icon-text-button" product="9-1" version="1">
+  <Page id="ghost-button-ghost-icon-text-button-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="sized-box" Type="Vertical Stack" />
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

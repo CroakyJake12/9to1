@@ -1,0 +1,5 @@
+<Cui id="widgets-settings-notifications-view" product="9-1" version="1">
+  <Page id="widgets-settings-notifications-view-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

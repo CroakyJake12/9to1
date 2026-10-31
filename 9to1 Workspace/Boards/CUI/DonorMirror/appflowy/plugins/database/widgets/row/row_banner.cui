@@ -1,0 +1,94 @@
+<Cui id="row-row-banner" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-widget.on-cover-changed(-row-cover-pb(-data:-is-desktop-?-'1'-:-'0xffe8e0ff',-upload-type:-file-upload-type-pb.local-file,-cover-type:-is-desktop-?-cover-type-pb.asset-cover-:-cover-type-pb.color-cover,-),-)" command="() =&gt; widget.onCoverChanged(
+                      RowCoverPB(
+                        data: isDesktop ? '1' : '0xffe8e0ff',
+                        uploadType: FileUploadTypePB.LocalFile,
+                        coverType: isDesktop
+                            ? CoverTypePB.AssetCover
+                            : CoverTypePB.ColorCover,
+                      ),
+                    )" />
+    <Action name="()-async-{-if-(!is-desktop)-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-mobile-emoji-picker-screen.route-name,-);-if-(result-!=-null)-{-widget.on-icon-changed(result.emoji);-}-}-else-{-popover-controller.show();-}-}" command="() async {
+                        if (!isDesktop) {
+                          final result = await context.push&lt;EmojiIconData&gt;(
+                            MobileEmojiPickerScreen.routeName,
+                          );
+
+                          if (result != null) {
+                            widget.onIconChanged(result.emoji);
+                          }
+                        } else {
+                          popoverController.show();
+                        }
+                      }" />
+    <Action name="is-popover-open-?-null-:" command="isPopoverOpen ? null :" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="row-row-banner-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="stack" Type="Absolute">
+            <Container id="sized-box" Type="Vertical Stack" />
+            <Container id="positioned" Type="Vertical Stack" />
+          </Container>
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="stack-2" Type="Absolute">
+          <Container id="sized-box-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="positioned-2" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="app-flowy-popover" Type="Context Menu" />
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="sized-box-4" Type="Vertical Stack" />
+    <Container id="sized-box-5" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="mouse-region-2" Type="Vertical Stack">
+      <Container id="container-3" Type="Vertical Stack">
+        <Container id="sized-box-6" Type="Vertical Stack" height="28">
+          <Container id="visibility" Type="Vertical Stack">
+            <Container id="row-2" Type="Horizontal Stack">
+              <Button id="flowy-button" Type="Action" action="()-=&gt;-widget.on-cover-changed(-row-cover-pb(-data:-is-desktop-?-'1'-:-'0xffe8e0ff',-upload-type:-file-upload-type-pb.local-file,-cover-type:-is-desktop-?-cover-type-pb.asset-cover-:-cover-type-pb.color-cover,-),-)">
+                <Image id="flowy-svg" />
+              </Button>
+              <Container id="app-flowy-popover-2" Type="Context Menu">
+                <Button id="flowy-button-2" Type="Action" action="()-async-{-if-(!is-desktop)-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-mobile-emoji-picker-screen.route-name,-);-if-(result-!=-null)-{-widget.on-icon-changed(result.emoji);-}-}-else-{-popover-controller.show();-}-}">
+                  <Image id="flowy-svg-2" />
+                </Button>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink-3" Type="Vertical Stack" />
+    <Container id="app-flowy-popover-3" Type="Context Menu" />
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="60">
+        <Container id="row-3" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Input id="text-field" Type="Text" />
+    <Container id="app-flowy-popover-4" Type="Context Menu">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Button id="flowy-icon-button" Type="Action" width="20" height="20">
+          <Image id="flowy-svg-3" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,45 @@
+<Cui id="src-default-emoji-picker-view" product="9-1" version="1">
+  <Actions>
+    <Action name="(index)-{-page-controller!.animate-to-page(-index,-duration:-widget.config.tab-indicator-anim-duration,-curve:-curves.ease,-);-}" command="(index) {
+                        _pageController!.animateToPage(
+                          index,
+                          duration: widget.config.tabIndicatorAnimDuration,
+                          curve: Curves.ease,
+                        );
+                      }" />
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="src-default-emoji-picker-view-root">
+    <Button id="icon-button" Type="Action" padding="2">
+      <Image id="icon" source="backspace" />
+    </Button>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" padding="4">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="sized-box" Type="Vertical Stack" height="32.0">
+          <Input id="text-field" Type="Text" />
+        </Container>
+        <Container id="vspace-2" Type="Vertical Stack" />
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack">
+            <Container id="tab-bar" Type="Horizontal Stack" padding="4.0" />
+          </Container>
+        </Container>
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Button id="tab" Type="Menu Item">
+      <Image id="icon-2" />
+    </Button>
+    <Container id="ink-well" Type="Vertical Stack" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="center" Type="Vertical Stack">
+      <Text id="text" />
+    </Container>
+    <Text id="text-2" />
+    <Container id="center-2" Type="Vertical Stack">
+      <Text id="text-3" text-alignment="Center" />
+    </Container>
+  </Page>
+</Cui>

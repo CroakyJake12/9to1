@@ -1,0 +1,12 @@
+<Cui id="base-option-color-list" product="9-1" version="1">
+  <Actions>
+    <Action name="on-selected-color" command="onSelectedColor" />
+  </Actions>
+  <Page id="base-option-color-list-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="8.0" background="#FF00C6F1">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

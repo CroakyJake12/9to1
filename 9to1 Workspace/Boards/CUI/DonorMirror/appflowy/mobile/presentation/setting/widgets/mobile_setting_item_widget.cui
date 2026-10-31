@@ -1,0 +1,11 @@
+<Cui id="widgets-mobile-setting-item-widget" product="9-1" version="1">
+  <Page id="widgets-mobile-setting-item-widget-root">
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="expanded" Type="Vertical Stack">
+        <Text id="text" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

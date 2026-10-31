@@ -1,0 +1,12 @@
+<Cui id="widgets-inline-actions-handler" product="9-1" version="1">
+  <Page id="widgets-inline-actions-handler-root">
+    <Container id="container" Type="Vertical Stack" CornerRadius="6.0" background="#FF000000">
+      <Container id="padding" Type="Vertical Stack" padding="8.0">
+        <Container id="sized-box" Type="Vertical Stack" width="150" />
+        <Container id="single-child-scroll-view" Type="Vertical Stack">
+          <Container id="column" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

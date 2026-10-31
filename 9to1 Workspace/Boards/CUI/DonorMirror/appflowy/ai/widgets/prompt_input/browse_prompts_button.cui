@@ -1,0 +1,33 @@
+<Cui id="prompt-input-browse-prompts-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-prompt-=-await-show-ai-prompt-modal(-context,-ai-prompt-selector-cubit:-context.read&lt;ai-prompt-selector-cubit&gt;(),-);-if-(context.mounted)-{-context.read&lt;ai-prompt-selector-cubit&gt;().reset();-}-if-(prompt-!=-null-&amp;&amp;-context.mounted)-{-on-select-prompt(prompt);-}-}" command="() async {
+                final prompt = await showAiPromptModal(
+                  context,
+                  aiPromptSelectorCubit: context.read&lt;AiPromptSelectorCubit&gt;(),
+                );
+                if (context.mounted) {
+                  context.read&lt;AiPromptSelectorCubit&gt;().reset();
+                }
+                if (prompt != null &amp;&amp; context.mounted) {
+                  onSelectPrompt(prompt);
+                }
+              }" />
+  </Actions>
+  <Page id="prompt-input-browse-prompts-button-root">
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="bloc-provider" Type="Vertical Stack">
+        <Container id="builder" Type="Vertical Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="sized-box" Type="Vertical Stack">
+              <Container id="padding" Type="Vertical Stack" padding="4.0">
+                <Container id="center" Type="Vertical Stack">
+                  <Text id="flowy-text" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

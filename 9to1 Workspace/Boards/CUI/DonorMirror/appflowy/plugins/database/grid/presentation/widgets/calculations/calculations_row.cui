@@ -1,0 +1,11 @@
+<Cui id="calculations-calculations-row" product="9-1" version="1">
+  <Page id="calculations-calculations-row-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

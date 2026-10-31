@@ -1,0 +1,35 @@
+<Cui id="widgets-board-editable-column-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-widget.is-editing.value-=-true;-}" command="() {
+          widget.isEditing.value = true;
+        }" />
+    <Action name="widget.on-submitted" command="widget.onSubmitted" />
+  </Actions>
+  <Page id="widgets-board-editable-column-header-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="value-listenable-builder" Type="Vertical Stack" />
+      </Container>
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="align" Type="Vertical Stack">
+          <Container id="flowy-tooltip" Type="Floating">
+            <Container id="container" Type="Vertical Stack" height="20" padding="8 1" CornerRadius="6">
+              <Container id="row-2" Type="Horizontal Stack">
+                <Container id="center" Type="Vertical Stack">
+                  <Container id="container-2" Type="Vertical Stack" width="6" height="6" CornerRadius="3" />
+                </Container>
+                <Container id="hspace-3" Type="Horizontal Stack" />
+                <Container id="flexible" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Input id="text-field" Type="Text" background="#00000000" />
+  </Page>
+</Cui>

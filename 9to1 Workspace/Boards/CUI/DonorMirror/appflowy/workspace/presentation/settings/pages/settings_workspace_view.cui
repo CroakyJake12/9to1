@@ -1,0 +1,147 @@
+<Cui id="pages-settings-workspace-view" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;appearance-settings-cubit&gt;()-.set-font-family" command="() =&gt; context
+                  .read&lt;AppearanceSettingsCubit&gt;()
+                  .setFontFamily" />
+    <Action name="()-=&gt;-context.read&lt;appearance-settings-cubit&gt;" command="() =&gt;
+                  context.read&lt;AppearanceSettingsCubit&gt;" />
+    <Action name="()-{-context.read&lt;dynamic-plugin-bloc&gt;().add(-dynamic-plugin-event.remove-plugin(-name:-t.theme-name,-),-);-if-(appearance.app-theme.theme-name-==-t.theme-name)-{-context-.read&lt;appearance-settings-cubit&gt;()-.set-theme(app-theme.builtins.first.theme-name);-}-}" command="() {
+                        context.read&lt;DynamicPluginBloc&gt;().add(
+                              DynamicPluginEvent.removePlugin(
+                                name: t.themeName,
+                              ),
+                            );
+
+                        if (appearance.appTheme.themeName == t.themeName) {
+                          context
+                              .read&lt;AppearanceSettingsCubit&gt;()
+                              .setTheme(AppTheme.builtins.first.themeName);
+                        }
+                      }" />
+    <Action name="(value)-{-set-state(()-=&gt;-width-=-value);-widget.on-padding-changed(value);-}" command="(value) {
+              setState(() =&gt; width = value);
+
+              widget.onPaddingChanged(value);
+            }" />
+  </Actions>
+  <Page id="pages-settings-workspace-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="2.5" />
+    <Container id="flexible" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" width="64" height="64">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Image id="flowy-svg-2" />
+      <Image id="flowy-svg-3" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="bloc-builder-3" Type="Vertical Stack">
+      <Image id="flowy-svg-4" />
+      <Image id="flowy-svg-5" />
+    </Container>
+    <Container id="bloc-builder-4" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="8.0">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-5" Type="Vertical Stack" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="expanded-2" Type="Vertical Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack">
+      <Container id="bloc-builder-6" Type="Vertical Stack">
+        <Image id="flowy-svg-6" />
+        <Image id="flowy-svg-7" />
+        <Button id="flowy-icon-button" Type="Action" action="()-{-context.read&lt;dynamic-plugin-bloc&gt;().add(-dynamic-plugin-event.remove-plugin(-name:-t.theme-name,-),-);-if-(appearance.app-theme.theme-name-==-t.theme-name)-{-context-.read&lt;appearance-settings-cubit&gt;()-.set-theme(app-theme.builtins.first.theme-name);-}-}">
+          <Image id="flowy-svg-8" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="16" height="16" />
+    <Container id="row-3" Type="Horizontal Stack">
+      <Container id="padding-3" Type="Vertical Stack" padding="16">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="column-2" Type="Vertical Stack">
+            <Container id="container-2" Type="Vertical Stack" width="88" height="72" />
+            <Container id="vspace-4" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="positioned" Type="Vertical Stack">
+        <Container id="container-3" Type="Vertical Stack" width="16" height="16">
+          <Image id="flowy-svg-9" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="row-4" Type="Horizontal Stack">
+        <Container id="expanded-3" Type="Vertical Stack">
+          <Input id="flowy-text-field" Type="Text">
+            <Container id="mouse-region" Type="Vertical Stack">
+              <Image id="icon" source="arrow_drop_down" />
+            </Container>
+          </Input>
+        </Container>
+        <Container id="hspace-3" Type="Horizontal Stack" />
+        <Container id="gesture-detector-2" Type="Vertical Stack">
+          <Container id="sized-box-2" Type="Vertical Stack" height="26">
+            <Container id="padding-4" Type="Vertical Stack" padding="4 2">
+              <Container id="row-5" Type="Horizontal Stack">
+                <Image id="flowy-svg-10" />
+                <Container id="hspace-4" Type="Horizontal Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="padding-5" Type="Vertical Stack" padding="12 4" />
+      <Container id="flexible-2" Type="Vertical Stack">
+        <Container id="vspace-5" Type="Vertical Stack" />
+        <Container id="sized-box-3" Type="Vertical Stack" height="29">
+          <Container id="align" Type="Vertical Stack">
+            <Text id="text" />
+          </Container>
+          <Image id="flowy-svg-11" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-7" Type="Vertical Stack" />
+    <Container id="row-6" Type="Horizontal Stack">
+      <Container id="container-4" Type="Vertical Stack" width="2" height="16" />
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="bloc-builder-8" Type="Vertical Stack" />
+    <Container id="row-7" Type="Horizontal Stack">
+      <Container id="container-5" Type="Vertical Stack">
+        <Text id="flowy-text-2" />
+      </Container>
+      <Text id="flowy-text-3" />
+    </Container>
+    <Container id="bloc-builder-9" Type="Vertical Stack">
+      <Container id="column-4" Type="Vertical Stack">
+        <Container id="row-8" Type="Horizontal Stack" />
+        <Container id="vspace-6" Type="Vertical Stack" />
+        <Container id="container-6" Type="Vertical Stack" height="32" padding="4" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder-10" Type="Vertical Stack">
+      <Input id="slider" Type="Slider" />
+    </Container>
+  </Page>
+</Cui>

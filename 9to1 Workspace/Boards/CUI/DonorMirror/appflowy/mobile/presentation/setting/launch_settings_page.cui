@@ -1,0 +1,11 @@
+<Cui id="setting-launch-settings-page" product="9-1" version="1">
+  <Page id="setting-launch-settings-page-root">
+    <Page id="scaffold">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="16">
+          <Container id="column" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Page>
+  </Page>
+</Cui>

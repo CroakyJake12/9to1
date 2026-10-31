@@ -1,0 +1,7 @@
+<Cui id="widget-constraint-flex-view" product="9-1" version="1">
+  <Page id="widget-constraint-flex-view-root">
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

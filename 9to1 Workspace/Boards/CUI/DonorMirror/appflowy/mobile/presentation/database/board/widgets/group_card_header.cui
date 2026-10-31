@@ -1,0 +1,79 @@
+<Cui id="widgets-group-card-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;board-bloc&gt;()-.add" command="() =&gt; context
+                .read&lt;BoardBloc&gt;()
+                .add" />
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-show-drag-handle:-true,-background-color:-theme.of(context).color-scheme.surface,-builder:-(-)-=&gt;-column(-cross-axis-alignment:-cross-axis-alignment.stretch,-children:-[-mobile-quick-action-button(-text:-locale-keys.board-column-rename-column.tr(),-icon:-flowy-svgs.edit-s,-on-tap:-()-{-context.read&lt;board-bloc&gt;().add(-board-event.start-editing-header(-widget.group-data.id,-),-);-context.pop();-},-),-const-mobile-quick-action-divider(),-mobile-quick-action-button(-text:-locale-keys.board-column-hide-column.tr(),-icon:-flowy-svgs.hide-s,-on-tap:-()-{-context.read&lt;board-bloc&gt;().add(-board-event.set-group-visibility(-widget.group-data.custom-data.group-as-group-pb,-false,-),-);-context.pop();-},-),-],-),-)" command="() =&gt; showMobileBottomSheet(
+                    context,
+                    showDragHandle: true,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    builder: (_) =&gt; Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        MobileQuickActionButton(
+                          text: LocaleKeys.board_column_renameColumn.tr(),
+                          icon: FlowySvgs.edit_s,
+                          onTap: () {
+                            context.read&lt;BoardBloc&gt;().add(
+                                  BoardEvent.startEditingHeader(
+                                    widget.groupData.id,
+                                  ),
+                                );
+                            context.pop();
+                          },
+                        ),
+                        const MobileQuickActionDivider(),
+                        MobileQuickActionButton(
+                          text: LocaleKeys.board_column_hideColumn.tr(),
+                          icon: FlowySvgs.hide_s,
+                          onTap: () {
+                            context.read&lt;BoardBloc&gt;().add(
+                                  BoardEvent.setGroupVisibility(
+                                    widget.groupData.customData.group
+                                        as GroupPB,
+                                    false,
+                                  ),
+                                );
+                            context.pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  )" />
+    <Action name="()-{-context.read&lt;board-bloc&gt;().add(-board-event.create-row(-widget.group-data.id,-order-object-position-type-pb.start,-null,-null,-),-);-}" command="() {
+                    context.read&lt;BoardBloc&gt;().add(
+                          BoardEvent.createRow(
+                            widget.groupData.id,
+                            OrderObjectPositionTypePB.Start,
+                            null,
+                            null,
+                          ),
+                        );
+                  }" />
+  </Actions>
+  <Page id="widgets-group-card-header-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Text id="text" />
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Text id="text-2" />
+      </Container>
+      <Input id="text-field" Type="Text" />
+      <Container id="padding" Type="Vertical Stack" padding="16">
+        <Container id="sized-box" Type="Vertical Stack" height="42">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="expanded" Type="Vertical Stack" />
+            <Button id="icon-button" Type="Action" action="()-=&gt;-show-mobile-bottom-sheet(-context,-show-drag-handle:-true,-background-color:-theme.of(context).color-scheme.surface,-builder:-(-)-=&gt;-column(-cross-axis-alignment:-cross-axis-alignment.stretch,-children:-[-mobile-quick-action-button(-text:-locale-keys.board-column-rename-column.tr(),-icon:-flowy-svgs.edit-s,-on-tap:-()-{-context.read&lt;board-bloc&gt;().add(-board-event.start-editing-header(-widget.group-data.id,-),-);-context.pop();-},-),-const-mobile-quick-action-divider(),-mobile-quick-action-button(-text:-locale-keys.board-column-hide-column.tr(),-icon:-flowy-svgs.hide-s,-on-tap:-()-{-context.read&lt;board-bloc&gt;().add(-board-event.set-group-visibility(-widget.group-data.custom-data.group-as-group-pb,-false,-),-);-context.pop();-},-),-],-),-)">
+              <Image id="icon" source="more_horiz_rounded" />
+              <Container id="column" Type="Vertical Stack" />
+            </Button>
+            <Button id="icon-button-2" Type="Action" action="()-{-context.read&lt;board-bloc&gt;().add(-board-event.create-row(-widget.group-data.id,-order-object-position-type-pb.start,-null,-null,-),-);-}">
+              <Image id="icon-2" source="add" />
+            </Button>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

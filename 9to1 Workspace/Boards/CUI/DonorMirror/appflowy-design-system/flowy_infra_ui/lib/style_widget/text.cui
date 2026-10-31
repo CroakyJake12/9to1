@@ -1,0 +1,7 @@
+<Cui id="style-widget-text" product="9-1" version="1">
+  <Page id="style-widget-text-root">
+    <Text id="flowy-text" />
+    <Text id="text" />
+    <Container id="flowy-tooltip" Type="Floating" />
+  </Page>
+</Cui>

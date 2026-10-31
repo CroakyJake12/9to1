@@ -1,0 +1,11 @@
+<Cui id="document-document" product="9-1" version="1">
+  <Page id="document-document-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="hspace-4" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

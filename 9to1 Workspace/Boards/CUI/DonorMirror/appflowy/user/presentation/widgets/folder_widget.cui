@@ -1,0 +1,46 @@
+<Cui id="widgets-folder-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="(name)-=&gt;-set-state(-()-=&gt;-folder-name-=-name,-)" command="(name) =&gt; setState(
+                () =&gt; _folderName = name,
+              )" />
+  </Actions>
+  <Page id="widgets-folder-widget-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="align" Type="Vertical Stack">
+        <Image id="icon" source="arrow_back_rounded" />
+        <Text id="text" text="Back" />
+      </Container>
+      <Container id="sized-box" Type="Vertical Stack" width="120">
+        <Input id="flowy-text-field" Type="Text" />
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="4.0" />
+    </Container>
+    <Container id="card" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="padding-3" Type="Vertical Stack" />
+          <Container id="expanded" Type="Vertical Stack">
+            <Container id="column-2" Type="Vertical Stack">
+              <Container id="row-2" Type="Horizontal Stack">
+                <Container id="flexible" Type="Vertical Stack" />
+                <Container id="tooltip" Type="Floating" CornerRadius="6">
+                  <Container id="container" Type="Vertical Stack" padding="10">
+                    <Text id="flowy-text" />
+                  </Container>
+                  <Button id="flowy-icon-button" Type="Action">
+                    <Image id="icon-2" source="warning_amber_rounded" />
+                  </Button>
+                </Container>
+              </Container>
+              <Container id="vspace-2" Type="Vertical Stack" />
+            </Container>
+          </Container>
+          <Container id="hspace" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

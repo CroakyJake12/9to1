@@ -1,0 +1,11 @@
+<Cui id="desktop-row-detail-desktop-row-detail-select-option-cell" product="9-1" version="1">
+  <Page id="desktop-row-detail-desktop-row-detail-select-option-cell-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" padding="8.0 6.0 8.0 5.0" />
+      </Container>
+    </Container>
+    <Text id="flowy-text" />
+    <Container id="wrap" Type="Wrap" />
+  </Page>
+</Cui>

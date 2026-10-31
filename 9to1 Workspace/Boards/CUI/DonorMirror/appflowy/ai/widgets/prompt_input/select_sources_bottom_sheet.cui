@@ -1,0 +1,74 @@
+<Cui id="prompt-input-select-sources-bottom-sheet" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-unawaited(-context-.read&lt;view-selector-cubit&gt;()-.refresh-sources(state.spaces,-state.current-space),-);-await-show-mobile-bottom-sheet&lt;void&gt;(-context,-background-color:-theme.surface-color-scheme.primary,-max-child-size:-0.98,-enable-draggable-scrollable:-true,-scrollable-widget-builder:-(-,-scroll-controller)-{-return-expanded(-child:-bloc-provider.value(-value:-cubit,-child:-mobile-select-sources-sheet-body(-scroll-controller:-scroll-controller,-),-),-);-},-builder:-(context)-=&gt;-const-sized-box.shrink(),-);-if-(context.mounted)-{-widget.on-update-selected-sources(cubit.selected-source-ids);-}-}" command="() async {
+                  unawaited(
+                    context
+                        .read&lt;ViewSelectorCubit&gt;()
+                        .refreshSources(state.spaces, state.currentSpace),
+                  );
+
+                  await showMobileBottomSheet&lt;void&gt;(
+                    context,
+                    backgroundColor: theme.surfaceColorScheme.primary,
+                    maxChildSize: 0.98,
+                    enableDraggableScrollable: true,
+                    scrollableWidgetBuilder: (_, scrollController) {
+                      return Expanded(
+                        child: BlocProvider.value(
+                          value: cubit,
+                          child: _MobileSelectSourcesSheetBody(
+                            scrollController: scrollController,
+                          ),
+                        ),
+                      );
+                    },
+                    builder: (context) =&gt; const SizedBox.shrink(),
+                  );
+                  if (context.mounted) {
+                    widget.onUpdateSelectedSources(cubit.selectedSourceIds);
+                  }
+                }" />
+  </Actions>
+  <Page id="prompt-input-select-sources-bottom-sheet-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="bloc-provider" Type="Vertical Stack" />
+      <Container id="bloc-builder-2" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="()-async-{-unawaited(-context-.read&lt;view-selector-cubit&gt;()-.refresh-sources(state.spaces,-state.current-space),-);-await-show-mobile-bottom-sheet&lt;void&gt;(-context,-background-color:-theme.surface-color-scheme.primary,-max-child-size:-0.98,-enable-draggable-scrollable:-true,-scrollable-widget-builder:-(-,-scroll-controller)-{-return-expanded(-child:-bloc-provider.value(-value:-cubit,-child:-mobile-select-sources-sheet-body(-scroll-controller:-scroll-controller,-),-),-);-},-builder:-(context)-=&gt;-const-sized-box.shrink(),-);-if-(context.mounted)-{-widget.on-update-selected-sources(cubit.selected-source-ids);-}-}" padding="4 6 2 6">
+          <Container id="row" Type="Horizontal Stack">
+            <Image id="flowy-svg" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="value-listenable-builder" Type="Vertical Stack">
+              <Text id="flowy-text" />
+            </Container>
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Image id="flowy-svg-2" />
+          </Container>
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="shrink" Type="Vertical Stack" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="custom-scroll-view" Type="Vertical Stack">
+      <Container id="colored-box" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" height="44.0">
+            <Container id="center" Type="Vertical Stack" />
+          </Container>
+          <Container id="padding" Type="Vertical Stack" padding="16.0 8.0">
+            <Container id="sized-box-2" Type="Vertical Stack" height="44.0" />
+          </Container>
+          <Container id="divider" Type="Vertical Stack" height="0.5" />
+        </Container>
+      </Container>
+      <Container id="bloc-builder-3" Type="Vertical Stack">
+        <Container id="sliver-list" Type="Vertical Stack" />
+      </Container>
+      <Container id="bloc-builder-4" Type="Vertical Stack">
+        <Container id="padding-2" Type="Vertical Stack" padding="16.0" />
+      </Container>
+      <Container id="bloc-builder-5" Type="Vertical Stack">
+        <Container id="sliver-list-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

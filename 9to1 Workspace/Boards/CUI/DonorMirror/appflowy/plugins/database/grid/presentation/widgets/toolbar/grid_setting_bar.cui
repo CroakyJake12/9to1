@@ -1,0 +1,16 @@
+<Cui id="toolbar-grid-setting-bar" product="9-1" version="1">
+  <Page id="toolbar-grid-setting-bar-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack" height="20">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="hspace-3" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

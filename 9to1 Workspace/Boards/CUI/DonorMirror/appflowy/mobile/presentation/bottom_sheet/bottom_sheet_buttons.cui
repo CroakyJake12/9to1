@@ -1,0 +1,33 @@
+<Cui id="bottom-sheet-bottom-sheet-buttons" product="9-1" version="1">
+  <Actions>
+    <Action name="on-done-??" command="onDone ??" />
+    <Action name="on-remove" command="onRemove" />
+    <Action name="on-tap-??" command="onTap ??" />
+  </Actions>
+  <Page id="bottom-sheet-bottom-sheet-buttons-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16.0">
+        <Container id="sized-box" Type="Vertical Stack" width="18" height="18">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="gesture-detector-2" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="16 12.0">
+        <Text id="flowy-text" text-alignment="Right" />
+      </Container>
+    </Container>
+    <Container id="gesture-detector-3" Type="Vertical Stack">
+      <Container id="padding-3" Type="Vertical Stack" padding="16 12.0">
+        <Text id="flowy-text-2" text-alignment="Right" />
+      </Container>
+    </Container>
+    <Container id="gesture-detector-4" Type="Vertical Stack">
+      <Container id="padding-4" Type="Vertical Stack" padding="16.0">
+        <Container id="sized-box-2" Type="Vertical Stack" width="18" height="18">
+          <Image id="flowy-svg-2" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,13 @@
+<Cui id="type-option-editor-date" product="9-1" version="1">
+  <Page id="type-option-editor-date-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="padding" Type="Vertical Stack" padding="12.0" />
+    </Container>
+    <Container id="app-flowy-popover-2" Type="Context Menu">
+      <Container id="padding-2" Type="Vertical Stack" padding="12.0" />
+    </Container>
+  </Page>
+</Cui>

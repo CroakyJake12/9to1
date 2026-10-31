@@ -1,0 +1,26 @@
+<Cui id="header-sidebar-top-menu" product="9-1" version="1">
+  <Page id="header-sidebar-top-menu-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="12.0 8">
+      <Image id="flowy-svg" />
+    </Container>
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" />
+    </Text>
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="12.0 6.0">
+        <Container id="flowy-tooltip" Type="Floating">
+          <Container id="sized-box-2" Type="Vertical Stack" width="24">
+            <Image id="flowy-svg-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

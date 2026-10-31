@@ -1,0 +1,48 @@
+<Cui id="image-viewer-interactive-image-toolbar" product="9-1" version="1">
+  <Actions>
+    <Action name="(scale)-{-widget.on-scale-changed(scale);-set-state(-()-=&gt;-current-scale-=-(scale-*-100).to-int(),-);-}" command="(scale) {
+        widget.onScaleChanged(scale);
+        setState(
+          () =&gt; _currentScale = (scale * 100).toInt(),
+        );
+      }" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="image-viewer-interactive-image-toolbar-root">
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16.0">
+        <Container id="sized-box" Type="Vertical Stack" width="200">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="app-flowy-popover" Type="Context Menu">
+              <Container id="flowy-tooltip" Type="Floating">
+                <Container id="padding-2" Type="Vertical Stack" padding="6">
+                  <Container id="sized-box-2" Type="Vertical Stack" width="40">
+                    <Container id="center" Type="Vertical Stack">
+                      <Text id="flowy-text" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Container id="hspace-3" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="6" background="#FF000000">
+      <Container id="padding-3" Type="Vertical Stack" padding="4">
+        <Container id="hspace-4" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="flowy-tooltip-2" Type="Floating">
+        <Container id="container" Type="Vertical Stack" width="32" height="32" padding="8">
+          <Image id="flowy-svg" background="#FF808080" />
+        </Container>
+      </Container>
+    </Container>
+    <Input id="slider" Type="Slider" />
+  </Page>
+</Cui>

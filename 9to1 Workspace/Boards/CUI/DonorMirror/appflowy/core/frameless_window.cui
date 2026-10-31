@@ -1,0 +1,7 @@
+<Cui id="core-frameless-window" product="9-1" version="1">
+  <Page id="core-frameless-window-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,7 @@
+<Cui id="base-selectable-svg-widget" product="9-1" version="1">
+  <Page id="base-selectable-svg-widget-root">
+    <Image id="flowy-svg" />
+    <Container id="padding" Type="Vertical Stack" />
+    <Image id="icon" />
+  </Page>
+</Cui>

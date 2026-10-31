@@ -1,0 +1,7 @@
+<Cui id="common-type-option-separator" product="9-1" version="1">
+  <Page id="common-type-option-separator-root">
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" height="1.0" />
+    </Container>
+  </Page>
+</Cui>

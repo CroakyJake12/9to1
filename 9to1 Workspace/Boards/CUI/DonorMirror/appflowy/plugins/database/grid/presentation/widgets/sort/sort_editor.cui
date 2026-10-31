@@ -1,0 +1,68 @@
+<Cui id="sort-sort-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context-.read&lt;sort-editor-bloc&gt;()-.add(const-sort-editor-event.delete-all-sorts());-popover-container.of(context).close();-}" command="() {
+              context
+                  .read&lt;SortEditorBloc&gt;()
+                  .add(const SortEditorEvent.deleteAllSorts());
+              PopoverContainer.of(context).close();
+            }" />
+    <Action name="()-{-context-.read&lt;sort-editor-bloc&gt;()-.add(sort-editor-event.delete-sort(sort.sort-id));-popover-container.of(context).close();-}" command="() {
+              context
+                  .read&lt;SortEditorBloc&gt;()
+                  .add(SortEditorEvent.deleteSort(sort.sortId));
+              PopoverContainer.of(context).close();
+            }" />
+    <Action name="popover-controller.show" command="_popoverController.show" />
+  </Actions>
+  <Page id="sort-sort-editor-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Container id="mouse-region" Type="Vertical Stack" />
+      </Container>
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="flexible" Type="Vertical Stack" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="flexible-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="6">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="mouse-region-2" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" height="14">
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+        <Container id="flexible-3" Type="Vertical Stack">
+          <Container id="sized-box-2" Type="Vertical Stack" height="26" />
+        </Container>
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Container id="flexible-4" Type="Vertical Stack">
+          <Container id="sized-box-3" Type="Vertical Stack" height="26" />
+        </Container>
+        <Container id="hspace-3" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button" Type="Action" action="()-{-context-.read&lt;sort-editor-bloc&gt;()-.add(sort-editor-event.delete-sort(sort.sort-id));-popover-container.of(context).close();-}" width="26">
+          <Image id="flowy-svg-2" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="sized-box-4" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="popover-controller.show">
+          <Text id="flowy-text" />
+          <Image id="flowy-svg-3" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="sized-box-5" Type="Vertical Stack">
+        <Button id="flowy-button-2" Type="Action" action="()-{-context-.read&lt;sort-editor-bloc&gt;()-.add(const-sort-editor-event.delete-all-sorts());-popover-container.of(context).close();-}">
+          <Text id="flowy-text-2" />
+          <Image id="flowy-svg-4" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover-2" Type="Context Menu">
+      <Image id="flowy-svg-5" />
+    </Container>
+  </Page>
+</Cui>

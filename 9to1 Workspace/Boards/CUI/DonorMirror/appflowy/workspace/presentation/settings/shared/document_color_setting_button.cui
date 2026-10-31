@@ -1,0 +1,62 @@
+<Cui id="shared-document-color-setting-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-settings-alert-dialog(-title:-widget.dialog-title,-confirm:-()-{-widget.on-apply(new-color);-navigator.of(context).pop();-},-children:-[-document-color-setting-dialog(-form-key:-global-key&lt;form-state&gt;(),-current-color:-widget.current-color,-preview-widget-builder:-widget.preview-widget-builder,-on-changed:-(color)-=&gt;-new-color-=-color,-),-],-).show" command="() =&gt; SettingsAlertDialog(
+        title: widget.dialogTitle,
+        confirm: () {
+          widget.onApply(newColor);
+          Navigator.of(context).pop();
+        },
+        children: [
+          _DocumentColorSettingDialog(
+            formKey: GlobalKey&lt;FormState&gt;(),
+            currentColor: widget.currentColor,
+            previewWidgetBuilder: widget.previewWidgetBuilder,
+            onChanged: (color) =&gt; newColor = color,
+          ),
+        ],
+      ).show" />
+    <Action name="()-=&gt;-show-color-picker-dialog(-context:-context,-current-color:-widget.current-color,-update-color:-update-color,-)" command="() =&gt; _showColorPickerDialog(
+                      context: context,
+                      currentColor: widget.currentColor,
+                      updateColor: _updateColor,
+                    )" />
+    <Action name="on-changed" command="onChanged" />
+  </Actions>
+  <Page id="shared-document-color-setting-button-root">
+    <Button id="flowy-button" Type="Action" action="()-=&gt;-settings-alert-dialog(-title:-widget.dialog-title,-confirm:-()-{-widget.on-apply(new-color);-navigator.of(context).pop();-},-children:-[-document-color-setting-dialog(-form-key:-global-key&lt;form-state&gt;(),-current-color:-widget.current-color,-preview-widget-builder:-widget.preview-widget-builder,-on-changed:-(color)-=&gt;-new-color-=-color,-),-],-).show" padding="8" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" width="100" height="40">
+        <Container id="center" Type="Vertical Stack" />
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="column-2" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6.0">
+          <Button id="flowy-icon-button" Type="Action" action="()-=&gt;-show-color-picker-dialog(-context:-context,-current-color:-widget.current-color,-update-color:-update-color,-)">
+            <Image id="flowy-svg" />
+          </Button>
+        </Container>
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Input id="text-form-field" Type="Text" />
+    <Text id="text" />
+    <Text id="text-2" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="sized-box-2" Type="Vertical Stack" height="24" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="sized-box-3" Type="Vertical Stack" height="48" />
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Image id="flowy-svg-2" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="16">
+        <Container id="row-3" Type="Horizontal Stack">
+          <Container id="hspace-3" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

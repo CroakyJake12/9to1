@@ -1,0 +1,10 @@
+<Cui id="icon-emoji-picker-tab" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="icon-emoji-picker-tab-root">
+    <Container id="tab-bar" Type="Horizontal Stack">
+      <Button id="tab" Type="Menu Item" />
+    </Container>
+  </Page>
+</Cui>

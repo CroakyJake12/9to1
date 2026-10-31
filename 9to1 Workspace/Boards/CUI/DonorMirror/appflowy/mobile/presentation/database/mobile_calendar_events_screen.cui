@@ -1,0 +1,15 @@
+<Cui id="database-mobile-calendar-events-screen" product="9-1" version="1">
+  <Page id="database-mobile-calendar-events-screen-root">
+    <Page id="scaffold">
+      <Text id="text" text="+" />
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack">
+          <Container id="column" Type="Vertical Stack">
+            <Container id="vspace" Type="Vertical Stack" />
+            <Container id="vspace-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Page>
+</Cui>

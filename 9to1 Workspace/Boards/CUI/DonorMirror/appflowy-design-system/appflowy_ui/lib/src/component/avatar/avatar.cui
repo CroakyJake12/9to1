@@ -1,0 +1,9 @@
+<Cui id="avatar-avatar" product="9-1" version="1">
+  <Page id="avatar-avatar-root">
+    <Container id="sized-box" Type="Vertical Stack" />
+    <Container id="sized-box-2" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack">
+      <Text id="text" text-alignment="Center" />
+    </Container>
+  </Page>
+</Cui>

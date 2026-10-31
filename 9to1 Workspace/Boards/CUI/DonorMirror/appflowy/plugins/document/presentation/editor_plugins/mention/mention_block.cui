@@ -1,0 +1,7 @@
+<Cui id="mention-mention-block" product="9-1" version="1">
+  <Page id="mention-mention-block-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="shrink-3" Type="Vertical Stack" />
+  </Page>
+</Cui>

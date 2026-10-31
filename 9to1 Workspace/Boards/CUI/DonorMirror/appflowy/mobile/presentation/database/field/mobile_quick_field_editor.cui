@@ -1,0 +1,16 @@
+<Cui id="field-mobile-quick-field-editor" product="9-1" version="1">
+  <Page id="field-mobile-quick-field-editor-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Image id="flowy-svg" />
+        <Image id="flowy-svg-2" />
+        <Image id="flowy-svg-3" />
+        <Image id="flowy-svg-4" />
+        <Image id="flowy-svg-5" />
+        <Image id="flowy-svg-6" />
+      </Container>
+    </Container>
+    <Container id="vspace-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

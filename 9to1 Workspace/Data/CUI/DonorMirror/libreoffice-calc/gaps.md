@@ -3,9 +3,9 @@
 Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
 reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
-- donor UI constructs translated: 8342
-- donor nodes dropped: 988
-- gap reports: 3507
+- donor UI constructs translated: 8276
+- donor nodes dropped: 982
+- gap reports: 3501
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
@@ -13,10 +13,10 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 | `notebook bar (ribbon) group` | 798 | sfxlo-NotebookbarToolBox |
 | `optional section` | 352 | VclOptionalBox |
 | `separator` | 304 | GtkSeparator |
-| `button row` | 134 | GtkButtonBox |
+| `button row` | 131 | GtkButtonBox |
 | `toolbar overflow` | 118 | sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox |
-| `window and dialog chrome` | 117 | GtkDialog |
 | `menu button` | 115 | svtlo-ManagedMenuButton |
+| `window and dialog chrome` | 114 | GtkDialog |
 | `scroller with explicit bars` | 70 | GtkScrolledWindow |
 | `radio menu item` | 67 | GtkRadioMenuItem |
 | `item collection (list/tree/table)` | 47 | GtkTreeView |

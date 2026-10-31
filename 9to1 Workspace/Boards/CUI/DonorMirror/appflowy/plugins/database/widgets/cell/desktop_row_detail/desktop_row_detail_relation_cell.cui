@@ -1,0 +1,11 @@
+<Cui id="desktop-row-detail-desktop-row-detail-relation-cell" product="9-1" version="1">
+  <Page id="desktop-row-detail-desktop-row-detail-relation-cell-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="container" Type="Vertical Stack" padding="8 6" />
+    </Container>
+    <Text id="flowy-text" />
+    <Container id="wrap" Type="Wrap">
+      <Text id="flowy-text-2" />
+    </Container>
+  </Page>
+</Cui>

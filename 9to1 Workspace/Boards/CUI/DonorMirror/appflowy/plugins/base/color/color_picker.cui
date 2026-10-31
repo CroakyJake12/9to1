@@ -1,0 +1,14 @@
+<Cui id="color-color-picker" product="9-1" version="1">
+  <Actions>
+    <Action name="on-selected-color" command="onSelectedColor" />
+  </Actions>
+  <Page id="color-color-picker-root">
+    <Container id="sized-box" Type="Vertical Stack" height="56">
+      <Button id="flowy-button" Type="Action" action="on-selected-color" padding="12.0 16.0">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+    <Container id="divider" Type="Vertical Stack" height="1" />
+    <Container id="decorated-box" Type="Vertical Stack" />
+  </Page>
+</Cui>

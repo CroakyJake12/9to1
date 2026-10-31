@@ -1,0 +1,5 @@
+<Cui id="appearance-rtl-setting" product="9-1" version="1">
+  <Page id="appearance-rtl-setting-root">
+    <Container id="column" Type="Vertical Stack" />
+  </Page>
+</Cui>

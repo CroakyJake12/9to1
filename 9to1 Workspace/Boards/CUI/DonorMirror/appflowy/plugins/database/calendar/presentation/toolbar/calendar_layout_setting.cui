@@ -1,0 +1,64 @@
+<Cui id="toolbar-calendar-layout-setting" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-updated(field-info.id);-popover-mutex.close();-}" command="() {
+                        onUpdated(fieldInfo.id);
+                        popoverMutex.close();
+                      }" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="toolbar-calendar-layout-setting-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Input id="circular-progress-indicator" Type="Progress" />
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="sized-box" Type="Vertical Stack" width="200">
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="bloc-provider-2" Type="Vertical Stack">
+        <Container id="bloc-builder-2" Type="Vertical Stack">
+          <Container id="sized-box-2" Type="Vertical Stack">
+            <Button id="flowy-button" Type="Action" action="()-{-on-updated(field-info.id);-popover-mutex.close();-}">
+              <Text id="flowy-text" />
+              <Image id="flowy-svg" />
+              <Image id="flowy-svg-2" />
+            </Button>
+          </Container>
+          <Container id="sized-box-3" Type="Vertical Stack" width="200">
+            <Container id="vspace-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="sized-box-4" Type="Vertical Stack">
+        <Button id="flowy-button-2" Type="Action" padding="2.0 10.0">
+          <Text id="flowy-text-2" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover-2" Type="Context Menu">
+      <Container id="sized-box-5" Type="Vertical Stack" width="100">
+        <Container id="vspace-3" Type="Vertical Stack" />
+      </Container>
+      <Container id="sized-box-6" Type="Vertical Stack">
+        <Button id="flowy-button-3" Type="Action" padding="2.0 10.0">
+          <Text id="flowy-text-3" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="sized-box-7" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="2.0 10.0">
+        <Container id="row" Type="Horizontal Stack">
+          <Text id="flowy-text-4" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-8" Type="Vertical Stack">
+      <Button id="flowy-button-4" Type="Action" action="on-tap">
+        <Text id="flowy-text-5" />
+        <Image id="flowy-svg-3" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

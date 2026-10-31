@@ -1,0 +1,14 @@
+<Cui id="choicechip-choicechip" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="choicechip-choicechip-root">
+    <Container id="sized-box" Type="Vertical Stack" height="28">
+      <Button id="flowy-button" Type="Action" action="on-tap" padding="8 2" background="#00000000">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

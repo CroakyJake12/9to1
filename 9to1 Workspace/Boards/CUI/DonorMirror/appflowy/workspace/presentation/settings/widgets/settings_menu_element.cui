@@ -1,0 +1,8 @@
+<Cui id="widgets-settings-menu-element" product="9-1" version="1">
+  <Page id="widgets-settings-menu-element-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

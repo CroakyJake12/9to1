@@ -1,0 +1,25 @@
+<Cui id="desktop-grid-desktop-grid-text-cell" product="9-1" version="1">
+  <Page id="desktop-grid-desktop-grid-text-cell-root">
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack">
+            <Input id="text-field" Type="Text" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="value-listenable-builder-2" Type="Vertical Stack">
+        <Container id="padding-2" Type="Vertical Stack" padding="6.0" />
+        <Container id="value-listenable-builder-3" Type="Vertical Stack">
+          <Container id="padding-3" Type="Vertical Stack" padding="6.0 1">
+            <Image id="flowy-svg" />
+          </Container>
+          <Container id="shrink-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

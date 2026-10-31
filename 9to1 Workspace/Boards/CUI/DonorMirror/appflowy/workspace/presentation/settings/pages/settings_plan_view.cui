@@ -1,0 +1,99 @@
+<Cui id="pages-settings-plan-view" product="9-1" version="1">
+  <Page id="pages-settings-plan-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="center" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" width="24" height="24" />
+      </Container>
+      <Container id="padding" Type="Vertical Stack" padding="16">
+        <Container id="center-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Text id="flowy-text" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="flexible" Type="Vertical Stack" />
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="container" Type="Vertical Stack" padding="16" CornerRadius="16" background="#FFBDBDBD">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="row-2" Type="Horizontal Stack">
+            <Container id="expanded" Type="Vertical Stack">
+              <Container id="column-2" Type="Vertical Stack">
+                <Container id="vspace-4" Type="Vertical Stack" />
+                <Container id="vspace-5" Type="Vertical Stack" />
+              </Container>
+            </Container>
+            <Container id="flexible-2" Type="Vertical Stack">
+              <Container id="row-3" Type="Horizontal Stack" />
+            </Container>
+          </Container>
+          <Container id="vspace-6" Type="Vertical Stack" />
+          <Text id="flowy-text-2" max-lines="5" />
+        </Container>
+      </Container>
+      <Container id="positioned" Type="Vertical Stack">
+        <Container id="container-2" Type="Vertical Stack" height="30" padding="24" background="#FF4F3F5F">
+          <Container id="center-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="vspace-7" Type="Vertical Stack" />
+      <Container id="row-4" Type="Horizontal Stack">
+        <Container id="expanded-2" Type="Vertical Stack" />
+        <Container id="expanded-3" Type="Vertical Stack" />
+      </Container>
+      <Container id="vspace-8" Type="Vertical Stack" />
+      <Container id="vspace-9" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-4" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="4">
+        <Container id="row-5" Type="Horizontal Stack">
+          <Image id="flowy-svg" background="#FF9C00FB" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Text id="flowy-text-3" />
+        </Container>
+      </Container>
+      <Container id="vspace-10" Type="Vertical Stack" />
+    </Container>
+    <Container id="row-6" Type="Horizontal Stack">
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="hspace-4" Type="Horizontal Stack" />
+      <Container id="sized-box-2" Type="Vertical Stack" height="26" />
+    </Container>
+    <Container id="row-7" Type="Horizontal Stack">
+      <Container id="expanded-4" Type="Vertical Stack">
+        <Container id="container-3" Type="Vertical Stack" height="8" CornerRadius="8" background="#FFDDF1F7">
+          <Container id="stack-2" Type="Absolute">
+            <Container id="container-4" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="hspace-5" Type="Horizontal Stack" />
+      <Container id="hspace-6" Type="Horizontal Stack" />
+    </Container>
+    <Container id="container-5" Type="Vertical Stack" height="220" padding="16 12" CornerRadius="16" background="#FFBDBDBD">
+      <Container id="column-5" Type="Vertical Stack">
+        <Container id="vspace-11" Type="Vertical Stack" />
+        <Container id="vspace-12" Type="Vertical Stack" />
+        <Text id="flowy-text-4" />
+        <Text id="flowy-text-5" />
+        <Container id="vspace-13" Type="Vertical Stack" />
+        <Container id="row-8" Type="Horizontal Stack">
+          <Container id="expanded-5" Type="Vertical Stack">
+            <Text id="flowy-text-6" max-lines="2" />
+          </Container>
+        </Container>
+        <Container id="row-9" Type="Horizontal Stack">
+          <Container id="expanded-6" Type="Vertical Stack">
+            <Image id="flowy-svg-2" background="#FF9C00FB" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

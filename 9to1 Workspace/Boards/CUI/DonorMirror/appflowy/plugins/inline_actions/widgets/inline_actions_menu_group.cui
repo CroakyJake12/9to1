@@ -1,0 +1,22 @@
+<Cui id="widgets-inline-actions-menu-group" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="_onPressed" />
+  </Actions>
+  <Page id="widgets-inline-actions-menu-group-root">
+    <Container id="padding" Type="Vertical Stack" padding="6">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" height="4" />
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" padding="2">
+      <Container id="sized-box-2" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="on-pressed">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="sized-box-3" Type="Vertical Stack" width="12" />
+            <Container id="flexible" Type="Vertical Stack" />
+          </Container>
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

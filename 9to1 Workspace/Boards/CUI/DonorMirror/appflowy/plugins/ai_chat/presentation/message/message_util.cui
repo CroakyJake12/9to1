@@ -1,0 +1,9 @@
+<Cui id="message-message-util" product="9-1" version="1">
+  <Page id="message-message-util-root">
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" />
+      <Text id="text-span-4" />
+    </Text>
+  </Page>
+</Cui>

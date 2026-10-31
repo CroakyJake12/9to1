@@ -1,0 +1,10 @@
+<Cui id="widget-rounded-button" product="9-1" version="1">
+  <Actions>
+    <Action name="press" command="press" />
+  </Actions>
+  <Page id="widget-rounded-button-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="text-button" Type="Action" action="press" />
+    </Container>
+  </Page>
+</Cui>

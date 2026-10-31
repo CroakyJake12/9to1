@@ -1,0 +1,40 @@
+<Cui id="editable-cell-skeleton-summary" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-clipboard.set-data(clipboard-data(text:-state.content));-show-message-toast(locale-keys.grid-row-copy-property.tr());-}" command="() {
+                Clipboard.setData(ClipboardData(text: state.content));
+                showMessageToast(LocaleKeys.grid_row_copyProperty.tr());
+              }" />
+    <Action name="()-{-context-.read&lt;summary-row-bloc&gt;()-.add(const-summary-row-event.start-summary());-}" command="() {
+                    context
+                        .read&lt;SummaryRowBloc&gt;()
+                        .add(const SummaryRowEvent.startSummary());
+                  }" />
+  </Actions>
+  <Page id="editable-cell-skeleton-summary-root">
+    <Container id="builder" Type="Vertical Stack" />
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+      <Container id="flowy-tooltip" Type="Floating">
+        <Container id="container" Type="Vertical Stack" width="26" height="26">
+          <Button id="flowy-icon-button" Type="Action" action="()-{-context-.read&lt;summary-row-bloc&gt;()-.add(const-summary-row-event.start-summary());-}">
+            <Image id="flowy-svg" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="flowy-tooltip-2" Type="Floating">
+        <Container id="container-2" Type="Vertical Stack" width="26" height="26">
+          <Button id="flowy-icon-button-2" Type="Action" action="()-{-clipboard.set-data(clipboard-data(text:-state.content));-show-message-toast(locale-keys.grid-row-copy-property.tr());-}">
+            <Image id="flowy-svg-2" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

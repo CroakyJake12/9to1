@@ -1,0 +1,7 @@
+<Cui id="flowy-overlay-appflowy-popover" product="9-1" version="1">
+  <Page id="flowy-overlay-appflowy-popover-root">
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="popover" Type="Context Menu" />
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

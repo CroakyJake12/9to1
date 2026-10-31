@@ -1,0 +1,11 @@
+<Cui id="widgets-mobile-setting-trailing" product="9-1" version="1">
+  <Page id="widgets-mobile-setting-trailing-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="flexible" Type="Vertical Stack">
+        <Text id="text" />
+      </Container>
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Image id="flowy-svg" />
+    </Container>
+  </Page>
+</Cui>

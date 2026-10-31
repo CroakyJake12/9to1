@@ -1,0 +1,13 @@
+<Cui id="desktop-grid-desktop-grid-checklist-cell" product="9-1" version="1">
+  <Page id="desktop-grid-desktop-grid-checklist-cell-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="value-listenable-builder" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack">
+            <Container id="shrink" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,5 @@
+<Cui id="bottom-sheet-bottom-sheet-media-upload" product="9-1" version="1">
+  <Page id="bottom-sheet-bottom-sheet-media-upload-root">
+    <Container id="container" Type="Vertical Stack" padding="12" />
+  </Page>
+</Cui>

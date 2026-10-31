@@ -1,0 +1,10 @@
+<Cui id="widgets-view-meta-info" product="9-1" version="1">
+  <Page id="widgets-view-meta-info-root">
+    <Container id="padding" Type="Vertical Stack" padding="6">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

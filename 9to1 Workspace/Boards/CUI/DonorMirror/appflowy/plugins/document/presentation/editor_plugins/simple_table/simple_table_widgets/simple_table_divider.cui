@@ -1,0 +1,6 @@
+<Cui id="simple-table-widgets-simple-table-divider" product="9-1" version="1">
+  <Page id="simple-table-widgets-simple-table-divider-root">
+    <Container id="vertical-divider" Type="Vertical Stack" width="1.0" />
+    <Container id="divider" Type="Vertical Stack" height="1.0" />
+  </Page>
+</Cui>

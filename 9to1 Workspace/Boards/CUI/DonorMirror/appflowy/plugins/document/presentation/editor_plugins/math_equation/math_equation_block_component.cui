@@ -1,0 +1,32 @@
+<Cui id="math-equation-math-equation-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="show-editing-dialog" command="showEditingDialog" />
+  </Actions>
+  <Page id="math-equation-math-equation-block-component-root">
+    <Container id="ink-well" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" CornerRadius="4" background="#00000000" />
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="stack" Type="Absolute">
+      <Container id="positioned" Type="Vertical Stack">
+        <Container id="value-listenable-builder" Type="Vertical Stack">
+          <Container id="shrink" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="52">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Image id="flowy-svg" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Text id="flowy-text" />
+      </Container>
+    </Container>
+    <Container id="center" Type="Vertical Stack" />
+    <Container id="alert-dialog" Type="Floating">
+      <Text id="text" />
+      <Container id="sized-box-2" Type="Vertical Stack">
+        <Input id="text-field" Type="Text" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

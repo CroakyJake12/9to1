@@ -1,0 +1,7 @@
+<Cui id="option-divider-option-action" product="9-1" version="1">
+  <Page id="option-divider-option-action-root">
+    <Container id="padding" Type="Vertical Stack" padding="4.0">
+      <Container id="divider" Type="Vertical Stack" height="1.0" />
+    </Container>
+  </Page>
+</Cui>

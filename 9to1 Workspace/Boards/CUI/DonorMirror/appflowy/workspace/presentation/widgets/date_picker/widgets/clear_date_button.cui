@@ -1,0 +1,17 @@
+<Cui id="widgets-clear-date-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-clear-date();-popover-container.of(context).close();-}" command="() {
+            onClearDate();
+            PopoverContainer.of(context).close();
+          }" />
+  </Actions>
+  <Page id="widgets-clear-date-button-root">
+    <Container id="padding" Type="Vertical Stack" padding="12.0">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="()-{-on-clear-date();-popover-container.of(context).close();-}">
+          <Text id="flowy-text" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

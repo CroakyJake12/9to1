@@ -1,0 +1,8 @@
+<Cui id="focus-auto-unfocus-overlay" product="9-1" version="1">
+  <Actions>
+    <Action name="unfocus-widget" command="_unfocusWidget" />
+  </Actions>
+  <Page id="focus-auto-unfocus-overlay-root">
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,32 @@
+<Cui id="search-mobile-search-reference-bottom-sheet" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap.call" command="onTap.call" />
+  </Actions>
+  <Page id="search-mobile-search-reference-bottom-sheet-root">
+    <Container id="sized-box" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16 8">
+        <Text id="text" />
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+      <Button id="flowy-button" Type="Action" action="on-tap.call">
+        <Container id="column-2" Type="Vertical Stack">
+          <Container id="padding-2" Type="Vertical Stack">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="center" Type="Vertical Stack" />
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Container id="flexible" Type="Vertical Stack">
+                <Container id="column-3" Type="Vertical Stack">
+                  <Text id="text-2" max-lines="1" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Button>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" width="40" height="4" padding="12" CornerRadius="2" background="#FF808080" />
+  </Page>
+</Cui>

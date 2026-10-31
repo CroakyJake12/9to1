@@ -1,0 +1,7 @@
+<Cui id="database-document-database-document-plugin" product="9-1" version="1">
+  <Page id="database-document-database-document-plugin-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

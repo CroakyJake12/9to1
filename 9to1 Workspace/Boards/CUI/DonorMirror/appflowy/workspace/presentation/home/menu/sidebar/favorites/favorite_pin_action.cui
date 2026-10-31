@@ -1,0 +1,15 @@
+<Cui id="favorites-favorite-pin-action" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-view.is-pinned-?-context.read&lt;favorite-bloc&gt;().add(favorite-event.unpin(view))-:-context.read&lt;favorite-bloc&gt;().add(favorite-event.pin(view));-}" command="() {
+          view.isPinned
+              ? context.read&lt;FavoriteBloc&gt;().add(FavoriteEvent.unpin(view))
+              : context.read&lt;FavoriteBloc&gt;().add(FavoriteEvent.pin(view));
+        }" />
+  </Actions>
+  <Page id="favorites-favorite-pin-action-root">
+    <Image id="flowy-svg" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Button id="flowy-icon-button" Type="Action" action="()-{-view.is-pinned-?-context.read&lt;favorite-bloc&gt;().add(favorite-event.unpin(view))-:-context.read&lt;favorite-bloc&gt;().add(favorite-event.pin(view));-}" width="24" />
+    </Container>
+  </Page>
+</Cui>

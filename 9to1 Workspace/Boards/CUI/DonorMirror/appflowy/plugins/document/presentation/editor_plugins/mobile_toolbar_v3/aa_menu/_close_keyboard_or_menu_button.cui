@@ -1,0 +1,12 @@
+<Cui id="aa-menu-close-keyboard-or-menu-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="aa-menu-close-keyboard-or-menu-button-root">
+    <Container id="sized-box" Type="Vertical Stack" width="62" height="42">
+      <Button id="flowy-button" Type="Action" action="on-pressed">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

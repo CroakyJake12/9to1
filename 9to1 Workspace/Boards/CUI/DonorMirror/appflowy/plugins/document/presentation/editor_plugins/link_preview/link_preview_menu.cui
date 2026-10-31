@@ -1,0 +1,17 @@
+<Cui id="link-preview-link-preview-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="show-popover" command="showPopover" />
+  </Actions>
+  <Page id="link-preview-link-preview-menu-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Button id="flowy-icon-button" Type="Action" action="show-popover">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="8.0">
+        <Container id="vspace" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

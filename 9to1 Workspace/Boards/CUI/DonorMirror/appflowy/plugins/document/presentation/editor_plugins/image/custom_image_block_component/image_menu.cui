@@ -1,0 +1,25 @@
+<Cui id="custom-image-block-component-image-menu" product="9-1" version="1">
+  <Page id="custom-image-block-component-image-menu-root">
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack" height="32" CornerRadius="4.0" background="#FF000000">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="hspace-3" Type="Horizontal Stack" />
+          <Container id="hspace-4" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" padding="0" />
+    <Container id="sized-box" Type="Vertical Stack" height="32">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="hspace-5" Type="Horizontal Stack" />
+        <Container id="hspace-6" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="8">
+      <Container id="container-2" Type="Vertical Stack" width="1" background="#FF808080" />
+    </Container>
+  </Page>
+</Cui>

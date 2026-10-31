@@ -1,0 +1,36 @@
+<Cui id="link-link-search-text-field" product="9-1" version="1">
+  <Actions>
+    <Action name="(text)-{-if-(text.is-empty)-{-searched-views.clear();-selected-index-=-0;-on-data-refresh?.call();-}-else-{-search-views(text);-}-}" command="(text) {
+        if (text.isEmpty) {
+          searchedViews.clear();
+          selectedIndex = 0;
+          onDataRefresh?.call();
+        } else {
+          searchViews(text);
+        }
+      }" />
+    <Action name="on-link-selected" command="onLinkSelected" />
+  </Actions>
+  <Page id="link-link-search-text-field-root">
+    <Input id="text-form-field" Type="Text" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" height="48" padding="8">
+      <Button id="flowy-button" Type="Action" action="on-link-selected">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="8">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="container-3" Type="Vertical Stack" height="32" padding="8" />
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" height="32">
+      <Button id="flowy-button-2" Type="Action">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+  </Page>
+</Cui>

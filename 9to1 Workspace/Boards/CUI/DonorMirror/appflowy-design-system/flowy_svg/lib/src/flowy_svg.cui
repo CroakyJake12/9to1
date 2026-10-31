@@ -1,0 +1,7 @@
+<Cui id="src-flowy-svg" product="9-1" version="1">
+  <Page id="src-flowy-svg-root">
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+    <Container id="sized-box" Type="Vertical Stack" />
+  </Page>
+</Cui>

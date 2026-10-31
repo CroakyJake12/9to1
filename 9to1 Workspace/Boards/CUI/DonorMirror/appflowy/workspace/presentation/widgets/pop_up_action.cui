@@ -1,0 +1,22 @@
+<Cui id="widgets-pop-up-action" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="widgets-pop-up-action-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="intrinsic-height" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover-2" Type="Context Menu" />
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

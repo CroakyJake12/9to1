@@ -1,0 +1,5 @@
+<Cui id="menu-menu-extension" product="9-1" version="1">
+  <Page id="menu-menu-extension-root">
+    <Container id="positioned" Type="Vertical Stack" />
+  </Page>
+</Cui>

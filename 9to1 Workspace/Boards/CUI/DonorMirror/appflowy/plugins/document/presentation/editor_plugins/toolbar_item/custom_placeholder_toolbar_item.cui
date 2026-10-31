@@ -1,0 +1,8 @@
+<Cui id="toolbar-item-custom-placeholder-toolbar-item" product="9-1" version="1">
+  <Page id="toolbar-item-custom-placeholder-toolbar-item-root">
+    <Container id="padding" Type="Vertical Stack" padding="8 5">
+      <Container id="container" Type="Vertical Stack" width="1" background="#FFE8ECF3" />
+    </Container>
+    <Container id="hspace" Type="Horizontal Stack" />
+  </Page>
+</Cui>

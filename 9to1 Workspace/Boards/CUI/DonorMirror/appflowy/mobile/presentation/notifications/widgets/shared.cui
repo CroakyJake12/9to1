@@ -1,0 +1,49 @@
+<Cui id="widgets-shared" product="9-1" version="1">
+  <Page id="widgets-shared-root">
+    <Container id="sized-box" Type="Vertical Stack" width="42" height="36">
+      <Container id="stack" Type="Absolute">
+        <Image id="flowy-svg" />
+        <Container id="align" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" width="20" height="20">
+            <Container id="center" Type="Vertical Stack">
+              <Image id="flowy-svg-2" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Container id="center-2" Type="Vertical Stack">
+        <Image id="flowy-svg-3" />
+      </Container>
+    </Container>
+    <Container id="sized-box-3" Type="Vertical Stack">
+      <Container id="center-3" Type="Vertical Stack">
+        <Container id="decorated-box" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="intrinsic-height" Type="Vertical Stack">
+      <Container id="bloc-provider" Type="Vertical Stack" />
+    </Container>
+    <Text id="flowy-text" max-lines="3" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="sized-box-4" Type="Vertical Stack" height="22">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="sized-box-5" Type="Vertical Stack" height="18">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="padding" Type="Vertical Stack" padding="5">
+          <Image id="flowy-svg-4" />
+        </Container>
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" width="2.50" height="2.50" padding="6.0" />
+  </Page>
+</Cui>

@@ -1,0 +1,17 @@
+<Cui id="shared-sidebar-setting" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-settings-dialog(-context,-user-workspace-bloc:-user-workspace-bloc,-password-bloc:-password-bloc,-)" command="() =&gt; showSettingsDialog(
+              context,
+              userWorkspaceBloc: _userWorkspaceBloc,
+              passwordBloc: _passwordBloc,
+            )" />
+  </Actions>
+  <Page id="shared-sidebar-setting-root">
+    <Container id="flowy-tooltip" Type="Floating">
+      <Button id="flowy-button" Type="Action" action="()-=&gt;-show-settings-dialog(-context,-user-workspace-bloc:-user-workspace-bloc,-password-bloc:-password-bloc,-)">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack" />
+  </Page>
+</Cui>

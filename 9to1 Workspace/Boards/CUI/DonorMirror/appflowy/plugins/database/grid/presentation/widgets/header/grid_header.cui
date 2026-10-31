@@ -1,0 +1,27 @@
+<Cui id="header-grid-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-result-=-await-field-backend-service.create-field(-view-id:-view-id,-);-result.fold(-(field)-=&gt;-on-field-created(field.id),-(err)-=&gt;-log.error(&quot;failed-to-create-field-type-option:-$err&quot;),-);-}" command="() async {
+        final result = await FieldBackendService.createField(
+          viewId: viewId,
+        );
+        result.fold(
+          (field) =&gt; onFieldCreated(field.id),
+          (err) =&gt; Log.error(&quot;Failed to create field type option: $err&quot;),
+        );
+      }" />
+  </Actions>
+  <Page id="header-grid-header-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="0 0" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" />
+    <Button id="flowy-button" Type="Action" action="()-async-{-final-result-=-await-field-backend-service.create-field(-view-id:-view-id,-);-result.fold(-(field)-=&gt;-on-field-created(field.id),-(err)-=&gt;-log.error(&quot;failed-to-create-field-type-option:-$err&quot;),-);-}">
+      <Text id="flowy-text" />
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

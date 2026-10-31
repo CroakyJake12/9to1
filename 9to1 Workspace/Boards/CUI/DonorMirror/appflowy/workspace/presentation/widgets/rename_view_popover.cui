@@ -1,0 +1,14 @@
+<Cui id="widgets-rename-view-popover" product="9-1" version="1">
+  <Actions>
+    <Action name="update-view-name" command="_updateViewName" />
+  </Actions>
+  <Page id="widgets-rename-view-popover-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="sized-box" Type="Vertical Stack" width="30.0" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="sized-box-2" Type="Vertical Stack" width="220" height="32.0">
+        <Input id="flowy-text-field" Type="Text" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

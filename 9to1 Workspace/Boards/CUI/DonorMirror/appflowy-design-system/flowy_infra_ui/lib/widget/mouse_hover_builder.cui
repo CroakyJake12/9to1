@@ -1,0 +1,8 @@
+<Cui id="widget-mouse-hover-builder" product="9-1" version="1">
+  <Actions>
+    <Action name="set-on-hover" command="setOnHover" />
+  </Actions>
+  <Page id="widget-mouse-hover-builder-root">
+    <Container id="mouse-region" Type="Vertical Stack" />
+  </Page>
+</Cui>

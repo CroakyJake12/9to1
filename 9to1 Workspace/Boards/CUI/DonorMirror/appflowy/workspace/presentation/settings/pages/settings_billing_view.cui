@@ -1,0 +1,55 @@
+<Cui id="pages-settings-billing-view" product="9-1" version="1">
+  <Actions>
+    <Action name="is-current-?-null-:-on-selected" command="isCurrent ? null : onSelected" />
+  </Actions>
+  <Page id="pages-settings-billing-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="center" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" width="24" height="24" />
+      </Container>
+      <Container id="padding" Type="Vertical Stack" padding="16">
+        <Container id="center-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="decorated-box" Type="Vertical Stack" CornerRadius="12">
+        <Container id="padding-2" Type="Vertical Stack" padding="16">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="column-3" Type="Vertical Stack">
+              <Container id="row-2" Type="Horizontal Stack">
+                <Text id="flowy-text" />
+                <Container id="hspace" Type="Horizontal Stack" />
+                <Container id="decorated-box-2" Type="Vertical Stack" CornerRadius="6">
+                  <Container id="padding-3" Type="Vertical Stack" padding="6 1">
+                    <Text id="flowy-text-2" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="vspace-3" Type="Vertical Stack" />
+              <Text id="flowy-text-3" />
+              <Container id="vspace-4" Type="Vertical Stack" />
+              <Text id="flowy-text-4" />
+            </Container>
+            <Container id="decorated-box-3" Type="Vertical Stack">
+              <Container id="sized-box-2" Type="Vertical Stack" width="22" height="22">
+                <Container id="center-3" Type="Vertical Stack">
+                  <Container id="sized-box-3" Type="Vertical Stack" width="10" height="10">
+                    <Container id="decorated-box-4" Type="Vertical Stack" background="#00000000" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

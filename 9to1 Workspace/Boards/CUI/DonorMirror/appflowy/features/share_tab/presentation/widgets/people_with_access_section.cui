@@ -1,0 +1,5 @@
+<Cui id="widgets-people-with-access-section" product="9-1" version="1">
+  <Page id="widgets-people-with-access-section-root">
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

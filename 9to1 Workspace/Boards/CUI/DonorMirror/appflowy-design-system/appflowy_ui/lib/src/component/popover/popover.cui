@@ -1,0 +1,9 @@
+<Cui id="popover-popover" product="9-1" version="1">
+  <Page id="popover-popover-root">
+    <Container id="decorated-box" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack">
+        <Container id="builder" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

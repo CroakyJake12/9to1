@@ -1,0 +1,15 @@
+<Cui id="cell-editor-extension" product="9-1" version="1">
+  <Page id="cell-editor-extension-root">
+    <Text id="flowy-text" />
+    <Container id="container" Type="Vertical Stack" padding="2.0">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="expanded" Type="Vertical Stack" />
+        <Container id="flexible" Type="Vertical Stack" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button" Type="Action" width="16.0">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

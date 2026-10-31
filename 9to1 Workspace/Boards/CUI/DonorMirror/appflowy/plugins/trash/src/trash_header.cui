@@ -1,0 +1,10 @@
+<Cui id="src-trash-header" product="9-1" version="1">
+  <Page id="src-trash-header-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="container" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

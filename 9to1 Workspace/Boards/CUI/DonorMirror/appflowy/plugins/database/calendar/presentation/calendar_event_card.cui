@@ -1,0 +1,12 @@
+<Cui id="presentation-calendar-event-card" product="9-1" version="1">
+  <Page id="presentation-calendar-event-card-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="shrink-2" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack">
+        <Container id="decorated-box" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

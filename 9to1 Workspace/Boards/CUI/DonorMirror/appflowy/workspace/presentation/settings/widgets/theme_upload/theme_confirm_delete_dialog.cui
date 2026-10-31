@@ -1,0 +1,16 @@
+<Cui id="theme-upload-theme-confirm-delete-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="on-cancel" command="onCancel" />
+    <Action name="on-confirm" command="onConfirm" />
+  </Actions>
+  <Page id="theme-upload-theme-confirm-delete-dialog-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="on-confirm" />
+      </Container>
+      <Container id="sized-box-2" Type="Vertical Stack">
+        <Button id="flowy-button-2" Type="Action" action="on-cancel" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

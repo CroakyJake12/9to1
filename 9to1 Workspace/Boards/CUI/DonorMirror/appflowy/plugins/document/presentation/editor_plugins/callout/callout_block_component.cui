@@ -1,0 +1,21 @@
+<Cui id="callout-callout-block-component" product="9-1" version="1">
+  <Page id="callout-callout-block-component-root">
+    <Container id="padding" Type="Vertical Stack" padding="2.0" />
+    <Container id="stack" Type="Absolute">
+      <Container id="container" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Container id="flexible" Type="Vertical Stack">
+          <Container id="padding-3" Type="Vertical Stack" padding="4.0" />
+        </Container>
+        <Container id="hspace-3" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="padding-4" Type="Vertical Stack" />
+    <Container id="container-3" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,15 @@
+<Cui id="float-bubble-version-section" product="9-1" version="1">
+  <Page id="float-bubble-version-section-root">
+    <Text id="flowy-text" />
+    <Container id="sized-box" Type="Vertical Stack" height="30">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="divider" Type="Vertical Stack" height="1" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Text id="flowy-text-2" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" height="30" />
+  </Page>
+</Cui>

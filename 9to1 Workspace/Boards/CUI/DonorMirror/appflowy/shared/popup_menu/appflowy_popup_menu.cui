@@ -1,0 +1,19 @@
+<Cui id="popup-menu-appflowy-popup-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="widget.enabled-?-handle-tap-:-null" command="widget.enabled ? handleTap : null" />
+    <Action name="widget.enabled-?-show-button-menu-:-null" command="widget.enabled ? showButtonMenu : null" />
+  </Actions>
+  <Page id="popup-menu-appflowy-popup-menu-root">
+    <Container id="divider" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" padding="3 3 2" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Image id="icon" source="done" />
+    <Container id="colored-box" Type="Vertical Stack" />
+    <Container id="single-child-scroll-view" Type="Vertical Stack" />
+    <Container id="align" Type="Vertical Stack" />
+    <Button id="popup-menu-button" Type="Action" />
+    <Button id="icon-button" Type="Action" action="widget.enabled-?-show-button-menu-:-null">
+      <Image id="icon-2" source="adaptive" />
+    </Button>
+  </Page>
+</Cui>

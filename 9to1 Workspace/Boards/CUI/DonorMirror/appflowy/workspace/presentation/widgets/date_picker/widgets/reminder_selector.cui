@@ -1,0 +1,35 @@
+<Cui id="widgets-reminder-selector" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(o-!=-selected-option)-{-on-option-selected?.call(o);-mutex?.close();-}-}" command="() {
+              if (o != selectedOption) {
+                onOptionSelected?.call(o);
+                mutex?.close();
+              }
+            }" />
+  </Actions>
+  <Page id="widgets-reminder-selector-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-if-(o-!=-selected-option)-{-on-option-selected?.call(o);-mutex?.close();-}-}">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6.0">
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Container id="padding-2" Type="Vertical Stack" padding="12.0">
+        <Container id="sized-box-2" Type="Vertical Stack">
+          <Button id="flowy-button-2" Type="Action">
+            <Text id="flowy-text-2" />
+            <Container id="row" Type="Horizontal Stack">
+              <Image id="flowy-svg-2" />
+            </Container>
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,10 @@
+<Cui id="tabs-tabs-manager" product="9-1" version="1">
+  <Page id="tabs-tabs-manager-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

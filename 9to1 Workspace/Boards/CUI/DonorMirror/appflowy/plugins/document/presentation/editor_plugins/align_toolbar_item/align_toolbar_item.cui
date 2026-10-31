@@ -1,0 +1,26 @@
+<Cui id="align-toolbar-item-align-toolbar-item" product="9-1" version="1">
+  <Actions>
+    <Action name="controller.show" command="controller.show" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="align-toolbar-item-align-toolbar-item-root">
+    <Image id="flowy-svg" background="#FFFFFFFF" />
+    <Container id="app-flowy-popover" Type="Context Menu" padding="2.0">
+      <Button id="flowy-button" Type="Action" action="controller.show" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="28">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="hspace-2" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Button id="flowy-button-2" Type="Action" action="on-tap">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Image id="flowy-svg-2" background="#FFFFFFFF" />
+      </Container>
+    </Button>
+    <Container id="padding" Type="Vertical Stack" padding="4">
+      <Container id="container" Type="Vertical Stack" width="1" background="#FF808080" />
+    </Container>
+  </Page>
+</Cui>

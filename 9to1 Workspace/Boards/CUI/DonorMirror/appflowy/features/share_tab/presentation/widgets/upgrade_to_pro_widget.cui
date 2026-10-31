@@ -1,0 +1,17 @@
+<Cui id="widgets-upgrade-to-pro-widget" product="9-1" version="1">
+  <Page id="widgets-upgrade-to-pro-widget-root">
+    <Container id="container" Type="Vertical Stack" background="#129327FF">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Text id="rich-text">
+          <Text id="text-span">
+            <Text id="text-span-2" />
+            <Text id="text-span-3" />
+          </Text>
+        </Text>
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,34 @@
+<Cui id="space-sidebar-space-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;space-bloc&gt;()-.add" command="() =&gt; context
+                .read&lt;SpaceBloc&gt;()
+                .add" />
+  </Actions>
+  <Page id="space-sidebar-space-header-root">
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Container id="value-listenable-builder-2" Type="Vertical Stack">
+          <Container id="positioned" Type="Vertical Stack" />
+        </Container>
+        <Container id="positioned-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" />
+    </Text>
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Container id="value-listenable-builder-3" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="flowy-tooltip-2" Type="Floating" />
+      </Container>
+    </Container>
+    <Container id="dialog" Type="Floating" />
+  </Page>
+</Cui>

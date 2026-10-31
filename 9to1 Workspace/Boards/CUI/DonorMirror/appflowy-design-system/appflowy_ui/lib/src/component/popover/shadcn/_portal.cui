@@ -1,0 +1,5 @@
+<Cui id="shadcn-portal" product="9-1" version="1">
+  <Page id="shadcn-portal-root">
+    <Container id="center" Type="Vertical Stack" />
+  </Page>
+</Cui>

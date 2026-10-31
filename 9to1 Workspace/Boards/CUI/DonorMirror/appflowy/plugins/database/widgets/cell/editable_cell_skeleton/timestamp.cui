@@ -1,0 +1,5 @@
+<Cui id="editable-cell-skeleton-timestamp" product="9-1" version="1">
+  <Page id="editable-cell-skeleton-timestamp-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

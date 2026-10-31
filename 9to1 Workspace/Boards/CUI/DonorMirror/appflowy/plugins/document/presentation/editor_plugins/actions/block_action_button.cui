@@ -1,0 +1,14 @@
+<Cui id="actions-block-action-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="actions-block-action-button-root">
+    <Container id="flowy-tooltip" Type="Floating">
+      <Button id="flowy-icon-button" Type="Action" action="on-tap" width="18.0">
+        <Container id="mouse-region" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

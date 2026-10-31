@@ -1,0 +1,9 @@
+<Cui id="shared-window-title-bar" product="9-1" version="1">
+  <Page id="shared-window-title-bar-root">
+    <Container id="container" Type="Vertical Stack" height="40">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

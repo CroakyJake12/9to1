@@ -1,0 +1,10 @@
+<Cui id="columns-simple-columns-block-component" product="9-1" version="1">
+  <Page id="columns-simple-columns-block-component-root">
+    <Container id="row" Type="Horizontal Stack" />
+    <Container id="align" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="decorated-box" Type="Vertical Stack" background="#FFFF0000" />
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="value-listenable-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

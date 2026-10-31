@@ -1,0 +1,7 @@
+<Cui id="presentation-editor-drop-handler" product="9-1" version="1">
+  <Page id="presentation-editor-drop-handler-root">
+    <Container id="consumer" Type="Vertical Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

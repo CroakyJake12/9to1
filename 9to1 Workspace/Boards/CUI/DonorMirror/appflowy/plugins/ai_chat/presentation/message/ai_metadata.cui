@@ -1,0 +1,27 @@
+<Cui id="message-ai-metadata" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-set-state(()-=&gt;-is-expanded-=-!is-expanded);-}" command="() {
+                setState(() =&gt; isExpanded = !isExpanded);
+              }" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="message-ai-metadata-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Button id="flowy-button" Type="Action" action="()-{-set-state(()-=&gt;-is-expanded-=-!is-expanded);-}" padding="4.0">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg" />
+      </Button>
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="wrap" Type="Wrap">
+        <Container id="bloc-provider" Type="Vertical Stack">
+          <Container id="bloc-builder" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Button id="flowy-button-2" Type="Action" action="on-tap" padding="4.0">
+      <Text id="flowy-text-2" />
+      <Image id="flowy-svg-2" />
+    </Button>
+  </Page>
+</Cui>

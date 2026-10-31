@@ -1,0 +1,5 @@
+<Cui id="editable-cell-skeleton-text" product="9-1" version="1">
+  <Page id="editable-cell-skeleton-text-root">
+    <Container id="builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

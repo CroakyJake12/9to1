@@ -1,0 +1,133 @@
+<Cui id="cell-editor-relation-cell-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;relation-cell-bloc&gt;().add(-relation-cell-event.select-database-id(-database-meta.database-id,-),-)" command="() =&gt; context.read&lt;RelationCellBloc&gt;().add(
+                              RelationCellEvent.selectDatabaseId(
+                                databaseMeta.databaseId,
+                              ),
+                            )" />
+    <Action name="()-{-final-user-workspace-bloc-=-context.read&lt;user-workspace-bloc&gt;();-if-(is-selected)-{-flowy-overlay.show(-context:-context,-builder:-(build-context-overlay-context)-{-return-bloc-provider.value(-value:-user-workspace-bloc,-child:-related-row-detail-page(-database-id:-database-id,-row-id:-row.row-id,-),-);-},-);-popover-container.of(context).close();-}-else-{-context-.read&lt;relation-cell-bloc&gt;()-.add(relation-cell-event.select-row(row.row-id));-}-}" command="() {
+          final userWorkspaceBloc = context.read&lt;UserWorkspaceBloc&gt;();
+          if (isSelected) {
+            FlowyOverlay.show(
+              context: context,
+              builder: (BuildContext overlayContext) {
+                return BlocProvider.value(
+                  value: userWorkspaceBloc,
+                  child: RelatedRowDetailPage(
+                    databaseId: databaseId,
+                    rowId: row.rowId,
+                  ),
+                );
+              },
+            );
+            PopoverContainer.of(context).close();
+          } else {
+            context
+                .read&lt;RelationCellBloc&gt;()
+                .add(RelationCellEvent.selectRow(row.rowId));
+          }
+        }" />
+    <Action name="(-)-{-final-focused-row-id-=-context.read&lt;relation-row-search-bloc&gt;().state.focused-row-id;-if-(focused-row-id-!=-null)-{-final-row-=-context-.read&lt;relation-cell-bloc&gt;()-.state-.rows-.first-where-or-null((e)-=&gt;-e.row-id-==-focused-row-id);-if-(row-!=-null)-{-flowy-overlay.show(-context:-context,-builder:-(build-context-overlay-context)-{-return-bloc-provider.value(-value:-context.read&lt;user-workspace-bloc&gt;(),-child:-related-row-detail-page(-database-id:-context-.read&lt;relation-cell-bloc&gt;()-.state-.related-database-meta!-.database-id,-row-id:-row.row-id,-),-);-},-);-popover-container.of(context).close();-}-else-{-context-.read&lt;relation-cell-bloc&gt;()-.add(relation-cell-event.select-row(focused-row-id));-}-}-focus-node.request-focus();-}" command="(_) {
+            final focusedRowId =
+                context.read&lt;RelationRowSearchBloc&gt;().state.focusedRowId;
+            if (focusedRowId != null) {
+              final row = context
+                  .read&lt;RelationCellBloc&gt;()
+                  .state
+                  .rows
+                  .firstWhereOrNull((e) =&gt; e.rowId == focusedRowId);
+              if (row != null) {
+                FlowyOverlay.show(
+                  context: context,
+                  builder: (BuildContext overlayContext) {
+                    return BlocProvider.value(
+                      value: context.read&lt;UserWorkspaceBloc&gt;(),
+                      child: RelatedRowDetailPage(
+                        databaseId: context
+                            .read&lt;RelationCellBloc&gt;()
+                            .state
+                            .relatedDatabaseMeta!
+                            .databaseId,
+                        rowId: row.rowId,
+                      ),
+                    );
+                  },
+                );
+                PopoverContainer.of(context).close();
+              } else {
+                context
+                    .read&lt;RelationCellBloc&gt;()
+                    .add(RelationCellEvent.selectRow(focusedRowId));
+              }
+            }
+            focusNode.requestFocus();
+          }" />
+    <Action name="(text)-{-if-(text-editing-controller.value.composing.is-collapsed)-{-context-.read&lt;relation-row-search-bloc&gt;()-.add(relation-row-search-event.update-filter(text));-}-}" command="(text) {
+            if (textEditingController.value.composing.isCollapsed) {
+              context
+                  .read&lt;RelationRowSearchBloc&gt;()
+                  .add(RelationRowSearchEvent.updateFilter(text));
+            }
+          }" />
+    <Action name="open-related-datbase" command="_openRelatedDatbase" />
+    <Action name="widget.on-pressed" command="widget.onPressed" />
+  </Actions>
+  <Page id="cell-editor-relation-cell-editor-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="custom-scroll-view" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6.0" />
+        <Container id="padding-2" Type="Vertical Stack" padding="6.0" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="padding-3" Type="Vertical Stack" padding="6.0" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding-4" Type="Vertical Stack" padding="6.0">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="mouse-region" Type="Vertical Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="padding-5" Type="Vertical Stack" padding="4 2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-6" Type="Vertical Stack" padding="6.0 6.0 6.0">
+      <Input id="flowy-text-field" Type="Text" />
+    </Container>
+    <Container id="sliver-list" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" height="28" padding="6.0 2.0">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="mouse-region-2" Type="Vertical Stack">
+          <Container id="padding-7" Type="Vertical Stack" padding="6.0 4.0">
+            <Container id="row-2" Type="Horizontal Stack">
+              <Container id="expanded" Type="Vertical Stack">
+                <Text id="flowy-text" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Button id="text-button" Type="Action" action="widget.on-pressed">
+      <Container id="container-2" Type="Vertical Stack" width="12" height="1" />
+    </Button>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder-3" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="padding-8" Type="Vertical Stack" padding="6 6 6 0">
+            <Text id="flowy-text-2" />
+          </Container>
+          <Container id="flexible" Type="Vertical Stack">
+            <Container id="vspace-3" Type="Vertical Stack" />
+            <Container id="sized-box" Type="Vertical Stack">
+              <Button id="flowy-button" Type="Action" action="()-=&gt;-context.read&lt;relation-cell-bloc&gt;().add(-relation-cell-event.select-database-id(-database-meta.database-id,-),-)">
+                <Text id="flowy-text-3" />
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,8 +1,0 @@
-<Cui id="groupediconpicker-groupediconpickergroup" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack">
-    <Container id="container-2" Type="Vertical Stack" cell-gap="3">
-      <Text id="name-label" horizontal-alignment="Left" />
-      <Container id="flowbox" Type="Wrap" horizontal-alignment="Left" focusable="false" />
-    </Container>
-  </Container>
-</Cui>

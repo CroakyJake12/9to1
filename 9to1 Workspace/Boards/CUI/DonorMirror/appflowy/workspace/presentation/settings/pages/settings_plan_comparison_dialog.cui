@@ -1,0 +1,85 @@
+<Cui id="pages-settings-plan-comparison-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-navigator.of(context).pop(-current-info.plan-!=-widget.subscription-info.plan,-)" command="() =&gt; Navigator.of(context).pop(
+                      currentInfo.plan != widget.subscriptionInfo.plan,
+                    )" />
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="pages-settings-plan-comparison-dialog-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="24 24 24">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="mouse-region" Type="Vertical Stack">
+              <Image id="flowy-svg" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack">
+          <Container id="single-child-scroll-view-2" Type="Vertical Stack" padding="24 24 24">
+            <Container id="column-2" Type="Vertical Stack">
+              <Container id="row-2" Type="Horizontal Stack">
+                <Container id="sized-box" Type="Vertical Stack" width="250">
+                  <Container id="column-3" Type="Vertical Stack">
+                    <Container id="vspace-2" Type="Vertical Stack" />
+                    <Container id="sized-box-2" Type="Vertical Stack" height="116" />
+                    <Container id="sized-box-3" Type="Vertical Stack" height="116" />
+                    <Container id="sized-box-4" Type="Vertical Stack" height="56" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="215" padding="4 4" CornerRadius="24" background="#FF251D37">
+      <Container id="container-2" Type="Vertical Stack" padding="22 22" CornerRadius="22">
+        <Container id="column-4" Type="Vertical Stack">
+          <Container id="vspace-3" Type="Vertical Stack" />
+          <Container id="sized-box-5" Type="Vertical Stack" height="56" />
+          <Container id="padding-2" Type="Vertical Stack" padding="12 12 0" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack" width="72" height="22" padding="12" CornerRadius="4" background="#FF4F3F5F">
+      <Container id="center" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" height="36" padding="12 12 0">
+      <Container id="row-3" Type="Horizontal Stack">
+        <Image id="flowy-svg-2" />
+        <Container id="expanded" Type="Vertical Stack" />
+        <Container id="flowy-tooltip" Type="Floating">
+          <Image id="flowy-svg-3" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-6" Type="Vertical Stack" height="56">
+      <Container id="row-4" Type="Horizontal Stack">
+        <Container id="gesture-detector-2" Type="Vertical Stack">
+          <Container id="mouse-region-2" Type="Vertical Stack">
+            <Container id="container-5" Type="Vertical Stack" width="148" height="36" CornerRadius="14" background="#00000000">
+              <Container id="center-2" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Text id="flowy-text" />
+    <Container id="container-6" Type="Vertical Stack" padding="2" CornerRadius="16" background="#FF251D37" />
+    <Container id="sized-box-7" Type="Vertical Stack" width="185" height="116">
+      <Container id="padding-3" Type="Vertical Stack" padding="12 12 0">
+        <Container id="column-5" Type="Vertical Stack">
+          <Container id="row-5" Type="Horizontal Stack">
+            <Container id="expanded-2" Type="Vertical Stack" />
+          </Container>
+          <Container id="vspace-4" Type="Vertical Stack" />
+          <Container id="flexible-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,7 @@
+<Cui id="chat-page-chat-content-page" product="9-1" version="1">
+  <Page id="chat-page-chat-content-page-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

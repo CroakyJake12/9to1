@@ -1,0 +1,47 @@
+<Cui id="search-mobile-search-result" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-if-(view-!=-null-&amp;&amp;-context.mounted)-{-await-go-to-view(context,-view);-}-else-{-show-toast-notification(-message:-locale-keys.search-page-not-exist.tr(),-type:-toastification-type.error,-);-log.error(-'tapping-search-result,-view-not-found:-${item.id}',-);-}-}" command="() async {
+                if (view != null &amp;&amp; context.mounted) {
+                  await _goToView(context, view);
+                } else {
+                  showToastNotification(
+                    message: LocaleKeys.search_pageNotExist.tr(),
+                    type: ToastificationType.error,
+                  );
+                  Log.error(
+                    'tapping search result, view not found: ${item.id}',
+                  );
+                }
+              }" />
+  </Actions>
+  <Page id="search-mobile-search-result-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Text id="text" />
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="column-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="400">
+      <Container id="center" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Text id="text-2" />
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Container id="gesture-detector" Type="Vertical Stack" />
+    </Container>
+    <Container id="align" Type="Vertical Stack">
+      <Container id="column-4" Type="Vertical Stack">
+        <Container id="vspace-5" Type="Vertical Stack" />
+        <Image id="flowy-svg" />
+        <Container id="vspace-6" Type="Vertical Stack" />
+        <Text id="text-3" max-lines="1" />
+        <Text id="text-4" text-alignment="Center" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

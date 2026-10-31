@@ -1,0 +1,5 @@
+<Cui id="handlers-inline-page-reference" product="9-1" version="1">
+  <Page id="handlers-inline-page-reference-root">
+    <Container id="sized-box" Type="Vertical Stack" width="16" />
+  </Page>
+</Cui>

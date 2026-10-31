@@ -1,0 +1,5 @@
+<Cui id="multi-image-block-component-image-render" product="9-1" version="1">
+  <Page id="multi-image-block-component-image-render-root">
+    <Container id="container" Type="Vertical Stack" />
+  </Page>
+</Cui>

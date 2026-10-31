@@ -1,0 +1,12 @@
+<Cui id="sites-publish-info-view-item" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="sites-publish-info-view-item-root">
+    <Container id="container" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="on-tap">
+        <Container id="flowy-tooltip" Type="Floating" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

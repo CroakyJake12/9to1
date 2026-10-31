@@ -1,0 +1,18 @@
+<Cui id="search-mobile-search-page" product="9-1" version="1">
+  <Page id="search-mobile-search-page-root">
+    <Container id="center" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Page id="scaffold">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="flexible" Type="Vertical Stack">
+            <Container id="single-child-scroll-view" Type="Vertical Stack">
+              <Container id="padding" Type="Vertical Stack" padding="16">
+                <Container id="column-2" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Page>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,25 @@
+<Cui id="share-share-tab" product="9-1" version="1">
+  <Page id="share-share-tab-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Image id="flowy-svg" />
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="2.0" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="expanded" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" height="36">
+            <Input id="flowy-text-field" Type="Text" />
+          </Container>
+        </Container>
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

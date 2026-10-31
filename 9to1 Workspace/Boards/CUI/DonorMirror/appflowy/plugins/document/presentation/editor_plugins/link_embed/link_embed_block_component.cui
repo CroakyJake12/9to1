@@ -1,0 +1,67 @@
+<Cui id="link-embed-link-embed-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="!universal-platform.is-mobile-?-null-:-()-=&gt;-af-launch-url-string" command="!UniversalPlatform.isMobile
+                ? null
+                : () =&gt;
+                    afLaunchUrlString" />
+    <Action name="(-)-{-is-hovering-=-false;-future.delayed(const-duration(milliseconds:-200),-()-{-if-(is-menu-showing-||-is-hovering)-return;-if-(mounted)-show-actions-notifier.value-=-false;-});-}" command="(_) {
+        isHovering = false;
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (isMenuShowing || isHovering) return;
+          if (mounted) showActionsNotifier.value = false;
+        });
+      }" />
+    <Action name="(-)-{-is-hovering-=-true;-show-actions-notifier.value-=-true;-}" command="(_) {
+        isHovering = true;
+        showActionsNotifier.value = true;
+      }" />
+    <Action name="af-launch-url-string" command="afLaunchUrlString" />
+  </Actions>
+  <Page id="link-embed-link-embed-block-component-root">
+    <Container id="mouse-region" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" height="450">
+      <Container id="stack" Type="Absolute" />
+    </Container>
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="mouse-region-2" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="container-2" Type="Vertical Stack" height="64" padding="12 20">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="center" Type="Vertical Stack" />
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Container id="expanded-2" Type="Vertical Stack">
+                <Container id="column-2" Type="Vertical Stack">
+                  <Text id="flowy-text" />
+                  <Container id="vspace" Type="Vertical Stack" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="center-2" Type="Vertical Stack" />
+    <Container id="gesture-detector-2" Type="Vertical Stack">
+      <Container id="center-3" Type="Vertical Stack">
+        <Container id="column-3" Type="Vertical Stack">
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="padding-2" Type="Vertical Stack" padding="24">
+            <Text id="rich-text" max-lines="1">
+              <Text id="text-span">
+                <Text id="text-span-2" />
+                <Text id="text-span-3" />
+              </Text>
+            </Text>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

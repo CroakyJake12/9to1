@@ -1,0 +1,22 @@
+<Cui id="toolbar-filter-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-final-bloc-=-context.read&lt;filter-editor-bloc&gt;();-if-(bloc.state.filters.is-empty)-{-popover-controller.show();-}-else-{-widget.toggle-extension.toggle();-}-}" command="() {
+                final bloc = context.read&lt;FilterEditorBloc&gt;();
+                if (bloc.state.filters.isEmpty) {
+                  _popoverController.show();
+                } else {
+                  widget.toggleExtension.toggle();
+                }
+              }" />
+  </Actions>
+  <Page id="toolbar-filter-button-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Button id="flowy-icon-button" Type="Action" action="()-{-final-bloc-=-context.read&lt;filter-editor-bloc&gt;();-if-(bloc.state.filters.is-empty)-{-popover-controller.show();-}-else-{-widget.toggle-extension.toggle();-}-}" width="24" height="24">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+  </Page>
+</Cui>

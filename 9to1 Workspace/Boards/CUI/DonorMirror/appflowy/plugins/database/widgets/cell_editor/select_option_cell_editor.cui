@@ -1,0 +1,80 @@
+<Cui id="cell-editor-select-option-cell-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;select-option-cell-editor-bloc&gt;()-.add" command="() =&gt; context
+            .read&lt;SelectOptionCellEditorBloc&gt;()
+            .add" />
+    <Action name="(-)-=&gt;-context.read&lt;select-option-cell-editor-bloc&gt;().add(-select-option-cell-editor-event.update-focused-option(-widget.option.id,-),-)" command="(_) =&gt; context.read&lt;SelectOptionCellEditorBloc&gt;().add(
+                SelectOptionCellEditorEvent.updateFocusedOption(
+                  widget.option.id,
+                ),
+              )" />
+    <Action name="(-)-{-context.read&lt;select-option-cell-editor-bloc&gt;().add(-const-select-option-cell-editor-event.update-focused-option(-create-select-option-suggestion-id,-),-);-}" command="(_) {
+            context.read&lt;SelectOptionCellEditorBloc&gt;().add(
+                  const SelectOptionCellEditorEvent.updateFocusedOption(
+                    createSelectOptionSuggestionId,
+                  ),
+                );
+          }" />
+    <Action name="on-selected" command="onSelected" />
+    <Action name="on-tap" command="_onTap" />
+    <Action name="popover-controller.show" command="_popoverController.show" />
+  </Actions>
+  <Page id="cell-editor-select-option-cell-editor-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="flexible" Type="Vertical Stack" />
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="12 0" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="12.0" />
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="16.0" />
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="padding-4" Type="Vertical Stack" padding="8.0 2.0">
+        <Container id="mouse-region-2" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" height="28">
+            <Button id="flowy-icon-button" Type="Action" action="on-tap" width="20">
+              <Image id="flowy-svg" />
+            </Button>
+            <Button id="flowy-icon-button-2" Type="Action" action="popover-controller.show">
+              <Image id="flowy-svg-2" />
+            </Button>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="mouse-region-3" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" width="26">
+            <Container id="center" Type="Vertical Stack">
+              <Image id="flowy-svg-3" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="gesture-detector-2" Type="Vertical Stack">
+          <Container id="mouse-region-4" Type="Vertical Stack">
+            <Container id="container-2" Type="Vertical Stack" padding="6.0" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack" height="32" padding="8 4">
+      <Container id="gesture-detector-3" Type="Vertical Stack">
+        <Container id="mouse-region-5" Type="Vertical Stack">
+          <Container id="row-2" Type="Horizontal Stack">
+            <Text id="flowy-text" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="expanded-2" Type="Vertical Stack">
+              <Container id="align" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

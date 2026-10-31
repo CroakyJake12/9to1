@@ -1,0 +1,20 @@
+<Cui id="domain-domain-more-action" product="9-1" version="1">
+  <Page id="domain-domain-more-action-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="34" padding="2.0">
+      <Image id="flowy-svg-2" />
+    </Container>
+    <Container id="dialog" Type="Floating">
+      <Container id="sized-box-2" Type="Vertical Stack" width="460" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,36 @@
+<Cui id="code-block-code-block-copy-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-delta-=-node.delta;-if-(delta-==-null)-{-return;-}-final-document-=-document.blank()-..insert([0],-[node.deep-copy()])-..to-json();-await-get-it&lt;clipboard-service&gt;().set-data(-clipboard-service-data(-plain-text:-delta.to-plain-text(),-in-app-json:-json-encode(document.to-json()),-),-);-if-(context.mounted)-{-show-toast-notification(-message:-locale-keys.document-code-block-code-copied-snackbar.tr(),-);-}-}" command="() async {
+            final delta = node.delta;
+            if (delta == null) {
+              return;
+            }
+
+            final document = Document.blank()
+              ..insert([0], [node.deepCopy()])
+              ..toJson();
+
+            await getIt&lt;ClipboardService&gt;().setData(
+              ClipboardServiceData(
+                plainText: delta.toPlainText(),
+                inAppJson: jsonEncode(document.toJson()),
+              ),
+            );
+
+            if (context.mounted) {
+              showToastNotification(
+                message: LocaleKeys.document_codeBlock_codeCopiedSnackbar.tr(),
+              );
+            }
+          }" />
+  </Actions>
+  <Page id="code-block-code-block-copy-button-root">
+    <Container id="padding" Type="Vertical Stack" padding="4">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Button id="flowy-icon-button" Type="Action" action="()-async-{-final-delta-=-node.delta;-if-(delta-==-null)-{-return;-}-final-document-=-document.blank()-..insert([0],-[node.deep-copy()])-..to-json();-await-get-it&lt;clipboard-service&gt;().set-data(-clipboard-service-data(-plain-text:-delta.to-plain-text(),-in-app-json:-json-encode(document.to-json()),-),-);-if-(context.mounted)-{-show-toast-notification(-message:-locale-keys.document-code-block-code-copied-snackbar.tr(),-);-}-}">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

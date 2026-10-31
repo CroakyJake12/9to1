@@ -1,0 +1,53 @@
+<Cui id="search-mobile-search-textfield" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-controller.clear();-}" command="() {
+                controller.clear();
+              }" />
+    <Action name="()-{-if-(last-page.is-empty)-return;-close-popup-menu();-try-{-bottom-navigation-bar-item-type-label-=-bottom-navigation-bar-item-type.values.by-name(last-page);-if-(label-==-bottom-navigation-bar-item-type.search)-{-label-=-bottom-navigation-bar-item-type.home;-}-if-(label-==-bottom-navigation-bar-item-type.notification)-{-get-it&lt;reminder-bloc&gt;().add(const-reminder-event.refresh());-}-bottom-navigation-bar-item-type.value-=-label.label;-final-route-name-=-label.route-name;-if-(route-name-!=-null)-go-router.of(context).go(route-name);-}-on-argument-error-{-log.error(-'last-page:-[$last-page]-cannot-be-converted-to-bottom-navigation-bar-item-type',-);-}-}" command="() {
+                  if (lastPage.isEmpty) return;
+                  
+                  closePopupMenu();
+                  try {
+                    BottomNavigationBarItemType label =
+                        BottomNavigationBarItemType.values.byName(lastPage);
+                    if (label == BottomNavigationBarItemType.search) {
+                      label = BottomNavigationBarItemType.home;
+                    }
+                    if (label == BottomNavigationBarItemType.notification) {
+                      getIt&lt;ReminderBloc&gt;().add(const ReminderEvent.refresh());
+                    }
+                    bottomNavigationBarItemType.value = label.label;
+                    final routeName = label.routeName;
+                    if (routeName != null) GoRouter.of(context).go(routeName);
+                  } on ArgumentError {
+                    Log.error(
+                      'lastPage: [$lastPage] cannot be converted to BottomNavigationBarItemType',
+                    );
+                  }
+                }" />
+  </Actions>
+  <Page id="search-mobile-search-textfield-root">
+    <Container id="container" Type="Vertical Stack" height="42" padding="4 16">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="center" Type="Vertical Stack">
+              <Image id="flowy-svg" />
+            </Container>
+          </Container>
+          <Container id="expanded" Type="Vertical Stack">
+            <Input id="text-form-field" Type="Text" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="8 10 8 10">
+      <Image id="flowy-svg-2" />
+    </Container>
+    <Container id="gesture-detector-2" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="4 10 8 10">
+        <Image id="flowy-svg-3" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

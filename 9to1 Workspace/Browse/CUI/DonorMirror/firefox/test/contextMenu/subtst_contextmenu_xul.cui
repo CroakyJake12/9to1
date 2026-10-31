@@ -1,7 +1,0 @@
-<Cui id="context-menu-subtst-contextmenu-xul" product="9-1" version="1">
-  <Page id="context-menu-subtst-contextmenu-xul-root">
-    <Container id="window" Type="Vertical Stack">
-      <Text id="test-xul-text-link-label" text="XUL text-link label" />
-    </Container>
-  </Page>
-</Cui>

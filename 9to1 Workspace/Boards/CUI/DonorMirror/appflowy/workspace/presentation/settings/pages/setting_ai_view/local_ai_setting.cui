@@ -1,0 +1,29 @@
+<Cui id="setting-ai-view-local-ai-setting" product="9-1" version="1">
+  <Page id="setting-ai-view-local-ai-setting-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="12" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="row-2" Type="Horizontal Stack">
+            <Text id="text" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="flowy-tooltip" Type="Floating">
+              <Image id="flowy-svg" />
+            </Container>
+          </Container>
+          <Container id="vspace" Type="Vertical Stack" />
+          <Text id="flowy-text" max-lines="3" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink-2" Type="Vertical Stack" />
+      <Container id="column-2" Type="Vertical Stack">
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

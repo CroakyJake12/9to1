@@ -1,0 +1,5 @@
+<Cui id="widgets-flowy-mobile-option-decorate-box" product="9-1" version="1">
+  <Page id="widgets-flowy-mobile-option-decorate-box-root">
+    <Container id="decorated-box" Type="Vertical Stack" />
+  </Page>
+</Cui>

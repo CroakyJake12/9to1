@@ -1,0 +1,5 @@
+<Cui id="setting-ai-view-local-settings-ai-view" product="9-1" version="1">
+  <Page id="setting-ai-view-local-settings-ai-view-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+  </Page>
+</Cui>

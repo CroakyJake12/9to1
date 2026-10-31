@@ -1,0 +1,17 @@
+<Cui id="home-mobile-home-setting-page" product="9-1" version="1">
+  <Page id="home-mobile-home-setting-page-root">
+    <Container id="center" Type="Vertical Stack" />
+    <Page id="scaffold" />
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack">
+          <Container id="padding" Type="Vertical Stack" padding="16">
+            <Container id="column" Type="Vertical Stack">
+              <Container id="vspace" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

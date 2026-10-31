@@ -1,0 +1,17 @@
+<Cui id="style-widget-color-picker" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-tap?.call(option,-i);-}" command="() {
+          onTap?.call(option, i);
+        }" />
+  </Actions>
+  <Page id="style-widget-color-picker-root">
+    <Container id="vspace" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-on-tap?.call(option,-i);-}">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+    <Container id="decorated-box" Type="Vertical Stack" background="#FFCFD3D9" />
+  </Page>
+</Cui>

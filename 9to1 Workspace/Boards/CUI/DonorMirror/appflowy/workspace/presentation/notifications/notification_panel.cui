@@ -1,0 +1,81 @@
+<Cui id="notifications-notification-panel" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-setting-bloc.add" command="() =&gt;
+          settingBloc.add" />
+    <Action name="()-{-keep-editor-focus-notifier.increase();-more-action-controller.show();-}" command="() {
+          keepEditorFocusNotifier.increase();
+          moreActionController.show();
+        }" />
+    <Action name="()-{-show-toast-notification(-message:-locale-keys-.notification-hub-mark-all-as-archived-succeed-toast-.tr(),-);-context-.read&lt;reminder-bloc&gt;()-.add(const-reminder-event.archive-all());-more-action-controller.close();-}" command="() {
+                showToastNotification(
+                  message: LocaleKeys
+                      .notificationHub_markAllAsArchivedSucceedToast
+                      .tr(),
+                );
+                context
+                    .read&lt;ReminderBloc&gt;()
+                    .add(const ReminderEvent.archiveAll());
+                moreActionController.close();
+              }" />
+    <Action name="()-{-show-toast-notification(-message:-locale-keys.notification-hub-mark-all-as-read-succeed-toast.tr(),-);-context-.read&lt;reminder-bloc&gt;()-.add(const-reminder-event.mark-all-read());-more-action-controller.close();-}" command="() {
+                showToastNotification(
+                  message:
+                      LocaleKeys.notificationHub_markAllAsReadSucceedToast.tr(),
+                );
+                context
+                    .read&lt;ReminderBloc&gt;()
+                    .add(const ReminderEvent.markAllRead());
+                moreActionController.close();
+              }" />
+    <Action name="on-hide" command="onHide" />
+  </Actions>
+  <Page id="notifications-notification-panel-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" background="#00000000">
+        <Container id="align" Type="Vertical Stack">
+          <Container id="gesture-detector-2" Type="Vertical Stack">
+            <Container id="container-2" Type="Vertical Stack" width="380" padding="14">
+              <Container id="column" Type="Vertical Stack">
+                <Container id="vspace" Type="Vertical Stack" />
+                <Container id="vspace-2" Type="Vertical Stack" />
+                <Container id="expanded" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack" height="24" padding="16">
+      <Container id="row" Type="Horizontal Stack">
+        <Button id="flowy-icon-button" Type="Action" action="on-hide" width="24">
+          <Image id="flowy-svg" />
+        </Button>
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Button id="flowy-icon-button-2" Type="Action" action="()-{-keep-editor-focus-notifier.increase();-more-action-controller.show();-}" width="24">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" padding="8" background="#0000001F">
+      <Container id="column-2" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" height="30">
+          <Button id="flowy-button" Type="Action" action="()-{-show-toast-notification(-message:-locale-keys.notification-hub-mark-all-as-read-succeed-toast.tr(),-);-context-.read&lt;reminder-bloc&gt;()-.add(const-reminder-event.mark-all-read());-more-action-controller.close();-}">
+            <Image id="flowy-svg-3" />
+          </Button>
+        </Container>
+        <Container id="vspace-3" Type="Vertical Stack" />
+        <Container id="sized-box-2" Type="Vertical Stack" height="30">
+          <Button id="flowy-button-2" Type="Action" action="()-{-show-toast-notification(-message:-locale-keys-.notification-hub-mark-all-as-archived-succeed-toast-.tr(),-);-context-.read&lt;reminder-bloc&gt;()-.add(const-reminder-event.archive-all());-more-action-controller.close();-}">
+            <Image id="flowy-svg-4" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" />
+    </Text>
+  </Page>
+</Cui>

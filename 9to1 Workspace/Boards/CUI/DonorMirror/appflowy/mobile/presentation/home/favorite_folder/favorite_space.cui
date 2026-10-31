@@ -1,0 +1,11 @@
+<Cui id="favorite-folder-favorite-space" product="9-1" version="1">
+  <Page id="favorite-folder-favorite-space-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="24.0" />
+    <Container id="hspace" Type="Horizontal Stack" />
+  </Page>
+</Cui>

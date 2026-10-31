@@ -1,0 +1,5 @@
+<Cui id="base-animated-gesture" product="9-1" version="1">
+  <Page id="base-animated-gesture-root">
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

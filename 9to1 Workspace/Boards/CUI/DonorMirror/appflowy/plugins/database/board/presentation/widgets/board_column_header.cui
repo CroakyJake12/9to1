@@ -1,0 +1,45 @@
+<Cui id="widgets-board-column-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;board-bloc&gt;().add(-board-event.create-row(-group-id,-order-object-position-type-pb.start,-null,-null,-),-)" command="() =&gt; context.read&lt;BoardBloc&gt;().add(
+              BoardEvent.createRow(
+                groupId,
+                OrderObjectPositionTypePB.Start,
+                null,
+                null,
+              ),
+            )" />
+    <Action name="()-{-run(context,-action,-custom-group-data.group);-popover-container.of(popover-context).close();-}" command="() {
+                    run(context, action, customGroupData.group);
+                    PopoverContainer.of(popoverContext).close();
+                  }" />
+  </Actions>
+  <Page id="widgets-board-column-header-root">
+    <Container id="container" Type="Vertical Stack" height="50" />
+    <Container id="app-flowy-popover" Type="Context Menu" padding="8">
+      <Button id="flowy-icon-button" Type="Action" width="20">
+        <Image id="flowy-svg" />
+      </Button>
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action" action="()-{-run(context,-action,-custom-group-data.group);-popover-container.of(popover-context).close();-}">
+          <Image id="flowy-svg-2" />
+          <Text id="flowy-text" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating">
+      <Button id="flowy-icon-button-2" Type="Action" action="()-=&gt;-context.read&lt;board-bloc&gt;().add(-board-event.create-row(-group-id,-order-object-position-type-pb.start,-null,-null,-),-)" width="20">
+        <Image id="flowy-svg-3" />
+      </Button>
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="align" Type="Vertical Stack">
+          <Container id="flowy-tooltip-2" Type="Floating" />
+        </Container>
+      </Container>
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

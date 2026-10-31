@@ -1,0 +1,13 @@
+<Cui id="style-widget-text-input" product="9-1" version="1">
+  <Actions>
+    <Action name="widget.on-changed" command="widget.onChanged" />
+    <Action name="widget.on-tap" command="widget.onTap" />
+  </Actions>
+  <Page id="style-widget-text-input-root">
+    <Container id="container" Type="Vertical Stack">
+      <Input id="text-form-field" Type="Text">
+        <Image id="icon" />
+      </Input>
+    </Container>
+  </Page>
+</Cui>

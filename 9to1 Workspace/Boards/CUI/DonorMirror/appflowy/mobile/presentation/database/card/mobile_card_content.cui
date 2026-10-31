@@ -1,0 +1,9 @@
+<Cui id="card-mobile-card-content" product="9-1" version="1">
+  <Page id="card-mobile-card-content-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack">
+        <Container id="column-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

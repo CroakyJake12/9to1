@@ -1,0 +1,16 @@
+<Cui id="card-cell-skeleton-relation-card-cell" product="9-1" version="1">
+  <Page id="card-cell-skeleton-relation-card-cell-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Text id="text" />
+        <Container id="container" Type="Vertical Stack">
+          <Container id="wrap" Type="Wrap" />
+          <Container id="single-child-scroll-view" Type="Vertical Stack">
+            <Container id="row" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

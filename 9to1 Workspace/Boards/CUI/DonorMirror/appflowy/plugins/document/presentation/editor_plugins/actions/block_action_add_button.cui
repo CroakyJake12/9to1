@@ -1,0 +1,11 @@
+<Cui id="actions-block-action-add-button" product="9-1" version="1">
+  <Page id="actions-block-action-add-button-root">
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" text="\n" />
+      <Text id="text-span-4" />
+      <Text id="text-span-5" />
+      <Text id="text-span-6" />
+    </Text>
+  </Page>
+</Cui>

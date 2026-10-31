@@ -1,0 +1,24 @@
+<Cui id="mobile-grid-mobile-grid-select-option-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-mobile-select-option-editor(-cell-controller:-bloc.cell-controller,-);-},-);-}" command="() {
+            showMobileBottomSheet(
+              context,
+              builder: (context) {
+                return MobileSelectOptionEditor(
+                  cellController: bloc.cellController,
+                );
+              },
+            );
+          }" />
+  </Actions>
+  <Page id="mobile-grid-mobile-grid-select-option-cell-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-mobile-select-option-editor(-cell-controller:-bloc.cell-controller,-);-},-);-}">
+        <Container id="align" Type="Vertical Stack">
+          <Container id="shrink" Type="Vertical Stack" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="hspace" Type="Horizontal Stack" />
+  </Page>
+</Cui>

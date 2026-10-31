@@ -1,0 +1,20 @@
+<Cui id="drag-to-reorder-visual-drag-area" product="9-1" version="1">
+  <Page id="drag-to-reorder-visual-drag-area-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="shrink-3" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" height="2" />
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="container-2" Type="Vertical Stack" width="2" />
+    </Container>
+    <Container id="positioned-2" Type="Vertical Stack">
+      <Container id="container-3" Type="Vertical Stack" width="2" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="container-4" Type="Vertical Stack" height="2" />
+      <Container id="sized-box" Type="Vertical Stack" />
+      <Container id="container-5" Type="Vertical Stack" height="2" />
+    </Container>
+    <Container id="positioned-3" Type="Vertical Stack" />
+  </Page>
+</Cui>

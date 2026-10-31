@@ -1,5 +1,0 @@
-<Cui id="ui-unitentry" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack">
-    <Container id="unit-dropdown" Type="Vertical Stack" width="70" vertical-alignment="Center" />
-  </Container>
-</Cui>

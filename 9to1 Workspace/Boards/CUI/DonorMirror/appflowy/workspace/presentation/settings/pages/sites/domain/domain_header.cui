@@ -1,0 +1,8 @@
+<Cui id="domain-domain-header" product="9-1" version="1">
+  <Page id="domain-domain-header-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

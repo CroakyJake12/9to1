@@ -1,0 +1,8 @@
+<Cui id="search-mobile-search-icon" product="9-1" version="1">
+  <Page id="search-mobile-search-icon-root">
+    <Container id="sized-box" Type="Vertical Stack" width="20">
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+    <Container id="shrink-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,20 @@
+<Cui id="mobile-row-detail-mobile-row-detail-relation-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-const-flowy-text(&quot;coming-soon&quot;);-},-)" command="() =&gt; showMobileBottomSheet(
+        context,
+        builder: (context) {
+          return const FlowyText(&quot;Coming soon&quot;);
+        },
+      )" />
+  </Actions>
+  <Page id="mobile-row-detail-mobile-row-detail-relation-cell-root">
+    <Container id="ink-well" Type="Vertical Stack">
+      <Text id="flowy-text" text="Coming soon" />
+      <Container id="container" Type="Vertical Stack" padding="12 13">
+        <Container id="wrap" Type="Wrap">
+          <Text id="flowy-text-2" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

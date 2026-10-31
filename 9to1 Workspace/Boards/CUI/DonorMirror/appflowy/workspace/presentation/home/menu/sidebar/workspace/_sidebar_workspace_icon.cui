@@ -1,0 +1,26 @@
+<Cui id="workspace-sidebar-workspace-icon" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-result-=-await-context.push&lt;emoji-icon-data&gt;(-uri(-path:-mobile-emoji-picker-screen.route-name,-query-parameters:-{-mobile-emoji-picker-screen.page-title:-locale-keys.settings-workspace-page-workspace-icon-title.tr(),-mobile-emoji-picker-screen.select-tabs:-[picker-tab-type.emoji.name],-},-).to-string(),-);-if-(result-!=-null)-{-widget.on-selected(result);-}-}" command="() async {
+        final result = await context.push&lt;EmojiIconData&gt;(
+          Uri(
+            path: MobileEmojiPickerScreen.routeName,
+            queryParameters: {
+              MobileEmojiPickerScreen.pageTitle:
+                  LocaleKeys.settings_workspacePage_workspaceIcon_title.tr(),
+              MobileEmojiPickerScreen.selectTabs: [PickerTabType.emoji.name],
+            },
+          ).toString(),
+        );
+        if (result != null) {
+          widget.onSelected(result);
+        }
+      }" />
+  </Actions>
+  <Page id="workspace-sidebar-workspace-icon-root">
+    <Container id="container" Type="Vertical Stack" background="#1A717171" />
+    <Container id="app-flowy-popover" Type="Context Menu" padding="0">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

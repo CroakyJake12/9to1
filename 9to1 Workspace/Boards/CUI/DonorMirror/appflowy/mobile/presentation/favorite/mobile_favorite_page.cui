@@ -1,0 +1,15 @@
+<Cui id="favorite-mobile-favorite-page" product="9-1" version="1">
+  <Page id="favorite-mobile-favorite-page-root">
+    <Container id="center" Type="Vertical Stack" />
+    <Page id="scaffold">
+      <Container id="bloc-provider" Type="Vertical Stack">
+        <Container id="bloc-builder" Type="Vertical Stack" />
+      </Container>
+    </Page>
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16 16 8.0 0.0" />
+      <Container id="divider" Type="Vertical Stack" />
+      <Container id="expanded" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

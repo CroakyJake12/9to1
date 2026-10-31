@@ -1,0 +1,5 @@
+<Cui id="workspace-workspace-setting-group" product="9-1" version="1">
+  <Page id="workspace-workspace-setting-group-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

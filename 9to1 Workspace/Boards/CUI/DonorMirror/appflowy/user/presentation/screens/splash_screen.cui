@@ -1,0 +1,16 @@
+<Cui id="screens-splash-screen" product="9-1" version="1">
+  <Page id="screens-splash-screen-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Page id="scaffold" />
+    </Container>
+    <Container id="container" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+    </Container>
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Image id="image" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,6 @@
+<Cui id="scrolling-styled-scrollview" product="9-1" version="1">
+  <Page id="scrolling-styled-scrollview-root">
+    <Container id="single-child-scroll-view" Type="Vertical Stack" />
+    <Container id="custom-scroll-view" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,9 @@
+<Cui id="blank-blank" product="9-1" version="1">
+  <Page id="blank-blank-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="10">
+        <Container id="shrink" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

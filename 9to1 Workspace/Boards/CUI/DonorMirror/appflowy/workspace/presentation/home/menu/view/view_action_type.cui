@@ -1,0 +1,5 @@
+<Cui id="view-view-action-type" product="9-1" version="1">
+  <Page id="view-view-action-type-root">
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,18 @@
+<Cui id="shared-settings-radio-select" product="9-1" version="1">
+  <Actions>
+    <Action name="on-changed" command="onChanged" />
+  </Actions>
+  <Page id="shared-settings-radio-select-root">
+    <Container id="wrap" Type="Wrap">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="container" Type="Vertical Stack" width="14" height="14" padding="2">
+            <Container id="decorated-box" Type="Vertical Stack" background="#00000000" />
+          </Container>
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

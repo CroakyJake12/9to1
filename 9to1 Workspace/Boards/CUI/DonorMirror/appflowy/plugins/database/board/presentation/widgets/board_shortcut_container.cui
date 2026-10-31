@@ -1,0 +1,14 @@
+<Cui id="widgets-board-shortcut-container" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-final-focus-node-=-focus.of(context);-focus-node.request-focus();-focus-scope.clear();-}" command="() {
+                  final focusNode = Focus.of(context);
+                  focusNode.requestFocus();
+                  focusScope.clear();
+                }" />
+  </Actions>
+  <Page id="widgets-board-shortcut-container-root">
+    <Container id="builder" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

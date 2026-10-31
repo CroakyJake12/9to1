@@ -1,0 +1,7 @@
+<Cui id="prompt-input-prompt-input-text-controller" product="9-1" version="1">
+  <Page id="prompt-input-prompt-input-text-controller-root">
+    <Text id="text-span" />
+    <Text id="text-span-2" />
+    <Text id="text-span-3" />
+  </Page>
+</Cui>

@@ -1,0 +1,36 @@
+<Cui id="prompt-input-mention-page-bottom-sheet" product="9-1" version="1">
+  <Actions>
+    <Action name="navigator.of" command="Navigator.of" />
+  </Actions>
+  <Page id="prompt-input-mention-page-bottom-sheet-root">
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="custom-scroll-view" Type="Vertical Stack">
+      <Container id="colored-box" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" height="44.0">
+            <Container id="center" Type="Vertical Stack" />
+          </Container>
+          <Container id="padding" Type="Vertical Stack" padding="16.0 8.0">
+            <Container id="sized-box-2" Type="Vertical Stack" height="44.0" />
+          </Container>
+          <Container id="divider" Type="Vertical Stack" height="0.5" />
+        </Container>
+      </Container>
+      <Text id="flowy-text" />
+      <Text id="flowy-text-2" />
+      <Container id="sliver-padding" Type="Vertical Stack" padding="16.0 8.0">
+        <Container id="sliver-list" Type="Vertical Stack">
+          <Container id="ink-well" Type="Vertical Stack">
+            <Container id="container" Type="Vertical Stack" height="44" padding="4.0">
+              <Container id="row" Type="Horizontal Stack">
+                <Container id="hspace" Type="Horizontal Stack" />
+                <Container id="expanded-2" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

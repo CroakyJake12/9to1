@@ -1,0 +1,21 @@
+<Cui id="widgets-font-size-stepper" product="9-1" version="1">
+  <Actions>
+    <Action name="(value)-{-set-state(()-=&gt;-value-=-value);-widget.on-changed(value);-}" command="(value) {
+                  setState(() =&gt; _value = value);
+                  widget.onChanged(value);
+                }" />
+  </Actions>
+  <Page id="widgets-font-size-stepper-root">
+    <Container id="padding" Type="Vertical Stack" padding="10">
+      <Container id="row" Type="Horizontal Stack">
+        <Text id="flowy-text" text="A" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Input id="slider" Type="Slider" />
+        </Container>
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Text id="flowy-text-2" text="A" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

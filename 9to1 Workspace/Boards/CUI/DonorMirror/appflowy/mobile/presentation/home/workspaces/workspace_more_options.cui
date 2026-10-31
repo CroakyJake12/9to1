@@ -1,0 +1,9 @@
+<Cui id="workspaces-workspace-more-options" product="9-1" version="1">
+  <Page id="workspaces-workspace-more-options-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+    <Image id="flowy-svg-3" />
+    <Image id="flowy-svg-4" />
+  </Page>
+</Cui>

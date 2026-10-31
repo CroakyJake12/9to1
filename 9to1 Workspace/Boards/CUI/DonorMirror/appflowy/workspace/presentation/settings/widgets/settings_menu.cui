@@ -1,0 +1,33 @@
+<Cui id="widgets-settings-menu" product="9-1" version="1">
+  <Page id="widgets-settings-menu-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack" padding="24">
+        <Container id="column" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+          <Image id="flowy-svg-2" />
+          <Image id="flowy-svg-3" />
+          <Image id="flowy-svg-4" />
+          <Image id="flowy-svg-5" />
+          <Image id="flowy-svg-6" />
+          <Image id="flowy-svg-7" />
+          <Image id="flowy-svg-8" />
+          <Image id="flowy-svg-9" />
+          <Image id="flowy-svg-10" />
+          <Image id="flowy-svg-11" />
+          <Image id="icon" source="flag" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="container-2" Type="Vertical Stack" padding="8 8 4">
+          <Container id="single-child-scroll-view-2" Type="Vertical Stack" padding="4 16">
+            <Container id="vspace" Type="Vertical Stack" />
+            <Image id="icon-2" source="sync" />
+            <Image id="icon-3" source="flag" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,10 @@
+<Cui id="home-toast" product="9-1" version="1">
+  <Page id="home-toast-root">
+    <Container id="decorated-box" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="12 6" />
+    </Container>
+    <Container id="snack-bar" Type="Floating">
+      <Text id="flowy-text" max-lines="2" />
+    </Container>
+  </Page>
+</Cui>

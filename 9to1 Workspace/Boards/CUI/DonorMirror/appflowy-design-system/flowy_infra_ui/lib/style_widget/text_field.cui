@@ -1,0 +1,17 @@
+<Cui id="style-widget-text-field" product="9-1" version="1">
+  <Actions>
+    <Action name="(text)-{-if-(widget.debounce-duration-!=-null)-{-debounce-on-changed-text(widget.debounce-duration!,-text);-}-else-{-on-changed(text);-}-}" command="(text) {
+        if (widget.debounceDuration != null) {
+          _debounceOnChangedText(widget.debounceDuration!, text);
+        } else {
+          _onChanged(text);
+        }
+      }" />
+    <Action name="on-submitted" command="_onSubmitted" />
+    <Action name="widget.on-tap" command="widget.onTap" />
+  </Actions>
+  <Page id="style-widget-text-field-root">
+    <Input id="flowy-text-field" Type="Text" />
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

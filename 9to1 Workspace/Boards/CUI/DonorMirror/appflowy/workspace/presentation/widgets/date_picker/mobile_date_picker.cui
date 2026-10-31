@@ -1,0 +1,82 @@
+<Cui id="date-picker-mobile-date-picker" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-final-result-=-await-show-date-time-picker(-context,-is-start-day-?-date-time-:-end-date-time,-use24h-format:-time-format-==-time-format-pb.twenty-four-hour,-mode:-cupertino-date-picker-mode.date,-);-handle-date-time-picker-result(result,-is-start-day,-true);-}" command="() async {
+              final result = await _showDateTimePicker(
+                context,
+                isStartDay ? dateTime : endDateTime,
+                use24hFormat: timeFormat == TimeFormatPB.TwentyFourHour,
+                mode: CupertinoDatePickerMode.date,
+              );
+              handleDateTimePickerResult(result, isStartDay, true);
+            }" />
+    <Action name="()-async-{-final-result-=-await-show-date-time-picker(-context,-is-start-day-?-date-time-:-end-date-time,-use24h-format:-time-format-==-time-format-pb.twenty-four-hour,-mode:-cupertino-date-picker-mode.time,-);-handle-date-time-picker-result(result,-is-start-day,-false);-}" command="() async {
+              final result = await _showDateTimePicker(
+                context,
+                isStartDay ? dateTime : endDateTime,
+                use24hFormat: timeFormat == TimeFormatPB.TwentyFourHour,
+                mode: CupertinoDatePickerMode.time,
+              );
+              handleDateTimePickerResult(result, isStartDay, false);
+            }" />
+  </Actions>
+  <Page id="date-picker-mobile-date-picker-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Text id="flowy-text" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Image id="flowy-svg" />
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="colored-box" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack" />
+      </Container>
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack">
+          <Container id="column-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="56">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="sized-box" Type="Vertical Stack" width="120" />
+        <Container id="hspace-3" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="16 12">
+      <Container id="column-4" Type="Vertical Stack">
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="expanded" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="padding-2" Type="Vertical Stack" padding="12.0 8">
+          <Text id="flowy-text-2" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="expanded-2" Type="Vertical Stack">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="padding-3" Type="Vertical Stack" padding="8.0">
+          <Text id="flowy-text-3" text-alignment="Center" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" width="1" height="16" />
+    <Container id="expanded-3" Type="Vertical Stack">
+      <Container id="gesture-detector-3" Type="Vertical Stack">
+        <Container id="padding-4" Type="Vertical Stack" padding="8.0">
+          <Text id="flowy-text-4" text-alignment="Center" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-3" Type="Vertical Stack" CornerRadius="6">
+      <Container id="row-3" Type="Horizontal Stack" />
+    </Container>
+    <Container id="column-5" Type="Vertical Stack">
+      <Container id="padding-5" Type="Vertical Stack" padding="36" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

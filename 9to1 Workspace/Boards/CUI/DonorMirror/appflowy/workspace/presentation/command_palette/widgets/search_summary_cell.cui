@@ -1,0 +1,69 @@
+<Cui id="widgets-search-summary-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="(event)-{-if-(!is-link-hovering)-{-is-link-hovering-=-true;-show-popover();-}-}" command="(event) {
+                    if (!isLinkHovering) {
+                      isLinkHovering = true;
+                      showPopover();
+                    }
+                  }" />
+    <Action name="(event)-{-if-(!is-reference-hovering)-{-is-reference-hovering-=-true;-}-}" command="(event) {
+          if (!isReferenceHovering) {
+            isReferenceHovering = true;
+          }
+        }" />
+    <Action name="(event)-{-if-(is-link-hovering)-{-is-link-hovering-=-false;-try-to-hide-popover();-}-}" command="(event) {
+                    if (isLinkHovering) {
+                      isLinkHovering = false;
+                      tryToHidePopover();
+                    }
+                  }" />
+    <Action name="(event)-{-if-(is-reference-hovering)-{-is-reference-hovering-=-false;-try-to-hide-popover();-}-}" command="(event) {
+          if (isReferenceHovering) {
+            isReferenceHovering = false;
+            tryToHidePopover();
+          }
+        }" />
+  </Actions>
+  <Page id="widgets-search-summary-cell-root">
+    <Container id="padding" Type="Vertical Stack" padding="4">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="mouse-region-2" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="sized-box" Type="Vertical Stack" />
+          <Container id="flexible" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Container id="container" Type="Vertical Stack" CornerRadius="6">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+    <Text id="text-span" />
+    <Text id="text-span-2">
+      <Text id="text-span-3" text=" ..." />
+      <Text id="text" />
+    </Text>
+    <Text id="text-span-4" />
+    <Text id="text-span-5" />
+    <Text id="text-span-6" />
+    <Container id="container-2" Type="Vertical Stack" padding="8">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="column-2" Type="Vertical Stack">
+          <Container id="padding-2" Type="Vertical Stack" padding="4 8">
+            <Text id="text-2" />
+          </Container>
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="center" Type="Vertical Stack" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="flexible-2" Type="Vertical Stack">
+              <Text id="text-3" max-lines="1" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

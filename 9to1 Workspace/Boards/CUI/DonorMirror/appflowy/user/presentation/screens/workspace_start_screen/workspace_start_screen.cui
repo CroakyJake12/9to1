@@ -1,0 +1,7 @@
+<Cui id="workspace-start-screen-workspace-start-screen" product="9-1" version="1">
+  <Page id="workspace-start-screen-workspace-start-screen-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

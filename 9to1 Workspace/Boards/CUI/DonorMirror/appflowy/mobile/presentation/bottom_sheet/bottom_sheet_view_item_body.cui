@@ -1,0 +1,15 @@
+<Cui id="bottom-sheet-bottom-sheet-view-item-body" product="9-1" version="1">
+  <Page id="bottom-sheet-bottom-sheet-view-item-body-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+    <Image id="flowy-svg-3" />
+    <Image id="flowy-svg-4" />
+    <Image id="flowy-svg-5" />
+    <Image id="flowy-svg-6" />
+    <Image id="flowy-svg-7" />
+    <Container id="padding" Type="Vertical Stack" padding="12.0">
+      <Container id="divider" Type="Vertical Stack" height="0.5" />
+    </Container>
+  </Page>
+</Cui>

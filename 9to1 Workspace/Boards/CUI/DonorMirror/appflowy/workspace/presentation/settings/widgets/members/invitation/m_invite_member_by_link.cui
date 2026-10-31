@@ -1,0 +1,14 @@
+<Cui id="invitation-m-invite-member-by-link" product="9-1" version="1">
+  <Page id="invitation-m-invite-member-by-link-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Text id="text" />
+    <Text id="text-span">
+      <Text id="text-span-2" />
+      <Text id="text-span-3" />
+      <Text id="text-span-4" />
+    </Text>
+  </Page>
+</Cui>

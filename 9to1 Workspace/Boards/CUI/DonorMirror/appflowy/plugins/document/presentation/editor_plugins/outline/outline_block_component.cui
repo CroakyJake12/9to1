@@ -1,0 +1,37 @@
+<Cui id="outline-outline-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="scroll-to-block" command="scrollToBlock" />
+  </Actions>
+  <Page id="outline-outline-block-component-root">
+    <Container id="stream-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" />
+    </Container>
+    <Container id="align" Type="Vertical Stack">
+      <Text id="text" />
+    </Container>
+    <Container id="align-2" Type="Vertical Stack">
+      <Text id="text-2" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="4.0" />
+    <Container id="padding-2" Type="Vertical Stack" padding="15.0">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="container-2" Type="Vertical Stack">
+      <Container id="container-3" Type="Vertical Stack" padding="2.0 5.0">
+        <Container id="column-2" Type="Vertical Stack">
+          <Text id="text-3" />
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Button id="flowy-button" Type="Action" action="scroll-to-block">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Button>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Text id="text-span" />
+    <Text id="text-span-2" />
+  </Page>
+</Cui>

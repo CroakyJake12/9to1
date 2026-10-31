@@ -1,0 +1,6 @@
+<Cui id="aa-menu-align-items" product="9-1" version="1">
+  <Page id="aa-menu-align-items-root">
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Container id="row" Type="Horizontal Stack" />
+  </Page>
+</Cui>

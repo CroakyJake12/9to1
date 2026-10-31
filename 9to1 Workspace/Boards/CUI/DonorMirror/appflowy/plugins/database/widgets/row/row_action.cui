@@ -1,0 +1,27 @@
+<Cui id="row-row-action" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-row-backend-service.delete-rows(view-id,-[row-id]);-flowy-overlay.pop(context);-}" command="() {
+          RowBackendService.deleteRows(viewId, [rowId]);
+          FlowyOverlay.pop(context);
+        }" />
+    <Action name="()-{-row-backend-service.duplicate-row(view-id,-row-id);-flowy-overlay.pop(context);-}" command="() {
+          RowBackendService.duplicateRow(viewId, rowId);
+          FlowyOverlay.pop(context);
+        }" />
+  </Actions>
+  <Page id="row-row-action-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-row-backend-service.delete-rows(view-id,-[row-id]);-flowy-overlay.pop(context);-}">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Button id="flowy-button-2" Type="Action" action="()-{-row-backend-service.duplicate-row(view-id,-row-id);-flowy-overlay.pop(context);-}">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

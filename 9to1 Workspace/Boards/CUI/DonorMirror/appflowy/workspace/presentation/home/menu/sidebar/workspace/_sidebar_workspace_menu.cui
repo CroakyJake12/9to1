@@ -1,0 +1,112 @@
+<Cui id="workspace-sidebar-workspace-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-await-get-it&lt;auth-service&gt;().sign-out();-await-run-app-flowy();-}" command="() async {
+          await getIt&lt;AuthService&gt;().signOut();
+          await runAppFlowy();
+        }" />
+    <Action name="()-{-af-launch-url-string(-'https://docs.appflowy.io/docs/guides/import-from-notion',-);-}" command="() {
+              afLaunchUrlString(
+                'https://docs.appflowy.io/docs/guides/import-from-notion',
+              );
+            }" />
+    <Action name="()-{-show-create-workspace-dialog(context);-popover-container.of(context).close-all();-}" command="() {
+          _showCreateWorkspaceDialog(context);
+          PopoverContainer.of(context).closeAll();
+        }" />
+    <Action name="()-{-show-import-notino-dialog(context);-}" command="() {
+          _showImportNotinoDialog(context);
+        }" />
+    <Action name="open-workspace" command="_openWorkspace" />
+  </Actions>
+  <Page id="workspace-sidebar-workspace-menu-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="10.0 6.0 10.0">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+      <Container id="padding-2" Type="Vertical Stack" padding="8.0 6.0">
+        <Container id="divider" Type="Vertical Stack" height="1.0" />
+      </Container>
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack" padding="6.0">
+          <Container id="column-2" Type="Vertical Stack">
+            <Container id="vspace" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="padding-3" Type="Vertical Stack" padding="6.0" />
+      <Container id="padding-4" Type="Vertical Stack" padding="6.0 6.0 6.0" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" height="44">
+          <Container id="mouse-region" Type="Vertical Stack">
+            <Container id="stack" Type="Absolute">
+              <Container id="positioned" Type="Vertical Stack" />
+              <Container id="positioned-2" Type="Vertical Stack">
+                <Container id="align" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="padding-5" Type="Vertical Stack" padding="8.0" />
+      </Container>
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="padding-6" Type="Vertical Stack" padding="5.0">
+        <Image id="flowy-svg" />
+      </Container>
+      <Container id="hspace-4" Type="Horizontal Stack" />
+    </Container>
+    <Button id="flowy-button" Type="Action" action="open-workspace">
+      <Container id="hspace-5" Type="Horizontal Stack" />
+      <Container id="row-3" Type="Horizontal Stack">
+        <Container id="flexible-2" Type="Vertical Stack">
+          <Container id="column-3" Type="Vertical Stack" />
+        </Container>
+        <Container id="hspace-6" Type="Horizontal Stack" />
+      </Container>
+    </Button>
+    <Container id="sized-box-2" Type="Vertical Stack" height="40">
+      <Button id="flowy-button-2" Type="Action" action="()-{-show-create-workspace-dialog(context);-popover-container.of(context).close-all();-}" padding="4.0">
+        <Container id="row-4" Type="Horizontal Stack">
+          <Container id="hspace-7" Type="Horizontal Stack" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="36.0" height="36.0" padding="7.0" CornerRadius="12" background="#01717171">
+      <Image id="flowy-svg-2" />
+    </Container>
+    <Container id="sized-box-3" Type="Vertical Stack" height="40">
+      <Button id="flowy-button-3" Type="Action" action="()-{-show-import-notino-dialog(context);-}" padding="4.0">
+        <Container id="row-5" Type="Horizontal Stack">
+          <Container id="hspace-8" Type="Horizontal Stack" />
+        </Container>
+        <Container id="flowy-tooltip-2" Type="Floating">
+          <Button id="flowy-icon-button" Type="Action" action="()-{-af-launch-url-string(-'https://docs.appflowy.io/docs/guides/import-from-notion',-);-}">
+            <Image id="flowy-svg-3" />
+          </Button>
+        </Container>
+      </Button>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" width="36.0" height="36.0" padding="7.0" CornerRadius="12" background="#01717171">
+      <Image id="flowy-svg-4" />
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Button id="flowy-button-4" Type="Action" action="()-async-{-await-get-it&lt;auth-service&gt;().sign-out();-await-run-app-flowy();-}" padding="6.0 7.0">
+        <Image id="flowy-svg-5" />
+      </Button>
+      <Button id="flowy-button-5" Type="Action">
+        <Image id="flowy-svg-6" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

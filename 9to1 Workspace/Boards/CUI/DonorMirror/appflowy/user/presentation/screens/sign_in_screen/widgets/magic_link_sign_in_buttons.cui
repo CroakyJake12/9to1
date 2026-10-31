@@ -1,0 +1,22 @@
+<Cui id="widgets-magic-link-sign-in-buttons" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+    <Action name="send-magic-link" command="_sendMagicLink" />
+  </Actions>
+  <Page id="widgets-magic-link-sign-in-buttons-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Input id="flowy-text-field" Type="Text" />
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Button id="elevated-button" Type="Action" action="on-tap">
+        <Text id="flowy-text" />
+      </Button>
+      <Container id="sized-box-2" Type="Vertical Stack" height="48">
+        <Button id="flowy-button" Type="Action" action="on-tap" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

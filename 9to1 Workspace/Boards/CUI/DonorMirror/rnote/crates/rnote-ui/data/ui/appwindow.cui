@@ -1,5 +1,0 @@
-<Cui id="ui-appwindow" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack" width="530" height="460">
-    <Container id="container-2" Type="Vertical Stack" />
-  </Container>
-</Cui>

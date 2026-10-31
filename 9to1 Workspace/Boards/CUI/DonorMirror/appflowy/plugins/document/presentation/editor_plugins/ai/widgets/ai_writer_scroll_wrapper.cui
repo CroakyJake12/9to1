@@ -1,0 +1,5 @@
+<Cui id="widgets-ai-writer-scroll-wrapper" product="9-1" version="1">
+  <Page id="widgets-ai-writer-scroll-wrapper-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

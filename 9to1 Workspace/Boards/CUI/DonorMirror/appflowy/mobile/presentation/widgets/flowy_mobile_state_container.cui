@@ -1,0 +1,33 @@
+<Cui id="widgets-flowy-mobile-state-container" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-af-launch-url-string" command="() =&gt;
+                            afLaunchUrlString" />
+    <Action name="()-{-final-string?-version-=-snapshot.data?.version;-final-string-os-=-platform.operating-system;-af-launch-url-string(-'https://github.com/app-flowy-io/app-flowy/issues/new?assignees=&amp;labels=&amp;projects=&amp;template=bug-report.yaml&amp;title=[bug]%20-mobile:%20&amp;version=$version&amp;os=$os&amp;context=error%20log:%20$error-msg',-);-}" command="() {
+                          final String? version = snapshot.data?.version;
+                          final String os = Platform.operatingSystem;
+                          afLaunchUrlString(
+                            'https://github.com/AppFlowy-IO/AppFlowy/issues/new?assignees=&amp;labels=&amp;projects=&amp;template=bug_report.yaml&amp;title=[Bug]%20Mobile:%20&amp;version=$version&amp;os=$os&amp;context=Error%20log:%20$errorMsg',
+                          );
+                        }" />
+  </Actions>
+  <Page id="widgets-flowy-mobile-state-container-root">
+    <Container id="padding" Type="Vertical Stack" padding="8 32">
+      <Container id="column" Type="Vertical Stack">
+        <Text id="text" text-alignment="Center" />
+        <Container id="sized-box" Type="Vertical Stack" height="8" />
+        <Text id="text-2" text-alignment="Center" />
+        <Container id="sized-box-2" Type="Vertical Stack" height="4" />
+        <Text id="text-3" text-alignment="Center" />
+        <Container id="sized-box-3" Type="Vertical Stack" height="8" />
+        <Container id="column-2" Type="Vertical Stack">
+          <Button id="outlined-button" Type="Action" action="()-{-final-string?-version-=-snapshot.data?.version;-final-string-os-=-platform.operating-system;-af-launch-url-string(-'https://github.com/app-flowy-io/app-flowy/issues/new?assignees=&amp;labels=&amp;projects=&amp;template=bug-report.yaml&amp;title=[bug]%20-mobile:%20&amp;version=$version&amp;os=$os&amp;context=error%20log:%20$error-msg',-);-}">
+            <Text id="text-4" />
+          </Button>
+          <Button id="outlined-button-2" Type="Action" action="()-=&gt;-af-launch-url-string">
+            <Text id="text-5" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

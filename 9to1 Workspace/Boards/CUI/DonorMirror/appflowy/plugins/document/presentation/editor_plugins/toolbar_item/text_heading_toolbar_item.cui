@@ -1,0 +1,23 @@
+<Cui id="toolbar-item-text-heading-toolbar-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-set-state(()-{-is-selected-=-true;-});-show-popover();-}" command="() {
+        setState(() {
+          isSelected = true;
+        });
+        showPopover();
+      }" />
+  </Actions>
+  <Page id="toolbar-item-text-heading-toolbar-item-root">
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Button id="flowy-icon-button" Type="Action" action="()-{-set-state(()-{-is-selected-=-true;-});-show-popover();-}" width="48" height="32">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Button>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

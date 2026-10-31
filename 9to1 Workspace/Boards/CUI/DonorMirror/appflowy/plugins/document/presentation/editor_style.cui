@@ -1,0 +1,20 @@
+<Cui id="presentation-editor-style" product="9-1" version="1">
+  <Page id="presentation-editor-style-root">
+    <Text id="text-span" />
+    <Text id="text-span-2" />
+    <Text id="text-span-3" />
+    <Text id="text-span-4" />
+    <Text id="text-span-5" />
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Container id="padding" Type="Vertical Stack" padding="6" />
+    <Text id="text-span-6" />
+    <Text id="text-span-7" />
+    <Text id="text-span-8">
+      <Text id="text-span-9" />
+      <Text id="text-span-10" />
+    </Text>
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

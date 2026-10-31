@@ -1,0 +1,75 @@
+<Cui id="prompt-input-select-sources-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;view-selector-cubit&gt;()-.toggle-is-expanded" command="() =&gt; context
+            .read&lt;ViewSelectorCubit&gt;()
+            .toggleIsExpanded" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="prompt-input-select-sources-menu-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="app-flowy-popover" Type="Context Menu" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="6 6 4 6">
+          <Container id="row" Type="Horizontal Stack">
+            <Image id="flowy-svg" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="value-listenable-builder" Type="Vertical Stack">
+              <Text id="flowy-text" />
+            </Container>
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Image id="flowy-svg-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="padding-2" Type="Vertical Stack" padding="8 12 8 8" />
+        <Container id="flexible" Type="Vertical Stack">
+          <Container id="list-view" Type="Vertical Stack" padding="8 4 8 12" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="mouse-region" Type="Vertical Stack" />
+    </Container>
+    <Container id="value-listenable-builder-2" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="gesture-detector-2" Type="Vertical Stack">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="hspace-3" Type="Horizontal Stack" />
+        <Container id="hspace-4" Type="Horizontal Stack" />
+        <Container id="hspace-5" Type="Horizontal Stack" />
+        <Container id="hspace-6" Type="Horizontal Stack" />
+        <Container id="hspace-7" Type="Horizontal Stack" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Text id="text" />
+        </Container>
+        <Container id="hspace-8" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button" Type="Action" width="24">
+          <Image id="flowy-svg-3" />
+        </Button>
+        <Container id="hspace-9" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button-2" Type="Action" width="24">
+          <Image id="flowy-svg-4" />
+        </Button>
+        <Container id="hspace-10" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="gesture-detector-3" Type="Vertical Stack">
+      <Container id="value-listenable-builder-3" Type="Vertical Stack">
+        <Image id="flowy-svg-5" />
+      </Container>
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="6.0">
+      <Container id="container" Type="Vertical Stack" width="4" height="4" CornerRadius="2" />
+    </Container>
+    <Container id="value-listenable-builder-4" Type="Vertical Stack">
+      <Image id="flowy-svg-6" />
+    </Container>
+  </Page>
+</Cui>

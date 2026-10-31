@@ -1,0 +1,5 @@
+<Cui id="widgets-user-avatar" product="9-1" version="1">
+  <Page id="widgets-user-avatar-root">
+    <Container id="decorated-box" Type="Vertical Stack" />
+  </Page>
+</Cui>

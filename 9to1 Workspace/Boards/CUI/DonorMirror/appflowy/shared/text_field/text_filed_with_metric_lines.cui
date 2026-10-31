@@ -1,0 +1,8 @@
+<Cui id="text-field-text-filed-with-metric-lines" product="9-1" version="1">
+  <Actions>
+    <Action name="update-displayed-line-count" command="updateDisplayedLineCount" />
+  </Actions>
+  <Page id="text-field-text-filed-with-metric-lines-root">
+    <Input id="text-field" Type="Text" />
+  </Page>
+</Cui>

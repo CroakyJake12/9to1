@@ -1,0 +1,18 @@
+<Cui id="header-cover-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="header-cover-editor-root">
+    <Container id="container" Type="Vertical Stack" height="30">
+      <Container id="single-child-scroll-view" Type="Vertical Stack" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="10.0">
+      <Container id="ink-well" Type="Vertical Stack">
+        <Container id="decorated-box" Type="Vertical Stack">
+          <Container id="container-2" Type="Vertical Stack" padding="1" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

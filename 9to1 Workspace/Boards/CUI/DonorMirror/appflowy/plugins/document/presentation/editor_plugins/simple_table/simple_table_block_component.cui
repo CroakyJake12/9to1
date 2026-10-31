@@ -1,0 +1,13 @@
+<Cui id="simple-table-simple-table-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="(event)-=&gt;-simple-table-context.is-hovering-on-table-block.value-=-true" command="(event) =&gt;
+              simpleTableContext.isHoveringOnTableBlock.value = true" />
+    <Action name="(event)-{-simple-table-context.is-hovering-on-table-block.value-=-false;-}" command="(event) {
+            simpleTableContext.isHoveringOnTableBlock.value = false;
+          }" />
+  </Actions>
+  <Page id="simple-table-simple-table-block-component-root">
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="mouse-region" Type="Vertical Stack" />
+  </Page>
+</Cui>

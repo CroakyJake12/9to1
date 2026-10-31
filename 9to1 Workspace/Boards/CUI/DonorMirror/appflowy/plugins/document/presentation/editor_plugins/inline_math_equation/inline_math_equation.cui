@@ -1,0 +1,23 @@
+<Cui id="inline-math-equation-inline-math-equation" product="9-1" version="1">
+  <Actions>
+    <Action name="widget.on-submit" command="widget.onSubmit" />
+  </Actions>
+  <Page id="inline-math-equation-inline-math-equation-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="padding" Type="Vertical Stack" padding="2.0">
+        <Container id="mouse-region" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Text id="flowy-text" />
+    <Container id="sized-box" Type="Vertical Stack" width="240">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="expanded" Type="Vertical Stack" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Button id="flowy-button" Type="Action" action="widget.on-submit">
+          <Text id="flowy-text-2" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack" />
+  </Page>
+</Cui>

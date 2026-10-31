@@ -1,0 +1,5 @@
+<Cui id="widgets-m-shared-page-list" product="9-1" version="1">
+  <Page id="widgets-m-shared-page-list-root">
+    <Container id="column" Type="Vertical Stack" />
+  </Page>
+</Cui>

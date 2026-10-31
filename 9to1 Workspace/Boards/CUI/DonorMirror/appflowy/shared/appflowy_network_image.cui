@@ -1,0 +1,7 @@
+<Cui id="shared-appflowy-network-image" product="9-1" version="1">
+  <Page id="shared-appflowy-network-image-root">
+    <Container id="center" Type="Vertical Stack" />
+    <Container id="shrink" Type="Vertical Stack" />
+    <Text id="flowy-text" />
+  </Page>
+</Cui>

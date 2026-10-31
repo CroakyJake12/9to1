@@ -1,0 +1,38 @@
+<Cui id="tabs-flowy-tab" product="9-1" version="1">
+  <Actions>
+    <Action name="close-other-tabs" command="_closeOtherTabs" />
+    <Action name="close-tab" command="_closeTab" />
+    <Action name="toggle-pin" command="_togglePin" />
+  </Actions>
+  <Page id="tabs-flowy-tab-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="app-flowy-popover" Type="Context Menu">
+        <Container id="consumer" Type="Vertical Stack">
+          <Container id="padding" Type="Vertical Stack" padding="16.0">
+            <Container id="gesture-detector" Type="Vertical Stack">
+              <Container id="container" Type="Vertical Stack">
+                <Container id="row" Type="Horizontal Stack">
+                  <Container id="flexible" Type="Vertical Stack" />
+                  <Container id="visibility" Type="Vertical Stack">
+                    <Container id="sized-box-2" Type="Vertical Stack" width="26" height="26">
+                      <Button id="flowy-icon-button" Type="Action" action="close-tab">
+                        <Image id="flowy-svg" />
+                      </Button>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Container id="vspace" Type="Vertical Stack" />
+    <Button id="flowy-button" Type="Action" action="close-tab" />
+    <Button id="flowy-button-2" Type="Action" action="close-other-tabs" />
+    <Container id="divider" Type="Vertical Stack" height="0.5" />
+    <Button id="flowy-button-3" Type="Action" action="toggle-pin" />
+    <Container id="flowy-tooltip-2" Type="Floating" />
+  </Page>
+</Cui>

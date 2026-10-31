@@ -1,0 +1,96 @@
+<Cui id="ai-prompt-modal-ai-prompt-visible-list" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;ai-prompt-selector-cubit&gt;()-.filter-text-controller-.clear" command="() =&gt; context
+                        .read&lt;AiPromptSelectorCubit&gt;()
+                        .filterTextController
+                        .clear" />
+    <Action name="()-{-cubit.select-prompt(widget.prompt.id);-}" command="() {
+              cubit.selectPrompt(widget.prompt.id);
+            }" />
+    <Action name="(-)-{-set-state(()-{-is-hovering-=-false;-timer?.cancel();-});-}" command="(_) {
+            setState(() {
+              isHovering = false;
+              timer?.cancel();
+            });
+          }" />
+    <Action name="(-)-{-set-state(()-{-is-hovering-=-true;-timer-=-timer(const-duration(milliseconds:-300),-()-{-if-(mounted)-{-cubit.select-prompt(widget.prompt.id);-}-});-});-}" command="(_) {
+            setState(() {
+              isHovering = true;
+              timer = Timer(const Duration(milliseconds: 300), () {
+                if (mounted) {
+                  cubit.selectPrompt(widget.prompt.id);
+                }
+              });
+            });
+          }" />
+  </Actions>
+  <Page id="ai-prompt-modal-ai-prompt-visible-list-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack">
+            <Text id="text-span">
+              <Text id="text-span-2" />
+              <Text id="text-span-3" />
+            </Text>
+          </Container>
+          <Container id="row-2" Type="Horizontal Stack">
+            <Container id="flexible" Type="Vertical Stack">
+              <Text id="text" max-lines="1" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="shrink-2" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" />
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Container id="bloc-builder" Type="Vertical Stack">
+          <Container id="shrink-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="mouse-region" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack">
+        <Image id="flowy-svg-2" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Text id="text-2" max-lines="1" />
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="padding-3" Type="Vertical Stack" padding="0 0 1 0" />
+      <Container id="shrink-4" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding-4" Type="Vertical Stack" padding="2.5">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="mouse-region-2" Type="Vertical Stack">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="stack" Type="Absolute">
+          <Container id="container-2" Type="Vertical Stack" background="#00000000">
+            <Container id="column-3" Type="Vertical Stack">
+              <Container id="row-3" Type="Horizontal Stack">
+                <Container id="expanded-3" Type="Vertical Stack">
+                  <Text id="text-3" max-lines="1" />
+                </Container>
+              </Container>
+              <Text id="text-4" max-lines="2" />
+            </Container>
+          </Container>
+          <Container id="positioned" Type="Vertical Stack">
+            <Container id="decorated-box" Type="Vertical Stack">
+              <Text id="text-5" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

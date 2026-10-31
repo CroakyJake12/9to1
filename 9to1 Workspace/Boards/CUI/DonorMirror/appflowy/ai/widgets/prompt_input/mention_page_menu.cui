@@ -1,0 +1,49 @@
+<Cui id="prompt-input-mention-page-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="prompt-input-mention-page-menu-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Container id="container" Type="Vertical Stack" CornerRadius="6.0" background="#0A1F2329" />
+      </Container>
+    </Container>
+    <Text id="text-span" />
+    <Container id="padding" Type="Vertical Stack" padding="8.0">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" padding="8.0">
+      <Container id="sized-box-2" Type="Vertical Stack">
+        <Container id="center-2" Type="Vertical Stack">
+          <Text id="flowy-text" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="container-2" Type="Vertical Stack" padding="4.0">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Container id="expanded" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-3" Type="Vertical Stack" width="16.0" />
+    <Image id="flowy-svg" />
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder-2" Type="Vertical Stack">
+        <Text id="flowy-text-2" />
+        <Container id="column" Type="Vertical Stack">
+          <Text id="flowy-text-3" />
+          <Text id="flowy-text-4" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

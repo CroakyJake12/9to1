@@ -1,0 +1,9 @@
+<Cui id="mobile-grid-mobile-grid-checkbox-cell" product="9-1" version="1">
+  <Page id="mobile-grid-mobile-grid-checkbox-cell-root">
+    <Container id="align" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="14 12">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

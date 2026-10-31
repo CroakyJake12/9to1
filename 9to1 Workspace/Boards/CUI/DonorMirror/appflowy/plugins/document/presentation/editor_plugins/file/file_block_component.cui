@@ -1,0 +1,56 @@
+<Cui id="file-file-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="(-)-{-set-state(()-=&gt;-is-hovering-=-false);-if-(!always-show-menu)-{-show-actions-notifier.value-=-false;-}-}" command="(_) {
+        setState(() =&gt; isHovering = false);
+        if (!alwaysShowMenu) {
+          showActionsNotifier.value = false;
+        }
+      }" />
+    <Action name="(-)-{-set-state(()-=&gt;-is-hovering-=-true);-show-actions-notifier.value-=-true;-}" command="(_) {
+        setState(() =&gt; isHovering = true);
+        showActionsNotifier.value = true;
+      }" />
+    <Action name="menu-controller.show" command="menuController.show" />
+    <Action name="url-!=-null-&amp;&amp;-url.is-not-empty-?-()-async-=&gt;-open-file(context,-url-type,-url)-:-open-menu" command="url != null &amp;&amp; url.isNotEmpty
+            ? () async =&gt; _openFile(context, urlType, url)
+            : _openMenu" />
+  </Actions>
+  <Page id="file-file-block-component-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="decorated-box" Type="Vertical Stack" CornerRadius="4">
+          <Container id="sized-box" Type="Vertical Stack" height="52">
+            <Container id="row" Type="Horizontal Stack">
+              <Container id="hspace" Type="Horizontal Stack" />
+              <Image id="flowy-svg" />
+              <Container id="hspace-2" Type="Horizontal Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="padding-2" Type="Vertical Stack" />
+    <Container id="expanded" Type="Vertical Stack">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="hspace-3" Type="Horizontal Stack" />
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="app-flowy-popover-2" Type="Context Menu" />
+      </Container>
+    </Container>
+    <Container id="hspace-4" Type="Horizontal Stack" />
+    <Container id="hspace-5" Type="Horizontal Stack" />
+    <Container id="flexible" Type="Vertical Stack">
+      <Text id="flowy-text-2" />
+    </Container>
+    <Image id="flowy-svg-2" />
+    <Container id="container" Type="Vertical Stack" padding="12.0" />
+    <Container id="padding-3" Type="Vertical Stack" padding="4">
+      <Image id="flowy-svg-3" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,7 +1,0 @@
-<Cui id="favicons-blank" product="9-1" version="1">
-  <Page id="favicons-blank-root">
-    <Container id="html" Type="Vertical Stack">
-      <Container id="head" Type="Vertical Stack" />
-    </Container>
-  </Page>
-</Cui>

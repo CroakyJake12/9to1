@@ -1,0 +1,14 @@
+<Cui id="shared-flowy-gradient-button" product="9-1" version="1">
+  <Actions>
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="shared-flowy-gradient-button-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="animated-container" Type="Vertical Stack" CornerRadius="16" background="#FF44326B">
+        <Container id="padding" Type="Vertical Stack" padding="20 8">
+          <Text id="flowy-text" text-alignment="Center" max-lines="2" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

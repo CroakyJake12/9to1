@@ -1,0 +1,79 @@
+<Cui id="presentation-calendar-event-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context.read&lt;calendar-bloc&gt;().add(-calendar-event.duplicate-event(-row-controller.view-id,-row-controller.row-id,-),-);-popover-container.of(context).close();-}" command="() {
+                context.read&lt;CalendarBloc&gt;().add(
+                      CalendarEvent.duplicateEvent(
+                        rowController.viewId,
+                        rowController.rowId,
+                      ),
+                    );
+                PopoverContainer.of(context).close();
+              }" />
+    <Action name="()-{-popover-container.of(context).close();-on-expand.call();-}" command="() {
+              PopoverContainer.of(context).close();
+              onExpand.call();
+            }" />
+    <Action name="()-{-show-confirm-deletion-dialog(-context:-context,-name:-locale-keys.grid-row-label.tr(),-description:-locale-keys.grid-row-delete-row-prompt.tr(),-on-confirm:-()-{-context.read&lt;calendar-bloc&gt;().add(-calendar-event.delete-event(-row-controller.view-id,-row-controller.row-id,-),-);-popover-container.of(context).close();-},-);-}" command="() {
+              showConfirmDeletionDialog(
+                context: context,
+                name: LocaleKeys.grid_row_label.tr(),
+                description: LocaleKeys.grid_row_deleteRowPrompt.tr(),
+                onConfirm: () {
+                  context.read&lt;CalendarBloc&gt;().add(
+                        CalendarEvent.deleteEvent(
+                          rowController.viewId,
+                          rowController.rowId,
+                        ),
+                      );
+                  PopoverContainer.of(context).close();
+                },
+              );
+            }" />
+    <Action name="cell.request-focus.notify" command="cell.requestFocus.notify" />
+  </Actions>
+  <Page id="presentation-calendar-event-editor-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="12.0 8.0 12.0 0">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="flowy-tooltip" Type="Floating">
+          <Button id="flowy-icon-button" Type="Action" action="()-{-context.read&lt;calendar-bloc&gt;().add(-calendar-event.duplicate-event(-row-controller.view-id,-row-controller.row-id,-),-);-popover-container.of(context).close();-}" width="20">
+            <Image id="flowy-svg" />
+          </Button>
+        </Container>
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button-2" Type="Action" action="()-{-show-confirm-deletion-dialog(-context:-context,-name:-locale-keys.grid-row-label.tr(),-description:-locale-keys.grid-row-delete-row-prompt.tr(),-on-confirm:-()-{-context.read&lt;calendar-bloc&gt;().add(-calendar-event.delete-event(-row-controller.view-id,-row-controller.row-id,-),-);-popover-container.of(context).close();-},-);-}" width="20">
+          <Image id="flowy-svg-2" />
+        </Button>
+        <Container id="hspace-2" Type="Horizontal Stack" />
+        <Button id="flowy-icon-button-3" Type="Action" action="()-{-popover-container.of(context).close();-on-expand.call();-}" width="20">
+          <Image id="flowy-svg-3" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="padding-2" Type="Vertical Stack" padding="16.0 12.0 16.0 8.0" />
+      <Container id="list-view" Type="Vertical Stack" padding="16.0" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" padding="16 4">
+      <Container id="row-2" Type="Horizontal Stack">
+        <Container id="sized-box" Type="Vertical Stack" width="88" height="28">
+          <Container id="padding-3" Type="Vertical Stack" padding="5 6">
+            <Container id="row-3" Type="Horizontal Stack">
+              <Container id="hspace-3" Type="Horizontal Stack" />
+              <Container id="expanded" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="hspace-4" Type="Horizontal Stack" />
+        <Container id="expanded-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Input id="flowy-text-field" Type="Text" />
+  </Page>
+</Cui>

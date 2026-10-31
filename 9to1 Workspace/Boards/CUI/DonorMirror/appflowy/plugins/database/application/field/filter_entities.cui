@@ -1,0 +1,7 @@
+<Cui id="field-filter-entities" product="9-1" version="1">
+  <Page id="field-filter-entities-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Text id="flowy-text" />
+  </Page>
+</Cui>

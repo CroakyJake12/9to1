@@ -1,0 +1,19 @@
+<Cui id="space-space-more-popup" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-editing(true);-popover.show();-}" command="() {
+            onEditing(true);
+            popover.show();
+          }" />
+  </Actions>
+  <Page id="space-space-more-popup-root">
+    <Button id="flowy-icon-button" Type="Action" action="()-{-on-editing(true);-popover.show();-}" width="24">
+      <Image id="flowy-svg" />
+    </Button>
+    <Container id="app-flowy-popover" Type="Context Menu" padding="0" />
+    <Container id="padding" Type="Vertical Stack" padding="8.0" />
+    <Container id="container" Type="Vertical Stack" height="34" padding="2.0">
+      <Image id="flowy-svg-2" />
+    </Container>
+    <Container id="flowy-tooltip" Type="Floating" />
+  </Page>
+</Cui>

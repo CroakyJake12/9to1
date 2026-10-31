@@ -1,0 +1,9 @@
+<Cui id="dialog-styled-dialogs" product="9-1" version="1">
+  <Page id="dialog-styled-dialogs-root">
+    <Container id="container" Type="Vertical Stack" />
+    <Container id="intrinsic-height" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" padding="2">
+      <Container id="single-child-scroll-view" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

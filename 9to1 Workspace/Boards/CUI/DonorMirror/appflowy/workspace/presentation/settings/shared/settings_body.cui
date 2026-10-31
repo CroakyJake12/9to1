@@ -1,0 +1,11 @@
+<Cui id="shared-settings-body" product="9-1" version="1">
+  <Page id="shared-settings-body-root">
+    <Container id="single-child-scroll-view" Type="Vertical Stack" padding="24">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="flexible" Type="Vertical Stack">
+          <Container id="shrink" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

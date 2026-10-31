@@ -1,0 +1,17 @@
+<Cui id="style-widget-icon-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="style-widget-icon-button-root">
+    <Button id="flowy-icon-button" Type="Action" />
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack">
+      <Container id="flowy-tooltip" Type="Floating" />
+    </Container>
+    <Button id="flowy-icon-button-2" Type="Action" action="on-pressed" width="16">
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

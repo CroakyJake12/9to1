@@ -1,17 +1,17 @@
 {
-  "translated": 11539,
-  "dropped_nodes": 1621,
-  "gap_count": 5083,
+  "translated": 11468,
+  "dropped_nodes": 1601,
+  "gap_count": 5080,
   "gap_constructs": {
     "toolbar with overflow": 2040,
     "notebook bar (ribbon) group": 1155,
     "optional section": 598,
     "separator": 402,
     "toolbar overflow": 135,
-    "button row": 133,
+    "button row": 132,
     "menu button": 132,
-    "scroller with explicit bars": 103,
-    "window and dialog chrome": 100,
+    "scroller with explicit bars": 102,
+    "window and dialog chrome": 99,
     "radio menu item": 95,
     "item collection (list/tree/table)": 69,
     "custom drawing surface": 35,
@@ -35320,27 +35320,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkDialog",
-      "construct": "window and dialog chrome",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/testmailsettings.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkButtonBox",
-      "construct": "button row",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/testmailsettings.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkScrolledWindow",
-      "construct": "scroller with explicit bars",
-      "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/testmailsettings.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "GtkDrawingArea",
       "construct": "custom drawing surface",
       "file": "9to1 Workspace/Write/Source/LibreOffice/sw/uiconfig/swriter/ui/textgridpage.ui",
@@ -35607,11 +35586,11 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     }
   ],
-  "pruned_stale": 0,
+  "pruned_stale": 3,
   "donor": "libreoffice-writer",
   "app": "Write",
   "source": "9to1 Workspace/Write/Source/LibreOffice/sw",
-  "translated_files": 232,
+  "translated_files": 229,
   "untranslated_files": 0,
   "unsupported_suffixes": {}
 }

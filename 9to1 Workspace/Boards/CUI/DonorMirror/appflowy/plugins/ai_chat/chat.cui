@@ -1,0 +1,11 @@
+<Cui id="ai-chat-chat" product="9-1" version="1">
+  <Page id="ai-chat-chat-root">
+    <Container id="sized-box" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

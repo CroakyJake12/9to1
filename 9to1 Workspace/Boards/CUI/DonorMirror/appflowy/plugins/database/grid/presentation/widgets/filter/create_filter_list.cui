@@ -1,0 +1,23 @@
+<Cui id="filter-create-filter-list" product="9-1" version="1">
+  <Actions>
+    <Action name="(text)-{-context-.read&lt;simple-text-filter-bloc&lt;field-info&gt;&gt;()-.add(simple-text-filter-event.update-filter(text));-}" command="(text) {
+          context
+              .read&lt;SimpleTextFilterBloc&lt;FieldInfo&gt;&gt;()
+              .add(SimpleTextFilterEvent.updateFilter(text));
+        }" />
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="filter-create-filter-list-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="custom-scroll-view" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="4">
+      <Input id="flowy-text-field" Type="Text" />
+    </Container>
+    <Button id="flowy-button" Type="Action" action="on-tap">
+      <Text id="flowy-text" />
+    </Button>
+  </Page>
+</Cui>

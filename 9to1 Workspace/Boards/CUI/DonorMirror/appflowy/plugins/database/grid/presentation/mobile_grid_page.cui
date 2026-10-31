@@ -1,0 +1,33 @@
+<Cui id="presentation-mobile-grid-page" product="9-1" version="1">
+  <Page id="presentation-mobile-grid-page-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+      <Container id="center-2" Type="Vertical Stack" />
+      <Container id="shrink-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="stack" Type="Absolute">
+      <Container id="column" Type="Vertical Stack" />
+      <Container id="positioned" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack" />
+    <Container id="bloc-builder-3" Type="Vertical Stack">
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="bloc-builder-4" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="shrink-4" Type="Vertical Stack" />
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="54">
+      <Button id="flowy-button" Type="Action" padding="20.0">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

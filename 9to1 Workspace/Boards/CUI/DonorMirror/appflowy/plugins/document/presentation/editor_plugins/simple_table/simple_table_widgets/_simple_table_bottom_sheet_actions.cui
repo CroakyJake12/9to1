@@ -1,0 +1,91 @@
+<Cui id="simple-table-widgets-simple-table-bottom-sheet-actions" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="simple-table-widgets-simple-table-bottom-sheet-actions-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="container" Type="Vertical Stack" padding="16" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="row-3" Type="Horizontal Stack">
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+    <Container id="expanded" Type="Vertical Stack">
+      <Container id="decorated-box" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="padding" Type="Vertical Stack" padding="1">
+            <Image id="flowy-svg-2" />
+          </Container>
+          <Text id="flowy-text" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" padding="16">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" width="36" height="24" padding="16" />
+    <Container id="padding-3" Type="Vertical Stack" padding="16">
+      <Image id="flowy-svg-3" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container-3" Type="Vertical Stack">
+        <Container id="row-4" Type="Horizontal Stack">
+          <Container id="hspace-3" Type="Horizontal Stack" />
+          <Container id="padding-4" Type="Vertical Stack" padding="1.0">
+            <Image id="flowy-svg-4" />
+          </Container>
+          <Container id="hspace-4" Type="Horizontal Stack" />
+          <Text id="flowy-text-2" />
+          <Container id="shrink" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" padding="16">
+      <Container id="row-5" Type="Horizontal Stack">
+        <Container id="hspace-5" Type="Horizontal Stack" />
+        <Container id="hspace-6" Type="Horizontal Stack" />
+        <Container id="hspace-7" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="expanded-2" Type="Vertical Stack">
+      <Image id="flowy-svg-5" />
+    </Container>
+    <Container id="expanded-3" Type="Vertical Stack">
+      <Container id="row-6" Type="Horizontal Stack">
+        <Image id="flowy-svg-6" />
+        <Container id="hspace-8" Type="Horizontal Stack" />
+        <Image id="flowy-svg-7" />
+      </Container>
+    </Container>
+    <Container id="expanded-4" Type="Vertical Stack">
+      <Container id="row-7" Type="Horizontal Stack">
+        <Container id="hspace-9" Type="Horizontal Stack" />
+        <Image id="flowy-svg-8" />
+      </Container>
+    </Container>
+    <Container id="container-5" Type="Vertical Stack" width="24" height="24" CornerRadius="100" background="#FFFFE6FD" />
+    <Container id="expanded-5" Type="Vertical Stack">
+      <Container id="row-8" Type="Horizontal Stack">
+        <Image id="flowy-svg-9" />
+        <Container id="hspace-10" Type="Horizontal Stack" />
+        <Image id="flowy-svg-10" />
+      </Container>
+    </Container>
+    <Container id="container-6" Type="Vertical Stack" padding="10" />
+    <Container id="padding-5" Type="Vertical Stack" padding="16">
+      <Container id="column-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="vspace-2" Type="Vertical Stack" />
+    <Container id="expanded-6" Type="Vertical Stack">
+      <Image id="flowy-svg-11" />
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Container id="row-9" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

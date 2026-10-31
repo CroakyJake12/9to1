@@ -1,0 +1,24 @@
+<Cui id="widgets-show-flowy-mobile-confirm-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-on-action-button-pressed?.call();-navigator.of(dialog-context).pop();-}" command="() {
+          onActionButtonPressed?.call();
+          
+          Navigator.of(dialogContext).pop();
+        }" />
+    <Action name="()-{-on-cancel-button-pressed?.call();-navigator.of(dialog-context).pop();-}" command="() {
+          onCancelButtonPressed?.call();
+          Navigator.of(dialogContext).pop();
+        }" />
+  </Actions>
+  <Page id="widgets-show-flowy-mobile-confirm-dialog-root">
+    <Button id="text-button" Type="Action" action="()-{-on-action-button-pressed?.call();-navigator.of(dialog-context).pop();-}">
+      <Text id="flowy-text" />
+    </Button>
+    <Button id="text-button-2" Type="Action" action="()-{-on-cancel-button-pressed?.call();-navigator.of(dialog-context).pop();-}">
+      <Text id="flowy-text-2" />
+    </Button>
+    <Container id="column" Type="Vertical Stack">
+      <Container id="divider" Type="Vertical Stack" height="1" background="#FF808080" />
+    </Container>
+  </Page>
+</Cui>

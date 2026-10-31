@@ -1,0 +1,11 @@
+<Cui id="simple-table-widgets-simple-table-reorder-button" product="9-1" version="1">
+  <Page id="simple-table-widgets-simple-table-reorder-button-root">
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" width="16.0" height="16.0" CornerRadius="8.0">
+          <Image id="flowy-svg" background="#FFFFFFFF" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

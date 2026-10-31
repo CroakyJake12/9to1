@@ -1,0 +1,7 @@
+<Cui id="mobile-toolbar-v3-add-attachment-item" product="9-1" version="1">
+  <Page id="mobile-toolbar-v3-add-attachment-item-root">
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

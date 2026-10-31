@@ -1,0 +1,9 @@
+<Cui id="email-email-section" product="9-1" version="1">
+  <Page id="email-email-section-root">
+    <Container id="column" Type="Vertical Stack">
+      <Text id="text" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Text id="text-2" />
+    </Container>
+  </Page>
+</Cui>

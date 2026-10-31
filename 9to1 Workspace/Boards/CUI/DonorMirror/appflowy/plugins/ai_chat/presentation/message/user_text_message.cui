@@ -1,0 +1,8 @@
+<Cui id="message-user-text-message" product="9-1" version="1">
+  <Page id="message-user-text-message-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+    <Text id="flowy-text" />
+  </Page>
+</Cui>

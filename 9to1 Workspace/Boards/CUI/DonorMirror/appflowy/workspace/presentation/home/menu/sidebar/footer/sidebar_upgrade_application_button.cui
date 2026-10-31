@@ -1,0 +1,27 @@
+<Cui id="footer-sidebar-upgrade-application-button" product="9-1" version="1">
+  <Actions>
+    <Action name="on-close-button-tap" command="onCloseButtonTap" />
+    <Action name="on-update-button-tap" command="onUpdateButtonTap" />
+  </Actions>
+  <Page id="footer-sidebar-upgrade-application-button-root">
+    <Container id="container" Type="Vertical Stack" padding="12" CornerRadius="16">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Image id="flowy-svg" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Button id="flowy-button" Type="Action" action="on-close-button-tap">
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+    <Text id="flowy-text" />
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container-2" Type="Vertical Stack" padding="10 6" CornerRadius="9" background="#FFA44AFD" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

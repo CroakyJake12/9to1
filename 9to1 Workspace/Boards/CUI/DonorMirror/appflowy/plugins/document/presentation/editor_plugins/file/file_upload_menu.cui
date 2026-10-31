@@ -1,0 +1,53 @@
+<Cui id="file-file-upload-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="set-state" command="setState" />
+    <Action name="submit" command="submit" />
+    <Action name="upload-file" command="_uploadFile" />
+  </Actions>
+  <Page id="file-file-upload-menu-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="tab-bar" Type="Horizontal Stack" />
+      <Container id="divider" Type="Vertical Stack" height="0" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="12.0 12.0 8.0 0" />
+    <Container id="padding-2" Type="Vertical Stack" padding="12">
+      <Container id="sized-box" Type="Vertical Stack" height="32">
+        <Button id="flowy-button" Type="Action" action="upload-file" padding="5">
+          <Text id="flowy-text" text-alignment="Center" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="16">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" height="172">
+            <Container id="center" Type="Vertical Stack">
+              <Container id="column-2" Type="Vertical Stack">
+                <Text id="flowy-text-2" />
+                <Text id="rich-text">
+                  <Text id="text-span">
+                    <Text id="text-span-2" />
+                    <Text id="text-span-3" />
+                  </Text>
+                </Text>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="16">
+      <Container id="column-3" Type="Vertical Stack">
+        <Input id="flowy-text-field" Type="Text" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Text id="flowy-text-3" text-alignment="Left" max-lines="3" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+        <Container id="sized-box-2" Type="Vertical Stack" height="32">
+          <Button id="flowy-button-2" Type="Action" action="submit" padding="5">
+            <Text id="flowy-text-4" text-alignment="Center" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

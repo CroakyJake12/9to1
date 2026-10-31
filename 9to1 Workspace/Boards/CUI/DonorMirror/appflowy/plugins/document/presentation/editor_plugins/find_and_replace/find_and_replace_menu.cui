@@ -1,0 +1,57 @@
+<Cui id="find-and-replace-find-and-replace-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="(-)-{-replace-selected-word();-future.delayed(-const-duration(milliseconds:-50),-()-=&gt;-widget.focus-node.request-focus(),-);-}" command="(_) {
+              _replaceSelectedWord();
+
+              Future.delayed(
+                const Duration(milliseconds: 50),
+                () =&gt; widget.focusNode.requestFocus(),
+              );
+            }" />
+    <Action name="(-)-{-widget.search-service.navigate-to-match();-future.delayed(-const-duration(milliseconds:-50),-()-=&gt;-widget.focus-node.request-focus(),-);-}" command="(_) {
+              widget.searchService.navigateToMatch();
+
+              
+              
+              
+              Future.delayed(
+                const Duration(milliseconds: 50),
+                () =&gt; widget.focusNode.requestFocus(),
+              );
+            }" />
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="find-and-replace-find-and-replace-menu-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="8.0" />
+      <Container id="padding-2" Type="Vertical Stack" padding="8.0" />
+    </Container>
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="sized-box" Type="Vertical Stack" width="200" height="30">
+        <Input id="text-field" Type="Text" />
+      </Container>
+      <Container id="container" Type="Vertical Stack" padding="8.0">
+        <Text id="flowy-text" />
+      </Container>
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="hspace-4" Type="Horizontal Stack" />
+      <Container id="hspace-5" Type="Horizontal Stack" />
+      <Container id="hspace-6" Type="Horizontal Stack" />
+      <Container id="hspace-7" Type="Horizontal Stack" />
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="hspace-8" Type="Horizontal Stack" />
+      <Container id="sized-box-2" Type="Vertical Stack" width="200" height="30">
+        <Input id="text-field-2" Type="Text" />
+      </Container>
+      <Image id="icon" source="find_replace_outlined" />
+      <Container id="hspace-9" Type="Horizontal Stack" />
+      <Image id="icon-2" source="change_circle_outlined" />
+    </Container>
+    <Button id="flowy-icon-button" Type="Action" action="on-pressed" width="24" height="24">
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

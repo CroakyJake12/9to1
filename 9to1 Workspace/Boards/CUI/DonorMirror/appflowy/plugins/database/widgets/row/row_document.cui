@@ -1,0 +1,19 @@
+<Cui id="row-row-document" product="9-1" version="1">
+  <Page id="row-row-document-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+      <Container id="center-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="bloc-provider-3" Type="Vertical Stack" />
+    <Container id="center-3" Type="Vertical Stack" />
+    <Container id="center-4" Type="Vertical Stack" />
+    <Container id="bloc-provider-4" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack">
+        <Container id="provider" Type="Vertical Stack">
+          <Container id="provider-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

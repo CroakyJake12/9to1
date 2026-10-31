@@ -1,0 +1,8 @@
+<Cui id="float-bubble-social-media-section" product="9-1" version="1">
+  <Page id="float-bubble-social-media-section-root">
+    <Container id="divider" Type="Vertical Stack" height="1" />
+    <Container id="padding" Type="Vertical Stack" padding="6">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

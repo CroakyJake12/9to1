@@ -1,0 +1,12 @@
+<Cui id="widgets-notifications-hub-empty" product="9-1" version="1">
+  <Page id="widgets-notifications-hub-empty-root">
+    <Container id="center" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="12 16">
+        <Container id="column" Type="Vertical Stack">
+          <Text id="flowy-text" />
+          <Container id="vspace" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

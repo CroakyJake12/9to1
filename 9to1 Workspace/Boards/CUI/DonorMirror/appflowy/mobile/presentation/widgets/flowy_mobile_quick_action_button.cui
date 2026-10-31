@@ -1,0 +1,17 @@
+<Cui id="widgets-flowy-mobile-quick-action-button" product="9-1" version="1">
+  <Actions>
+    <Action name="enable-?-on-tap-:-null" command="enable ? onTap : null" />
+  </Actions>
+  <Page id="widgets-flowy-mobile-quick-action-button-root">
+    <Container id="ink-well" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" height="52" padding="16">
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="flowy-svg" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="divider" Type="Vertical Stack" height="0.5" />
+  </Page>
+</Cui>

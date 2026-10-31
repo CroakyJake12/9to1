@@ -1,0 +1,13 @@
+<Cui id="widgets-setting-third-party-login" product="9-1" version="1">
+  <Page id="widgets-setting-third-party-login-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Input id="linear-progress-indicator" Type="Progress" />
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="shrink-2" Type="Vertical Stack" />
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

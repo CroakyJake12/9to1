@@ -1,0 +1,9 @@
+<Cui id="presentation-animated-chat-list-reversed" product="9-1" version="1">
+  <Page id="presentation-animated-chat-list-reversed-root">
+    <Container id="stack" Type="Absolute">
+      <Container id="custom-scroll-view" Type="Vertical Stack">
+        <Container id="sliver-padding" Type="Vertical Stack" padding="0" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

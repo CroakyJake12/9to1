@@ -1,0 +1,13 @@
+<Cui id="files-settings-export-file-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="files-settings-export-file-widget-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16 20" />
+    </Container>
+    <Button id="flowy-icon-button" Type="Action" action="on-tap">
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

@@ -1,0 +1,9 @@
+<Cui id="theme-upload-theme-upload-loading-widget" product="9-1" version="1">
+  <Page id="theme-upload-theme-upload-loading-widget-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Input id="circular-progress-indicator" Type="Progress" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

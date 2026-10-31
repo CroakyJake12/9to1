@@ -1,0 +1,9 @@
+<Cui id="simple-table-simple-table-row-block-component" product="9-1" version="1">
+  <Page id="simple-table-simple-table-row-block-component-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="intrinsic-height" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+    <Container id="flexible" Type="Vertical Stack" />
+  </Page>
+</Cui>

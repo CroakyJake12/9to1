@@ -1,0 +1,49 @@
+<Cui id="select-select-option-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context-.read&lt;edit-select-option-bloc&gt;()-.add(const-edit-select-option-event.delete());-}" command="() {
+          context
+              .read&lt;EditSelectOptionBloc&gt;()
+              .add(const EditSelectOptionEvent.delete());
+        }" />
+    <Action name="(new-name)-{-if-(name-!=-new-name)-{-context-.read&lt;edit-select-option-bloc&gt;()-.add(edit-select-option-event.update-name(new-name));-}-}" command="(newName) {
+        if (name != newName) {
+          context
+              .read&lt;EditSelectOptionBloc&gt;()
+              .add(EditSelectOptionEvent.updateName(newName));
+        }
+      }" />
+    <Action name="on-selected-color" command="onSelectedColor" />
+  </Actions>
+  <Page id="select-select-option-editor-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="sized-box" Type="Vertical Stack" width="180">
+          <Container id="padding" Type="Vertical Stack" padding="6.0" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-{-context-.read&lt;edit-select-option-bloc&gt;()-.add(const-edit-select-option-event.delete());-}">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Input id="flowy-text-field" Type="Text" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack">
+        <Container id="sized-box-3" Type="Vertical Stack">
+          <Text id="flowy-text-2" text-alignment="Left" />
+        </Container>
+      </Container>
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Image id="flowy-svg-2" />
+    <Container id="decorated-box" Type="Vertical Stack" />
+    <Container id="sized-box-4" Type="Vertical Stack">
+      <Button id="flowy-button-2" Type="Action" action="on-selected-color">
+        <Text id="flowy-text-3" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

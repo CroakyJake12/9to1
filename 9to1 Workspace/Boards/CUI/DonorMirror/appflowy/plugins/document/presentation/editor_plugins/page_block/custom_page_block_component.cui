@@ -1,0 +1,13 @@
+<Cui id="page-block-custom-page-block-component" product="9-1" version="1">
+  <Page id="page-block-custom-page-block-component-root">
+    <Container id="single-child-scroll-view" Type="Vertical Stack">
+      <Container id="builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="container" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" />
+    <Container id="center" Type="Vertical Stack" />
+  </Page>
+</Cui>

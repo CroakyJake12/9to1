@@ -1,0 +1,29 @@
+<Cui id="widgets-recent-views-list" product="9-1" version="1">
+  <Page id="widgets-recent-views-list-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="flexible" Type="Vertical Stack">
+      <Container id="align" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="0 6">
+          <Container id="single-child-scroll-view" Type="Vertical Stack">
+            <Container id="padding-2" Type="Vertical Stack" padding="0 6">
+              <Container id="column" Type="Vertical Stack">
+                <Container id="vspace" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack">
+      <Text id="text" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="center" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="align-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

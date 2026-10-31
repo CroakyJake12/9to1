@@ -1,0 +1,37 @@
+<Cui id="presentation-chat-message-selector-banner" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;chat-select-message-bloc&gt;().add(-const-chat-select-message-event.toggle-selecting-messages(),-)" command="() =&gt; context.read&lt;ChatSelectMessageBloc&gt;().add(
+                        const ChatSelectMessageEvent.toggleSelectingMessages(),
+                      )" />
+    <Action name="()-{-if-(selected-amount-&gt;-0)-{-unselect-all-messages(context);-}-else-{-select-all-messages(context);-}-}" command="() {
+                  if (selectedAmount &gt; 0) {
+                    _unselectAllMessages(context);
+                  } else {
+                    _selectAllMessages(context);
+                  }
+                }" />
+  </Actions>
+  <Page id="presentation-chat-message-selector-banner-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack" height="48" padding="16" background="#FF00BCF0">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Image id="flowy-svg" />
+          </Container>
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="mouse-region" Type="Vertical Stack">
+            <Container id="gesture-detector-2" Type="Vertical Stack">
+              <Image id="flowy-svg-2" background="#FFFFFFFF" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="bloc-builder-2" Type="Vertical Stack" />
+  </Page>
+</Cui>

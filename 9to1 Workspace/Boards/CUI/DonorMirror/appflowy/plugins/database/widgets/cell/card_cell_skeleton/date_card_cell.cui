@@ -1,0 +1,18 @@
+<Cui id="card-cell-skeleton-date-card-cell" product="9-1" version="1">
+  <Page id="card-cell-skeleton-date-card-cell-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="container" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="flexible" Type="Vertical Stack">
+              <Text id="text" />
+            </Container>
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

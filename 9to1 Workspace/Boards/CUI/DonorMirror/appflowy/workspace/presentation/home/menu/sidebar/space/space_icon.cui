@@ -1,0 +1,12 @@
+<Cui id="space-space-icon" product="9-1" version="1">
+  <Page id="space-space-icon-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Image id="flowy-svg" source="first" />
+    <Container id="container-2" Type="Vertical Stack">
+      <Container id="center-2" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

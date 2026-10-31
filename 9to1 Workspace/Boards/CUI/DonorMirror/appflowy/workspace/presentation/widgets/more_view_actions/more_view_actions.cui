@@ -1,0 +1,20 @@
+<Cui id="more-view-actions-more-view-actions" product="9-1" version="1">
+  <Page id="more-view-actions-more-view-actions-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="app-flowy-popover" Type="Context Menu" />
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="bloc-builder-3" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="padding" Type="Vertical Stack" padding="6">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

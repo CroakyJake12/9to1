@@ -1,0 +1,6 @@
+<Cui id="icon-emoji-picker-icon" product="9-1" version="1">
+  <Page id="icon-emoji-picker-icon-root">
+    <Image id="icon" />
+    <Image id="icon-2" />
+  </Page>
+</Cui>

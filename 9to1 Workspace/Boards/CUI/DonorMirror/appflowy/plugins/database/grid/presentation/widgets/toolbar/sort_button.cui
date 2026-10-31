@@ -1,0 +1,21 @@
+<Cui id="toolbar-sort-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(state.sorts.is-empty)-{-popover-controller.show();-}-else-{-widget.toggle-extension.toggle();-}-}" command="() {
+                if (state.sorts.isEmpty) {
+                  _popoverController.show();
+                } else {
+                  widget.toggleExtension.toggle();
+                }
+              }" />
+  </Actions>
+  <Page id="toolbar-sort-button-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Button id="flowy-icon-button" Type="Action" action="()-{-if-(state.sorts.is-empty)-{-popover-controller.show();-}-else-{-widget.toggle-extension.toggle();-}-}" width="24" height="24">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+  </Page>
+</Cui>

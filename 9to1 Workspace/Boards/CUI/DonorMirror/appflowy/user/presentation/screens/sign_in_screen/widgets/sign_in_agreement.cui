@@ -1,0 +1,12 @@
+<Cui id="widgets-sign-in-agreement" product="9-1" version="1">
+  <Page id="widgets-sign-in-agreement-root">
+    <Text id="rich-text" text-alignment="Center">
+      <Text id="text-span">
+        <Text id="text-span-2" />
+        <Text id="text-span-3" />
+        <Text id="text-span-4" />
+        <Text id="text-span-5" />
+      </Text>
+    </Text>
+  </Page>
+</Cui>

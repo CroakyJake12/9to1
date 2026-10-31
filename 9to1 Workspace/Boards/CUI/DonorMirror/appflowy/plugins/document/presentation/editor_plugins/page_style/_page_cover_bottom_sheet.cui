@@ -1,0 +1,34 @@
+<Cui id="page-style-page-cover-bottom-sheet" product="9-1" version="1">
+  <Page id="page-style-page-cover-bottom-sheet-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="16.0">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Text id="flowy-text" />
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="vspace-3" Type="Vertical Stack" />
+          <Text id="flowy-text-2" />
+          <Container id="vspace-4" Type="Vertical Stack" />
+          <Container id="vspace-5" Type="Vertical Stack" />
+          <Text id="flowy-text-3" />
+          <Container id="vspace-6" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="42.0">
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" height="42.0">
+      <Container id="hspace-2" Type="Horizontal Stack" />
+    </Container>
+    <Container id="container" Type="Vertical Stack" width="42" height="42" CornerRadius="21" />
+    <Container id="container-2" Type="Vertical Stack" width="42" height="42" CornerRadius="21" background="#00000000">
+      <Container id="container-3" Type="Vertical Stack" width="34" height="34" CornerRadius="17" />
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" width="42" height="42" CornerRadius="21" />
+    <Container id="container-5" Type="Vertical Stack" width="42" height="42" CornerRadius="21" background="#00000000">
+      <Container id="container-6" Type="Vertical Stack" width="34" height="34" CornerRadius="17" />
+    </Container>
+    <Container id="container-7" Type="Vertical Stack" padding="2.0" CornerRadius="6" background="#FF00BCF0" />
+  </Page>
+</Cui>

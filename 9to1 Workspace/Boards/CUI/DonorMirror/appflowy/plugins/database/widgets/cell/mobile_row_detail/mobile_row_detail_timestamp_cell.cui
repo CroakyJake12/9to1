@@ -1,0 +1,7 @@
+<Cui id="mobile-row-detail-mobile-row-detail-timestamp-cell" product="9-1" version="1">
+  <Page id="mobile-row-detail-mobile-row-detail-timestamp-cell-root">
+    <Container id="container" Type="Vertical Stack" padding="12 13">
+      <Text id="flowy-text" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,9 +1,0 @@
-<Cui id="protections-ui-cookie-setter-page" product="9-1" version="1">
-  <Page id="protections-ui-cookie-setter-page-root">
-    <Container id="html" Type="Vertical Stack">
-      <Container id="body" Type="Vertical Stack">
-        <Container id="script" Type="Vertical Stack" />
-      </Container>
-    </Container>
-  </Page>
-</Cui>

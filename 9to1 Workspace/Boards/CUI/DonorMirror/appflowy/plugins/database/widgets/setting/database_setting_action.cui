@@ -1,0 +1,13 @@
+<Cui id="setting-database-setting-action" product="9-1" version="1">
+  <Page id="setting-database-setting-action-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action">
+          <Text id="flowy-text" />
+          <Image id="flowy-svg" />
+          <Image id="flowy-svg-2" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

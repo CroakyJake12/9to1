@@ -1,0 +1,24 @@
+<Cui id="shared-flowy-error-page" product="9-1" version="1">
+  <Page id="shared-flowy-error-page-root">
+    <Container id="column" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="24.0" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Image id="flowy-svg-2" />
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Container id="vspace-5" Type="Vertical Stack" />
+      <Text id="rich-text">
+        <Text id="text-span">
+          <Text id="text-span-2" />
+          <Text id="text-span-3" text="Github" />
+          <Text id="text-span-4" />
+        </Text>
+      </Text>
+      <Container id="vspace-6" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

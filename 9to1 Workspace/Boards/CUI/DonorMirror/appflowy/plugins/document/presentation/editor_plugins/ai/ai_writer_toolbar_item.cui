@@ -1,0 +1,52 @@
+<Cui id="ai-ai-writer-toolbar-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(-is-aiwriter-enabled(editor-state))-{-keep-editor-focus-notifier.increase();-insert-ai-node(editor-state,-ai-writer-command.improve-writing);-}-else-{-show-toast-notification(-message:-locale-keys.document-plugins-appflowy-aiedit-disabled.tr(),-);-}-}" command="() {
+        if (_isAIWriterEnabled(editorState)) {
+          keepEditorFocusNotifier.increase();
+          _insertAiNode(editorState, AiWriterCommand.improveWriting);
+        } else {
+          showToastNotification(
+            message: LocaleKeys.document_plugins_appflowyAIEditDisabled.tr(),
+          );
+        }
+      }" />
+    <Action name="()-{-if-(-is-aiwriter-enabled(widget.editor-state))-{-keep-editor-focus-notifier.increase();-popover-controller.show();-set-state(()-{-is-selected-=-true;-});-}-else-{-show-toast-notification(-message:-locale-keys.document-plugins-appflowy-aiedit-disabled.tr(),-);-}-}" command="() {
+        if (_isAIWriterEnabled(widget.editorState)) {
+          keepEditorFocusNotifier.increase();
+          popoverController.show();
+          setState(() {
+            isSelected = true;
+          });
+        } else {
+          showToastNotification(
+            message: LocaleKeys.document_plugins_appflowyAIEditDisabled.tr(),
+          );
+        }
+      }" />
+    <Action name="()-{-popover-controller.close();-insert-ai-node(widget.editor-state,-command);-}" command="() {
+          popoverController.close();
+          _insertAiNode(widget.editorState, command);
+        }" />
+  </Actions>
+  <Page id="ai-ai-writer-toolbar-item-root">
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" height="36">
+      <Button id="flowy-button" Type="Action" action="()-{-popover-controller.close();-insert-ai-node(widget.editor-state,-command);-}">
+        <Image id="flowy-svg" />
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+    <Container id="divider" Type="Vertical Stack" height="1.0" />
+    <Button id="flowy-icon-button" Type="Action" action="()-{-if-(-is-aiwriter-enabled(widget.editor-state))-{-keep-editor-focus-notifier.increase();-popover-controller.show();-set-state(()-{-is-selected-=-true;-});-}-else-{-show-toast-notification(-message:-locale-keys.document-plugins-appflowy-aiedit-disabled.tr(),-);-}-}" width="48" height="32">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg-2" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Image id="flowy-svg-3" />
+      </Container>
+    </Button>
+    <Button id="flowy-icon-button-2" Type="Action" action="()-{-if-(-is-aiwriter-enabled(editor-state))-{-keep-editor-focus-notifier.increase();-insert-ai-node(editor-state,-ai-writer-command.improve-writing);-}-else-{-show-toast-notification(-message:-locale-keys.document-plugins-appflowy-aiedit-disabled.tr(),-);-}-}" width="36" height="32">
+      <Image id="flowy-svg-4" />
+    </Button>
+  </Page>
+</Cui>

@@ -1,0 +1,6 @@
+<Cui id="message-ai-markdown-text" product="9-1" version="1">
+  <Page id="message-ai-markdown-text-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="intrinsic-height" Type="Vertical Stack" />
+  </Page>
+</Cui>

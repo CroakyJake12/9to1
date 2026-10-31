@@ -1,0 +1,20 @@
+<Cui id="icon-emoji-picker-flowy-icon-emoji-picker" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="icon-emoji-picker-flowy-icon-emoji-picker-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" height="46" padding="4.0 12.0">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="expanded" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Container id="expanded-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="32">
+      <Button id="flowy-button" Type="Action" action="on-tap">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

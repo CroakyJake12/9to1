@@ -1,0 +1,14 @@
+<Cui id="setting-setting-button" product="9-1" version="1">
+  <Actions>
+    <Action name="popover-controller.show" command="_popoverController.show" />
+  </Actions>
+  <Page id="setting-setting-button-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Button id="flowy-icon-button" Type="Action" action="popover-controller.show" width="24" height="24">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

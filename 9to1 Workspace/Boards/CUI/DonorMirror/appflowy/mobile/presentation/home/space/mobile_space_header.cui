@@ -1,0 +1,23 @@
+<Cui id="space-mobile-space-header" product="9-1" version="1">
+  <Actions>
+    <Action name="on-added" command="onAdded" />
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="space-mobile-space-header-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="48">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Container id="hspace-3" Type="Horizontal Stack" />
+          <Image id="flowy-svg" />
+          <Container id="gesture-detector-2" Type="Vertical Stack">
+            <Container id="container" Type="Vertical Stack" padding="8.0">
+              <Image id="flowy-svg-2" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

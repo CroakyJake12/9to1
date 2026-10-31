@@ -1,0 +1,18 @@
+<Cui id="cell-editor-checklist-progress-bar" product="9-1" version="1">
+  <Page id="cell-editor-checklist-progress-bar-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="row-2" Type="Horizontal Stack">
+          <Container id="flexible" Type="Vertical Stack">
+            <Container id="container" Type="Vertical Stack" height="4.0" padding="1" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="sized-box" Type="Vertical Stack" width="45">
+        <Container id="align" Type="Vertical Stack">
+          <Text id="text" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

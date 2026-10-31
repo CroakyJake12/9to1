@@ -1,0 +1,16 @@
+<Cui id="card-cell-skeleton-media-card-cell" product="9-1" version="1">
+  <Page id="card-cell-skeleton-media-card-cell-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="padding" Type="Vertical Stack" padding="4">
+          <Container id="row" Type="Horizontal Stack">
+            <Image id="flowy-svg" />
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Container id="flexible" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

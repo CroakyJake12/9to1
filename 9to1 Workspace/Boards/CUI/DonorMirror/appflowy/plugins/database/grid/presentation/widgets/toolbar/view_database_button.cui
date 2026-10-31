@@ -1,0 +1,19 @@
+<Cui id="toolbar-view-database-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-get-it&lt;tabs-bloc&gt;().add(-tabs-event.open-plugin(-plugin:-view.plugin(),-view:-view,-),-);-}" command="() {
+          getIt&lt;TabsBloc&gt;().add(
+            TabsEvent.openPlugin(
+              plugin: view.plugin(),
+              view: view,
+            ),
+          );
+        }" />
+  </Actions>
+  <Page id="toolbar-view-database-button-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Button id="flowy-icon-button" Type="Action" action="()-{-get-it&lt;tabs-bloc&gt;().add(-tabs-event.open-plugin(-plugin:-view.plugin(),-view:-view,-),-);-}" width="24" height="24">
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

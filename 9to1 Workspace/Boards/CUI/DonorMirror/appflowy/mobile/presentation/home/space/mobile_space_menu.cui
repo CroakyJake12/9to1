@@ -1,0 +1,45 @@
+<Cui id="space-mobile-space-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context.read&lt;space-bloc&gt;().add(space-event.open(space:-space));-navigator.of(context).pop();-}" command="() {
+        context.read&lt;SpaceBloc&gt;().add(SpaceEvent.open(space: space));
+        Navigator.of(context).pop();
+      }" />
+    <Action name="show-create-space-dialog" command="_showCreateSpaceDialog" />
+  </Actions>
+  <Page id="space-mobile-space-menu-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="sized-box" Type="Vertical Stack" />
+          <Container id="padding" Type="Vertical Stack" padding="8.0">
+            <Container id="divider" Type="Vertical Stack" height="0.5" />
+          </Container>
+          <Container id="sized-box-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Button id="flowy-button" Type="Action" action="()-{-context.read&lt;space-bloc&gt;().add(space-event.open(space:-space));-navigator.of(context).pop();-}" padding="12.0">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Image id="flowy-svg" />
+      </Container>
+    </Button>
+    <Button id="flowy-button-2" Type="Action" action="show-create-space-dialog" padding="12.0">
+      <Container id="padding-2" Type="Vertical Stack" padding="2.0">
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Button>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Image id="flowy-svg-3" />
+      <Container id="hspace-3" Type="Horizontal Stack" />
+      <Container id="padding-3" Type="Vertical Stack" padding="8.0">
+        <Image id="flowy-svg-4" />
+      </Container>
+    </Container>
+    <Text id="flowy-text" max-lines="10" />
+    <Text id="flowy-text-2" />
+    <Text id="flowy-text-3" />
+  </Page>
+</Cui>

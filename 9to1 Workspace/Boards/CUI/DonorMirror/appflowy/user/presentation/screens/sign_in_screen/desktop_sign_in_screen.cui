@@ -1,0 +1,26 @@
+<Cui id="sign-in-screen-desktop-sign-in-screen" product="9-1" version="1">
+  <Page id="sign-in-screen-desktop-sign-in-screen-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Page id="scaffold">
+        <Container id="center" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="vspace-3" Type="Vertical Stack" />
+          <Container id="vspace-4" Type="Vertical Stack" />
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="hspace" Type="Horizontal Stack" />
+          </Container>
+          <Container id="vspace-5" Type="Vertical Stack" />
+        </Container>
+      </Page>
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="row-2" Type="Horizontal Stack">
+      <Container id="flexible" Type="Vertical Stack" />
+      <Container id="padding" Type="Vertical Stack" padding="10">
+        <Text id="text" />
+      </Container>
+      <Container id="flexible-2" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

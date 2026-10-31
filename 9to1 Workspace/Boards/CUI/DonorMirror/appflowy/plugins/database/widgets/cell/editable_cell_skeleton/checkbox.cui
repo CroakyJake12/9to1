@@ -1,0 +1,5 @@
+<Cui id="editable-cell-skeleton-checkbox" product="9-1" version="1">
+  <Page id="editable-cell-skeleton-checkbox-root">
+    <Container id="bloc-builder" Type="Vertical Stack" />
+  </Page>
+</Cui>

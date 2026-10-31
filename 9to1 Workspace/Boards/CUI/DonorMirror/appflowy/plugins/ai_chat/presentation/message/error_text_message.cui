@@ -1,0 +1,21 @@
+<Cui id="message-error-text-message" product="9-1" version="1">
+  <Page id="message-error-text-message-root">
+    <Container id="center" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="8.0" background="#80FFE7EE">
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="flowy-svg" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="flexible" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Text id="rich-text">
+      <Text id="text-span">
+        <Text id="text-span-2" />
+        <Text id="text-span-3" />
+        <Text id="text-span-4" />
+      </Text>
+    </Text>
+    <Text id="flowy-text" />
+  </Page>
+</Cui>

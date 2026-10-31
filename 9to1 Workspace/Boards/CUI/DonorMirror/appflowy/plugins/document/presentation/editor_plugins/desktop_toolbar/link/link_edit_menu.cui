@@ -1,0 +1,86 @@
+<Cui id="link-link-edit-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="(text)-{-link-info-=-link-info(-name:-text,-link:-link-info.link,-is-page:-link-info.is-page,-);-}" command="(text) {
+          linkInfo = LinkInfo(
+            name: text,
+            link: linkInfo.link,
+            isPage: linkInfo.isPage,
+          );
+        }" />
+    <Action name="hide-search-result" command="hideSearchResult" />
+    <Action name="on-dismiss" command="onDismiss" />
+    <Action name="on-remove-link.call" command="onRemoveLink.call" />
+    <Action name="show-search-result" command="showSearchResult" />
+  </Actions>
+  <Page id="link-link-edit-menu-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" width="400" background="#FFFFFFFF">
+        <Container id="stack" Type="Absolute">
+          <Container id="gesture-detector-2" Type="Vertical Stack">
+            <Container id="container-2" Type="Vertical Stack" width="400" />
+          </Container>
+          <Container id="positioned" Type="Vertical Stack" />
+          <Container id="positioned-2" Type="Vertical Stack" />
+          <Container id="positioned-3" Type="Vertical Stack" />
+          <Container id="positioned-4" Type="Vertical Stack" />
+          <Container id="positioned-5" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" width="360">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="sized-box-2" Type="Vertical Stack" width="360" height="32" />
+        <Container id="vspace" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="4" />
+    </Container>
+    <Container id="gesture-detector-3" Type="Vertical Stack">
+      <Container id="sized-box-3" Type="Vertical Stack" width="360" height="32">
+        <Container id="row" Type="Horizontal Stack">
+          <Button id="flowy-icon-button" Type="Action" action="on-remove-link.call" width="32" height="32">
+            <Image id="flowy-svg" />
+          </Button>
+          <Container id="decorated-box" Type="Vertical Stack" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="value-listenable-builder" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-4" Type="Vertical Stack" width="360" height="32">
+      <Input id="text-form-field" Type="Text" />
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="gesture-detector-4" Type="Vertical Stack">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="flowy-tooltip" Type="Floating">
+          <Container id="container-3" Type="Vertical Stack" height="32" padding="8 0 8 0">
+            <Container id="row-2" Type="Horizontal Stack">
+              <Container id="hspace-2" Type="Horizontal Stack" />
+              <Container id="flexible" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-4" Type="Vertical Stack" width="360" height="32" />
+    <Container id="container-5" Type="Vertical Stack" width="360" height="32">
+      <Container id="flowy-tooltip-2" Type="Floating">
+        <Container id="gesture-detector-5" Type="Vertical Stack">
+          <Container id="mouse-region-2" Type="Vertical Stack">
+            <Container id="padding-2" Type="Vertical Stack" padding="8 6 8 6">
+              <Container id="row-3" Type="Horizontal Stack">
+                <Image id="flowy-svg-2" />
+                <Container id="hspace-3" Type="Horizontal Stack" />
+                <Container id="flexible-2" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

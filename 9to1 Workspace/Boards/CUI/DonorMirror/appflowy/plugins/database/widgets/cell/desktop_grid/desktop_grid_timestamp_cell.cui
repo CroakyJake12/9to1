@@ -1,0 +1,12 @@
+<Cui id="desktop-grid-desktop-grid-timestamp-cell" product="9-1" version="1">
+  <Page id="desktop-grid-desktop-grid-timestamp-cell-root">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack" />
+    </Container>
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack">
+        <Text id="flowy-text" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

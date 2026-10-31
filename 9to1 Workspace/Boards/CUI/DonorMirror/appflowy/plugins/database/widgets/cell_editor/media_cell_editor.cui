@@ -1,0 +1,81 @@
+<Cui id="cell-editor-media-cell-editor" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-open-interactive-viewer-from-files(-context,-files,-on-delete-image:-(index)-{-final-delete-file-=-files[index];-context.read&lt;media-cell-bloc&gt;().delete-file(delete-file.id);-},-user-profile:-context.read&lt;media-cell-bloc&gt;().state.user-profile,-initial-index:-index,-)" command="() =&gt; openInteractiveViewerFromFiles(
+          context,
+          files,
+          onDeleteImage: (index) {
+            final deleteFile = files[index];
+            context.read&lt;MediaCellBloc&gt;().deleteFile(deleteFile.id);
+          },
+          userProfile: context.read&lt;MediaCellBloc&gt;().state.userProfile,
+          initialIndex: index,
+        )" />
+    <Action name="add-file-popover-controller.show" command="addFilePopoverController.show" />
+    <Action name="af-launch-url-string" command="afLaunchUrlString" />
+    <Action name="on-tap" command="onTap" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="cell-editor-media-cell-editor-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="flexible" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="decorated-box" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack" padding="8.0">
+          <Container id="gesture-detector" Type="Vertical Stack">
+            <Container id="padding-2" Type="Vertical Stack" padding="4.0">
+              <Container id="row" Type="Horizontal Stack">
+                <Image id="flowy-svg" />
+                <Container id="hspace" Type="Horizontal Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="4">
+      <Container id="mouse-region" Type="Vertical Stack">
+        <Container id="decorated-box-2" Type="Vertical Stack" CornerRadius="4" background="#00000000">
+          <Container id="row-2" Type="Horizontal Stack">
+            <Container id="padding-4" Type="Vertical Stack" padding="4">
+              <Image id="flowy-svg-2" />
+            </Container>
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Container id="flexible-2" Type="Vertical Stack">
+              <Container id="padding-5" Type="Vertical Stack" padding="4" />
+            </Container>
+            <Container id="expanded" Type="Vertical Stack">
+              <Container id="gesture-detector-2" Type="Vertical Stack">
+                <Container id="row-3" Type="Horizontal Stack">
+                  <Container id="padding-6" Type="Vertical Stack" padding="4">
+                    <Image id="flowy-svg-3" />
+                  </Container>
+                  <Container id="hspace-3" Type="Horizontal Stack" />
+                  <Container id="flexible-3" Type="Vertical Stack">
+                    <Container id="padding-7" Type="Vertical Stack" padding="1">
+                      <Text id="flowy-text" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="hspace-4" Type="Horizontal Stack" />
+            <Container id="app-flowy-popover-2" Type="Context Menu">
+              <Button id="flowy-icon-button" Type="Action" width="24">
+                <Image id="flowy-svg-4" />
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="gesture-detector-3" Type="Vertical Stack" />
+    <Container id="vspace" Type="Vertical Stack" />
+    <Button id="flowy-button" Type="Action" action="on-tap">
+      <Image id="flowy-svg-5" />
+      <Container id="padding-8" Type="Vertical Stack" padding="4 1 1" />
+    </Button>
+  </Page>
+</Cui>

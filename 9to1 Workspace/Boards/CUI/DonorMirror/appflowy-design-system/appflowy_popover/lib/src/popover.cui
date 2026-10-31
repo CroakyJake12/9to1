@@ -1,0 +1,22 @@
+<Cui id="src-popover" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(widget.trigger-actions-&amp;-popover-trigger-flags.click-!=-0)-{-return-call-handler(handler);-}-}" command="() {
+            if (widget.triggerActions &amp; PopoverTriggerFlags.click != 0) {
+              return _callHandler(handler);
+            }
+          }" />
+    <Action name="()-{-if-(widget.trigger-actions-&amp;-popover-trigger-flags.secondary-click-!=-0)-{-return-call-handler(handler);-}-}" command="() {
+            if (widget.triggerActions &amp; PopoverTriggerFlags.secondaryClick !=
+                0) {
+              return _callHandler(handler);
+            }
+          }" />
+    <Action name="show-overlay" command="showOverlay" />
+  </Actions>
+  <Page id="src-popover-root">
+    <Container id="popover" Type="Context Menu" />
+    <Container id="mouse-region" Type="Vertical Stack" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="stack" Type="Absolute" />
+  </Page>
+</Cui>

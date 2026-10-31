@@ -1,0 +1,5 @@
+<Cui id="sidebar-slider-menu-hover-trigger" product="9-1" version="1">
+  <Page id="sidebar-slider-menu-hover-trigger-root">
+    <Container id="container" Type="Vertical Stack" width="50" background="#FF000000" />
+  </Page>
+</Cui>

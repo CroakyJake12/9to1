@@ -1,0 +1,39 @@
+<Cui id="image-resizeable-image" product="9-1" version="1">
+  <Actions>
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="image-resizeable-image-root">
+    <Container id="align" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="mouse-region" Type="Vertical Stack">
+          <Container id="gesture-detector" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="stack" Type="Absolute" />
+    <Container id="sized-box-2" Type="Vertical Stack" height="150">
+      <Container id="row" Type="Horizontal Stack">
+        <Input id="circular-progress-indicator" Type="Progress" />
+        <Text id="text" />
+      </Container>
+    </Container>
+    <Container id="positioned" Type="Vertical Stack">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="mouse-region-2" Type="Vertical Stack">
+          <Container id="center" Type="Vertical Stack">
+            <Container id="container" Type="Vertical Stack" height="40" background="#FF000000" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" height="160" padding="8.0" background="#FF808080">
+      <Container id="column" Type="Vertical Stack">
+        <Image id="flowy-svg" />
+        <Text id="flowy-text" />
+        <Container id="vspace" Type="Vertical Stack" />
+        <Text id="flowy-text-2" text-alignment="Center" max-lines="2" />
+        <Container id="vspace-2" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

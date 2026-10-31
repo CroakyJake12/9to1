@@ -1,0 +1,12 @@
+<Cui id="widgets-font-size-action" product="9-1" version="1">
+  <Page id="widgets-font-size-action-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack" height="34" padding="2.0">
+        <Button id="flowy-button" Type="Action">
+          <Image id="icon" source="format_size_sharp" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

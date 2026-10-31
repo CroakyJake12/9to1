@@ -1,0 +1,26 @@
+<Cui id="presentation-chat-welcome-page" product="9-1" version="1">
+  <Actions>
+    <Action name="on-selected" command="onSelected" />
+  </Actions>
+  <Page id="presentation-chat-welcome-page-root">
+    <Container id="column" Type="Vertical Stack">
+      <Image id="flowy-svg" />
+      <Container id="vspace" Type="Vertical Stack" />
+      <Text id="flowy-text" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="vspace-3" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" padding="16.0" />
+    <Container id="vspace-4" Type="Vertical Stack" />
+    <Container id="vspace-5" Type="Vertical Stack" />
+    <Container id="decorated-box" Type="Vertical Stack" CornerRadius="16" background="#051F2329">
+      <Button id="text-button" Type="Action" action="on-selected">
+        <Text id="flowy-text-2" />
+      </Button>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="36">
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="custom-scroll-view" Type="Vertical Stack" />
+  </Page>
+</Cui>

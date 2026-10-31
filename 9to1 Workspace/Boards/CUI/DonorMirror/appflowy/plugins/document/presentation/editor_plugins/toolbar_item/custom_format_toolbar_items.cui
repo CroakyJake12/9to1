@@ -1,0 +1,13 @@
+<Cui id="toolbar-item-custom-format-toolbar-items" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-editor-state.toggle-attribute(-name,-selection:-selection,-)" command="() =&gt; editorState.toggleAttribute(
+                name,
+                selection: selection,
+              )" />
+  </Actions>
+  <Page id="toolbar-item-custom-format-toolbar-items-root">
+    <Button id="flowy-icon-button" Type="Action" action="()-=&gt;-editor-state.toggle-attribute(-name,-selection:-selection,-)" width="36" height="32">
+      <Image id="flowy-svg" background="#FF282E3A" />
+    </Button>
+  </Page>
+</Cui>

@@ -1,15 +1,15 @@
 {
   "_purpose": "Ratchet for the Stage A donor-UI mirror corpora. documents/without-errors are measured by eng/cui-mirror/probe under --strict; any CUI compile error fails. A fall in `documents` means mirrors were lost and must be explained, not absorbed.",
   "_measured_on": "2026-10-31",
-  "_measured_at_source": "04a19137",
-  "_mirror_tool_version": "e98dc48ca7ef0f6d671d9653d6dfcf6e6f6ad0635c7a21c2345f48f3f16f1469",
+  "_measured_at_source": "bd5d9b3a",
+  "_mirror_tool_version": "3949660e634e3cc4df7ca186f2327a819a10f0bb507bc71e9f8f6a88cc89ee0d",
   "_probe_command": "dotnet eng/cui-mirror/probe/bin/Release/net10.0/CuiMirrorProbe.dll --strict <corpus>...",
-  "documents": 1050,
-  "without_errors": 1050,
+  "documents": 1758,
+  "without_errors": 1758,
   "compile_errors_allowed": 0,
   "corpora": [
     "9to1 Workspace/Boards/CUI/DonorMirror/appflowy",
-    "9to1 Workspace/Boards/CUI/DonorMirror/rnote",
+    "9to1 Workspace/Boards/CUI/DonorMirror/appflowy-design-system",
     "9to1 Workspace/Browse/CUI/DonorMirror/firefox",
     "9to1 Workspace/Build/CUI/DonorMirror/gitea",
     "9to1 Workspace/Canvas/CUI/DonorMirror/rnote",
@@ -20,5 +20,5 @@
     "9to1 Workspace/Write/CUI/DonorMirror/libreoffice-writer"
   ],
   "evidence_label": "CUI compile evidence only. Nothing here is rendered, run natively, packaged or accepted.",
-  "_change_reason": "2026-10-31: corpora regenerated from per-app donor trees (Data now mirrors Data/Source/LibreOffice/sc, Present mirrors Present/Source/LibreOffice/sd, instead of borrowing Write's checkout) after a bad rm -rf removed the Present and Data trees; each app's donor binding now owns its own path, pin and digest. +1 document from the first AppFlowy frontend pass (1 of 18 files: its board UI is Dart code-built widgets, so 17 files stay recorded untranslated until a Dart dialect exists). Gitea is 289 rather than 292 because the Go template handling changed: control tags no longer leak, and three files whose template branch tags leave an unbalanced tree are now reported untranslated instead of being mirrored with invented structure."
+  "_change_reason": "2026-10-31 second pass (1050 -> 1758 documents): the owner's correction that Boards' UI donor is AppFlowy, not rnote. Added the Dart/Flutter dialect, which reads widget constructor calls because AppFlowy has no markup UI, and mirrored 824 files from AppFlowy's lib plus 55 from its design-system packages (all compiling clean). Retired Boards' rnote UI mirror: 31 of its 33 documents were byte-identical to Canvas's, 2 differed, and the two donor checkouts drift in 8 UI files - one shared drawing surface must be pinned once, and the owner's single-implementation requirement forbids keeping two revisions of it. Also fixed an emitter bug that emitted space-only donor text runs as empty CUI values (CUI030, 4 documents)."
 }

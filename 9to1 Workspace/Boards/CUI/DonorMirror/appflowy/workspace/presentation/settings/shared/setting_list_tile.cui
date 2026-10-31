@@ -1,0 +1,17 @@
+<Cui id="shared-setting-list-tile" product="9-1" version="1">
+  <Actions>
+    <Action name="on-reset-requested" command="onResetRequested" />
+  </Actions>
+  <Page id="shared-setting-list-tile-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="padding" Type="Vertical Stack" padding="4" />
+        </Container>
+      </Container>
+    </Container>
+    <Button id="flowy-icon-button" Type="Action" action="on-reset-requested" width="24">
+      <Image id="flowy-svg" />
+    </Button>
+  </Page>
+</Cui>

@@ -1,0 +1,25 @@
+<Cui id="widgets-option-text-field" product="9-1" version="1">
+  <Actions>
+    <Action name="()-async-{-if-(is-primary)-{-return;-}-final-field-type-=-await-show-field-type-grid-bottom-sheet(-context,-title:-locale-keys.grid-field-edit-property.tr(),-);-if-(field-type-!=-null)-{-on-field-type-changed(field-type);-}-}" command="() async {
+          if (isPrimary) {
+            return;
+          }
+          final fieldType = await showFieldTypeGridBottomSheet(
+            context,
+            title: LocaleKeys.grid_field_editProperty.tr(),
+          );
+          if (fieldType != null) {
+            onFieldTypeChanged(fieldType);
+          }
+        }" />
+  </Actions>
+  <Page id="widgets-option-text-field-root">
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" width="38" height="38" CornerRadius="12">
+        <Container id="center" Type="Vertical Stack">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

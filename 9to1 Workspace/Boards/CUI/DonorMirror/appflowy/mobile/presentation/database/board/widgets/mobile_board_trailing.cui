@@ -1,0 +1,45 @@
+<Cui id="widgets-mobile-board-trailing" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-set-state" command="() =&gt;
+                                    setState" />
+    <Action name="()-{-context.read&lt;board-bloc&gt;().add(-board-event.create-group(-text-controller.text,-),-);-text-controller.clear();-set-state(()-=&gt;-is-editing-=-false);-}" command="() {
+                              context.read&lt;BoardBloc&gt;().add(
+                                    BoardEvent.createGroup(
+                                      _textController.text,
+                                    ),
+                                  );
+                              _textController.clear();
+                              setState(() =&gt; isEditing = false);
+                            }" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="widgets-mobile-board-trailing-root">
+    <Container id="container" Type="Vertical Stack" padding="8">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="decorated-box" Type="Vertical Stack" CornerRadius="8">
+          <Container id="padding" Type="Vertical Stack" padding="8 4">
+            <Container id="column" Type="Vertical Stack">
+              <Input id="text-field" Type="Text" background="#00000000">
+                <Container id="animated-opacity" Type="Vertical Stack">
+                  <Button id="icon-button" Type="Action" action="()-=&gt;-set-state">
+                    <Image id="icon" source="close" />
+                  </Button>
+                </Container>
+              </Input>
+              <Container id="row" Type="Horizontal Stack">
+                <Button id="text-button" Type="Action" action="set-state">
+                  <Text id="text" />
+                </Button>
+                <Button id="text-button-2" Type="Action" action="()-{-context.read&lt;board-bloc&gt;().add(-board-event.create-group(-text-controller.text,-),-);-text-controller.clear();-set-state(()-=&gt;-is-editing-=-false);-}">
+                  <Text id="text-2" />
+                </Button>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Image id="icon-2" source="add" />
+        <Text id="text-3" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,11 @@
+<Cui id="theme-upload-theme-upload-button" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-bloc-provider.of&lt;dynamic-plugin-bloc&gt;(context)-.add" command="() =&gt; BlocProvider.of&lt;DynamicPluginBloc&gt;(context)
+            .add" />
+  </Actions>
+  <Page id="theme-upload-theme-upload-button-root">
+    <Button id="flowy-button" Type="Action" action="()-=&gt;-bloc-provider.of&lt;dynamic-plugin-bloc&gt;(context)-.add" CornerRadius="8">
+      <Container id="row" Type="Horizontal Stack" />
+    </Button>
+  </Page>
+</Cui>

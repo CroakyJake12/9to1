@@ -1,0 +1,22 @@
+<Cui id="desktop-grid-desktop-grid-date-cell" product="9-1" version="1">
+  <Page id="desktop-grid-desktop-grid-date-cell-root">
+    <Container id="app-flowy-popover" Type="Context Menu">
+      <Container id="align" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="flexible" Type="Vertical Stack">
+            <Text id="flowy-text" />
+          </Container>
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="flowy-tooltip" Type="Floating">
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

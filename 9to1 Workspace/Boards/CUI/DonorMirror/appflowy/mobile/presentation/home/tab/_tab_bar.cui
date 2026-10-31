@@ -1,0 +1,7 @@
+<Cui id="tab-tab-bar" product="9-1" version="1">
+  <Page id="tab-tab-bar-root">
+    <Container id="container" Type="Vertical Stack" padding="8.0">
+      <Button id="tab" Type="Menu Item" />
+    </Container>
+  </Page>
+</Cui>

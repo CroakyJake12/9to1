@@ -1,0 +1,75 @@
+<Cui id="widgets-dialogs" product="9-1" version="1">
+  <Actions>
+    <Action name="on-dismiss" command="onDismiss" />
+  </Actions>
+  <Page id="widgets-dialogs-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Container id="container" Type="Vertical Stack" height="1" />
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Container id="sized-box" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" height="48">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="container-2" Type="Vertical Stack" padding="16 16">
+      <Container id="container-3" Type="Vertical Stack" padding="12.0 13.0" CornerRadius="12.0" background="#E5171717">
+        <Container id="column-4" Type="Vertical Stack">
+          <Container id="row-2" Type="Horizontal Stack">
+            <Image id="flowy-svg" />
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Container id="expanded" Type="Vertical Stack" />
+          </Container>
+          <Container id="vspace-5" Type="Vertical Stack" />
+        </Container>
+        <Container id="column-5" Type="Vertical Stack">
+          <Container id="vspace-6" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Container id="container-4" Type="Vertical Stack">
+        <Container id="row-3" Type="Horizontal Stack">
+          <Image id="flowy-svg-2" />
+          <Container id="hspace-3" Type="Horizontal Stack" />
+          <Container id="flexible" Type="Vertical Stack">
+            <Text id="text" max-lines="2" />
+            <Text id="rich-text" max-lines="2" />
+          </Container>
+          <Container id="hspace-4" Type="Horizontal Stack" />
+          <Container id="mouse-region" Type="Vertical Stack">
+            <Container id="gesture-detector" Type="Vertical Stack">
+              <Container id="center-2" Type="Vertical Stack">
+                <Image id="flowy-svg-3" background="#FFBDBDBD" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="dialog" Type="Floating">
+      <Container id="sized-box-3" Type="Vertical Stack" width="440" />
+    </Container>
+    <Container id="dialog-2" Type="Floating">
+      <Container id="sized-box-4" Type="Vertical Stack" width="440" />
+    </Container>
+    <Container id="dialog-3" Type="Floating">
+      <Container id="sized-box-5" Type="Vertical Stack" width="440" />
+    </Container>
+    <Container id="dialog-4" Type="Floating">
+      <Container id="sized-box-6" Type="Vertical Stack" width="440" />
+    </Container>
+    <Container id="dialog-5" Type="Floating">
+      <Container id="sized-box-7" Type="Vertical Stack" width="440" />
+    </Container>
+  </Page>
+</Cui>

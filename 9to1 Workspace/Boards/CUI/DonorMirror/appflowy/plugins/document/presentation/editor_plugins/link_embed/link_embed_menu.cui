@@ -1,0 +1,29 @@
+<Cui id="link-embed-link-embed-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="copy-link" command="copyLink" />
+    <Action name="get-tap-callback" command="getTapCallback" />
+  </Actions>
+  <Page id="link-embed-link-embed-menu-root">
+    <Container id="container" Type="Vertical Stack" padding="4" CornerRadius="12">
+      <Container id="row" Type="Horizontal Stack">
+        <Button id="flowy-icon-button" Type="Action" action="copy-link">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+    <Button id="flowy-icon-button-2" Type="Action" action="get-tap-callback">
+      <Image id="flowy-svg-2" />
+    </Button>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="padding" Type="Vertical Stack" padding="8.0">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Button id="flowy-icon-button-3" Type="Action" action="get-tap-callback">
+      <Image id="flowy-svg-3" />
+    </Button>
+    <Container id="app-flowy-popover-2" Type="Context Menu" />
+    <Container id="padding-2" Type="Vertical Stack" padding="8.0">
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

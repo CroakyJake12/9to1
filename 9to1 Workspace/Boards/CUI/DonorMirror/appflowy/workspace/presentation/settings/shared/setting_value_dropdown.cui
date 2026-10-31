@@ -1,0 +1,5 @@
+<Cui id="shared-setting-value-dropdown" product="9-1" version="1">
+  <Page id="shared-setting-value-dropdown-root">
+    <Container id="app-flowy-popover" Type="Context Menu" />
+  </Page>
+</Cui>

@@ -1,0 +1,22 @@
+<Cui id="setting-mobile-database-controls" product="9-1" version="1">
+  <Actions>
+    <Action name="on-tap" command="onTap" />
+  </Actions>
+  <Page id="setting-mobile-database-controls-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-provider-2" Type="Vertical Stack" />
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+    <Container id="ink-well" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="5.0">
+        <Image id="flowy-svg" />
+        <Container id="row" Type="Horizontal Stack">
+          <Image id="flowy-svg-2" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

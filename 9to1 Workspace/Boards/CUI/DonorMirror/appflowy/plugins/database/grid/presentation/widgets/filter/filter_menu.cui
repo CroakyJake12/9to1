@@ -1,0 +1,19 @@
+<Cui id="filter-filter-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="popover-controller.show" command="popoverController.show" />
+  </Actions>
+  <Page id="filter-filter-menu-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="wrap" Type="Wrap" />
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="28">
+      <Button id="flowy-button" Type="Action" action="popover-controller.show">
+        <Text id="flowy-text" />
+        <Image id="flowy-svg" />
+      </Button>
+    </Container>
+    <Container id="app-flowy-popover" Type="Context Menu" />
+  </Page>
+</Cui>

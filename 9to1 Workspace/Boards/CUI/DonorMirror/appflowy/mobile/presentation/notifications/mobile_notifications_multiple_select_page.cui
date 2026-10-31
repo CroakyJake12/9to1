@@ -1,0 +1,10 @@
+<Cui id="notifications-mobile-notifications-multiple-select-page" product="9-1" version="1">
+  <Page id="notifications-mobile-notifications-multiple-select-page-root">
+    <Page id="scaffold">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="vspace" Type="Vertical Stack" />
+        <Container id="expanded" Type="Vertical Stack" />
+      </Container>
+    </Page>
+  </Page>
+</Cui>

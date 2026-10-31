@@ -1,0 +1,11 @@
+<Cui id="view-database-field-list" product="9-1" version="1">
+  <Page id="view-database-field-list-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="padding" Type="Vertical Stack" padding="20" />
+      </Container>
+    </Container>
+    <Image id="flowy-svg" />
+  </Page>
+</Cui>

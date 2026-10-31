@@ -1,0 +1,7 @@
+<Cui id="aa-menu-bius-items" product="9-1" version="1">
+  <Page id="aa-menu-bius-items-root">
+    <Container id="intrinsic-height" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

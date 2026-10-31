@@ -1,0 +1,14 @@
+<Cui id="folder-section-folder" product="9-1" version="1">
+  <Page id="folder-section-folder-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="bloc-provider" Type="Vertical Stack">
+        <Container id="bloc-builder" Type="Vertical Stack">
+          <Container id="column" Type="Vertical Stack">
+            <Container id="vspace" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

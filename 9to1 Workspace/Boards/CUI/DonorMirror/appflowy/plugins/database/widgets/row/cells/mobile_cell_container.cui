@@ -1,0 +1,21 @@
+<Cui id="cells-mobile-cell-container" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(is-primary)-{-on-primary-field-cell-tap?.call();-return;-}-if-(!is-focus)-{-child.request-focus.notify();-}-}" command="() {
+              if (isPrimary) {
+                onPrimaryFieldCellTap?.call();
+                return;
+              }
+              if (!isFocus) {
+                child.requestFocus.notify();
+              }
+            }" />
+  </Actions>
+  <Page id="cells-mobile-cell-container-root">
+    <Container id="selector" Type="Vertical Stack">
+      <Container id="center" Type="Vertical Stack" />
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="container" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

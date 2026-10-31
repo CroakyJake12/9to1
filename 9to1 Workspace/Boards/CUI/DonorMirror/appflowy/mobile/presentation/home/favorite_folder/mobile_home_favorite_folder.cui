@@ -1,0 +1,13 @@
+<Cui id="favorite-folder-mobile-home-favorite-folder" product="9-1" version="1">
+  <Page id="favorite-folder-mobile-home-favorite-folder-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="divider" Type="Vertical Stack" height="1" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

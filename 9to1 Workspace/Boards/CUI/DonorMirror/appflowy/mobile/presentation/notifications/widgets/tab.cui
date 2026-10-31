@@ -1,0 +1,11 @@
+<Cui id="widgets-tab" product="9-1" version="1">
+  <Page id="widgets-tab-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="shrink" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

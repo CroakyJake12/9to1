@@ -1,0 +1,9 @@
+<Cui id="image-viewer-interactive-image-viewer" product="9-1" version="1">
+  <Page id="image-viewer-interactive-image-viewer-root">
+    <Container id="stack" Type="Absolute">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="gesture-detector" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

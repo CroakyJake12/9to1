@@ -1,0 +1,30 @@
+<Cui id="page-item-mobile-view-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context-.read&lt;view-bloc&gt;()-.add(view-event.set-is-expanded(!widget.is-expanded));-}" command="() {
+        context
+            .read&lt;ViewBloc&gt;()
+            .add(ViewEvent.setIsExpanded(!widget.isExpanded));
+      }" />
+    <Action name="widget.on-selected" command="widget.onSelected" />
+  </Actions>
+  <Page id="page-item-mobile-view-item-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="column" Type="Vertical Stack" />
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="ink-well" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack">
+        <Container id="padding" Type="Vertical Stack">
+          <Container id="row" Type="Horizontal Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" width="18.0" />
+    <Container id="hspace-2" Type="Horizontal Stack" />
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="6.0 6.0">
+        <Image id="flowy-svg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

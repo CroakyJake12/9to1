@@ -1,0 +1,6 @@
+<Cui id="command-palette-search-result-ext" product="9-1" version="1">
+  <Page id="command-palette-search-result-ext-root">
+    <Text id="text" />
+    <Image id="flowy-svg" />
+  </Page>
+</Cui>

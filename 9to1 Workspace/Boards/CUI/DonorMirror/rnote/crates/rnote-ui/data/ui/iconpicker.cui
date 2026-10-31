@@ -1,8 +1,0 @@
-<Cui id="ui-iconpicker" product="9-1" version="1">
-  <Container id="container" Type="Vertical Stack">
-    <Container id="container-2" Type="Vertical Stack">
-      <Container id="gridview" Type="Wrap" />
-    </Container>
-    <Text id="selection-label" text-trimming="PathSegmentEllipsis" text-wrapping="Wrap" vertical-alignment="Bottom" hidden="true" />
-  </Container>
-</Cui>

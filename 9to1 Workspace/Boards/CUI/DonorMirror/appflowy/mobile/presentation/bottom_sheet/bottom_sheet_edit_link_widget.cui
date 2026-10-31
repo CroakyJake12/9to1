@@ -1,0 +1,70 @@
+<Cui id="bottom-sheet-bottom-sheet-edit-link-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-widget.on-remove-link(link-info);-context.pop();-}" command="() {
+        widget.onRemoveLink(linkInfo);
+        context.pop();
+      }" />
+    <Action name="(text)-{-link-info-=-link-info(-name:-text,-link:-link-info.link,-is-page:-link-info.is-page,-);-}" command="(text) {
+          linkInfo = LinkInfo(
+            name: text,
+            link: linkInfo.link,
+            isPage: linkInfo.isPage,
+          );
+        }" />
+    <Action name="show-search-result" command="showSearchResult" />
+  </Actions>
+  <Page id="bottom-sheet-bottom-sheet-edit-link-widget-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="vspace-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box-2" Type="Vertical Stack" height="48">
+      <Input id="text-form-field" Type="Text" />
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="vspace-4" Type="Vertical Stack" />
+    </Container>
+    <Container id="column-3" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="4" />
+    </Container>
+    <Container id="center" Type="Vertical Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack" padding="14" background="#FF808080">
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="flexible" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" />
+    <Container id="container-3" Type="Vertical Stack" height="48">
+      <Container id="gesture-detector-2" Type="Vertical Stack">
+        <Container id="padding-2" Type="Vertical Stack" padding="12">
+          <Container id="row-2" Type="Horizontal Stack">
+            <Image id="flowy-svg" />
+            <Container id="hspace-2" Type="Horizontal Stack" />
+            <Container id="flexible-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="gesture-detector-3" Type="Vertical Stack">
+      <Container id="sized-box-3" Type="Vertical Stack" height="32">
+        <Container id="center-2" Type="Vertical Stack">
+          <Container id="row-3" Type="Horizontal Stack">
+            <Image id="flowy-svg-2" />
+            <Container id="hspace-3" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

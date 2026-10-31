@@ -1,0 +1,5 @@
+<Cui id="setting-database-settings-list" product="9-1" version="1">
+  <Page id="setting-database-settings-list-root">
+    <Container id="vspace" Type="Vertical Stack" />
+  </Page>
+</Cui>

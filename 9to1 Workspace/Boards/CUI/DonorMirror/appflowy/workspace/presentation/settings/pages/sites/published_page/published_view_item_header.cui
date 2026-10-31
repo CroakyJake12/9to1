@@ -1,0 +1,8 @@
+<Cui id="published-page-published-view-item-header" product="9-1" version="1">
+  <Page id="published-page-published-view-item-header-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="hspace" Type="Horizontal Stack" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,68 @@
+<Cui id="simple-table-simple-table-cell-block-component" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-final-transaction-=-editor-state.transaction;-final-length-=-node.children.length;-final-path-=-node.path.child(length);-transaction-..insert-node(-path,-paragraph-node(),-)-..after-selection-=-selection.collapsed(position(path:-path));-editor-state.apply(transaction);-}" command="() {
+        final transaction = editorState.transaction;
+        final length = node.children.length;
+        final path = node.path.child(length);
+        transaction
+          ..insertNode(
+            path,
+            paragraphNode(),
+          )
+          ..afterSelection = Selection.collapsed(Position(path: path));
+        editorState.apply(transaction);
+      }" />
+  </Actions>
+  <Page id="simple-table-simple-table-cell-block-component-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="stack" Type="Absolute">
+      <Container id="positioned" Type="Vertical Stack" />
+      <Container id="positioned-2" Type="Vertical Stack" />
+      <Container id="positioned-3" Type="Vertical Stack" />
+      <Container id="positioned-4" Type="Vertical Stack" />
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack" />
+    <Container id="shrink-2" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="0 0 0 0">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="value-listenable-builder-2" Type="Vertical Stack">
+          <Container id="value-listenable-builder-3" Type="Vertical Stack">
+            <Container id="value-listenable-builder-4" Type="Vertical Stack">
+              <Container id="decorated-box" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="container" Type="Vertical Stack">
+          <Container id="column" Type="Vertical Stack">
+            <Container id="expanded" Type="Vertical Stack" />
+          </Container>
+          <Container id="column-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="padding-2" Type="Vertical Stack" padding="0 0 0 0">
+      <Container id="value-listenable-builder-5" Type="Vertical Stack">
+        <Container id="value-listenable-builder-6" Type="Vertical Stack">
+          <Container id="value-listenable-builder-7" Type="Vertical Stack">
+            <Container id="value-listenable-builder-8" Type="Vertical Stack">
+              <Container id="stack-2" Type="Absolute">
+                <Container id="decorated-box-2" Type="Vertical Stack" />
+                <Container id="positioned-5" Type="Vertical Stack" />
+                <Container id="positioned-6" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="container-2" Type="Vertical Stack">
+          <Container id="column-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" />
+    <Container id="align" Type="Vertical Stack" />
+    <Container id="shrink-3" Type="Vertical Stack" />
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="sized-box-2" Type="Vertical Stack" />
+    <Container id="shrink-4" Type="Vertical Stack" />
+  </Page>
+</Cui>

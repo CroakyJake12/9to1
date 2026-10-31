@@ -1,0 +1,13 @@
+<Cui id="widgets-navigation-bar-button" product="9-1" version="1">
+  <Actions>
+    <Action name="enable-?-on-tap-:-null" command="enable ? onTap : null" />
+  </Actions>
+  <Page id="widgets-navigation-bar-button-root">
+    <Container id="container" Type="Vertical Stack" height="40" CornerRadius="10" background="#3F1F2329">
+      <Button id="flowy-button" Type="Action" action="enable-?-on-tap-:-null">
+        <Image id="flowy-svg" />
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,8 @@
+<Cui id="base-flowy-search-text-field" product="9-1" version="1">
+  <Page id="base-flowy-search-text-field-root">
+    <Container id="sized-box" Type="Vertical Stack" height="44.0">
+      <Image id="flowy-svg" />
+      <Image id="icon" source="close" />
+    </Container>
+  </Page>
+</Cui>

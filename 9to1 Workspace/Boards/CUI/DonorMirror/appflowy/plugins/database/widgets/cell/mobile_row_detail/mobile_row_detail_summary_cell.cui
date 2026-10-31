@@ -1,0 +1,15 @@
+<Cui id="mobile-row-detail-mobile-row-detail-summary-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="focus-node.unfocus" command="focusNode.unfocus" />
+  </Actions>
+  <Page id="mobile-row-detail-mobile-row-detail-summary-cell-root">
+    <Container id="container" Type="Vertical Stack" padding="4 2">
+      <Container id="column" Type="Vertical Stack">
+        <Input id="text-field" Type="Text" />
+        <Container id="row" Type="Horizontal Stack">
+          <Container id="padding" Type="Vertical Stack" padding="8.0" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

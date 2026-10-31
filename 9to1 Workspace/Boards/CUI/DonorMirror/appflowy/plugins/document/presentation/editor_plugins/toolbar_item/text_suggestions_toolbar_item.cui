@@ -1,0 +1,36 @@
+<Cui id="toolbar-item-text-suggestions-toolbar-item" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-item.on-tap(widget.editor-state,-true);-widget.on-select?.call();-popover-controller.close();-}" command="() {
+          item.onTap(widget.editorState, true);
+          widget.onSelect?.call();
+          popoverController.close();
+        }" />
+  </Actions>
+  <Page id="toolbar-item-text-suggestions-toolbar-item-root">
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="flowy-tooltip" Type="Floating">
+      <Container id="padding" Type="Vertical Stack" padding="8">
+        <Container id="row" Type="Horizontal Stack">
+          <Text id="flowy-text" />
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="single-child-scroll-view" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="36">
+      <Button id="flowy-button" Type="Action" action="()-{-item.on-tap(widget.editor-state,-true);-widget.on-select?.call();-popover-controller.close();-}">
+        <Image id="flowy-svg-2" />
+        <Text id="flowy-text-2" />
+        <Image id="flowy-svg-3" />
+      </Button>
+    </Container>
+    <Container id="container" Type="Vertical Stack" height="32" padding="8">
+      <Container id="align" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

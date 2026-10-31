@@ -1,0 +1,13 @@
+<Cui id="widgets-upload-image-file-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="upload-image" command="_uploadImage" />
+  </Actions>
+  <Page id="widgets-upload-image-file-widget-root">
+    <Button id="flowy-button" Type="Action" action="upload-image">
+      <Container id="container" Type="Vertical Stack" padding="4.0">
+        <Text id="flowy-text" />
+      </Container>
+    </Button>
+    <Container id="padding" Type="Vertical Stack" padding="8.0" />
+  </Page>
+</Cui>

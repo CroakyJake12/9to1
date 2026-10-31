@@ -1,0 +1,148 @@
+<Cui id="view-database-sort-bottom-sheet" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context-.read&lt;mobile-sort-editor-cubit&gt;()-.start-editing-sort" command="() =&gt; context
+                .read&lt;MobileSortEditorCubit&gt;()
+                .startEditingSort" />
+    <Action name="()-=&gt;-context-.read&lt;sort-editor-bloc&gt;()-.add" command="() =&gt; context
+                  .read&lt;SortEditorBloc&gt;()
+                  .add" />
+    <Action name="()-{-final-first-field-=-context-.read&lt;sort-editor-bloc&gt;()-.state-.creatable-fields-.first-or-null;-if-(first-field-==-null)-{-fluttertoast.show-toast(-msg:-locale-keys.grid-sort-cannot-find-creatable-field.tr(),-gravity:-toast-gravity.bottom,-);-}-else-{-context.read&lt;mobile-sort-editor-cubit&gt;().start-creating-sort();-}-}" command="() {
+                  final firstField = context
+                      .read&lt;SortEditorBloc&gt;()
+                      .state
+                      .creatableFields
+                      .firstOrNull;
+                  if (firstField == null) {
+                    Fluttertoast.showToast(
+                      msg: LocaleKeys.grid_sort_cannotFindCreatableField.tr(),
+                      gravity: ToastGravity.BOTTOM,
+                    );
+                  } else {
+                    context.read&lt;MobileSortEditorCubit&gt;().startCreatingSort();
+                  }
+                }" />
+    <Action name="(index)-{-final-new-condition-=-index-==-0-?-sort-condition-pb.ascending-:-sort-condition-pb.descending;-change-condition(context,-new-condition);-}" command="(index) {
+                  final newCondition = index == 0
+                      ? SortConditionPB.Ascending
+                      : SortConditionPB.Descending;
+                  _changeCondition(context, newCondition);
+                }" />
+  </Actions>
+  <Page id="view-database-sort-bottom-sheet-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="sized-box" Type="Vertical Stack" height="400">
+          <Container id="padding" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="sized-box-2" Type="Vertical Stack" height="44.0">
+        <Container id="stack" Type="Absolute">
+          <Container id="align" Type="Vertical Stack" />
+          <Container id="align-2" Type="Vertical Stack" />
+          <Container id="align-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack">
+        <Container id="expanded" Type="Vertical Stack">
+          <Container id="center" Type="Vertical Stack">
+            <Container id="column-3" Type="Vertical Stack">
+              <Image id="flowy-svg" />
+              <Text id="flowy-text" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="container" Type="Vertical Stack" height="44" padding="14">
+          <Container id="ink-well" Type="Vertical Stack">
+            <Container id="center-2" Type="Vertical Stack">
+              <Container id="row" Type="Horizontal Stack">
+                <Image id="flowy-svg-2" />
+                <Container id="hspace" Type="Horizontal Stack" />
+                <Text id="flowy-text-2" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="container-2" Type="Vertical Stack" padding="4.0" CornerRadius="12">
+      <Container id="stack-2" Type="Absolute">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="padding-2" Type="Vertical Stack" padding="14 8">
+            <Container id="column-4" Type="Vertical Stack">
+              <Container id="padding-3" Type="Vertical Stack" padding="12.0" />
+              <Container id="vspace" Type="Vertical Stack" />
+              <Container id="row-2" Type="Horizontal Stack">
+                <Container id="expanded-2" Type="Vertical Stack">
+                  <Container id="container-3" Type="Vertical Stack" height="44" padding="12">
+                    <Container id="center-3" Type="Vertical Stack">
+                      <Container id="row-3" Type="Horizontal Stack">
+                        <Container id="expanded-3" Type="Vertical Stack">
+                          <Text id="flowy-text-3" />
+                        </Container>
+                        <Container id="hspace-2" Type="Horizontal Stack" />
+                        <Image id="flowy-svg-3" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+                <Container id="hspace-3" Type="Horizontal Stack" />
+                <Container id="expanded-4" Type="Vertical Stack">
+                  <Container id="container-4" Type="Vertical Stack" height="44" padding="12 10">
+                    <Container id="center-4" Type="Vertical Stack">
+                      <Container id="row-4" Type="Horizontal Stack">
+                        <Container id="expanded-5" Type="Vertical Stack">
+                          <Text id="flowy-text-4" />
+                        </Container>
+                        <Container id="hspace-4" Type="Horizontal Stack" />
+                        <Image id="flowy-svg-4" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="positioned" Type="Vertical Stack">
+          <Container id="ink-well-2" Type="Vertical Stack">
+            <Container id="center-5" Type="Vertical Stack">
+              <Image id="flowy-svg-5" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column-5" Type="Vertical Stack">
+      <Container id="vspace-2" Type="Vertical Stack" />
+      <Container id="padding-4" Type="Vertical Stack" padding="16">
+        <Container id="container-5" Type="Vertical Stack" padding="3.0" CornerRadius="10">
+          <Container id="tab-bar" Type="Horizontal Stack">
+            <Button id="tab" Type="Menu Item" height="34">
+              <Container id="center-6" Type="Vertical Stack">
+                <Text id="flowy-text-5" />
+              </Container>
+            </Button>
+            <Button id="tab-2" Type="Menu Item" height="34">
+              <Container id="center-7" Type="Vertical Stack">
+                <Text id="flowy-text-6" />
+              </Container>
+            </Button>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="vspace-3" Type="Vertical Stack" />
+      <Container id="padding-5" Type="Vertical Stack" padding="16.0">
+        <Text id="flowy-text-7" />
+      </Container>
+      <Container id="vspace-4" Type="Vertical Stack" />
+      <Container id="divider" Type="Vertical Stack" height="0.5" />
+      <Container id="expanded-6" Type="Vertical Stack">
+        <Container id="bloc-builder-3" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

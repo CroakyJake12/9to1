@@ -1,0 +1,7 @@
+<Cui id="actions-block-action-option-button" product="9-1" version="1">
+  <Page id="actions-block-action-option-button-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,23 @@
+<Cui id="mobile-grid-mobile-grid-translate-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="(p)-=&gt;-provider.of&lt;translate-mouse-notifier&gt;(context,-listen:-false)-.on-enter-=-false" command="(p) =&gt;
+              Provider.of&lt;TranslateMouseNotifier&gt;(context, listen: false)
+                  .onEnter = false" />
+    <Action name="(p)-=&gt;-provider.of&lt;translate-mouse-notifier&gt;(context,-listen:-false)-.on-enter-=-true" command="(p) =&gt;
+              Provider.of&lt;TranslateMouseNotifier&gt;(context, listen: false)
+                  .onEnter = true" />
+    <Action name="focus-node.unfocus" command="focusNode.unfocus" />
+  </Actions>
+  <Page id="mobile-grid-mobile-grid-translate-cell-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Input id="text-field" Type="Text" />
+        <Container id="padding" Type="Vertical Stack">
+          <Container id="consumer" Type="Vertical Stack">
+            <Container id="shrink" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

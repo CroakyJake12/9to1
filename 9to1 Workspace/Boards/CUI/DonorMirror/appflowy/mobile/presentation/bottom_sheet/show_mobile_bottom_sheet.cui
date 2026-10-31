@@ -1,0 +1,34 @@
+<Cui id="bottom-sheet-show-mobile-bottom-sheet" product="9-1" version="1">
+  <Page id="bottom-sheet-show-mobile-bottom-sheet-root">
+    <Container id="divider" Type="Vertical Stack" height="0.5" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="expanded" Type="Vertical Stack">
+        <Container id="single-child-scroll-view" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="column-2" Type="Vertical Stack">
+      <Container id="flexible" Type="Vertical Stack">
+        <Container id="single-child-scroll-view-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="vspace" Type="Vertical Stack" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="column-3" Type="Vertical Stack" />
+    <Container id="column-4" Type="Vertical Stack" />
+    <Container id="padding-2" Type="Vertical Stack" padding="4.0">
+      <Container id="sized-box" Type="Vertical Stack" height="44.0">
+        <Container id="stack" Type="Absolute">
+          <Container id="align" Type="Vertical Stack" />
+          <Container id="align-2" Type="Vertical Stack" />
+          <Container id="align-3" Type="Vertical Stack" />
+          <Container id="align-4" Type="Vertical Stack">
+            <Container id="container" Type="Vertical Stack">
+              <Text id="text" />
+            </Container>
+          </Container>
+          <Container id="align-5" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

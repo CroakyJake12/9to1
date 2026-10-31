@@ -1,0 +1,11 @@
+<Cui id="widgets-favorite-button" product="9-1" version="1">
+  <Page id="widgets-favorite-button-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="flowy-tooltip" Type="Floating">
+        <Container id="padding" Type="Vertical Stack" padding="6">
+          <Image id="flowy-svg" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

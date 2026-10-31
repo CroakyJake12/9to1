@@ -1,0 +1,38 @@
+<Cui id="style-widget-button" product="9-1" version="1">
+  <Actions>
+    <Action name="disable-?-null-:-on-secondary-tap" command="disable ? null : onSecondaryTap" />
+    <Action name="disable-?-null-:-on-tap" command="disable ? null : onTap" />
+    <Action name="on-pressed" command="onPressed" />
+  </Actions>
+  <Page id="style-widget-button-root">
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Container id="expanded" Type="Vertical Stack" />
+    <Container id="hspace-2" Type="Horizontal Stack" />
+    <Container id="row" Type="Horizontal Stack" />
+    <Container id="container" Type="Vertical Stack">
+      <Container id="padding" Type="Vertical Stack" padding="6 4" />
+    </Container>
+    <Button id="flowy-button" Type="Action" />
+    <Container id="ink-well" Type="Vertical Stack" />
+    <Container id="gesture-detector-2" Type="Vertical Stack" />
+    <Container id="hspace-3" Type="Horizontal Stack" />
+    <Container id="expanded-2" Type="Vertical Stack" />
+    <Container id="hspace-4" Type="Horizontal Stack" />
+    <Container id="row-2" Type="Horizontal Stack" />
+    <Container id="container-2" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" padding="6 4" />
+    </Container>
+    <Container id="hspace-5" Type="Horizontal Stack" />
+    <Text id="text" text-alignment="Center" />
+    <Container id="row-3" Type="Horizontal Stack" />
+    <Button id="text-button" Type="Action" action="on-pressed" />
+    <Container id="flowy-tooltip" Type="Floating" />
+    <Container id="hspace-6" Type="Horizontal Stack" />
+    <Text id="rich-text" text-alignment="Center" />
+    <Container id="padding-3" Type="Vertical Stack">
+      <Container id="row-4" Type="Horizontal Stack" />
+    </Container>
+    <Container id="flowy-tooltip-2" Type="Floating" />
+  </Page>
+</Cui>

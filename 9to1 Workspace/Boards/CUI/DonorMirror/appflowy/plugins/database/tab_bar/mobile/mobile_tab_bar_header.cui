@@ -1,0 +1,43 @@
+<Cui id="mobile-mobile-tab-bar-header" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-show-transition-mobile-bottom-sheet(-context,-show-divider:-false,-builder:-(-)-{-return-multi-bloc-provider(-providers:-[-bloc-provider&lt;view-bloc&gt;.value(-value:-context.read&lt;view-bloc&gt;(),-),-bloc-provider&lt;database-tab-bar-bloc&gt;.value(-value:-context.read&lt;database-tab-bar-bloc&gt;(),-),-],-child:-const-mobile-database-view-list(),-);-},-);-}" command="() {
+            showTransitionMobileBottomSheet(
+              context,
+              showDivider: false,
+              builder: (_) {
+                return MultiBlocProvider(
+                  providers: [
+                    BlocProvider&lt;ViewBloc&gt;.value(
+                      value: context.read&lt;ViewBloc&gt;(),
+                    ),
+                    BlocProvider&lt;DatabaseTabBarBloc&gt;.value(
+                      value: context.read&lt;DatabaseTabBarBloc&gt;(),
+                    ),
+                  ],
+                  child: const MobileDatabaseViewList(),
+                );
+              },
+            );
+          }" />
+  </Actions>
+  <Page id="mobile-mobile-tab-bar-header-root">
+    <Container id="padding" Type="Vertical Stack" padding="14.0 5.0">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="bloc-builder" Type="Vertical Stack">
+          <Container id="shrink" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="bloc-builder-2" Type="Vertical Stack">
+      <Container id="shrink-2" Type="Vertical Stack" />
+      <Button id="text-button" Type="Action" action="()-{-show-transition-mobile-bottom-sheet(-context,-show-divider:-false,-builder:-(-)-{-return-multi-bloc-provider(-providers:-[-bloc-provider&lt;view-bloc&gt;.value(-value:-context.read&lt;view-bloc&gt;(),-),-bloc-provider&lt;database-tab-bar-bloc&gt;.value(-value:-context.read&lt;database-tab-bar-bloc&gt;(),-),-],-child:-const-mobile-database-view-list(),-);-},-);-}">
+        <Container id="row-2" Type="Horizontal Stack">
+          <Container id="hspace" Type="Horizontal Stack" />
+          <Container id="flexible" Type="Vertical Stack" />
+          <Container id="hspace-2" Type="Horizontal Stack" />
+          <Image id="flowy-svg" />
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

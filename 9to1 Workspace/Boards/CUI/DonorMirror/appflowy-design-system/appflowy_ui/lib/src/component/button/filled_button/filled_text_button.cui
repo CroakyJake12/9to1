@@ -1,0 +1,6 @@
+<Cui id="filled-button-filled-text-button" product="9-1" version="1">
+  <Page id="filled-button-filled-text-button-root">
+    <Text id="text" text-alignment="Center" />
+    <Container id="align" Type="Vertical Stack" />
+  </Page>
+</Cui>

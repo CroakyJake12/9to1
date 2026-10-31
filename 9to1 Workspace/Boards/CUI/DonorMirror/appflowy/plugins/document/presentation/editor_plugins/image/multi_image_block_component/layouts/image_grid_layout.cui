@@ -1,0 +1,14 @@
+<Cui id="layouts-image-grid-layout" product="9-1" version="1">
+  <Page id="layouts-image-grid-layout-root">
+    <Container id="gesture-detector" Type="Vertical Stack" />
+    <Container id="gesture-detector-2" Type="Vertical Stack" />
+    <Container id="gesture-detector-3" Type="Vertical Stack" />
+    <Container id="gesture-detector-4" Type="Vertical Stack" />
+    <Container id="gesture-detector-5" Type="Vertical Stack" />
+    <Container id="gesture-detector-6" Type="Vertical Stack" />
+    <Container id="gesture-detector-7" Type="Vertical Stack" />
+    <Container id="gesture-detector-8" Type="Vertical Stack" />
+    <Container id="gesture-detector-9" Type="Vertical Stack" />
+    <Container id="gesture-detector-10" Type="Vertical Stack" />
+  </Page>
+</Cui>

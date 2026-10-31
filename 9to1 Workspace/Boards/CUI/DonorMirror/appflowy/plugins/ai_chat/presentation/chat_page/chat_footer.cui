@@ -1,0 +1,6 @@
+<Cui id="chat-page-chat-footer" product="9-1" version="1">
+  <Page id="chat-page-chat-footer-root">
+    <Container id="shrink" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,7 @@
+<Cui id="style-widget-divider" product="9-1" version="1">
+  <Page id="style-widget-divider-root">
+    <Container id="padding" Type="Vertical Stack">
+      <Container id="divider" Type="Vertical Stack" height="1.0" />
+    </Container>
+  </Page>
+</Cui>

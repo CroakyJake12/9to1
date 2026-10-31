@@ -1,0 +1,20 @@
+<Cui id="calculations-calculation-selector" product="9-1" version="1">
+  <Actions>
+    <Action name="set-hovering" command="_setHovering" />
+  </Actions>
+  <Page id="calculations-calculation-selector-root">
+    <Container id="mouse-region" Type="Vertical Stack">
+      <Container id="animated-opacity" Type="Vertical Stack">
+        <Button id="flowy-button" Type="Action">
+          <Container id="row" Type="Horizontal Stack">
+            <Container id="flexible" Type="Vertical Stack">
+              <Text id="flowy-text" />
+            </Container>
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Image id="flowy-svg" />
+          </Container>
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

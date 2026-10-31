@@ -1,0 +1,15 @@
+<Cui id="sort-order-panel" product="9-1" version="1">
+  <Actions>
+    <Action name="on-condition" command="onCondition" />
+  </Actions>
+  <Page id="sort-order-panel-root">
+    <Container id="intrinsic-height" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="on-condition">
+        <Text id="flowy-text" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,14 @@
+<Cui id="desktop-grid-desktop-grid-checkbox-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="bloc.add" command="bloc.add" />
+  </Actions>
+  <Page id="desktop-grid-desktop-grid-checkbox-cell-root">
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="container" Type="Vertical Stack">
+        <Button id="flowy-icon-button" Type="Action" action="bloc.add" width="20">
+          <Image id="flowy-svg" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

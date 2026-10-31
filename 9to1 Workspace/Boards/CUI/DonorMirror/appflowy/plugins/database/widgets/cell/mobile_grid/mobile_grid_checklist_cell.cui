@@ -1,0 +1,22 @@
+<Cui id="mobile-grid-mobile-grid-checklist-cell" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-bloc-provider.value(-value:-bloc,-child:-const-mobile-checklist-cell-edit-screen(),-);-},-)" command="() =&gt; showMobileBottomSheet(
+            context,
+            builder: (context) {
+              return BlocProvider.value(
+                value: bloc,
+                child: const MobileChecklistCellEditScreen(),
+              );
+            },
+          )" />
+  </Actions>
+  <Page id="mobile-grid-mobile-grid-checklist-cell-root">
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Button id="flowy-button" Type="Action" action="()-=&gt;-show-mobile-bottom-sheet(-context,-builder:-(context)-{-return-bloc-provider.value(-value:-bloc,-child:-const-mobile-checklist-cell-edit-screen(),-);-},-)">
+        <Container id="container" Type="Vertical Stack">
+          <Container id="shrink" Type="Vertical Stack" />
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

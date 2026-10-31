@@ -1,0 +1,10 @@
+<Cui id="columns-simple-column-block-component" product="9-1" version="1">
+  <Page id="columns-simple-column-block-component-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="provider" Type="Vertical Stack" />
+      <Container id="decorated-box" Type="Vertical Stack" background="#FF0000FF" />
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="container" Type="Vertical Stack" background="#FF008000" />
+  </Page>
+</Cui>

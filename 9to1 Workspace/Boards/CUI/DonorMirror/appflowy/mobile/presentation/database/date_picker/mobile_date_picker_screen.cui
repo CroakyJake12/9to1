@@ -1,0 +1,13 @@
+<Cui id="date-picker-mobile-date-picker-screen" product="9-1" version="1">
+  <Page id="date-picker-mobile-date-picker-screen-root">
+    <Page id="scaffold" />
+    <Container id="list-view" Type="Vertical Stack">
+      <Container id="colored-box" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

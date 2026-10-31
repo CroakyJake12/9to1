@@ -1,0 +1,8 @@
+<Cui id="view-database-view-quick-actions" product="9-1" version="1">
+  <Page id="view-database-view-quick-actions-root">
+    <Container id="column" Type="Vertical Stack">
+      <Container id="expanded" Type="Vertical Stack" />
+      <Container id="shrink" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

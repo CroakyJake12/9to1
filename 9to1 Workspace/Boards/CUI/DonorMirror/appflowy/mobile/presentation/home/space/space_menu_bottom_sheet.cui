@@ -1,0 +1,10 @@
+<Cui id="space-space-menu-bottom-sheet" product="9-1" version="1">
+  <Page id="space-space-menu-bottom-sheet-root">
+    <Container id="column" Type="Vertical Stack" />
+    <Image id="flowy-svg" />
+    <Image id="flowy-svg-2" />
+    <Image id="flowy-svg-3" />
+    <Image id="flowy-svg-4" />
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

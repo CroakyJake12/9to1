@@ -1,0 +1,15 @@
+<Cui id="setting-settings-popup-menu" product="9-1" version="1">
+  <Page id="setting-settings-popup-menu-root">
+    <Button id="popup-menu-button" Type="Action">
+      <Container id="padding" Type="Vertical Stack" padding="8.0">
+        <Image id="flowy-svg" />
+      </Container>
+    </Button>
+    <Container id="container" Type="Vertical Stack" height="44" padding="16 12">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg-2" />
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

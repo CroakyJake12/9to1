@@ -1,0 +1,87 @@
+<Cui id="presentation-calendar-page" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-if-(state.unschedule-events.is-not-empty)-{-if-(universal-platform.is-mobile)-{-show-unscheduled-events-mobile(state.unschedule-events);-}-else-{-popover-controller.show();-}-}-}" command="() {
+                if (state.unscheduleEvents.isNotEmpty) {
+                  if (UniversalPlatform.isMobile) {
+                    _showUnscheduledEventsMobile(state.unscheduleEvents);
+                  } else {
+                    _popoverController.show();
+                  }
+                }
+              }" />
+    <Action name="on-pressed" command="onPressed" />
+    <Action name="universal-platform.is-mobile-?-()-=&gt;-show-mobile-bottom-sheet(-context,-title:-locale-keys.calendar-quick-jump-year.tr(),-show-header:-true,-show-close-button:-true,-builder:-(-)-=&gt;-sized-box(-height:-200,-child:-year-picker(-first-date:-calendar-constants.epoch-date.without-time,-last-date:-calendar-constants.max-date.without-time,-selected-date:-current-month,-current-date:-date-time.now(),-on-changed:-(new-date)-{-calendar-state?.current-state?.jump-to-month(new-date);-context.pop();-},-),-),-)-:-null" command="UniversalPlatform.isMobile
+                ? () =&gt; showMobileBottomSheet(
+                      context,
+                      title: LocaleKeys.calendar_quickJumpYear.tr(),
+                      showHeader: true,
+                      showCloseButton: true,
+                      builder: (_) =&gt; SizedBox(
+                        height: 200,
+                        child: YearPicker(
+                          firstDate: CalendarConstants.epochDate.withoutTime,
+                          lastDate: CalendarConstants.maxDate.withoutTime,
+                          selectedDate: currentMonth,
+                          currentDate: DateTime.now(),
+                          onChanged: (newDate) {
+                            _calendarState?.currentState?.jumpToMonth(newDate);
+                            context.pop();
+                          },
+                        ),
+                      ),
+                    )
+                : null" />
+  </Actions>
+  <Page id="presentation-calendar-page-root">
+    <Container id="bloc-provider" Type="Vertical Stack" />
+    <Container id="bloc-builder" Type="Vertical Stack">
+      <Container id="value-listenable-builder" Type="Vertical Stack">
+        <Container id="center" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="padding" Type="Vertical Stack" />
+    <Container id="sized-box" Type="Vertical Stack" height="24">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="gesture-detector" Type="Vertical Stack">
+          <Container id="sized-box-2" Type="Vertical Stack" height="200" />
+          <Container id="row-2" Type="Horizontal Stack">
+            <Container id="hspace" Type="Horizontal Stack" />
+            <Image id="flowy-svg" />
+          </Container>
+        </Container>
+        <Button id="flowy-icon-button" Type="Action">
+          <Image id="flowy-svg-2" />
+        </Button>
+        <Button id="flowy-icon-button-2" Type="Action">
+          <Image id="flowy-svg-3" />
+        </Button>
+        <Container id="hspace-2" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="center-2" Type="Vertical Stack">
+      <Container id="padding-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack">
+      <Container id="bloc-builder-2" Type="Vertical Stack">
+        <Container id="app-flowy-popover" Type="Context Menu">
+          <Button id="outlined-button" Type="Action" action="()-{-if-(state.unschedule-events.is-not-empty)-{-if-(universal-platform.is-mobile)-{-show-unscheduled-events-mobile(state.unschedule-events);-}-else-{-popover-controller.show();-}-}-}">
+            <Container id="flowy-tooltip" Type="Floating" />
+          </Button>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="column" Type="Vertical Stack">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="padding-3" Type="Vertical Stack" padding="6 4">
+      <Text id="flowy-text-2" />
+    </Container>
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="flexible" Type="Vertical Stack" />
+    <Container id="sized-box-3" Type="Vertical Stack" height="26">
+      <Button id="flowy-button" Type="Action" action="on-pressed" padding="8.0 4.0">
+        <Text id="flowy-text-3" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,17 @@
+<Cui id="select-option-select-option" product="9-1" version="1">
+  <Page id="select-option-select-option-root">
+    <Container id="app-flowy-popover" Type="Context Menu" />
+    <Container id="vspace" Type="Vertical Stack" />
+    <Container id="padding" Type="Vertical Stack" padding="4 1">
+      <Container id="custom-scroll-view" Type="Vertical Stack" />
+    </Container>
+    <Container id="sized-box" Type="Vertical Stack" height="20">
+      <Container id="row" Type="Horizontal Stack">
+        <Container id="expanded" Type="Vertical Stack">
+          <Text id="flowy-text" />
+        </Container>
+        <Container id="hspace" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,60 @@
+<Cui id="widgets-setting-appflowy-cloud" product="9-1" version="1">
+  <Actions>
+    <Action name="widget.on-changed" command="widget.onChanged" />
+  </Actions>
+  <Page id="widgets-setting-appflowy-cloud-root">
+    <Container id="center" Type="Vertical Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+    </Container>
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="vspace-2" Type="Vertical Stack" />
+          <Container id="vspace-3" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="center-2" Type="Vertical Stack">
+      <Input id="circular-progress-indicator-2" Type="Progress" />
+    </Container>
+    <Container id="vspace-4" Type="Vertical Stack" />
+    <Container id="row" Type="Horizontal Stack">
+      <Text id="flowy-text" />
+      <Text id="flowy-text-2" />
+    </Container>
+    <Container id="bloc-provider-2" Type="Vertical Stack">
+      <Container id="column-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="bloc-provider-3" Type="Vertical Stack">
+      <Container id="bloc-builder-2" Type="Vertical Stack">
+        <Container id="column-3" Type="Vertical Stack">
+          <Container id="vspace-5" Type="Vertical Stack" />
+          <Container id="vspace-6" Type="Vertical Stack" />
+          <Container id="vspace-7" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Text id="rich-text">
+      <Text id="text-span">
+        <Text id="text-span-2" />
+        <Text id="text-span-3" />
+        <Text id="text-span-4" />
+      </Text>
+    </Text>
+    <Container id="column-4" Type="Vertical Stack">
+      <Container id="sized-box" Type="Vertical Stack" height="28">
+        <Input id="text-field" Type="Text" />
+      </Container>
+    </Container>
+    <Text id="flowy-text-3" />
+    <Container id="row-2" Type="Horizontal Stack" />
+    <Container id="bloc-builder-3" Type="Vertical Stack">
+      <Container id="row-3" Type="Horizontal Stack" />
+    </Container>
+    <Container id="bloc-builder-4" Type="Vertical Stack">
+      <Container id="row-4" Type="Horizontal Stack" />
+    </Container>
+    <Container id="shrink" Type="Vertical Stack" />
+  </Page>
+</Cui>

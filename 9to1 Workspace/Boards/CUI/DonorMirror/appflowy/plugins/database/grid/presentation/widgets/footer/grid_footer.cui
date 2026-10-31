@@ -1,0 +1,20 @@
+<Cui id="footer-grid-footer" product="9-1" version="1">
+  <Actions>
+    <Action name="()-=&gt;-context.read&lt;grid-bloc&gt;().add(-const-grid-event.load-more-rows(),-)" command="() =&gt; context.read&lt;GridBloc&gt;().add(
+              const GridEvent.loadMoreRows(),
+            )" />
+  </Actions>
+  <Page id="footer-grid-footer-root">
+    <Button id="flowy-button" Type="Action" padding="12">
+      <Text id="flowy-text" />
+      <Image id="flowy-svg" />
+    </Button>
+    <Container id="container" Type="Vertical Stack" padding="0" />
+    <Container id="container-2" Type="Vertical Stack" padding="0">
+      <Button id="flowy-button-2" Type="Action" action="()-=&gt;-context.read&lt;grid-bloc&gt;().add(-const-grid-event.load-more-rows(),-)" padding="12">
+        <Text id="flowy-text-2" />
+        <Image id="flowy-svg-2" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

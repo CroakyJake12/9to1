@@ -1,0 +1,35 @@
+<Cui id="space-space-migration" product="9-1" version="1">
+  <Actions>
+    <Action name="on-upgrade" command="onUpgrade" />
+    <Action name="set-state" command="setState" />
+  </Actions>
+  <Page id="space-space-migration-root">
+    <Container id="container" Type="Vertical Stack" padding="12" CornerRadius="10" background="#66F5EAFF" />
+    <Container id="column" Type="Vertical Stack">
+      <Container id="vspace" Type="Vertical Stack" />
+      <Container id="vspace-2" Type="Vertical Stack" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="row" Type="Horizontal Stack">
+        <Image id="flowy-svg" />
+        <Container id="hspace" Type="Horizontal Stack" />
+        <Container id="expanded" Type="Vertical Stack">
+          <Text id="flowy-text" />
+        </Container>
+        <Image id="flowy-svg-2" />
+      </Container>
+    </Container>
+    <Container id="row-2" Type="Horizontal Stack">
+      <Image id="flowy-svg-3" />
+      <Container id="hspace-2" Type="Horizontal Stack" />
+      <Container id="expanded-2" Type="Vertical Stack">
+        <Text id="flowy-text-2" max-lines="3" />
+      </Container>
+    </Container>
+    <Container id="gesture-detector-2" Type="Vertical Stack">
+      <Container id="container-2" Type="Vertical Stack" padding="10 8" CornerRadius="9" background="#FFA44AFD">
+        <Text id="flowy-text-3" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

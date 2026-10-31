@@ -1,0 +1,12 @@
+<Cui id="recent-folder-recent-space" product="9-1" version="1">
+  <Page id="recent-folder-recent-space-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="center" Type="Vertical Stack" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="24.0" />
+    <Container id="hspace" Type="Horizontal Stack" />
+  </Page>
+</Cui>

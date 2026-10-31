@@ -1,0 +1,25 @@
+<Cui id="paste-as-paste-as-menu" product="9-1" version="1">
+  <Actions>
+    <Action name="dismiss" command="dismiss" />
+    <Action name="on-select" command="onSelect" />
+  </Actions>
+  <Page id="paste-as-paste-as-menu-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="gesture-detector" Type="Vertical Stack">
+        <Container id="stack" Type="Absolute" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" padding="6" CornerRadius="8">
+      <Container id="column" Type="Vertical Stack">
+        <Container id="container-2" Type="Vertical Stack" height="32" padding="8" />
+      </Container>
+    </Container>
+    <Container id="value-listenable-builder" Type="Vertical Stack">
+      <Container id="sized-box-2" Type="Vertical Stack" height="36">
+        <Button id="flowy-button" Type="Action" action="on-select">
+          <Text id="flowy-text" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

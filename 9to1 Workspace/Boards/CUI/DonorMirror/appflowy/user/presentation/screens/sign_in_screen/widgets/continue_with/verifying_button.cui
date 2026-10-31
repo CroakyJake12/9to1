@@ -1,0 +1,9 @@
+<Cui id="continue-with-verifying-button" product="9-1" version="1">
+  <Page id="continue-with-verifying-button-root">
+    <Container id="row" Type="Horizontal Stack">
+      <Input id="circular-progress-indicator" Type="Progress" />
+      <Container id="hspace" Type="Horizontal Stack" />
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

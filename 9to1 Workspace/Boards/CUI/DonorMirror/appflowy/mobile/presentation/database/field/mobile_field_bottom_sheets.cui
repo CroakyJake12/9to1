@@ -1,0 +1,6 @@
+<Cui id="field-mobile-field-bottom-sheets" product="9-1" version="1">
+  <Page id="field-mobile-field-bottom-sheets-root">
+    <Container id="padding" Type="Vertical Stack" padding="16" />
+    <Container id="single-child-scroll-view" Type="Vertical Stack" />
+  </Page>
+</Cui>

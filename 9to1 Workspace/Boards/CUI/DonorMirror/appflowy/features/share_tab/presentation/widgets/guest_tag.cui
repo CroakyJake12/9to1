@@ -1,0 +1,7 @@
+<Cui id="widgets-guest-tag" product="9-1" version="1">
+  <Page id="widgets-guest-tag-root">
+    <Container id="container" Type="Vertical Stack" padding="2">
+      <Text id="text" />
+    </Container>
+  </Page>
+</Cui>

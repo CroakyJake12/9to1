@@ -1,0 +1,24 @@
+<Cui id="mobile-toolbar-v3-util" product="9-1" version="1">
+  <Actions>
+    <Action name="enable-==-false-?-null-:-on-tap" command="enable == false ? null : onTap" />
+  </Actions>
+  <Page id="mobile-toolbar-v3-util-root">
+    <Image id="flowy-svg" />
+    <Container id="padding" Type="Vertical Stack">
+      <Text id="flowy-text" />
+    </Container>
+    <Container id="gesture-detector" Type="Vertical Stack">
+      <Container id="stack" Type="Absolute">
+        <Container id="container" Type="Vertical Stack" />
+        <Container id="positioned" Type="Vertical Stack">
+          <Image id="flowy-svg-2" />
+        </Container>
+        <Container id="align" Type="Vertical Stack">
+          <Image id="flowy-svg-3" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="hspace" Type="Horizontal Stack" />
+    <Container id="vspace" Type="Vertical Stack" />
+  </Page>
+</Cui>

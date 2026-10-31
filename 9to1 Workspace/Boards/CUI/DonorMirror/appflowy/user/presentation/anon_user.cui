@@ -1,0 +1,23 @@
+<Cui id="presentation-anon-user" product="9-1" version="1">
+  <Actions>
+    <Action name="()-{-context.read&lt;anon-user-bloc&gt;().add(anon-user-event.open-anon-user(user));-did-open-user();-}" command="() {
+          context.read&lt;AnonUserBloc&gt;().add(AnonUserEvent.openAnonUser(user));
+          didOpenUser();
+        }" />
+  </Actions>
+  <Page id="presentation-anon-user-root">
+    <Container id="bloc-provider" Type="Vertical Stack">
+      <Container id="bloc-builder" Type="Vertical Stack">
+        <Container id="shrink" Type="Vertical Stack" />
+        <Container id="column" Type="Vertical Stack">
+          <Container id="vspace" Type="Vertical Stack" />
+          <Container id="expanded" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+    <Image id="flowy-svg" />
+    <Container id="sized-box" Type="Vertical Stack" height="30">
+      <Button id="flowy-button" Type="Action" action="()-{-context.read&lt;anon-user-bloc&gt;().add(anon-user-event.open-anon-user(user));-did-open-user();-}" />
+    </Container>
+  </Page>
+</Cui>

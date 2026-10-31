@@ -1,0 +1,7 @@
+<Cui id="widgets-auth-form-container" product="9-1" version="1">
+  <Page id="widgets-auth-form-container-root">
+    <Container id="sized-box" Type="Vertical Stack">
+      <Container id="column" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>
