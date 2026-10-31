@@ -1,0 +1,1250 @@
+{
+  "_meaning": "Hand states for every Boards MUST, overriding the text-matching probe. basis=cluster means the state came from a cluster judgement with named evidence rather than a row-by-row verification; basis=row means I judged that row individually. Both are code-and-test readings: no Boards surface was rendered in this pass, so nothing here is acceptance evidence.",
+  "_app": "Boards",
+  "_measured_on": "2026-10-31",
+  "_rows": 138,
+  "assessments": [
+    {
+      "id": "G0:L9383-055808d1da",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/DonorParityManifest.md",
+      "reason": "the manifest exists and names the selected AppFlowy revision with classifications; the parity it records is itself incomplete, so the contract is held but the coverage is not",
+      "basis": "cluster",
+      "cluster": "Product role and donor contract",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9387-22d83d4b75",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/DonorParityManifest.md",
+      "reason": "the manifest exists and names the selected AppFlowy revision with classifications; the parity it records is itself incomplete, so the contract is held but the coverage is not",
+      "basis": "cluster",
+      "cluster": "Product role and donor contract",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9391-2e11259588",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9391-2e4f41be4d",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9393-69a14c463e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9393-b165b4cecf",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9395-01927eae60",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9395-0d1f922090",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9395-9a15b0226e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9395-59d50d28a5",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9397-ba832b6054",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9397-2f39f229dd",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9397-d31ae37968",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9397-c0ce1a0f87",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/hui/Views/Boards.cui; app/ShellChrome.cs; app.tests/BoardsVisualTests.cs",
+      "reason": "CUI views and visual tests exist, but the presentation claims in this cluster (no paper/card floating, integrated editor heading, coherent chrome/sidebar/content hierarchy, icon coherence) were not observed on screen in this pass",
+      "basis": "cluster",
+      "cluster": "Visual shell",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9401-f0fceb93ba",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/RecentBoardCatalog.cs; app.tests/RecentBoardCatalogTests.cs; app.tests/BoardsLandingRegressionTests.cs",
+      "reason": "recent-boards surface and landing regressions are covered; the global launch-screen contract itself is Home-owned and Boards' conformance to it was not observed",
+      "basis": "cluster",
+      "cluster": "Landing page",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9403-cd72717752",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/app/RecentBoardCatalog.cs; app.tests/RecentBoardCatalogTests.cs",
+      "reason": "a real Recent view backed by the catalogue, with tests",
+      "basis": "row",
+      "cluster": "Landing page",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9403-1f9708fe43",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/app/RecentBoardCatalog.cs",
+      "reason": "the catalogue is populated from actual board files; the test Empty_filtered_Boards_Library_uses_the_existing_create_and_audit_retry_host (in Haven.Desktop.Tests) pins the no-fabrication behaviour",
+      "basis": "row",
+      "cluster": "Landing page",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9405-c3023157e6",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/RecentBoardCatalog.cs; app.tests/RecentBoardCatalogTests.cs; app.tests/BoardsLandingRegressionTests.cs",
+      "reason": "recent-boards surface and landing regressions are covered; the global launch-screen contract itself is Home-owned and Boards' conformance to it was not observed",
+      "basis": "cluster",
+      "cluster": "Landing page",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9409-3a5b6cba0b",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9411-d06d950eba",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9411-cc0d15ad54",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9413-651a31a7e9",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9415-62f0116cf0",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9415-8672e11afb",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9415-3e79470fad",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9415-ff600c66a7",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9417-ff754cee69",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9417-2015d1cbf5",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/NavBuilder.cs; app/BlockGripCui.cs; app.tests/BoardsHomeBoardSwitcherTests.cs; app.tests/BoardsTreeMoveUndoRegression.cs",
+      "reason": "switcher, tree and grip behaviour exist with tests; the presentation rows in this cluster (header area, independent scroll, collapsed narrow state, visual distinction of selection/nesting/disclosure) were not observed rendered, and the grip menu has no on-screen verification at all",
+      "basis": "cluster",
+      "cluster": "Sidebar and board switching",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9421-151c4a8fe7",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs; contract/HavenBoardContract.cs; DonorParityManifest.md",
+      "reason": "a versioned rich board/page contract with stable ids exists; the same manifest records that the canonical Board/Page schema the specification requires is not yet established (Boards still rides a NotesDocument with ProductKey=boards in the shared service)",
+      "basis": "cluster",
+      "cluster": "Canonical Board and Page model",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9421-0790678e10",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs; contract/HavenBoardContract.cs; DonorParityManifest.md",
+      "reason": "a versioned rich board/page contract with stable ids exists; the same manifest records that the canonical Board/Page schema the specification requires is not yet established (Boards still rides a NotesDocument with ProductKey=boards in the shared service)",
+      "basis": "cluster",
+      "cluster": "Canonical Board and Page model",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9423-fa5fb1c541",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs; contract/HavenBoardContract.cs; DonorParityManifest.md",
+      "reason": "a versioned rich board/page contract with stable ids exists; the same manifest records that the canonical Board/Page schema the specification requires is not yet established (Boards still rides a NotesDocument with ProductKey=boards in the shared service)",
+      "basis": "cluster",
+      "cluster": "Canonical Board and Page model",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9425-0dd584b62b",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs; contract/HavenBoardContract.cs; DonorParityManifest.md",
+      "reason": "a versioned rich board/page contract with stable ids exists; the same manifest records that the canonical Board/Page schema the specification requires is not yet established (Boards still rides a NotesDocument with ProductKey=boards in the shared service)",
+      "basis": "cluster",
+      "cluster": "Canonical Board and Page model",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9427-e519849a62",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs; contract/HavenBoardContract.cs; DonorParityManifest.md",
+      "reason": "a versioned rich board/page contract with stable ids exists; the same manifest records that the canonical Board/Page schema the specification requires is not yet established (Boards still rides a NotesDocument with ProductKey=boards in the shared service)",
+      "basis": "cluster",
+      "cluster": "Canonical Board and Page model",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9431-cf9fbd10f0",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/DonorParityManifest.md line 20",
+      "reason": "the manifest states plainly that the current shared service stores Boards as a NotesDocument with ProductKey=boards and 'does not yet establish the canonical Board/Page schema required by the specification'; Boards rides its own contract, so Home's Shared Productivity Engine is not used as required",
+      "basis": "row",
+      "cluster": "Shared Productivity Engine",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9431-f1de713bcf",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/DonorParityManifest.md; 9to1 Workspace/shared/src/Haven.Application/Notes/NotesDocumentValidator.cs",
+      "reason": "shared productivity bundles are validated in the shared service, but Boards has its own board contract, so the engine is shared in places and forked in others",
+      "basis": "cluster",
+      "cluster": "Shared Productivity Engine",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9433-a9c8828630",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/DonorParityManifest.md; 9to1 Workspace/shared/src/Haven.Application/Notes/NotesDocumentValidator.cs",
+      "reason": "shared productivity bundles are validated in the shared service, but Boards has its own board contract, so the engine is shared in places and forked in others",
+      "basis": "cluster",
+      "cluster": "Shared Productivity Engine",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9437-864d190584",
+      "state": "PARTIAL",
+      "evidence": "measured presence: ViewMode/EditMode/EditView in 62 Boards files",
+      "reason": "mode machinery is present; the persistent top-right Edit/View switch and the read-only-with-respect-to-content semantics were not observed and are not covered by a named test I found",
+      "basis": "cluster",
+      "cluster": "Edit and View modes",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9441-7453251aaa",
+      "state": "PARTIAL",
+      "evidence": "measured presence: ViewMode/EditMode/EditView in 62 Boards files",
+      "reason": "mode machinery is present; the persistent top-right Edit/View switch and the read-only-with-respect-to-content semantics were not observed and are not covered by a named test I found",
+      "basis": "cluster",
+      "cluster": "Edit and View modes",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9443-c94fd3289c",
+      "state": "PARTIAL",
+      "evidence": "measured presence: ViewMode/EditMode/EditView in 62 Boards files",
+      "reason": "mode machinery is present; the persistent top-right Edit/View switch and the read-only-with-respect-to-content semantics were not observed and are not covered by a named test I found",
+      "basis": "cluster",
+      "cluster": "Edit and View modes",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9447-98a30777e0",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/app.tests/BoardsFreeformPresentationTests.cs (Free_placement_requires_unlocked_mode_and_valid_geometry; Layout_mode_and_absolute_geometry_round_trip_without_mode_switch_conversion)",
+      "reason": "the locked/unlocked distinction, the free-placement gate and the no-conversion round trip are asserted by named tests",
+      "basis": "cluster",
+      "cluster": "Locked and Unlocked layout modes",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9453-9787d253be",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/app.tests/BoardsFreeformPresentationTests.cs (Free_placement_requires_unlocked_mode_and_valid_geometry; Layout_mode_and_absolute_geometry_round_trip_without_mode_switch_conversion)",
+      "reason": "the locked/unlocked distinction, the free-placement gate and the no-conversion round trip are asserted by named tests",
+      "basis": "cluster",
+      "cluster": "Locked and Unlocked layout modes",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9455-243a0a0513",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/app.tests/BoardsFreeformPresentationTests.cs (Free_placement_requires_unlocked_mode_and_valid_geometry; Layout_mode_and_absolute_geometry_round_trip_without_mode_switch_conversion)",
+      "reason": "the locked/unlocked distinction, the free-placement gate and the no-conversion round trip are asserted by named tests",
+      "basis": "cluster",
+      "cluster": "Locked and Unlocked layout modes",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9459-e928925526",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "eng/donor-sources.json Boards/rnote binding",
+      "reason": "the Rnote-derived ink ENGINE is not consumed by Boards at any revision (Canvas pins v0.14.2 and our fork changes at 44ff1089 are not consumed either), so free drawing over the page via the Home shared engine is not met; Boards' own ink support exists but is not that engine",
+      "basis": "row",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9459-87b451a781",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Ink_tools_pressure_eraser_selection_and_view_survive_reopen)",
+      "reason": "ink with pressure, eraser and selection survives reopen in Boards' own contract tests; DrawingLayer naming grounded absence: no match for /DrawingLayer|InkLayer/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), and the strokes are not carried by the Home shared-engine ink layer",
+      "basis": "cluster",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9461-72e46fc419",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Ink_tools_pressure_eraser_selection_and_view_survive_reopen)",
+      "reason": "ink with pressure, eraser and selection survives reopen in Boards' own contract tests; DrawingLayer naming grounded absence: no match for /DrawingLayer|InkLayer/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), and the strokes are not carried by the Home shared-engine ink layer",
+      "basis": "cluster",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9461-93467c1e5c",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Ink_tools_pressure_eraser_selection_and_view_survive_reopen)",
+      "reason": "ink with pressure, eraser and selection survives reopen in Boards' own contract tests; DrawingLayer naming grounded absence: no match for /DrawingLayer|InkLayer/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), and the strokes are not carried by the Home shared-engine ink layer",
+      "basis": "cluster",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9461-bcd03ec88e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Ink_tools_pressure_eraser_selection_and_view_survive_reopen)",
+      "reason": "ink with pressure, eraser and selection survives reopen in Boards' own contract tests; DrawingLayer naming grounded absence: no match for /DrawingLayer|InkLayer/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), and the strokes are not carried by the Home shared-engine ink layer",
+      "basis": "cluster",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9463-42bbff0ecd",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Ink_tools_pressure_eraser_selection_and_view_survive_reopen)",
+      "reason": "ink with pressure, eraser and selection survives reopen in Boards' own contract tests; DrawingLayer naming grounded absence: no match for /DrawingLayer|InkLayer/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), and the strokes are not carried by the Home shared-engine ink layer",
+      "basis": "cluster",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9463-f98e538a7a",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Ink_tools_pressure_eraser_selection_and_view_survive_reopen)",
+      "reason": "ink with pressure, eraser and selection survives reopen in Boards' own contract tests; DrawingLayer naming grounded absence: no match for /DrawingLayer|InkLayer/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), and the strokes are not carried by the Home shared-engine ink layer",
+      "basis": "cluster",
+      "cluster": "Free drawing and ink",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9467-90a3415c26",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9467-54316f26b7",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9471-0395923ee3",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9473-8e7b020bf7",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs",
+      "reason": "the toolbar builder exposes block/text tooling; there are no Rnote-derived pen/eraser/ink controls in it, consistent with the engine gap above",
+      "basis": "row",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9475-d149b0334e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9475-877eaa12dc",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9477-26d3236a8a",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9477-578f14e4c6",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9477-7d811481e3",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9477-7bbbebbcf1",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9477-ec7271f79f",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9479-bf5d3b9e28",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/ToolbarBuilder.cs; app/BoardsViewModel.Toolbar.cs; app.tests/BoardsSingleToolbarTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "there is a single toolbar with conversion and selection behaviour under test; grounded absence: no match for /Island/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026), so the authored requirement for a persistent FLOATING contextual island is not met by that naming, and its positioning/scroll/accessibility rows were not observed",
+      "basis": "cluster",
+      "cluster": "Floating contextual formatting island",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9483-a7355813ea",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenBoardGenerativePlan.cs; tests/HavenBoardGenerativePlanTests.cs; hui/HavenBoardGenerativeUiCoordinator.cs",
+      "reason": "a generative plan and review flow exists with tests; grounded absence: no match for /AIBar|AiBar/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) in Boards, so Boards' integration with the global persistent AI bar and its semantic context (active board/page/selection/layout mode) is not established",
+      "basis": "cluster",
+      "cluster": "Persistent AI bar",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9483-e121999622",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenBoardGenerativePlan.cs; tests/HavenBoardGenerativePlanTests.cs; hui/HavenBoardGenerativeUiCoordinator.cs",
+      "reason": "a generative plan and review flow exists with tests; grounded absence: no match for /AIBar|AiBar/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) in Boards, so Boards' integration with the global persistent AI bar and its semantic context (active board/page/selection/layout mode) is not established",
+      "basis": "cluster",
+      "cluster": "Persistent AI bar",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9485-1f68b493c4",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "AI mutations cannot route through 9to1.Boards.* because that namespace does not exist (measured absence); the generative plan applies typed commands internally, which is close but not the required API surface",
+      "basis": "row",
+      "cluster": "Persistent AI bar",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9485-7b1c09bf6f",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs",
+      "reason": "donor CRUD shapes are mapped onto typed 9to1 commands rather than calling donor services; no hidden AppFlowy AI invocation path was found",
+      "basis": "row",
+      "cluster": "Persistent AI bar",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9489-ee7f81e2f6",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9489-97d17d9bdd",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9491-7f7e2c0691",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Heading_4_to_6_style_ids_round_trip_and_v2_migration_seeds_them)",
+      "reason": "Heading 4/5/6 styles exist with a migration path, asserted by name",
+      "basis": "row",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9491-fbe72e7379",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Custom_style_lifecycle_apply_persist_reopen_delete_fallback; Law_board_custom_styles_persist_with_applications)",
+      "reason": "custom styles are versioned definitions referenced by stable ids, under test",
+      "basis": "row",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9493-26ef3ccc8e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9493-224f697594",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9495-e28b68008e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9497-65cb5aab10",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9497-55e809cd93",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9499-5ea827391b",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9499-98de4af537",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs; tests/HavenRichBoardTests.cs; app.tests/BoardsBlockConversionTests.cs",
+      "reason": "donor CRUD is mapped onto typed commands and block conversion is tested, but full non-proprietary block parity is not demonstrated, and the parity manifest is a hand-kept list, which the requirement explicitly forbids as the sole mechanism",
+      "basis": "cluster",
+      "cluster": "Block system and AppFlowy block parity",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9503-0726b6608a",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Graph_block_full_lifecycle_survives_reopen_editable; Graph_expression_evaluator_is_deterministic_and_safe; Graph_slider_definitions_persist_and_drive_existing_expression_evaluator; Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves)",
+      "reason": "multiple named tests cover the graph lifecycle, expression safety, sliders and inequality handling",
+      "basis": "cluster",
+      "cluster": "Graph block",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9503-e706a163ef",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Graph_block_full_lifecycle_survives_reopen_editable; Graph_expression_evaluator_is_deterministic_and_safe; Graph_slider_definitions_persist_and_drive_existing_expression_evaluator; Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves)",
+      "reason": "multiple named tests cover the graph lifecycle, expression safety, sliders and inequality handling",
+      "basis": "cluster",
+      "cluster": "Graph block",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9505-7854bb95ef",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Graph_block_full_lifecycle_survives_reopen_editable; Graph_expression_evaluator_is_deterministic_and_safe; Graph_slider_definitions_persist_and_drive_existing_expression_evaluator; Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves)",
+      "reason": "multiple named tests cover the graph lifecycle, expression safety, sliders and inequality handling",
+      "basis": "cluster",
+      "cluster": "Graph block",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9505-e3ca573d9e",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Graph_block_full_lifecycle_survives_reopen_editable; Graph_expression_evaluator_is_deterministic_and_safe; Graph_slider_definitions_persist_and_drive_existing_expression_evaluator; Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves)",
+      "reason": "multiple named tests cover the graph lifecycle, expression safety, sliders and inequality handling",
+      "basis": "cluster",
+      "cluster": "Graph block",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9507-cdf70bca33",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Graph_block_full_lifecycle_survives_reopen_editable; Graph_expression_evaluator_is_deterministic_and_safe; Graph_slider_definitions_persist_and_drive_existing_expression_evaluator; Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves)",
+      "reason": "multiple named tests cover the graph lifecycle, expression safety, sliders and inequality handling",
+      "basis": "cluster",
+      "cluster": "Graph block",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9509-74d1810d28",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs (Graph_block_full_lifecycle_survives_reopen_editable; Graph_expression_evaluator_is_deterministic_and_safe; Graph_slider_definitions_persist_and_drive_existing_expression_evaluator; Graph_inequalities_resolve_boundary_and_shaded_side_without_evaluating_comparisons_as_curves)",
+      "reason": "multiple named tests cover the graph lifecycle, expression safety, sliders and inequality handling",
+      "basis": "cluster",
+      "cluster": "Graph block",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9513-75ced2f81e",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardTests.cs (Image_and_divider_blocks_survive_reopen)",
+      "reason": "image blocks round-trip; crop, rotate, aspect-ratio, fit/fill and the non-destructive-source guarantee are not covered by any test or code I located",
+      "basis": "cluster",
+      "cluster": "Enhanced image formatting",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9513-af72c7e7cf",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardTests.cs (Image_and_divider_blocks_survive_reopen)",
+      "reason": "image blocks round-trip; crop, rotate, aspect-ratio, fit/fill and the non-destructive-source guarantee are not covered by any test or code I located",
+      "basis": "cluster",
+      "cluster": "Enhanced image formatting",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9517-9ea376f273",
+      "state": "PARTIAL",
+      "evidence": "measured: TableBlock appears in 4 Boards files",
+      "reason": "table blocks exist, but the required row/column add-remove-reorder-resize-merge and the formatting-separated-from-data guarantee are not evidenced",
+      "basis": "cluster",
+      "cluster": "Enhanced table formatting",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9517-433877bee9",
+      "state": "PARTIAL",
+      "evidence": "measured: TableBlock appears in 4 Boards files",
+      "reason": "table blocks exist, but the required row/column add-remove-reorder-resize-merge and the formatting-separated-from-data guarantee are not evidenced",
+      "basis": "cluster",
+      "cluster": "Enhanced table formatting",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9521-4f8bd88bc4",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsEmbeddedArtifactHost.cs; app.tests/EmbeddedPresentationLifecycleTests.cs",
+      "reason": "embedded hosts and their lifecycle are modelled and tested; the shared-engine block equivalence across Write/Present/Canvas/Data was not demonstrated from Boards' side",
+      "basis": "cluster",
+      "cluster": "Cross-app parity blocks",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9523-3d4b70c088",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsEmbeddedArtifactHost.cs; app.tests/EmbeddedPresentationLifecycleTests.cs",
+      "reason": "embedded hosts and their lifecycle are modelled and tested; the shared-engine block equivalence across Write/Present/Canvas/Data was not demonstrated from Boards' side",
+      "basis": "cluster",
+      "cluster": "Cross-app parity blocks",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9527-1e31415345",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenBoardFreeformContractTests.cs (Canvas_page_accepts_only_a_canvas_owner_reference; Canvas_objects_move_resize_retext_and_remove_with_reopen)",
+      "reason": "Canvas pages are real and tested; a Write page type in Boards was not evidenced",
+      "basis": "cluster",
+      "cluster": "Write and Canvas page types",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9529-cabe89c150",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenBoardFreeformContractTests.cs (Canvas_page_accepts_only_a_canvas_owner_reference; Canvas_objects_move_resize_retext_and_remove_with_reopen)",
+      "reason": "Canvas pages are real and tested; a Write page type in Boards was not evidenced",
+      "basis": "cluster",
+      "cluster": "Write and Canvas page types",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9529-2226555866",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenBoardFreeformContractTests.cs (Canvas_page_accepts_only_a_canvas_owner_reference; Canvas_objects_move_resize_retext_and_remove_with_reopen)",
+      "reason": "Canvas pages are real and tested; a Write page type in Boards was not evidenced",
+      "basis": "cluster",
+      "cluster": "Write and Canvas page types",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9531-50fcff0802",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenBoardFreeformContractTests.cs (Canvas_page_accepts_only_a_canvas_owner_reference; Canvas_objects_move_resize_retext_and_remove_with_reopen)",
+      "reason": "Canvas pages are real and tested; a Write page type in Boards was not evidenced",
+      "basis": "cluster",
+      "cluster": "Write and Canvas page types",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9537-9d2e957b6a",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat PageType value and no Chat page surface in Boards first-party source",
+      "reason": "Boards' page kinds do not include a Chat page in this checkout; the typed-action machinery exists in the chat service elsewhere, so the Boards-side requirement is unmet",
+      "basis": "cluster",
+      "cluster": "Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9537-a0c19d183a",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat PageType value and no Chat page surface in Boards first-party source",
+      "reason": "Boards' page kinds do not include a Chat page in this checkout; the typed-action machinery exists in the chat service elsewhere, so the Boards-side requirement is unmet",
+      "basis": "cluster",
+      "cluster": "Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9539-0e8634c881",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat PageType value and no Chat page surface in Boards first-party source",
+      "reason": "Boards' page kinds do not include a Chat page in this checkout; the typed-action machinery exists in the chat service elsewhere, so the Boards-side requirement is unmet",
+      "basis": "cluster",
+      "cluster": "Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9543-cfb104de49",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /ScopedChat/ in 9to1 Workspace/shared first-party source (measured 31 Oct 2026) - the term does not occur anywhere in first-party source",
+      "basis": "cluster",
+      "cluster": "Scoped Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9543-3e87f8e5b1",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /ScopedChat/ in 9to1 Workspace/shared first-party source (measured 31 Oct 2026) - the term does not occur anywhere in first-party source",
+      "basis": "cluster",
+      "cluster": "Scoped Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9545-f590150a69",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /ScopedChat/ in 9to1 Workspace/shared first-party source (measured 31 Oct 2026) - the term does not occur anywhere in first-party source",
+      "basis": "cluster",
+      "cluster": "Scoped Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9547-1fac747bdb",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /ScopedChat/ in 9to1 Workspace/shared first-party source (measured 31 Oct 2026) - the term does not occur anywhere in first-party source",
+      "basis": "cluster",
+      "cluster": "Scoped Chat page type",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9551-bd4ef2f609",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat page type to host subpages, and no Pending/Ready/Failed/Removed ingestion states in Boards",
+      "reason": "depends on the Chat page type above, which is not implemented, so ingestion states (Pending/Ready/Failed/Removed) and revocation semantics have no Boards surface to live on",
+      "basis": "cluster",
+      "cluster": "Chat source subpages",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9553-7fb54db575",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat page type to host subpages, and no Pending/Ready/Failed/Removed ingestion states in Boards",
+      "reason": "depends on the Chat page type above, which is not implemented, so ingestion states (Pending/Ready/Failed/Removed) and revocation semantics have no Boards surface to live on",
+      "basis": "cluster",
+      "cluster": "Chat source subpages",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9553-127175ee3b",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat page type to host subpages, and no Pending/Ready/Failed/Removed ingestion states in Boards",
+      "reason": "depends on the Chat page type above, which is not implemented, so ingestion states (Pending/Ready/Failed/Removed) and revocation semantics have no Boards surface to live on",
+      "basis": "cluster",
+      "cluster": "Chat source subpages",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9555-80eadfe20a",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no Chat page type to host subpages, and no Pending/Ready/Failed/Removed ingestion states in Boards",
+      "reason": "depends on the Chat page type above, which is not implemented, so ingestion states (Pending/Ready/Failed/Removed) and revocation semantics have no Boards surface to live on",
+      "basis": "cluster",
+      "cluster": "Chat source subpages",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9559-884cb57cf3",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsDatabaseSource.cs; app.tests/BoardsDatabase{Insertion,Presentation,Reference,Close}Tests.cs",
+      "reason": "a database-backed source with insertion, presentation, reference and close behaviour under test; the donor-facing filtering/sorting/grouping/view-selection workflow is not demonstrated",
+      "basis": "cluster",
+      "cluster": "Data-backed structured items",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9561-4a590b1944",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsDatabaseSource.cs; app.tests/BoardsDatabase{Insertion,Presentation,Reference,Close}Tests.cs",
+      "reason": "a database-backed source with insertion, presentation, reference and close behaviour under test; the donor-facing filtering/sorting/grouping/view-selection workflow is not demonstrated",
+      "basis": "cluster",
+      "cluster": "Data-backed structured items",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9561-4f86c24bf0",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsDatabaseSource.cs; app.tests/BoardsDatabase{Insertion,Presentation,Reference,Close}Tests.cs",
+      "reason": "a database-backed source with insertion, presentation, reference and close behaviour under test; the donor-facing filtering/sorting/grouping/view-selection workflow is not demonstrated",
+      "basis": "cluster",
+      "cluster": "Data-backed structured items",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9565-7a7a88da0f",
+      "state": "IMPLEMENTED",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardPlacementTests.cs; app.tests/Layout_mode_and_absolute_geometry_round_trip_without_mode_switch_conversion",
+      "reason": "placement is stored as document-space absolute geometry and survives a mode switch without conversion",
+      "basis": "row",
+      "cluster": "Board document-space coordinates",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9567-7ea9ff6950",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/tests/HavenRichBoardPlacementTests.cs; app.tests/BoardsFreeformInsertionTests.cs",
+      "reason": "absolute placement is stored and round-tripped; the explicit statement that persistence uses Board document-space rather than CUI's proportional -1000..1000 range, and the view-transform-only guarantee for zoom/DPI/pan, were not directly verified",
+      "basis": "cluster",
+      "cluster": "Board document-space coordinates",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9571-2f9ae698eb",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsEmbeddedArtifactHost.cs; contract/ContentAddressedHavenBoardAttachmentStore.cs",
+      "reason": "artifact hosts and content-addressed attachments exist; explicit ownership independence, attach-without-transfer and delete-board-not-artifact were not each evidenced",
+      "basis": "cluster",
+      "cluster": "Embedded artifact ownership and lifecycle",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9571-728c6ed3fc",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsEmbeddedArtifactHost.cs; contract/ContentAddressedHavenBoardAttachmentStore.cs",
+      "reason": "artifact hosts and content-addressed attachments exist; explicit ownership independence, attach-without-transfer and delete-board-not-artifact were not each evidenced",
+      "basis": "cluster",
+      "cluster": "Embedded artifact ownership and lifecycle",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9573-6ef130d0ae",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/app/IBoardsEmbeddedArtifactHost.cs; contract/ContentAddressedHavenBoardAttachmentStore.cs",
+      "reason": "artifact hosts and content-addressed attachments exist; explicit ownership independence, attach-without-transfer and delete-board-not-artifact were not each evidenced",
+      "basis": "cluster",
+      "cluster": "Embedded artifact ownership and lifecycle",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9577-1bd8a8172a",
+      "state": "NOT-ASSESSED",
+      "evidence": "not grounded in this pass",
+      "reason": "I did not verify the narrowest-entity resolution claim either way; recorded as unassessed rather than guessed",
+      "basis": "row",
+      "cluster": "Collaboration and concurrency",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9577-9b61198d38",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenBoardCollaboration.cs; hui/HavenBoardCollaborationCoordinator.cs; tests/HavenBoardCollaborationContractTests.cs (Disabled_sync_adapter_never_claims_remote_delivery_or_returns_remote_data)",
+      "reason": "collaboration contract and coordinator are tested, including truthfulness when sync is disabled; narrowest-entity conflict resolution, deterministic ordering under simultaneous moves, ephemeral presence state and reconnect replay identity were not each shown",
+      "basis": "cluster",
+      "cluster": "Collaboration and concurrency",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9579-70ca0a0bd2",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenBoardCollaboration.cs; hui/HavenBoardCollaborationCoordinator.cs; tests/HavenBoardCollaborationContractTests.cs (Disabled_sync_adapter_never_claims_remote_delivery_or_returns_remote_data)",
+      "reason": "collaboration contract and coordinator are tested, including truthfulness when sync is disabled; narrowest-entity conflict resolution, deterministic ordering under simultaneous moves, ephemeral presence state and reconnect replay identity were not each shown",
+      "basis": "cluster",
+      "cluster": "Collaboration and concurrency",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9579-7d5deb92e7",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenBoardCollaboration.cs; hui/HavenBoardCollaborationCoordinator.cs; tests/HavenBoardCollaborationContractTests.cs (Disabled_sync_adapter_never_claims_remote_delivery_or_returns_remote_data)",
+      "reason": "collaboration contract and coordinator are tested, including truthfulness when sync is disabled; narrowest-entity conflict resolution, deterministic ordering under simultaneous moves, ephemeral presence state and reconnect replay identity were not each shown",
+      "basis": "cluster",
+      "cluster": "Collaboration and concurrency",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9579-21638f3a9b",
+      "state": "NOT-ASSESSED",
+      "evidence": "not grounded in this pass",
+      "reason": "reconnect/offline replay identity not verified in this pass",
+      "basis": "row",
+      "cluster": "Collaboration and concurrency",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9583-92b8c91179",
+      "state": "PARTIAL",
+      "evidence": "measured: capability wording in 8 Boards files, capabilityMatrix/PlatformCapability identifiers absent",
+      "reason": "some capability awareness exists; an explicit queryable capability matrix and the closest-useful-alternative behaviour were not found",
+      "basis": "cluster",
+      "cluster": "Platform capability behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9583-a3a4fbe78b",
+      "state": "PARTIAL",
+      "evidence": "measured: capability wording in 8 Boards files, capabilityMatrix/PlatformCapability identifiers absent",
+      "reason": "some capability awareness exists; an explicit queryable capability matrix and the closest-useful-alternative behaviour were not found",
+      "basis": "cluster",
+      "cluster": "Platform capability behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9585-57039a1c74",
+      "state": "NOT-ASSESSED",
+      "evidence": "not grounded in this pass",
+      "reason": "closest-useful-alternative behaviour not verified in this pass",
+      "basis": "row",
+      "cluster": "Platform capability behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9589-f6326698b9",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /Virtualiz|virtualis/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) in Boards; large-board lazy loading, stroke culling and the representative performance-acceptance scenarios have no implementation or harness in this checkout",
+      "basis": "cluster",
+      "cluster": "Performance and resource behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9589-5e4043297a",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /Virtualiz|virtualis/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) in Boards; large-board lazy loading, stroke culling and the representative performance-acceptance scenarios have no implementation or harness in this checkout",
+      "basis": "cluster",
+      "cluster": "Performance and resource behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9591-3339a380a6",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /Virtualiz|virtualis/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) in Boards; large-board lazy loading, stroke culling and the representative performance-acceptance scenarios have no implementation or harness in this checkout",
+      "basis": "cluster",
+      "cluster": "Performance and resource behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9591-0b691f3976",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: no performance harness for Boards in this checkout",
+      "reason": "there is no large-Board/large-page/drawing-heavy/collaboration performance acceptance harness, so this acceptance-facing requirement is unmet rather than merely unmeasured",
+      "basis": "row",
+      "cluster": "Performance and resource behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9595-b13566a843",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/LocalBoardWriteLease.cs; contract/JsonFileHavenBoardStore.cs; tests/HavenBoardContractTests.cs (Corrupt_primary_recovers_previous_durable_backup; Invalid_save_is_rejected_and_previous_valid_file_survives; Failed_SaveAs_file_promotion_preserves_old_identity); app.tests/BoardsSaveDurabilityRegression.cs",
+      "reason": "crash-safe revisioned persistence and backup recovery are asserted by named tests; recoverable delete semantics grounded absence: no match for /Trash|undelete|RetainedBoard/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) (retention exists in shared, not wired for Boards) and the dirty/saving/saved/failed status distinction were not evidenced",
+      "basis": "cluster",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9595-f63ba271bf",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/LocalBoardWriteLease.cs; contract/JsonFileHavenBoardStore.cs; tests/HavenBoardContractTests.cs (Corrupt_primary_recovers_previous_durable_backup; Invalid_save_is_rejected_and_previous_valid_file_survives; Failed_SaveAs_file_promotion_preserves_old_identity); app.tests/BoardsSaveDurabilityRegression.cs",
+      "reason": "crash-safe revisioned persistence and backup recovery are asserted by named tests; recoverable delete semantics grounded absence: no match for /Trash|undelete|RetainedBoard/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) (retention exists in shared, not wired for Boards) and the dirty/saving/saved/failed status distinction were not evidenced",
+      "basis": "cluster",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9595-866eda85e9",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/LocalBoardWriteLease.cs; contract/JsonFileHavenBoardStore.cs; tests/HavenBoardContractTests.cs (Corrupt_primary_recovers_previous_durable_backup; Invalid_save_is_rejected_and_previous_valid_file_survives; Failed_SaveAs_file_promotion_preserves_old_identity); app.tests/BoardsSaveDurabilityRegression.cs",
+      "reason": "crash-safe revisioned persistence and backup recovery are asserted by named tests; recoverable delete semantics grounded absence: no match for /Trash|undelete|RetainedBoard/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) (retention exists in shared, not wired for Boards) and the dirty/saving/saved/failed status distinction were not evidenced",
+      "basis": "cluster",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9597-37bac44975",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/LocalBoardWriteLease.cs; contract/JsonFileHavenBoardStore.cs; tests/HavenBoardContractTests.cs (Corrupt_primary_recovers_previous_durable_backup; Invalid_save_is_rejected_and_previous_valid_file_survives; Failed_SaveAs_file_promotion_preserves_old_identity); app.tests/BoardsSaveDurabilityRegression.cs",
+      "reason": "crash-safe revisioned persistence and backup recovery are asserted by named tests; recoverable delete semantics grounded absence: no match for /Trash|undelete|RetainedBoard/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) (retention exists in shared, not wired for Boards) and the dirty/saving/saved/failed status distinction were not evidenced",
+      "basis": "cluster",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9597-bd27e62ffa",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/LocalBoardWriteLease.cs; contract/JsonFileHavenBoardStore.cs; tests/HavenBoardContractTests.cs (Corrupt_primary_recovers_previous_durable_backup; Invalid_save_is_rejected_and_previous_valid_file_survives; Failed_SaveAs_file_promotion_preserves_old_identity); app.tests/BoardsSaveDurabilityRegression.cs",
+      "reason": "crash-safe revisioned persistence and backup recovery are asserted by named tests; recoverable delete semantics grounded absence: no match for /Trash|undelete|RetainedBoard/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) (retention exists in shared, not wired for Boards) and the dirty/saving/saved/failed status distinction were not evidenced",
+      "basis": "cluster",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9599-dfec1c02d3",
+      "state": "NOT-ASSESSED",
+      "evidence": "not grounded in this pass",
+      "reason": "revision/conflict semantics for concurrent edits to the same canonical object not verified in this pass",
+      "basis": "row",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9601-96e9249c21",
+      "state": "NOT-ASSESSED",
+      "evidence": "not grounded in this pass",
+      "reason": "dirty/saving/saved/failed status truthfulness not verified in this pass",
+      "basis": "row",
+      "cluster": "Persistence, history and recovery",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9669-de4e0aa4e1",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /9to1\\.Boards\\./ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) - the canonical Boards action namespace required by the API-parity rule does not occur anywhere in first-party source; typed command reduction exists inside the board contract, but it is not an exposed 9to1.Boards.* surface",
+      "basis": "cluster",
+      "cluster": "Boards API",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9669-322a0d6075",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/HavenBoardContract.cs",
+      "reason": "stable ids and structured rejections exist inside the contract, but there is no exposed API surface, so revision checks and partial/error results are not externally observable",
+      "basis": "row",
+      "cluster": "Boards API",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9673-263b2192b2",
+      "state": "PARTIAL",
+      "evidence": "measured: permission wording in 13 Boards files, confirm in 7",
+      "reason": "permission and confirmation vocabulary is present; distinct read/edit/share/external/destructive permissions and the gated-approval behaviour for purge and bulk destruction were not individually evidenced",
+      "basis": "cluster",
+      "cluster": "Permissions and risk",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9675-c841b885a0",
+      "state": "PARTIAL",
+      "evidence": "measured: permission wording in 13 Boards files, confirm in 7",
+      "reason": "permission and confirmation vocabulary is present; distinct read/edit/share/external/destructive permissions and the gated-approval behaviour for purge and bulk destruction were not individually evidenced",
+      "basis": "cluster",
+      "cluster": "Permissions and risk",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9679-810a2a4b09",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /BoardNotFound|PageNotFound|BlockNotFound/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026) in Boards (one incidental hit in shared); the structured failure vocabulary the specification names is not what the contract returns, though rejection tests for duplicate/blank/oversized ids do exist",
+      "basis": "cluster",
+      "cluster": "Failure behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9681-ff7c34925c",
+      "state": "NOT-ASSESSED",
+      "evidence": "not grounded in this pass",
+      "reason": "behaviour when Home or the engine becomes unavailable after opening was not verified",
+      "basis": "row",
+      "cluster": "Failure behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9681-c2503369cb",
+      "state": "PARTIAL",
+      "evidence": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "reason": "one storage implementation is in place; whether it can silently fall back to an incompatible private engine was not tested either way",
+      "basis": "row",
+      "cluster": "Failure behaviour",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    },
+    {
+      "id": "G0:L9716-e15b5e46c5",
+      "state": "NOT-IMPLEMENTED",
+      "evidence": "measured absence: repository-wide grep",
+      "reason": "grounded absence: no match for /Install Home|InstallHome/ in 9to1 Workspace/Boards first-party source (measured 31 Oct 2026): the Home-absent bootstrap flow the acceptance row requires is not present in Boards' launch path",
+      "basis": "cluster",
+      "cluster": "Acceptance requirements",
+      "assessed": "2026-10-31 agent code/test reading pass"
+    }
+  ]
+}

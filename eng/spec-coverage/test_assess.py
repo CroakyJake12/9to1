@@ -282,6 +282,69 @@ class ArtifactSafetyTests(unittest.TestCase):
         after = (HERE / "coverage-summary.json").read_bytes()
         self.assertEqual(after, before, "the same tree must measure to the same record")
 
+class HandStateTests(unittest.TestCase):
+    """A hand state pass must be complete, typed, evidenced, and it must beat the probe."""
+
+    def test_every_boards_must_row_has_an_explicit_hand_state(self):
+        register = json.loads((HERE / "register.json").read_text())
+        must_ids = {r["id"] for r in register["requirements"] if r["level"] == "MUST" and r["app"] == "Boards"}
+        hand = json.loads((HERE / "assessments" / "Boards.json").read_text())
+        self.assertEqual({row["id"] for row in hand["assessments"]}, must_ids,
+                         "a partial hand pass must not leave rows implicitly inheriting the probe")
+        self.assertEqual(hand["_rows"], len(hand["assessments"]))
+
+    def test_hand_states_use_only_the_allowed_vocabulary(self):
+        allowed = {"IMPLEMENTED", "PARTIAL", "NOT-IMPLEMENTED", "NOT-ASSESSED"}
+        for path in (HERE / "assessments").glob("*.json"):
+            for row in json.loads(path.read_text()).get("assessments", []):
+                self.assertIn(row["state"], allowed, f"{path.name}:{row.get('id')}")
+                self.assertTrue(row.get("reason"), f"{path.name}:{row.get('id')} has no reason")
+                self.assertIn(row.get("basis"), ("row", "cluster"), f"{path.name}:{row.get('id')} basis")
+
+    def test_unassessed_rows_are_reported_separately_and_neva_flattered_into_a_percentage(self):
+        payload = assess.score(["Boards"], write_artifacts=False)
+        row = payload["summary"]["Boards"]
+        states = row["hand_states"]
+        self.assertEqual(sum(states.values()), row["must_rows"])
+        self.assertEqual(row["must_rows"], 138)
+        self.assertAlmostEqual(row["state_coverage_pct"],
+                               round(100 * (row["must_rows"] - states["NOT-ASSESSED"]) / row["must_rows"], 1))
+        self.assertAlmostEqual(row["implemented_pct"], round(100 * states["IMPLEMENTED"] / 138, 1))
+        self.assertLessEqual(row["implemented_pct"], row["implemented_or_partial_pct"])
+
+    def test_a_hand_state_replaces_the_probe_tier_for_the_same_row(self):
+        payload = assess.score(["Boards"], write_artifacts=False)
+        tiers = [r["tier"] for r in payload["assessments"] if r["app"] == "Boards"]
+        self.assertFalse(any(t in ("WEAK-SINGLE-TERM", "CODE-PRESENT", "TEST-ASSERTED", "NO-EVIDENCE")
+                             for t in tiers),
+                         "the probe must not also be counted once a hand state exists")
+        self.assertTrue(all(t in ("IMPLEMENTED", "PARTIAL", "NOT-IMPLEMENTED", "NOT-ASSESSED") for t in tiers))
+        hand = json.loads((HERE / "assessments" / "Boards.json").read_text())
+        counts = {}
+        for row in hand["assessments"]:
+            counts[row["state"]] = counts.get(row["state"], 0) + 1
+        self.assertEqual(counts, {"PARTIAL": 95, "IMPLEMENTED": 15, "NOT-IMPLEMENTED": 22, "NOT-ASSESSED": 6},
+                         "the Boards measured state pass changed: re-measure deliberately and say why")
+
+    def test_committed_hand_evidence_all_resolves_or_states_a_measured_absence(self):
+        problems = assess.verify_hand_evidence()
+        self.assertEqual(problems, [], "hand evidence must name a real path or a stated measured absence")
+
+    def test_the_boards_pass_records_the_measured_absences_it_claims(self):
+        hand = json.loads((HERE / "assessments" / "Boards.json").read_text())
+        absent = [row for row in hand["assessments"] if row["state"] == "NOT-IMPLEMENTED"]
+        self.assertGreaterEqual(len(absent), 20)
+        for row in absent:
+            # a NOT-IMPLEMENTED claim is allowed two kinds of support: a recorded measured absence, or a named
+            # artifact whose own text supports the gap (the Boards manifest saying the canonical schema is not
+            # yet established is the clearest example)
+            supported = ("measured absence" in row["evidence"] or "absence:" in row["reason"]
+                         or bool(assess.PATHISH.search(row["evidence"])))
+            self.assertTrue(supported, f"{row['id']} claims NOT-IMPLEMENTED without recorded support")
+        self.assertGreaterEqual(sum(1 for r in absent if "measured absence" in r["evidence"]), 10,
+                                "at least most gaps must be grep-checkable absences")
+
+
 class MeasuredNumberTests(unittest.TestCase):
     """Numbers that came from a real run, pinned so a change has to be deliberate."""
 
@@ -328,9 +391,9 @@ class MeasuredNumberTests(unittest.TestCase):
         # .json were removed as evidence classes (4 of 12 audited false positives were app gap-manifest docs and
         # my own donor-registry metadata), and snake_case test names began contributing their sub-tokens (the
         # old tokeniser swallowed `Matching_challenge_commits_site_bound_ownership` into one unfindable token).
+        # Boards is excluded here because it now has a hand state pass, which replaces the probe tiers for that
+        # app entirely; its measured state pin is in HandStateTests.test_a_hand_state_replaces_the_probe_tier...
         expected = {
-            "Boards": {"must_rows": 138, "TEST-ASSERTED": 2, "CODE-PRESENT": 7, "WEAK-SINGLE-TERM": 92,
-                       "NO-EVIDENCE": 14},
             "Spaces": {"must_rows": 218, "TEST-ASSERTED": 2, "CODE-PRESENT": 17, "WEAK-SINGLE-TERM": 120,
                        "NO-EVIDENCE": 35},
             "Haven": {"must_rows": 240, "TEST-ASSERTED": 3, "CODE-PRESENT": 10, "WEAK-SINGLE-TERM": 143,

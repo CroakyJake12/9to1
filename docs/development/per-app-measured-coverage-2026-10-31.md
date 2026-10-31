@@ -91,6 +91,64 @@ not verdicts**:
 * **NO-PROBE-TERMS / unsearchable** rows are requirements written purely in prose ("MUST feel clean and
   comfortable"); they are recorded as a separate bucket rather than folded into either side.
 
+## First measured per-app state: Boards, 138 of 138 MUSTs given an explicit state
+
+The instrument's second axis is a **hand state pass**: every MUST row for an app gets an explicit
+`IMPLEMENTED` / `PARTIAL` / `NOT-IMPLEMENTED` / `NOT-ASSESSED` with evidence and a reason, in
+`eng/spec-coverage/assessments/<App>.json`, and a hand state always beats the probe. Boards is done first,
+because I know its surface from today's framework work.
+
+**Measured result for Boards (31 Oct 2026), 138 MUST requirements:**
+
+| State | Rows | Share |
+|---|---:|---:|
+| IMPLEMENTED | **15** | **10.9%** |
+| PARTIAL | **95** | 68.8% |
+| NOT-IMPLEMENTED | **22** | 15.9% |
+| NOT-ASSESSED (this pass did not ground it) | 6 | 4.3% |
+| state coverage (rows given a grounded state) | 132/138 | 95.7% |
+
+So the honest per-app sentence is: **Boards is ~11% fully implemented and ~80% implemented-or-partial against its
+138 MUST requirements, with 16% measured as not implemented.** Not "Boards is 80% done" — the PARTIAL rows are
+half-built surfaces, and a percentage that quietly credits them would be the same kind of dishonesty as my old
+±15-point ranges.
+
+How the pass works (`eng/spec-coverage/write_boards_state.py`, reproducible): 31 requirement clusters, each with
+named evidence and a reason; 19 rows judged individually. Cluster-level states are labelled `basis: cluster` in
+the file so the coarser grain is visible, not hidden. Six rows are `NOT-ASSESSED` because I did not verify them —
+recorded as a gap in the review rather than guessed either way.
+
+The gaps that are **grounded by measured absence** (the grep is written into the reason so anyone can falsify it):
+
+* `9to1.Boards.*` action namespace: **zero occurrences in the whole repository**. Every user-visible Boards action
+  is required to have an equivalent API action; there is no exposed Boards API surface at all.
+* Scoped Chat: the term `ScopedChat` appears **nowhere** in first-party source → the entire Scoped Chat page type
+  cluster (4 MUSTs) plus its grounding/provenance requirements is unimplemented.
+* Chat page type and Chat source subpages (7 MUSTs): no Chat page surface in Boards.
+* Virtualisation/lazy loading: **zero** matches in Boards → the performance cluster (4 MUSTs) is unimplemented.
+* `BoardNotFound`/`PageNotFound`/`BlockNotFound` structured failures: absent in Boards.
+* Home-absent "Install Home" bootstrap: absent in Boards' launch path.
+* Recoverable delete: `Trash`/`undelete` absent in Boards (retention exists in `shared`, not wired for Boards).
+* The **Rnote-derived ink engine is consumed by nothing**: Boards has ink support of its own (pressure, eraser,
+  selection, survive-reopen tests) but not through Home's shared engine, which is what spec L9459 requires and
+  what your answer on 31 October confirmed is the shared piece.
+* Boards' use of Home's Shared Productivity Engine: NOT-IMPLEMENTED, and the evidence is Boards' own
+  `DonorParityManifest.md` line 20, which says the shared service still stores Boards as a `NotesDocument` with
+  `ProductKey=boards` and "does not yet establish the canonical Board/Page schema required by the specification".
+
+What IS genuinely implemented is not small either, and it is asserted by named tests I read: graph blocks
+(expression safety, sliders, inequalities, full lifecycle survive-reopen), locked/unlocked layout modes with no
+silent geometry conversion, Heading 4–6 styles with migration, custom styles as versioned stable-id definitions,
+crash-safe persistence with backup recovery (`Corrupt_primary_recovers_previous_durable_backup`,
+`Invalid_save_is_rejected_and_previous_valid_file_survives`, `BoardsSaveDurabilityRegression`), Board document-space
+absolute placement surviving a mode switch, a real Recent-board catalogue, and typed command mapping instead of
+hidden donor service calls. Boards carries 113 test methods in its own suites plus ~54 Boards-relevant tests in
+Haven.Desktop.Tests.
+
+This is a code-and-test reading. **No Boards surface was rendered in this pass**, so no row here is acceptance
+evidence, and nothing about the 102 UX27 scenarios moved. The per-app number for the other apps arrives as their
+own passes are written; until then those apps report only the denominator and the probe tiers.
+
 ## Measured precision of each tier (21 hand verdicts)
 
 I hand-judged 21 probe-credited rows by reading the requirement next to the file the probe pointed at. The

@@ -62,7 +62,10 @@ MAX_TERMS_PER_ROW = 10        # probe breadth per requirement
 MAX_FILE_BYTES = 1_500_000
 
 TIERS = ("TEST-ASSERTED", "CODE-PRESENT", "MIRROR-ONLY", "WEAK-SINGLE-TERM", "NO-EVIDENCE", "NO-PROBE-TERMS",
-         "NO-DISTINCTIVE-TERM", "PARTIAL", "IMPLEMENTED", "NOT-IMPLEMENTED")
+         "NO-DISTINCTIVE-TERM", "PARTIAL", "IMPLEMENTED", "NOT-IMPLEMENTED", "NOT-ASSESSED")
+# Hand states, set in assessments/<App>.json. NOT-ASSESSED is a real category, not a rounding gap: it keeps an
+# incomplete review honest instead of letting unexamined rows fall into whichever bucket flatters the number.
+HAND_STATES = ("IMPLEMENTED", "PARTIAL", "NOT-IMPLEMENTED", "NOT-ASSESSED")
 
 # Markdown is deliberately NOT an evidence class. Measured in the first hand audit of 12 credited rows
 # (31 Oct 2026): 6 were false, and four of those six pointed at documentation - two at an app's own
@@ -426,8 +429,13 @@ def score(app_filter: list[str] | None = None, write_artifacts: bool = True) -> 
                                                ("TEST-ASSERTED", "CODE-PRESENT", "MIRROR-ONLY",
                                                 "WEAK-SINGLE-TERM", "NO-EVIDENCE", "NO-PROBE-TERMS",
                                                 "NO-DISTINCTIVE-TERM")},
-                        "override_states": {tier: counts[tier] for tier in
-                                            ("PARTIAL", "IMPLEMENTED", "NOT-IMPLEMENTED") if counts[tier]},
+                        "hand_states": {state: counts[state] for state in HAND_STATES},
+                        "state_coverage_pct": round(100 * sum(counts[s] for s in HAND_STATES if s != "NOT-ASSESSED")
+                                                    / total, 1),
+                        "implemented_pct": round(100 * counts["IMPLEMENTED"] / total, 1),
+                        "implemented_or_partial_pct": round(100 * (counts["IMPLEMENTED"] + counts["PARTIAL"])
+                                                            / total, 1),
+                        "not_implemented_pct": round(100 * counts["NOT-IMPLEMENTED"] / total, 1),
                         "code_presence_pct": round(100 * strong / total, 1),
                         "test_asserted_pct": round(100 * counts["TEST-ASSERTED"] / total, 1),
                         "no_evidence_pct": round(100 * counts["NO-EVIDENCE"] / total, 1),
@@ -471,6 +479,41 @@ def score(app_filter: list[str] | None = None, write_artifacts: bool = True) -> 
     return payload
 
 
+PATHISH = re.compile(r"(?<!\w)((?:9to1 Workspace|9to1 Models|framework|eng|docs)/[^ ;,())]+)")
+
+
+def verify_hand_evidence() -> list[str]:
+    """Hand states must point at things that exist.
+
+    An override is a human claim, so its evidence is checked the same way a pointer is: every repository path it
+    names must be present. Prose evidence ("grounded absence: ...", "measured: ...") is allowed to carry no path,
+    but then it must be a stated absence rather than a vague gesture, so a bare evidence string with no path and
+    no "absence"/"measured" marker is reported too.
+    """
+    problems: list[str] = []
+    for path in sorted(OVERRIDE_DIR.glob("*.json")) if OVERRIDE_DIR.is_dir() else []:
+        data = json.loads(path.read_text())
+        for row in data.get("assessments", []):
+            evidence = str(row.get("evidence", ""))
+            named = PATHISH.findall(evidence)
+            if not named:
+                lowered = evidence.lower()
+                if "absence" in lowered or "measured" in lowered or "not grounded" in lowered:
+                    continue
+                problems.append(f"{row.get('id')}: hand evidence names no path and no measured absence: "
+                                f"{evidence[:70]}")
+                continue
+            for rel in named:
+                candidate = rel.rstrip(".")
+                if (ROOT / candidate).exists():
+                    continue
+                # a path with a test-method suffix (`File.cs (Test_Name)`) or a directory prefix is normal
+                if any((ROOT / part).exists() for part in candidate.split(" ")):
+                    continue
+                problems.append(f"{row.get('id')}: hand evidence path absent: {candidate}")
+    return problems
+
+
 def verify_pointers() -> list[str]:
     """Re-check that every stored pointer still resolves in the repository as it stands."""
     data = json.loads(OUT.read_text())
@@ -496,13 +539,21 @@ def main(argv=None) -> int:
         CANDIDATES = candidates()
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("mode", nargs="?", default="score",
-                    choices=["score", "row", "verify-pointers", "terms", "sample", "precision"])
+                    choices=["score", "row", "verify-pointers", "verify-hand-evidence", "terms", "sample",
+                             "precision"])
     ap.add_argument("target", nargs="?", default=None)
     ap.add_argument("--app", action="append", default=[])
     ap.add_argument("--seed", type=int, default=20261031)
     ap.add_argument("--tier", default="TEST-ASSERTED,CODE-PRESENT,WEAK-SINGLE-TERM,MIRROR-ONLY")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
+
+    if args.mode == "verify-hand-evidence":
+        problems = verify_hand_evidence()
+        for problem in problems[:40]:
+            print("HAND EVIDENCE:", problem)
+        print(f"hand evidence verification: {len(problems)} problem row(s)")
+        return 1 if problems else 0
 
     if args.mode == "verify-pointers":
         if not OUT.is_file():
@@ -609,14 +660,27 @@ def main(argv=None) -> int:
         return 0
     print(f"MUST requirements assessed: {sum(v['must_rows'] for v in summary.values())} across "
           f"{len(summary)} app buckets; {payload['_meta']['files_indexed']} files indexed")
-    print(f"\n  {'app':<26} {'rows':>5} {'test':>5} {'code':>5} {'weak':>5} {'none':>5} {'unsearch':>8} "
-          f"{'credited%':>9} {'test%':>6}")
-    for app, row in sorted(summary.items(), key=lambda kv: -kv[1]["must_rows"]):
-        print(f"  {app:<26} {row['must_rows']:>5} {row['TEST-ASSERTED']:>5} {row['CODE-PRESENT']:>5} "
-              f"{row['WEAK-SINGLE-TERM']:>5} {row['NO-EVIDENCE']:>5} {row['NO-PROBE-TERMS'] + row['NO-DISTINCTIVE-TERM']:>8} "
-              f"{row['code_presence_pct']:>9} {row['test_asserted_pct']:>6}")
-    print("\nStatic evidence tiers only. CODE-PRESENT is vocabulary present in first-party source, never "
-          "verified behaviour; nothing here is rendered, packaged or accepted; acceptance stays NOT RUN.")
+    hand = [(app, r) for app, r in summary.items() if r["state_coverage_pct"]]
+    probe = [(app, r) for app, r in summary.items() if not r["state_coverage_pct"]]
+    if hand:
+        print("\nHAND-ASSESSED apps (explicit state per requirement, overrides the probe):")
+        print(f"  {'app':<26} {'MUST':>5} {'impl':>5} {'partial':>8} {'not-impl':>9} {'unassessed':>11} "
+              f"{'coverage%':>9} {'impl%':>7} {'impl+partial%':>14}")
+        for app, row in sorted(hand, key=lambda kv: -kv[1]["must_rows"]):
+            states = row["hand_states"]
+            print(f"  {app:<26} {row['must_rows']:>5} {states['IMPLEMENTED']:>5} {states['PARTIAL']:>8} "
+                  f"{states['NOT-IMPLEMENTED']:>9} {states['NOT-ASSESSED']:>11} "
+                  f"{row['state_coverage_pct']:>9} {row['implemented_pct']:>7} "
+                  f"{row['implemented_or_partial_pct']:>14}")
+    if probe:
+        print("\nPROBE-ONLY apps (candidate evidence, audited precision 0.22 for CODE-PRESENT - not a verdict):")
+        print(f"  {'app':<26} {'rows':>5} {'test':>5} {'code':>5} {'weak':>5} {'none':>5} {'unsearch':>8}")
+        for app, row in sorted(probe, key=lambda kv: -kv[1]["must_rows"]):
+            print(f"  {app:<26} {row['must_rows']:>5} {row['TEST-ASSERTED']:>5} {row['CODE-PRESENT']:>5} "
+                  f"{row['WEAK-SINGLE-TERM']:>5} {row['NO-EVIDENCE']:>5} "
+                  f"{row['NO-PROBE-TERMS'] + row['NO-DISTINCTIVE-TERM']:>8}")
+    print("\nHand states are code/test readings, not on-screen observation. Probe tiers are candidate evidence "
+          "with audited precision. Neither kind is rendered, packaged or accepted; acceptance stays NOT RUN.")
     return 0
 
 
