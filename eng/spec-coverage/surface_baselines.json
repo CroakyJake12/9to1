@@ -1,33 +1,30 @@
 {
   "_meaning": "CUI versus foreign-rendering surface counts. A baseline may only fall in foreign files and rise in CUI documents; both directions are checked.",
   "_evidence_level": "static file measurement: no rendering, no run, no acceptance",
+  "_nature": "one-way ratchet baseline: foreign-rendering UI files may only fall, own .cui may only rise",
   "_recorded_on": "2026-10-31",
-  "_reason": "Initial measured baseline, 31 Oct 2026. This records a VIOLATION LEVEL, not approval: the owner's rule is that main UI structure is rendered in CUI and .xaml/.axaml/.hui are foreign rendering. Measured: 95 first-party foreign-rendering UI files (69 .axaml, 26 .hui) with 74 of them in the shipping Haven desktop shell - App.axaml, MainWindow.axaml, Interface/Shell/MainView.axaml, Views/Shell/Sidebar/Sidebar.axaml, TopRail and 30+ Views/Pages/*Page.axaml - against only 72 first-party .cui documents product-wide (Boards 11, Assistants 8, Spaces 7, Home 5) while the Stage A donor mirror corpora hold 1,784 .cui. The baseline may only move by reducing foreign files and increasing CUI documents; both directions are enforced. Not evidence that anything renders or works.",
+  "_reason": "Correction of my own measurement, not a change in the product: app attribution used the workspace directory name, so Build appeared to have ZERO first-party .cui documents when its surfaces live in 9to1 Workspace/Dev (6), Sites (13) and Stacks (1). Build now measures 20 own .cui plus 289 mirror .cui, because the specification's one-app rule makes Dev/Sites/Stacks the Build app. Rollup now uses the same recorded app-local roots as the coverage instrument, so the two tools share one grouping source. Foreign/shell totals unchanged: 93 and 55.",
   "own_cui_total": 72,
   "mirror_cui_total": 1784,
   "foreign_total": 93,
   "foreign_shell_total": 55,
   "own_cui_per_app": {
     "shared": 20,
+    "Spaces": 15,
     "Boards": 11,
-    "Assistants": 8,
-    "Spaces": 7,
-    "Home": 5,
+    "Haven": 6,
+    "Build": 4,
     "Picture": 3,
     "Files": 2,
     "Data": 2,
-    "Dev": 2,
     "Canvas": 2,
-    "Terminal": 1,
-    "MiniComputer": 1,
+    "other apps": 1,
+    "Mini Computer": 1,
     "Forms": 1,
-    "Mail": 1,
+    "Connect": 1,
     "Cards": 1,
     "Wave": 1,
-    "Motion": 1,
-    "Stacks": 1,
-    "Browse": 1,
-    "Sites": 1
+    "Motion": 1
   },
   "mirror_cui_per_app": {
     "Boards": 879,
@@ -38,12 +35,12 @@
     "Files": 39,
     "Canvas": 33,
     "Connect": 19,
-    "Browse": 16
+    "Haven": 16
   },
   "foreign_per_app": {
     "shared": 89,
     "Picture": 2,
-    "Studio": 2
+    "AI Studio": 2
   },
   "foreign_files": [
     "9to1 Workspace/Picture/App.axaml",

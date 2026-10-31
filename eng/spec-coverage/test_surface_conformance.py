@@ -102,7 +102,9 @@ class CliTests(unittest.TestCase):
             self.skipTest("baseline is recorded by a measured run")
         data = json.loads(sc.BASELINE.read_text())
         self.assertIn("_reason", data)
-        self.assertIn("VIOLATION LEVEL", data["_reason"])
+        # Matched on a machine-readable field, not on prose: re-recording a baseline with a different
+        # human-readable _reason must not break the gate that proves the record is a ratchet baseline.
+        self.assertEqual(sc.NATURE, data["_nature"])
         self.assertIn("static", data["_evidence_level"].lower())
 
     def test_check_passes_against_the_committed_baseline(self):

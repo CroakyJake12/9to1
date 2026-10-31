@@ -35,6 +35,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = Path(__file__).resolve().parent / "surface_baselines.json"
+
+# Machine-readable kind of this record. Tests and gates match on this, never on prose in _reason.
+NATURE = "one-way ratchet baseline: foreign-rendering UI files may only fall, own .cui may only rise"
 DONOR_REGISTRY = ROOT / "eng/donor-sources.json"
 SHELL_MARKERS = ("/shell/", "mainview", "mainwindow", "app.axaml", "sidebar", "toprail", "/views/pages/")
 
@@ -42,6 +45,30 @@ SHELL_MARKERS = ("/shell/", "mainview", "mainwindow", "app.axaml", "sidebar", "t
 def donor_prefixes() -> list[str]:
     registry = json.loads(DONOR_REGISTRY.read_text())
     return sorted({str(row["path"]) for row in registry.get("bindings", []) if row.get("path")})
+
+
+def app_owner_index() -> list[tuple[str, str]]:
+    """Longest-prefix map from a repository path to the specification app that owns it.
+
+    Measured defect of the first version: it attributed app by workspace directory name alone, so Build scored
+    zero first-party CUI documents when its real surfaces live in 9to1 Workspace/Dev (6 .cui), Sites (13) and
+    Stacks (1) - the specification's one-app rule makes those directories Build. The app-local roots recorded in
+    app-roots/assess config are the single source of truth for that grouping, so the two tools cannot drift.
+    """
+    try:
+        config = json.loads((Path(__file__).resolve().parent / "app-roots.json").read_text())["apps"]
+    except (OSError, KeyError, json.JSONDecodeError):
+        return []
+    pairs = [(str(prefix), app) for app, roots in config.items() for root_class, prefix in roots
+             if root_class == "app-local"]
+    return sorted(pairs, key=lambda pair: -len(pair[0]))
+
+
+def app_owner(rel: str, index: list[tuple[str, str]]) -> str:
+    for prefix, app in index:
+        if rel == prefix or rel.startswith(prefix.rstrip("/") + "/"):
+            return app
+    return rel.split("/")[1] if rel.startswith("9to1 Workspace/") else rel.split("/")[0]
 
 
 def measure() -> dict[str, object]:
@@ -56,11 +83,12 @@ def measure() -> dict[str, object]:
     own_cui: Counter[str] = Counter()
     mirror_cui: Counter[str] = Counter()
     foreign_files: list[str] = []
+    app_of_path = app_owner_index()
     for path in workspace.rglob("*.cui"):
         rel = path.relative_to(ROOT).as_posix()
         if excluded(rel):
             continue
-        app = rel.split("/")[1]
+        app = app_owner(rel, app_of_path)
         (mirror_cui if "/CUI/DonorMirror/" in rel else own_cui)[app] += 1
     for extension in (".xaml", ".axaml", ".hui"):
         for path in workspace.rglob(f"*{extension}"):
@@ -73,7 +101,7 @@ def measure() -> dict[str, object]:
             foreign_files.append(rel)
     shell = [rel for rel in foreign_files
              if any(marker in rel.lower() for marker in SHELL_MARKERS)]
-    per_app_foreign: Counter[str] = Counter(rel.split("/")[1] for rel in foreign_files)
+    per_app_foreign: Counter[str] = Counter(app_owner(rel, app_of_path) for rel in foreign_files)
     return {
         "own_cui_total": sum(own_cui.values()),
         "mirror_cui_total": sum(mirror_cui.values()),
@@ -121,6 +149,7 @@ def main(argv=None) -> int:
         payload = {"_meaning": "CUI versus foreign-rendering surface counts. A baseline may only fall in foreign "
                                "files and rise in CUI documents; both directions are checked.",
                    "_evidence_level": "static file measurement: no rendering, no run, no acceptance",
+                   "_nature": NATURE,
                    "_recorded_on": date.today().isoformat(), "_reason": args.reason,
                    **now}
         BASELINE.write_text(json.dumps(payload, indent=2) + "\n")
