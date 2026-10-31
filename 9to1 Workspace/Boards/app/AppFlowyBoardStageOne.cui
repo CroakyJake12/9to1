@@ -87,6 +87,8 @@
            HorizontalScrolling, and the Repeat itself carries Panel="Horizontal Stack". My Horizontal Stack
            container produced a column layout that broke twice in a row (side-by-side columns lost, card panels
            vanished - /tmp/opencode/g2.png b24fa8d2795a and g3.png f5e4c1f977d3). -->
+      <!-- Canonical Repeat mode: the generated columns ARE children of this Horizontal Stack, so its CellGap is
+           the donor's inter-column space (groupMargin horizontal 8 each side = 16). -->
       <Container Type="Horizontal Stack" ID="DonorBoardColumns" Row="1" CellGap="16" VerticalAlignment="Stretch"
                  HorizontalScrolling="True" VerticalScrolling="False" ScrollBarThickness="8">
         <If Condition="{Binding DonorHasHiddenGroups}">
@@ -109,7 +111,7 @@
                   <Button Column="1" ID="DonorHiddenGroupsCollapse" Content="Collapse" Action="CollapseHiddenGroups"
                           Height="26" AccessibleName="Collapse hidden sections" />
                 </Container>
-                <Repeat Source="{Binding DonorHiddenGroups}" As="hidden" Key="{Binding hidden.Id}" Panel="Vertical Stack">
+                <Repeat Source="{Binding DonorHiddenGroups}" As="hidden" Key="{Binding hidden.Id}">
                   <Container Type="Horizontal Stack" CellGap="6" Padding="8 6" CornerRadius="6"
                              Background="{Resource CuiPanelBrush}">
                     <Button Action="OpenHiddenGroup" Content="{Binding hidden.Title}"
@@ -121,11 +123,12 @@
           </If>
         </If>
 
-        <Repeat Source="{Binding DonorGroupColumns}" As="group" Key="{Binding group.Id}" Panel="Horizontal Stack" CellGap="16">
+        <Repeat Source="{Binding DonorGroupColumns}" As="group" Key="{Binding group.Id}" Panel="Horizontal Stack">
           <!-- group.dart builds the column as a vertical Flex with MainAxisSize.min and a LOOSE flexible body, so
                the column is only as tall as its cards and the footer follows them. An "Auto 1fr Auto" grid pinned the
                footer to the window foot instead. -->
-          <Container Type="Grid" ID="DonorGroupColumn" Width="256" RowSizes="Auto 1fr Auto" CellGap="4">
+          <Container Type="Grid" ID="DonorGroupColumn" Width="256" RowSizes="Auto Auto Auto" CellGap="4"
+                     VerticalAlignment="Top">
             <!-- Donor header: height 50, content varies with the group's field type. -->
             <Container Type="Grid" Column="0" Row="0" ColumnSizes="Auto 1fr Auto Auto Auto" Height="50" Padding="16 0"
                        ID="DonorGroupHeader" CellGap="4" VerticalAlignment="Center">
@@ -175,12 +178,15 @@
             <!-- Donor: the column body is padded 8 on top (board_page.dart:341) and scrolls its cards. -->
             <Container Type="Vertical Stack" ID="DonorCardList" Column="0" Row="1" Margin="0 8 0 0" Padding="12 0" CellGap="8"
                        VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="8">
-              <Repeat Source="{Binding group.Cards}" As="card" Key="{Binding card.Id}" Panel="Vertical Stack">
+              <Repeat Source="{Binding group.Cards}" As="card" Key="{Binding card.Id}">
                 <!-- Donor RowCard fills the column width; its content padding is EdgeInsets.all(4)
                      (card.dart RowCardStyleConfiguration). The previous bound Width collapsed to the title text. -->
+                <!-- Card surface has to read against the board: the donor paints white cards on a grey group.
+                     CuiPanelBrush measured almost identical to the workspace material in the light theme, which is
+                     why the panels vanished in g3 and later frames. -->
                 <Container Type="Overlay" ID="DonorCard" Width="226" MinHeight="56" Margin="3 4"
-                           HorizontalAlignment="Stretch" Background="{Resource CuiPanelBrush}" CornerRadius="6"
-                           BorderWidth="1">
+                           HorizontalAlignment="Stretch" Background="{Resource CuiFloatingSurfaceMaterial}" CornerRadius="6"
+                           BorderWidth="1" BorderBrush="{Resource CuiLineBrush}">
                   <!-- Donor: the whole card is the open gesture (card.dart tap to open the row document). This is a
                        hit area over the card, deliberately without its own label, so the title is not drawn twice. -->
                   <Button ID="DonorCardOpenSurface" Action="OpenDonorCard" Width="226" MinHeight="56"
@@ -196,7 +202,7 @@
                     <Container Type="Vertical Stack" Padding="4" CellGap="4">
                       <Text ID="DonorCardTitle" Text="{Binding card.Title}" FontSize="14" FontWeight="Bold"
                             Foreground="{Resource CuiTextBrush}" AccessibleName="Page title" />
-                      <Repeat Source="{Binding card.Previews}" As="preview" Key="{Binding preview}" Panel="Vertical Stack">
+                      <Repeat Source="{Binding card.Previews}" As="preview" Key="{Binding preview}">
                         <Text ID="DonorCardCell" Text="{Binding preview}" FontSize="13"
                               Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Page detail" />
                       </Repeat>

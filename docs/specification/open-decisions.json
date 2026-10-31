@@ -507,7 +507,7 @@
     {
       "id": "OPEN-2026-10-31-CUI-HORIZONTAL-REPEAT-LAYOUT",
       "at": "2026-10-31T18:20:00Z",
-      "status": "open engineering question - no owner decision needed, but it blocks AppFlowy-grade board layout",
+      "status": "CLOSED - it was not a CUI gap. Two of my claims in this entry were wrong and are corrected below.",
       "title": "How a CUI Repeat of wide multi-child columns lays out horizontally, and how a group body is content-height",
       "summary": "The AppFlowy board is a horizontally scrolling strip of fixed-width columns, each column being header + content-height card body + footer. Four authored variants were measured on screen and each fixed one thing while breaking another, so the CUI layout engine's rules - not further guessing - have to be derived before this can be called a faithful copy.",
       "measured_attempts": [
@@ -524,7 +524,17 @@
         "Is the missing card panel a colour-resource problem (CuiPanelBrush nearly equals the workspace material in the light theme) or an Overlay painting problem? The donor paints white cards on a grey group on a darker board."
       ],
       "affected_change": "The AppFlowy board re-UI's presentation only. Behaviour and data wiring are already committed (bb6a6370) and independent of this question.",
-      "evidence": "the five frames listed above under /tmp/opencode/; commits af15ed29, 66673e50, e24c43e3, bb6a6370"
+      "evidence": "the five frames listed above under /tmp/opencode/; commits af15ed29, 66673e50, e24c43e3, bb6a6370",
+      "correction_2026_10_31_evening": [
+        "My 'lost side-by-side columns' diagnosis was a MISREAD of the frames: the boards opened in g3/g6/g7 had ONE section, so there was only ever one column to draw. Proof: g6 and g7 are byte-identical (e9154d1cc71d) even though g7 re-added the legacy Panel= attribute the canonical reading had removed - the attribute changed nothing there.",
+        "The two real defects were (a) the column body row was 1fr, pushing the footer to the strip foot instead of under the last card (donor group.dart uses MainAxisSize.min with a LOOSE flexible body), and (b) the card panel was effectively invisible because CuiPanelBrush measured near-identical to the workspace material in this theme. Fixed by RowSizes 'Auto Auto Auto' + VerticalAlignment Top, and CuiFloatingSurfaceMaterial with a CuiLineBrush border - the same resources the working toolbar in d2.png already uses. Verified on screen: /tmp/opencode/g8.png b462c902888d (crop g8-crop.png) shows a bordered card, the 'New page' footer directly under it, and the header 'Notes - 1 page + ...' with the trailing 'New section'.",
+        "The canonical-vs-legacy finding is still real and worth keeping: CuiControlLoader.cs:1783-1792 says a Repeat with NO Panel= is a keyed generated child range of its owning Container, and Panel= is only a versioned compatibility escape. In this document it currently makes no measurable difference, so the columns repeat stays on the legacy form for now with the canonical restructure (lifting the zero-child conditional branches out of the strip) recorded as an open tidy-up, not a gap.",
+        "Also measured: a resource name that does not exist in this host's palette (I tried CuiBorderBrush) - the registered set is CuiAccentBrush, CuiAccentInkBrush, CuiFloatingSurfaceMaterial, CuiLineBrush, CuiMutedBrush, CuiPanel2Brush, CuiPanelBrush, CuiSurfaceMaterial, CuiTextBrush, CuiTextSoftBrush, CuiWorkspaceMaterial."
+      ],
+      "remaining_sub_questions": [
+        "Canonical Repeat child-range behaviour when zero-child conditional branches precede the Repeat inside the same Container (untested; the structural edit aborted cleanly when its anchors did not match).",
+        "Why the section icon image overlaps the section title glyph in the header (visible in g8-crop.png) - a column-placement/measure question inside the header Grid, still open."
+      ]
     }
   ]
 }
