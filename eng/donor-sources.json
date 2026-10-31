@@ -542,7 +542,18 @@
         "modules": "sw/uiconfig (Writer), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices",
         "committedToGit": false,
         "reason": "Stage A: Writer's UI is mirrored into CUI from the donor's own GTK Builder sets. Extracted at an exact revision rather than cloned with history because the mirror needs the UI declarations, not decades of commits. Fork/submodule conversion is a separate unit.",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-libreoffice-write",
+          "branch": "main",
+          "commit": "e170f13651035027665a5ad8cb034eb6d9e5b8cb",
+          "tag": "upstream-master-7528c0d40601",
+          "pushed": "2026-10-31",
+          "files": 808,
+          "contentDigest": "481e6e474660135179a56a8938f3a70a2ea525bad25209e3b70e94486b964c0a",
+          "digestVerification": "proven before pushing by exporting the prepared commit with git archive into a clean directory and recomputing snapshot_digest; equals the recorded digest. The tool then re-checks that git ls-remote shows both the commit and the tag.",
+          "note": "Preservation copy of the extracted snapshot tree, not a fork carrying upstream history. Byte-for-byte: nothing edited, formatted or pruned; git's text normalisation and export filters are disabled inside .git/info/attributes because a donor .gitattributes was measured altering the exported bytes."
+        }
       }
     },
     {
@@ -564,7 +575,18 @@
         "modules": "sd/uiconfig (Impress), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices",
         "committedToGit": false,
         "reason": "Stage A mirror of the Impress UI from its own module tree. Owner decision 2026-10-31: Draw and Math are NOT donors, so this tree carries no sd/../draw or math module; Impress, Writer and Calc only. Kept as its own app-local tree so the binding path is real.",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-libreoffice-present",
+          "branch": "main",
+          "commit": "415d520f3f79478cc86f3defddbf2bfc24aa7ec7",
+          "tag": "upstream-master-7528c0d40601",
+          "pushed": "2026-10-31",
+          "files": 486,
+          "contentDigest": "8a13fd0e343e30d8ed827082911dd8ed862639702516a73291edf3e6fcc86254",
+          "digestVerification": "proven before pushing by exporting the prepared commit with git archive into a clean directory and recomputing snapshot_digest; equals the recorded digest. The tool then re-checks that git ls-remote shows both the commit and the tag.",
+          "note": "Preservation copy of the extracted snapshot tree, not a fork carrying upstream history. Byte-for-byte: nothing edited, formatted or pruned; git's text normalisation and export filters are disabled inside .git/info/attributes because a donor .gitattributes was measured altering the exported bytes."
+        }
       }
     },
     {
@@ -586,7 +608,18 @@
         "modules": "sc/uiconfig (Calc), svx/uiconfig + chart2/uiconfig (shared UI), icon-themes, licence notices",
         "committedToGit": false,
         "reason": "Stage A mirror of the Calc UI. DuckDB stays the analytical engine the specification names; LibreOffice Calc is the spreadsheet-compatibility donor and the UI reference for it.",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-libreoffice-data",
+          "branch": "main",
+          "commit": "8dcadbe7475e4c5e72656bd3e98b29bed64a5b2c",
+          "tag": "upstream-master-7528c0d40601",
+          "pushed": "2026-10-31",
+          "files": 488,
+          "contentDigest": "eafb3acb76abffac7de4abd56cf501c77fbea51f5bf72aa0afa1bbfa8f9a6929",
+          "digestVerification": "proven before pushing by exporting the prepared commit with git archive into a clean directory and recomputing snapshot_digest; equals the recorded digest. The tool then re-checks that git ls-remote shows both the commit and the tag.",
+          "note": "Preservation copy of the extracted snapshot tree, not a fork carrying upstream history. Byte-for-byte: nothing edited, formatted or pruned; git's text normalisation and export filters are disabled inside .git/info/attributes because a donor .gitattributes was measured altering the exported bytes."
+        }
       }
     },
     {
@@ -672,7 +705,18 @@
         "modules": "whole release tag tree (workbench, editor, extensions)",
         "committedToGit": false,
         "reason": "Stage A reference for Build's code workspace. Its workbench UI is TypeScript-built custom elements, so the mirror pass for it is not written yet; the snapshot makes the pin and the licence real rather than implied.",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-dev-code-oss",
+          "branch": "main",
+          "commit": "d4959f3893143ea3351748afae4e7297a9237158",
+          "tag": "upstream-1.144.0-2c33b50b16c4",
+          "pushed": "2026-10-31",
+          "files": 21264,
+          "contentDigest": "abf5007dae54e7c46b69bfc530debdcca3305aeb51358080ce818fc672b35504",
+          "digestVerification": "proven before pushing by exporting the prepared commit with git archive into a clean directory and recomputing snapshot_digest; equals the recorded digest. The tool then re-checks that git ls-remote shows both the commit and the tag.",
+          "note": "Preservation copy of the extracted snapshot tree, not a fork carrying upstream history. Byte-for-byte: nothing edited, formatted or pruned; git's text normalisation and export filters are disabled inside .git/info/attributes because a donor .gitattributes was measured altering the exported bytes."
+        }
       }
     },
     {
@@ -916,7 +960,18 @@
         "modules": "templates (Go html/template) and web_src",
         "committedToGit": false,
         "reason": "Stage A mirror of the source-collaboration web UI. Latest release, per the owner's always-the-latest rule.",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-build-gitea",
+          "branch": "main",
+          "commit": "f3839630fb3ae54b776b0659cc8794bdc35aeba4",
+          "tag": "upstream-v28.2.0-829b49c1ae96",
+          "pushed": "2026-10-31",
+          "files": 6366,
+          "contentDigest": "756481adff65dfc504d8c13175fb802359d6318ec184e00490ce70fb789c5d41",
+          "digestVerification": "proven before pushing by exporting the prepared commit with git archive into a clean directory and recomputing snapshot_digest; equals the recorded digest. The tool then re-checks that git ls-remote shows both the commit and the tag.",
+          "note": "Preservation copy of the extracted snapshot tree, not a fork carrying upstream history. Byte-for-byte: nothing edited, formatted or pruned; git's text normalisation and export filters are disabled inside .git/info/attributes because a donor .gitattributes was measured altering the exported bytes."
+        }
       }
     },
     {
@@ -981,7 +1036,18 @@
         "modules": "comm/mail (the email client UI), its themes, and the shared mail chrome",
         "committedToGit": false,
         "reason": "Owner scope decision 2026-10-31: Connect ships the email capabilities only, so this is the Mail donor. The GitHub mirror publishes `main`; the comm-esr release refs are not exposed on it, which is recorded instead of glossed over.",
-        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility."
+        "conversion": "Not a submodule. Converting this snapshot into a controlled-fork submodule pin is a separate verified unit; the snapshot is local materialisation evidence and never a claim of recursive-checkout reproducibility.",
+        "remotePreservation": {
+          "repo": "https://github.com/CroakyJake12/donor-connect-thunderbird",
+          "branch": "main",
+          "commit": "9c90d8a47033ad964a1cecae249f685f9c40e92f",
+          "tag": "upstream-main-86898fed4da6",
+          "pushed": "2026-10-31",
+          "files": 1774,
+          "contentDigest": "0c7add8f2ff578aeaeb041deb4ec0bcab7c4b2cab0425321cb506b7ebe370704",
+          "digestVerification": "proven before pushing by exporting the prepared commit with git archive into a clean directory and recomputing snapshot_digest; equals the recorded digest. The tool then re-checks that git ls-remote shows both the commit and the tag.",
+          "note": "Preservation copy of the extracted snapshot tree, not a fork carrying upstream history. Byte-for-byte: nothing edited, formatted or pruned; git's text normalisation and export filters are disabled inside .git/info/attributes because a donor .gitattributes was measured altering the exported bytes."
+        }
       }
     },
     {

@@ -141,7 +141,7 @@
           "Moving existing saved artefacts between locations."
         ],
         "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
-        "state": "answered — implementation in progress"
+        "state": "answered \u2014 implementation in progress"
       },
       "note_29_october": "The setup gate the owner ordered removed is no longer required in order to save: the 9to1 workspace is created on demand and boards land in it. Files' own setup page still exists as the deliberate-choice path; removing that gate is queued with the three-root navigation work."
     },
@@ -241,7 +241,7 @@
     {
       "id": "OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION",
       "at": "2026-10-30T00:47:00Z",
-      "status": "open — only the incompatible conversion mappings are held",
+      "status": "open \u2014 only the incompatible conversion mappings are held",
       "title": "Content and identity contract for the remaining Design conversions",
       "requirements": [
         "UX27-BOARD-027",
@@ -261,7 +261,7 @@
     {
       "id": "OPEN-2026-10-30-ENGINE-DONOR-FORK",
       "at": "2026-10-30T10:05:00Z",
-      "status": "answered by owner 30 October 2026 — embed unmodified engines, fork modified ones",
+      "status": "answered by owner 30 October 2026 \u2014 embed unmodified engines, fork modified ones",
       "title": "Browse must be built ON vendored engine donor sources, not against external binaries",
       "verbatim_owner_request": "Owner, 30 October 2026: 'I specifically told her to fork chromium and gecko and put the source directly inside of 9to1, and she said she did... The whole idea is that we take donor sources, put their source code into 9to1's repository, and then build upon those sources to save loads of time rebuilding from scratch.'",
       "requirement": "The durable principle already exists in AGENTS.md - donor engines may keep their implementation languages behind reviewed typed infrastructure boundaries, and donor licences and notices are preserved. What is missing is the requirement that the vendored source is actually FORKED and BUILT UPON. Today it is decoration.",
@@ -286,7 +286,7 @@
         "Rnote (Canvas)": "FORK (controlled fork exists; our one commit on astra/lossless-canvas-serialization-20261003 + Canvas/rnote-poc/patches)",
         "DuckDB": "EMBED (MIT, unmodified, tag v1.5.5)",
         "Chromium": "EMBED pinned official artefact + digest; the /usr/bin/chromium system lookup must go or be labelled dev-only (Browse currently has no engine on this PC)",
-        "AppFlowy Board": "NOT CONSUMED — currently first-party; elect MPL-2.0 only if donor code is linked"
+        "AppFlowy Board": "NOT CONSUMED \u2014 currently first-party; elect MPL-2.0 only if donor code is linked"
       },
       "corrections": "Chrome for Testing has no Linux ARM64 build (measured from the research pack); Gecko candidate builds publish linux-aarch64 with SHA-256/512 + signatures. DevTools on Gecko uses RDP/BiDi, not CDP (CDP removed Firefox 141)."
     },
@@ -445,10 +445,64 @@
       "at": "2026-10-31T13:17:46Z",
       "status": "owner answer needed; the count is measured, the choice is not mine to make",
       "title": "865 MUST requirements (22% of the specification's MUSTs) sit in apps your Shipmas scoping does not name",
-      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848…, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
+      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848\u2026, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
       "why_it_matters": "The plan and every per-app percentage depend on this. The specification calls several of these mandatory - 'Dulche, nodes and agentic runtime' carries 414 MUSTs and the Spaces/Build/Boards workflows depend on it; the TF family (116 MUSTs) is called one mandatory shipping product at spec L947 while its own name is an OPEN decision at spec L1037; packaging (63) and Admin (61) sit under frameworks and the Business/Accounts surface. I have counted them, kept them in the register so nothing disappears, and marked them UNRESOLVED instead of choosing.",
       "question_for_owner": "For each of these buckets, in or out for the Shipmas delivery: Dulche runtime (414), TF (116, spec names no product), other independent apps such as Terminal/Maps/Launcher/Shelf (97), Voice & Vision is named but its requirements are split across sections, packaging/lifecycle (63), Admin (61), shared settings/models (39), Study Space (33), Forms (42). A one-line answer per bucket is enough; I will not infer it.",
       "what_would_make_it_false": "If a later owner instruction names these apps one way or the other, that answer supersedes this record; the register rows themselves do not change, only their scope class, which is derived from a recorded mapping table rather than embedded in the parse."
+    },
+    {
+      "id": "OPEN-2026-10-31-BOARDS-APPFLOWY-REUI-ORDER",
+      "at": "2026-10-31T15:30:00Z",
+      "status": "ANSWERED by owner 31 October 2026 - the order is now pinned; implementation of stage 1 has NOT started",
+      "title": "Boards surface must be an AppFlowy re-UI first, then that re-UI transitioned into 9to1 Boards",
+      "verbatim_owner_request": "Owner, 31 October 2026: 'the intended boards surface is appflowy re-ui first, then transition that re-ui into the 9to1 boards' and 'if we rebuild appflowy then turn it into boards, we then don't have to re-add appflowy functionality. we then just transition that into what we want 9to1 boards to look and function like and add more stuff on top'. On preservation: 'but also commit the source pulls to remote'.",
+      "measured_facts": [
+        "The CUI Boards that runs today is not an AppFlowy re-UI. Its own document 9to1 Workspace/Boards/app/Boards.cui (42,176 bytes; 30 first-party .cui documents totalling 2,927 lines) reproduces the previous FIRST-PARTY Boards layout: 280 px section/page sidebar, block toolbar, page surface. The owner identified this on sight: 'it's the same as the old boards; doesn't look like a cui rewrite of appflowy'.",
+        "The existing AppFlowy mirror corpus is a structural transliteration, not a re-UI: measured over Boards/CUI/DonorMirror/appflowy there are 824 documents / 20,710 lines / 11,627 elements, and 228 of those documents contain <= 6 elements. shared/af_image.cui is four empty <Container Type=\"Vertical Stack\"> elements named after Flutter layout arguments. Mirror corpora classify as 'mirror' in the surface gate and can never raise an evidence tier.",
+        "Donor UI volume measured for the re-UI: AppFlowy board view lib/plugins/database/board = 14 files / 3,844 LOC; AppFlowy grid+cell+calendar+filter/sort widgets = 201 files / 28,658 LOC; whole Flutter app UI (upper bound) = 1,526 files / 243,832 LOC.",
+        "The pinned AppFlowy snapshot was disk-only: `git ls-files 9to1 Workspace/Boards/Source/AppFlowy` returned 0 tracked entries. It is now preserved on a remote and proven byte-faithful - see docs/development/donor-snapshot-preservation-2026-10-31.md; the same was done the same day for the other six snapshot donors (35,275 files / 431 MB total)."
+      ],
+      "estimate_labelled_as_estimate": [
+        "Stage 1 (AppFlowy's board screens re-rendered in CUI, unchanged): 2-4 focused working days.",
+        "Stage 2 (transition that re-UI onto canonical Board/Page/Block identity, real data and spec save/draft behaviour, then additions on top): a further 2-3 days.",
+        "Whole shipmas donor re-UI plus transition across the in-scope apps: roughly 8-14 weeks single-worker; Build/CodeOSS workbench dominates at 6-12+ weeks for a faithful re-UI, or ~2-3 weeks for the spec-named subset.",
+        "Weakest input, stated so it can be challenged: the assumed verified-authoring rate of 60-120 CUI lines/hour, calibrated from one measured working stretch on 31 October 2026 whose authored output (3 CUI menu entries, a 44-line runtime function, 113 lines of tests) came with 6 guarded build units, 3 test runs, 4 self-inflicted test errors corrected and 4 defects fixed in the capture/input tools."
+      ],
+      "queued_behind_this_work": "Owner instruction 31 October 2026: the CUI theme defects ('the themes don't look as intended') are deliberately NOT fixed now and re-enter work after the AppFlowy re-UI. This is a deferral, not a waiver. Evidence the issues are real: 4 of the 6 failures pinned in eng/development/cui_test_baselines.json are theme/appearance tests (CuiThemeTests.Applying_global_theme_updates_active_theme_for_subsequent_surface_loads and CuiSceneAppearanceResourceTests.Opaque_button_states_use_readable_existing_ink_and_same_scoped_backend_brushes across four appearance variants). The separately pinned cross-thread defect CuiControlLoader.ThemePreferenceChanged using the ambient static Dispatcher.UIThread is deferred on the same basis.",
+      "correction_to_earlier_claims": "The measured Boards figure '138/138 MUSTs, IMPLEMENTED 15 = 10.9%' describes the first-party implementation that runs today. It must not be read as donor re-UI progress, because stage 1 had not started when that figure was recorded.",
+      "affected_change": "The whole Boards surface implementation route: a new CUI document set authored from the donor's own UI source (stage 1), then moved onto canonical 9to1 Boards state (stage 2), replacing the first-party layout rather than being added beside it. Stage A/B wording in eng/cui-mirror and the DonorMirror corpora remain reference material only.",
+      "plan_document": "docs/development/boards-appflowy-reui-plan-2026-10-31.md"
+    },
+    {
+      "id": "OPEN-2026-10-31-BOARDS-DONOR-VIEW-SCOPE",
+      "at": "2026-10-31T15:30:00Z",
+      "status": "open - owner answer needed; it changes the Boards estimate by an order of magnitude",
+      "title": "How much of AppFlowy's database-view UI is inside 9to1 Boards: the board view alone, or grid/calendar/cell-editor parity too",
+      "summary": "Re-rendering AppFlowy's board view in CUI is a bounded job (14 files / 3,844 LOC, roughly a dozen screens: board page, group column and header, card, hidden groups, card editor, settings bar, add-card affordances). Re-rendering AppFlowy's surrounding database-view machinery is a different order of work (201 files / 28,658 LOC: desktop/mobile grid, per-type cell editors and cell widgets for text/number/checkbox/select/date/time/timestamp/checklist/relation/media/summary/url/translate, filter choice-chips and conditions, sort editor, calculations row, calendar page and event editor, tab bar).",
+      "why_this_is_a_question_not_an_implementation_choice": "The canonical specification describes Boards as a page/block/ink workspace with sections, and separately requires Data-owned artifacts and cross-app objects; it does not say Boards carries AppFlowy's grid/calendar/row-detail feature set. The owner's 'nothing from appflowy is lost' expectation and the specification's Boards scope point at different denominators, so guessing either way risks either deleting donor capability the owner expects to keep, or spending weeks on a surface the specification places in Data rather than Boards.",
+      "options": [
+        "Board view only for now (2-4 days stage 1, 2-3 days stage 2); grid/calendar stay in Data where the specification puts database behaviour.",
+        "Board view plus card/row-detail editing (adds roughly 1-2 weeks), because AppFlowy cards open a row detail that 9to1 Boards would otherwise have to reinvent as a page.",
+        "Full database-view parity inside Boards (3-6 weeks) - largest, and needs a specification amendment because it moves Data-owned functionality into Boards."
+      ],
+      "affected_change": "The Boards requirement denominator (currently 138 MUSTs measured against the canonical text) and therefore every Boards percentage reported to the owner; plus what the Legacy/current comparison pair is expected to show.",
+      "evidence": "measured file and LOC counts in docs/development/boards-appflowy-reui-plan-2026-10-31.md; donor tree 9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/{board,grid,widgets,calendar}"
+    },
+    {
+      "id": "OPEN-2026-10-31-LEGACY-PAIR-RETIREMENT",
+      "at": "2026-10-31T15:30:00Z",
+      "status": "owner plan recorded; retirement criterion needs owner confirmation",
+      "title": "Temporary 'Legacy XX' / 'XX' pairs for donor-rebuilt surfaces, and when the legacy side is removed",
+      "verbatim_owner_request": "Owner, 31 October 2026: 'for each surface that was rebuilt with a donor, we split into 2 apps temporarily. Legacy xx and xx. So we can compare what we made before vs the current donor with the new ui' - 'to essentially make sure we replicate the spec behaviour properly, allowing me to test them both' - 'eventually the legacy surfaces will be removed'. Earlier the same day: 'you might have to load the old 9to1 app you froze for the legacy apps'.",
+      "measured_facts": [
+        "Two Boards entry points exist in source: the new CUI app (9to1 Workspace/Boards/app, now with per-OS targets so it runs on this Linux PC: commit 94fc2a3a) and the legacy host (9to1 Workspace/Boards/Host/HavenOS.Boards.Host.csproj, which defers all app resources and services to the Home process).",
+        "The frozen installed package cannot serve as the legacy comparison on this PC: launching /usr/bin/haven (haven 0.1.0+test20261026.git59d66496) on 31 October renders a 'Shutdown not complete' page repeating '/usr/lib/haven/libcakes/canvas_motore_poc.so: cannot open shared object file: No such file or directory' many times. Its own diagnostic text states the shutdown did not complete and the native app initialisation did not finish.",
+        "The new CUI Boards landing was also measured broken before it was fixed: Recent stayed at 'Loading saved boards\u2026' forever so a draft could not be reopened, the splash title claimed 'Untitled board - Boards' while no board was open, and after a board was actually activated the splash stayed on screen with no editor surface (framework cause in commit 78122e51)."
+      ],
+      "proposed_retirement_condition": "For each pair: the legacy entry is removed when the current implementation demonstrably covers every behaviour the legacy surface had that the specification also requires, verified by the owner driving both, and the shared-implementation rule is then satisfied with one implementation per app. Until then the pair is a labelled testing scaffold and no app may be called consolidated.",
+      "state": "open - implementation running on this PC as a pair; no legacy surface is currently launchable on this machine",
+      "affected_change": "Packaging and app registration (two app entries), the 'one implementation per app' pinned requirement (the pair is temporary and must not become a permanent fork), and what any app percentage means while two entries exist.",
+      "evidence": "docs/development/boards-appflowy-reui-plan-2026-10-31.md; on-screen captures /tmp/opencode/d1.png d2.png (new Boards, board surface rendering) and /tmp/opencode/legacy2.png (installed package diagnostics page), sha256 recorded in the progress report of 31 October 2026"
     }
   ]
 }
