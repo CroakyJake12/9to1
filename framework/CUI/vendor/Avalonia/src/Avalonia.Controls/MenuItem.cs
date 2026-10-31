@@ -509,7 +509,11 @@ namespace Avalonia.Controls
         protected override void OnGotFocus(FocusChangedEventArgs e)
         {
             base.OnGotFocus(e);
-            ItemsControlFromItemContainer(this)?.UpdateSelectionFromEvent(this, e);
+            // A submenu can host real editors and selectors. Their GotFocus event
+            // bubbles through this item; selecting the containing item here would
+            // immediately steal focus back from that embedded control.
+            if (ReferenceEquals(e.Source, this))
+                ItemsControlFromItemContainer(this)?.UpdateSelectionFromEvent(this, e);
         }
 
         /// <inheritdoc/>

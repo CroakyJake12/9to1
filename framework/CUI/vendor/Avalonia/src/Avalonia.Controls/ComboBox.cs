@@ -265,6 +265,10 @@ namespace Avalonia.Controls
             else if (IsDropDownOpen && e.Key == Key.Escape)
             {
                 SetCurrentValue(IsDropDownOpenProperty, false);
+                // Opening a noneditable selector focuses its selected popup item.
+                // Escape returns that same keyboard gesture to the selector after
+                // closing the popup, including when it lives inside another menu.
+                Focus();
                 e.Handled = true;
             }
             else if (!IsDropDownOpen && !IsEditable && (e.Key == Key.Enter || e.Key == Key.Space))
