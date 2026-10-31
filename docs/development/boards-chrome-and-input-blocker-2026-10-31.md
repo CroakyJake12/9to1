@@ -130,3 +130,44 @@ the owner decision is recorded as `OPEN-2026-10-31-BOARDS-WIRE-EXISTING-CODE` (c
 7. Only after the ported surface renders: add the two missing view-model dispatch cases for `RenameSectionAsync`
    and `DeleteSectionAsync` (host-side, C#), then remove the preview seam and `AppFlowyBoardStageOneSurface.cs`
    duplicates.
+
+## Port executed onto the working surface (commit `0fd48244`), plus a new crash found while verifying it
+
+The donor geometry now lives in `Boards.cui` (the surface the owner actually uses): sidebar 268, inset 8, nav rows
+header / search(30) / `+ New page`(30) / tree(1fr) / footer with CellGap 6, and a 40-high content tab strip above
+the authoring toolbar (`EditorHost` rows renumbered: FormattingToolbar 1, ContextHost 2, PageCard 3). Wiring reuses
+existing code only: `Action="AddPage"` for both new-page controls and `IsEnabled="{Binding CanEdit}"`.
+
+Evidence levels, stated exactly:
+* **on-screen capture**: `k1.png` `324fd437aee3…` differs from the pre-port frame `k0.png` `d6b9ede8c001…`, 0
+  runtime diagnostics; restored instance `k4.png` `324fd437aee3…`.
+* **NOT RUN**: the *editor* view of the port (the tab strip lives in `EditorHost`, which is `Active=` when a board
+  is open). Reaching it needs either a click (input delivery still unproven) or opening a board by path, and that
+  route crashes (below).
+
+### New defect, with repro and retained logs
+
+Launching the Boards app with a board file as `argv[0]` **aborts the process with an unhandled exception and opens
+no window**:
+
+```
+Unhandled exception. System.IO.IOException: A local board with this identity already exists. Open that draft to resolve both revisions.
+```
+
+Repro that was run: `HAVEN_DATA_DIR=<profile copy> Boards.App.dll <path to a .9to1board>` using (a) the draft file
+itself and (b) a copy with a brand-new filename in a different directory — **both** abort identically, because the
+collision is on the identity stored *inside* the document, not the filename. Logs kept:
+`/tmp/opencode/boards-run-k2.log`, `/tmp/opencode/boards-run-k3.log` (core dumped). Expected behaviour by the
+exception's own message: open the draft and present a revision-resolution flow instead of crashing. This belongs in
+the bug queue next to the reported-bug list; it is a crash, not a cosmetic gap.
+
+### Corrections to my own claims made earlier in this session (both wrong, both recorded)
+
+1. "the block editor sits inside the 280-wide nav column" — **false**. Parsed ancestry:
+   `Page < Container < EditorHost(Row=1 Column=1) < PageCard`. My same-indent close-tag scan mislocated `NavPane`'s
+   end at line 108 and I reported from that instead of verifying.
+2. "board search is a capability gap" — **false**. `NavSearchBox` exists (`Boards.cui:92`) and is wired in
+   `BoardsViewModel.cs:1767`, with edit-mode exemptions at `:1300` and `:1744-1745`.
+
+Remaining true gaps after these corrections: filter, sort, layout-settings model, hidden sections, the multi-page
+tab stack, card hover seam, popover 168 x 300 limit, drag reorder, grid/calendar.
