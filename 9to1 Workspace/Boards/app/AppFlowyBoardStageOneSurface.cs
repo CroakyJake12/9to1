@@ -72,8 +72,12 @@ internal sealed class AppFlowyBoardStageOneSurface : ICuiBindingContext, ICuiAct
         _values["DonorHiddenGroups"] = Array.Empty<HiddenGroupCard>();
         _values["DonorIsViewReference"] = false;
         _values["DonorCanFilter"] = false;
-        _values["DonorCanCreateGroup"] = false;
+        const bool canCreateGroup = false;   // 9to1 Boards has no grouping-field creation yet (stage two)
+        _values["DonorCanCreateGroup"] = canCreateGroup;
         _values["DonorTrailingWidth"] = (double)GroupColumnWidth;
+        // Donor board_page.dart:365 - with no creatable grouping field the trailing column is absent
+        // and the donor leaves a 40-wide spacer there instead.
+        _values["DonorShowsTrailingSpacer"] = !canCreateGroup;
     }
 
     public event Action? ExitRequested;

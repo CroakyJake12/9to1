@@ -73,7 +73,12 @@
       </Container>
 
       <!-- Donor: the board itself slides horizontally; the hidden-groups column comes first. -->
-      <Container Type="Horizontal Stack" ID="DonorBoardColumns" Row="1" CellGap="8"
+      <!-- Measured donor constraint, board_page.dart:352 - groupConstraints BoxConstraints.tightFor(width:
+           compactMode ? 196 : 256). My previous version bound the widths to context values and nothing honoured
+           them, so every column collapsed to its content and the whole board sat in the top-left corner of a
+           2080x1400 window (owner: "very broken rn"). The donor uses tight constraints, so the geometry is
+           authored as literals here and the column body is a 1fr row so it fills the height. -->
+      <Container Type="Horizontal Stack" ID="DonorBoardColumns" Row="1" CellGap="12" VerticalAlignment="Stretch"
                  HorizontalScrolling="True" VerticalScrolling="False" ScrollBarThickness="8">
         <If Condition="{Binding DonorHasHiddenGroups}">
           <!-- CUI021 measured on compile: an <Else> must be a sibling that follows a complete <If>, not a child
@@ -108,10 +113,10 @@
         </If>
 
         <Repeat Source="{Binding DonorGroupColumns}" As="group" Key="{Binding group.Id}" Panel="Horizontal Stack">
-          <Container Type="Vertical Stack" ID="DonorGroupColumn" Width="{Binding group.Width, fallback=280}" CellGap="4">
+          <Container Type="Grid" ID="DonorGroupColumn" Width="256" RowSizes="Auto 1fr Auto" CellGap="4">
             <!-- Donor header: height 50, content varies with the group's field type. -->
-            <Container Type="Grid" ColumnSizes="Auto 1fr Auto Auto" Height="50" ID="DonorGroupHeader" CellGap="4"
-                       VerticalAlignment="Center">
+            <Container Type="Grid" Column="0" Row="0" ColumnSizes="Auto 1fr Auto Auto" Height="50"
+                       ID="DonorGroupHeader" CellGap="4" VerticalAlignment="Center">
               <Image Column="0" Source="icon:folder" Width="16" Height="16" VerticalAlignment="Center"
                      AccessibleName="Group" />
               <Text Column="1" Text="{Binding group.Title}" FontSize="14" FontWeight="Medium"
@@ -144,17 +149,20 @@
 
             <!-- Donor body: the column's cards. RowCard = cover (when present) then the cell column whose
                  first cell is the title, with the hover accessories overlay carrying edit and more-options. -->
-            <Container Type="Vertical Stack" ID="DonorCardList" CellGap="8" VerticalScrolling="True"
-                       HorizontalScrolling="False" ScrollBarThickness="8">
+            <!-- Donor: the column body is padded 8 on top (board_page.dart:341) and scrolls its cards. -->
+            <Container Type="Vertical Stack" ID="DonorCardList" Column="0" Row="1" Margin="0 8 0 0" CellGap="8"
+                       VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="8">
               <Repeat Source="{Binding group.Cards}" As="card" Key="{Binding card.Id}" Panel="Vertical Stack">
-                <Container Type="Overlay" ID="DonorCard" Width="{Binding card.Width, fallback=256}"
+                <!-- Donor RowCard fills the column width; its content padding is EdgeInsets.all(4)
+                     (card.dart RowCardStyleConfiguration). The previous bound Width collapsed to the title text. -->
+                <Container Type="Overlay" ID="DonorCard" Width="248" MinHeight="56" HorizontalAlignment="Stretch"
                            Background="{Resource CuiPanelBrush}" CornerRadius="6" BorderWidth="1">
                   <Container Type="Vertical Stack" CellGap="0">
                     <If Condition="{Binding card.HasCover}">
                       <Image ID="DonorCardCover" Source="{Binding card.CoverSource}" Height="{Binding card.CoverHeight}"
-                             Width="{Binding card.Width, fallback=256}" AccessibleName="Card cover" />
+                             Width="248" AccessibleName="Card cover" />
                     </If>
-                    <Container Type="Vertical Stack" Padding="10 8" CellGap="4">
+                    <Container Type="Vertical Stack" Padding="4" CellGap="4">
                       <Repeat Source="{Binding card.Cells}" As="cell" Key="{Binding cell.Id}" Panel="Vertical Stack">
                         <Text ID="DonorCardCell" Text="{Binding cell.Text}" FontSize="13"
                               FontWeight="{Binding cell.TitleWeight, fallback=Normal}"
@@ -178,7 +186,8 @@
             </Container>
 
             <!-- Donor: BoardColumnFooter. -->
-            <Container Type="Horizontal Stack" ID="DonorGroupFooter" Height="36" CellGap="4" VerticalAlignment="Center">
+            <Container Type="Horizontal Stack" ID="DonorGroupFooter" Column="0" Row="2" Height="36" CellGap="4"
+                       VerticalAlignment="Center">
               <Button ID="DonorGroupNewCardAtTop" Width="20" Height="20" Padding="0" Action="CreateCardAtTop"
                       Background="Transparent" BorderWidth="0" ToolTip="Add card to the top of the column"
                       AccessibleName="Add card to the top of the column">
@@ -191,11 +200,15 @@
         </Repeat>
 
         <!-- Donor: BoardTrailing, the trailing column that creates a new group. -->
-        <Container Type="Vertical Stack" ID="DonorBoardTrailing" Width="{Binding DonorTrailingWidth, fallback=280}"
-                   CellGap="8" Active="{Binding DonorCanCreateGroup}">
+        <!-- Donor board_page.dart:365 - the trailing column exists only when the grouping field can create a
+             new group; otherwise the donor spends that space on a 40-wide spacer, which is reproduced here. -->
+        <Container Type="Vertical Stack" ID="DonorBoardTrailing" Width="256" CellGap="8"
+                   Active="{Binding DonorCanCreateGroup}">
           <Button ID="DonorCreateGroup" Content="New group" Action="CreateGroup" Height="26"
                   HorizontalAlignment="Left" AccessibleName="Create a new group" />
         </Container>
+        <Container Type="Horizontal Stack" ID="DonorBoardTrailingSpacer" Width="40"
+                   Active="{Binding DonorShowsTrailingSpacer}" />
       </Container>
     </Container>
   </Page>
