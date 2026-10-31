@@ -9,7 +9,7 @@
     <Action name="CloseSectionIconPicker" command="CloseSectionIconPicker" />
   </Actions>
   <Page>
-    <Container Type="Grid" ColumnSizes="280 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
+    <Container Type="Grid" ColumnSizes="268 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
       <!-- Top document bar: file actions, title, save state, global actions -->
       <Container padding="12 2" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="Transparent" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" CellGap="2">
@@ -60,8 +60,8 @@
            Gated with the board surface: while the Boards splash is showing there is no current
            board, so its title, save state and page list must not remain on screen (owner report
            28 October: the sidebar kept showing the last board's name and pages on the splash). -->
-      <Container padding="16 18" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="Transparent" BorderWidth="0" Active="{Binding ShowEditor}">
-        <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="12">
+      <Container padding="8 8" Type="Overlay" ID="NavPane" Row="1" Column="0" Background="Transparent" BorderWidth="0" Active="{Binding ShowEditor}">
+        <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="6">
           <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
             <Image ID="BoardSwitcherIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Current Board" />
             <!-- The owner's 29 October report: the board title was cut mid-word ("A-Level Computer Sc")
@@ -89,11 +89,14 @@
             </Button>
             </Container>
           </Container>
-          <Input id="NavSearchBox" Row="1" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" padding="14 11" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
-          <Container verticalalignment="Stretch" Type="Overlay" Row="2" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6">
+          <Input id="NavSearchBox" Row="1" Height="30" accessible-name="Search sections and pages" placeholdertext="Search pages" margin="0 0 4 0" padding="14 11" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
+          <Button ID="NavNewPageButton" Row="2" Content="+ New page" Action="AddPage" Height="30" Padding="6 0"
+                  HorizontalAlignment="Stretch" AccessibleName="New page" ToolTip="Add a page to the current section"
+                  IsEnabled="{Binding CanEdit}" />
+          <Container verticalalignment="Stretch" Type="Overlay" Row="3" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6">
             <Container Type="Vertical Stack" ID="NavHost" />
           </Container>
-          <Container Type="Menu" Row="3" Margin="0 8 0 0">
+          <Container Type="Menu" Row="4" Margin="0 8 0 0">
             <Button Type="Menu Item" Content="+ Add" Width="168" HorizontalAlignment="Center" Interactive="{Binding CanEdit}" FontWeight="Bold" FontSize="14" AccessibleName="Add page or section" ID="AddNewButton" Padding="14 9" Background="{Resource CuiAccentBrush}" Foreground="{Resource CuiAccentInkBrush}" BorderWidth="0" CornerRadius="18">
               <Button Type="Menu Item" Content="New page in this section" Action="AddPage" AccessibleName="Create a page in the current section" />
               <Button Type="Menu Item" Content="New section" Action="AddSection" AccessibleName="Create a new section in this Board" />
@@ -107,8 +110,31 @@
         </Container>
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
-        <Container Type="Grid" ID="EditorHost" Row="1" Column="1" RowSizes="Auto Auto 1fr" Active="{Binding ShowEditor}">
-        <Container Type="Grid" Row="0" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Padding="8 4" Margin="16 4 14 4" CornerRadius="14">
+        <Container Type="Grid" ID="EditorHost" Row="1" Column="1" RowSizes="40 Auto Auto 1fr" Active="{Binding ShowEditor}">
+        <!-- Donor: the content pane's tab row (home_sizes.dart tabBarHeight 40, tabBarWidth 200;
+             tab_bar_item.dart = icon + title + close). Rendered from state that exists here - the board title and
+             the open page title - because 9to1 Boards has no open-pages tab stack in the host yet, so nothing
+             unwired is drawn. The "+" calls the surface's existing AddPage handler. Next host wiring item: a real
+             multi-tab stack with switch and close. -->
+        <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" CellGap="6" Row="0" Height="40" ID="BoardsTabBar">
+          <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="6" Width="200" Height="40" Padding="10 0"
+                     ID="BoardNameTab" VerticalAlignment="Center">
+            <Image Column="0" Source="ownerbrand:boards" Width="16" Height="16" VerticalAlignment="Center"
+                   AccessibleName="Board" />
+            <Text Column="1" Text="{Binding BoardTitle, fallback=Board}" FontSize="13" VerticalAlignment="Center"
+                  TextTrimming="CharacterEllipsis" AccessibleName="Board name" />
+          </Container>
+          <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="6" Width="200" Height="40" Padding="10 0"
+                     ID="CurrentPageTab" VerticalAlignment="Center">
+            <Text Column="0" Text="{Binding PageTypeLabel, fallback=Page}" FontSize="11" VerticalAlignment="Center"
+                  AccessibleName="Page type" />
+            <Text Column="1" Text="{Binding PageTitle, fallback=Page}" FontSize="13" VerticalAlignment="Center"
+                  TextTrimming="CharacterEllipsis" AccessibleName="Open page name" />
+          </Container>
+          <Button Column="3" ID="TabNewPageButton" Content="+" Action="AddPage" Width="34" Height="34" FontSize="16"
+                  AccessibleName="New page" ToolTip="Add a page" IsEnabled="{Binding CanEdit}" />
+        </Container>
+        <Container Type="Grid" Row="1" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Padding="8 4" Margin="16 4 14 4" CornerRadius="14">
           <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="0" VerticalAlignment="Center" AccessibleName="Text formatting">
             <Button ID="RangeBold" Selected="{Binding RangeBoldSelected}" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold">
               <Image Source="icon:bold" Width="18" Height="18" AccessibleName="Bold" />
@@ -126,7 +152,7 @@
           <Container Type="Overlay" Column="1" Width="1" Height="20" VerticalAlignment="Center" Margin="6 0" Background="{Resource CuiLineBrush}" />
           <Container Type="Horizontal Stack" CellGap="4" ID="ToolbarHost" Column="2" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
         </Container>
-        <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="Transparent">
+        <Container Type="Vertical Stack" ID="ContextHost" Row="2" Active="{Binding ContextVisible}" Padding="12 6" Background="Transparent">
           <If Condition="{Binding ContextIsTable}">
             <Container Type="Wrap" CellGap="4">
               <Text Text="Table" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0 0 4 0" />
@@ -215,7 +241,7 @@
             </Container>
           </If>
         </Container>
-        <Container horizontalalignment="Stretch" cornerradius="22" padding="20 12" margin="16 6 14 12" Type="Overlay" ID="PageCard" Row="2" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
+        <Container horizontalalignment="Stretch" cornerradius="22" padding="20 12" margin="16 6 14 12" Type="Overlay" ID="PageCard" Row="3" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
           <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
               <Container margin="76 10" Type="Vertical Stack" ID="DocumentContentLayer">
