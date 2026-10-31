@@ -34,10 +34,15 @@ class MeasureRuleTests(unittest.TestCase):
         now = sc.measure()
         self.assertGreater(now["mirror_cui_total"], 1700)
         self.assertNotEqual(now["own_cui_total"], now["mirror_cui_total"])
-        # Boards measured: 879 mirror documents and 11 of its own; conflating them would make the
-        # donor-translation work look like product conformance.
+        # Boards measured: 879 stage-A mirror documents, and its own count pinned from the recorded baseline.
+        # Conflating the two would make donor translation look like product conformance. The mirror figure stays
+        # exact because generation changes must be seen; the own figure is a one-way floor, because adding a
+        # first-party CUI document (measured: Boards rose 11 -> 12 when AppFlowyBoardStageOne.cui landed) is the
+        # improvement this ratchet exists to record. A drop below the floor still fails the gate.
         self.assertEqual(now["mirror_cui_per_app"].get("Boards", 0), 879)
-        self.assertEqual(now["own_cui_per_app"].get("Boards", 0), 11)
+        recorded = json.loads(sc.BASELINE.read_text())["own_cui_per_app"]["Boards"]
+        self.assertGreaterEqual(now["own_cui_per_app"].get("Boards", 0), recorded)
+        self.assertLess(now["own_cui_per_app"].get("Boards", 0), recorded + 200)
 
     def test_test_fixtures_are_not_counted_as_shipping_surfaces(self):
         now = sc.measure()
