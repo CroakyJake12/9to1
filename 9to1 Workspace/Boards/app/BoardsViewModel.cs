@@ -346,6 +346,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         (host.CanRetryOpenCreatedBoard || host.CanRetryCreationSettlement ||
          host.CanInspectUnknownCreation || host.CanOpenRecordedBoard);
     public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
+
+    /// <summary>Whether the board the user is looking at can be saved right now. On the Boards splash there is
+    /// no current board, so the save commands must not present as available (owner report 31 October 2026:
+    /// they were only reachable at all from the File menu once a board was open).</summary>
+    public bool CanSaveBoard => CanEdit && HasOpenBoard;
     public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null &&
         !_homeCreationOperationInProgress && !_homeBoardCreationHost.HasUnresolvedCreation;
     public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode && _pendingEmbeddedPageLink is null;
@@ -980,6 +985,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("CanOpenBoardMenu", CanOpenBoardMenu);
         Set("CanSwitchBoard", CanSwitchBoard);
         Set("CanCreateBoard", CanCreateBoard);
+        Set("CanSaveBoard", CanSaveBoard);
+        Set("CanSaveAs", CanSaveAs);
         Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
         Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);
         Set("CanCheckSavedBoard", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanInspectUnknownCreation == true);

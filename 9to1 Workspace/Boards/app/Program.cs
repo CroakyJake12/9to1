@@ -15,6 +15,9 @@ using Polyline = Avalonia.Controls.Shapes.Polyline;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+#if !WINDOWS
+using Avalonia.X11;
+#endif
 using Avalonia.Styling;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
@@ -33,7 +36,13 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+#if WINDOWS
         Console.WriteLine("[CUI Boards] Starting Avalonia Win32 + Skia...");
+#else
+        // This line is launch evidence, so it has to name the backend the build actually uses. It used to say
+        // Win32 unconditionally even for the Linux comparison build.
+        Console.WriteLine("[CUI Boards] Starting Avalonia X11 + Skia...");
+#endif
         // File associations and drops may arrive as a split path when quoting is lost;
         // rejoin extra arguments onto the first when it does not resolve on its own.
         if (args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]))
@@ -50,10 +59,16 @@ internal static class Program
 
     public static AppBuilder BuildAvaloniaApp()
     {
-        return CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BoardsApp>()
-            .UseWin32()
-            .UseSkia()
-            .UseHarfBuzz());
+        // Platform selection follows the target framework, never an OS guess at runtime, and only one windowing
+        // backend is packaged per build. Windows keeps Win32; the Linux x64 comparison build uses the vendored
+        // fork's X11 backend so the owner can run the new CUI surface on the same machine as the legacy one.
+        var builder = CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BoardsApp>());
+#if WINDOWS
+        builder = builder.UseWin32();
+#else
+        builder = builder.UseX11();
+#endif
+        return builder.UseSkia().UseHarfBuzz();
     }
 
     /// <summary>Shared read-only drawing-layer renderer used by standalone and embedded surfaces.</summary>
@@ -148,6 +163,14 @@ internal sealed class BoardsApp : Application
         if (Program.OpenPath is null) _viewModel.SetNoBoardOpen();
         RecordCurrentPage();
         _viewModel.SetLanding(Program.OpenPath is null);
+        if (Program.OpenPath is null)
+        {
+            // Measured defect (owner report 31 October 2026): a freshly launched standalone Boards showed
+            // "Loading saved boards…" forever and nothing else, because the splash filled its Recent list only
+            // from actions taken inside a mounted board. UX27-BOARD-004 requires that closing and reopening the
+            // application restores the draft through Recent/Drafts, so the landing reads the real catalogue now.
+            _ = RefreshLandingDataAsync();
+        }
         if (legacyFailures.Count > 0)
             _viewModel.Set("StatusText", "Some existing boards need Open to locate or recover them: " + string.Join("; ", legacyFailures));
         WireViewModel(_viewModel);
@@ -542,6 +565,14 @@ internal sealed class BoardsApp : Application
     {
         if (_window is null || _viewModel is null)
             return;
+        // The splash is not a board, so it must not be labelled as one. Measured on 31 October 2026: a fresh
+        // standalone launch showed "Untitled board — Boards" in the title bar while no board was open, which
+        // made the owner look for a board that did not exist.
+        if (!_viewModel.HasOpenBoard || _viewModel.Get("IsLanding") is true)
+        {
+            _window.Title = "Boards";
+            return;
+        }
         var title = _viewModel.Session.Document.Title;
         _window.Title = string.IsNullOrWhiteSpace(title) ? "Boards" : title + " — Boards";
     }

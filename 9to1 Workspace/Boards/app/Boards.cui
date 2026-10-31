@@ -17,9 +17,14 @@
             <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
             <Container Type="Menu" ID="FileMenu">
               <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
-                <Button Type="Menu Item" Content="Open…" Action="OpenBoard" />
-                <Button Type="Menu Item" Content="Save" Action="SaveBoard" />
-                <Button Type="Menu Item" Content="Save As…" Action="SaveAsBoard" />
+                <!-- Owner report 31 October: "the option was tucked away under file", "I was looking under
+                     the board dropdown", "where the name is". File keeps these entries, and the board-name
+                     menu now repeats them so saving is reachable where the user actually looks. The shortcut
+                     is stated on the item itself because UX27-BOARD-005 requires "File → Save As and its
+                     shortcut" to be a real, findable command. -->
+                <Button Type="Menu Item" Content="Open…" Action="OpenBoard" Shortcut="Ctrl+O" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open a board file" ToolTip="Open a .9to1board file (Ctrl+O)" />
+                <Button Type="Menu Item" ID="FileMenuSave" Content="Save" Action="SaveBoard" Shortcut="Ctrl+S" IsEnabled="{Binding CanSaveBoard}" Interactive="{Binding CanSaveBoard}" AccessibleName="Save this board" ToolTip="Save this board (Ctrl+S)" />
+                <Button Type="Menu Item" ID="FileMenuSaveAs" Content="Save As…" Action="SaveAsBoard" Shortcut="Ctrl+Shift+S" IsEnabled="{Binding CanSaveAs}" Interactive="{Binding CanSaveAs}" AccessibleName="Save this board to a file you choose" ToolTip="Save this board to a file you choose (Ctrl+Shift+S)" />
                 <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
                 <Button Type="Menu Item" Content="Exit" Action="CloseWindow" />
               </Button>
@@ -64,7 +69,13 @@
             </Container>
             <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">
             <Button Type="Menu Item" ID="BoardSwitcher" IconSource="icon:chevron-down" Width="32" Height="32" Padding="0" Background="Transparent" BorderWidth="0" CornerRadius="6" IsEnabled="{Binding CanOpenBoardMenu}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board actions" HorizontalAlignment="Center">
-              <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" IsEnabled="{Binding CanCreateBoard}" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
+              <!-- UX27-BOARD-004/005 and the owner's 31 October report: the board-name menu is where the user
+                 expects save commands to be. Drafts are already durable, so the menu states that plainly and
+                 offers the explicit file route without hiding it behind the File menu. -->
+            <Button Type="Menu Item" ID="BoardSwitcherSave" Content="Save" Action="SaveBoard" Shortcut="Ctrl+S" IsEnabled="{Binding CanSaveBoard}" Interactive="{Binding CanSaveBoard}" AccessibleName="Save this board" ToolTip="Save this board (Ctrl+S)" />
+            <Button Type="Menu Item" ID="BoardSwitcherSaveAs" Content="Save As…" Action="SaveAsBoard" Shortcut="Ctrl+Shift+S" IsEnabled="{Binding CanSaveAs}" Interactive="{Binding CanSaveAs}" AccessibleName="Save this board to a file you choose" ToolTip="Save this board to a file you choose (Ctrl+Shift+S)" />
+            <Button Type="Menu Item" ID="BoardSwitcherDraftState" Content="{Binding SaveStateText, fallback=Saved}" Interactive="False" AccessibleName="Board draft save state" />
+            <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" IsEnabled="{Binding CanCreateBoard}" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
               <Button Type="Menu Item" ID="BoardSwitcherOpen" Content="Open Board…" Action="OpenBoard" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
               <Button Type="Menu Item" ID="BoardSwitcherAll" Content="All Boards…" Action="ShowLanding" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
               <Button Type="Menu Item" ID="BoardSwitcherRetryOpen" Content="Retry opening created Board" Action="RetryOpenCreatedBoard" IsEnabled="{Binding CanRetryHomeBoardOpen}" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created Board" />

@@ -2,7 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- Owner comparison pair (31 Oct 2026): the new CUI Boards must run on the same Linux x64 PC that runs
+         the legacy surface, so the two can be tested side by side. Windows packaging is unchanged: the Windows
+         TFM and the Win32 platform are still selected there, exactly as 9to1 Workspace/Boards/Host already does
+         for the legacy entry. -->
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-windows</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,7 +36,8 @@
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Skia\Avalonia.Skia\Avalonia.Skia.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\HarfBuzz\Avalonia.HarfBuzz\Avalonia.HarfBuzz.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Headless\Avalonia.Headless\Avalonia.Headless.csproj" />
-    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Windows\Avalonia.Win32\Avalonia.Win32.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Windows\Avalonia.Win32\Avalonia.Win32.csproj" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.X11\Avalonia.X11.csproj" Condition="!$([MSBuild]::IsOSPlatform('Windows'))" />
   </ItemGroup>
 
   <!-- CUI Framework + Boards contract references -->
