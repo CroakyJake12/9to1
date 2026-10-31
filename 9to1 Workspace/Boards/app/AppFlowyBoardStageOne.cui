@@ -45,10 +45,127 @@
     <Action name="OpenFilterEditor" command="DonorOpenFilterEditor" />
     <Action name="SwitchToDatabaseView" command="DonorSwitchToGrid" />
     <Action name="CreateGroup" command="DonorCreateGroup" />
+    <Action name="OpenTab" command="DonorOpenTab" parameter="{Binding tab.Id}" />
+    <Action name="ToggleSection" command="DonorToggleSection" parameter="{Binding section.Id}" />
+    <Action name="OpenSidebarPage" command="DonorOpenSidebarPage" parameter="{Binding page.Id}" />
+    <Action name="CreateRootPage" command="DonorCreateRootPage" />
+    <Action name="CreateSectionPage" command="DonorCreateSectionPage" parameter="{Binding section.Id}" />
+    <Action name="SearchPages" command="DonorSearchPages" />
+    <Action name="CloseSearch" command="DonorCloseSearch" />
+    <Action name="FilterPages" command="DonorFilterPages" />
+    <Action name="CloseTab" command="DonorCloseTab" parameter="{Binding tab.Id}" />
     <Action name="ExitStageOne" command="DonorExitStageOneSurface" />
   </Actions>
   <Page>
-    <Container Type="Grid" RowSizes="Auto 1fr" CellGap="6" Background="{Resource CuiWorkspaceMaterial}">
+    <!-- Donor: the desktop app shell around the board. lib/workspace/presentation/home/home_sizes.dart measures
+         minimumSidebarWidth 268, workspaceSectionHeight 32, searchSectionHeight 30, newPageSectionHeight 30,
+         tabBarHeight 40, tabBarWidth 200, HomeSpaceViewSizes.leftPadding 16 / viewHeight 30.
+         home/menu/sidebar/sidebar.dart:332-420 builds the sidebar as a Column: SidebarTopMenu (32, inset 8 with
+         right 6), VSpace 6, the search button (30), VSpace 6, the New Page button, VSpace 12, a divider at padding
+         12, the page tree, a divider, the footer, VSpace 14. widgets/tab_bar_item.dart is a Row of the page's emoji,
+         its title and a close button. 9to1 wording is applied to everything 9to1 names; the donor labels that
+         already say "Search" and "+ New page" stay. -->
+    <Container Type="Grid" ColumnSizes="268 1fr" CellGap="0" ID="DonorAppShell"
+               Background="{Resource CuiWorkspaceMaterial}">
+      <Container Type="Vertical Stack" Column="0" ID="DonorSidebar" Width="268" Padding="8 8" CellGap="0"
+                 Background="{Resource CuiPanelBrush}" AccessibleName="Pages sidebar">
+        <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="4" Height="32" Padding="0 0 6 0"
+                   ID="DonorSidebarWorkspace" VerticalAlignment="Center">
+          <Text Column="0" Text="{Binding DonorWorkspaceEmoji}" FontSize="15" VerticalAlignment="Center"
+                ID="DonorWorkspaceEmoji" AccessibleName="Workspace icon" />
+          <Text Column="1" Text="{Binding DonorWorkspaceName}" FontSize="13" FontWeight="Bold"
+                VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ID="DonorWorkspaceName"
+                AccessibleName="Workspace name" />
+          <!-- The donor's workspace menu and the account cluster are Haven's shared header services; this
+               standalone Boards host has no space or account session, so those two controls are NOT rendered here
+               rather than rendered and doing nothing. Recorded in open-decisions as the chrome seam to close. -->
+          <Button Column="2" ID="DonorSidebarNewPageButton" Content="+" Action="CreateRootPage" Width="22"
+                  Height="22" Padding="0" AccessibleName="New page" ToolTip="New page" />
+        </Container>
+        <If Condition="{Binding DonorSearchIdle}">
+          <Button ID="DonorSearchButton" Content="Search" Action="SearchPages" Height="30" Padding="6 0"
+                  Margin="0 6 0 0" HorizontalAlignment="Stretch" AccessibleName="Search pages" />
+        </If>
+        <If Condition="{Binding DonorSearchActive}">
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="4" Margin="0 6 0 0" Height="30"
+                     ID="DonorSearchRow">
+            <Input Column="0" ID="DonorSearchField" Type="Text" Value="{Binding DonorSidebarQuery, mode=TwoWay}"
+                   Action="FilterPages" PlaceholderText="Search" Height="30" AccessibleName="Search pages" />
+            <Button Column="1" ID="DonorCloseSearch" Content="✕" Action="CloseSearch" Width="22" Height="22"
+                    Padding="0" AccessibleName="Close search" />
+          </Container>
+        </If>
+        <Button ID="DonorNewPageButton" Content="+ New page" Action="CreateRootPage" Height="30" Padding="6 0"
+                Margin="0 6 0 0" HorizontalAlignment="Stretch" AccessibleName="New page" />
+        <Container Type="Overlay" ID="DonorSidebarTree" VerticalScrolling="True" HorizontalScrolling="False"
+                   ScrollBarThickness="8" Margin="0 12 0 0" VerticalAlignment="Stretch">
+          <Container Type="Vertical Stack" CellGap="0">
+            <If Condition="!{Binding DonorHasSidebarMatches}">
+              <Text Text="No pages yet" FontSize="12" Margin="16 6 0 0" ID="DonorSidebarEmpty"
+                    Foreground="{Resource CuiTextSoftBrush}" AccessibleName="No pages in this board" />
+            </If>
+            <Repeat Source="{Binding DonorSidebarSections}" As="section" Key="{Binding section.Id}">
+              <Container Type="Vertical Stack" CellGap="2">
+                <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" CellGap="4" Height="24" Padding="8 0"
+                           ID="DonorSidebarSectionRow" VerticalAlignment="Center">
+                  <Button Column="0" ID="DonorSectionChevron" Content="⌄" Action="ToggleSection" Width="16"
+                          Height="16" Padding="0" AccessibleName="Collapse this section" />
+                  <Button Column="1" ID="DonorToggleSection" Content="{Binding section.Name}" Action="ToggleSection"
+                          Height="24" Padding="0" HorizontalAlignment="Stretch" AccessibleName="Section name" />
+                  <Button Column="3" ID="DonorSectionNewPage" Content="+" Action="CreateSectionPage" Width="20"
+                          Height="20" Padding="0" AccessibleName="New page in this section" />
+                </Container>
+                <If Condition="{Binding section.Expanded}">
+                  <Repeat Source="{Binding section.Pages}" As="page" Key="{Binding page.Id}">
+                  <!-- The row is one Button carrying the icon and the title as its content, the shape a
+                       shipping surface uses for its list items (Mail/UI/MailWorkspace.cui:10-13 uses
+                       <Button action= action-argument=><Text/><Text/></Button>). My first draft here invented
+                       IconContent=/Command=/GridColumn=/Opacity= attributes and Space/Border elements, none of
+                       which exist in this vocabulary; corrected against the registry and against shipping CUI.
+                       Donor geometry kept: viewHeight 30, leftPadding 16. -->
+                  <Button Column="0" ID="DonorSidebarPage" Height="30" Padding="16 0"
+                          HorizontalAlignment="Stretch" Action="OpenSidebarPage" AccessibleName="Open page">
+                    <Text Text="{Binding page.Emoji}" FontSize="14" />
+                    <Text Text="{Binding page.Title}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                  </Button>
+                  </Repeat>
+                </If>
+              </Container>
+            </Repeat>
+          </Container>
+        </Container>
+        <Container Type="Grid" ColumnSizes="1fr" CellGap="6" Height="28" Margin="0 6 0 0"
+                   ID="DonorSidebarFooter" VerticalAlignment="Center">
+          <Text Column="0" Text="{Binding DonorAccountName}" FontSize="11.5" ID="DonorSidebarAccount"
+                VerticalAlignment="Center" AccessibleName="Account" />
+        </Container>
+      </Container>
+
+      <!-- Donor: the content pane's tab row (HomeSizes.tabBarHeight 40, tabBarWidth 200). -->
+      <Container Type="Grid" RowSizes="40 1fr" ColumnSizes="1fr" Column="1" CellGap="0" ID="DonorContentPane">
+        <Container Type="Grid" ColumnSizes="1fr Auto" Row="0" CellGap="0" Height="40" ID="DonorViewTabBar"
+                   Background="{Resource CuiPanelBrush}">
+          <Container Type="Overlay" Column="0" HorizontalScrolling="True" VerticalScrolling="False"
+                     ScrollBarThickness="8">
+            <Container Type="Horizontal Stack" CellGap="0">
+              <Repeat Source="{Binding DonorOpenTabs}" As="tab" Key="{Binding tab.Id}">
+                <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6" Width="200" Height="40" Padding="10 0"
+                           ID="DonorViewTab" VerticalAlignment="Center">
+                  <Button Column="0" ID="DonorOpenTab" Height="40" Padding="0" HorizontalAlignment="Stretch"
+                          Action="OpenTab" AccessibleName="Open page tab">
+                    <Text Text="{Binding tab.Emoji}" FontSize="14" />
+                    <Text Text="{Binding tab.Title}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                  </Button>
+                  <Button Column="1" ID="DonorCloseTab" Content="✕" Action="CloseTab" Width="20" Height="20"
+                          Padding="0" AccessibleName="Close tab" />
+                </Container>
+              </Repeat>
+            </Container>
+          </Container>
+          <Button Column="1" ID="DonorNewTabButton" Content="+" Action="CreateRootPage" Width="34" Height="34"
+                  FontSize="16" AccessibleName="New page tab" ToolTip="New page" />
+        </Container>
+        <Container Type="Grid" RowSizes="Auto 1fr" Row="1" CellGap="6" Background="{Resource CuiWorkspaceMaterial}">
       <!-- Donor: the database tab bar row. The settings cluster is right-aligned, 20 high. -->
       <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" Row="0" CellGap="8" ID="DonorBoardTabBar">
         <Container Type="Horizontal Stack" Column="0" CellGap="8" VerticalAlignment="Center">
@@ -134,15 +251,21 @@
                        ID="DonorGroupHeader" CellGap="4" VerticalAlignment="Center">
               <Image Column="0" Source="icon:folder" Width="16" Height="16" VerticalAlignment="Center"
                      AccessibleName="Section" />
-              <!-- The donor shows the group's card count beside the title (board_column_header.dart) -->
-              <If Condition="{Binding group.Editing}">
-                <Input Column="1" ID="DonorGroupTitleEdit" Type="Text" Value="{Binding group.DraftTitle}"
-                       SubmitAction="CommitSectionTitle" FontSize="14" AccessibleName="Section title" />
-              </If>
-              <If Condition="{Binding group.NotEditing}">
-                <Text Column="1" Text="{Binding group.Title}" FontSize="14" FontWeight="Medium"
-                      VerticalAlignment="Center" AccessibleName="Section title" />
-              </If>
+              <!-- Measured defect (g8-crop.png): the section icon overlapped the title glyph. Hypothesis, now
+                   tested: grid placement attributes are not applied to the children of a conditional branch, so
+                   both branch bodies fell back to cell 0 on top of the icon. The two branches are therefore wrapped
+                   in one Container that carries Column="1". -->
+              <Container Column="1" Type="Horizontal Stack" CellGap="4" ID="DonorGroupTitleCell"
+                         VerticalAlignment="Center">
+                <If Condition="{Binding group.Editing}">
+                  <Input ID="DonorGroupTitleEdit" Type="Text" Value="{Binding group.DraftTitle}"
+                         SubmitAction="CommitSectionTitle" FontSize="14" AccessibleName="Section title" />
+                </If>
+                <If Condition="{Binding group.NotEditing}">
+                  <Text Text="{Binding group.Title}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"
+                        AccessibleName="Section title" />
+                </If>
+              </Container>
               <Text Column="2" Text="{Binding group.CountLabel}" FontSize="12"
                     Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center"
                     AccessibleName="Number of pages in this section" />
@@ -252,6 +375,8 @@
         </Container>
         <Container Type="Horizontal Stack" ID="DonorBoardTrailingSpacer" Width="40"
                    Active="{Binding DonorShowsTrailingSpacer}" />
+      </Container>
+    </Container>
       </Container>
     </Container>
   </Page>
