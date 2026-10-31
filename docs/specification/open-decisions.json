@@ -539,7 +539,7 @@
     {
       "id": "OPEN-2026-10-31-BOARDS-WIRE-EXISTING-CODE",
       "at": "2026-10-31T19:55:00Z",
-      "status": "owner direction recorded; implementation not started",
+      "status": "owner confirmed: wire EVERYTHING; prefer host wiring over CUI Action declarations",
       "title": "Boards re-UI: lay the interface out in CUI, wire it to the EXISTING Boards code; do not force behaviour through new CUI actions",
       "owner_words_in_order": [
         "like u don't even need to use cui actions rn literally just rebuild the interface in cui",
@@ -549,9 +549,12 @@
         "just wire up the existing code to new ui"
       ],
       "consequence": "The parallel stage-one command set (Donor*) and the BOARDS_STAGE_ONE_PREVIEW host stop being the wiring mechanism. The AppFlowy-shaped layout is ported into the input-proven Boards.cui presentation and calls the existing view-model cases (AddPage, AddSubpage, AddSection, OpenRecentPage, SaveBoard, SaveAsBoard, NewBoard, OpenBoard, ToggleTheme) and existing adapter calls (AddSectionAsync, AddPageAsync, RenameSectionAsync, DeleteSectionAsync, RenamePageAsync, DeletePageAsync, MovePageAsync). This also satisfies the pinned one-implementation-per-app requirement.",
-      "deviation_note": "This relaxes my own earlier no-dead-controls rule for stage one only: the donor's search/filter/sort/layout-settings/hidden-section controls may be rendered for visual parity, labelled in code as not yet wired, because the owner asks for the interface first.",
+      "deviation_note": "Superseded for stage one: rendering donor controls without wiring is NOT acceptable after this correction. Every donor control in the re-UI must end up connected to real behaviour. The permitted route is host-side wiring (view-model dispatch cases, adapter calls, C#/native infrastructure) instead of declaring CUI <Actions> with bound parameters, which the owner finds heavier than it should be. The earlier 'no dead controls' rule and this correction point the same way now; only the mechanism changes.",
       "still_open": "Whether any of this needs the native Rust layer: no first-party Rust source exists in this repository except donor snapshots (Rnote, Gecko) and Canvas/rnote-poc, so for Boards the 'native' wiring site is the C# host/view model/adapter, not Rust. Recorded so the next session does not go looking for a Rust Boards runtime.",
-      "evidence": "docs/development/boards-appflowy-reui-plan-2026-10-31.md (mapping table with file:line citations), docs/development/boards-chrome-and-input-blocker-2026-10-31.md"
+      "evidence": "docs/development/boards-appflowy-reui-plan-2026-10-31.md (mapping table with file:line citations), docs/development/boards-chrome-and-input-blocker-2026-10-31.md",
+      "owner_correction_followup": [
+        "no wire everything. but hopefully wiring should be easier than forcing via actions"
+      ]
     }
   ]
 }

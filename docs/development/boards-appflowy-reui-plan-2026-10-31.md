@@ -180,3 +180,36 @@ stage one) as long as they are labelled in code as not yet wired.
    retirement condition.
 3. Wire the two adapter calls that lack a view-model dispatch case (`RenameSectionAsync`, `DeleteSectionAsync`) —
    host-side, not CUI-side.
+
+## "Wire everything" inventory — 31 October 2026, owner correction
+
+Owner correction: *"no wire everything. but hopefully wiring should be easier than forcing via actions"*. So the
+visual-parity allowance above is withdrawn: **every** donor control in the re-UI ends up connected to real
+behaviour, by wiring host code rather than by authoring CUI `<Actions>` with bound parameters. Statuses below are
+measured against this repository, not assumed.
+
+| donor control in the re-UI | wiring status | where it goes |
+| --- | --- | --- |
+| sidebar page row, board card → open page | **EXISTS** | `BoardsViewModel` `OpenRecentPage` + the existing selection→block-editor route |
+| section `+` new page in that section | **EXISTS** | `ContractSessionAdapter.AddPageAsync(sectionId,title)` :1271 |
+| section header inline rename | **THIN** | adapter `RenameSectionAsync` :1457 exists; no `BoardsViewModel` dispatch case → add one |
+| section `⋯` → delete section | **THIN** | adapter `DeleteSectionAsync` :1239 exists; dispatch case missing |
+| page rename in the tree | **THIN** | adapter `RenamePageAsync` :1506 exists |
+| move page between sections | **THIN→GAP** | adapter `MovePageAsync` :1582 exists; the donor's **drag** input has no CUI/render seam |
+| tree section collapse chevron | **THIN** | view-state only, host-side; must persist like the donor does |
+| hidden sections column + `hide section` | **GAP** | 9to1 Boards has no hidden-section state or per-view layout settings to persist it in |
+| board settings panel (card size/layout, show icon/cover, collapse hidden) | **GAP** | no settings model on the board document; needs a persisted per-view layout setting |
+| search | **GAP** | measured: no search API anywhere in Boards or the shared layer |
+| filter | **GAP** | no board filter model |
+| sort | **GAP** | no board sort model |
+| open-pages tab strip (switch/close) | **GAP** | the Boards host shows one page at a time; no tab stack exists |
+| `+ New page` at the space level | **GAP** | a 9to1 board page always belongs to a section; needs either a root-page data model or an explicit owner decision (see `OPEN-2026-10-31-BOARDS-DONOR-VIEW-SCOPE`) |
+| card hover accessories (edit / more options) | **GAP** | no hover seam in the CUI renderer |
+| group options popover limited to 168 x 300 | **GAP** | popover max-size is not expressible today |
+| dark theme like the screenshot | **EXISTS** | `ToggleTheme` + Home-owned theme state; the *appearance* defects stay queued behind this work per the owner's earlier instruction |
+| workspace menu, account cluster, notifications | **EXISTS in Haven, not in the standalone host** | must come from the SAME shared Home-owned controls (pinned one-implementation rule), not a local copy |
+| grid / calendar views | **GAP, owner decision pending** | 28,658 donor LOC; `OPEN-2026-10-31-BOARDS-DONOR-VIEW-SCOPE` |
+
+Sequencing I will follow: port the layout onto the working surface → wire the EXISTS/THIN rows (they are mostly one
+dispatch case each) → then close the GAPs that the board flow actually needs (tab strip, settings model, hide +
+hidden column, search) before taking grid/calendar parity, which is the pending owner decision.
