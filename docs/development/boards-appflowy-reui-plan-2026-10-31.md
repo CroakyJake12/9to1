@@ -95,9 +95,26 @@ ambient static `Dispatcher.UIThread`, a cross-thread race.
 The owner asked for `Legacy XX` / `XX` pairs so before-and-after can be tested side by side, and said
 "eventually the legacy surfaces will be removed".
 
-- `Boards` — the CUI surface currently running (first-party layout today, AppFlowy re-UI after stage 1).
-  Launch: `HAVEN_DATA_DIR=<profile> <guarded-dotnet> "9to1 Workspace/Boards/app/bin/Release/net10.0/CakeOS.Apps.Boards.App.dll"`
-  with `DISPLAY=:1`. Linux and Windows targets both exist as of commit `94fc2a3a`.
+- `Boards` — the CUI surface that runs today (first-party layout, plus the stage-one AppFlowy re-UI mounted
+  over it). Launch, measured working on this PC:
+  ```
+  DISPLAY=:1 XAUTHORITY=/run/user/1000/gdm/Xauthority \
+  HAVEN_DATA_DIR=/tmp/opencode/boards-cui-evidence/profile \
+  "<guarded-dotnet>" "9to1 Workspace/Boards/app/bin/Release/net10.0/CakeOS.Apps.Boards.App.dll"
+  ```
+  Linux and Windows targets both exist as of commit `94fc2a3a`. The apphost in that directory does **not**
+  start here (no shared .NET 10 framework installed), so the dll is run through the guarded SDK host —
+  recorded so nobody mistakes a working launch recipe for a packaged app.
+- **Stage-one seam, as of `af15ed29`:** in the running app, File → "AppFlowy re-UI (stage one)" mounts
+  AppFlowy's board structure over the same board, and "Leave AppFlowy re-UI" returns. To launch straight
+  into it for a side-by-side test, set `BOARDS_STAGE_ONE_PREVIEW=1`; it calls the same
+  `ShowStageOneSurfaceAsync`, so there is no second code path.
+  Measured on-screen evidence, window `0x420000f`, `AppFlowy stage-one document diagnostics: 0`:
+  `/tmp/opencode/e4.png` sha256 `41ccc699a414…` (1:1 crop `e4-crop.png`), after the menu fix `66673e50`.
+  Before that fix the same surface rendered the group options inline: `/tmp/opencode/e3.png`
+  sha256 `d50eab0faee9…`.
+  Use a **separate copy** of the data directory for the second process (`profile-copy` here) so the pair
+  never writes the same board file from two sessions.
 - `Legacy Boards` — what 9to1 shipped before the donor route. The installed frozen package
   (`haven 0.1.0+test20261026.git59d66496`) **cannot serve as the legacy reference on this PC**: launched
   on 31 October it renders a "Shutdown not complete" diagnostic page reporting repeated
