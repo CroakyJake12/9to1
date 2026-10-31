@@ -1,6 +1,6 @@
 <Cui id="widget-separated-flex" product="9-1" version="1">
   <Page id="widget-separated-flex-root">
-    <Container id="divider" Type="Vertical Stack" />
-    <Container id="vertical-divider" Type="Vertical Stack" />
+    <Container id="divider" Type="Separator" />
+    <Container id="vertical-divider" Type="Separator" />
   </Page>
 </Cui>

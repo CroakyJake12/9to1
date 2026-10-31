@@ -12,14 +12,14 @@
         <Button id="menu_openHelp" action="open-support-url" />
         <Button id="menu_openReleaseHelp" action="open-link-text" />
         <Button id="menu_keyboardShortcuts" action="open-link-text" />
-        <Container id="menuseparator" Type="Menu" />
+        <Container id="menuseparator" Type="Separator" />
         <Button id="getInvolved" action="open-link-text" />
         <Button id="donationsPage" action="open-link-text" />
         <Button id="feedbackPage" action="open-link-text" />
-        <Container id="functionsSeparator" Type="Menu" />
+        <Container id="functionsSeparator" Type="Separator" />
         <Button id="helpTroubleshootMode" action="safe-mode-restart" />
         <Button id="aboutsupport_open" action="open-about-support" />
-        <Container id="aboutSeparator" Type="Menu" />
+        <Container id="aboutSeparator" Type="Separator" />
         <Button id="aboutName" action="open-about-dialog" />
       </Container>
     </Button>

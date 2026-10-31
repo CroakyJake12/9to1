@@ -4,7 +4,7 @@
       <Button id="brushstyle-menubutton" icon-source="pen-brush-style-solid-symbolic" />
       <Button id="brushconfig-menubutton" icon-source="settings-symbolic" horizontal-alignment="Stretch" role="Grow" />
     </Container>
-    <Container id="container-3" Type="Horizontal Stack" />
+    <Container id="container-3" Type="Separator" />
     <Container id="stroke-width-picker" Type="Vertical Stack" />
   </Container>
 </Cui>

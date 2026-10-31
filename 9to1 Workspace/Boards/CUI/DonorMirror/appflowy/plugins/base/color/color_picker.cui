@@ -8,7 +8,7 @@
         <Text id="flowy-text" />
       </Button>
     </Container>
-    <Container id="divider" Type="Vertical Stack" height="1" />
+    <Container id="divider" Type="Separator" height="1" />
     <Container id="decorated-box" Type="Vertical Stack" />
   </Page>
 </Cui>

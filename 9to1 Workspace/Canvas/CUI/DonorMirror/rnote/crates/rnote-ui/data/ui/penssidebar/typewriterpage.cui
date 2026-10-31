@@ -1,11 +1,11 @@
 <Cui id="penssidebar-typewriterpage" product="9-1" version="1">
   <Container id="container" Type="Vertical Stack">
     <Button id="fontdialog-button" icon-source="pen-typewriter-fontchooser-symbolic" tooltip="Font Chooser" />
-    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="container-2" Type="Separator" />
     <Input id="font-size-spinbutton" Type="Number" tooltip="Edit Font Size" />
-    <Container id="container-3" Type="Horizontal Stack" />
+    <Container id="container-3" Type="Separator" />
     <Button id="emojichooser-menubutton" icon-source="emojichooser-symbolic" />
-    <Container id="container-4" Type="Horizontal Stack" />
+    <Container id="container-4" Type="Separator" />
     <Container id="container-5" Type="Vertical Stack">
       <Button id="text-reset-button" icon-source="reset-state-symbolic" />
       <Button id="text-bold-button" icon-source="text-bold-symbolic" />
@@ -13,7 +13,7 @@
       <Button id="text-underline-button" icon-source="text-underline-symbolic" />
       <Button id="text-strikethrough-button" icon-source="text-strikethrough-symbolic" />
     </Container>
-    <Container id="container-6" Type="Horizontal Stack" />
+    <Container id="container-6" Type="Separator" />
     <Container id="container-7" Type="Vertical Stack">
       <Button id="text-align-start-togglebutton" icon-source="text-align-start-symbolic" checked="true" />
       <Button id="text-align-center-togglebutton" icon-source="text-align-center-symbolic" />

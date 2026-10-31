@@ -2,16 +2,16 @@
   <Container id="cell-appearance-property-panel" Type="Grid" focusable="false">
     <Container id="grid1" Type="Grid" cell-gap="3" focusable="false" role="Grow" column="0" row="0">
       <Text id="cellbackgroundlabel" text="Background:" focusable="false" column="0" row="0" />
-      <Container id="cellbackgroundcolor" Type="Horizontal Stack" tooltip="Select the background color of the selected cells." horizontal-alignment="Right" role="Grow" column="1" row="0">
+      <Container id="cellbackgroundcolor" Type="Toolbar" tooltip="Select the background color of the selected cells." horizontal-alignment="Right" role="Grow" column="1" row="0">
         <Button id=".uno:background-color" tooltip="Select the background color of the selected cells." />
       </Container>
-      <Container id="cellbordertype" Type="Horizontal Stack" vertical-alignment="Top" column="0" row="1" row-span="2">
+      <Container id="cellbordertype" Type="Toolbar" vertical-alignment="Top" column="0" row="1" row-span="2">
         <Button id="set-border-style" tooltip="Specify the borders of the selected cells." horizontal-alignment="Left" vertical-alignment="Top" role="Grow" />
       </Container>
-      <Container id="borderlinecolor" Type="Horizontal Stack" tooltip="Select the line color of the borders." horizontal-alignment="Right" role="Grow" column="1" row="2">
+      <Container id="borderlinecolor" Type="Toolbar" tooltip="Select the line color of the borders." horizontal-alignment="Right" role="Grow" column="1" row="2">
         <Button id=".uno:frame-line-color" tooltip="Select the line color of the borders." />
       </Container>
-      <Container id="borderlinestyle" Type="Horizontal Stack" horizontal-alignment="Right" role="Grow" column="1" row="1">
+      <Container id="borderlinestyle" Type="Toolbar" horizontal-alignment="Right" role="Grow" column="1" row="1">
         <Button id="line-style" tooltip="Select the line style of the borders." />
       </Container>
     </Container>

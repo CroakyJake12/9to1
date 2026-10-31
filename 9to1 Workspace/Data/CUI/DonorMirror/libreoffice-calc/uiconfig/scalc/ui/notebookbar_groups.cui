@@ -67,10 +67,10 @@
               <Button id="printb" vertical-alignment="Center" role="Grow" />
             </Container>
           </Container>
-          <Container id="separator4" Type="Horizontal Stack" />
+          <Container id="separator4" Type="Separator" />
           <Text id="filegrouplabel" text="File" />
         </Container>
-        <Container id="separator1" Type="Horizontal Stack" />
+        <Container id="separator1" Type="Separator" />
         <Container id="clipboardgroup" Type="Vertical Stack" cell-gap="5">
           <Container id="clipboardgroupbuttons" Type="Vertical Stack" cell-gap="3">
             <Container id="box2" Type="Vertical Stack" cell-gap="3">
@@ -81,10 +81,10 @@
               <Button id="undob" vertical-alignment="Center" role="Grow" />
             </Container>
           </Container>
-          <Container id="separator3" Type="Horizontal Stack" />
+          <Container id="separator3" Type="Separator" />
           <Text id="clipboardgrouplabel" text="Clipboard" />
         </Container>
-        <Container id="separator2" Type="Horizontal Stack" />
+        <Container id="separator2" Type="Separator" />
         <Container id="formatgroup" Type="Vertical Stack" cell-gap="5">
           <Container id="formatgroupbuttons" Type="Vertical Stack" cell-gap="3">
             <Button id="paragraphstyleb:stylemenu" content="Style" text="Style" />
@@ -135,10 +135,10 @@
               </Container>
             </Container>
           </Container>
-          <Container id="separator5" Type="Horizontal Stack" />
+          <Container id="separator5" Type="Separator" />
           <Text id="formatgrouplabel" text="Text" />
         </Container>
-        <Container id="separator6" Type="Horizontal Stack" />
+        <Container id="separator6" Type="Separator" />
         <Container id="context-container" Type="Vertical Stack">
           <Container id="tablegroup" Type="Vertical Stack" cell-gap="5">
             <Container id="tablegroupbuttons" Type="Vertical Stack" cell-gap="6">
@@ -172,7 +172,7 @@
                 <Button id="bottomb" content="Bottom" text="Bottom" />
               </Container>
             </Container>
-            <Container id="separator12" Type="Horizontal Stack" />
+            <Container id="separator12" Type="Separator" />
             <Text id="tablegrouplabel" text="Spreadsheet" />
           </Container>
           <Container id="insertgroup" Type="Vertical Stack" cell-gap="5">
@@ -192,7 +192,7 @@
                 <Button id="commentb" />
               </Container>
             </Container>
-            <Container id="separator7" Type="Horizontal Stack" />
+            <Container id="separator7" Type="Separator" />
             <Text id="insertgrouplabel" text="Insert" />
           </Container>
           <Container id="imagegroup" Type="Vertical Stack" cell-gap="5">
@@ -208,11 +208,11 @@
                 <Button id="lockb" content="Lock" text="Lock" />
               </Container>
             </Container>
-            <Container id="separator13" Type="Horizontal Stack" />
+            <Container id="separator13" Type="Separator" />
             <Text id="imagegrouplabel" text="Image" />
           </Container>
         </Container>
-        <Container id="separator8" Type="Horizontal Stack" />
+        <Container id="separator8" Type="Separator" />
       </Container>
     </Container>
     <Container id="wrapmenu" Type="Menu">

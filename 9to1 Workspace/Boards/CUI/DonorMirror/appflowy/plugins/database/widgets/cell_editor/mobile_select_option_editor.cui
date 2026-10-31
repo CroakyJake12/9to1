@@ -7,7 +7,7 @@
     <Container id="bloc-provider" Type="Vertical Stack">
       <Container id="bloc-builder" Type="Vertical Stack">
         <Container id="column" Type="Vertical Stack">
-          <Container id="divider" Type="Vertical Stack" height="0.5" />
+          <Container id="divider" Type="Separator" height="0.5" />
           <Container id="expanded" Type="Vertical Stack">
             <Container id="padding" Type="Vertical Stack" padding="0.0 16.0" />
           </Container>

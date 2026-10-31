@@ -10,7 +10,7 @@
         <Button id="navContext-markAsNotJunk" />
         <Button id="navContext-delete" />
       </Container>
-      <Container id="mailContext-sep-navigation" Type="Menu" />
+      <Container id="mailContext-sep-navigation" Type="Separator" />
       <Button id="mailContext-openInBrowser" content="{Binding openInBrowser.label}" shortcut="{Binding openInBrowser.accesskey}" />
       <Button id="mailContext-openLinkInBrowser" content="{Binding openLinkInBrowser.label}" shortcut="{Binding openLinkInBrowser.accesskey}" />
       <Button id="mailContext-copylink" content="{Binding copyLinkCmd.label}" shortcut="{Binding copyLinkCmd.accesskey}" />
@@ -19,19 +19,19 @@
       <Button id="mailContext-addemail" content="{Binding AddToAddressBook.label}" shortcut="{Binding AddToAddressBook.accesskey}" />
       <Button id="mailContext-composeemailto" content="{Binding SendMessageTo.label}" shortcut="{Binding SendMessageTo.accesskey}" />
       <Button id="mailContext-copyemail" content="{Binding copyEmailCmd.label}" shortcut="{Binding copyEmailCmd.accesskey}" />
-      <Container id="menuseparator" Type="Menu" />
+      <Container id="menuseparator" Type="Separator" />
       <Button id="mailContext-copyimage" content="{Binding copyImageAllCmd.label}" shortcut="{Binding copyImageAllCmd.accesskey}" />
       <Button id="mailContext-saveimage" content="{Binding saveImageAsCmd.label}" shortcut="{Binding saveImageAsCmd.accesskey}" />
-      <Container id="menuseparator-2" Type="Menu" />
+      <Container id="menuseparator-2" Type="Separator" />
       <Button id="mailContext-copy" />
       <Button id="mailContext-selectall" />
-      <Container id="menuseparator-3" Type="Menu" />
+      <Container id="menuseparator-3" Type="Separator" />
       <Button id="mailContext-searchTheWeb" />
-      <Container id="menuseparator-4" Type="Menu" />
+      <Container id="menuseparator-4" Type="Separator" />
       <Button id="mailContext-editDraftMsg" content="{Binding contextEditDraftMsg.label}" />
       <Button id="mailContext-newMsgFromTemplate" content="{Binding contextNewMsgFromTemplate.label}" />
       <Button id="mailContext-editTemplateMsg" content="{Binding contextEditTemplate.label}" shortcut="{Binding contextEditTemplate.accesskey}" />
-      <Container id="menuseparator-5" Type="Menu" />
+      <Container id="menuseparator-5" Type="Separator" />
       <Button id="mailContext-open">
         <Container id="mailContext-openPopup" Type="Menu">
           <Button id="mailContext-openNewTab" content="{Binding contextOpenNewTab.label}" shortcut="{Binding contextOpenNewTab.accesskey}" />
@@ -53,13 +53,13 @@
           <Button id="mailContext-forward" />
           <Button id="mailContext-forwardAsInline" />
           <Button id="mailContext-forwardAsAttachment" />
-          <Container id="menuseparator-6" Type="Menu" />
+          <Container id="menuseparator-6" Type="Separator" />
           <Button id="mailContext-redirect" />
         </Container>
       </Button>
       <Button id="mailContext-cancel" />
       <Button id="mailContext-editAsNew" content="{Binding contextEditMsgAsNew.label}" shortcut="{Binding contextEditMsgAsNew.accesskey}" />
-      <Container id="menuseparator-7" Type="Menu" />
+      <Container id="menuseparator-7" Type="Separator" />
       <Button id="mailContext-moveToFolderAgain" />
       <Button id="mailContext-moveMenu">
         <Container id="mailContext-fileHereMenu" Type="Menu" />
@@ -71,9 +71,9 @@
         <Container id="mailContext-tagpopup" Type="Menu">
           <Button id="mailContext-addNewTag" content="{Binding addNewTag.label}" shortcut="{Binding addNewTag.accesskey}" />
           <Button id="mailContext-manageTags" content="{Binding manageTags.label}" shortcut="{Binding manageTags.accesskey}" />
-          <Container id="menuseparator-8" Type="Menu" />
+          <Container id="menuseparator-8" Type="Separator" />
           <Button id="mailContext-tagRemoveAll" shortcut="{Binding tagCmd0.key}" />
-          <Container id="menuseparator-9" Type="Menu" />
+          <Container id="menuseparator-9" Type="Separator" />
         </Container>
       </Button>
       <Button id="mailContext-mark" content="{Binding markMenu.label}" shortcut="{Binding markMenu.accesskey}">
@@ -83,9 +83,9 @@
           <Button id="mailContext-markThreadAsRead" content="{Binding markThreadAsReadCmd.label}" shortcut="{Binding markThreadAsReadCmd.accesskey}" />
           <Button id="mailContext-markReadByDate" content="{Binding markReadByDateCmd.label}" shortcut="{Binding markReadByDateCmd.accesskey}" />
           <Button id="mailContext-markAllRead" content="{Binding markAllReadCmd.label}" shortcut="{Binding markAllReadCmd.accesskey}" />
-          <Container id="menuseparator-10" Type="Menu" />
+          <Container id="menuseparator-10" Type="Separator" />
           <Button id="mailContext-markFlagged" content="{Binding markStarredCmd.label}" shortcut="{Binding markStarredCmd.accesskey}" />
-          <Container id="menuseparator-11" Type="Menu" />
+          <Container id="menuseparator-11" Type="Separator" />
           <Button id="mailContext-markAsJunk" />
           <Button id="mailContext-markAsNotJunk" />
           <Button id="mailContext-recalculateJunkScore" />
@@ -107,7 +107,7 @@
           <Button id="mailContext-copyNewsLink" />
         </Container>
       </Button>
-      <Container id="menuseparator-12" Type="Menu" />
+      <Container id="menuseparator-12" Type="Separator" />
       <Button id="mailContext-threads">
         <Container id="mailContext-threadsPopup" Type="Menu">
           <Button id="mailContext-ignoreThread" content="{Binding contextKillThreadMenu.label}" shortcut="{Binding contextKillThreadMenu.accesskey}" />
@@ -115,7 +115,7 @@
           <Button id="mailContext-watchThread" content="{Binding contextWatchThreadMenu.label}" shortcut="{Binding contextWatchThreadMenu.accesskey}" />
         </Container>
       </Button>
-      <Container id="menuseparator-13" Type="Menu" />
+      <Container id="menuseparator-13" Type="Separator" />
       <Button id="mailContext-saveAs" content="{Binding contextSaveAs.label}" shortcut="{Binding contextSaveAs.accesskey}" />
       <Button id="mailContext-print" content="{Binding contextPrint.label}" shortcut="{Binding contextPrint.accesskey}" />
       <Button id="mailContext-downloadSelected" content="{Binding downloadSelectedCmd.label}" shortcut="{Binding downloadSelectedCmd.accesskey}" />

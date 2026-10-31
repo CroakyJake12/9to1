@@ -5,14 +5,13 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 303
 - donor nodes dropped: 12
-- gap reports: 204
+- gap reports: 186
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
 | `custom donor widget` | 56 | RnAppMenu, RnAppWindow, RnBrushPage, RnCanvas, RnCanvasMenu, RnCanvasWrapper |
 | `shortcut browser` | 48 | GtkShortcutsGroup, GtkShortcutsSection, GtkShortcutsShortcut, GtkShortcutsWindow |
 | `toggle button` | 25 | GtkToggleButton |
-| `separator` | 18 | GtkSeparator |
 | `header bar` | 15 | AdwHeaderBar, AdwToolbarView |
 | `dialog with typed responses` | 12 | AdwAlertDialog, AdwDialog |
 | `unmodelled donor construct` | 9 | GtkDropDown, GtkPicture, GtkStackPage |

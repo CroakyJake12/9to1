@@ -5,10 +5,10 @@
         <Input id="searchterm" Type="Select" vertical-alignment="Center" focusable="false" role="Grow">
           <Input id="input" Type="Text" />
         </Input>
-        <Container id="searchoptionstoolbar" Type="Horizontal Stack">
+        <Container id="searchoptionstoolbar" Type="Toolbar">
           <Button id="searchoptionsbutton" icon-source="cmd/scsymbolshapes.flower.png" tooltip="Search Options" />
         </Container>
-        <Container id="findandreplacetoolbar" Type="Horizontal Stack">
+        <Container id="findandreplacetoolbar" Type="Toolbar">
           <Button id="searchdialog" icon-source="cmd/scsearchdialog.png" tooltip="Search with Find and Replace" />
         </Container>
       </Container>

@@ -20095,7 +20095,7 @@
       "why": "not translated"
     }
   ],
-  "pruned_stale": 20,
+  "pruned_stale": 0,
   "donor": "gitea",
   "app": "Build",
   "source": "9to1 Workspace/Build/Source/Gitea/templates",

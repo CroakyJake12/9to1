@@ -5,7 +5,7 @@
       <Container id="bloc-builder" Type="Vertical Stack">
         <Container id="column" Type="Vertical Stack">
           <Container id="vspace" Type="Vertical Stack" />
-          <Container id="divider" Type="Vertical Stack" height="1" />
+          <Container id="divider" Type="Separator" height="1" />
         </Container>
       </Container>
     </Container>

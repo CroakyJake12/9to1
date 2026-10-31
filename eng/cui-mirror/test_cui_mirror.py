@@ -415,6 +415,44 @@ class CorpusCheckTests(unittest.TestCase):
         self.assertTrue(any("Canvas/CUI/DonorMirror" in path for path in found), found[:5])
 
 
+class NewCuiConstructMappingTests(unittest.TestCase):
+    """The Toolbar and Separator constructs the framework just gained must be what the mirrors emit."""
+
+    def _emit(self, module, suffix, body, dialect=None):
+        import tempfile
+        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+            path = Path(tmp) / f"probe.{suffix}"
+            path.write_text(body)
+            result = module.translate(path, body)
+        return cui_mirror.emit(result), result
+
+    def test_gtk_toolbar_and_separator_use_the_cui_constructs(self):
+        text, result = self._emit(dialect_gtk, "ui",
+            '<interface><object class="GtkToolbar" id="tb">'
+            '<child><object class="GtkToolButton" id="b1"><property name="label">Cut</property></object></child>'
+            '<child><object class="GtkSeparatorToolItem" id="s1"/></child>'
+            '</object></interface>')
+        self.assertIn('<Container id="tb" Type="Toolbar">', text)
+        self.assertIn('Type="Separator"', text)
+        self.assertNotIn("toolbar with overflow", [g["construct"] for g in result.gaps])
+
+    def test_xul_toolbar_and_menu_separator_use_them_too(self):
+        text, result = self._emit(dialect_xul, "xhtml",
+            '<xul:toolbar xmlns:xul="urn:xul" id="mail-bar"><xul:toolbarbutton id="reply" label="Reply"/>'
+            '<xul:menuseparator/></xul:toolbar>')
+        self.assertIn('Type="Toolbar"', text)
+        self.assertIn('Type="Separator"', text)
+
+    def test_dart_divider_and_overflow_bar_use_them_too(self):
+        text, result = self._emit(dialect_dart, "dart",
+            "Widget b() => OverflowBar(children: [FlowyButton(label: 'Ok'), OverflowButton("
+            "onPressed: showMore()), Divider()]);")
+        self.assertIn('Type="Toolbar"', text)
+        self.assertIn('Type="Separator"', text)
+        self.assertIn('OverflowHost="true"', text)
+        self.assertIn('action="show-more"', text)
+
+
 class DartDialectTests(unittest.TestCase):
     """AppFlowy's UI is Dart code, so the mirror reads constructor calls, not tags."""
 

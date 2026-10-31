@@ -8,7 +8,7 @@
       <Button id="selector-toggle" role="Grow" />
       <Button id="tools-toggle" role="Grow" />
     </Container>
-    <Container id="container-3" Type="Horizontal Stack" />
+    <Container id="container-3" Type="Separator" />
     <Container id="container-4" Type="Vertical Stack">
       <Button id="undo-button" is-enabled="false" />
       <Button id="redo-button" is-enabled="false" />

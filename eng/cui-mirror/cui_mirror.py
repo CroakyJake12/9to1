@@ -21,7 +21,7 @@ from typing import Iterable
 
 # Attribute spellings copied from the house style of authored CUI (Assistants Home.cui and friends):
 # mostly kebab-case, with the composite names spelled as the authored sources spell them.
-_KEEP_PASCAL = {"Type", "Condition", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
+_KEEP_PASCAL = {"Type", "Condition", "OverflowHost", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
                 "CornerRadius", "ColumnSizes", "RowSizes", "Value", "Content", "Parameter"}
 
 ALIGNMENT_H = {"start": "Left", "end": "Right", "center": "Center", "fill": "Stretch",

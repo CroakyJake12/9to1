@@ -6,7 +6,7 @@
         <Input id="str-apply-to-current" Type="Radio" text="Apply changes to current presentation" column="0" row="4" />
         <Input id="str-save-as" Type="Radio" text="Duplicate presentation before applying changes" checked="true" column="0" row="5" />
         <Input id="progress" Type="Progress" focusable="false" role="Grow" column="0" row="7" />
-        <Container id="container" Type="Horizontal Stack" focusable="false" role="Grow" column="0" row="8" />
+        <Container id="container" Type="Separator" focusable="false" role="Grow" column="0" row="8" />
         <Container id="container-2" Type="Vertical Stack" cell-gap="12" focusable="false" column="0" row="9">
           <Input id="str-save-settings" Type="Checkbox" text="Save settings as" />
           <Input id="my-settings" Type="Select" focusable="false">

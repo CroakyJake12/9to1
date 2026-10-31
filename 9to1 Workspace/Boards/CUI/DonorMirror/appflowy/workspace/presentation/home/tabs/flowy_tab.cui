@@ -31,7 +31,7 @@
     <Container id="vspace" Type="Vertical Stack" />
     <Button id="flowy-button" Type="Action" action="close-tab" />
     <Button id="flowy-button-2" Type="Action" action="close-other-tabs" />
-    <Container id="divider" Type="Vertical Stack" height="0.5" />
+    <Container id="divider" Type="Separator" height="0.5" />
     <Button id="flowy-button-3" Type="Action" action="toggle-pin" />
     <Container id="flowy-tooltip-2" Type="Floating" />
   </Page>

@@ -3613,6 +3613,11 @@ public sealed partial class CuiControlLoader : IDisposable
                         catch (FormatException) { }
                     }
                     break;
+                case "overflowhost":
+                case "overflow-host":
+                    CuiOverflowHosts.Set(control, string.Equals(resolved, "true", StringComparison.OrdinalIgnoreCase)
+                                            || resolved == "1");
+                    break;
                 case "grid.column":
                 case "grid-column":
                 case "gridcolumn":

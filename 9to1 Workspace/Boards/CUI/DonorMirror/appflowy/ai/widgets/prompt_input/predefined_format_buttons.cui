@@ -46,7 +46,7 @@
         </Container>
       </Container>
     </Container>
-    <Container id="vertical-divider" Type="Vertical Stack" />
+    <Container id="vertical-divider" Type="Separator" />
     <Container id="gesture-detector-2" Type="Vertical Stack">
       <Container id="flowy-tooltip-2" Type="Floating">
         <Container id="center-2" Type="Vertical Stack">

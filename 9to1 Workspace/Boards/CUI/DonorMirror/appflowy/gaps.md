@@ -5,7 +5,7 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 2855
 - donor nodes dropped: 0
-- gap reports: 9965
+- gap reports: 9896
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
@@ -36,7 +36,6 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 | `layered stack with positioned children` | 105 | Stack |
 | `scroller` | 80 | SingleChildScrollView |
 | `absolute placement` | 75 | Positioned |
-| `separator` | 69 | Divider, VerticalDivider |
 | `inline handler block` | 65 | FlowyButton.onTap, FlowyIconButton.onPressed, FlowyTextField.onChanged, GestureDetector.onLongPress, GestureDetector.onTap, IconButton.onPressed |
 | `border spec` | 57 | Container.decoration.border, DecoratedBox.decoration.border, FlowyButton.decoration.border, FlowyIconButton.decoration.border |
 | `application frame with body/appBar layers` | 46 | Scaffold |

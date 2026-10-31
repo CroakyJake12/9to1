@@ -36,7 +36,7 @@
             </Container>
           </Container>
           <Container id="boxline" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
-            <Container id="separator1" Type="Horizontal Stack" focusable="false" role="Grow" />
+            <Container id="separator1" Type="Separator" focusable="false" role="Grow" />
           </Container>
           <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
             <Text id="label1" text="Available Fields:" focusable="false" />

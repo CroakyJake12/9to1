@@ -365,8 +365,8 @@
     <Container id="notebook-bar" Type="Grid" focusable="false">
       <Container id="box1" Type="Vertical Stack" focusable="false" column="0" row="0">
         <Container id="context-container" Type="Horizontal Stack" role="Grow">
-          <Container id="file" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-file" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="file" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-file" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-file-new" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-file-new" text="New" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="bx-file-add-direct" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
@@ -375,7 +375,7 @@
                 <Container id="bx-file-search-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
                   <Button id="btn-file-new-doc" />
                 </Container>
-                <Container id="container" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
               </Container>
               <Container id="gd-file-file" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-file-file" text="Document" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
@@ -391,7 +391,7 @@
                 <Container id="bx-file-export-direct-to-pdf" Type="Vertical Stack" focusable="false" column="3" row="0">
                   <Button id="btn-file-export-direct-to-pdf" />
                 </Container>
-                <Container id="container-2" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="container-2" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
                 <Container id="bx-file-send-mail" Type="Vertical Stack" focusable="false" column="3" row="1">
                   <Button id="btn-file-send-mail" />
                 </Container>
@@ -407,7 +407,7 @@
                 <Container id="bx-file-web-html" Type="Vertical Stack" focusable="false" column="1" row="1">
                   <Button id="btn-file-web-html" />
                 </Container>
-                <Container id="container-3" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-3" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
               </Container>
               <Container id="gd-file-properties" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="bx-file-set-document-properties" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
@@ -419,7 +419,7 @@
                 <Container id="bx-file-sign-pdf" Type="Vertical Stack" focusable="false" column="1" row="1">
                   <Button id="btn-file-sign-pdf" />
                 </Container>
-                <Container id="container-4" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-4" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Text id="lb-file-properties" text="Properties" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
               </Container>
             </Container>
@@ -439,8 +439,8 @@
             </Container>
           </Container>
           <Text id="file-label" text="~File" focusable="false" />
-          <Container id="home" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-home" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="home" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-home" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-home-clipboard" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-clipboard" text="Clipboard" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="bx-home-paste" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
@@ -452,11 +452,11 @@
                 <Container id="bx-home-copy" Type="Vertical Stack" focusable="false" column="1" row="1">
                   <Button id="btn-home-copy" />
                 </Container>
-                <Container id="container-5" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-5" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
               </Container>
               <Container id="gd-home-page" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-page" text="Page" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-6" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-6" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-home-insert-page" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-home-insert-page" />
                 </Container>
@@ -501,11 +501,11 @@
                   <Button id="btn-home-grow" />
                   <Button id="btn-home-shrink" />
                 </Container>
-                <Container id="container-7" Type="Horizontal Stack" focusable="false" column="5" row="0" row-span="3" />
+                <Container id="container-7" Type="Separator" focusable="false" column="5" row="0" row-span="3" />
               </Container>
               <Container id="gd-home-paragraph" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-paragraph" text="Paragraph" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-8" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-8" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-home-list" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="0" row="0">
                   <Button id="btn-home-default-bullet" />
                   <Button id="btn-home-default-numbering" />
@@ -543,11 +543,11 @@
             </Container>
           </Container>
           <Text id="home-label" text="~Home" focusable="false" />
-          <Container id="insert" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-insert" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="insert" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-insert" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-insert-page" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-page" text="Page" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-9" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-9" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-insert-insert-page" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-insert-page" />
                 </Container>
@@ -560,7 +560,7 @@
               </Container>
               <Container id="gd-insert-data" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-data" text="Data" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-10" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-10" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bo-insert-table" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-insert-table" />
                 </Container>
@@ -573,7 +573,7 @@
               </Container>
               <Container id="gd-insert-graphic" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-graphic" text="Graphic" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-11" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-11" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-insert-insert-graphic" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-insert-graphic" />
                 </Container>
@@ -586,7 +586,7 @@
               </Container>
               <Container id="gd-insert-text" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-text" text="Text" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-12" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-12" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-insert-charmap-control" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-insert-charmap-control" />
                 </Container>
@@ -602,7 +602,7 @@
               </Container>
               <Container id="gd-insert-fontwork" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-fontwork" text="Fontwork" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-13" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-13" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-insert-fontwork-gallery-floater" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-fontwork-gallery-floater" />
                 </Container>
@@ -617,7 +617,7 @@
               </Container>
               <Container id="gd-insert-drawing-objects" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-drawing-objects" text="Drawing Objects" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-14" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-14" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-insert-shapes1" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-insert-line" role="Grow" />
                   <Button id="btn-insert-arrows-toolbox" />
@@ -656,11 +656,11 @@
             </Container>
           </Container>
           <Text id="insert-label" text="~Insert" focusable="false" />
-          <Container id="layout" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-layout" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="layout" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-layout" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-layout-format" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-format" text="Format" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-15" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-15" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-layout-format" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-layout-page-setup" />
                 </Container>
@@ -673,7 +673,7 @@
               </Container>
               <Container id="gd-layout-page" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-page" text="Page" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-16" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-16" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-layout-move-page-up" Type="Vertical Stack" focusable="false" column="2" row="0">
                   <Button id="btn-layout-move-page-up" />
                 </Container>
@@ -692,14 +692,14 @@
               </Container>
               <Container id="gd-layout-master" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-master" text="Master" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-17" Type="Horizontal Stack" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-17" Type="Separator" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-layout-drawing-layout" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-layout-drawing-layout" />
                 </Container>
               </Container>
               <Container id="gd-layout-background" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-background" text="Background" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-18" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-18" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-layout-toggle-object-rotate-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-layout-toggle-object-rotate-mode" />
                 </Container>
@@ -721,11 +721,11 @@
             </Container>
           </Container>
           <Text id="layout-label" text="~Layout" focusable="false" />
-          <Container id="review" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-review" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="review" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-review" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-review-spelling" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-spelling" text="Spelling" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="container-19" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-19" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-review-spelling" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-spell-dialog" />
                   <Button id="btn-review-thesaurus-dialog" />
@@ -739,7 +739,7 @@
               </Container>
               <Container id="gd-review-comments" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-comments" text="Comments" focusable="false" column="0" row="2" column-span="4" />
-                <Container id="container-20" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="container-20" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
                 <Container id="bx-review-annotation" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-insert-annotation" role="Grow" />
                 </Container>
@@ -761,7 +761,7 @@
               </Container>
               <Container id="gd-review-redact" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-redact" text="Redact" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="container-21" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-21" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-review-redact-doc" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-redact-doc" />
                 </Container>
@@ -780,11 +780,11 @@
             </Container>
           </Container>
           <Text id="review-label" text="~Review" focusable="false" />
-          <Container id="view" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-view" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="view" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-view" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-view-mode" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-mode" text="View Mode" focusable="false" column="0" row="2" />
-                <Container id="container-22" Type="Horizontal Stack" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-22" Type="Separator" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-view-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-page-mode" />
                   <Button id="btn-view-master-page" />
@@ -792,7 +792,7 @@
               </Container>
               <Container id="gd-view-zoom" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-zoom" text="Zoom" focusable="false" column="0" row="2" column-span="3" />
-                <Container id="container-23" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-23" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-view-zoom-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-zoom-mode" />
                 </Container>
@@ -811,7 +811,7 @@
               </Container>
               <Container id="gd-view-options" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-options" text="Options" focusable="false" column="0" row="2" column-span="5" />
-                <Container id="container-24" Type="Horizontal Stack" focusable="false" column="5" row="0" row-span="3" />
+                <Container id="container-24" Type="Separator" focusable="false" column="5" row="0" row-span="3" />
                 <Container id="bx-view-sidebar" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-sidebar" />
                 </Container>
@@ -836,7 +836,7 @@
               </Container>
               <Container id="gd-view-gluepoints" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-gluepoints" text="Gluepoints" focusable="false" column="0" row="2" column-span="3" />
-                <Container id="container-25" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-25" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-view-glue-edit-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-glue-edit-mode" />
                 </Container>
@@ -872,11 +872,11 @@
             </Container>
           </Container>
           <Text id="view-label" text="~View" focusable="false" />
-          <Container id="table" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-table" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="table" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-table" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-table" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-table" text="Table" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="container-26" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-26" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-table" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-table-transform-dialog" />
                   <Button id="btn-table-select-table" />
@@ -890,7 +890,7 @@
               </Container>
               <Container id="gd-table-cells" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-table-cells" text="Cells" focusable="false" column="0" row="2" column-span="3" />
-                <Container id="container-27" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-27" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-table-cells" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-table-merge-cells" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-table-split-cell" />
@@ -911,7 +911,7 @@
               </Container>
               <Container id="gd-table-layout" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-table-layout" text="Layout" focusable="false" column="0" row="2" column-span="4" />
-                <Container id="container-28" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="container-28" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
                 <Container id="bx-table-table-design" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-table-table-design" vertical-alignment="Center" role="Grow" />
                 </Container>
@@ -943,11 +943,11 @@
             </Container>
           </Container>
           <Text id="table-label" text="~Table" focusable="false" />
-          <Container id="image" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-image" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="image" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-image" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-image" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image" text="Image" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-29" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-29" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-image-compress-graphic" Type="Vertical Stack" focusable="false" column="1" row="0">
                   <Button id="btn-image-compress-graphic" />
                 </Container>
@@ -965,7 +965,7 @@
               </Container>
               <Container id="gd-image-fill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-30" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-30" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-image-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
                   <Button id="btn-image-format-area" />
                 </Container>
@@ -987,7 +987,7 @@
               </Container>
               <Container id="gd-image-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-31" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-31" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-image-align-top" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-image-object-align-left" />
                   <Button id="btn-image-align-center" />
@@ -1005,7 +1005,7 @@
               </Container>
               <Container id="gd-image-modify" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-modify" text="Modify" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
-                <Container id="container-32" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="container-32" Type="Separator" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
                 <Container id="bx-image-graphic-filter-toolbox" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-image-graphic-filter-toolbox" vertical-alignment="Center" role="Grow" />
                 </Container>
@@ -1041,11 +1041,11 @@
             </Container>
           </Container>
           <Text id="image-label" text="Ima~ge" focusable="false" />
-          <Container id="draw" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="pmhb-draw" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="draw" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-draw" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-draw" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw" text="Drawing Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-33" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-33" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-draw-transform-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-draw-transform-dialog" />
                 </Container>
@@ -1062,7 +1062,7 @@
               </Container>
               <Container id="gd-draw-fill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-34" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-34" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-draw-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
                   <Button id="btn-draw-format-area" />
                 </Container>
@@ -1084,7 +1084,7 @@
               </Container>
               <Container id="gd-draw-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-35" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-35" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-draw-align-top" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-draw-object-align-left" />
                   <Button id="btn-draw-align-center" />
@@ -1102,7 +1102,7 @@
               </Container>
               <Container id="gd-draw-combination" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-combination" text="Combination" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-36" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-36" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-draw-combine" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-draw-combine" role="Grow" />
                 </Container>
@@ -1120,7 +1120,7 @@
               </Container>
               <Container id="gd-draw-grouping" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-grouping" text="Grouping" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-37" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-37" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-draw-format-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-draw-format-group" role="Grow" />
                   <Button id="btn-draw-format-ungroup" />
@@ -1134,7 +1134,7 @@
               </Container>
               <Container id="gd-draw3-d" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw3-d" text="3D" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-38" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-38" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-draw-extrusion-toggle" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-draw-extrusion-toggle" role="Grow" />
                 </Container>
@@ -1158,11 +1158,11 @@
             </Container>
           </Container>
           <Text id="draw-label" text="~Draw" focusable="false" />
-          <Container id="object" Type="Horizontal Stack" focusable="false">
-            <Container id="pmhb-object" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="object" Type="Toolbar" focusable="false">
+            <Container id="pmhb-object" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-object" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-object" text="Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-39" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-39" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-object-toggle-rotate" Type="Vertical Stack" focusable="false" column="1" row="1">
                   <Button id="btn-object-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-object-flip-vertical" />
@@ -1177,7 +1177,7 @@
               </Container>
               <Container id="gd-object-fill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-object-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-40" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-40" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-object-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
                   <Button id="btn-object-format-area" />
                 </Container>
@@ -1199,7 +1199,7 @@
               </Container>
               <Container id="gd-object-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-object-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-41" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-41" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-object-align-top" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-object-object-align-left" />
                   <Button id="btn-object-align-center" />
@@ -1228,18 +1228,18 @@
             </Container>
           </Container>
           <Text id="object-label" text="~Object" focusable="false" />
-          <Container id="media" Type="Horizontal Stack" focusable="false">
-            <Container id="pmhb-media" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="media" Type="Toolbar" focusable="false">
+            <Container id="pmhb-media" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-media" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-media" text="Media" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-42" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-42" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-media-transform-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-media-transform-dialog" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-media-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-media-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-43" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-43" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-media-align-top" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-media-object-align-left" />
                   <Button id="btn-media-align-center" />
@@ -1257,7 +1257,7 @@
               </Container>
               <Container id="gd-media-player" Type="Grid" cell-gap="3" focusable="false" role="Grow">
                 <Text id="lb-media-player" text="Media Player" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-44" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-44" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-media-avmedia-tool-box" Type="Vertical Stack" width="200" focusable="false" column="0" row="0">
                   <Button id="btn-media-avmedia-tool-box" />
                 </Container>
@@ -1278,11 +1278,11 @@
             </Container>
           </Container>
           <Text id="media-label" text="~Media" focusable="false" />
-          <Container id="3-d" Type="Horizontal Stack" focusable="false">
-            <Container id="pmhb3-d" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="3-d" Type="Toolbar" focusable="false">
+            <Container id="pmhb3-d" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd3-dobject" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb3-dobject" text="3D Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-45" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-45" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx3-dtransform-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn3-dtransform-dialog" />
                 </Container>
@@ -1299,7 +1299,7 @@
               </Container>
               <Container id="gd3-dfill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb3-dfill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="container-46" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-46" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx3-dformat-area" Type="Vertical Stack" focusable="false" column="0" row="1">
                   <Button id="btn3-dformat-area" />
                 </Container>
@@ -1321,7 +1321,7 @@
               </Container>
               <Container id="gd3-dpositioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb3-dpositioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-47" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-47" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx3-dalign-top" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn3-dobject-align-left" />
                   <Button id="btn3-dalign-center" />
@@ -1339,7 +1339,7 @@
               </Container>
               <Container id="gd3-d" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb3-d" text="3D" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-48" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-48" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx3-dwindow3-d1" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn3-dwindow3-d1" vertical-alignment="Center" role="Grow" />
                 </Container>
@@ -1357,11 +1357,11 @@
             </Container>
           </Container>
           <Text id="3-dlabel" text="3~D" focusable="false" />
-          <Container id="master-tab" Type="Horizontal Stack" focusable="false">
-            <Container id="master" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="master-tab" Type="Toolbar" focusable="false">
+            <Container id="master" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-master" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-master" text="Master" focusable="false" column="0" row="2" column-span="4" />
-                <Container id="container-49" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="container-49" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
                 <Container id="bx-master-rename-master-pag" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
                   <Button id="btn-master-rename-master-page" />
                 </Container>
@@ -1383,7 +1383,7 @@
               </Container>
               <Container id="gd-master-slide" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-master-slide" text="Slide" focusable="false" column="0" row="2" column-span="3" />
-                <Container id="container-50" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="container-50" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-master-slide-setup" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-master-slide-setup" />
                 </Container>
@@ -1402,7 +1402,7 @@
               </Container>
               <Container id="gd-master-color" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-master-color" text="Color" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="container-51" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-51" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-master-output-quality-color" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-master-output-quality-color" />
                 </Container>
@@ -1415,7 +1415,7 @@
               </Container>
               <Container id="gd-master-close" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-master-close" focusable="false" column="0" row="2" />
-                <Container id="container-52" Type="Horizontal Stack" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-52" Type="Separator" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-master-close-master-view" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-master-close-master-view" />
                 </Container>
@@ -1431,11 +1431,11 @@
             </Container>
           </Container>
           <Text id="master-label" text="~Master" focusable="false" />
-          <Container id="form" Type="Horizontal Stack" focusable="false">
-            <Container id="pmhb-form" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="form" Type="Toolbar" focusable="false">
+            <Container id="pmhb-form" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-form-mode" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-form-mode" text="Mode" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="separator46" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="separator46" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-form-transform-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-form-transform-dialog" />
                 </Container>
@@ -1448,7 +1448,7 @@
               </Container>
               <Container id="gd-form-properties" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-form-properties" text="Properties" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="separator47" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="separator47" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-form-form-properties" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-form-form-properties" />
                 </Container>
@@ -1470,7 +1470,7 @@
               </Container>
               <Container id="gd-form-controls" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-form-controls" text="Controls" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="separator48" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="separator48" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
                 <Container id="bx-form-controls1" Type="Vertical Stack" focusable="false" column="0" row="0">
                   <Button id="btn-form-label" />
                   <Button id="btn-form-edit" />
@@ -1513,22 +1513,22 @@
             </Container>
           </Container>
           <Text id="form-label" text="Form" focusable="false" />
-          <Container id="extension-tab" Type="Horizontal Stack" focusable="false">
-            <Container id="extension" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow" />
+          <Container id="extension-tab" Type="Toolbar" focusable="false">
+            <Container id="extension" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow" />
             <Container id="extension-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="extension-section" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="extension-extension-button:menu-addons" content="Extension" text="Extension" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
                 <Container id="section-bottom68" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
               </Container>
             </Container>
-            <Container id="separator50" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" />
+            <Container id="separator50" Type="Separator" horizontal-alignment="Right" focusable="false" />
           </Container>
           <Text id="extension-label" text="E~xtension" focusable="false" />
-          <Container id="tools-tab" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
-            <Container id="tools" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+          <Container id="tools-tab" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="tools" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-tools-macro" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-tools-macro" text="Macro" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="container-53" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="container-53" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
                 <Container id="bx-tools-run-macro" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-tools-run-macro" />
                 </Container>
@@ -1541,14 +1541,14 @@
               </Container>
               <Container id="gd-tools-auto-correction" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-tools-auto-correction" text="AutoCorrection" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="1" />
-                <Container id="container-54" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="2" />
+                <Container id="container-54" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="2" />
                 <Container id="bx-tools-auto-format-redline-apply" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0">
                   <Button id="btn-tools-auto-correct-dlg" />
                 </Container>
               </Container>
               <Container id="gd-tools" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-tools" text="Tools" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
-                <Container id="container-55" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="container-55" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
                 <Container id="bx-tools-bmp-mask" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-tools-bmp-mask" role="Grow" />
                 </Container>

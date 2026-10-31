@@ -11,7 +11,7 @@
           <Text id="flowy-text" />
         </Container>
       </Container>
-      <Container id="divider" Type="Vertical Stack" height="2" />
+      <Container id="divider" Type="Separator" height="2" />
     </Container>
     <Container id="padding-2" Type="Vertical Stack" padding="8.0">
       <Container id="container" Type="Vertical Stack" CornerRadius="8" />

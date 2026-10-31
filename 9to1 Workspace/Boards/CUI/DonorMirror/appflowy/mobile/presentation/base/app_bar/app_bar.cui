@@ -1,6 +1,6 @@
 <Cui id="app-bar-app-bar" product="9-1" version="1">
   <Page id="app-bar-app-bar-root">
     <Text id="flowy-text" />
-    <Container id="divider" Type="Vertical Stack" height="0.5" />
+    <Container id="divider" Type="Separator" height="0.5" />
   </Page>
 </Cui>

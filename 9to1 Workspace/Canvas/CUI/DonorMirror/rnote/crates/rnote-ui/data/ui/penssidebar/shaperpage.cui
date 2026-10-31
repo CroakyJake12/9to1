@@ -8,8 +8,8 @@
       </Button>
       <Button id="shapeconfig-menubutton" icon-source="settings-symbolic" />
     </Container>
-    <Container id="container-3" Type="Horizontal Stack" />
+    <Container id="container-3" Type="Separator" />
     <Container id="stroke-width-picker" Type="Vertical Stack" />
-    <Container id="container-4" Type="Horizontal Stack" />
+    <Container id="container-4" Type="Separator" />
   </Container>
 </Cui>

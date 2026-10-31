@@ -3,7 +3,7 @@
     <Container id="container" Type="Vertical Stack">
       <Container id="column" Type="Vertical Stack">
         <Image id="flowy-svg" />
-        <Container id="divider" Type="Vertical Stack" />
+        <Container id="divider" Type="Separator" />
       </Container>
     </Container>
   </Page>

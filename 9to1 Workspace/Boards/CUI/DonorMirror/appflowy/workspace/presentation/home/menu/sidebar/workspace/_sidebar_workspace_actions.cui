@@ -12,7 +12,7 @@
     <Button id="flowy-button" Type="Action" action="()-{-if-(!is-popover-open)-{-controller.show();-is-popover-open-=-true;-}-}" padding="4.0">
       <Image id="flowy-svg" />
     </Button>
-    <Container id="divider" Type="Vertical Stack" />
+    <Container id="divider" Type="Separator" />
     <Image id="flowy-svg-2" />
     <Image id="flowy-svg-3" />
     <Image id="flowy-svg-4" />

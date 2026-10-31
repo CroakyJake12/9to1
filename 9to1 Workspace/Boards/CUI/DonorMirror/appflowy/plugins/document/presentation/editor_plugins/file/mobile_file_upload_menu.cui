@@ -8,7 +8,7 @@
   <Page id="file-mobile-file-upload-menu-root">
     <Container id="column" Type="Vertical Stack">
       <Container id="tab-bar" Type="Horizontal Stack" />
-      <Container id="divider" Type="Vertical Stack" height="0" />
+      <Container id="divider" Type="Separator" height="0" />
     </Container>
     <Container id="padding" Type="Vertical Stack" padding="12.0 12.0 8.0 0" />
     <Container id="padding-2" Type="Vertical Stack" padding="16">

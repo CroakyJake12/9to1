@@ -3,7 +3,7 @@
     <Container id="workspaces-scroller" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
       <Container id="workspaces-listbox" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow" />
     </Container>
-    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="container-2" Type="Separator" />
     <Container id="container-3" Type="Vertical Stack" cell-gap="6" horizontal-alignment="Stretch" vertical-alignment="Bottom">
       <Container id="container-4" Type="Vertical Stack">
         <Button id="move-selected-workspace-up-button" />

@@ -1,12 +1,11 @@
 {
   "translated": 303,
   "dropped_nodes": 12,
-  "gap_count": 204,
+  "gap_count": 186,
   "gap_constructs": {
     "custom donor widget": 56,
     "shortcut browser": 48,
     "toggle button": 25,
-    "separator": 18,
     "header bar": 15,
     "dialog with typed responses": 12,
     "unmodelled donor construct": 9,
@@ -93,13 +92,6 @@
     {
       "donor": "RnColorPad",
       "construct": "custom donor widget",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -567,13 +559,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "RnPenShortcutRow",
       "construct": "custom donor widget",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penshortcutrow.ui",
@@ -590,13 +575,6 @@
     {
       "donor": "RnBrushPage",
       "construct": "custom donor widget",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -625,13 +603,6 @@
     {
       "donor": "GtkToggleButton",
       "construct": "toggle button",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -735,13 +706,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "GtkToggleButton",
       "construct": "toggle button",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
@@ -763,22 +727,8 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "RnStrokeWidthPicker",
       "construct": "custom donor widget",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -798,13 +748,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "GtkToggleButton",
       "construct": "toggle button",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
@@ -812,22 +755,8 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "GtkToggleButton",
       "construct": "toggle button",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -842,34 +771,6 @@
     {
       "donor": "RnTypewriterPage",
       "construct": "custom donor widget",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -1372,13 +1273,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "GtkScrolledWindow",
       "construct": "scroller with explicit bars",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
@@ -1388,20 +1282,6 @@
     {
       "donor": "GtkListView",
       "construct": "item collection (list/tree/table)",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -1437,13 +1317,6 @@
     {
       "donor": "GtkListBox",
       "construct": "item collection (list/tree/table)",
-      "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "GtkSeparator",
-      "construct": "separator",
       "file": "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"

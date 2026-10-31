@@ -17,7 +17,7 @@
         <Container id="sized-box-2" Type="Vertical Stack" />
       </Container>
     </Container>
-    <Container id="divider" Type="Vertical Stack" height="1" />
+    <Container id="divider" Type="Separator" height="1" />
     <Container id="bloc-builder-2" Type="Vertical Stack" />
     <Container id="container" Type="Vertical Stack">
       <Button id="flowy-button" Type="Action" action="mobile-create-field-workflow" padding="14 12">

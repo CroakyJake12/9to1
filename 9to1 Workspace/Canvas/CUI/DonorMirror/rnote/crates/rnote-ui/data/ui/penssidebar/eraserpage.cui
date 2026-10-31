@@ -4,7 +4,7 @@
       <Button id="eraserstyle-trash-colliding-strokes-toggle" icon-source="pen-eraser-trash-colliding-strokes-symbolic" />
       <Button id="eraserstyle-split-colliding-strokes-toggle" icon-source="pen-eraser-split-colliding-strokes-symbolic" />
     </Container>
-    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="container-2" Type="Separator" />
     <Container id="stroke-width-picker" Type="Vertical Stack" />
   </Container>
 </Cui>

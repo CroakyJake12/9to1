@@ -87,7 +87,11 @@ CONTAINER_TYPE = {
     "GtkListBoxRow": "Horizontal Stack", "GtkFlowBox": "Wrap", "GtkFlowBoxChild": "Vertical Stack",
     "GtkTreeView": "Vertical Stack", "GtkColumnView": "Vertical Stack", "GtkListView": "Vertical Stack",
     "GtkGridView": "Wrap", "GtkIconView": "Wrap", "GtkStatusbar": "Horizontal Stack",
-    "GtkToolbar": "Horizontal Stack", "GtkExpander": "Vertical Stack", "GtkSeparator": "Horizontal Stack",
+    # CUI now owns these constructs: the toolbar keeps its measured overflow behaviour and the
+    # separator keeps its meaning, instead of both being flattened into a plain stack.
+    "GtkToolbar": "Toolbar", "sfxlo-PriorityHBox": "Toolbar", "sfxlo-PriorityMergedHBox": "Toolbar",
+    "GtkExpander": "Vertical Stack", "GtkSeparator": "Separator",
+    "GtkSeparatorToolItem": "Separator",
     "GtkShortcutsWindow": "Vertical Stack", "GtkShortcutsSection": "Vertical Stack",
     "GtkShortcutsGroup": "Vertical Stack", "GtkInfoBar": "Horizontal Stack", "GtkFrame": "Vertical Stack",
     "GtkAspectFrame": "Vertical Stack", "GtkEventBox": "Vertical Stack", "GtkDrawingArea": "Overlay",
@@ -102,14 +106,15 @@ GAP_CONSTRUCT = {
     "AdwMessageDialog": "dialog with typed responses", "AdwDialog": "dialog with typed responses",
     "GtkAboutDialog": "dialog with typed responses", "GtkFileChooserDialog": "dialog with typed responses",
     "AdwHeaderBar": "header bar", "AdwWindowTitle": "header bar", "AdwToolbarView": "header bar",
-    "AdwBottomSheet": "bottom sheet", "AdwOverflow": "toolbar overflow",
+    "AdwBottomSheet": "bottom sheet", "AdwOverflow": "layered stack with positioned children",
     "GtkNotebook": "tab strip", "GtkStack": "tab strip", "GtkStackSwitcher": "tab strip",
     "AdwTabView": "tab strip", "AdwTabBar": "tab strip", "AdwTabOverview": "tab strip",
     "AdwSplitView": "split view", "GtkPaned": "split view", "AdwFlap": "split view",
     "AdwLeaflet": "split view", "AdwClamp": "adaptive width clamp", "AdwBin": "slot host",
-    "GtkToolbar": "toolbar with overflow", "GtkToolButton": "toolbar with overflow",
-    "GtkToggleToolButton": "toolbar with overflow", "GtkMenuToolButton": "toolbar with overflow",
-    "GtkRadioToolButton": "toolbar with overflow", "GtkSeparatorToolItem": "toolbar with overflow",
+    # The toolbar construct itself is modelled now; what is still missing is each item's own state
+    # semantics (toggle / menu / radio), which stays an honest gap until CUI grows those item types.
+    "GtkToggleToolButton": "toggle button", "GtkMenuToolButton": "menu button",
+    "GtkRadioToolButton": "radio group item",
     "GtkHeaderBar": "header bar", "GtkMenuBar": "menu bar", "GtkMenuBar": "menu bar",
     "GtkToggleButton": "toggle button", "AdwSplitButton": "split button",
     "AdwToggleButton": "segmented toggle group", "AdwToggleGroup": "segmented toggle group",
@@ -132,7 +137,7 @@ GAP_CONSTRUCT = {
     "GtkScaleButton": "icon button with popup", "GtkVolumeButton": "icon button with popup",
     "AdwCarousel": "paged carousel", "GtkShortcutsWindow": "shortcut browser",
     "GtkShortcutsSection": "shortcut browser", "GtkShortcutsGroup": "shortcut browser",
-    "GtkShortcutsShortcut": "shortcut browser", "GtkSeparator": "separator",
+    "GtkShortcutsShortcut": "shortcut browser",
     "GtkViewport": "clipped viewport", "GtkOverlay": "layered overlay container",
     "GtkScrolledWindow": "scroller with explicit bars", "GtkEventBox": "input capture surface",
     "GtkDrawingArea": "custom drawing surface", "GtkFixed": "absolute placement layer",
@@ -171,28 +176,35 @@ ELEMENT_OF.update({
     "Ooo::ValuePositionItem": "Container", "o3tl::TemporaryObject": "Container",
 })
 CONTAINER_TYPE.update({
-    "sfxlo-NotebookbarToolBox": "Vertical Stack", "sfxlo-PriorityMergedHBox": "Horizontal Stack",
-    "sfxlo-PriorityHBox": "Horizontal Stack", "sfxlo-DropdownBox": "Horizontal Stack",
+    "sfxlo-NotebookbarToolBox": "Vertical Stack",
+    # Priority boxes drop items into an overflow menu by priority - the CUI Toolbar contract - so the
+    # later update must not flatten them back into a plain horizontal stack.
+    "sfxlo-PriorityMergedHBox": "Toolbar",
+    "sfxlo-PriorityHBox": "Toolbar", "sfxlo-DropdownBox": "Horizontal Stack",
     "sfxlo-ContextVBox": "Vertical Stack", "sfxlo-NotebookbarTabControl": "Horizontal Stack",
     "sfxlo-NotebookbarToolPanel": "Vertical Stack", "sfxlo-Notebookbox": "Horizontal Stack",
     "sfxlo-NotebookbarListBox": "Vertical Stack", "VclOptionalBox": "Horizontal Stack",
     "VclFrame": "Vertical Stack", "VclScrolledWindow": "Vertical Stack", "VclTreeView": "Vertical Stack",
     "VclButtonBox": "Horizontal Stack", "VclExpander": "Vertical Stack", "VclNotebook": "Vertical Stack",
-    "VclMenuBar": "Horizontal Stack", "VclToolbar": "Horizontal Stack",
+    "VclMenuBar": "Horizontal Stack", "VclToolbar": "Toolbar", "AdwEntryToolbar": "Toolbar",
     "GtkButtonBox": "Horizontal Stack", "AdwOverlaySplitView": "Horizontal Stack",
     "AdwSplitView": "Horizontal Stack", "AdwBreakpoint": "Vertical Stack",
     "AdwSpringWidget": "Horizontal Stack",
 })
 GAP_CONSTRUCT.update({
-    "sfxlo-NotebookbarToolBox": "notebook bar (ribbon) group", "sfxlo-PriorityMergedHBox": "toolbar overflow",
-    "sfxlo-PriorityHBox": "toolbar overflow", "sfxlo-DropdownBox": "toolbar overflow",
+    "sfxlo-NotebookbarToolBox": "notebook bar (ribbon) group",
+    # The office's own priority boxes ARE toolbars with overflow: they drop items by priority into an
+    # overflow menu when the width runs out, which is exactly the CUI Toolbar contract now. The dropdown
+    # box is a menu button instead, and stays recorded under that name rather than being called a toolbar.
+    "sfxlo-PriorityMergedHBox": "menu button", "sfxlo-PriorityHBox": "menu button",
+    "sfxlo-DropdownBox": "menu button",
     "sfxlo-ContextVBox": "context toolbar", "sfxlo-NotebookbarTabControl": "notebook bar (ribbon) tab",
     "sfxlo-NotebookbarToolPanel": "notebook bar (ribbon) group", "sfxlo-Notebookbox": "notebook bar (ribbon) tab",
     "sfxlo-NotebookbarListBox": "item collection (list/tree/table)",
     "VclOptionalBox": "optional section", "VclFrame": "framed section", "VclScrolledWindow": "scroller with explicit bars",
     "VclTreeView": "item collection (list/tree/table)", "VclButtonBox": "button row",
     "VclExpander": "expander section", "VclNotebook": "tab strip", "VclMenuBar": "menu bar",
-    "VclToolbar": "toolbar with overflow", "VclToggleButton": "toggle button", "VclPushButton": "button",
+    "VclToggleButton": "toggle button", "VclPushButton": "button",
     "svtlo-ManagedMenuButton": "menu button", "GtkButtonBox": "button row",
     "GtkRadioMenuItem": "radio menu item", "GtkLockButton": "lock/permission toggle",
     "AdwOverlaySplitView": "split view", "AdwSplitView": "split view", "AdwBreakpoint": "responsive breakpoint rules",

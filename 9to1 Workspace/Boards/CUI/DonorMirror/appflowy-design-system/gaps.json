@@ -1,7 +1,7 @@
 {
   "translated": 129,
   "dropped_nodes": 0,
-  "gap_count": 365,
+  "gap_count": 362,
   "gap_constructs": {
     "n/a": 97,
     "custom donor widget": 58,
@@ -23,7 +23,6 @@
     "donor button wrapper (FlowyButton)": 4,
     "donor icon asset (FlowySvg)": 4,
     "donor text wrapper (FlowyText)": 4,
-    "separator": 3,
     "transient anchored popover": 2,
     "fixed vertical spacer": 2,
     "donor icon button wrapper (FlowyIconButton)": 2,
@@ -1850,13 +1849,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/divider.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Padding.padding",
       "construct": "insets expression",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/style_widget/divider.dart",
@@ -2471,20 +2463,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/route/animation.dart",
       "line": 0,
       "why": "no translatable UI"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/separated_flex.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VerticalDivider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/packages/flowy_infra_ui/lib/widget/separated_flex.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "SizedBox.width=width",

@@ -4,7 +4,7 @@
     <Action name="widget.enabled-?-show-button-menu-:-null" command="widget.enabled ? showButtonMenu : null" />
   </Actions>
   <Page id="popup-menu-appflowy-popup-menu-root">
-    <Container id="divider" Type="Vertical Stack" />
+    <Container id="divider" Type="Separator" />
     <Container id="container" Type="Vertical Stack" padding="3 3 2" />
     <Container id="gesture-detector" Type="Vertical Stack" />
     <Image id="icon" source="done" />

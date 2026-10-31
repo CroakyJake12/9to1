@@ -8,7 +8,7 @@
   <Page id="container-accessory-root">
     <Container id="shrink" Type="Vertical Stack" />
     <Container id="gesture-detector" Type="Vertical Stack" />
-    <Container id="vertical-divider" Type="Vertical Stack" width="1" background="#FF1F2329" />
+    <Container id="vertical-divider" Type="Separator" width="1" background="#FF1F2329" />
     <Container id="intrinsic-height" Type="Vertical Stack">
       <Container id="row" Type="Horizontal Stack" />
     </Container>

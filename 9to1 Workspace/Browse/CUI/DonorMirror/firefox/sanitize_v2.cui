@@ -28,7 +28,7 @@
               <Button id="menuitem-2" text="2" />
               <Button id="menuitem-3" text="3" />
               <Button id="sanitizeSinceMidnight" text="4" />
-              <Container id="menuseparator" Type="Menu" />
+              <Container id="menuseparator" Type="Separator" />
               <Button id="menuitem-4" text="0" />
             </Container>
           </Container>

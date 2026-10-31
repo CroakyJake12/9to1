@@ -5,20 +5,19 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 854
 - donor nodes dropped: 0
-- gap reports: 1100
+- gap reports: 1068
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
 | `property not modelled` | 506 | arrowscrollbox@orient, browser.action, browser@autocompletepopup, browser@disablehistory, browser@manualactiveness, browser@messagemanagergroup |
-| `unknown donor construct` | 375 | b, body, code, commandset, dialog, head |
+| `unknown donor construct` | 372 | b, body, code, commandset, dialog, head |
 | `inline text run` | 36 | html:span |
-| `separator` | 26 | menuseparator |
 | `keyboard shortcut table` | 22 | key |
 | `link action` | 21 | html:a |
 | `typed command declaration` | 17 | command |
-| `toolbar with overflow` | 13 | toolbar, toolbarbutton |
 | `preprocessor directives` | 11 | moz-build preprocessor |
 | `item collection (list/tree/table)` | 11 | html:li, html:ol, html:table, html:ul |
+| `toolbar item` | 10 | toolbarbutton |
 | `web view host` | 8 | browser, html:iframe |
 | `parse error: illegal parameter entity reference: line 5, column 0` | 6 | unparseable xul/xhtml |
 | `item template contract` | 6 | html:template |

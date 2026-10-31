@@ -494,7 +494,7 @@
     </Container>
     <Container id="notebook-bar" Type="Grid">
       <Container id="box8" Type="Vertical Stack">
-        <Container id="default-box1" Type="Horizontal Stack">
+        <Container id="default-box1" Type="Toolbar">
           <Container id="section-tools" Type="Horizontal Stack" horizontal-alignment="Right">
             <Container id="horizontal2" Type="Vertical Stack">
               <Container id="vertical2" Type="Vertical Stack" horizontal-alignment="Right">
@@ -537,10 +537,10 @@
               </Container>
             </Container>
           </Container>
-          <Container id="separator7" Type="Horizontal Stack" horizontal-alignment="Right" />
+          <Container id="separator7" Type="Separator" horizontal-alignment="Right" />
           <Container id="section-edit" Type="Horizontal Stack">
             <Container id="horizontal1" Type="Vertical Stack">
-              <Container id="separator1" Type="Horizontal Stack" />
+              <Container id="separator1" Type="Separator" />
               <Container id="vertical1" Type="Vertical Stack">
                 <Container id="box5" Type="Vertical Stack">
                   <Container id="first1" Type="Vertical Stack">
@@ -568,10 +568,10 @@
             </Container>
           </Container>
           <Container id="context-container" Type="Vertical Stack" role="Grow">
-            <Container id="default-box" Type="Horizontal Stack">
+            <Container id="default-box" Type="Toolbar">
               <Container id="section-style" Type="Horizontal Stack">
                 <Container id="horizontal3" Type="Vertical Stack">
-                  <Container id="separator3" Type="Horizontal Stack" />
+                  <Container id="separator3" Type="Separator" />
                   <Container id="vertical3" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first2" Type="Vertical Stack">
                       <Button id="style-apply" role="Grow" />
@@ -595,7 +595,7 @@
               </Container>
               <Container id="section-font" Type="Horizontal Stack">
                 <Container id="horizontal5" Type="Vertical Stack">
-                  <Container id="separator4" Type="Horizontal Stack" />
+                  <Container id="separator4" Type="Separator" />
                   <Container id="vertical5" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box10" Type="Vertical Stack">
                       <Container id="box81" Type="Vertical Stack">
@@ -630,7 +630,7 @@
               </Container>
               <Container id="section-number" Type="Horizontal Stack">
                 <Container id="horizontal10" Type="Vertical Stack">
-                  <Container id="separator9" Type="Horizontal Stack" />
+                  <Container id="separator9" Type="Separator" />
                   <Container id="vertical10" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box13" Type="Vertical Stack">
                       <Container id="section-bottom36" Type="Vertical Stack" role="Grow">
@@ -654,7 +654,7 @@
               </Container>
               <Container id="section-alignment" Type="Horizontal Stack">
                 <Container id="horizontal7" Type="Vertical Stack">
-                  <Container id="separator5" Type="Horizontal Stack" />
+                  <Container id="separator5" Type="Separator" />
                   <Container id="vertical7" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box86" Type="Vertical Stack">
                       <Container id="second6" Type="Vertical Stack">
@@ -680,7 +680,7 @@
               </Container>
               <Container id="section-cell" Type="Horizontal Stack">
                 <Container id="horizontal42" Type="Vertical Stack">
-                  <Container id="separator158" Type="Horizontal Stack" />
+                  <Container id="separator158" Type="Separator" />
                   <Container id="vertical43" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box93" Type="Vertical Stack">
                       <Container id="second55" Type="Vertical Stack">
@@ -708,7 +708,7 @@
               </Container>
               <Container id="section-insert" Type="Horizontal Stack">
                 <Container id="horizontal8" Type="Vertical Stack">
-                  <Container id="separator6" Type="Horizontal Stack" />
+                  <Container id="separator6" Type="Separator" />
                   <Container id="vertical8" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box3" Type="Vertical Stack">
                       <Container id="first7" Type="Vertical Stack">
@@ -729,7 +729,7 @@
               </Container>
               <Container id="section-data" Type="Horizontal Stack">
                 <Container id="horizontal44" Type="Vertical Stack">
-                  <Container id="separator163" Type="Horizontal Stack" />
+                  <Container id="separator163" Type="Separator" />
                   <Container id="vertical44" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box97" Type="Vertical Stack">
                       <Container id="second57" Type="Vertical Stack">
@@ -752,7 +752,7 @@
               </Container>
               <Container id="section-review" Type="Horizontal Stack">
                 <Container id="horizontal11" Type="Vertical Stack">
-                  <Container id="separator10" Type="Horizontal Stack" />
+                  <Container id="separator10" Type="Separator" />
                   <Container id="vertical11" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box16" Type="Vertical Stack">
                       <Container id="first10" Type="Vertical Stack">
@@ -774,7 +774,7 @@
               </Container>
               <Container id="section-view" Type="Horizontal Stack">
                 <Container id="horizontal12" Type="Vertical Stack">
-                  <Container id="separator11" Type="Horizontal Stack" />
+                  <Container id="separator11" Type="Separator" />
                   <Container id="vertical12" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box17" Type="Vertical Stack">
                       <Container id="first11" Type="Vertical Stack">
@@ -795,10 +795,10 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="graphic-box" Type="Horizontal Stack">
+            <Container id="graphic-box" Type="Toolbar">
               <Container id="section-graphic" Type="Horizontal Stack">
                 <Container id="horizontal4" Type="Vertical Stack">
-                  <Container id="separator12" Type="Horizontal Stack" />
+                  <Container id="separator12" Type="Separator" />
                   <Container id="vertical4" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first222" Type="Vertical Stack">
                       <Container id="first15" Type="Vertical Stack">
@@ -825,7 +825,7 @@
               </Container>
               <Container id="section-arrange" Type="Horizontal Stack">
                 <Container id="horizontal6" Type="Vertical Stack">
-                  <Container id="separator13" Type="Horizontal Stack" />
+                  <Container id="separator13" Type="Separator" />
                   <Container id="vertical6" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box22" Type="Vertical Stack">
                       <Container id="send-to-front-group" Type="Vertical Stack">
@@ -844,7 +844,7 @@
                           <Button id="send-to-back3" />
                         </Container>
                       </Container>
-                      <Container id="separator19" Type="Horizontal Stack" />
+                      <Container id="separator19" Type="Separator" />
                       <Container id="send-to-front-group3" Type="Vertical Stack">
                         <Container id="one-step4" Type="Vertical Stack">
                           <Button id="object-align-left" />
@@ -869,7 +869,7 @@
               </Container>
               <Container id="section-color" Type="Horizontal Stack">
                 <Container id="horizontal9" Type="Vertical Stack">
-                  <Container id="separator14" Type="Horizontal Stack" />
+                  <Container id="separator14" Type="Separator" />
                   <Container id="vertical9" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="graf-mode-group" Type="Vertical Stack">
                       <Button id="graf-mode" role="Grow" />
@@ -896,7 +896,7 @@
               </Container>
               <Container id="section-graphic1" Type="Horizontal Stack">
                 <Container id="horizontal13" Type="Vertical Stack">
-                  <Container id="separator15" Type="Horizontal Stack" />
+                  <Container id="separator15" Type="Separator" />
                   <Container id="vertical14" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first17" Type="Vertical Stack">
                       <Button id="grid-visible" role="Grow" />
@@ -912,10 +912,10 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="annotation-box" Type="Horizontal Stack">
+            <Container id="annotation-box" Type="Toolbar">
               <Container id="section-language" Type="Horizontal Stack">
                 <Container id="horizontal29" Type="Vertical Stack">
-                  <Container id="separator110" Type="Horizontal Stack" />
+                  <Container id="separator110" Type="Separator" />
                   <Container id="vertical30" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first40" Type="Vertical Stack">
                       <Button id="spell-dialog2" />
@@ -929,7 +929,7 @@
               </Container>
               <Container id="section-reviews" Type="Horizontal Stack">
                 <Container id="horizontal26" Type="Vertical Stack">
-                  <Container id="separator104" Type="Horizontal Stack" />
+                  <Container id="separator104" Type="Separator" />
                   <Container id="vertical27" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box50" Type="Vertical Stack">
                       <Container id="track-changes-group" Type="Vertical Stack">
@@ -964,7 +964,7 @@
               </Container>
               <Container id="section-comments" Type="Horizontal Stack">
                 <Container id="horizontal27" Type="Vertical Stack">
-                  <Container id="separator106" Type="Horizontal Stack" />
+                  <Container id="separator106" Type="Separator" />
                   <Container id="vertical28" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box48" Type="Vertical Stack">
                       <Container id="insert-annotation-group" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
@@ -990,7 +990,7 @@
               </Container>
               <Container id="section-compare" Type="Horizontal Stack">
                 <Container id="horizontal24" Type="Vertical Stack">
-                  <Container id="separator59" Type="Horizontal Stack" />
+                  <Container id="separator59" Type="Separator" />
                   <Container id="vertical25" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box47" Type="Vertical Stack">
                       <Container id="protect-trace-change-mode-group" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Center" role="Grow">
@@ -1013,7 +1013,7 @@
               </Container>
               <Container id="section-view3" Type="Horizontal Stack">
                 <Container id="horizontal30" Type="Vertical Stack">
-                  <Container id="separator111" Type="Horizontal Stack" />
+                  <Container id="separator111" Type="Separator" />
                   <Container id="vertical31" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box61" Type="Vertical Stack">
                       <Container id="first42" Type="Vertical Stack">
@@ -1041,10 +1041,10 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="draw-box" Type="Horizontal Stack">
+            <Container id="draw-box" Type="Toolbar">
               <Container id="section-draw" Type="Horizontal Stack">
                 <Container id="horizontal25" Type="Vertical Stack">
-                  <Container id="separator116" Type="Horizontal Stack" />
+                  <Container id="separator116" Type="Separator" />
                   <Container id="vertical26" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box49" Type="Vertical Stack">
                       <Container id="box55" Type="Vertical Stack">
@@ -1055,7 +1055,7 @@
                           <Button id="draw-caption2" role="Grow" />
                         </Container>
                       </Container>
-                      <Container id="separator128" Type="Horizontal Stack" />
+                      <Container id="separator128" Type="Separator" />
                       <Container id="box72" Type="Vertical Stack">
                         <Container id="shapes1" Type="Vertical Stack">
                           <Button id="line" role="Grow" />
@@ -1071,7 +1071,7 @@
                           <Button id="line-toolbox" />
                         </Container>
                       </Container>
-                      <Container id="separator123" Type="Horizontal Stack" />
+                      <Container id="separator123" Type="Separator" />
                       <Container id="box73" Type="Vertical Stack">
                         <Container id="shapes6" Type="Vertical Stack">
                           <Button id="basic-shapes1" role="Grow" />
@@ -1096,7 +1096,7 @@
               </Container>
               <Container id="section-draw-edit" Type="Horizontal Stack">
                 <Container id="horizontal28" Type="Vertical Stack">
-                  <Container id="separator117" Type="Horizontal Stack" />
+                  <Container id="separator117" Type="Separator" />
                   <Container id="vertical29" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box52" Type="Vertical Stack">
                       <Container id="box53" Type="Vertical Stack">
@@ -1108,7 +1108,7 @@
                           <Button id="flip-horizontal1" role="Grow" />
                         </Container>
                       </Container>
-                      <Container id="separator118" Type="Horizontal Stack" />
+                      <Container id="separator118" Type="Separator" />
                       <Container id="box59" Type="Vertical Stack">
                         <Container id="third10" Type="Vertical Stack">
                           <Button id="format-line1" role="Grow" />
@@ -1143,7 +1143,7 @@
               </Container>
               <Container id="section-arrang" Type="Horizontal Stack">
                 <Container id="horizontal34" Type="Vertical Stack">
-                  <Container id="separator121" Type="Horizontal Stack" />
+                  <Container id="separator121" Type="Separator" />
                   <Container id="vertical35" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box90" Type="Vertical Stack">
                       <Container id="box94" Type="Vertical Stack">
@@ -1156,7 +1156,7 @@
                           <Button id="object-forward-one5" />
                         </Container>
                       </Container>
-                      <Container id="separator124" Type="Horizontal Stack" />
+                      <Container id="separator124" Type="Separator" />
                       <Container id="send-to-front-group4" Type="Vertical Stack">
                         <Container id="one-step5" Type="Vertical Stack">
                           <Button id="object-align-left1" />
@@ -1181,7 +1181,7 @@
               </Container>
               <Container id="section-draw-grid" Type="Horizontal Stack">
                 <Container id="horizontal36" Type="Vertical Stack">
-                  <Container id="separator126" Type="Horizontal Stack" />
+                  <Container id="separator126" Type="Separator" />
                   <Container id="vertical37" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first34" Type="Vertical Stack">
                       <Button id="grid-visible1" role="Grow" />
@@ -1198,7 +1198,7 @@
               </Container>
               <Container id="section-draw-view" Type="Horizontal Stack">
                 <Container id="horizontal35" Type="Vertical Stack">
-                  <Container id="separator122" Type="Horizontal Stack" />
+                  <Container id="separator122" Type="Separator" />
                   <Container id="vertical36" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box69" Type="Vertical Stack">
                       <Container id="first45" Type="Vertical Stack">
@@ -1224,7 +1224,7 @@
               </Container>
               <Container id="section3-d" Type="Horizontal Stack">
                 <Container id="horizontal37" Type="Vertical Stack">
-                  <Container id="separator127" Type="Horizontal Stack" />
+                  <Container id="separator127" Type="Separator" />
                   <Container id="vertical38" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first38" Type="Vertical Stack">
                       <Button id="extrusion-toggle" role="Grow" />
@@ -1245,10 +1245,10 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="draw-text-box" Type="Horizontal Stack">
+            <Container id="draw-text-box" Type="Toolbar">
               <Container id="section-format1" Type="Horizontal Stack">
                 <Container id="horizontal23" Type="Vertical Stack">
-                  <Container id="separator32" Type="Horizontal Stack" />
+                  <Container id="separator32" Type="Separator" />
                   <Container id="vertical24" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box58" Type="Vertical Stack">
                       <Container id="box60" Type="Vertical Stack">
@@ -1288,7 +1288,7 @@
               </Container>
               <Container id="section-paragraph1" Type="Horizontal Stack">
                 <Container id="horizontal33" Type="Vertical Stack">
-                  <Container id="separator140" Type="Horizontal Stack" />
+                  <Container id="separator140" Type="Separator" />
                   <Container id="vertical34" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="second43" Type="Vertical Stack">
                       <Button id="left-para2" />
@@ -1310,7 +1310,7 @@
               </Container>
               <Container id="section-view1" Type="Horizontal Stack">
                 <Container id="horizontal32" Type="Vertical Stack">
-                  <Container id="separator139" Type="Horizontal Stack" />
+                  <Container id="separator139" Type="Separator" />
                   <Container id="vertical33" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box83" Type="Vertical Stack">
                       <Container id="first44" Type="Vertical Stack">
@@ -1339,7 +1339,7 @@
               </Container>
               <Container id="section-insert1" Type="Horizontal Stack">
                 <Container id="horizontal38" Type="Vertical Stack">
-                  <Container id="separator141" Type="Horizontal Stack" />
+                  <Container id="separator141" Type="Separator" />
                   <Container id="vertical39" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first39" Type="Vertical Stack">
                       <Button id="insert-symbole1" role="Grow" />
@@ -1357,10 +1357,10 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="media-box" Type="Horizontal Stack">
+            <Container id="media-box" Type="Toolbar">
               <Container id="section-alignment1" Type="Horizontal Stack">
                 <Container id="horizontal14" Type="Vertical Stack">
-                  <Container id="separator20" Type="Horizontal Stack" />
+                  <Container id="separator20" Type="Separator" />
                   <Container id="vertical32" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first22" Type="Vertical Stack">
                       <Button id="avmedia-tool-box" />
@@ -1376,10 +1376,10 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="olebox" Type="Horizontal Stack">
+            <Container id="olebox" Type="Toolbar">
               <Container id="section-graphic2" Type="Horizontal Stack">
                 <Container id="horizontal39" Type="Vertical Stack">
-                  <Container id="separator148" Type="Horizontal Stack" />
+                  <Container id="separator148" Type="Separator" />
                   <Container id="vertical40" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="section-bottom1" Type="Vertical Stack">
                       <Button id="fill-style1" role="Grow" />
@@ -1405,7 +1405,7 @@
               </Container>
               <Container id="section-arrange1" Type="Horizontal Stack">
                 <Container id="horizontal40" Type="Vertical Stack">
-                  <Container id="separator149" Type="Horizontal Stack" />
+                  <Container id="separator149" Type="Separator" />
                   <Container id="vertical41" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box67" Type="Vertical Stack">
                       <Container id="wrap-group2" Type="Vertical Stack">
@@ -1420,7 +1420,7 @@
                           <Button id="wrap-right2" />
                         </Container>
                       </Container>
-                      <Container id="separator150" Type="Horizontal Stack" />
+                      <Container id="separator150" Type="Separator" />
                       <Container id="align-group1" Type="Vertical Stack">
                         <Container id="align5" Type="Vertical Stack">
                           <Button id="align-left2" />
@@ -1433,7 +1433,7 @@
                           <Button id="align-bottom4" />
                         </Container>
                       </Container>
-                      <Container id="separator151" Type="Horizontal Stack" />
+                      <Container id="separator151" Type="Separator" />
                       <Container id="send-to-front-group1" Type="Vertical Stack">
                         <Container id="one-step2" Type="Vertical Stack">
                           <Button id="align-bottom5" />
@@ -1456,7 +1456,7 @@
               </Container>
               <Container id="section-graphic3" Type="Horizontal Stack">
                 <Container id="horizontal43" Type="Vertical Stack">
-                  <Container id="separator153" Type="Horizontal Stack" />
+                  <Container id="separator153" Type="Separator" />
                   <Container id="vertical45" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="first48" Type="Vertical Stack">
                       <Button id="grid-visible2" role="Grow" />
@@ -1473,7 +1473,7 @@
               </Container>
               <Container id="section-view2" Type="Horizontal Stack">
                 <Container id="horizontal41" Type="Vertical Stack">
-                  <Container id="separator144" Type="Horizontal Stack" />
+                  <Container id="separator144" Type="Separator" />
                   <Container id="vertical42" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
                     <Container id="box78" Type="Vertical Stack">
                       <Container id="first49" Type="Vertical Stack">

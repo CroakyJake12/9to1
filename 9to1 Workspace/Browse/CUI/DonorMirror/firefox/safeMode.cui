@@ -16,13 +16,13 @@
         </Container>
         <Container id="safeMode" Type="Vertical Stack">
           <Text id="label" />
-          <Container id="separator" Type="Vertical Stack" />
+          <Container id="separator" Type="Separator" />
           <Text id="resetProfileInstead" />
         </Container>
         <Container id="resetProfile" Type="Vertical Stack" hidden="true">
           <Text id="label-2" />
         </Container>
-        <Container id="separator-2" Type="Vertical Stack" />
+        <Container id="separator-2" Type="Separator" />
       </Container>
     </Container>
   </Page>

@@ -6,9 +6,9 @@
   </Actions>
   <Page id="widgets-toolbar-context.inc-root">
     <Container id="toolbar-context-menu" Type="Menu">
-      <Container id="customizeMailToolbarMenuSeparator" Type="Menu" />
+      <Container id="customizeMailToolbarMenuSeparator" Type="Separator" />
       <Button id="CustomizeMailToolbar" action="cmd-customize-mail-toolbar" content="{Binding customizeToolbar.label}" shortcut="{Binding customizeToolbar.accesskey}" />
-      <Container id="extensionsMailToolbarMenuSeparator" Type="Menu" />
+      <Container id="extensionsMailToolbarMenuSeparator" Type="Separator" />
       <Button id="menuitem" action="toolbar-context-menu.open-about-addons-for-context-action" />
       <Button id="menuitem-2" action="toolbar-context-menu.remove-extension-for-context-action" />
     </Container>

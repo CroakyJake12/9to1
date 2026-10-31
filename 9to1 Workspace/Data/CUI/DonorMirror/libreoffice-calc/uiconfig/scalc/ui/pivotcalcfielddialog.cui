@@ -25,7 +25,7 @@
             <Button id="deletebtn" content="Delete" text="Delete" vertical-alignment="Center" role="Grow" />
           </Container>
         </Container>
-        <Container id="sep1" Type="Horizontal Stack" focusable="false" />
+        <Container id="sep1" Type="Separator" focusable="false" />
         <Container id="box3" Type="Vertical Stack" width="250" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
           <Text id="label3" text="Fields:" focusable="false" />
           <Container id="container-2" Type="Vertical Stack" width="180" height="150" role="Grow">

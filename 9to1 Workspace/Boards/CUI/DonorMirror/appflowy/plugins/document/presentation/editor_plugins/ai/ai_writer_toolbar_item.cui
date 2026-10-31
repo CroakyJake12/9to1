@@ -37,7 +37,7 @@
         <Text id="flowy-text" />
       </Button>
     </Container>
-    <Container id="divider" Type="Vertical Stack" height="1.0" />
+    <Container id="divider" Type="Separator" height="1.0" />
     <Button id="flowy-icon-button" Type="Action" action="()-{-if-(-is-aiwriter-enabled(widget.editor-state))-{-keep-editor-focus-notifier.increase();-popover-controller.show();-set-state(()-{-is-selected-=-true;-});-}-else-{-show-toast-notification(-message:-locale-keys.document-plugins-appflowy-aiedit-disabled.tr(),-);-}-}" width="48" height="32">
       <Container id="row" Type="Horizontal Stack">
         <Image id="flowy-svg-2" />

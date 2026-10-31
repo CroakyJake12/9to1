@@ -3,29 +3,27 @@
 Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
 reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
-- donor UI constructs translated: 11468
-- donor nodes dropped: 1601
-- gap reports: 5080
+- donor UI constructs translated: 11539
+- donor nodes dropped: 1621
+- gap reports: 2838
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `toolbar with overflow` | 2040 | GtkMenuToolButton, GtkRadioToolButton, GtkSeparatorToolItem, GtkToggleToolButton, GtkToolButton, GtkToolbar |
 | `notebook bar (ribbon) group` | 1155 | sfxlo-NotebookbarToolBox |
 | `optional section` | 598 | VclOptionalBox |
-| `separator` | 402 | GtkSeparator |
-| `toolbar overflow` | 135 | sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox |
-| `button row` | 132 | GtkButtonBox |
-| `menu button` | 132 | svtlo-ManagedMenuButton |
-| `scroller with explicit bars` | 102 | GtkScrolledWindow |
-| `window and dialog chrome` | 99 | GtkDialog |
+| `menu button` | 448 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox, svtlo-ManagedMenuButton |
+| `button row` | 133 | GtkButtonBox |
+| `scroller with explicit bars` | 103 | GtkScrolledWindow |
+| `window and dialog chrome` | 100 | GtkDialog |
 | `radio menu item` | 95 | GtkRadioMenuItem |
 | `item collection (list/tree/table)` | 69 | GtkIconView, GtkTreeView |
 | `custom drawing surface` | 35 | GtkDrawingArea |
+| `unmodelled donor construct` | 27 | GtkCalendar, GtkMessageDialog, GtkSeparatorToolItem, GtkToolItem |
 | `clipped viewport` | 25 | GtkViewport |
-| `unmodelled donor construct` | 21 | GtkCalendar, GtkMessageDialog, GtkToolItem |
 | `tab strip` | 20 | GtkNotebook |
-| `toggle button` | 7 | GtkToggleButton |
+| `toggle button` | 11 | GtkToggleButton, GtkToggleToolButton |
 | `expander section` | 6 | GtkExpander |
+| `radio group item` | 6 | GtkRadioToolButton |
 | `context toolbar` | 4 | sfxlo-ContextVBox |
 | `notebook bar (ribbon) tab` | 2 | sfxlo-NotebookbarTabControl |
 | `progress` | 1 | GtkProgressBar |

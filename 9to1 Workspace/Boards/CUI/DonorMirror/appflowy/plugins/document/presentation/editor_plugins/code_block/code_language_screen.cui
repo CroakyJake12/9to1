@@ -1,7 +1,7 @@
 <Cui id="code-block-code-language-screen" product="9-1" version="1">
   <Page id="code-block-code-language-screen-root">
     <Page id="scaffold">
-      <Container id="divider" Type="Vertical Stack" />
+      <Container id="divider" Type="Separator" />
       <Container id="sized-box" Type="Vertical Stack" height="48" />
     </Page>
   </Page>

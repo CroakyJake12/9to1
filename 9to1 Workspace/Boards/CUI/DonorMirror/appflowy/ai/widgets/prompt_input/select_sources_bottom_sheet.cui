@@ -57,7 +57,7 @@
           <Container id="padding" Type="Vertical Stack" padding="16.0 8.0">
             <Container id="sized-box-2" Type="Vertical Stack" height="44.0" />
           </Container>
-          <Container id="divider" Type="Vertical Stack" height="0.5" />
+          <Container id="divider" Type="Separator" height="0.5" />
         </Container>
       </Container>
       <Container id="bloc-builder-3" Type="Vertical Stack">

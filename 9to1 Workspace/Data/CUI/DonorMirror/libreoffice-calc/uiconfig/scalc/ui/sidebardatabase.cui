@@ -4,14 +4,14 @@
       <Input id="chk-header-row" Type="Checkbox" text="Header Row" role="Grow" column="0" row="0" />
       <Input id="chk-total-row" Type="Checkbox" text="Total Row" role="Grow" column="1" row="0" />
       <Input id="chk-filter-buttons" Type="Checkbox" text="Filter Buttons" role="Grow" column="0" row="1" />
-      <Container id="container" Type="Horizontal Stack" focusable="false" role="Grow" column="0" row="2" />
-      <Container id="container-2" Type="Horizontal Stack" focusable="false" role="Grow" column="1" row="2" />
+      <Container id="container" Type="Separator" focusable="false" role="Grow" column="0" row="2" />
+      <Container id="container-2" Type="Separator" focusable="false" role="Grow" column="1" row="2" />
       <Input id="chk-banded-rows" Type="Checkbox" text="Banded Rows" role="Grow" column="0" row="3" />
       <Input id="chk-banded-cols" Type="Checkbox" text="Banded Columns" role="Grow" column="1" row="3" />
       <Input id="chk-first-column" Type="Checkbox" text="First Column" role="Grow" column="0" row="4" />
       <Input id="chk-last-column" Type="Checkbox" text="Last Column" role="Grow" column="1" row="4" />
     </Container>
-    <Container id="container-3" Type="Horizontal Stack" focusable="false" role="Grow" column="0" row="1" />
+    <Container id="container-3" Type="Separator" focusable="false" role="Grow" column="0" row="1" />
     <Container id="container-4" Type="Vertical Stack" cell-gap="5" focusable="false" role="Grow" column="0" row="2">
       <Text id="lbl-styles" text="Table Styles" focusable="false" />
       <Input id="cb-styles" Type="Select" focusable="false" role="Grow" />

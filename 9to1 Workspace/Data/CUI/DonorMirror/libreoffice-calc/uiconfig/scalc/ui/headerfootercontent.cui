@@ -21,7 +21,7 @@
         <Input id="combo-lb-defined" Type="Select" focusable="false" column="2" row="0" />
         <Text id="label-ft-preset" text="Preset" focusable="false" column="1" row="0" />
       </Container>
-      <Container id="container" Type="Horizontal Stack" focusable="false" />
+      <Container id="container" Type="Separator" focusable="false" />
       <Container id="grid2" Type="Grid" cell-gap="12" focusable="false">
         <Container id="container-2" Type="Vertical Stack" cell-gap="12" focusable="false" column="1" row="0">
           <Input id="combo-lb-font-family" Type="Select" focusable="false">

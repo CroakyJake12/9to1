@@ -10,7 +10,7 @@
           <Button id="str-remove" content="Delete" text="Delete" column="1" row="0" />
         </Container>
         <Text id="str-chose-settings" text="Choose settings for Presentation Minimizer" horizontal-alignment="Left" focusable="false" column="0" row="2" />
-        <Container id="container-2" Type="Horizontal Stack" focusable="false" column="0" row="1" />
+        <Container id="container-2" Type="Separator" focusable="false" column="0" row="1" />
       </Container>
       <Text id="str-introduction" text="Introduction" focusable="false" />
     </Container>

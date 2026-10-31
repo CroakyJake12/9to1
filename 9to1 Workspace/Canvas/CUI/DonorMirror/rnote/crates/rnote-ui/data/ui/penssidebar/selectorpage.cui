@@ -6,7 +6,7 @@
       <Button id="selectorstyle-single-toggle" icon-source="pen-selector-single-symbolic" />
       <Button id="selectorstyle-intersectingpath-toggle" icon-source="pen-selector-intersectingpath-symbolic" />
     </Container>
-    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="container-2" Type="Separator" />
     <Container id="selection-actionbox" Type="Vertical Stack" cell-gap="6">
       <Button id="resize-lock-aspectratio-togglebutton" icon-source="selection-resize-lock-aspectratio-symbolic" />
       <Button id="selection-select-all-button" icon-source="selection-select-all-symbolic" />

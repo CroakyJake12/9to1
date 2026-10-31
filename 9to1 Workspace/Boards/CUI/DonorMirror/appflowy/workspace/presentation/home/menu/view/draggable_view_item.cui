@@ -1,17 +1,17 @@
 <Cui id="view-draggable-view-item" product="9-1" version="1">
   <Page id="view-draggable-view-item-root">
     <Container id="column" Type="Vertical Stack">
-      <Container id="divider" Type="Vertical Stack" background="#00000000" />
+      <Container id="divider" Type="Separator" background="#00000000" />
       <Container id="decorated-box" Type="Vertical Stack" CornerRadius="6.0" background="#00000000" />
-      <Container id="divider-2" Type="Vertical Stack" background="#00000000" />
+      <Container id="divider-2" Type="Separator" background="#00000000" />
     </Container>
     <Container id="stack" Type="Absolute">
       <Container id="positioned" Type="Vertical Stack">
-        <Container id="divider-3" Type="Vertical Stack" background="#00000000" />
+        <Container id="divider-3" Type="Separator" background="#00000000" />
       </Container>
       <Container id="decorated-box-2" Type="Vertical Stack" CornerRadius="4.0" background="#00000000" />
       <Container id="positioned-2" Type="Vertical Stack">
-        <Container id="divider-4" Type="Vertical Stack" background="#00000000" />
+        <Container id="divider-4" Type="Separator" background="#00000000" />
       </Container>
     </Container>
   </Page>

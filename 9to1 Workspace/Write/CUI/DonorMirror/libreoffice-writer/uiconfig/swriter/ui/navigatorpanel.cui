@@ -23,117 +23,117 @@
         <Container id="container-2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
           <Container id="gridcontent16" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
             <Container id="container-3" Type="Grid" cell-gap="3" focusable="false">
-              <Container id="content1" Type="Horizontal Stack" column="0" row="0">
+              <Container id="content1" Type="Toolbar" column="0" row="0">
                 <Button id="contenttoggle" icon-source="sw/res/sc20244.png" tooltip="Toggle Master View" />
               </Container>
-              <Container id="content2" Type="Horizontal Stack" role="Grow" column="1" row="0">
+              <Container id="content2" Type="Toolbar" role="Grow" column="1" row="0">
                 <Container id=".uno:nav-element" Type="Vertical Stack" focusable="false" role="Grow">
                   <Input id="nav-element-widget" Type="Select" focusable="false" role="Grow" />
                 </Container>
               </Container>
-              <Container id="content3" Type="Horizontal Stack" column="2" row="0">
+              <Container id="content3" Type="Toolbar" column="2" row="0">
                 <Button id=".uno:scroll-to-previous" />
                 <Button id=".uno:scroll-to-next" />
               </Container>
-              <Container id="content4" Type="Horizontal Stack" column="3" row="0">
+              <Container id="content4" Type="Toolbar" column="3" row="0">
                 <Container id="container-4" Type="Vertical Stack" focusable="false" role="Grow">
                   <Input id="gotopage" Type="Number" tooltip="Go to page" />
                 </Container>
               </Container>
             </Container>
-            <Container id="content5" Type="Horizontal Stack">
+            <Container id="content5" Type="Toolbar">
               <Button id="root" icon-source="sw/res/sc20234.png" tooltip="Content Navigation View" />
-              <Container id="separator3" Type="Vertical Stack" focusable="false" />
+              <Container id="separator3" Type="Separator" focusable="false" />
               <Button id="header" icon-source="sw/res/sc20179.png" tooltip="Header" />
               <Button id="footer" icon-source="sw/res/sc20177.png" tooltip="Footer" />
               <Button id="anchor" icon-source="sw/res/sc20182.png" tooltip="Anchor&lt;-&gt;Text" />
               <Button id="reminder" icon-source="sw/res/sc20183.png" tooltip="Set Reminder" />
-              <Container id="separator5" Type="Vertical Stack" focusable="false" />
+              <Container id="separator5" Type="Separator" focusable="false" />
               <Button id="headings" icon-source="sw/res/sc20236.png" tooltip="Show Up to Outline Level" />
             </Container>
             <Container id="container-5" Type="Vertical Stack" focusable="false">
-              <Container id="content6" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+              <Container id="content6" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                 <Button id="listbox" icon-source="sw/res/sc20233.png" tooltip="List Box On/Off" />
-                <Container id="separator6" Type="Vertical Stack" focusable="false" />
+                <Container id="separator6" Type="Separator" focusable="false" />
               </Container>
               <Container id="content-functions-box" Type="Vertical Stack" focusable="false">
-                <Container id="headings-content-function-buttons-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="headings-content-function-buttons-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id="promote" icon-source="sw/res/sc20172.png" tooltip="Promote Outline Level" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id="demote" icon-source="sw/res/sc20173.png" tooltip="Demote Outline Level" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id="chapterup" icon-source="sw/res/sc20174.png" tooltip="Move Heading Up" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id="chapterdown" icon-source="sw/res/sc20171.png" tooltip="Move Heading Down" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="tables-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="tables-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="tables-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="tables-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:table-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:auto-format" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:delete-table" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="frames-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="frames-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="frames-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="frames-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:frame-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:object-title-description-frames" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="images-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="images-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="images-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="images-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:graphic-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:object-title-description-images" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="oleobjects-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="oleobjects-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="oleobjects-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="oleobjects-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:frame-dialog-more" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:object-title-description-oleobjects" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="bookmarks-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="bookmarks-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="bookmarks-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="bookmarks-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:edit-bookmark" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="sections-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="sections-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="sections-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="sections-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:edit-region" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="hyperlinks-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="hyperlinks-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="hyperlinks-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="hyperlinks-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:open-hyperlink-on-cursor" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:edit-hyperlink" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="references-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="references-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="indexes-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="references-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="references-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="indexes-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:update-all-indexes" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="indexes-toxbase-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="indexes-toxbase-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:update-cur-index" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:edit-cur-index" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:remove-table-of" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="indexes-toxmark-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="indexes-toxmark-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:index-entry-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="comments-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="comments-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:delete-all-notes" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="comments-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="drawingobjects-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="drawingobjects-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="comments-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="drawingobjects-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="drawingobjects-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:insert-caption-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                   <Button id=".uno:object-title-description-drawingobjects" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="fields-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="fields-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:update-fields?unlock-soft-fixed:bool=1" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="fields-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="fields-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:field-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="footnotes-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="footnotes-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:footnote-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="footnotes-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="endnotes-content-type-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="footnotes-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="endnotes-content-type-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id=".uno:endnote-dialog" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
-                <Container id="endnotes-content-uno-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top" />
-                <Container id="delete-function-button-toolbar" Type="Horizontal Stack" horizontal-alignment="Left" vertical-alignment="Top">
+                <Container id="endnotes-content-uno-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top" />
+                <Container id="delete-function-button-toolbar" Type="Toolbar" horizontal-alignment="Left" vertical-alignment="Top">
                   <Button id="delete" icon-source="cmd/scdelete.png" tooltip="Delete" horizontal-alignment="Left" vertical-alignment="Top" />
                 </Container>
               </Container>
@@ -146,15 +146,15 @@
             <Container id="contenttree" Type="Vertical Stack" width="-1" role="Grow" />
           </Container>
         </Container>
-        <Container id="global" Type="Horizontal Stack" column="0" row="1">
+        <Container id="global" Type="Toolbar" column="0" row="1">
           <Button id="globaltoggle" icon-source="sw/res/sc20244.png" tooltip="Toggle Master View" />
-          <Container id="separator7" Type="Vertical Stack" focusable="false" />
+          <Container id="separator7" Type="Separator" focusable="false" />
           <Button id="edit" icon-source="sw/res/sc20245.png" tooltip="Edit" />
           <Button id="update" icon-source="sw/res/sc20246.png" tooltip="Update" />
           <Button id="insert" icon-source="sw/res/sc20247.png" tooltip="Insert" />
-          <Container id="separator8" Type="Vertical Stack" focusable="false" />
+          <Container id="separator8" Type="Separator" focusable="false" />
           <Button id="save" icon-source="sw/res/sc20248.png" tooltip="Save Contents as well" />
-          <Container id="separator9" Type="Vertical Stack" focusable="false" />
+          <Container id="separator9" Type="Separator" focusable="false" />
           <Button id="moveup" icon-source="sw/res/sc20174.png" tooltip="Move Up" />
           <Button id="movedown" icon-source="sw/res/sc20171.png" tooltip="Move Down" />
         </Container>

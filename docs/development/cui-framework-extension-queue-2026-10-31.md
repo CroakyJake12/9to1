@@ -50,6 +50,42 @@ Nothing in this document is accepted, rendered or run. It is a queue with eviden
 3. Add runtime tests in `framework/CUI/Runtime.Tests` for the *behaviour* (e.g. an overflow menu really contains the items that did not fit at the measured width), not just for parsing.
 4. Re-run the mirrors and the compile probe; record the drop in gap reports as the measured effect, and keep any remaining approximations visible.
 
+## Progress against this queue — measured 31 October, later the same day
+
+**Items implemented: `toolbar with overflow` and `separator`.**
+
+- Framework (CUI-owned, no donor control, no Fluent template): `CuiToolbarPanel` measures its children and
+  collapses exactly the items the measured width cannot hold, presenting the author's `OverflowHost="true"`
+  surface only when something actually collapsed; `CuiSeparatorPanel` draws the rule from the theme-owned
+  `CuiLineBrush`/`CuiLineStrongBrush`, observed live; `CuiOverflowHosts` is the framework marker the loader
+  fills from the authored property, so the marker cannot be set from outside CUI and survives re-parenting.
+  Registry gained Container Types `Toolbar` and `Separator` plus the typed boolean property `OverflowHost`;
+  the mirror emitter reads that registry live, so the mirrors gained the constructs in the same change.
+- Measured effect on the corpora: gap reports **33,014 → 25,113**; `toolbar with overflow` and `separator`
+  are now **zero** and **433 Toolbar** and **1,639 Separator** elements are emitted. Documents **1,758 →
+  1,764**, all compiling clean (`--strict`, 0 errors, exit 0, registry 2.0).
+- Relabelling is counted, not hidden: `menu button` rose 459 → 1,537 because LibreOffice's
+  `sfxlo-PriorityHBox`/`PriorityMergedHBox`/`DropdownBox` are now named for what they are (the office's own
+  overflow/dropdown machinery) instead of being lumped in with toolbar overflow.
+- Tests: `framework/CUI/Runtime.Tests/CuiToolbarOverflowAndSeparatorTests.cs` — 6 tests, all passing in
+  isolation, asserting measured behaviour: 4 items in a 220-wide toolbar stay visible with no overflow
+  control; the same document at 140 wide keeps exactly 2 visible and collapses 2, the host appears, the
+  survivors keep document order inside the measured width, and a collapsed item's **authored** `IsVisible`
+  is untouched (only the layout cell is hidden). Python mirror suite 47 → 50 with the mapping pinned for
+  GTK, XUL and Dart.
+- Runtime suite state, measured rather than assumed: the same binary run four times gave
+  **Failed = 13, 12, 10, 9** out of 749 — the failures move around inside the theme-refresh family, so they
+  are **flaky**, not new: `CuiControlLoader.ThemePreferenceChanged → RefreshTheme` throws
+  `InvalidOperationException: The calling thread cannot access this object because a different thread owns it`.
+  `CuiThemeTests` alone: 57/57 pass. My new class alone: 6/6 pass. This family is **not run by CI at all**
+  (`9to1 Workspace/shared/Haven.sln` contains no CakeOS.Cui project), which is how it stayed red. Two owed
+  follow-ups: put the CUI runtime suite under a pinned-failure CI ratchet, and fix the cross-thread theme
+  refresh. Neither is waived.
+- Build safety: these builds ran under the new `eng/development/guarded_lowmem_build.py` (floor 1,100 MiB
+  MemAvailable, idle CPU/IO priority, server GC off, `-m:1`, shared compilation off, whole process group
+  killed on breach). Measured worst case: peak process-tree RSS 357 MiB, minimum MemAvailable 5,246 MiB —
+  so the earlier "blocked on memory" deferral was **caution, not measurement**, and is corrected here.
+
 ## Status and the constraint that defers step 2
 
 Steps 1-4 are **not started**. The framework build/test for this unit is blocked on this PC right now, measured at 10:2x on 31 October 2026: MemAvailable ≈ 5.5 GiB of 62.4 GiB total, with 3.5 GiB of 4.1 GiB swap already in use, because this OpenCode session *is* the resident model host (~45 GiB resident). Building the vendored Avalonia fork plus the CUI runtime test project risks the OOM conditions the memory guards exist to prevent, and the resident host must never be stopped. Zero-build work (donor custody, mirrors, gates, decision records) continues; the framework unit runs when memory headroom returns, with the guarded entrypoint, `-m:1`, shared compilation off and serial SDK admission.

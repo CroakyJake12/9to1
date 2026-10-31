@@ -103,7 +103,7 @@
         </Container>
         <Container id="navigation-toolbox" Type="Vertical Stack">
           <Container id="titlebar" Type="Vertical Stack">
-            <Container id="toolbar-menubar" Type="Horizontal Stack" />
+            <Container id="toolbar-menubar" Type="Toolbar" />
           </Container>
         </Container>
         <Container id="hiddenBrowser" Type="Overlay" />

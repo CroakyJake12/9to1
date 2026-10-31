@@ -44,8 +44,8 @@ WIDGETS: dict[str, tuple[str, str | None, str | None]] = {
     "DecoratedBox": ("Container", "Vertical Stack", None),
     "ColoredBox": ("Container", "Vertical Stack", None),
     "Card": ("Container", "Vertical Stack", "elevated card surface"),
-    "Divider": ("Container", None, "separator"),
-    "VerticalDivider": ("Container", None, "separator"),
+    "Divider": ("Container", "Separator", None),
+    "VerticalDivider": ("Container", "Separator", None),
     "SliverPadding": ("Container", "Vertical Stack", "sliver layout"),
     # scrolling and collections
     "SingleChildScrollView": ("Container", "Vertical Stack", "scroller"),
@@ -112,8 +112,10 @@ WIDGETS: dict[str, tuple[str, str | None, str | None]] = {
     "AnimatedOpacity": ("Container", "Vertical Stack", "animated property transition"),
     "Visibility": ("Container", "Vertical Stack", "conditional visibility"),
     "Offstage": ("Container", "Vertical Stack", "conditionally unrendered subtree"),
-    "OverflowBar": ("Container", "Horizontal Stack", "toolbar with overflow"),
-    "OverflowButton": ("Button", "Action", "toolbar with overflow"),
+    "OverflowBar": ("Container", "Toolbar", None),
+    # The donor's own overflow chevron is exactly CUI's authored overflow surface, so it is marked as
+    # such rather than being mirrored as an ordinary button.
+    "OverflowButton": ("Button", "Action", None, "true"),
     # AppFlowy's own design-system wrappers: donor constructs, not CUI ones
     "FlowyText": ("Text", None, "donor text wrapper (FlowyText)"),
     "FlowyTextField": ("Input", "Text", "donor text field wrapper (FlowyTextField)"),
@@ -326,7 +328,10 @@ def translate(path, source: str) -> Result:
             mapped = _widget_for(name)
             if mapped:
                 children = walk(open_at + 1, close_at)
-                element, ctype, gap = mapped
+                # A mapped entry is (element, Type, gap) and may carry a fourth slot marking this node as
+                # its container's authored overflow surface.
+                element, ctype, gap = mapped[0], mapped[1], mapped[2]
+                marks_overflow_host = len(mapped) > 3 and mapped[3] == "true"
                 node = Node(element=element, donor=name)
                 node.props["id"] = kebab(name.split(".")[-1])
                 if element == "Container":
@@ -427,6 +432,8 @@ def translate(path, source: str) -> Result:
                                             "file": str(path), "line": 0,
                                             "why": "the donor carries width+colour+side in one decoration "
                                                   "object; CUI's border properties are separate"})
+                if marks_overflow_host:
+                    node.props["OverflowHost"] = "true"
                 if gap:
                     result.gaps.append({"donor": name, "construct": gap, "file": str(path), "line": 0,
                                         "why": "approximated with the nearest CUI construct; verify in "

@@ -5,7 +5,7 @@
         <Container id="sort-key-window" Type="Vertical Stack" focusable="false" role="Grow" />
       </Container>
     </Container>
-    <Container id="container" Type="Horizontal Stack" focusable="false" />
+    <Container id="container" Type="Separator" focusable="false" />
     <Container id="container-2" Type="Vertical Stack" focusable="false">
       <Container id="container-3" Type="Grid" cell-gap="3" focusable="false">
         <Input id="rb-top-down" Type="Radio" text="Top to bottom (sort rows)" checked="true" column="1" row="1" />

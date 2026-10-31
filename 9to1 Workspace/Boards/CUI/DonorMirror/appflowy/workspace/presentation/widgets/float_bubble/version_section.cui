@@ -3,7 +3,7 @@
     <Text id="flowy-text" />
     <Container id="sized-box" Type="Vertical Stack" height="30">
       <Container id="column" Type="Vertical Stack">
-        <Container id="divider" Type="Vertical Stack" height="1" />
+        <Container id="divider" Type="Separator" height="1" />
         <Container id="vspace" Type="Vertical Stack" />
         <Container id="gesture-detector" Type="Vertical Stack">
           <Text id="flowy-text-2" />

@@ -420,9 +420,9 @@
           <Container id="attachmentListTooltip" Type="Floating" />
           <Container id="tabContextMenu" Type="Menu">
             <Button id="tabContextMenuOpenInWindow" content="{Binding moveToNewWindow.label}" shortcut="{Binding moveToNewWindow.accesskey}" />
-            <Container id="menuseparator" Type="Menu" />
+            <Container id="menuseparator" Type="Separator" />
             <Button id="tabContextMenuCloseOtherTabs" content="{Binding closeOtherTabsCmd2.label}" shortcut="{Binding closeOtherTabsCmd2.accesskey}" />
-            <Container id="menuseparator-2" Type="Menu" />
+            <Container id="menuseparator-2" Type="Separator" />
             <Button id="tabContextMenuRecentlyClosed" content="{Binding recentlyClosedTabsCmd.label}" shortcut="{Binding recentlyClosedTabsCmd.accesskey}">
               <Container id="menupopup" Type="Menu" />
             </Button>
@@ -470,8 +470,8 @@
         <Container id="navigation-toolbox" Type="Vertical Stack">
           <Container id="titlebar" Type="Vertical Stack">
             <Container id="unified-toolbar" Type="Vertical Stack" />
-            <Container id="toolbar-menubar" Type="Horizontal Stack" />
-            <Container id="tabs-toolbar" Type="Horizontal Stack">
+            <Container id="toolbar-menubar" Type="Toolbar" />
+            <Container id="tabs-toolbar" Type="Toolbar">
               <Container id="tabmail-tabs" Type="Horizontal Stack" role="Grow" vertical-alignment="Bottom">
                 <Image id="img" />
                 <Container id="tabmail-arrowscrollbox" Type="Vertical Stack" role="Grow">

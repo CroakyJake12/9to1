@@ -3,7 +3,7 @@
     <Container id="grid1" Type="Grid" cell-gap="3" focusable="false" role="Grow" column="0" row="0">
       <Text id="numberformatcomboboxlabel" text="Category" focusable="false" column="0" row="0" column-span="2" />
       <Input id="numberformatcombobox" Type="Select" tooltip="Select a category of contents." vertical-alignment="Center" focusable="false" role="Grow" column="0" row="1" />
-      <Container id="numberformat" Type="Horizontal Stack" column="1" row="1">
+      <Container id="numberformat" Type="Toolbar" column="1" row="1">
         <Button id=".uno:number-format-decimal" />
         <Button id=".uno:number-format-percent" />
         <Button id=".uno:number-format-currency" />

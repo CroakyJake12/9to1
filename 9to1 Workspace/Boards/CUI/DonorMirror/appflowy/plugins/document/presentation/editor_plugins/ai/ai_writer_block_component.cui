@@ -22,7 +22,7 @@
             <Container id="flexible" Type="Vertical Stack">
               <Container id="decorated-box" Type="Vertical Stack" />
             </Container>
-            <Container id="divider" Type="Vertical Stack" height="1.0" />
+            <Container id="divider" Type="Separator" height="1.0" />
             <Container id="decorated-box-2" Type="Vertical Stack" />
           </Container>
         </Container>

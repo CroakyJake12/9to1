@@ -6,10 +6,10 @@
   <Page id="content-mac-window-menu.inc-root">
     <Button id="windowMenu" content="{Binding windowMenu.label}">
       <Container id="windowPopup" Type="Menu">
-        <Container id="menuseparator" Type="Menu" />
+        <Container id="menuseparator" Type="Separator" />
         <Button id="minimizeWindow" content="{Binding minimizeWindow.label}" action="window.minimize" />
         <Button id="zoomWindow" content="{Binding zoomWindow.label}" action="zoom-window" />
-        <Container id="sep-window-list" Type="Menu" />
+        <Container id="sep-window-list" Type="Separator" />
       </Container>
     </Button>
   </Page>

@@ -13,14 +13,14 @@
       <Container id="positioned" Type="Vertical Stack" />
     </Container>
     <Container id="column-2" Type="Vertical Stack">
-      <Container id="divider" Type="Vertical Stack" height="0.5" background="#7FEDEDED" />
-      <Container id="divider-2" Type="Vertical Stack" height="0.5" background="#7FEDEDED" />
+      <Container id="divider" Type="Separator" height="0.5" background="#7FEDEDED" />
+      <Container id="divider-2" Type="Separator" height="0.5" background="#7FEDEDED" />
     </Container>
     <Container id="container" Type="Vertical Stack" background="#0F181818">
       <Container id="row" Type="Horizontal Stack">
         <Container id="expanded-2" Type="Vertical Stack" />
         <Container id="padding" Type="Vertical Stack" padding="13.0">
-          <Container id="vertical-divider" Type="Vertical Stack" width="1.0" background="#FFD9D9D9" />
+          <Container id="vertical-divider" Type="Separator" width="1.0" background="#FFD9D9D9" />
         </Container>
         <Container id="hspace" Type="Horizontal Stack" />
       </Container>

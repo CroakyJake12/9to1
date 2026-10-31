@@ -7,10 +7,10 @@
         <Button id="spacesPopupButtonCalendar" />
         <Button id="spacesPopupButtonTasks" />
         <Button id="spacesPopupButtonChat" />
-        <Container id="spacesPopupSettingsSeparator" Type="Menu" />
+        <Container id="spacesPopupSettingsSeparator" Type="Separator" />
         <Button id="spacesPopupButtonSettings" />
-        <Container id="spacesPopupAddonsSeparator" Type="Menu" />
-        <Container id="spacesPopupRevealSeparator" Type="Menu" />
+        <Container id="spacesPopupAddonsSeparator" Type="Separator" />
+        <Container id="spacesPopupRevealSeparator" Type="Separator" />
         <Button id="spacesPopupButtonReveal" />
       </Container>
     </Button>

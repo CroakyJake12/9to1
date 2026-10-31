@@ -5,11 +5,11 @@
         <Button id="toolstyle-verticalspace-toggle" icon-source="pen-tools-verticalspacetool-symbolic" />
         <Button id="verticalspace-menubutton" icon-source="settings-symbolic" />
       </Container>
-      <Container id="container-3" Type="Horizontal Stack" />
+      <Container id="container-3" Type="Separator" />
       <Button id="toolstyle-offsetcamera-toggle" icon-source="pen-tools-offsetcameratool-symbolic" />
-      <Container id="container-4" Type="Horizontal Stack" />
+      <Container id="container-4" Type="Separator" />
       <Button id="toolstyle-zoom-toggle" icon-source="pen-tools-zoomtool-symbolic" />
-      <Container id="container-5" Type="Horizontal Stack" />
+      <Container id="container-5" Type="Separator" />
       <Button id="toolstyle-laser-toggle" icon-source="pen-tools-laser-symbolic" />
     </Container>
   </Container>

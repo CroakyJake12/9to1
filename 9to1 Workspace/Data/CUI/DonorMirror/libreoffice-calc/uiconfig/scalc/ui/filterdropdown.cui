@@ -16,7 +16,7 @@
           <Input id="multi-field-combo" Type="Select" tooltip="Select Field" />
           <Input id="search-edit" Type="Text" placeholder-text="Search items..." />
           <Container id="box" Type="Vertical Stack" focusable="false" role="Grow">
-            <Container id="container-3" Type="Horizontal Stack" focusable="false" />
+            <Container id="container-3" Type="Separator" focusable="false" />
             <Container id="container-4" Type="Vertical Stack" cell-gap="6" focusable="false">
               <Input id="toggle-all" Type="Checkbox" text="All" role="Grow" />
               <Input id="lock-checked" Type="Checkbox" text="Lock" role="Grow" />

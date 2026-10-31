@@ -44,11 +44,11 @@
     </Container>
     <Container id="row-6" Type="Horizontal Stack">
       <Container id="flexible-2" Type="Vertical Stack">
-        <Container id="divider" Type="Vertical Stack" />
+        <Container id="divider" Type="Separator" />
       </Container>
       <Container id="padding-2" Type="Vertical Stack" padding="10" />
       <Container id="flexible-3" Type="Vertical Stack">
-        <Container id="divider-2" Type="Vertical Stack" />
+        <Container id="divider-2" Type="Separator" />
       </Container>
     </Container>
   </Page>

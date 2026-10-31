@@ -6,7 +6,7 @@
     </Container>
     <Container id="notebook-bar" Type="Grid">
       <Container id="box1" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
-        <Container id="default-box" Type="Horizontal Stack">
+        <Container id="default-box" Type="Toolbar">
           <Container id="clipboard-section" Type="Horizontal Stack" vertical-alignment="Center">
             <Container id="section-bottom41" Type="Vertical Stack">
               <Button id="edit-undo" />
@@ -14,16 +14,16 @@
             </Container>
           </Container>
           <Container id="context-container" Type="Vertical Stack" role="Grow">
-            <Container id="default-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="default-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="default-section-select" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator86" Type="Horizontal Stack" />
+                <Container id="separator86" Type="Separator" />
                 <Container id="section-bottom93" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-select-object" />
                   <Button id="default-zoom-mode" />
                 </Container>
               </Container>
               <Container id="default-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator80" Type="Horizontal Stack" />
+                <Container id="separator80" Type="Separator" />
                 <Container id="section-bottom69" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-format-area5" />
                 </Container>
@@ -74,7 +74,7 @@
                 </Container>
               </Container>
               <Container id="default-section-text-box" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator23" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator23" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom2" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-text" />
                   <Button id="default-vertical-text" />
@@ -89,7 +89,7 @@
                 </Container>
               </Container>
               <Container id="default-section-line-toolbox" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator62" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator62" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom5" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-arrows-toolbox" />
                   <Button id="default-line-toolbox" />
@@ -97,7 +97,7 @@
                 </Container>
               </Container>
               <Container id="default-section-basic-shapes" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator63" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator63" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom6" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-basic-shapes" />
                   <Button id="default-symbol-shapes" />
@@ -105,7 +105,7 @@
                 </Container>
               </Container>
               <Container id="default-section-flow-chart-shapes" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator64" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator64" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-top3" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-star-shapes" />
                   <Button id="default-callout-shapes" />
@@ -114,13 +114,13 @@
                 </Container>
               </Container>
               <Container id="default-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator76" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator76" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom94" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="draw-style-apply2" />
                 </Container>
               </Container>
               <Container id="default-section-insert" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator18" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator18" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom92" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-capture-point1" />
                 </Container>
@@ -130,7 +130,7 @@
                 </Container>
               </Container>
               <Container id="default-section-zoom1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator6" Type="Horizontal Stack" />
+                <Container id="separator6" Type="Separator" />
                 <Container id="section-bottom7" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-zoom-previous" />
                   <Button id="default-zoom-page" />
@@ -143,7 +143,7 @@
                 </Container>
               </Container>
               <Container id="default-section-snap1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator1" Type="Horizontal Stack" />
+                <Container id="separator1" Type="Separator" />
                 <Container id="line-b1" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-grid-use" />
                   <Button id="default-helplines-use" />
@@ -157,16 +157,16 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="table-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="table-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="table-section-paintbrush" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator22" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator22" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom35" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-format-paintbrush" />
                   <Button id="table-set-defaul" />
                 </Container>
               </Container>
               <Container id="text-section-area3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator74" Type="Horizontal Stack" />
+                <Container id="separator74" Type="Separator" />
                 <Container id="section-bottom89" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-format-area3" />
                 </Container>
@@ -212,7 +212,7 @@
                 </Container>
               </Container>
               <Container id="table-section-font-name" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator3" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator3" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom7" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-char-font-name1" />
                 </Container>
@@ -229,7 +229,7 @@
                 </Container>
               </Container>
               <Container id="table-section-bold-italic" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator46" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator46" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-top7" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-bold1" />
                   <Button id="table-italic1" />
@@ -245,7 +245,7 @@
                 </Container>
               </Container>
               <Container id="table-section-font-color" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator38" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator38" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom60" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-color1" />
                   <Button id="text-spacing1" />
@@ -258,7 +258,7 @@
                 </Container>
               </Container>
               <Container id="table-section-bullet-numbering" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator8" Type="Horizontal Stack" />
+                <Container id="separator8" Type="Separator" />
                 <Container id="section-bottom61" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-default-bullet" />
                   <Button id="table-default-numbering" />
@@ -272,7 +272,7 @@
                 </Container>
               </Container>
               <Container id="table-section-para1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator11" Type="Horizontal Stack" />
+                <Container id="separator11" Type="Separator" />
                 <Container id="ext-bottom10" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-left-para1" />
                   <Button id="table-center-para1" />
@@ -281,7 +281,7 @@
                 </Container>
               </Container>
               <Container id="table-section-para2" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator39" Type="Horizontal Stack" />
+                <Container id="separator39" Type="Separator" />
                 <Container id="section-bottom1" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-cell-vert-top1" horizontal-alignment="Center" role="Grow" />
                   <Button id="text-cell-vert-center1" />
@@ -306,13 +306,13 @@
                 </Container>
               </Container>
               <Container id="tabl-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator75" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator75" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom52" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-style-apply1" />
                 </Container>
               </Container>
               <Container id="table-section-merge" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator12" Type="Horizontal Stack" />
+                <Container id="separator12" Type="Separator" />
                 <Container id="section-bottom10" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-merge-cells1" />
                   <Button id="table-split-cell1" />
@@ -325,7 +325,7 @@
                 </Container>
               </Container>
               <Container id="table-section-column" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator19" Type="Horizontal Stack" />
+                <Container id="separator19" Type="Separator" />
                 <Container id="section-bottom11" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-entire-column1" />
                   <Button id="table-insert-columns-before1" />
@@ -347,22 +347,22 @@
                 </Container>
               </Container>
               <Container id="table-section-insert" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator36" Type="Horizontal Stack" />
+                <Container id="separator36" Type="Separator" />
                 <Container id="section-bottom65" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="table-charmap-control1" />
                 </Container>
               </Container>
             </Container>
-            <Container id="graphic-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="graphic-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="graphic-section-select" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator2" Type="Horizontal Stack" />
+                <Container id="separator2" Type="Separator" />
                 <Container id="section-bottom14" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-select-object" />
                   <Button id="graphic-zoom-mode" />
                 </Container>
               </Container>
               <Container id="graphic-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator4" Type="Horizontal Stack" />
+                <Container id="separator4" Type="Separator" />
                 <Container id="section-bottom19" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-format-area" />
                 </Container>
@@ -408,7 +408,7 @@
                 </Container>
               </Container>
               <Container id="graphic-section-rotate" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator7" Type="Horizontal Stack" />
+                <Container id="separator7" Type="Separator" />
                 <Container id="ext-bottom18" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-advanced-mode" />
                   <Button id="graphic-toggle-object-bezier-mode" />
@@ -426,7 +426,7 @@
                 </Container>
               </Container>
               <Container id="graphic-section-object-align" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator28" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator28" Type="Separator" vertical-alignment="Center" />
                 <Container id="align8" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-object-align" />
                 </Container>
@@ -445,7 +445,7 @@
                 </Container>
               </Container>
               <Container id="graphic-section-object-position" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator43" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator43" Type="Separator" vertical-alignment="Center" />
                 <Container id="align22" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-object-position" />
                 </Container>
@@ -462,7 +462,7 @@
                 </Container>
               </Container>
               <Container id="graphic-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator15" Type="Horizontal Stack" />
+                <Container id="separator15" Type="Separator" />
                 <Container id="section-bottom32" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-before-object" />
                   <Button id="graphic-behind-object" />
@@ -474,13 +474,13 @@
                 </Container>
               </Container>
               <Container id="graphic-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator68" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator68" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom16" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-style-apply3" />
                 </Container>
               </Container>
               <Container id="graphic-section-crop" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator17" Type="Horizontal Stack" />
+                <Container id="separator17" Type="Separator" />
                 <Container id="ext-bottom20" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-crop" />
                 </Container>
@@ -493,7 +493,7 @@
                 </Container>
               </Container>
               <Container id="graphic-section-graphic-filter-toolbox" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator20" Type="Horizontal Stack" />
+                <Container id="separator20" Type="Separator" />
                 <Container id="section-bottom37" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="graphic-graphic-filter-toolbox" />
                 </Container>
@@ -514,23 +514,23 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="draw-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="draw-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="multi-object-section-format" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator13" Type="Horizontal Stack" />
+                <Container id="separator13" Type="Separator" />
                 <Container id="section-bottom12" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-clone-tool" />
                   <Button id="multi-object-clear-direct-formatting" />
                 </Container>
               </Container>
               <Container id="multi-object-section-select" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator27" Type="Horizontal Stack" />
+                <Container id="separator27" Type="Separator" />
                 <Container id="section-bottom44" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-select-object" />
                   <Button id="multi-object-zoom-mode" />
                 </Container>
               </Container>
               <Container id="multi-object-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator31" Type="Horizontal Stack" />
+                <Container id="separator31" Type="Separator" />
                 <Container id="section-bottom108" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-format-area" />
                 </Container>
@@ -581,7 +581,7 @@
                 </Container>
               </Container>
               <Container id="multi-object-section-rotate" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator56" Type="Horizontal Stack" />
+                <Container id="separator56" Type="Separator" />
                 <Container id="ext-bottom69" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-advanced-mode" />
                   <Button id="multi-object-toggle-object-bezier-mode" />
@@ -599,7 +599,7 @@
                 </Container>
               </Container>
               <Container id="multi-object-section-object-align" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator9" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator9" Type="Separator" vertical-alignment="Center" />
                 <Container id="align7" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-object-align" />
                 </Container>
@@ -618,7 +618,7 @@
                 </Container>
               </Container>
               <Container id="multi-object-section-object-position" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator32" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator32" Type="Separator" vertical-alignment="Center" />
                 <Container id="align21" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-object-position" />
                 </Container>
@@ -635,7 +635,7 @@
                 </Container>
               </Container>
               <Container id="multi-object-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator70" Type="Horizontal Stack" />
+                <Container id="separator70" Type="Separator" />
                 <Container id="section-bottom113" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-before-object" />
                   <Button id="multi-object-behind-object" />
@@ -647,13 +647,13 @@
                 </Container>
               </Container>
               <Container id="multi-object-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator67" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator67" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom72" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-style-apply3" />
                 </Container>
               </Container>
               <Container id="multi-object-section-combine" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator91" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator91" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom115" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="multi-object-combine" />
                   <Button id="multi-object-dismantle" />
@@ -672,16 +672,16 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="media-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="media-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="media-section-select" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator10" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator10" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom15" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-select-object" />
                   <Button id="media-zoom-mode" />
                 </Container>
               </Container>
               <Container id="media-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator16" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator16" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom18" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-format-area" />
                 </Container>
@@ -727,7 +727,7 @@
                 </Container>
               </Container>
               <Container id="media-section-avmedia-player" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator33" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator33" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom48" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-avmedia-player" />
                 </Container>
@@ -738,7 +738,7 @@
                 </Container>
               </Container>
               <Container id="media-section-object-align" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator34" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator34" Type="Separator" vertical-alignment="Center" />
                 <Container id="align19" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-object-align" />
                 </Container>
@@ -757,7 +757,7 @@
                 </Container>
               </Container>
               <Container id="media-section-object-position" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator47" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator47" Type="Separator" vertical-alignment="Center" />
                 <Container id="align24" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-object-position" />
                 </Container>
@@ -774,7 +774,7 @@
                 </Container>
               </Container>
               <Container id="media-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator66" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator66" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom82" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-before-object" />
                   <Button id="media-behind-object" />
@@ -786,28 +786,28 @@
                 </Container>
               </Container>
               <Container id="media-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator40" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator40" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom17" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-style-apply3" />
                 </Container>
               </Container>
               <Container id="media-section-avmedia-tool-box" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator45" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator45" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom76" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="media-avmedia-tool-box" />
                 </Container>
               </Container>
             </Container>
-            <Container id="object-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="object-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="object-section-select" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator53" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator53" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom63" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-select-object" />
                   <Button id="object-zoom-mode" />
                 </Container>
               </Container>
               <Container id="object-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator85" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator85" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom67" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-format-area" />
                 </Container>
@@ -853,7 +853,7 @@
                 </Container>
               </Container>
               <Container id="object-section-rotate" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator87" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator87" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom74" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-advanced-mode" />
                   <Button id="object-toggle-object-bezier-mode" />
@@ -871,7 +871,7 @@
                 </Container>
               </Container>
               <Container id="object-section-object-align" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator88" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator88" Type="Separator" vertical-alignment="Center" />
                 <Container id="align13" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-object-align" />
                 </Container>
@@ -890,7 +890,7 @@
                 </Container>
               </Container>
               <Container id="object-section-object-position" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator89" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator89" Type="Separator" vertical-alignment="Center" />
                 <Container id="align28" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-object-position" />
                 </Container>
@@ -907,7 +907,7 @@
                 </Container>
               </Container>
               <Container id="object-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator90" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator90" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom95" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-before-object" />
                   <Button id="object-behind-object" />
@@ -919,22 +919,22 @@
                 </Container>
               </Container>
               <Container id="object-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator92" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator92" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom97" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-style-apply" />
                 </Container>
               </Container>
             </Container>
-            <Container id="form-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="form-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="form-section-label" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator44" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator44" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom5" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="for-switch-control-design-mode" />
                   <Button id="form-use-wizards" />
                 </Container>
               </Container>
               <Container id="form-section-control-properties" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator50" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator50" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom30" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-control-properties" />
                 </Container>
@@ -955,7 +955,7 @@
                 </Container>
               </Container>
               <Container id="form-section-labels" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator49" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator49" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom28" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-label" />
                   <Button id="form-edit" />
@@ -970,14 +970,14 @@
                 </Container>
               </Container>
               <Container id="form-section-pushbutton" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator35" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator35" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom32" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-pushbutton" />
                   <Button id="form-imagebutton" />
                 </Container>
               </Container>
               <Container id="form-section-open-read-only" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator51" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator51" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom47" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-open-read-only" />
                 </Container>
@@ -988,7 +988,7 @@
                 </Container>
               </Container>
               <Container id="form-section-object-align" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator42" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator42" Type="Separator" vertical-alignment="Center" />
                 <Container id="align20" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-object-align" />
                 </Container>
@@ -1007,7 +1007,7 @@
                 </Container>
               </Container>
               <Container id="form-section-object-position" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator48" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator48" Type="Separator" vertical-alignment="Center" />
                 <Container id="align25" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-object-position" />
                 </Container>
@@ -1024,7 +1024,7 @@
                 </Container>
               </Container>
               <Container id="form-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator41" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator41" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom27" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="object-before-object1" />
                   <Button id="object-behind-object1" />
@@ -1036,7 +1036,7 @@
                 </Container>
               </Container>
               <Container id="form-section-formatted-field" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator55" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator55" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom35" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-formatted-field" />
                   <Button id="form-date-field" />
@@ -1047,7 +1047,7 @@
                 </Container>
               </Container>
               <Container id="form-section-group-box" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator54" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator54" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom36" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="form-group-box" />
                 </Container>
@@ -1065,16 +1065,16 @@
                 </Container>
               </Container>
             </Container>
-            <Container id="text-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="text-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="text-section-paintbrush" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator58" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator58" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom51" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-format-paintbrush" />
                   <Button id="text-reset-attributes" />
                 </Container>
               </Container>
               <Container id="text-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator65" Type="Horizontal Stack" />
+                <Container id="separator65" Type="Separator" />
                 <Container id="section-bottom71" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-format-area1" />
                 </Container>
@@ -1120,7 +1120,7 @@
                 </Container>
               </Container>
               <Container id="text-section-font-name" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator73" Type="Horizontal Stack" />
+                <Container id="separator73" Type="Separator" />
                 <Container id="ext-bottom40" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-char-font-name" />
                 </Container>
@@ -1137,7 +1137,7 @@
                 </Container>
               </Container>
               <Container id="text-section-bold-italic" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator77" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator77" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-top17" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-bold" />
                   <Button id="text-italic" />
@@ -1153,7 +1153,7 @@
                 </Container>
               </Container>
               <Container id="text-section-font-color" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator78" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator78" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom54" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-color" />
                   <Button id="text-spacing" />
@@ -1166,7 +1166,7 @@
                 </Container>
               </Container>
               <Container id="text-section-bullet-numbering" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator59" Type="Horizontal Stack" />
+                <Container id="separator59" Type="Separator" />
                 <Container id="section-bottom55" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-default-bullet" />
                   <Button id="text-default-numbering" />
@@ -1180,7 +1180,7 @@
                 </Container>
               </Container>
               <Container id="text-section-para1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator60" Type="Horizontal Stack" />
+                <Container id="separator60" Type="Separator" />
                 <Container id="ext-bottom42" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-left-para" />
                   <Button id="text-center-para" />
@@ -1189,7 +1189,7 @@
                 </Container>
               </Container>
               <Container id="text-section-para2" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator79" Type="Horizontal Stack" />
+                <Container id="separator79" Type="Separator" />
                 <Container id="section-bottom59" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-cell-vert-top" horizontal-alignment="Center" role="Grow" />
                   <Button id="text-cell-vert-center" />
@@ -1215,29 +1215,29 @@
                 </Container>
               </Container>
               <Container id="text-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator82" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator82" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom53" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="text-style-apply" />
                 </Container>
               </Container>
               <Container id="text-section-text-box" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator69" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator69" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom88" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="default-text1" />
                   <Button id="default-vertical-text1" />
                 </Container>
               </Container>
             </Container>
-            <Container id="3-dobject-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="3-dobject-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="3d-object-section-select" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator5" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator5" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom8" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-select-object" />
                   <Button id="3d-object-zoom-mode" />
                 </Container>
               </Container>
               <Container id="3d-object-section-area1" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator21" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator21" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom33" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-format-area" />
                 </Container>
@@ -1283,7 +1283,7 @@
                 </Container>
               </Container>
               <Container id="3d-object-section-rotate" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator24" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator24" Type="Separator" vertical-alignment="Center" />
                 <Container id="ext-bottom62" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-toggle-object-rotate-mode" />
                 </Container>
@@ -1299,7 +1299,7 @@
                 </Container>
               </Container>
               <Container id="3-dobject-section-object-align" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator30" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator30" Type="Separator" vertical-alignment="Center" />
                 <Container id="align18" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-object-align" />
                 </Container>
@@ -1318,7 +1318,7 @@
                 </Container>
               </Container>
               <Container id="3d-object-section-object-position" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator14" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator14" Type="Separator" vertical-alignment="Center" />
                 <Container id="align23" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-object-position" />
                 </Container>
@@ -1335,7 +1335,7 @@
                 </Container>
               </Container>
               <Container id="3d-object-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator83" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator83" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom102" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-before-object" />
                   <Button id="3d-object-behind-object" />
@@ -1347,15 +1347,15 @@
                 </Container>
               </Container>
               <Container id="3d-object-section-styles" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator84" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator84" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom9" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="3d-object-style-apply3" />
                 </Container>
               </Container>
             </Container>
-            <Container id="master-page-container" Type="Horizontal Stack" vertical-alignment="Center">
+            <Container id="master-page-container" Type="Toolbar" vertical-alignment="Center">
               <Container id="master-section-drawing-layout" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator71" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator71" Type="Separator" vertical-alignment="Center" />
                 <Container id="draw22" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="master-drawing-layout" />
                 </Container>
@@ -1381,7 +1381,7 @@
                 </Container>
               </Container>
               <Container id="master-section-select-background" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator61" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator61" Type="Separator" vertical-alignment="Center" />
                 <Container id="draw24" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="master-select-background" />
                 </Container>
@@ -1392,7 +1392,7 @@
                 </Container>
               </Container>
               <Container id="master-section-view" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator57" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator57" Type="Separator" vertical-alignment="Center" />
                 <Container id="section-bottom22" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="master-view-menu" />
                 </Container>
@@ -1403,7 +1403,7 @@
                 </Container>
               </Container>
               <Container id="master-section-close" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="separator72" Type="Horizontal Stack" vertical-alignment="Center" />
+                <Container id="separator72" Type="Separator" vertical-alignment="Center" />
                 <Container id="anchor6" Type="Vertical Stack" vertical-alignment="Center">
                   <Button id="master-close-master-view" />
                 </Container>

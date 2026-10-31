@@ -164,6 +164,8 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             "vertical stack" => new StackPanel { Orientation = Orientation.Vertical },
             "horizontal stack" => new StackPanel { Orientation = Orientation.Horizontal },
             "wrap" => new WrapPanel(),
+            "toolbar" => new CuiToolbarPanel(),
+            "separator" => new CuiSeparatorPanel(),
             "absolute" => new CuiAbsolutePanel(),
             "overlay" => new Panel(),
             "overlay float" => new CuiOverlayPanel(),
@@ -452,6 +454,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             case Grid grid: grid.RowSpacing = value; grid.ColumnSpacing = value; break;
             case StackPanel stack: stack.Spacing = value; break;
             case WrapPanel wrap: wrap.ItemSpacing = value; wrap.LineSpacing = value; break;
+            case CuiToolbarPanel toolbar: toolbar.Spacing = value; break;
             default: throw new InvalidOperationException($"CellGap is not meaningful for Container Type '{LayoutType}'.");
         }
     }

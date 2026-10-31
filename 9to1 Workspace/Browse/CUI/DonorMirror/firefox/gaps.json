@@ -1,10 +1,10 @@
 {
   "translated": 662,
   "dropped_nodes": 0,
-  "gap_count": 677,
+  "gap_count": 672,
   "gap_constructs": {
     "property not modelled": 426,
-    "unknown donor construct": 158,
+    "unknown donor construct": 155,
     "item collection (list/tree/table)": 16,
     "keyboard shortcut table": 8,
     "link action": 8,
@@ -13,12 +13,11 @@
     "split view": 6,
     "layout spacer": 6,
     "typed command declaration": 4,
-    "toolbar with overflow": 4,
+    "toolbar item": 4,
     "parse error: syntax error: line 1, column 0": 3,
     "tab strip": 2,
     "parse error: unbound prefix: line 2, column 0": 2,
     "table column header": 2,
-    "separator": 2,
     "inline vector icon": 2,
     "parse error: unbound prefix: line 4, column 4": 1,
     "parse error: junk after document element: line 4, column 6": 1,
@@ -2137,13 +2136,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "separator",
-      "construct": "unknown donor construct",
-      "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/pageinfo/pageInfo.xhtml",
-      "line": 0,
-      "why": "approximated as a container; CUI lacks this construct"
-    },
-    {
       "donor": "html:label@control",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/pageinfo/pageInfo.xhtml",
@@ -2991,13 +2983,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "separator",
-      "construct": "unknown donor construct",
-      "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/safeMode.xhtml",
-      "line": 0,
-      "why": "approximated as a container; CUI lacks this construct"
-    },
-    {
       "donor": "html:label@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/safeMode.xhtml",
@@ -3010,13 +2995,6 @@
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/safeMode.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "separator",
-      "construct": "unknown donor construct",
-      "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/safeMode.xhtml",
-      "line": 0,
-      "why": "approximated as a container; CUI lacks this construct"
     },
     {
       "donor": "window",
@@ -3206,13 +3184,6 @@
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/sanitize.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/sanitize.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",
@@ -3612,13 +3583,6 @@
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/sanitize_v2.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/sanitize_v2.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",
@@ -4259,7 +4223,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4273,7 +4237,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4287,7 +4251,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4301,7 +4265,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content/titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4776,7 +4740,7 @@
       "why": "dropped; record for Stage B"
     }
   ],
-  "pruned_stale": 111,
+  "pruned_stale": 0,
   "donor": "firefox",
   "app": "Browse",
   "source": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content",

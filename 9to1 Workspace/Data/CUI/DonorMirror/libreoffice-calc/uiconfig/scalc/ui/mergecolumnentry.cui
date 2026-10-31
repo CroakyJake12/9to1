@@ -1,6 +1,6 @@
 <Cui id="ui-mergecolumnentry" product="9-1" version="1">
   <Container id="grid" Type="Grid" cell-gap="6" focusable="false">
-    <Container id="container" Type="Horizontal Stack" focusable="false" column="0" row="0" column-span="3" />
+    <Container id="container" Type="Separator" focusable="false" column="0" row="0" column-span="3" />
     <Text id="label1" text="Merge Columns" horizontal-alignment="Left" focusable="false" column="0" row="1" column-span="3" />
     <Input id="ed-separator" Type="Text" placeholder-text="Separator string" role="Grow" column="0" row="2" />
     <Input id="ed-columns" Type="Text" placeholder-text="Cols(; Separated)" role="Grow" column="1" row="2" />

@@ -45,7 +45,7 @@ TYPE_OF = {
 
 GAP_CONSTRUCT = {
     "SplitView": "split view", "NavigationView": "navigation rail with selection",
-    "Breadcrumb": "breadcrumb", "BreadcrumbBar": "breadcrumb", "CommandBar": "toolbar with overflow",
+    "Breadcrumb": "breadcrumb", "BreadcrumbBar": "breadcrumb",
     "ListView": "item collection (list/tree/table)", "GridView": "item collection (list/tree/table)",
     "ItemsRepeater": "item collection (list/tree/table)", "TreeView": "item collection (list/tree/table)",
     "SemanticZoom": "grouped scrolling collection", "StandardViewMode": "view mode switcher",
@@ -56,7 +56,7 @@ GAP_CONSTRUCT = {
     "ListViewBase": "item collection (list/tree/table)", "FlipView": "paged carousel",
     "RichSuggestBox": "item collection (list/tree/table)", "NumberBox": "numeric stepper",
     "TeachingTip": "transient banner", "InfoBar": "transient banner", "ContentDialog": "dialog with typed responses",
-    "MenuFlyoutSeparator": "separator", "AppBarSeparator": "separator", "ToolTip": "transient tooltip host",
+    "ToolTip": "transient tooltip host",
     "Popup": "transient overlay host", "AdaptiveTrigger": "responsive breakpoint rules",
     "VisualState": "responsive breakpoint rules", "VisualStateGroup": "responsive breakpoint rules",
     "StateTriggers": "responsive breakpoint rules", "EntranceTransition": "entrance motion",

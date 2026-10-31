@@ -42,7 +42,7 @@
       <Container id="flexible" Type="Vertical Stack" />
       <Container id="hspace-4" Type="Horizontal Stack" />
       <Container id="padding" Type="Vertical Stack" padding="2.0">
-        <Container id="vertical-divider" Type="Vertical Stack" width="1.0" />
+        <Container id="vertical-divider" Type="Separator" width="1.0" />
       </Container>
       <Container id="hspace-5" Type="Horizontal Stack" />
     </Container>
@@ -64,7 +64,7 @@
       </Container>
     </Container>
     <Container id="padding-3" Type="Vertical Stack" padding="12">
-      <Container id="divider" Type="Vertical Stack" height="1" />
+      <Container id="divider" Type="Separator" height="1" />
     </Container>
     <Container id="value-listenable-builder" Type="Vertical Stack">
       <Container id="padding-4" Type="Vertical Stack" padding="12">

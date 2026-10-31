@@ -1,18 +1,17 @@
 {
   "translated": 854,
   "dropped_nodes": 0,
-  "gap_count": 1100,
+  "gap_count": 1068,
   "gap_constructs": {
     "property not modelled": 506,
-    "unknown donor construct": 375,
+    "unknown donor construct": 372,
     "inline text run": 36,
-    "separator": 26,
     "keyboard shortcut table": 22,
     "link action": 21,
     "typed command declaration": 17,
-    "toolbar with overflow": 13,
     "preprocessor directives": 11,
     "item collection (list/tree/table)": 11,
+    "toolbar item": 10,
     "web view host": 8,
     "parse error: illegal parameter entity reference: line 5, column 0": 6,
     "item template contract": 6,
@@ -1827,13 +1826,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/helpMenu.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/helpMenu.inc.xhtml",
@@ -1855,13 +1847,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/helpMenu.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/helpMenu.inc.xhtml",
@@ -1874,13 +1859,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/helpMenu.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/helpMenu.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",
@@ -2450,13 +2428,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "toolbar",
-      "construct": "toolbar with overflow",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/hiddenWindowMac.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "browser",
       "construct": "web view host",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/hiddenWindowMac.xhtml",
@@ -2492,25 +2463,11 @@
       "why": "3 directive line(s) removed before parsing"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/macWindowMenu.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@key",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/macWindowMenu.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/macWindowMenu.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "moz-build preprocessor",
@@ -2583,27 +2540,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
@@ -2618,20 +2554,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@default",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
@@ -2644,13 +2566,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menu@data-l10n-id",
@@ -2744,13 +2659,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
@@ -2763,13 +2671,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",
@@ -2861,34 +2762,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",
@@ -3017,13 +2890,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menu@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
@@ -3036,13 +2902,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/mailContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "unparseable xul/xhtml",
@@ -3095,7 +2954,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger-titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3116,7 +2975,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger-titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3137,7 +2996,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger-titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -3158,7 +3017,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger-titlebar-items.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -5642,20 +5501,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "tooltip",
       "construct": "transient tooltip host",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
@@ -5915,13 +5760,6 @@
       "why": "approximated as a container; CUI lacks this construct"
     },
     {
-      "donor": "toolbar",
-      "construct": "toolbar with overflow",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "toolbar@autohide",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
@@ -5962,13 +5800,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "toolbar",
-      "construct": "toolbar with overflow",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "tabs",
@@ -6056,7 +5887,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6210,14 +6041,14 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/messenger.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6798,7 +6629,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/multimessageview.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -6812,7 +6643,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/multimessageview.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7161,13 +6992,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "separator",
-      "construct": "unknown donor construct",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/newTagDialog.xhtml",
-      "line": 0,
-      "why": "approximated as a container; CUI lacks this construct"
-    },
-    {
       "donor": "html:input",
       "construct": "Type \"text\"",
       "file": "content-newTagDialog",
@@ -7260,7 +7084,7 @@
     },
     {
       "donor": "toolbarbutton",
-      "construct": "toolbar with overflow",
+      "construct": "toolbar item",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/spacesToolbarPin.inc.xhtml",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7357,13 +7181,6 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/spacesToolbarPin.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuitem@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/spacesToolbarPin.inc.xhtml",
@@ -7378,25 +7195,11 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/spacesToolbarPin.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "menuseparator@collapsed",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/spacesToolbarPin.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/spacesToolbarPin.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",
@@ -7567,25 +7370,11 @@
       "why": "dropped; record for Stage B"
     },
     {
-      "donor": "separator",
-      "construct": "unknown donor construct",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/systemIntegrationDialog.xhtml",
-      "line": 0,
-      "why": "approximated as a container; CUI lacks this construct"
-    },
-    {
       "donor": "checkbox@data-l10n-id",
       "construct": "property not modelled",
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/systemIntegrationDialog.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "separator",
-      "construct": "unknown donor construct",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/systemIntegrationDialog.xhtml",
-      "line": 0,
-      "why": "approximated as a container; CUI lacks this construct"
     },
     {
       "donor": "checkbox@data-l10n-id",
@@ -7719,20 +7508,6 @@
       "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/widgets/toolbarContext.inc.xhtml",
       "line": 0,
       "why": "dropped; record for Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/widgets/toolbarContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "menuseparator",
-      "construct": "separator",
-      "file": "9to1 Workspace/Connect/Source/Thunderbird/comm/mail/base/content/widgets/toolbarContext.inc.xhtml",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "menuitem@data-l10n-id",

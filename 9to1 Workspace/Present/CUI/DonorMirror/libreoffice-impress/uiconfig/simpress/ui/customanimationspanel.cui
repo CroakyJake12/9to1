@@ -45,7 +45,7 @@
             <Input id="anim-duration" Type="Number" role="Grow" column="1" row="7" column-span="2" />
             <Text id="delay-label" text="Delay:" horizontal-alignment="Right" focusable="false" column="0" row="8" />
             <Input id="delay-value" Type="Number" role="Grow" column="1" row="8" column-span="2" />
-            <Container id="separator1" Type="Horizontal Stack" focusable="false" column="0" row="9" column-span="3" />
+            <Container id="separator1" Type="Separator" focusable="false" column="0" row="9" column-span="3" />
             <Input id="auto-preview" Type="Checkbox" text="Automatic Preview" column="0" row="10" column-span="2" />
             <Button id="play" content="Play" text="Play" tooltip="Preview Effect" column="2" row="10" />
             <Text id="box1-label" text="Animation Deck" focusable="false" column="0" row="11" column-span="3" />

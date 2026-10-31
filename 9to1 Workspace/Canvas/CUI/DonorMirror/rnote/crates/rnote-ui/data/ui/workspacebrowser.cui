@@ -12,13 +12,13 @@
             <Button id="dir-controls-actions-menubutton" />
           </Container>
         </Container>
-        <Container id="container-4" Type="Horizontal Stack" />
+        <Container id="container-4" Type="Separator" />
       </Container>
       <Container id="files-scroller" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
         <Container id="files-listview" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow" />
       </Container>
-      <Container id="container-5" Type="Horizontal Stack" />
-      <Container id="corner-filler" Type="Horizontal Stack" vertical-alignment="Bottom" />
+      <Container id="container-5" Type="Separator" />
+      <Container id="corner-filler" Type="Separator" vertical-alignment="Bottom" />
       <Container id="workspacesbar" Type="Vertical Stack" />
     </Container>
   </Container>

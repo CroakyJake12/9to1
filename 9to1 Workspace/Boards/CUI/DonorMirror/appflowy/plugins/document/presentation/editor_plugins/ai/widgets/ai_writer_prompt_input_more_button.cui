@@ -18,7 +18,7 @@
     <Container id="container" Type="Vertical Stack" padding="8.0">
       <Container id="column" Type="Vertical Stack" />
     </Container>
-    <Container id="divider" Type="Vertical Stack" height="1.0" />
+    <Container id="divider" Type="Separator" height="1.0" />
     <Container id="builder" Type="Vertical Stack">
       <Button id="flowy-button" Type="Action" action="on-select-command" padding="8.0 6.0">
         <Image id="flowy-svg-2" />

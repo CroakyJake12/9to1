@@ -28,7 +28,7 @@
         </Container>
       </Container>
       <Container id="padding-2" Type="Vertical Stack" padding="8.0 6.0">
-        <Container id="divider" Type="Vertical Stack" height="1.0" />
+        <Container id="divider" Type="Separator" height="1.0" />
       </Container>
       <Container id="flexible" Type="Vertical Stack">
         <Container id="single-child-scroll-view" Type="Vertical Stack" padding="6.0">

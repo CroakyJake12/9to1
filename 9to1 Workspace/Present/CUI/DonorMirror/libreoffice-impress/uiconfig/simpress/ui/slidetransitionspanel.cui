@@ -30,7 +30,7 @@
           <Container id="buttonbox1" Type="Horizontal Stack" focusable="false">
             <Button id="apply-to-all" content="Apply Transition to All Slides" text="Apply Transition to All Slides" horizontal-alignment="Center" />
           </Container>
-          <Container id="separator1" Type="Horizontal Stack" focusable="false" />
+          <Container id="separator1" Type="Separator" focusable="false" />
           <Container id="box3" Type="Vertical Stack" cell-gap="18" focusable="false">
             <Input id="auto-preview" Type="Checkbox" text="Automatic Preview" />
             <Button id="play" content="Play" text="Play" tooltip="Preview Effect" />

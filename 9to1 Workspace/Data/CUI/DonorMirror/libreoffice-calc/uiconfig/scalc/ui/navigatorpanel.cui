@@ -12,13 +12,13 @@
           <Text id="label2" text="Row:" horizontal-alignment="Left" focusable="false" column="0" row="1" />
           <Input id="column" Type="Number" tooltip="Column" role="Grow" column="1" row="0" />
           <Input id="row" Type="Number" tooltip="Row" role="Grow" column="1" row="1" />
-          <Container id="toolbox1" Type="Horizontal Stack" column="2" row="0">
+          <Container id="toolbox1" Type="Toolbar" column="2" row="0">
             <Button id="datarange" icon-source="sc/res/na03.png" tooltip="Data Range" />
             <Button id="start" icon-source="sc/res/na05.png" tooltip="Start" />
             <Button id="end" icon-source="sc/res/na06.png" tooltip="End" />
             <Button id="contents" icon-source="sc/res/na011.png" tooltip="Contents" />
           </Container>
-          <Container id="toolbox2" Type="Horizontal Stack" column="2" row="1">
+          <Container id="toolbox2" Type="Toolbar" column="2" row="1">
             <Button id="toggle" icon-source="sc/res/na010.png" tooltip="Toggle" />
             <Button id="scenarios" icon-source="sc/res/na07.png" tooltip="Scenarios" />
             <Button id="dragmode" icon-source="sc/res/na09.png" tooltip="Drag Mode" />

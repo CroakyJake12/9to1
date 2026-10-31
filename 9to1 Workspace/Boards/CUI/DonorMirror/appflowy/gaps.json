@@ -1,7 +1,7 @@
 {
   "translated": 2855,
   "dropped_nodes": 0,
-  "gap_count": 9965,
+  "gap_count": 9896,
   "gap_constructs": {
     "custom donor widget": 1365,
     "donor icon asset (FlowySvg)": 754,
@@ -29,7 +29,6 @@
     "layered stack with positioned children": 105,
     "scroller": 80,
     "absolute placement": 75,
-    "separator": 69,
     "inline handler block": 65,
     "border spec": 57,
     "application frame with body/appBar layers": 46,
@@ -1747,13 +1746,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/ai/widgets/prompt_input/mention_page_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Theme.of(context).cardColor",
       "construct": "theme colour token",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/ai/widgets/prompt_input/mention_page_bottom_sheet.dart",
@@ -2151,13 +2143,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/ai/widgets/prompt_input/predefined_format_buttons.dart",
       "line": 0,
       "why": "the donor size is an expression, not a CUI length"
-    },
-    {
-      "donor": "VerticalDivider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/ai/widgets/prompt_input/predefined_format_buttons.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "FlowySvg",
@@ -2617,13 +2602,6 @@
     {
       "donor": "BlocBuilder",
       "construct": "conditional rebuild on state",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/ai/widgets/prompt_input/select_sources_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/ai/widgets/prompt_input/select_sources_bottom_sheet.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -4316,13 +4294,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/base/app_bar/app_bar.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "PreferredSize",
       "construct": "custom donor widget",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/base/app_bar/app_bar.dart",
@@ -5527,13 +5498,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/bottom_sheet/bottom_sheet_view_item_body.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "FlowyOptionTile.text",
       "construct": "custom donor widget",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/bottom_sheet/bottom_sheet_view_item_body.dart",
@@ -5595,13 +5559,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/bottom_sheet/default_mobile_action_pane.dart",
       "line": 0,
       "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/bottom_sheet/show_mobile_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "SingleChildScrollView",
@@ -5686,13 +5643,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/bottom_sheet/show_mobile_bottom_sheet.dart",
       "line": 0,
       "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/bottom_sheet/show_transition_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Padding.padding",
@@ -7662,13 +7612,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "BlocBuilder",
       "construct": "conditional rebuild on state",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
@@ -7725,13 +7668,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Expanded",
       "construct": "flex share sizing",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
@@ -7776,13 +7712,6 @@
     {
       "donor": "VSpace",
       "construct": "fixed vertical spacer",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -7860,13 +7789,6 @@
     {
       "donor": "BlocBuilder",
       "construct": "conditional rebuild on state",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_filter_bottom_sheet.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8364,13 +8286,6 @@
     {
       "donor": "VSpace",
       "construct": "fixed vertical spacer",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_sort_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/database/view/database_sort_bottom_sheet.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -8922,13 +8837,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/favorite/mobile_favorite_page.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Expanded",
       "construct": "flex share sizing",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/favorite/mobile_favorite_page.dart",
@@ -9022,13 +8930,6 @@
     {
       "donor": "VSpace",
       "construct": "fixed vertical spacer",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/home/favorite_folder/mobile_home_favorite_folder.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/home/favorite_folder/mobile_home_favorite_folder.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -10294,13 +10195,6 @@
       "why": "the donor size is an expression, not a CUI length"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/home/space/mobile_space_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "SizedBox.height=SpaceUIConstants.itemHeight",
       "construct": "computed size",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/home/space/mobile_space_menu.dart",
@@ -11020,13 +10914,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/home/workspaces/create_workspace_menu.dart",
       "line": 0,
       "why": "1 call(s) of this donor wrapper held UI inside it; its own definition lives elsewhere and was not followed"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/home/workspaces/workspace_menu_bottom_sheet.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Expanded",
@@ -14921,13 +14808,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/widgets/flowy_mobile_quick_action_button.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Opacity",
       "construct": "custom donor widget",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/widgets/flowy_mobile_quick_action_button.dart",
@@ -15119,13 +14999,6 @@
     {
       "donor": "FlowyText",
       "construct": "donor text wrapper (FlowyText)",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/widgets/show_flowy_mobile_confirm_dialog.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/mobile/presentation/widgets/show_flowy_mobile_confirm_dialog.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -17168,13 +17041,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/base/color/color_picker.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "ListView.separated",
       "construct": "custom donor widget",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/base/color/color_picker.dart",
@@ -17250,13 +17116,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/base/emoji/emoji_picker_header.dart",
       "line": 0,
       "why": "themed colour: CUI owns the value, no literal invented"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/base/emoji/emoji_picker_header.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Column.crossAxisAlignment",
@@ -22033,13 +21892,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/grid/presentation/widgets/header/mobile_grid_header.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "BlocBuilder",
       "construct": "conditional rebuild on state",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/grid/presentation/widgets/header/mobile_grid_header.dart",
@@ -23244,13 +23096,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/tab_bar/desktop/tab_bar_header.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Positioned",
       "construct": "absolute placement",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/tab_bar/desktop/tab_bar_header.dart",
@@ -23307,13 +23152,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "VerticalDivider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/tab_bar/desktop/tab_bar_header.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "BlocBuilder",
       "construct": "conditional rebuild on state",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/tab_bar/desktop/tab_bar_header.dart",
@@ -23326,13 +23164,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/tab_bar/desktop/tab_bar_header.dart",
       "line": 0,
       "why": "themed colour: CUI owns the value, no literal invented"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/tab_bar/desktop/tab_bar_header.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Positioned",
@@ -23855,13 +23686,6 @@
     {
       "donor": "GestureDetector",
       "construct": "gesture handling (tap/drag/long-press)",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/card/container/accessory.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VerticalDivider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/card/container/accessory.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -25463,13 +25287,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell/desktop_row_detail/desktop_row_detail_checklist_cell.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Flexible",
       "construct": "flex share sizing",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell/desktop_row_detail/desktop_row_detail_checklist_cell.dart",
@@ -25500,13 +25317,6 @@
     {
       "donor": "HSpace",
       "construct": "fixed horizontal spacer",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell/desktop_row_detail/desktop_row_detail_checklist_cell.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell/desktop_row_detail/desktop_row_detail_checklist_cell.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -27906,13 +27716,6 @@
       "why": "CUI does not accept action on Container"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_checklist_cell_editor.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Expanded",
       "construct": "flex share sizing",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_checklist_cell_editor.dart",
@@ -28013,13 +27816,6 @@
     {
       "donor": "InkWell",
       "construct": "ripple/press visual state",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_checklist_cell_editor.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_checklist_cell_editor.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -28144,25 +27940,11 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_media_cell_editor.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Divider.height=.5",
       "construct": "computed size",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_media_cell_editor.dart",
       "line": 0,
       "why": "the donor size is an expression, not a CUI length"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_media_cell_editor.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "SingleChildScrollView",
@@ -28387,13 +28169,6 @@
       "file": "cell_editor-mobile_media_cell_editor",
       "line": 0,
       "why": "CUI does not accept action on Container"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/cell_editor/mobile_select_option_editor.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Expanded",
@@ -31504,13 +31279,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/row/row_detail.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "VSpace",
       "construct": "fixed vertical spacer",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/database/widgets/row/row_detail.dart",
@@ -33933,13 +33701,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/actions/option/divider_option_action.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "no widget constructor found",
       "construct": "n/a",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/actions/option/option_actions.dart",
@@ -34089,13 +33850,6 @@
     {
       "donor": "Flexible",
       "construct": "flex share sizing",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/ai/ai_writer_block_component.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/ai/ai_writer_block_component.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -34381,13 +34135,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/ai/ai_writer_toolbar_item.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "FlowySvg",
       "construct": "donor icon asset (FlowySvg)",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/ai/ai_writer_toolbar_item.dart",
@@ -34547,13 +34294,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/ai/widgets/ai_writer_prompt_input_more_button.dart",
       "line": 0,
       "why": "the donor carries width+colour+side in one decoration object; CUI's border properties are separate"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/ai/widgets/ai_writer_prompt_input_more_button.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Theme.of(context).iconTheme.color",
@@ -35205,13 +34945,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/code_block/code_block_menu_item.dart",
       "line": 0,
       "why": "no translatable UI"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/code_block/code_language_screen.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Scaffold",
@@ -36901,13 +36634,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/file/file_block_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "VSpace",
       "construct": "fixed vertical spacer",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/file/file_block_menu.dart",
@@ -36980,13 +36706,6 @@
     {
       "donor": "TabBar",
       "construct": "tab strip",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/file/file_upload_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/file/file_upload_menu.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -37218,13 +36937,6 @@
     {
       "donor": "TabBar",
       "construct": "tab strip",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/file/mobile_file_upload_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/file/mobile_file_upload_menu.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -39925,13 +39637,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/image/upload_image_menu/upload_image_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "BoxDecoration(\n                borderRadius: BorderRadius.ci",
       "construct": "theme colour token",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/image/upload_image_menu/upload_image_menu.dart",
@@ -41969,13 +41674,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/mobile_toolbar_item/mobile_block_settings_screen.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Scaffold",
       "construct": "application frame with body/appBar layers",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/mobile_toolbar_item/mobile_block_settings_screen.dart",
@@ -42389,29 +42087,8 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/mobile_toolbar_v3/appflowy_mobile_toolbar.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/mobile_toolbar_v3/appflowy_mobile_toolbar.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Expanded",
       "construct": "flex share sizing",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/mobile_toolbar_v3/appflowy_mobile_toolbar.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "VerticalDivider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/mobile_toolbar_v3/appflowy_mobile_toolbar.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -45434,20 +45111,6 @@
       "why": "CUI does not accept action on Container"
     },
     {
-      "donor": "VerticalDivider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/simple_table/simple_table_widgets/simple_table_divider.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/simple_table/simple_table_widgets/simple_table_divider.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "no widget constructor found",
       "construct": "n/a",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/simple_table/simple_table_widgets/simple_table_feedback.dart",
@@ -47331,13 +46994,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "VerticalDivider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/shared/share/publish_tab.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "HSpace",
       "construct": "fixed horizontal spacer",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/shared/share/publish_tab.dart",
@@ -47396,13 +47052,6 @@
     {
       "donor": "BlocBuilder",
       "construct": "conditional rebuild on state",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/shared/share/publish_tab.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/plugins/shared/share/publish_tab.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -49263,13 +48912,6 @@
       "why": "the donor size is an expression, not a CUI length"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/shared/popup_menu/appflowy_popup_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "GestureDetector",
       "construct": "gesture handling (tap/drag/long-press)",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/shared/popup_menu/appflowy_popup_menu.dart",
@@ -50236,22 +49878,8 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/user/presentation/screens/sign_in_screen/mobile_sign_in_screen.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Expanded",
       "construct": "flex share sizing",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/user/presentation/screens/sign_in_screen/mobile_sign_in_screen.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/user/presentation/screens/sign_in_screen/mobile_sign_in_screen.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -57663,13 +57291,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/sidebar/workspace/_sidebar_workspace_actions.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "onHover ? Theme.of(context).colorScheme.error : null",
       "construct": "theme colour token",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/sidebar/workspace/_sidebar_workspace_actions.dart",
@@ -57791,13 +57412,6 @@
     {
       "donor": "HSpace",
       "construct": "fixed horizontal spacer",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/sidebar/workspace/_sidebar_workspace_menu.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/sidebar/workspace/_sidebar_workspace_menu.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -58279,13 +57893,6 @@
       "why": "the donor size is an expression, not a CUI length"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Divider.height=kDraggableViewItemDividerHeight",
       "construct": "computed size",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
@@ -58293,25 +57900,11 @@
       "why": "the donor size is an expression, not a CUI length"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Divider.height=kDraggableViewItemDividerHeight",
       "construct": "computed size",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
       "line": 0,
       "why": "the donor size is an expression, not a CUI length"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Positioned.height=kDraggableViewItemDividerHeight",
@@ -58333,13 +57926,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
       "line": 0,
       "why": "the donor size is an expression, not a CUI length"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/menu/view/draggable_view_item.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Positioned.height=kDraggableViewItemDividerHeight",
@@ -59030,13 +58616,6 @@
     {
       "donor": "FlowyButton",
       "construct": "donor button wrapper (FlowyButton)",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/tabs/flowy_tab.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/home/tabs/flowy_tab.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -60477,22 +60056,8 @@
       "why": "main-axis distribution has no CUI container property yet"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/pages/account/account_sign_in_out.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Flexible",
       "construct": "flex share sizing",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/pages/account/account_sign_in_out.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/pages/account/account_sign_in_out.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -65104,13 +64669,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/shared/settings_category_spacer.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Padding.padding",
       "construct": "insets expression",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/shared/settings_category_spacer.dart",
@@ -65435,13 +64993,6 @@
     {
       "donor": "VSpace",
       "construct": "fixed vertical spacer",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/widgets/cancel_plan_survey_dialog.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/widgets/cancel_plan_survey_dialog.dart",
       "line": 0,
       "why": "approximated with the nearest CUI construct; verify in Stage B"
@@ -66257,13 +65808,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/widgets/members/workspace_member_page.dart",
       "line": 0,
       "why": "themed colour: CUI owns the value, no literal invented"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/widgets/members/workspace_member_page.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Expanded",
@@ -67155,13 +66699,6 @@
       "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/widgets/theme_upload/upload_new_theme_widget.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "Column.mainAxisAlignment",
       "construct": "distributor alignment",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/settings/widgets/theme_upload/upload_new_theme_widget.dart",
@@ -67783,13 +67320,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/widgets/date_picker/widgets/date_time_text_field.dart",
       "line": 0,
       "why": "themed colour: CUI owns the value, no literal invented"
-    },
-    {
-      "donor": "VerticalDivider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/widgets/date_picker/widgets/date_time_text_field.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "Expanded",
@@ -68723,13 +68253,6 @@
       "why": "themed colour: CUI owns the value, no literal invented"
     },
     {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/widgets/float_bubble/social_media_section.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
-    },
-    {
       "donor": "FlowyText",
       "construct": "inline text template",
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/widgets/float_bubble/version_section.dart",
@@ -68756,13 +68279,6 @@
       "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/widgets/float_bubble/version_section.dart",
       "line": 0,
       "why": "themed colour: CUI owns the value, no literal invented"
-    },
-    {
-      "donor": "Divider",
-      "construct": "separator",
-      "file": "9to1 Workspace/Boards/Source/AppFlowy/frontend/appflowy_flutter/lib/workspace/presentation/widgets/float_bubble/version_section.dart",
-      "line": 0,
-      "why": "approximated with the nearest CUI construct; verify in Stage B"
     },
     {
       "donor": "VSpace",

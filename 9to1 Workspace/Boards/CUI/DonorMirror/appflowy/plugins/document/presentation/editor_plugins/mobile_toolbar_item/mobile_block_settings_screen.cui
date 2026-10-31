@@ -8,7 +8,7 @@
         </Container>
         <Image id="flowy-svg" />
       </Button>
-      <Container id="divider" Type="Vertical Stack" height="1.0" />
+      <Container id="divider" Type="Separator" height="1.0" />
     </Page>
   </Page>
 </Cui>

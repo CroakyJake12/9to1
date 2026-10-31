@@ -5,7 +5,7 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 129
 - donor nodes dropped: 0
-- gap reports: 365
+- gap reports: 362
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
@@ -37,7 +37,6 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 | `donor button wrapper (FlowyButton)` | 4 | FlowyButton |
 | `donor icon asset (FlowySvg)` | 4 | FlowySvg |
 | `donor text wrapper (FlowyText)` | 4 | FlowyText |
-| `separator` | 3 | Divider, VerticalDivider |
 | `transient anchored popover` | 2 | Popover |
 | `fixed vertical spacer` | 2 | VSpace |
 | `donor icon button wrapper (FlowyIconButton)` | 2 | FlowyIconButton |

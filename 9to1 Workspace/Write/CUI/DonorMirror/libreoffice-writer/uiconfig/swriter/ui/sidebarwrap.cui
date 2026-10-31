@@ -5,7 +5,7 @@
       <Input id="spacing-lb" Type="Select" tooltip="Set the amount of space between the image and surrounding text" focusable="false" role="Grow" column="1" row="1" />
       <Text id="label2" text="Wrap:" focusable="false" column="0" row="0" />
       <Container id="container" Type="Vertical Stack" focusable="false" role="Grow" column="1" row="0">
-        <Container id="wrapoptions" Type="Horizontal Stack">
+        <Container id="wrapoptions" Type="Toolbar">
           <Container id=".uno:wrap-off" Type="Vertical Stack" tooltip="None" />
           <Container id=".uno:wrap-on" Type="Vertical Stack" tooltip="Parallel" />
           <Container id=".uno:wrap-ideal" Type="Vertical Stack" tooltip="Optimal" />

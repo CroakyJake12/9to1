@@ -2,10 +2,10 @@
   "summary": {
     "translated": 662,
     "dropped_nodes": 0,
-    "gap_count": 677,
+    "gap_count": 672,
     "gap_constructs": {
       "property not modelled": 426,
-      "unknown donor construct": 158,
+      "unknown donor construct": 155,
       "item collection (list/tree/table)": 16,
       "keyboard shortcut table": 8,
       "link action": 8,
@@ -14,12 +14,11 @@
       "split view": 6,
       "layout spacer": 6,
       "typed command declaration": 4,
-      "toolbar with overflow": 4,
+      "toolbar item": 4,
       "parse error: syntax error: line 1, column 0": 3,
       "tab strip": 2,
       "parse error: unbound prefix: line 2, column 0": 2,
       "table column header": 2,
-      "separator": 2,
       "inline vector icon": 2,
       "parse error: unbound prefix: line 4, column 4": 1,
       "parse error: junk after document element: line 4, column 6": 1,
@@ -36,7 +35,7 @@
       "transient tooltip host": 1,
       "transient overlay host": 1
     },
-    "pruned_stale": 111,
+    "pruned_stale": 0,
     "donor": "firefox",
     "app": "Browse",
     "source": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content",
@@ -52,7 +51,7 @@
       "dialect": "xul",
       "nodes": 75,
       "actions": 0,
-      "donor_sha256": "2d453203a36bb6dc4f992a8c2b09887997bef4eb7ab99838bfaee49398aa653a",
+      "donor_sha256": "b1b13e2e658f42a4dcc32ff83636317fef578855dd1d08c1fef2248876c917d5",
       "refreshed": true
     },
     {
@@ -68,7 +67,7 @@
       "dialect": "xul",
       "nodes": 21,
       "actions": 0,
-      "donor_sha256": "88a729bdfe9e5579c9ac66aec1ae4677e72b3115a9c681347d845c294f7b7e9b",
+      "donor_sha256": "4f5449842b557c5664ca0c4a0a701741e66592297187ce7da4db3c0711b2e030",
       "refreshed": true
     },
     {
@@ -78,7 +77,7 @@
       "dialect": "xul",
       "nodes": 28,
       "actions": 0,
-      "donor_sha256": "70a3c6047f3db5edd127b460d0fc920b502b8cc4f7b069e94985f070521ef778",
+      "donor_sha256": "5683557ba5ffe44614dec51376e16bf4ec7fcb8016d152c3c4318b7dcba0f68a",
       "refreshed": true
     },
     {
@@ -88,7 +87,7 @@
       "dialect": "xul",
       "nodes": 43,
       "actions": 0,
-      "donor_sha256": "bb971cb9259a1162f6a41a0a1ec5f1dd5af0d304f0f9b56bb5c240980c7235c7",
+      "donor_sha256": "f671db831bcb44b072850e2ff45fe917c2a9dbd75e37b41784d9b229c4fe7594",
       "refreshed": true
     },
     {
@@ -110,7 +109,7 @@
       "dialect": "xul",
       "nodes": 32,
       "actions": 0,
-      "donor_sha256": "5dd1273f480455001b0de85c695265112c37a6906998e471b0df73aa64ec9b4d",
+      "donor_sha256": "fc755ea16c5cdd966358a2daa77af353bef1b640dad0beb333491bab132f9674",
       "refreshed": true
     },
     {
@@ -162,7 +161,7 @@
       "dialect": "xul",
       "nodes": 6,
       "actions": 0,
-      "donor_sha256": "947a7e7f50d8ada39f9cea64aa5783f3811c4a58cdec17fe940f1e04c8e3ea7b",
+      "donor_sha256": "13e27bb669b9573f7b8338aae8caef8ae61b50b75aaaee46ef0db67ec5dbc090",
       "refreshed": true
     },
     {
@@ -190,7 +189,7 @@
       "dialect": "xul",
       "nodes": 4,
       "actions": 0,
-      "donor_sha256": "ea93ad4501d37ad8eae9456f4280532a097515aa331614aa541124d61d0da35c",
+      "donor_sha256": "1b867f38b048a1527fcc4bdb5cb34d54df6c2b738ab65a199d793c8bf94592f4",
       "refreshed": true
     },
     {
@@ -200,7 +199,7 @@
       "dialect": "xul",
       "nodes": 215,
       "actions": 4,
-      "donor_sha256": "c39d29d4516554aabff0093c348c1d98279cfe8d11e8b91b8f3778fbb8a7cc85",
+      "donor_sha256": "d1002ada161f9ca2dd0be53a8a376f4992ad8b0c13470e29f92f3c53c4fa26e1",
       "refreshed": true
     },
     {
@@ -216,7 +215,7 @@
       "dialect": "xul",
       "nodes": 3,
       "actions": 0,
-      "donor_sha256": "73f9010017f774176a7f07d0aa2f3ef4cda60e018522473287dab869d6fada1b",
+      "donor_sha256": "459a1309004a91a018018163183c409b8c3788aa0c77621ff948685df884c8b3",
       "refreshed": true
     },
     {
@@ -226,7 +225,7 @@
       "dialect": "xul",
       "nodes": 17,
       "actions": 0,
-      "donor_sha256": "284f9aae8508b603adf7f9ada19d8c27f2e22110ea06635b467b9d093278a638",
+      "donor_sha256": "59a44156cc74cd7f439b1589d8097508038ac7383bbd48f7cfa544a53b594d4f",
       "refreshed": true
     },
     {
@@ -236,7 +235,7 @@
       "dialect": "xul",
       "nodes": 50,
       "actions": 0,
-      "donor_sha256": "0c07c86675a4fc43119efa3dfe68511b0662dd6014507a4b0ce0665fd81438ed",
+      "donor_sha256": "7d092b912479f0bebefbc62d0fb450a15d75593aaff96549af23a5069b980d1a",
       "refreshed": true
     },
     {
@@ -246,7 +245,7 @@
       "dialect": "xul",
       "nodes": 96,
       "actions": 0,
-      "donor_sha256": "b24e25feb95974238197949113702a620f4d370ac72fd929abf112f275cfe3db",
+      "donor_sha256": "561ebb569870b08fd50bdb3e835bc551ddfd74f2c50084ebba34b4f8e3c2bcd0",
       "refreshed": true
     },
     {
@@ -262,7 +261,7 @@
       "dialect": "xul",
       "nodes": 9,
       "actions": 0,
-      "donor_sha256": "e1c387f3ef61ac415344534fc65a5fbb4882caf6c06d0376f455f1319ad4fbcf",
+      "donor_sha256": "5199b173feaa33d13992a3f230dda7897f1372a8baa3e7df1af3cf119ed9b431",
       "refreshed": true
     },
     {
@@ -272,7 +271,7 @@
       "dialect": "xul",
       "nodes": 6,
       "actions": 4,
-      "donor_sha256": "e2daf2adf9ddabe6266176b5a6d8702dcadad9b57637be40afd0784332b3985c",
+      "donor_sha256": "81931516a1e65c09ccca35ecc0a107ccbcee60b04430f949d443032ff56ce550",
       "refreshed": true
     },
     {
@@ -288,7 +287,7 @@
       "dialect": "xul",
       "nodes": 26,
       "actions": 0,
-      "donor_sha256": "262dd8b720210d71ec26a39f204bf5888a82efdad3f15b334726058a30e97af3",
+      "donor_sha256": "b1513a107fe728515295750c76a0bdd29ce1006b539c0aea210622c4f407c104",
       "refreshed": true
     },
     {
@@ -298,7 +297,7 @@
       "dialect": "xul",
       "nodes": 31,
       "actions": 0,
-      "donor_sha256": "ca3324834637667db422e7fa7c5cc3580f2dea4bf36d292fde550c96b314360a",
+      "donor_sha256": "8db1f10053747252820e8d25e46eac33512a2fc4ca0ace837a0f24404707df0f",
       "refreshed": true
     }
   ]

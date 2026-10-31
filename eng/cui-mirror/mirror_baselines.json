@@ -1,11 +1,11 @@
 {
   "_purpose": "Ratchet for the Stage A donor-UI mirror corpora. documents/without-errors are measured by eng/cui-mirror/probe under --strict; any CUI compile error fails. A fall in `documents` means mirrors were lost and must be explained, not absorbed.",
   "_measured_on": "2026-10-31",
-  "_measured_at_source": "bd5d9b3a",
-  "_mirror_tool_version": "3949660e634e3cc4df7ca186f2327a819a10f0bb507bc71e9f8f6a88cc89ee0d",
+  "_measured_at_source": "edea7658",
+  "_mirror_tool_version": "54a032f776e42d7a8575821752254cc8eeb430829cbe5882d918b897257f4458",
   "_probe_command": "dotnet eng/cui-mirror/probe/bin/Release/net10.0/CuiMirrorProbe.dll --strict <corpus>...",
-  "documents": 1758,
-  "without_errors": 1758,
+  "documents": 1764,
+  "without_errors": 1764,
   "compile_errors_allowed": 0,
   "corpora": [
     "9to1 Workspace/Boards/CUI/DonorMirror/appflowy",
@@ -20,5 +20,7 @@
     "9to1 Workspace/Write/CUI/DonorMirror/libreoffice-writer"
   ],
   "evidence_label": "CUI compile evidence only. Nothing here is rendered, run natively, packaged or accepted.",
-  "_change_reason": "2026-10-31 second pass (1050 -> 1758 documents): the owner's correction that Boards' UI donor is AppFlowy, not rnote. Added the Dart/Flutter dialect, which reads widget constructor calls because AppFlowy has no markup UI, and mirrored 824 files from AppFlowy's lib plus 55 from its design-system packages (all compiling clean). Retired Boards' rnote UI mirror: 31 of its 33 documents were byte-identical to Canvas's, 2 differed, and the two donor checkouts drift in 8 UI files - one shared drawing surface must be pinned once, and the owner's single-implementation requirement forbids keeping two revisions of it. Also fixed an emitter bug that emitted space-only donor text runs as empty CUI values (CUI030, 4 documents)."
+  "_change_reason": "2026-10-31 second pass (1050 -> 1758 documents): the owner's correction that Boards' UI donor is AppFlowy, not rnote. Added the Dart/Flutter dialect, which reads widget constructor calls because AppFlowy has no markup UI, and mirrored 824 files from AppFlowy's lib plus 55 from its design-system packages (all compiling clean). Retired Boards' rnote UI mirror: 31 of its 33 documents were byte-identical to Canvas's, 2 differed, and the two donor checkouts drift in 8 UI files - one shared drawing surface must be pinned once, and the owner's single-implementation requirement forbids keeping two revisions of it. Also fixed an emitter bug that emitted space-only donor text runs as empty CUI values (CUI030, 4 documents).",
+  "gap_reports_recorded": 25113,
+  "_gap_ratchet": "Measured before/after CUI gaining the Toolbar and Separator constructs (framework/CUI Runtime: CuiToolbarPanel with real measured collapse-to-overflow, CuiSeparatorPanel painted from CuiLineBrush, CuiOverflowHosts marker, registry TypesFor + authored OverflowHost property, loader support): gap reports fell 33,014 -> 25,113, and 'toolbar with overflow' plus 'separator' are now ZERO because they are modelled, not relabelled - 433 Toolbar elements and 1,639 Separator elements are emitted across the corpora. 'menu button' rose to 1,537 because the office priority/dropdown boxes are now named for the construct they actually are; that is a rename of an existing gap, counted honestly. The office notebook/ribbon group (4,046) and optional section (2,263) are unchanged and are the next queue items. Documents 1,758 -> 1,764 because six more donor files now yield modelled UI."
 }
