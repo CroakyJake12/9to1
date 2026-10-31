@@ -2870,6 +2870,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return;
         if (block.Database is not null || block.Tabber is not null)
         { Set("StatusText", "Database views keep their Data reference. Use Delete to remove this reference, or choose another database view."); return; }
+        var pageId = SelectedPageId;
+        var sourceId = block.Id;
+        var parentId = ParentKey(sourceId);
+        var root = _attachedRoot ?? _themeSurface;
+        var editorName = IsListKind(block.Kind) ? "chk_" + sourceId.Replace(':', '_') : "t_" + sourceId;
+        var editor = root is null ? null : FindControls<TextBox>(root).FirstOrDefault(input => input.Name == editorName);
+        var top = editor is null ? null : TopLevel.GetTopLevel(editor);
+        var previousFocus = top?.FocusManager?.GetFocusedElement();
+        var restoreEditor = editor is not null &&
+            (editor.IsKeyboardFocusWithin || IsAttributeToolbarControl(previousFocus as Control));
+        var caret = editor?.CaretIndex ?? 0;
         var contractKind = kind switch
         {
             "heading" => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.Heading,
@@ -2880,19 +2891,38 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         };
         if (_session is ContractSessionAdapter adapter)
         {
-            await adapter.ConvertBlockKindAsync(CurrentPage().Id, block.Id, contractKind);
-            RefreshAfterEdit();
-            return;
+            if (!await adapter.ConvertBlockKindAsync(pageId, sourceId, contractKind)) return;
         }
-        block.Kind = kind switch
+        else
         {
-            "heading" => "heading",
-            "checklist" or "bulleted" or "numbered" => kind,
-            _ => "paragraph",
-        };
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
+            block.Kind = kind switch
+            {
+                "heading" => "heading",
+                "checklist" or "bulleted" or "numbered" => kind,
+                _ => "paragraph",
+            };
+            _session.MarkDirty();
+        }
+        if (_disposed || EditorLifetimeEnded) return;
+        if (SelectedPageId == pageId && _selectedBlockId == sourceId)
+        {
+            // Paragraph-to-list conversion retains the canonical block ID but
+            // projects its new row as parent:item. Select that row before normal
+            // binding refresh can fall back to the page's first paragraph.
+            var converted = PageBlocks.FirstOrDefault(candidate => candidate.Id == sourceId)
+                ?? PageBlocks.FirstOrDefault(candidate => candidate.Id == parentId)
+                ?? PageBlocks.FirstOrDefault(candidate => candidate.Id.StartsWith(parentId + ":", StringComparison.Ordinal));
+            if (converted is not null)
+            {
+                _selectedBlockId = converted.Id;
+                InvalidateTextRange();
+                var currentFocus = top?.FocusManager?.GetFocusedElement();
+                if (restoreEditor && !_textRangeDetached && _isEditMode &&
+                    (currentFocus is null || ReferenceEquals(currentFocus, previousFocus) || ReferenceEquals(currentFocus, editor)))
+                    _pendingTextFocus = (pageId, converted.Id, Math.Clamp(caret, 0, converted.Text.Length));
+            }
+        }
+        RefreshAfterEdit();
     }
 
     public (string Title, string FileName, string Path, long SizeBytes) BoardInfo()
