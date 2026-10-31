@@ -503,6 +503,28 @@
       "state": "open - implementation running on this PC as a pair; no legacy surface is currently launchable on this machine",
       "affected_change": "Packaging and app registration (two app entries), the 'one implementation per app' pinned requirement (the pair is temporary and must not become a permanent fork), and what any app percentage means while two entries exist.",
       "evidence": "docs/development/boards-appflowy-reui-plan-2026-10-31.md; on-screen captures /tmp/opencode/d1.png d2.png (new Boards, board surface rendering) and /tmp/opencode/legacy2.png (installed package diagnostics page), sha256 recorded in the progress report of 31 October 2026"
+    },
+    {
+      "id": "OPEN-2026-10-31-CUI-HORIZONTAL-REPEAT-LAYOUT",
+      "at": "2026-10-31T18:20:00Z",
+      "status": "open engineering question - no owner decision needed, but it blocks AppFlowy-grade board layout",
+      "title": "How a CUI Repeat of wide multi-child columns lays out horizontally, and how a group body is content-height",
+      "summary": "The AppFlowy board is a horizontally scrolling strip of fixed-width columns, each column being header + content-height card body + footer. Four authored variants were measured on screen and each fixed one thing while breaking another, so the CUI layout engine's rules - not further guessing - have to be derived before this can be called a faithful copy.",
+      "measured_attempts": [
+        "g1 sha 9a395c4c80e5: parent Container Type=\"Horizontal Stack\" + column Grid RowSizes=\"Auto 1fr Auto\" - two columns side by side and card panels visible, but the footer is pinned to the window foot because 1fr fills the column.",
+        "g2 sha b24fa8d2795a: column as a plain Vertical Stack - footer moved under the cards, side-by-side columns lost.",
+        "g3 sha f5e4c1f977d3: column Grid RowSizes=\"Auto Auto Auto\" with VerticalAlignment Top - side-by-side lost and card panels gone.",
+        "g4 sha 97167d315071: columns inside the shipping Files pattern (Container Type=\"Overlay\" + Repeat Panel=\"Horizontal Stack\", FilesBrowser.cui:17-18) - still lost.",
+        "g5 sha 5daf1600d575: g1 geometry restored, with the wording/glyph/label fixes kept - two columns, cards under their headers, trailing 'New section'."
+      ],
+      "donor_reference_points": "AppFlowyBoard lib/src/widgets/board.dart:29-34 (groupMargin horizontal 8, header/body/footer paddings, cardMargin h3 v4); board_group/group.dart:355-386 (column is a vertical Flex with MainAxisSize.min and a LOOSE Flexible body, wrapped in ClipRRect with the group background and corner radius); AppFlowy frontend board_page.dart:352 groupConstraints tightFor(width: 196 or 256).",
+      "open_questions": [
+        "Which CUI construct expresses 'a horizontally scrolling strip whose repeated children are fixed-width composite columns' - Overlay + Repeat Panel, a Grid with Auto columns and 1fr outer, or an unsupported case that needs a framework addition?",
+        "How is a content-height column body with a following footer expressed, given a 1fr row fills and an Auto row set breaks the horizontal layout today?",
+        "Is the missing card panel a colour-resource problem (CuiPanelBrush nearly equals the workspace material in the light theme) or an Overlay painting problem? The donor paints white cards on a grey group on a darker board."
+      ],
+      "affected_change": "The AppFlowy board re-UI's presentation only. Behaviour and data wiring are already committed (bb6a6370) and independent of this question.",
+      "evidence": "the five frames listed above under /tmp/opencode/; commits af15ed29, 66673e50, e24c43e3, bb6a6370"
     }
   ]
 }
