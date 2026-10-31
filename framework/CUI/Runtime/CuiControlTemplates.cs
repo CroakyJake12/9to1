@@ -344,6 +344,7 @@ public static class CuiControlTemplates
             (TextPresenter.SelectionEndProperty,"SelectionEnd"),(TextPresenter.SelectionBrushProperty,"SelectionBrush"),
             (TextPresenter.SelectionForegroundBrushProperty,"SelectionForegroundBrush"),(TextPresenter.CaretBrushProperty,"CaretBrush"),
             (TextPresenter.TextWrappingProperty,"TextWrapping"),(TextPresenter.TextAlignmentProperty,"TextAlignment"),
+            (TextPresenter.LineHeightProperty,"LineHeight"),
             (TextPresenter.PasswordCharProperty,"PasswordChar"),(TextPresenter.RevealPasswordProperty,"RevealPassword"),
             (TextElement.FontFamilyProperty,"FontFamily"),(TextElement.FontSizeProperty,"FontSize"),
             (TextElement.FontWeightProperty,"FontWeight"),(TextElement.ForegroundProperty,"Foreground")
@@ -621,7 +622,7 @@ public static class CuiControlTemplates
                 || change.Property == Avalonia.Controls.MenuItem.IsCheckedProperty) UpdateRow();
         };
         UpdateRow();
-        var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
+        var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.BottomEdgeAlignedLeft : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
         CuiPopupPresentation.RequestTransparency(popup);
         popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupHorizontalOffset" : "CuiSubmenuHorizontalOffset"));
         popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupVerticalOffset" : "CuiSubmenuVerticalOffset"));

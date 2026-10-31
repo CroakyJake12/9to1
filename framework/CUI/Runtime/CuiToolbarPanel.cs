@@ -61,6 +61,10 @@ public sealed class CuiToolbarPanel : Panel
         var order = new List<(Control Child, Size Desired)>(Children.Count);
         foreach (var child in Children)
         {
+            // CUI wraps each authored control in a private layout cell. A cell hidden by the
+            // previous measurement reports DesiredSize.Zero, so restore that private cell
+            // before measuring again. Never alter the authored child's own visibility.
+            if (child is Border { Child: { IsVisible: true } }) child.IsVisible = true;
             child.Measure(childAvailable);
             if (IsOverflowHost(child))
             {

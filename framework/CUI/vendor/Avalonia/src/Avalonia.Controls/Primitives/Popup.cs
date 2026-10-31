@@ -1105,13 +1105,17 @@ namespace Avalonia.Controls.Primitives
             if (_openState is null)
                 return;
 
-            // A LayoutUpdated event is raised for the whole visual tree:
-            // the bounds of the PlacementTarget might not have effectively changed.
+            // A LayoutUpdated event is raised for the whole visual tree. An ancestor can
+            // move (including while scrolling) without changing the target's local bounds,
+            // so compare the transform used to place the popup as well as the local bounds.
             var newBounds = _openState.PlacementTarget.Bounds;
-            if (newBounds == _openState.LastPlacementTargetBounds)
+            var newTransform = _openState.PlacementTarget.TransformToVisual(_openState.TopLevel);
+            if (newBounds == _openState.LastPlacementTargetBounds &&
+                newTransform == _openState.LastPlacementTargetTransform)
                 return;
 
             _openState.LastPlacementTargetBounds = newBounds;
+            _openState.LastPlacementTargetTransform = newTransform;
             UpdateHostPosition(_openState.PopupHost, _openState.PlacementTarget);
         }
 
@@ -1146,8 +1150,8 @@ namespace Avalonia.Controls.Primitives
 
             public PopupOpenState(Control placementTarget, TopLevel topLevel, IPopupHost popupHost, IDisposable cleanup)
             {
-                PlacementTarget = placementTarget;
                 TopLevel = topLevel;
+                PlacementTarget = placementTarget;
                 PopupHost = popupHost;
                 _cleanup = cleanup;
             }
@@ -1162,10 +1166,13 @@ namespace Avalonia.Controls.Primitives
                 {
                     _placementTarget = value;
                     LastPlacementTargetBounds = value.Bounds;
+                    LastPlacementTargetTransform = value.TransformToVisual(TopLevel);
                 }
             }
 
             public Rect LastPlacementTargetBounds { get; set; }
+
+            public Matrix? LastPlacementTargetTransform { get; set; }
 
             public IPopupHost PopupHost { get; }
 

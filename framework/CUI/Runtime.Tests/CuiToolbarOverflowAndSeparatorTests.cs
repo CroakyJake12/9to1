@@ -151,6 +151,54 @@ public sealed class CuiToolbarOverflowAndSeparatorTests
     }
 
     [Fact]
+    public async Task Toolbar_remeasures_narrow_wide_narrow_without_losing_hidden_item_or_host_width()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var window = new Window { Width = 400, Height = 200 };
+            var (root, loader) = Load(ToolbarMarkup.Replace("Width=\"220\"", "Width=\"140\""), window);
+            using (loader)
+            {
+                var toolbar = (CuiContainerControl)Find(root, "toolbar")!;
+                var panel = (CuiToolbarPanel)toolbar.Layout;
+                foreach (var width in new[] { 140d, 220d, 140d })
+                {
+                    // Width is an authored CUI value. NativeChanged restores its effective
+                    // value after a raw Avalonia assignment, so resize through the same
+                    // property layer as a live authored/bound width change.
+                    Assert.True(CuiPropertyPresentation.Set(toolbar, "Width", width,
+                        CuiPropertyLevel.Overlay, "toolbar resize regression"));
+                    for (var pass = 0; pass < 3; pass++)
+                    {
+                        panel.InvalidateMeasure();
+                        window.UpdateLayout();
+                        Assert.Equal(width, toolbar.Width);
+                        Assert.Equal(width, toolbar.Bounds.Width, 2);
+                        Assert.Equal(width, panel.Bounds.Width, 2);
+                        var narrow = width < 200;
+                        Assert.Equal(narrow ? 2 : 4, panel.VisibleItemCount);
+                        Assert.Equal(narrow ? 2 : 0, panel.HiddenItemCount);
+                        Assert.Equal(narrow, Find(root, "more")!.IsEffectivelyVisible);
+                        Assert.Equal(!narrow, Find(root, "three")!.IsEffectivelyVisible);
+                        Assert.True(Find(root, "three")!.IsVisible);
+                        Assert.Equal(50d, Find(root, "one")!.Bounds.Width, 2);
+                        Assert.Equal(50d, Find(root, "two")!.Bounds.Width, 2);
+                        if (narrow)
+                        {
+                            var more = Find(root, "more")!;
+                            Assert.Equal(30d, more.Bounds.Width, 2);
+                            Assert.True(Pos(more, toolbar).X + more.Bounds.Width <= width + 0.5);
+                        }
+                    }
+                }
+                window.Close();
+            }
+        }, lifetime.Token);
+    }
+
+    [Fact]
     public async Task Separator_takes_the_span_it_is_offered_and_only_its_thickness_across()
     {
         using var lifetime = new CancellationTokenSource();
