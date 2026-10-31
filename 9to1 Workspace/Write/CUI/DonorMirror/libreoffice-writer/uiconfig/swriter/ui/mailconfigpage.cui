@@ -1,0 +1,39 @@
+<Cui id="ui-mailconfigpage" product="9-1" version="1">
+  <Container id="mail-config-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Image id="lockdisplayname" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Text id="displayname-label" text="Your name:" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+        <Input id="displayname" Type="Text" role="Grow" column="2" row="0" />
+        <Image id="lockaddress" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Text id="address-label" text="Email address:" horizontal-alignment="Left" focusable="false" column="1" row="1" />
+        <Input id="address" Type="Text" role="Grow" column="2" row="1" />
+        <Image id="lockreplytocb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        <Input id="replytocb" Type="Checkbox" text="Send replies to different email address" column="1" row="2" column-span="2" />
+        <Image id="lockreplyto" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        <Text id="replyto-label" text="Reply address:" horizontal-alignment="Left" focusable="false" column="1" row="3" />
+        <Input id="replyto" Type="Text" role="Grow" column="2" row="3" />
+      </Container>
+      <Text id="label1" text="User Information" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Image id="lockserver" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Text id="server-label" text="Server name:" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+        <Input id="server" Type="Text" role="Grow" column="2" row="0" column-span="2" />
+        <Image id="lockport" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Text id="port-label" text="Port:" horizontal-alignment="Left" focusable="false" column="1" row="1" />
+        <Input id="port" Type="Number" column="2" row="1" column-span="2" />
+        <Image id="locksecure" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="1" row="2" source="res/lock.png" />
+        <Input id="secure" Type="Checkbox" text="Use secure connection (TLS/SSL)" role="Grow" column="2" row="2" column-span="2" />
+        <Container id="buttonbox1" Type="Horizontal Stack" horizontal-alignment="Left" focusable="false" column="2" row="3">
+          <Button id="serverauthentication" content="Server Authentication…" text="Server Authentication…" horizontal-alignment="Left" />
+        </Container>
+        <Container id="buttonbox2" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="3">
+          <Button id="test" content="Test Settings" text="Test Settings" />
+        </Container>
+      </Container>
+      <Text id="label2" text="Outgoing Email Server (SMTP Only)" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

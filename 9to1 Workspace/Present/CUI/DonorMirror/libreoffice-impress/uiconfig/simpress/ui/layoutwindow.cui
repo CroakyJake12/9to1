@@ -1,0 +1,18 @@
+<Cui id="ui-layoutwindow" product="9-1" version="1">
+  <Page id="ui-layoutwindow-root">
+    <Image id="image1" focusable="false" source="missing-image" />
+    <Container id="layout-window" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Container id="horiframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="iconview1" Type="Wrap" role="Grow" />
+          <Text id="text" text="Horizontal" focusable="false" />
+        </Container>
+        <Container id="vertframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="iconview2" Type="Wrap" role="Grow" />
+          <Text id="text-2" text="Vertical" focusable="false" />
+        </Container>
+        <Button id="more" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,16 @@
+<Cui id="content-mac-window-menu.inc" product="9-1" version="1">
+  <Actions>
+    <Action name="window.minimize" command="window.minimize();" />
+    <Action name="zoom-window" command="zoomWindow();" />
+  </Actions>
+  <Page id="content-mac-window-menu.inc-root">
+    <Button id="windowMenu" content="{Binding windowMenu.label}">
+      <Container id="windowPopup" Type="Menu">
+        <Container id="menuseparator" Type="Menu" />
+        <Button id="minimizeWindow" content="{Binding minimizeWindow.label}" action="window.minimize" />
+        <Button id="zoomWindow" content="{Binding zoomWindow.label}" action="zoom-window" />
+        <Container id="sep-window-list" Type="Menu" />
+      </Container>
+    </Button>
+  </Page>
+</Cui>

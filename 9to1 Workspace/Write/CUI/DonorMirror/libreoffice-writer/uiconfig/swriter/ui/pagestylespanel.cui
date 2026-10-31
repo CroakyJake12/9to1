@@ -1,0 +1,19 @@
+<Cui id="ui-pagestylespanel" product="9-1" version="1">
+  <Container id="page-styles-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" horizontal-alignment="Right" focusable="false" role="Grow" column="0" row="0">
+      <Text id="numberslabel" text="Number:" focusable="false" column="0" row="0" />
+      <Text id="backgroundlabel" text="Background:" focusable="false" column="0" row="1" />
+      <Input id="numberbox" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+      <Text id="layoutlabel" text="Layout:" focusable="false" column="0" row="6" />
+      <Input id="layoutbox" Type="Select" focusable="false" role="Grow" column="1" row="6" />
+      <Text id="columnlabel" text="Columns:" focusable="false" column="0" row="7" />
+      <Input id="columnbox" Type="Select" focusable="false" role="Grow" column="1" row="7" />
+      <Input id="lbhatching" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+      <Input id="lbbitmap" Type="Select" focusable="false" role="Grow" column="1" row="4" />
+      <Button id="lbcolor" width="150" vertical-alignment="Center" role="Grow" column="1" row="2" />
+      <Button id="lbgradient" width="150" vertical-alignment="Center" role="Grow" column="1" row="5" />
+      <Input id="bgselect" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+      <Text id="customlabel" text="Custom" focusable="false" column="1" row="8" />
+    </Container>
+  </Container>
+</Cui>

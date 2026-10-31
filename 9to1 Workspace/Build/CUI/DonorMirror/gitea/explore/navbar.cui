@@ -1,0 +1,12 @@
+<Cui id="explore-navbar" product="9-1" version="1">
+  <Page id="explore-navbar-root">
+    <Container id="overflow-menu" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack">
+        <Button id="a" />
+        <Button id="a-2" />
+        <Button id="a-3" />
+        <Button id="a-4" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

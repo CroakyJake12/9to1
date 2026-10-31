@@ -1,0 +1,14 @@
+<Cui id="ui-displaywindow" product="9-1" version="1">
+  <Container id="display-window" Type="Menu" focusable="false">
+    <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false">
+      <Container id="editframe" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="iconview1" Type="Wrap" />
+        <Text id="text" text="Edit Modes" focusable="false" />
+      </Container>
+      <Container id="masterframe" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="iconview2" Type="Wrap" />
+        <Text id="text-2" text="Master Modes" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,37 @@
+<Cui id="content-gloda-facet-view-wrapper" product="9-1" version="1">
+  <Actions>
+    <Action name="cmd-full-zoom-enlarge" command="cmd_fullZoomEnlarge" />
+    <Action name="cmd-full-zoom-reduce" command="cmd_fullZoomReduce" />
+    <Action name="cmd-full-zoom-reset" command="cmd_fullZoomReset" />
+  </Actions>
+  <Page id="content-gloda-facet-view-wrapper-root">
+    <Container id="window" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="style" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/viewZoomOverlay.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="selectEditMenuItems" Type="Vertical Stack">
+          <Container id="command" Type="Vertical Stack" />
+          <Container id="command-2" Type="Vertical Stack" />
+          <Container id="command-3" Type="Vertical Stack" />
+        </Container>
+        <Container id="keyset" Type="Vertical Stack">
+          <Container id="key_fullZoomEnlarge" Type="Vertical Stack" />
+          <Container id="key_fullZoomEnlarge2" Type="Vertical Stack" />
+          <Container id="key_fullZoomReduce" Type="Vertical Stack" />
+          <Container id="key_fullZoomReset" Type="Vertical Stack" />
+        </Container>
+        <Container id="aHTMLTooltip" Type="Floating" />
+        <Container id="browser" Type="Overlay" role="Grow" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

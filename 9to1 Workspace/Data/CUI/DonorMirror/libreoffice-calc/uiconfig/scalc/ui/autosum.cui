@@ -1,0 +1,15 @@
+<Cui id="ui-autosum" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id="sum" Type="Menu Item" content="Sum" text="Sum" focusable="false" />
+    <Button id="average" Type="Menu Item" content="Average" text="Average" focusable="false" />
+    <Button id="min" Type="Menu Item" content="Min" text="Min" focusable="false" />
+    <Button id="max" Type="Menu Item" content="Max" text="Max" focusable="false" />
+    <Button id="count" Type="Menu Item" content="Count" text="Count" focusable="false" />
+    <Button id="counta" Type="Menu Item" content="CountA" text="CountA" focusable="false" />
+    <Button id="product" Type="Menu Item" content="Product" text="Product" focusable="false" />
+    <Button id="stdev" Type="Menu Item" content="Stdev" text="Stdev" focusable="false" />
+    <Button id="stdevp" Type="Menu Item" content="StdevP" text="StdevP" focusable="false" />
+    <Button id="var" Type="Menu Item" content="Var" text="Var" focusable="false" />
+    <Button id="varp" Type="Menu Item" content="VarP" text="VarP" focusable="false" />
+  </Container>
+</Cui>

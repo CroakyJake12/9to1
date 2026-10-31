@@ -1,0 +1,5 @@
+<Cui id="ui-combobox" product="9-1" version="1">
+  <Container id="combo-box" Type="Vertical Stack" width="150" cell-gap="6" focusable="false" role="Grow">
+    <Input id="combobox" Type="Select" focusable="false" role="Grow" />
+  </Container>
+</Cui>

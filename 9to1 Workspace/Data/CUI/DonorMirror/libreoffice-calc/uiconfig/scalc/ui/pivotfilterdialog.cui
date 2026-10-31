@@ -1,0 +1,52 @@
+<Cui id="ui-pivotfilterdialog" product="9-1" version="1">
+  <Container id="pivot-filter-dialog" Type="Vertical Stack" modal="True">
+    <Text id="pivot-filter-dialog-label" text="Filter" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" role="Grow">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Input id="connect1" Type="Select" />
+          <Input id="connect2" Type="Select" />
+          <Text id="label2" text="Operator" />
+          <Text id="label3" text="Field name" />
+          <Text id="label4" text="Condition" />
+          <Text id="label5" text="Value" />
+          <Input id="field1" Type="Select" />
+          <Input id="field2" Type="Select" />
+          <Input id="field3" Type="Select" />
+          <Input id="cond1" Type="Select" />
+          <Input id="cond2" Type="Select" />
+          <Input id="cond3" Type="Select" />
+          <Input id="val1" Type="Select" role="Grow">
+            <Input id="comboboxtext-entry2" Type="Text" />
+          </Input>
+          <Input id="val2" Type="Select" role="Grow">
+            <Input id="comboboxtext-entry4" Type="Text" />
+          </Input>
+          <Input id="val3" Type="Select" role="Grow">
+            <Input id="comboboxtext-entry6" Type="Text" />
+          </Input>
+        </Container>
+        <Text id="label1" text="Filter Criteria" />
+      </Container>
+      <Container id="more" Type="Vertical Stack" role="Grow">
+        <Container id="grid2" Type="Grid" role="Grow">
+          <Container id="grid3" Type="Grid" role="Grow">
+            <Input id="case" Type="Checkbox" text="Case sensitive" role="Grow" />
+            <Input id="regexp" Type="Checkbox" text="Regular expressions" role="Grow" />
+            <Input id="unique" Type="Checkbox" text="No duplications" role="Grow" />
+          </Container>
+          <Container id="grid5" Type="Grid" is-enabled="false">
+            <Text id="dbarealabel" text="Data range:" is-enabled="false" />
+            <Text id="dbarea" text="dummy" is-enabled="false" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="label6" text="Options" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

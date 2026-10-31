@@ -1,0 +1,30 @@
+<Cui id="ui-assignstylesdialog" product="9-1" version="1">
+  <Page id="ui-assignstylesdialog-root">
+    <Image id="image1" focusable="false" source="sw/res/allleft.png" />
+    <Image id="image2" focusable="false" source="sw/res/allright.png" />
+    <Container id="assign-styles-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="assign-styles-dialog-label" text="Assign Styles" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+            <Container id="container" Type="Vertical Stack" role="Grow">
+              <Container id="styles" Type="Vertical Stack" role="Grow" />
+            </Container>
+            <Container id="grid2" Type="Grid" cell-gap="12" horizontal-alignment="Left" focusable="false" role="Grow">
+              <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="12" horizontal-alignment="Left" focusable="false" column="0" row="0">
+                <Button id="left" tooltip="Promote index level" />
+                <Button id="right" tooltip="Demote index level" />
+              </Container>
+            </Container>
+          </Container>
+          <Text id="label3" text="Styles" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,16 @@
+<Cui id="user-view-emails" product="9-1" version="1">
+  <Page id="user-view-emails-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="div-4" Type="Vertical Stack">
+            <Button id="a" />
+            <Container id="div-5" Type="Vertical Stack" />
+            <Container id="div-6" Type="Vertical Stack" />
+            <Container id="div-7" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

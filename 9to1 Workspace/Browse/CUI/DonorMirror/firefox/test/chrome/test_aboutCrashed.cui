@@ -1,0 +1,13 @@
+<Cui id="chrome-test-about-crashed" product="9-1" version="1">
+  <Page id="chrome-test-about-crashed-root">
+    <Container id="window" Type="Vertical Stack">
+      <Container id="script" Type="Vertical Stack">
+        <Image id="script-icon" source="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+      </Container>
+      <Container id="frame1" Type="Overlay" />
+      <Container id="frame2" Type="Overlay" />
+      <Container id="script-2" Type="Vertical Stack" />
+      <Container id="body" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

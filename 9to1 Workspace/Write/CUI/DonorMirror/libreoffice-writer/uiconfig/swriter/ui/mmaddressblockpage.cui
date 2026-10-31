@@ -1,0 +1,64 @@
+<Cui id="ui-mmaddressblockpage" product="9-1" version="1">
+  <Page id="ui-mmaddressblockpage-root">
+    <Image id="image1" source="go-previous" />
+    <Image id="image2" source="go-next" />
+    <Container id="mmaddress-block-page" Type="Vertical Stack" cell-gap="12" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" role="Grow">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Container id="step1" Type="Grid" role="Grow">
+            <Container id="grid3" Type="Grid">
+              <Button id="addresslist" content="Select Address List..." text="Select Address List..." />
+              <Button id="differentlist" content="Select Different Address List..." text="Select Different Address List..." />
+            </Container>
+            <Text id="currentaddress" text="Current address list: %1" column-span="2" />
+            <Container id="grid2" Type="Grid" role="Grow">
+              <Text id="label2" text="Select the address list containing the address data you want to use. This data is needed to create the address block." text-wrapping="Wrap" role="Grow" />
+              <Text id="label3" text="1." />
+            </Container>
+          </Container>
+          <Container id="step3" Type="Grid" role="Grow">
+            <Button id="assign" content="Match Fields..." text="Match Fields..." vertical-alignment="Bottom" />
+            <Container id="grid4" Type="Grid" role="Grow">
+              <Text id="label4" text="Match the field name used in the mail merge to the column headers in your data source." text-wrapping="Wrap" role="Grow" />
+              <Text id="settingsft1" text="3." />
+            </Container>
+          </Container>
+          <Container id="step2" Type="Grid" role="Grow">
+            <Text id="settingsft" text="2." row-span="2" />
+            <Input id="address" Type="Checkbox" text="This document shall contain an address block" />
+            <Container id="grid5" Type="Grid" role="Grow">
+              <Container id="grid7" Type="Grid" role="Grow">
+                <Button id="settings" content="More..." text="More..." vertical-alignment="Bottom" />
+                <Container id="settingspreviewwin" Type="Vertical Stack" role="Grow">
+                  <Container id="container" Type="Vertical Stack">
+                    <Container id="settingspreview" Type="Overlay" role="Grow" />
+                  </Container>
+                </Container>
+              </Container>
+              <Input id="hideempty" Type="Checkbox" text="Suppress lines with just empty fields" />
+            </Container>
+          </Container>
+          <Container id="step4" Type="Grid" role="Grow">
+            <Container id="grid9" Type="Grid" role="Grow">
+              <Container id="addresspreviewwin" Type="Vertical Stack" role="Grow">
+                <Container id="container-2" Type="Vertical Stack">
+                  <Container id="addresspreview" Type="Overlay" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="grid10" Type="Grid">
+                <Button id="prev" />
+                <Button id="next" />
+                <Text id="documentindex" text="Document: %1" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="grid6" Type="Grid" role="Grow">
+              <Text id="label6" text="Check if the address data matches correctly." text-wrapping="Wrap" role="Grow" />
+              <Text id="settingsft2" text="4." />
+            </Container>
+          </Container>
+        </Container>
+        <Text id="label1" text="Insert Address Block" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

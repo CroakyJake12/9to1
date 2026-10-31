@@ -1,0 +1,23 @@
+<Cui id="ui-insertcells" product="9-1" version="1">
+  <Container id="insert-cells-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="insert-cells-dialog-label" text="Insert Cells" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area3" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="selection" Type="Vertical Stack" focusable="false">
+        <Container id="container" Type="Grid" cell-gap="3" focusable="false">
+          <Input id="down" Type="Radio" text="Shift cells down" checked="true" column="0" row="0" />
+          <Input id="right" Type="Radio" text="Shift cells right" column="0" row="1" />
+          <Input id="rows" Type="Radio" text="Entire row" column="0" row="2" />
+          <Input id="cols" Type="Radio" text="Entire column" column="0" row="3" />
+          <Input id="number-of-rows" Type="Number" horizontal-alignment="Left" vertical-alignment="Top" column="1" row="2" />
+          <Input id="number-of-columns" Type="Number" horizontal-alignment="Left" vertical-alignment="Top" column="1" row="3" />
+        </Container>
+        <Text id="label1" text="Selection" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

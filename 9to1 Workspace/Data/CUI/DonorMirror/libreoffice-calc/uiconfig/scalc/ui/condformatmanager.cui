@@ -1,0 +1,25 @@
+<Cui id="ui-condformatmanager" product="9-1" version="1">
+  <Container id="cond-format-manager" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="cond-format-manager-label" text="Manage Conditional Formatting" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="container-2" Type="Vertical Stack" />
+          </Container>
+          <Container id="buttonbox2" Type="Horizontal Stack" cell-gap="12" focusable="false">
+            <Button id="add" content="Add" text="Add" />
+            <Button id="edit" content="Edit..." text="Edit..." />
+            <Button id="remove" content="Remove" text="Remove" />
+          </Container>
+        </Container>
+        <Text id="label1" text="Conditional Formats" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

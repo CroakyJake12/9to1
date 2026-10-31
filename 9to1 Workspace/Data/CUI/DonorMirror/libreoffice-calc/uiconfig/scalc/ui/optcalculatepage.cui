@@ -1,0 +1,67 @@
+<Cui id="ui-optcalculatepage" product="9-1" version="1">
+  <Container id="opt-calculate-page" Type="Grid" cell-gap="12" horizontal-alignment="Left" vertical-alignment="Top" focusable="false">
+    <Container id="frame5" Type="Vertical Stack" focusable="false" column="0" row="0">
+      <Container id="grid5" Type="Grid" focusable="false">
+        <Input id="formulawildcards" Type="Radio" text="Enable wildcards in formulas" tooltip="Enable wildcards for interoperability with Microsoft Excel" checked="true" column="1" row="0" />
+        <Image id="lockformulawild" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Input id="formularegex" Type="Radio" text="Enable regular expressions in formulas" column="1" row="1" />
+        <Input id="formulaliteral" Type="Radio" text="No wildcards or regular expressions in formulas" column="1" row="2" />
+      </Container>
+      <Text id="label5" text="Formulas Wildcards" focusable="false" />
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" column="1" row="0">
+      <Container id="grid2" Type="Grid" focusable="false">
+        <Input id="datestd" Type="Radio" text="1899-12-30 (default)" tooltip="Value 0 corresponds to 1899-12-30" checked="true" column="1" row="0" />
+        <Image id="lockdate" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Input id="datesc10" Type="Radio" text="1900-01-01 (StarCalc 1.0)" tooltip="Value 0 corresponds to 1900-01-01" column="1" row="1" />
+        <Input id="date1904" Type="Radio" text="1904-01-01" tooltip="0 corresponds to 1904-01-01" column="1" row="2" />
+      </Container>
+      <Text id="label3" text="Date" focusable="false" />
+    </Container>
+    <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="1">
+      <Container id="grid3" Type="Grid" focusable="false" role="Grow">
+        <Image id="lockcase" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Input id="case" Type="Checkbox" text="Case sensitive" tooltip="Disable case sensitivity for interoperability with Microsoft Excel" column="1" row="0" />
+        <Image id="lockcalc" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Input id="calc" Type="Checkbox" text="Precision as shown" column="1" row="1" />
+        <Image id="lockmatch" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        <Input id="match" Type="Checkbox" text="Search criteria = and &lt;&gt; must apply to whole cells" tooltip="Keep this enabled for interoperability with Microsoft Excel or for better performance" column="1" row="2" />
+        <Image id="locklookup" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        <Input id="lookup" Type="Checkbox" text="Automatically find column and row labels" column="1" row="3" />
+        <Image id="lockgeneralprec" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+        <Input id="generalprec" Type="Checkbox" text="Limit decimals for general number format" column="1" row="4" />
+        <Image id="lockprec" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" column="1" row="5">
+          <Text id="precft" text="Decimal places:" focusable="false" />
+          <Input id="prec" Type="Number" />
+        </Container>
+      </Container>
+      <Text id="label1" text="General Calculations" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false" column="1" row="1">
+      <Container id="container" Type="Vertical Stack" cell-gap="3" focusable="false">
+        <Container id="container-2" Type="Vertical Stack" focusable="false">
+          <Image id="lockiterate" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" source="res/lock.png" />
+          <Input id="iterate" Type="Checkbox" text="Iterations" />
+        </Container>
+        <Container id="grid1" Type="Grid" cell-gap="3" focusable="false">
+          <Image id="locksteps" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Text id="stepsft" text="Steps:" focusable="false" column="1" row="0" />
+          <Input id="steps" Type="Number" column="2" row="0" />
+          <Image id="lockminchange" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Text id="minchangeft" text="Minimum change:" focusable="false" column="1" row="1" />
+          <Input id="minchange" Type="Text" column="2" row="1" />
+        </Container>
+      </Container>
+      <Text id="label2" text="Iterative References" focusable="false" />
+    </Container>
+    <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="2" column-span="2">
+      <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Image id="lockthreadingenabled" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Input id="threadingenabled" Type="Checkbox" text="Enable multi-threaded calculation" tooltip="Enable multi-threaded calculation of formula-groups" column="1" row="0" column-span="2" />
+        <Input id="allowopencl" Type="Checkbox" text="Allow use of OpenCL" column="1" row="1" />
+      </Container>
+      <Text id="label4" text="CPU Threading Settings" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

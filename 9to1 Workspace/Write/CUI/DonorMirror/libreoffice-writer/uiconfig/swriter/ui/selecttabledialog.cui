@@ -1,0 +1,21 @@
+<Cui id="ui-selecttabledialog" product="9-1" version="1">
+  <Container id="select-table-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="select-table-dialog-label" text="Select Table" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Text id="select" text="The file you have selected contains more than one table. Please select the table containing the address list you want to use." text-wrapping="Wrap" horizontal-alignment="Left" focusable="false" />
+        <Container id="container" Type="Vertical Stack" role="Grow">
+          <Container id="table" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Container id="buttonbox1" Type="Horizontal Stack" horizontal-alignment="Left" focusable="false">
+          <Button id="preview" content="Preview" text="Preview" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

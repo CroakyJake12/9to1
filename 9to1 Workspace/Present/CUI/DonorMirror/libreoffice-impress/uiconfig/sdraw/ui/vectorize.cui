@@ -1,0 +1,37 @@
+<Cui id="ui-vectorize" product="9-1" version="1">
+  <Container id="vectorize-dialog" Type="Vertical Stack" modal="True">
+    <Text id="vectorize-dialog-label" text="Convert to Polygon" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="preview" content="Preview" text="Preview" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid2" Type="Grid">
+        <Text id="label2" text="Number of colors:" />
+        <Input id="colors" Type="Number" />
+        <Text id="label3" text="Point reduction:" />
+        <Input id="points" Type="Number" />
+        <Text id="tilesft" text="Tile size:" />
+        <Input id="tiles" Type="Number" />
+        <Input id="fillholes" Type="Checkbox" text="Fill holes" column-span="2" />
+      </Container>
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Text id="label5" text="Source image:" />
+        <Text id="label6" text="Vectorized image:" />
+        <Container id="container" Type="Vertical Stack">
+          <Container id="container-2" Type="Vertical Stack" role="Grow">
+            <Container id="source" Type="Overlay" role="Grow" />
+          </Container>
+        </Container>
+        <Container id="container-3" Type="Vertical Stack">
+          <Container id="container-4" Type="Vertical Stack" role="Grow">
+            <Container id="vectorized" Type="Overlay" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+      <Input id="progressbar" Type="Progress" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

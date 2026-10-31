@@ -1,0 +1,15 @@
+<Cui id="ui-alreadyexistsdialog" product="9-1" version="1">
+  <Container id="already-exists-dialog" Type="Vertical Stack">
+    <Text id="already-exists-dialog-label" text="File already exists" />
+    <Container id="container" Type="Vertical Stack" cell-gap="24">
+      <Container id="container-2" Type="Horizontal Stack">
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+      </Container>
+      <Container id="grid" Type="Grid" role="Grow">
+        <Input id="edit1" Type="Text" role="Grow" />
+        <Text id="label2" text="Subject:" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

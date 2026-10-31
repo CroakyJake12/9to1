@@ -1,0 +1,36 @@
+<Cui id="ui-annotation" product="9-1" version="1">
+  <Page id="ui-annotation-root">
+    <Image id="image7" focusable="false" source="open-menu-symbolic" />
+    <Container id="menu" Type="Menu" focusable="false">
+      <Button id="reply" Type="Menu Item" content="Reply" text="Reply" focusable="false" />
+      <Button id="sep1" Type="Menu Item" focusable="false" />
+      <Button id="resolve" Type="Menu Item" content="Resolve" text="Resolve" focusable="false" />
+      <Button id="unresolve" Type="Menu Item" content="Unresolve" text="Unresolve" focusable="false" />
+      <Button id="resolvethread" Type="Menu Item" content="Resolve Thread" text="Resolve Thread" focusable="false" />
+      <Button id="unresolvethread" Type="Menu Item" content="Unresolve Thread" text="Unresolve Thread" focusable="false" />
+      <Button id="promote" Type="Menu Item" content="Promote Comment" text="Promote Comment" focusable="false" />
+      <Button id="delete" Type="Menu Item" content="Delete Comment" text="Delete Comment" focusable="false" />
+      <Button id="deletethread" Type="Menu Item" content="Delete Comment Thread" text="Delete Comment Thread" focusable="false" />
+      <Button id="deleteby" Type="Menu Item" content="Delete All Comments by $1" text="Delete All Comments by $1" focusable="false" />
+      <Button id="deleteall" Type="Menu Item" content="Delete All Comments" text="Delete All Comments" focusable="false" />
+      <Button id="formatall" Type="Menu Item" content="Format All Comments..." text="Format All Comments..." focusable="false" />
+    </Container>
+    <Container id="annotation" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="scrolledwindow" Type="Vertical Stack" role="Grow">
+        <Container id="container" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="container-2" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="editview" Type="Overlay" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="container-3" Type="Vertical Stack" focusable="false">
+        <Container id="container-4" Type="Vertical Stack" focusable="false" role="Grow">
+          <Text id="author" text="label" focusable="false" />
+          <Text id="date" text="label" focusable="false" />
+          <Text id="resolved" text="label" focusable="false" />
+        </Container>
+        <Button id="menubutton" vertical-alignment="Top" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

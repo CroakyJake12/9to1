@@ -1,0 +1,13 @@
+{
+  "translated": 0,
+  "dropped_nodes": 0,
+  "gap_count": 0,
+  "gap_constructs": {},
+  "gaps": [],
+  "donor": "appflowy-board",
+  "app": "Boards",
+  "source": "9to1 Workspace/Boards/Source/AppFlowyBoard/lib",
+  "translated_files": 0,
+  "untranslated_files": 0,
+  "unsupported_suffixes": {}
+}

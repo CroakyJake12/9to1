@@ -1,0 +1,10 @@
+<Cui id="ui-paranumberingtab" product="9-1" version="1">
+  <Container id="draw-para-numbering" Type="Vertical Stack" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+      <Input id="checkbutton-cb-new-start" Type="Checkbox" text="Restart at this paragraph" column="0" row="0" column-span="2" />
+      <Input id="spinbutton-nf-new-start" Type="Number" focusable="false" is-enabled="false" column="1" row="1" />
+      <Input id="checkbutton-cb-number-new-start" Type="Checkbox" text="Start with:" horizontal-alignment="Left" is-enabled="false" column="0" row="1" />
+    </Container>
+    <Text id="label1" text="Paragraph Numbering" focusable="false" />
+  </Container>
+</Cui>

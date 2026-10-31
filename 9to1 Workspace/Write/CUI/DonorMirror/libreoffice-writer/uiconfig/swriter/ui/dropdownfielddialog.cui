@@ -1,0 +1,25 @@
+<Cui id="ui-dropdownfielddialog" product="9-1" version="1">
+  <Container id="dropdown-field-dialog" Type="Vertical Stack" modal="True">
+    <Text id="dropdown-field-dialog-label" text="Choose Item:" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Container id="grid2" Type="Grid">
+          <Button id="prev" content="Previous" text="Previous" />
+          <Button id="next" content="Next" text="Next" />
+        </Container>
+        <Button id="edit" content="Edit" text="Edit" />
+        <Button id="ok" content="OK" text="OK" is-enabled="false" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" role="Grow">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="list" Type="Vertical Stack" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="label1" text="Edit" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

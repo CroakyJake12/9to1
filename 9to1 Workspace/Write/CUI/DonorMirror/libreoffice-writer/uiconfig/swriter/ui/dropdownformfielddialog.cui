@@ -1,0 +1,30 @@
+<Cui id="ui-dropdownformfielddialog" product="9-1" version="1">
+  <Container id="drop-down-form-field-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="drop-down-form-field-dialog-label" text="Drop-down Form Field" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="list-grid" Type="Grid" cell-gap="12" focusable="false">
+        <Container id="grid9" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+          <Text id="item-label" text="Item" focusable="false" column="0" row="0" />
+          <Input id="item-entry" Type="Text" role="Grow" column="0" row="1" />
+        </Container>
+        <Button id="add-button" content="Add" text="Add" horizontal-alignment="Left" column="0" row="1" />
+        <Container id="grid6" Type="Grid" cell-gap="6" focusable="false" column="0" row="2">
+          <Text id="listitem-label" text="Items on list" focusable="false" column="0" row="0" />
+          <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Container id="items-treeview" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="6" focusable="false" column="0" row="2">
+            <Button id="remove-button" content="Remove" text="Remove" />
+            <Button id="up-button" content="Move Up" text="Move Up" />
+            <Button id="down-button" content="Move Down" text="Move Down" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

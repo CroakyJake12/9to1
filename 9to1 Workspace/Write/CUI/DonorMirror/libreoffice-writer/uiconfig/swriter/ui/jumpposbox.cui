@@ -1,0 +1,5 @@
+<Cui id="ui-jumpposbox" product="9-1" version="1">
+  <Container id="jump-pos-box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Input id="jumppos" Type="Text" role="Grow" />
+  </Container>
+</Cui>

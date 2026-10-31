@@ -1,0 +1,10 @@
+<Cui id="penssidebar-eraserpage" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Container id="eraserstyle-togglebox" Type="Vertical Stack">
+      <Button id="eraserstyle-trash-colliding-strokes-toggle" icon-source="pen-eraser-trash-colliding-strokes-symbolic" />
+      <Button id="eraserstyle-split-colliding-strokes-toggle" icon-source="pen-eraser-split-colliding-strokes-symbolic" />
+    </Container>
+    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="stroke-width-picker" Type="Vertical Stack" />
+  </Container>
+</Cui>

@@ -1,0 +1,21 @@
+<Cui id="ui-numberingnamedialog" product="9-1" version="1">
+  <Container id="numbering-name-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="numbering-name-dialog-label" text="Save As" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Container id="form" Type="Vertical Stack" tooltip="Names of saved formats." role="Grow" />
+          </Container>
+          <Input id="entry" Type="Text" tooltip="Enter name to identify the format to be saved." column="0" row="0" />
+        </Container>
+        <Text id="label1" text="Format" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

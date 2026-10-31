@@ -1,0 +1,22 @@
+<Cui id="ui-cellprotectionpage" product="9-1" version="1">
+  <Container id="cell-protection-page" Type="Grid" cell-gap="12" focusable="false">
+    <Container id="frame-protection" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="check-hide-all" Type="Checkbox" text="Hide all" column="0" row="0" />
+        <Input id="check-protected" Type="Checkbox" text="Protected" checked="true" column="0" row="1" />
+        <Input id="check-hide-formula" Type="Checkbox" text="Hide formula" column="0" row="2" />
+        <Text id="label1" text="Cell protection is only effective after the current sheet has been protected.
+
+Select 'Protect Sheet' from the 'Tools' menu." text-wrapping="Wrap" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="0" row-span="3" />
+      </Container>
+      <Text id="label-protection" text="Protection" focusable="false" />
+    </Container>
+    <Container id="frame-print" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="1">
+      <Container id="grid2" Type="Grid" cell-gap="12" focusable="false">
+        <Input id="check-hide-printing" Type="Checkbox" text="Hide when printing" column="0" row="0" />
+        <Text id="label4" text="The cells selected will be omitted when printing." text-wrapping="Wrap" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="label3" text="Print" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,39 @@
+<Cui id="ui-pivotcalcfielddialog" product="9-1" version="1">
+  <Container id="pivot-calc-field" Type="Vertical Stack" width="500" modal="True" focusable="false">
+    <Text id="pivot-calc-field-label" text="Insert Calculated Field" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="3" focusable="false" role="Grow">
+        <Container id="container" Type="Vertical Stack" vertical-alignment="Center" focusable="false">
+          <Container id="grid1" Type="Grid" cell-gap="10" vertical-alignment="Center" focusable="false" role="Grow">
+            <Text id="label1" text="Name:" focusable="false" column="0" row="0" />
+            <Text id="label2" text="Formula:" vertical-alignment="Top" focusable="false" column="0" row="1" />
+            <Container id="scrolledwindow-calcentry" Type="Vertical Stack" role="Grow" column="1" row="1">
+              <Input id="calcentry" Type="Text" role="Grow" />
+            </Container>
+            <Input id="calcfieldscb" Type="Select" focusable="false" role="Grow" column="1" row="0">
+              <Input id="input" Type="Text" focusable="false" />
+            </Input>
+          </Container>
+          <Container id="dialog-action-area2" Type="Horizontal Stack" cell-gap="5" horizontal-alignment="Center" vertical-alignment="Center">
+            <Button id="addbtn" content="Add" text="Add" vertical-alignment="Center" role="Grow" />
+            <Button id="modbtn" content="Modify" text="Modify" vertical-alignment="Center" role="Grow" />
+            <Button id="deletebtn" content="Delete" text="Delete" vertical-alignment="Center" role="Grow" />
+          </Container>
+        </Container>
+        <Container id="sep1" Type="Horizontal Stack" focusable="false" />
+        <Container id="box3" Type="Vertical Stack" width="250" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
+          <Text id="label3" text="Fields:" focusable="false" />
+          <Container id="container-2" Type="Vertical Stack" width="180" height="150" role="Grow">
+            <Container id="listbox-fields" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Button id="insertbtn" content="Insert Field" text="Insert Field" horizontal-alignment="Right" vertical-alignment="Center" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

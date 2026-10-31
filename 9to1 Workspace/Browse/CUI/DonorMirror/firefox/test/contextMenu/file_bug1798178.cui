@@ -1,0 +1,9 @@
+<Cui id="context-menu-file-bug1798178" product="9-1" version="1">
+  <Page id="context-menu-file-bug1798178-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="body" Type="Vertical Stack">
+        <Button id="a" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

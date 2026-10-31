@@ -1,0 +1,36 @@
+<Cui id="content-about-restart-required" product="9-1" version="1">
+  <Page id="content-about-restart-required-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="errorPageContainer" Type="Vertical Stack">
+          <Container id="text-container" Type="Vertical Stack">
+            <Container id="title-2" Type="Vertical Stack">
+              <Text id="title-text" />
+            </Container>
+            <Container id="errorLongContent" Type="Vertical Stack">
+              <Container id="errorLongDesc" Type="Vertical Stack">
+                <Text id="p" />
+                <Text id="p-2" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="restartButtonContainer" Type="Vertical Stack">
+            <Button id="restart" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="script" Type="Vertical Stack">
+        <Image id="script-icon" source="chrome://browser/content/aboutRestartRequired.js" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,14 @@
+<Cui id="base-footer" product="9-1" version="1">
+  <Page id="base-footer-root">
+    <Container id="table" Type="Grid" role="presentation">
+      <Container id="tr" Type="Horizontal Stack">
+        <Container id="td" Type="Vertical Stack" height="16" />
+      </Container>
+      <Container id="tr-2" Type="Horizontal Stack">
+        <Container id="td-2" Type="Vertical Stack" vertical-alignment="Center">
+          <Button id="a" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

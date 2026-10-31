@@ -1,0 +1,1747 @@
+{
+  "summary": {
+    "translated": 1319,
+    "dropped_nodes": 0,
+    "gap_count": 1342,
+    "gap_constructs": {
+      "unknown donor construct": 708,
+      "property not modelled": 458,
+      "web view host": 22,
+      "link action": 17,
+      "item collection (list/tree/table)": 16,
+      "parse error: syntax error: line 1, column 0": 13,
+      "keyboard shortcut table": 8,
+      "preprocessor directives": 7,
+      "inline text run": 7,
+      "split view": 6,
+      "layout spacer": 6,
+      "parse error: mismatched tag: line 4, column 9": 6,
+      "typed command declaration": 4,
+      "toolbar with overflow": 4,
+      "inline vector icon": 3,
+      "parse error: mismatched tag: line 5, column 9": 3,
+      "tab strip": 2,
+      "parse error: unbound prefix: line 2, column 0": 2,
+      "table column header": 2,
+      "separator": 2,
+      "parse error: not well-formed (invalid token): line 11, column 14": 2,
+      "parse error: junk after document element: line 4, column 0": 2,
+      "parse error: mismatched tag: line 18, column 10": 2,
+      "parse error: unbound prefix: line 4, column 4": 1,
+      "parse error: junk after document element: line 4, column 6": 1,
+      "parse error: duplicate attribute: line 56, column 26": 1,
+      "parse error: junk after document element: line 8, column 2": 1,
+      "parse error: duplicate attribute: line 8, column 8": 1,
+      "parse error: mismatched tag: line 28, column 10": 1,
+      "parse error: unbound prefix: line 4, column 2": 1,
+      "parse error: unbound prefix: line 138, column 4": 1,
+      "parse error: unbound prefix: line 66, column 10": 1,
+      "VerticalAlignment=stretch": 1,
+      "parse error: junk after document element: line 11, column 4": 1,
+      "parse error: not well-formed (invalid token): line 27, column 24": 1,
+      "parse error: not well-formed (invalid token): line 29, column 16": 1,
+      "parse error: not well-formed (invalid token): line 11, column 30": 1,
+      "parse error: mismatched tag: line 8, column 2": 1,
+      "parse error: mismatched tag: line 13, column 2": 1,
+      "parse error: not well-formed (invalid token): line 6, column 19": 1,
+      "parse error: mismatched tag: line 8, column 12": 1,
+      "parse error: not well-formed (invalid token): line 13, column 28": 1,
+      "parse error: not well-formed (invalid token): line 15, column 25": 1,
+      "parse error: mismatched tag: line 9, column 4": 1,
+      "parse error: not well-formed (invalid token): line 7, column 15": 1,
+      "parse error: mismatched tag: line 4, column 177": 1,
+      "parse error: mismatched tag: line 6, column 181": 1,
+      "parse error: mismatched tag: line 3, column 2": 1,
+      "parse error: junk after document element: line 5, column 0": 1,
+      "parse error: not well-formed (invalid token): line 13, column 39": 1,
+      "parse error: unclosed token: line 8, column 7": 1,
+      "parse error: no element found: line 2, column 0": 1,
+      "parse error: not well-formed (invalid token): line 8, column 36": 1,
+      "parse error: mismatched tag: line 4, column 16": 1,
+      "parse error: junk after document element: line 2, column 0": 1,
+      "parse error: mismatched tag: line 13, column 12": 1,
+      "parse error: mismatched tag: line 44, column 11": 1,
+      "parse error: mismatched tag: line 23, column 11": 1,
+      "select with option items": 1,
+      "parse error: not well-formed (invalid token): line 74, column 20": 1,
+      "parse error: unbound prefix: line 3, column 0": 1,
+      "transient tooltip host": 1,
+      "transient overlay host": 1
+    },
+    "pruned_stale": 0,
+    "donor": "firefox",
+    "app": "Browse",
+    "source": "9to1 Workspace/Browse/Source/FirefoxGecko/browser/base/content",
+    "translated_files": 127,
+    "untranslated_files": 66,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "aboutDialog.xhtml",
+      "cui": "aboutDialog.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 75,
+      "actions": 0,
+      "donor_sha256": "f28f4494228612f09fbd3e49a206502f0d70489ff5e953e27e11c81ec8e3d174",
+      "refreshed": false
+    },
+    {
+      "donor_file": "aboutFrameCrashed.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "aboutRestartRequired.xhtml",
+      "cui": "aboutRestartRequired.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "7b958c3aaf5d799d64544214c1d369b5f9488a8dc04dd53f283826a2a6b03f8d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "aboutRobots.xhtml",
+      "cui": "aboutRobots.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "15dc062d283159467ed9a86f8de06976ecda1800183d9790377d33d1baf55ce1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "aboutTabCrashed.xhtml",
+      "cui": "aboutTabCrashed.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 43,
+      "actions": 0,
+      "donor_sha256": "c53062756b05dd7d8b0d6e3f282ced05c8532525e3d410364d5c84e9cdf55f67",
+      "refreshed": false
+    },
+    {
+      "donor_file": "appmenu-viewcache.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "blanktab.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "blockedSite.xhtml",
+      "cui": "blockedSite.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "02d8ddc678fa2aa348df9075ab016610a3234a05d7791dde209fa175d443aeab",
+      "refreshed": false
+    },
+    {
+      "donor_file": "browser-box.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "browser-context.inc",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "browser-menubar.inc",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "browser-sets.inc",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "browser.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "default-bookmarks.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "fullscreen-and-pointerlock.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "hiddenWindowMac.xhtml",
+      "cui": "hiddenWindowMac.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "92b20f9c030e49e4829c89233d2c2d2d31a950c3f074bb22318eecaa224ef125",
+      "refreshed": false
+    },
+    {
+      "donor_file": "macWindow.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "main-popupset.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "navigator-toolbox.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "overrides/app-license.html",
+      "cui": "overrides/app-license.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "63135695a5f31fb1ed440a7f7449b8cd0ebe951e1cd03afbf189ad56b1e07bde",
+      "refreshed": false
+    },
+    {
+      "donor_file": "pageinfo/pageInfo.xhtml",
+      "cui": "pageinfo/pageInfo.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 215,
+      "actions": 4,
+      "donor_sha256": "5e1ff1ffb293129e6e256894f46c6e8c89a7c38fa53461aecb72bad31f7939e0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "popup-notifications.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "private-browsing-indicator.inc.xhtml",
+      "cui": "private-browsing-indicator.inc.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "f467f0ecbb640828ca0b17c124a9696969384530003812cf9de5caaf45863569",
+      "refreshed": false
+    },
+    {
+      "donor_file": "safeMode.xhtml",
+      "cui": "safeMode.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "e8cc583eab5da50def47505175c5c3922b6bed3ba196acebcbbeb8c43e711ec0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "sanitize.xhtml",
+      "cui": "sanitize.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 50,
+      "actions": 0,
+      "donor_sha256": "a825c1f8bd8bf55d6dfe95c53d65e28055be59128d1589c64a625fa0a709ddbe",
+      "refreshed": false
+    },
+    {
+      "donor_file": "sanitize_v2.xhtml",
+      "cui": "sanitize_v2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 96,
+      "actions": 0,
+      "donor_sha256": "8eefa6ba9261006afceab29f37217e78b01092b8685d2393eebed64317d48366",
+      "refreshed": false
+    },
+    {
+      "donor_file": "spotlight.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "swipe-navigation.inc.xhtml",
+      "cui": "swipe-navigation.inc.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "609cc08727831550a16f29868a6224c220ec1fbd4a9cc235aaa7c417df1bf05b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/about/dummy_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/about/iframe_page_csp.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/about/iframe_page_xfo.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/about/sandbox_corp_popup.html",
+      "cui": "test/about/sandbox_corp_popup.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "234a9beb7943602b68ac6e74c018b3f73539f95d50e5d65cfcecc11b1fe2acf2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/alerts/file_dom_notifications.html",
+      "cui": "test/alerts/file_dom_notifications.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "87bf4051a69f9f5ad5be4fd56b57297626442f1cf4b4fc5ab345c516150741f6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/chrome/test_aboutCrashed.xhtml",
+      "cui": "test/chrome/test_aboutCrashed.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e79a4a8fb199537072ea0314d6ec38f5dc7786d0d7fe5c7029b410f41311a7b7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/chrome/test_aboutRestartRequired.xhtml",
+      "cui": "test/chrome/test_aboutRestartRequired.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "807b3ac9c7465b579c56161f999c263d71cfbc21f2b934599293d9f9a175724a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/browser_contextmenu_loadblobinnewtab.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/contextMenu/browser_contextmenu_shareurl.html",
+      "cui": "test/contextMenu/browser_contextmenu_shareurl.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "d5a4055215c38c1cb51d435689ef000747fda3c76ba562e5e42b49169ce5c4e2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/file_bug1798178.html",
+      "cui": "test/contextMenu/file_bug1798178.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "e88029d41faadb55b25feaca96397f4dd19cf22e6991e51a04b6d0fd70edf9bf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/subtst_contextmenu.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/contextMenu/subtst_contextmenu_add_search_engine.html",
+      "cui": "test/contextMenu/subtst_contextmenu_add_search_engine.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "0b1b3b86c0e0784b4dd47f5bd904243ada5665b5ef1ac33ab45da67754697735",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/subtst_contextmenu_input.html",
+      "cui": "test/contextMenu/subtst_contextmenu_input.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "5f1cf33912ea859854a8a730508231ba649d4b6c2fb71e7ab18cff1a661ab125",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/subtst_contextmenu_webext.html",
+      "cui": "test/contextMenu/subtst_contextmenu_webext.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "a94979ba7188334b7708ca2b004d1a28d245fe742b2ac357d5ca29709f39959d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/subtst_contextmenu_xul.xhtml",
+      "cui": "test/contextMenu/subtst_contextmenu_xul.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "8cd972034779d847f8e81e6979887b53e506efa86ee4f8fdc74d721c37a4e219",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/test_contextmenu_iframe.html",
+      "cui": "test/contextMenu/test_contextmenu_iframe.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "1cd6b89fa546e44b99f5d619e22ef171674895225c79ca1b463813d6373db274",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/test_contextmenu_links.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/contextMenu/test_view_image_inline_svg.html",
+      "cui": "test/contextMenu/test_view_image_inline_svg.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "6485eb72bdb58a0f8670ad9c0e540956646ae621cca65f428c7e0335fe93d670",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/contextMenu/test_view_image_revoked_cached_blob.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/favicons/accept.html",
+      "cui": "test/favicons/accept.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "1873d8ea7659fc6d91db235e3608cced3a8aae2345eabbd5b4516425992dbcc2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/auth_test.html",
+      "cui": "test/favicons/auth_test.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "6492f642e49bb61b5fa7139e42bc48d6046acbb1fc64e0e3407b6a7b8887666c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/blank.html",
+      "cui": "test/favicons/blank.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "98dd0d6a1379d287a34d50eafc2e29b9949c54d2e8a0f8674251f67c8309778a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/cookie_favicon.html",
+      "cui": "test/favicons/cookie_favicon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "be5cb8837cebad2597e4d6c302ada9af444e99e32f2af978c936f62b66943133",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/credentials1.html",
+      "cui": "test/favicons/credentials1.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "8a3d505ea4b276c5a0733504edde9f4db62097d622a21944b5492d668d215fcd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/credentials2.html",
+      "cui": "test/favicons/credentials2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e7c7442a50e073199dbb054bf1beffffa6ea852096c07bf159602fd930db233e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/crossorigin.html",
+      "cui": "test/favicons/crossorigin.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "5c694c5eea3f410a1b67f13cb281a470725c72061ff91f47d6af63ac75bfd0ba",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/datauri-favicon.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/favicons/discovery.html",
+      "cui": "test/favicons/discovery.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "3c850fc2b0721418eae7f72488e71eaab3695cfe014562d9448edb47af0675aa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_bug970276_popup1.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/favicons/file_bug970276_popup2.html",
+      "cui": "test/favicons/file_bug970276_popup2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "a293e54cd13b92e46c8be76024fed1909861d8ba5629425b79c07768093fa3c7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon.html",
+      "cui": "test/favicons/file_favicon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "55633d092aca3e5bb1d5b41a160f557bf394b1826a11e47a3aed1b8e8f4898af",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon_change.html",
+      "cui": "test/favicons/file_favicon_change.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "1664b4c69b01fc98dd460cf67b501930557e4f491ee9755e4fa1e6dd374938a8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon_change_not_in_document.html",
+      "cui": "test/favicons/file_favicon_change_not_in_document.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "b8ce55ee4df89ba7eb96de9b16d38145bb5fcc406251bb4a27e5e981c1821030",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon_empty.html",
+      "cui": "test/favicons/file_favicon_empty.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "ecfac79bd3a1f19591c3392fd66c4b3a756dff305208d4dd72208afbaac76675",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon_no_referrer.html",
+      "cui": "test/favicons/file_favicon_no_referrer.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "2b060308998e0ef5cd6215e4ac10dcf9a163eeb45a90769af67cbeaf54f0fbdd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon_redirect.html",
+      "cui": "test/favicons/file_favicon_redirect.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "204a4e8964154b62bdbd553c03a0464ff1a813ff3ccfa326558832044d6a81e0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_favicon_thirdParty.html",
+      "cui": "test/favicons/file_favicon_thirdParty.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "1f2a9ec644ab612e3209569765fecc843a80afe9f88a347230ef3926a4da7620",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_insecure_favicon.html",
+      "cui": "test/favicons/file_insecure_favicon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "b239b79ea91d1eed1a7b735971b36febd2d4ba2adc177ab6d00ed5c35f2dad55",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_invalid_href.html",
+      "cui": "test/favicons/file_invalid_href.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "3817a250b450319ab41127d4e21a7916f2bf2fe6bfce00b56ad4f96bf25f6f40",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_mask_icon.html",
+      "cui": "test/favicons/file_mask_icon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "3c90b2fa54aea52cf0538887ee8420eef94806c07ab2346d4000b46b4a9decda",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_rich_icon.html",
+      "cui": "test/favicons/file_rich_icon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "5a8f96192888f86aa93c486147f04037c56865540dbed8697e5d6d55558205a6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_with_favicon.html",
+      "cui": "test/favicons/file_with_favicon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "b98a9cf07b5c341884cf3ecb6f092464e3ce09ad2ab8450979910580d759dd48",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/file_with_slow_favicon.html",
+      "cui": "test/favicons/file_with_slow_favicon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "09d32316d65142a17080d0596b529d8d02ab54ec986a6af7239216c3b50b9b75",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/large_favicon.html",
+      "cui": "test/favicons/large_favicon.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "3faaaf872ad1b9164bfbe8011ca5661f9cd5b6a075f8a432c85f047d86eba792",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/favicons/no-store.html",
+      "cui": "test/favicons/no-store.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "506bb6bbcd5b5dd045783fab19309c2b8ada8f35a1fed19bd3ca338523eb2ca5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/fullscreen/fullscreen.html",
+      "cui": "test/fullscreen/fullscreen.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 1,
+      "donor_sha256": "af043a8aab068e057c0ecf0e5ad430cf53909bd1cab3e2a36dfe444bf62a1816",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/fullscreen/fullscreen_frame.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/fullscreen/open_and_focus_helper.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/app_bug575561.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/app_subframe_bug575561.html",
+      "cui": "test/general/app_subframe_bug575561.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "bda4c07a1f0716a34f257dd6ae8ff316bcdde11502c670290f786924f28cf433",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/browser_bug479408_sample.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/bug792517-2.html",
+      "cui": "test/general/bug792517-2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "3743a466e643ec3c44ba5a86cc71ef81d6fee92f10092e21567c389f57ce1500",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/bug792517.html",
+      "cui": "test/general/bug792517.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "e5d043c591a35f703ce160af065a046eaf8a80ea89c6236ecfc8b14e5b6c667c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/clipboard_pastefile.html",
+      "cui": "test/general/clipboard_pastefile.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "c7568162a149a18b400cbdbf3c5d3a9b8e1db93e55c5ae6de0d3b4a844db4ce1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/download_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/dummy_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/file_documentnavigation_frameset.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/file_fullscreen-window-open.html",
+      "cui": "test/general/file_fullscreen-window-open.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "9d1ad028152f47c73b6b14912dfade224fec0051f36d7868a0a5dcb3c8817b30",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/file_window_activation.html",
+      "cui": "test/general/file_window_activation.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "f553c086105547e3e005aa4c112513802b3525498052447c370e0dc4ac025b16",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/file_window_activation2.html",
+      "cui": "test/general/file_window_activation2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "f810142ac669be2c711df07de419b2ff1aafc77754b792ea7d75037a1952e5f9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/file_with_link_to_http.html",
+      "cui": "test/general/file_with_link_to_http.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "9dab0ce15dbdbf54e59fcf05b63dea4d986ba9cd3e37fb7b8a50d6d4f4ffa26c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/navigating_window_with_download.html",
+      "cui": "test/general/navigating_window_with_download.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "07f5a50d22e935bfdff0267d45cc9611d2385e19db04c9cc570c2caa628d6fee",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/test_bug462673.html",
+      "cui": "test/general/test_bug462673.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "45f287785d5424d52d8b42246453eaf3bfb72f5bfa54bdf30fde602568ae9a88",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/test_bug628179.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/general/test_remoteTroubleshoot.html",
+      "cui": "test/general/test_remoteTroubleshoot.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "f1bf7889279dd7591fcdeee8efd55468fbd8a2c83132f4b5d3021f39b0958639",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/general/web_video.html",
+      "cui": "test/general/web_video.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "f0a3f54ea733ac4d543edd4c7c5938ec19315834d288ca70b952ba9df5842209",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/keyboard/file_empty.html",
+      "cui": "test/keyboard/file_empty.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "0f04d8957ced272a47af5ae9b79c5df4da3f3a554e00c722ecccbfc61c2b2fd7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/keyboard/focusableContent.html",
+      "cui": "test/keyboard/focusableContent.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "815e3a12d47701825bf647c8b4111443fd7062e7c7925eb27f467b734bdfca2b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/linkHandling/file_contentAreaClick_subframe_javascript.html",
+      "cui": "test/linkHandling/file_contentAreaClick_subframe_javascript.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "af6777e2d0c0996c9a76d96ee307f044305dd38cd37cf054121d184cfef0b670",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/menubar/file_shareurl.html",
+      "cui": "test/menubar/file_shareurl.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "d5a4055215c38c1cb51d435689ef000747fda3c76ba562e5e42b49169ce5c4e2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/metaTags/bad_meta_tags.html",
+      "cui": "test/metaTags/bad_meta_tags.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "f3d3ada3e2038bb5254a3f9fc06b6f879262b2f1cf6bc1a89457d725ecc4e93a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/metaTags/meta_tags.html",
+      "cui": "test/metaTags/meta_tags.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "fca04d7a906b455c3ecdcf54ae3784b3aae7a3527e734b6fc69b859e776b3a58",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/outOfProcess/file_base.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/outOfProcess/file_frame1.html",
+      "cui": "test/outOfProcess/file_frame1.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "e1a18c600dae9857d29b06ca12e3be7c274d3c099b09c6449026791f81b22f17",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/outOfProcess/file_frame2.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/outOfProcess/file_innerframe.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/pageStyle/page_style.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/pageStyle/page_style_only_alternates.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/pageStyle/page_style_sample.html",
+      "cui": "test/pageStyle/page_style_sample.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 36,
+      "actions": 0,
+      "donor_sha256": "0daa8f74bd57c3e8d6562bc273b37f601d123926cec543513d0a51e04fd9ad8e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/pageinfo/all_images.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/pageinfo/iframes.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/pageinfo/image.html",
+      "cui": "test/pageinfo/image.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "3c928d4d149c338fe2deedc19b05b22d04b3c9cd6b3933d3bcbb318c996c9757",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/pageinfo/svg_image.html",
+      "cui": "test/pageinfo/svg_image.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "c4809165b7aefd8a292fb893d6f72c4d7e5b7784d3575882c93323a661606a53",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/performance/file_empty.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/permissions/browser_autoplay_blocked.html",
+      "cui": "test/permissions/browser_autoplay_blocked.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "455c86d9c38162c599a5b36bb6a4e0ef98f8b0779aed00ec01d27bcda8fd04d3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/permissions/browser_autoplay_js.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/permissions/browser_autoplay_muted.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/permissions/empty.html",
+      "cui": "test/permissions/empty.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "aadbf2c655f45a7ca9028f82245e263bfbe48aa30b333b7ff75db3de7e5a8a9a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/permissions/permissions.html",
+      "cui": "test/permissions/permissions.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 10,
+      "actions": 5,
+      "donor_sha256": "f9412b78a6b011604a1b28dbc34b2fbb7953714e033a4f892a61713dbee6bf07",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/permissions/temporary_permissions_frame.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/permissions/temporary_permissions_subframe.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/plugins/empty_file.html",
+      "cui": "test/plugins/empty_file.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "29289eafcf069ce8044dc8c857a1e9c89a53749322ebb89ddc3a8d64b2cf8201",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/plugins/plugin_bug797677.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/popups/popup_blocker.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/popups/popup_blocker2.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/popups/popup_blocker_10_popups.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/popups/popup_blocker_a.html",
+      "cui": "test/popups/popup_blocker_a.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "cde0de77d3a506d528cf4b3e51d621b83408e84fa6a9d2bd9d3e3ee5fdf1b07d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/popups/popup_blocker_b.html",
+      "cui": "test/popups/popup_blocker_b.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "6a90d3820e1a70af625a8a288f6946e392c041fd34ed3263ed04d1004ed91313",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/popups/popup_blocker_frame.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/popups/popup_size.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/protectionsUI/benignPage.html",
+      "cui": "test/protectionsUI/benignPage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "935ce95f01528929f02ca89954f03991070b2a723f450dcaf30c8278478499bf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/canvas-fingerprinter.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/protectionsUI/containerPage.html",
+      "cui": "test/protectionsUI/containerPage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "1ab8d336691b2676161f919cacc01c04d12f380c079a6556b325bca050aae441",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/cookiePage.html",
+      "cui": "test/protectionsUI/cookiePage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "47c485255c0c6727ac9688dcac86e8434d317e2ef9a6ea8ab103d3857f616eee",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/cookieSetterPage.html",
+      "cui": "test/protectionsUI/cookieSetterPage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "2ade09c04ae43d4b75e1f449886dd5daf7cba43cf37791c589af49bea07331ce",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/emailTrackingPage.html",
+      "cui": "test/protectionsUI/emailTrackingPage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "de40a1d0538c0521d20e5a9cccee7d0e395976bae7a6026a3993868435962f3a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/embeddedPage.html",
+      "cui": "test/protectionsUI/embeddedPage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "198a31dc24570d989cfe6f8c3f7e0671ebaf4ba417a9e8cb5fed1bd917f84f5d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/file_protectionsUI_fetch.html",
+      "cui": "test/protectionsUI/file_protectionsUI_fetch.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "a61e0054ba5fa74b7b474627b92481ad488f9f577a627370135700f61964131a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/font-fingerprinter.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/protectionsUI/sandboxed.html",
+      "cui": "test/protectionsUI/sandboxed.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "43b7ef292d5b4538a876e97f191bd7da4accfc33eb82137be9ea93967e04cdf7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/trackerCookiePage.html",
+      "cui": "test/protectionsUI/trackerCookiePage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "acd18d4f4bdc1114cd546a00de8c031864d529167c52ec2b944475971df2fa14",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/protectionsUI/trackingPage.html",
+      "cui": "test/protectionsUI/trackingPage.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "f91278c37bbc047f81918ce4a1dda2747ea8014af80e4e3c853f4b18fb40058e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/sanitize/dummy_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/sanitize/site_data_test.html",
+      "cui": "test/sanitize/site_data_test.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "b77f0c593140ea6fe173436065e94720a7b3b0c6b2a0cd2adc98f7997880aa1a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/scroll-to-text-fragment/dummy_page.html",
+      "cui": "test/scroll-to-text-fragment/dummy_page.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "2d4900d1d89da40bbba280f3a414aa7473fa88c35efc181f8d6a17fb091491d1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/scroll-to-text-fragment/scroll-to-text-fragment-from-browser-chrome-target.html",
+      "cui": "test/scroll-to-text-fragment/scroll-to-text-fragment-from-browser-chrome-target.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "e6353fc651d2f4994cfac2fc0d730b02207ee199e8a9e6331ad46493ec24e45e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/dummy_iframe_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/dummy_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/file_csp_block_all_mixedcontent.html",
+      "cui": "test/siteIdentity/file_csp_block_all_mixedcontent.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "f830f8a4f2cdfe22ced33ccdbf97567bd542ebff92dfd0da26b940e0442f2e99",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedActiveContent_1.html",
+      "cui": "test/siteIdentity/file_mixedActiveContent_1.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "9e97cbfe6586b3fce36a21159679c5428a910cc7fcb99aaf3b43e65cad6ec6cf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedActiveContent_2.html",
+      "cui": "test/siteIdentity/file_mixedActiveContent_2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "a6d8b2aae7d5f3be32326d779c229840d1650376f81e6bd3dd835cf4d31d3885",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedContentFramesOnHttp.html",
+      "cui": "test/siteIdentity/file_mixedContentFramesOnHttp.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "1825775d7d617e5b4e9b89a20bff3c2ea1a69af8f9898b3801ed075e4fef07be",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedContentFromOnunload.html",
+      "cui": "test/siteIdentity/file_mixedContentFromOnunload.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "80ef5be686ab2ba9e08f9b74f13cb913c3a5b981ed20f113db8d276c9a8524e3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedContentFromOnunload_test1.html",
+      "cui": "test/siteIdentity/file_mixedContentFromOnunload_test1.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e3b66952d04432fe03c5e45452456dc261884324190a2839527338359d9dac96",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedContentFromOnunload_test2.html",
+      "cui": "test/siteIdentity/file_mixedContentFromOnunload_test2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "506bf33bc014623460a7fce9666216d7820de0d816d043594edbf8bfd2da68e1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_mixedPassiveContent.html",
+      "cui": "test/siteIdentity/file_mixedPassiveContent.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "475a288d2239a8de3185d83dc8769c4f9b7447c01a13ca3a33bdc48289edabed",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/file_pdf_blob.html",
+      "cui": "test/siteIdentity/file_pdf_blob.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "91a68dcf2efd480025caa7d8e20e77f7fb719c0e76f59509c787f0cc4849e7e1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/iframe_navigation.html",
+      "cui": "test/siteIdentity/iframe_navigation.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "cdf3109faaaf2139faca2777ad7c4fc66574ccd76c3c2612c70aa74fa1a666a1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/insecure_opener.html",
+      "cui": "test/siteIdentity/insecure_opener.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "841aa0c6e740de1af8081919606e3d01cb2cf14465a5d6bfc7d14064a16d86a8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/open-self-from-frame.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/simple_mixed_passive.html",
+      "cui": "test/siteIdentity/simple_mixed_passive.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "27cb697284609bde8783b63368d7b25188a8595760ff42c1f841d8d36b9339fc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/test-mixedcontent-securityerrors.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/test_mcb_double_redirect_image.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/test_mcb_redirect.html",
+      "cui": "test/siteIdentity/test_mcb_redirect.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "2e05383c103774a5d53d070f46b08b8b2358442f2f82c9c4d08d63bd5b1f7afc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/test_mcb_redirect_image.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/test_no_mcb_for_loopback.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/test_no_mcb_for_onions.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/siteIdentity/test_no_mcb_on_http_site_font.html",
+      "cui": "test/siteIdentity/test_no_mcb_on_http_site_font.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "ac593e1d945c538e15d7fbca5178ddb6cd3c6207af9daf5a437c14e1254e0438",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/test_no_mcb_on_http_site_font2.html",
+      "cui": "test/siteIdentity/test_no_mcb_on_http_site_font2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "dca74c008db31e5eb0dd8fef5066674ccd142b3df6a0bdb5fde6e69b0228ed68",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/test_no_mcb_on_http_site_img.html",
+      "cui": "test/siteIdentity/test_no_mcb_on_http_site_img.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "9cdd6ecc2244f777f3af2db45f52f4de2aa212f1251c060abbf9615653f92ad1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/siteIdentity/test_web_controlled_blank.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/static/dummy_page.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/sync/browser_fxa_web_channel.html",
+      "cui": "test/sync/browser_fxa_web_channel.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "b3a351148eac24d85733d49ba597dc8c15e6e9ae115f9e4fd94f432fcc313afc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabPrompts/file_beforeunload_stop.html",
+      "cui": "test/tabPrompts/file_beforeunload_stop.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "9aa4ee95a8538bd1e3209def8caed0d368a779032951fbc343037ba967c68635",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabPrompts/openPromptOffTimeout.html",
+      "cui": "test/tabPrompts/openPromptOffTimeout.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "8ac9b1e1d01f70fe88ae3721bc396f39fd535a31d884d0fa4463bf0af6831eaf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabPrompts/redirect-crossDomain-tabTitle-update.html",
+      "cui": "test/tabPrompts/redirect-crossDomain-tabTitle-update.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "bec63ce39c8f242f569a756d3c42640e907296b1c0ebe724b004336bbc744556",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabPrompts/redirect-crossDomain.html",
+      "cui": "test/tabPrompts/redirect-crossDomain.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "1f9482d1a7847debe6111894aaf4ff02eb47c7c0a7bc49bb3dcb07609c13aaec",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabPrompts/redirect-sameDomain.html",
+      "cui": "test/tabPrompts/redirect-sameDomain.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "985e1145fa7269f1aff67083eaced2e798f0ffdb6684f59ccc81be2a848cfd11",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabcrashed/file_contains_emptyiframe.html",
+      "cui": "test/tabcrashed/file_contains_emptyiframe.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "1f5eca63b82192da6da5ce663b4767afcb29848e006059a0f42541ad71b5169c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabcrashed/file_iframe.html",
+      "cui": "test/tabcrashed/file_iframe.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "b01e5592e6bbc2d599cb428f38ffcf5314cbffbeda471d0fba27b22ec2195245",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabdialogs/subdialog.xhtml",
+      "cui": "test/tabdialogs/subdialog.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 11,
+      "actions": 1,
+      "donor_sha256": "b53a2718a0443dd3a04e331f34425d3377cea8711c5d033fb503f8cfefc51fd6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/tabdialogs/test_page.html",
+      "cui": "test/tabdialogs/test_page.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "aa1776a62d457bb3a0098b6d3da58f96484d5869377bb373d2db8bcdb0d93a36",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/webextensions/file_install_extensions.html",
+      "cui": "test/webextensions/file_install_extensions.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "040f1b6a5e4eff6df893e894932cb1b18b9ebf96c567f350787086034f022f3f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/webrtc/get_user_media.html",
+      "cui": "test/webrtc/get_user_media.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "7b50d7e66f3340e37f24a61d9624b21917220c6713ae7e4dad4abb2e4aa04667",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/webrtc/get_user_media2.html",
+      "cui": "test/webrtc/get_user_media2.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "7c8a9601bde2ac98898497ed79a9fe0b6504a8af3fcf22cd80c919d1d059c5f5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/webrtc/get_user_media_in_frame.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/webrtc/get_user_media_in_xorigin_frame.html",
+      "cui": "test/webrtc/get_user_media_in_xorigin_frame.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "a26c84d74107a03f3aa4ecd89cc1ef035b6c577a2f58667310c443e7f3aa8b25",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/webrtc/get_user_media_in_xorigin_frame_ancestor.html",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "test/webrtc/peerconnection_connect.html",
+      "cui": "test/webrtc/peerconnection_connect.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "ed52a5a125d778ccca5db424201107b88c347fa3c8399ebb8960ecfe3c5b9dd5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/webrtc/single_peerconnection.html",
+      "cui": "test/webrtc/single_peerconnection.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "8fefcda1c9059c8a398e6174a118241d79b5d2b65a5132ecd97bd9fb7ad2202e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "test/zoom/zoom_test.html",
+      "cui": "test/zoom/zoom_test.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "bf18cf66a59f4a77bcf5c3e81668c78a5951b679f2b71c0839b799f7138832f2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "titlebar-items.inc.xhtml",
+      "cui": "titlebar-items.inc.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 6,
+      "actions": 4,
+      "donor_sha256": "601dab3c09e1705fd66d1e5849aa1a9599719d976cd028bf32df694f32915634",
+      "refreshed": false
+    },
+    {
+      "donor_file": "unified-extensions-viewcache.inc.xhtml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xul"
+    },
+    {
+      "donor_file": "webext-panels.xhtml",
+      "cui": "webext-panels.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "add5402c59c3772ceb813157afee7dbfc1a4a6db342036483967bee694bcc8ae",
+      "refreshed": false
+    },
+    {
+      "donor_file": "webrtcIndicator.xhtml",
+      "cui": "webrtcIndicator.cui",
+      "status": "translated",
+      "dialect": "xul",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "16c886bb078ee39e15dbc2c537dd6b8c76d48616e9d6aae21428ab1b255e23be",
+      "refreshed": false
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+<Cui id="ui-sortoptionspage" product="9-1" version="1">
+  <Container id="sort-options-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame2" Type="Vertical Stack" focusable="false">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="case" Type="Checkbox" text="Case sensitive" column="0" row="0" />
+        <Input id="formats" Type="Checkbox" text="Include formats" column="0" row="1" />
+        <Container id="container" Type="Vertical Stack" cell-gap="3" focusable="false" column="0" row="2">
+          <Input id="naturalsort" Type="Checkbox" text="Enable natural sort" tooltip="Numbers embedded in text are sorted according to their value." />
+          <Input id="doublenaturalsortrb" Type="Radio" text="Recognize decimal separator" tooltip="Example: A1.14 (with dot as separator) contains character 'A' and number 1.14" checked="true" />
+          <Input id="integernaturalsortrb" Type="Radio" text="Decimal separator as regular character" tooltip="Example: In A1.14, the dot is a character, not a decimal separator." />
+        </Container>
+        <Input id="includenotes" Type="Checkbox" text="Include boundary column(s) containing only comments" column="0" row="3" />
+        <Input id="includeimages" Type="Checkbox" text="Include boundary column(s) containing only images" column="0" row="4" />
+        <Input id="copyresult" Type="Checkbox" text="Copy sort results to:" column="0" row="5" />
+        <Input id="sortuser" Type="Checkbox" text="Custom sort order" column="0" row="7" />
+        <Container id="container-2" Type="Vertical Stack" cell-gap="3" focusable="false" column="0" row="6">
+          <Input id="outarealb" Type="Select" focusable="false" />
+          <Input id="outareaed" Type="Text" role="Grow" />
+        </Container>
+        <Input id="sortuserlb" Type="Select" focusable="false" column="0" row="8" />
+        <Container id="container-3" Type="Grid" cell-gap="3" focusable="false" column="0" row="9">
+          <Text id="label6" text="Locale" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+          <Text id="algorithmft" text="Options" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+          <Input id="language" Type="Select" focusable="false" column="0" row="1">
+            <Input id="input" Type="Text" focusable="false" />
+          </Input>
+          <Input id="algorithmlb" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+        </Container>
+      </Container>
+      <Text id="label2" text="Sort Options" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

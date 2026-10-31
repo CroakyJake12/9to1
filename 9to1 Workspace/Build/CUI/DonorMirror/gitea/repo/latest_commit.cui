@@ -1,0 +1,11 @@
+<Cui id="repo-latest-commit" product="9-1" version="1">
+  <Page id="repo-latest-commit-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="span" text="{Binding Unresolved}">
+        <Text id="span-2" text="{Binding Unresolved}" />
+        <Button id="button" />
+        <Container id="pre" Type="Vertical Stack" />
+      </Text>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,27 @@
+<Cui id="ui-dapiservicedialog" product="9-1" version="1">
+  <Container id="dapiservice-dialog" Type="Vertical Stack" modal="True" focusable="false" role="Grow">
+    <Text id="dapiservice-dialog-label" text="External Source" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label2" text="Service" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+          <Text id="label3" text="Source" horizontal-alignment="Left" focusable="false" column="0" row="1" />
+          <Text id="label4" text="Name" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+          <Text id="label5" text="User" horizontal-alignment="Left" focusable="false" column="0" row="3" />
+          <Text id="label6" text="Password" horizontal-alignment="Left" focusable="false" column="0" row="4" />
+          <Input id="password" Type="Text" role="Grow" column="1" row="4" />
+          <Input id="user" Type="Text" role="Grow" column="1" row="3" />
+          <Input id="name" Type="Text" role="Grow" column="1" row="2" />
+          <Input id="source" Type="Text" role="Grow" column="1" row="1" />
+          <Input id="service" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+        </Container>
+        <Text id="label1" text="Selection" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

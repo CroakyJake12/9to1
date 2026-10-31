@@ -1,0 +1,37 @@
+<Cui id="ui-tablecolumnpage" product="9-1" version="1">
+  <Page id="ui-tablecolumnpage-root">
+    <Image id="image7" focusable="false" source="go-previous" />
+    <Image id="image8" focusable="false" source="go-next" />
+    <Container id="table-column-page" Type="Vertical Stack" focusable="false">
+      <Container id="gd-table-column-page" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="adaptwidth" Type="Checkbox" text="Adapt table width" column="0" row="0" />
+        <Input id="adaptcolumns" Type="Checkbox" text="Adjust columns proportionally" column="0" row="1" />
+        <Container id="grid14" Type="Grid" cell-gap="12" focusable="false" column="0" row="2">
+          <Text id="spaceft" text="Remaining space:" focusable="false" column="0" row="0" />
+          <Text id="space" focusable="false" role="Grow" column="1" row="0" />
+          <Input id="spacefmt" Type="Number" column="2" row="0" />
+        </Container>
+        <Container id="frame7" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="3">
+          <Container id="columnwidthsgrid" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="1" text="1" focusable="false" is-enabled="false" role="Grow" column="1" row="0" />
+            <Text id="2" text="2" focusable="false" is-enabled="false" role="Grow" column="2" row="0" column-span="2" />
+            <Text id="3" text="3" focusable="false" is-enabled="false" role="Grow" column="4" row="0" column-span="2" />
+            <Text id="4" text="4" focusable="false" is-enabled="false" role="Grow" column="6" row="0" column-span="2" />
+            <Text id="5" text="5" focusable="false" is-enabled="false" role="Grow" column="8" row="0" column-span="2" />
+            <Text id="6" text="6" focusable="false" is-enabled="false" role="Grow" column="10" row="0" />
+            <Button id="back" horizontal-alignment="Left" is-enabled="false" column="0" row="0" />
+            <Button id="next" horizontal-alignment="Right" is-enabled="false" column="11" row="0" />
+            <Input id="width1" Type="Number" horizontal-alignment="Center" is-enabled="false" role="Grow" column="0" row="1" column-span="2" />
+            <Input id="width2" Type="Number" horizontal-alignment="Center" is-enabled="false" role="Grow" column="2" row="1" column-span="2" />
+            <Input id="width3" Type="Number" horizontal-alignment="Center" is-enabled="false" role="Grow" column="4" row="1" column-span="2" />
+            <Input id="width4" Type="Number" horizontal-alignment="Center" is-enabled="false" role="Grow" column="6" row="1" column-span="2" />
+            <Input id="width5" Type="Number" horizontal-alignment="Center" is-enabled="false" role="Grow" column="8" row="1" column-span="2" />
+            <Input id="width6" Type="Number" horizontal-alignment="Center" is-enabled="false" role="Grow" column="10" row="1" column-span="2" />
+          </Container>
+          <Text id="label26" text="Column Width" focusable="false" />
+        </Container>
+      </Container>
+      <Text id="text" text="Columns" focusable="false" />
+    </Container>
+  </Page>
+</Cui>

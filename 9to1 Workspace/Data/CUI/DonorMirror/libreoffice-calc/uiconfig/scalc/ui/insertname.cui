@@ -1,0 +1,16 @@
+<Cui id="ui-insertname" product="9-1" version="1">
+  <Container id="insert-name-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="insert-name-dialog-label" text="Paste Names" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="pasteall" content="Paste All" text="Paste All" />
+        <Button id="paste" content="Paste" text="Paste" />
+        <Button id="close" content="Close" text="Close" />
+      </Container>
+      <Container id="container" Type="Vertical Stack" role="Grow">
+        <Container id="ctrl" Type="Vertical Stack" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

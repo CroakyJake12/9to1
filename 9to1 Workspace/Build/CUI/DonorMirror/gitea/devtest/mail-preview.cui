@@ -1,0 +1,25 @@
+<Cui id="devtest-mail-preview" product="9-1" version="1">
+  <Page id="devtest-mail-preview-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Button id="a" />
+        <Text id="p" text="Mailer service is not enabled or no template is found" />
+      </Container>
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack" />
+        <Container id="div-5" Type="Vertical Stack" />
+        <Container id="div-6" Type="Vertical Stack">
+          <Container id="iframe" Type="Overlay">
+            <Text id="iframe-label" text="Light mail preview" />
+            <Image id="iframe-icon" source="[value]/devtest/mail-preview/[value]?scheme=light" />
+          </Container>
+          <Container id="iframe-2" Type="Overlay">
+            <Text id="iframe-label-2" text="Dark mail preview" />
+            <Image id="iframe-icon-2" source="[value]/devtest/mail-preview/[value]?scheme=dark" />
+          </Container>
+        </Container>
+        <Container id="style" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

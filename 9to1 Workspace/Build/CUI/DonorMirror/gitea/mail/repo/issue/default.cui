@@ -1,0 +1,36 @@
+<Cui id="issue-default" product="9-1" version="1">
+  <Page id="issue-default-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack" />
+      <Container id="body" Type="Vertical Stack">
+        <Text id="p" text="{Binding Unresolved}" />
+        <Text id="p-2" text="[value]
+				[value]
+				[value]
+
+				[value]
+				[value]
+				[value]
+
+				[value]
+			
+				[value]" />
+        <Text id="p-3">
+          <Container id="hr" Type="Vertical Stack" />
+          <Container id="div" Type="Vertical Stack">
+            <Container id="pre" Type="Vertical Stack" />
+            <Container id="div-2" Type="Vertical Stack" />
+          </Container>
+        </Text>
+        <Container id="ul" Type="Vertical Stack">
+          <Container id="li" Type="Horizontal Stack">
+            <Button id="a" />
+          </Container>
+        </Container>
+        <Text id="p-4">
+          <Button id="a-2" />
+        </Text>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

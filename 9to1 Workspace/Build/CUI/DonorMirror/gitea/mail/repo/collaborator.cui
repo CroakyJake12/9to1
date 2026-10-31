@@ -1,0 +1,12 @@
+<Cui id="repo-collaborator" product="9-1" version="1">
+  <Page id="repo-collaborator-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack" />
+      <Container id="body" Type="Vertical Stack">
+        <Text id="p">
+          <Button id="a" />
+        </Text>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

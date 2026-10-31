@@ -1,0 +1,41 @@
+<Cui id="ui-autoformattable" product="9-1" version="1">
+  <Container id="auto-format-table-dialog" Type="Vertical Stack" modal="True">
+    <Text id="auto-format-table-dialog-label" text="AutoFormat" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" role="Grow">
+        <Container id="format" Type="Vertical Stack" role="Grow">
+          <Container id="container" Type="Grid">
+            <Container id="grid2" Type="Grid" role="Grow">
+              <Container id="preview" Type="Overlay" role="Grow" />
+              <Container id="container-2" Type="Vertical Stack" role="Grow">
+                <Container id="formatlb" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="container-3" Type="Horizontal Stack" cell-gap="6">
+              <Button id="add" content="Add" text="Add" />
+              <Button id="remove" content="Delete" text="Delete" />
+              <Button id="rename" content="Rename" text="Rename" />
+            </Container>
+          </Container>
+          <Text id="label1" text="Format" />
+        </Container>
+        <Container id="formatting" Type="Vertical Stack">
+          <Container id="grid4" Type="Grid">
+            <Input id="numformatcb" Type="Checkbox" text="Number format" />
+            <Input id="bordercb" Type="Checkbox" text="Borders" />
+            <Input id="fontcb" Type="Checkbox" text="Font" />
+            <Input id="patterncb" Type="Checkbox" text="Pattern" />
+            <Input id="alignmentcb" Type="Checkbox" text="Alignment" />
+            <Input id="autofitcb" Type="Checkbox" text="AutoFit width and height" />
+          </Container>
+          <Text id="label2" text="Formatting" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

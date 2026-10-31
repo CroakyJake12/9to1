@@ -1,0 +1,63 @@
+<Cui id="ui-fldfuncpage" product="9-1" version="1">
+  <Container id="field-func-page" Type="Vertical Stack" cell-gap="12" role="Grow">
+    <Container id="typeframe" Type="Vertical Stack" role="Grow">
+      <Container id="container" Type="Vertical Stack" role="Grow">
+        <Container id="type" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="label1" text="Type" />
+    </Container>
+    <Container id="selectframe" Type="Vertical Stack" role="Grow">
+      <Container id="container-2" Type="Vertical Stack" role="Grow">
+        <Container id="select" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="label4" text="Select" />
+    </Container>
+    <Container id="formatframe" Type="Vertical Stack" role="Grow">
+      <Container id="container-3" Type="Vertical Stack" role="Grow">
+        <Container id="format" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="label2" text="Format" />
+    </Container>
+    <Container id="grid1" Type="Grid" role="Grow">
+      <Button id="macro" content="Macro..." text="Macro..." horizontal-alignment="Right" />
+      <Container id="valuegroup" Type="Grid" role="Grow">
+        <Text id="valueft" text="Value" />
+        <Input id="value" Type="Text" role="Grow" />
+      </Container>
+      <Container id="grid3" Type="Grid" role="Grow">
+        <Text id="nameft" text="Name" />
+        <Input id="cond-function" Type="Text" role="Grow" />
+      </Container>
+      <Container id="grid4" Type="Grid" role="Grow">
+        <Text id="cond1ft" text="Then" />
+        <Input id="cond1" Type="Text" role="Grow" />
+      </Container>
+      <Container id="grid5" Type="Grid">
+        <Text id="cond2ft" text="Else" />
+        <Input id="cond2" Type="Text" role="Grow" />
+      </Container>
+      <Container id="listgroup" Type="Grid">
+        <Container id="grid9" Type="Grid" role="Grow">
+          <Text id="itemft" text="Item" />
+          <Input id="item" Type="Text" role="Grow" />
+        </Container>
+        <Button id="add" content="Add" text="Add" horizontal-alignment="Left" />
+        <Container id="grid6" Type="Grid">
+          <Text id="listitemft" text="Items on list" />
+          <Container id="container-4" Type="Vertical Stack" role="Grow">
+            <Container id="listitems" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="6" horizontal-alignment="Right">
+            <Button id="remove" content="Remove" text="Remove" />
+            <Button id="up" content="Move Up" text="Move Up" />
+            <Button id="down" content="Move Down" text="Move Down" />
+          </Container>
+          <Container id="grid8" Type="Grid">
+            <Text id="listnameft" text="Name" />
+            <Input id="listname" Type="Text" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

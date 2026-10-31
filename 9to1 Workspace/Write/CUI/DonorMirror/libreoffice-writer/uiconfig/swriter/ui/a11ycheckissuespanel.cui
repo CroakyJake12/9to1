@@ -1,0 +1,21 @@
+<Cui id="ui-a11ycheckissuespanel" product="9-1" version="1">
+  <Container id="a11y-check-issues-panel" Type="Vertical Stack" width="300" cell-gap="3" focusable="false" role="Grow">
+    <Container id="grid-options" Type="Grid" focusable="false">
+      <Text id="lb-options" text="Adjust accessibility check options" text-wrapping="Wrap" horizontal-alignment="Left" focusable="false" role="Grow" column="0" row="0" />
+      <Button id="b-options" content="Options..." text="Options..." horizontal-alignment="Right" vertical-alignment="Center" column="1" row="0" />
+    </Container>
+    <Container id="sep" Type="Horizontal Stack" focusable="false" />
+    <Container id="expand-errors" Type="Vertical Stack">
+      <Container id="accessibility-box-err" Type="Vertical Stack" focusable="false" />
+      <Text id="expand-errors-label" text="Accessibility errors" focusable="false" />
+    </Container>
+    <Container id="sep-level" Type="Horizontal Stack" focusable="false" />
+    <Container id="expand-warnings" Type="Vertical Stack">
+      <Container id="accessibility-box-wrn" Type="Vertical Stack" focusable="false" />
+      <Text id="expand-warns-lb" text="Accessibility warnings" focusable="false" />
+    </Container>
+    <Container id="update-box" Type="Vertical Stack" focusable="false">
+      <Button id="update-link-button" content="Click to update..." text="Click to update..." />
+    </Container>
+  </Container>
+</Cui>

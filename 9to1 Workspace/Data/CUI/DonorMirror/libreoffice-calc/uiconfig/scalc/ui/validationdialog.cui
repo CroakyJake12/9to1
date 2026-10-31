@@ -1,0 +1,17 @@
+<Cui id="ui-validationdialog" product="9-1" version="1">
+  <Container id="validation-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="validation-dialog-label" text="Validity" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="reset" content="Reset" text="Reset" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="container" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+        <Container id="refinputbox" Type="Vertical Stack" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

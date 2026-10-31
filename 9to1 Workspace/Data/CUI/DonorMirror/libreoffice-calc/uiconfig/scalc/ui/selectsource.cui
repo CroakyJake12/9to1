@@ -1,0 +1,24 @@
+<Cui id="ui-selectsource" product="9-1" version="1">
+  <Container id="select-source-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="select-source-dialog-label" text="Select Source" />
+    <Container id="dialog-vbox3" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area3" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="selection" Type="Vertical Stack" focusable="false">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Input id="namedrange" Type="Radio" text="Named range:" />
+            <Input id="rangelb" Type="Select" focusable="false" role="Grow" />
+          </Container>
+          <Input id="selection-2" Type="Radio" text="Current selection" checked="true" />
+          <Input id="database" Type="Radio" text="Data source registered in Calc" />
+          <Input id="external" Type="Radio" text="External source/interface" />
+        </Container>
+        <Text id="label1" text="Selection" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

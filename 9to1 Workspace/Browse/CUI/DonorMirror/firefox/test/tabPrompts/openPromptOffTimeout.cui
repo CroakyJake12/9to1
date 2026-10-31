@@ -1,0 +1,7 @@
+<Cui id="tab-prompts-open-prompt-off-timeout" product="9-1" version="1">
+  <Page id="tab-prompts-open-prompt-off-timeout-root">
+    <Container id="body" Type="Vertical Stack">
+      <Container id="script" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

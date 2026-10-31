@@ -1,0 +1,44 @@
+<Cui id="settings-lfs-locks" product="9-1" version="1">
+  <Page id="settings-lfs-locks-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Text id="h4">
+          <Button id="a" />
+        </Text>
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="form" Type="Vertical Stack">
+            <Container id="div-4" Type="Vertical Stack">
+              <Input id="input" Type="Text" />
+              <Button id="button" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="lfs-files-locks-table" Type="Grid">
+          <Container id="tbody" Type="Grid">
+            <Container id="tr" Type="Horizontal Stack">
+              <Container id="td" Type="Vertical Stack">
+                <Button id="a-2" text="{Binding Unresolved}" />
+                <Text id="span" text="{Binding Unresolved}" />
+                <Text id="span-2" text="{Binding Unresolved}" />
+              </Container>
+              <Container id="td-2" Type="Vertical Stack">
+                <Button id="a-3" />
+              </Container>
+              <Container id="td-3" Type="Vertical Stack" />
+              <Container id="td-4" Type="Vertical Stack">
+                <Container id="form-2" Type="Vertical Stack">
+                  <Button id="button-2">
+                    <Text id="span-3" text="{Binding Unresolved}" />
+                  </Button>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="tr-2" Type="Horizontal Stack">
+              <Container id="td-5" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

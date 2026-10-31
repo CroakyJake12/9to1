@@ -1,0 +1,11 @@
+<Cui id="user-controls-location-unavailable-indicator" product="9-1" version="1">
+  <Page id="user-controls-location-unavailable-indicator-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="stackpanel" Type="Vertical Stack" horizontal-alignment="Center">
+        <Image id="fonticon" horizontal-alignment="Center" source="{Binding Glyph}" />
+        <Text id="textblock" horizontal-alignment="Center" text="{Binding Title}" />
+        <Text id="textblock-2" horizontal-alignment="Center" foreground="{ThemeResource TextFillColorSecondaryBrush}" text="{Binding Message}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

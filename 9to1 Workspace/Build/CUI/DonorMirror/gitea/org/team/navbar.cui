@@ -1,0 +1,12 @@
+<Cui id="team-navbar" product="9-1" version="1">
+  <Page id="team-navbar-root">
+    <Container id="div" Type="Vertical Stack">
+      <Button id="a">
+        <Text id="strong" text="{Binding Unresolved}" />
+      </Button>
+      <Button id="a-2">
+        <Text id="strong-2" text="{Binding Unresolved}" />
+      </Button>
+    </Container>
+  </Page>
+</Cui>

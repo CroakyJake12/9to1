@@ -1,0 +1,19 @@
+<Cui id="user-org-profile-avatar" product="9-1" version="1">
+  <Page id="user-org-profile-avatar-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="div-4" Type="Vertical Stack">
+            <Text id="span">
+              <Button id="a" />
+            </Text>
+            <Text id="span-2">
+              <Container id="div-5" Type="Vertical Stack" />
+              <Container id="div-6" Type="Vertical Stack" />
+            </Text>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,565 @@
+<Cui id="content-messenger" product="9-1" version="1">
+  <Actions>
+    <Action name="cmd-copy" command="cmd_copy" />
+    <Action name="cmd-new-message" command="cmd_newMessage" />
+    <Action name="cmd-paste" command="cmd_paste" />
+    <Action name="cmd-select-all" command="cmd_selectAll" />
+    <Action name="g-spaces-toolbar.toggle-toolbar" command="gSpacesToolbar.toggleToolbar(false);" />
+    <Action name="go-do-command" command="goDoCommand('Browser:Forward');" />
+    <Action name="open-invitations-dialog" command="openInvitationsDialog()" />
+    <Action name="return-content-area-click" command="return contentAreaClick(event);" />
+    <Action name="switch-pane-focus" command="SwitchPaneFocus(event);" />
+  </Actions>
+  <Page id="content-messenger-root">
+    <Container id="messengerWindow" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="link-6" Type="Vertical Stack" />
+        <Container id="link-7" Type="Vertical Stack" />
+        <Container id="link-8" Type="Vertical Stack" />
+        <Container id="link-9" Type="Vertical Stack" />
+        <Container id="link-10" Type="Vertical Stack" />
+        <Container id="link-11" Type="Vertical Stack" />
+        <Container id="link-12" Type="Vertical Stack" />
+        <Container id="link-13" Type="Vertical Stack" />
+        <Container id="link-14" Type="Vertical Stack" />
+        <Container id="link-15" Type="Vertical Stack" />
+        <Container id="link-16" Type="Vertical Stack" />
+        <Container id="link-17" Type="Vertical Stack" />
+        <Container id="link-18" Type="Vertical Stack" />
+        <Container id="link-19" Type="Vertical Stack" />
+        <Container id="link-20" Type="Vertical Stack" />
+        <Container id="link-21" Type="Vertical Stack" />
+        <Container id="link-22" Type="Vertical Stack" />
+        <Container id="link-23" Type="Vertical Stack" />
+        <Container id="link-24" Type="Vertical Stack" />
+        <Container id="link-25" Type="Vertical Stack" />
+        <Container id="link-26" Type="Vertical Stack" />
+        <Container id="link-27" Type="Vertical Stack" />
+        <Container id="link-28" Type="Vertical Stack" />
+        <Container id="link-29" Type="Vertical Stack" />
+        <Container id="link-30" Type="Vertical Stack" />
+        <Container id="link-31" Type="Vertical Stack" />
+        <Container id="link-32" Type="Vertical Stack" />
+        <Container id="link-33" Type="Vertical Stack" />
+        <Container id="link-34" Type="Vertical Stack" />
+        <Container id="link-35" Type="Vertical Stack" />
+        <Container id="link-36" Type="Vertical Stack" />
+        <Container id="link-37" Type="Vertical Stack" />
+        <Container id="link-38" Type="Vertical Stack" />
+        <Container id="link-39" Type="Vertical Stack" />
+        <Container id="link-40" Type="Vertical Stack" />
+        <Container id="link-41" Type="Vertical Stack" />
+        <Container id="link-42" Type="Vertical Stack" />
+        <Container id="link-43" Type="Vertical Stack" />
+        <Container id="link-44" Type="Vertical Stack" />
+        <Container id="link-45" Type="Vertical Stack" />
+        <Container id="link-46" Type="Vertical Stack" />
+        <Container id="link-47" Type="Vertical Stack" />
+        <Container id="link-48" Type="Vertical Stack" />
+        <Container id="link-49" Type="Vertical Stack" />
+        <Container id="link-50" Type="Vertical Stack" />
+        <Container id="link-51" Type="Vertical Stack" />
+        <Container id="link-52" Type="Vertical Stack" />
+        <Container id="link-53" Type="Vertical Stack" />
+        <Container id="link-54" Type="Vertical Stack" />
+        <Container id="link-55" Type="Vertical Stack" />
+        <Container id="link-56" Type="Vertical Stack" />
+        <Container id="link-57" Type="Vertical Stack" />
+        <Container id="link-58" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/globalOverlay.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack">
+          <Image id="script-icon-2" source="chrome://global/content/editMenuOverlay.js" />
+        </Container>
+        <Container id="script-3" Type="Vertical Stack">
+          <Image id="script-icon-3" source="chrome://messenger/content/mailWindow.js" />
+        </Container>
+        <Container id="script-4" Type="Vertical Stack">
+          <Image id="script-icon-4" source="chrome://messenger/content/messenger.js" />
+        </Container>
+        <Container id="script-5" Type="Vertical Stack">
+          <Image id="script-icon-5" source="chrome://messenger/content/specialTabs.js" />
+        </Container>
+        <Container id="script-6" Type="Vertical Stack">
+          <Image id="script-icon-6" source="chrome://messenger/content/spacesToolbar.js" />
+        </Container>
+        <Container id="script-7" Type="Vertical Stack">
+          <Image id="script-icon-7" source="chrome://messenger/content/glodaFacetTab.js" />
+        </Container>
+        <Container id="script-8" Type="Vertical Stack">
+          <Image id="script-icon-8" source="chrome://messenger/content/searchBar.js" />
+        </Container>
+        <Container id="script-9" Type="Vertical Stack">
+          <Image id="script-icon-9" source="chrome://messenger/content/mail3PaneWindowCommands.js" />
+        </Container>
+        <Container id="script-10" Type="Vertical Stack">
+          <Image id="script-icon-10" source="chrome://global/content/contentAreaUtils.js" />
+        </Container>
+        <Container id="script-11" Type="Vertical Stack">
+          <Image id="script-icon-11" source="chrome://messenger/content/browserPopups.js" />
+        </Container>
+        <Container id="script-12" Type="Vertical Stack">
+          <Image id="script-icon-12" source="chrome://messenger/content/accountUtils.js" />
+        </Container>
+        <Container id="script-13" Type="Vertical Stack">
+          <Image id="script-icon-13" source="chrome://communicator/content/contentAreaClick.js" />
+        </Container>
+        <Container id="script-14" Type="Vertical Stack">
+          <Image id="script-icon-14" source="chrome://messenger/content/toolbarIconColor.js" />
+        </Container>
+        <Container id="script-15" Type="Vertical Stack">
+          <Image id="script-icon-15" source="chrome://messenger/content/jsTreeView.js" />
+        </Container>
+        <Container id="script-16" Type="Vertical Stack">
+          <Image id="script-icon-16" source="chrome://messenger/content/chat/chat-messenger.js" />
+        </Container>
+        <Container id="script-17" Type="Vertical Stack">
+          <Image id="script-icon-17" source="chrome://messenger/content/chat/imStatusSelector.js" />
+        </Container>
+        <Container id="script-18" Type="Vertical Stack">
+          <Image id="script-icon-18" source="chrome://messenger/content/chat/imContextMenu.js" />
+        </Container>
+        <Container id="script-19" Type="Vertical Stack">
+          <Image id="script-icon-19" source="chrome://messenger/content/chat/chat-conversation.js" />
+        </Container>
+        <Container id="script-20" Type="Vertical Stack">
+          <Image id="script-icon-20" source="chrome://messenger/content/addressbook/addressBookTab.js" />
+        </Container>
+        <Container id="script-21" Type="Vertical Stack">
+          <Image id="script-icon-21" source="chrome://messenger/content/preferences/preferencesTab.js" />
+        </Container>
+        <Container id="script-22" Type="Vertical Stack">
+          <Image id="script-icon-22" source="chrome://messenger/content/mailCore.js" />
+        </Container>
+        <Container id="script-23" Type="Vertical Stack">
+          <Image id="script-icon-23" source="chrome://messenger/content/mailCommands.js" />
+        </Container>
+        <Container id="script-24" Type="Vertical Stack">
+          <Image id="script-icon-24" source="chrome://messenger/content/mailWindowOverlay.js" />
+        </Container>
+        <Container id="script-25" Type="Vertical Stack">
+          <Image id="script-icon-25" source="chrome://messenger/content/mailTabs.js" />
+        </Container>
+        <Container id="script-26" Type="Vertical Stack">
+          <Image id="script-icon-26" source="chrome://messenger-newsblog/content/newsblogOverlay.js" />
+        </Container>
+        <Container id="script-27" Type="Vertical Stack">
+          <Image id="script-icon-27" source="chrome://messenger/content/mail-offline.js" />
+        </Container>
+        <Container id="script-28" Type="Vertical Stack">
+          <Image id="script-icon-28" source="chrome://messenger/content/msgViewPickerOverlay.js" />
+        </Container>
+        <Container id="script-29" Type="Vertical Stack">
+          <Image id="script-icon-29" source="chrome://messenger/content/viewZoomOverlay.js" />
+        </Container>
+        <Container id="script-30" Type="Vertical Stack">
+          <Image id="script-icon-30" source="chrome://communicator/content/utilityOverlay.js" />
+        </Container>
+        <Container id="script-31" Type="Vertical Stack">
+          <Image id="script-icon-31" source="chrome://messenger/content/chat/chat-conversation-info.js" />
+        </Container>
+        <Container id="script-32" Type="Vertical Stack">
+          <Image id="script-icon-32" source="chrome://gloda/content/autocomplete-richlistitem.js" />
+        </Container>
+        <Container id="script-33" Type="Vertical Stack">
+          <Image id="script-icon-33" source="chrome://gloda/content/glodacomplete.js" />
+        </Container>
+        <Container id="script-34" Type="Vertical Stack">
+          <Image id="script-icon-34" source="chrome://messenger/content/chat/chat-contact.js" />
+        </Container>
+        <Container id="script-35" Type="Vertical Stack">
+          <Image id="script-icon-35" source="chrome://messenger/content/chat/chat-group.js" />
+        </Container>
+        <Container id="script-36" Type="Vertical Stack">
+          <Image id="script-icon-36" source="chrome://messenger/content/chat/chat-imconv.js" />
+        </Container>
+        <Container id="script-37" Type="Vertical Stack">
+          <Image id="script-icon-37" source="chrome://messenger/content/tabmail-tab.js" />
+        </Container>
+        <Container id="script-38" Type="Vertical Stack">
+          <Image id="script-icon-38" source="chrome://messenger/content/tabmail-tabs.js" />
+        </Container>
+        <Container id="script-39" Type="Vertical Stack">
+          <Image id="script-icon-39" source="chrome://messenger/content/tabmail.js" />
+        </Container>
+        <Container id="script-40" Type="Vertical Stack">
+          <Image id="script-icon-40" source="chrome://messenger/content/messenger-customization.js" />
+        </Container>
+        <Container id="script-41" Type="Vertical Stack">
+          <Image id="script-icon-41" source="chrome://messenger/content/customizable-toolbar.js" />
+        </Container>
+        <Container id="script-42" Type="Vertical Stack">
+          <Image id="script-icon-42" source="chrome://messenger/content/sync.js" />
+        </Container>
+        <Container id="script-43" Type="Vertical Stack">
+          <Image id="script-icon-43" source="moz-src:///comm/mail/components/customizableui/content/panelUI.js" />
+        </Container>
+        <Container id="script-44" Type="Vertical Stack">
+          <Image id="script-icon-44" source="chrome://global/content/macWindowMenu.js" />
+        </Container>
+        <Container id="script-45" Type="Vertical Stack">
+          <Image id="script-icon-45" source="chrome://messenger/content/minimizeToTray.js" />
+        </Container>
+        <Container id="script-46" Type="Vertical Stack">
+          <Image id="script-icon-46" source="chrome://calendar/content/calendar-management.js" />
+        </Container>
+        <Container id="script-47" Type="Vertical Stack">
+          <Image id="script-icon-47" source="chrome://calendar/content/calendar-ui-utils.js" />
+        </Container>
+        <Container id="script-48" Type="Vertical Stack">
+          <Image id="script-icon-48" source="chrome://calendar/content/calendar-tabs.js" />
+        </Container>
+        <Container id="script-49" Type="Vertical Stack">
+          <Image id="script-icon-49" source="chrome://calendar/content/calendar-modes.js" />
+        </Container>
+        <Container id="script-50" Type="Vertical Stack">
+          <Image id="script-icon-50" source="chrome://calendar/content/calendar-day-label.js" />
+        </Container>
+        <Container id="script-51" Type="Vertical Stack">
+          <Image id="script-icon-51" source="chrome://calendar/content/calendar-clipboard.js" />
+        </Container>
+        <Container id="script-52" Type="Vertical Stack">
+          <Image id="script-icon-52" source="chrome://calendar/content/import-export.js" />
+        </Container>
+        <Container id="script-53" Type="Vertical Stack">
+          <Image id="script-icon-53" source="chrome://calendar/content/publish.js" />
+        </Container>
+        <Container id="script-54" Type="Vertical Stack">
+          <Image id="script-icon-54" source="chrome://calendar/content/calendar-item-editing.js" />
+        </Container>
+        <Container id="script-55" Type="Vertical Stack">
+          <Image id="script-icon-55" source="chrome://calendar/content/calendar-chrome-startup.js" />
+        </Container>
+        <Container id="script-56" Type="Vertical Stack">
+          <Image id="script-icon-56" source="chrome://calendar/content/widgets/mouseoverPreviews.js" />
+        </Container>
+        <Container id="script-57" Type="Vertical Stack">
+          <Image id="script-icon-57" source="chrome://calendar/content/calendar-views-utils.js" />
+        </Container>
+        <Container id="script-58" Type="Vertical Stack">
+          <Image id="script-icon-58" source="chrome://calendar/content/widgets/calendar-filter.js" />
+        </Container>
+        <Container id="script-59" Type="Vertical Stack">
+          <Image id="script-icon-59" source="chrome://calendar/content/widgets/calendar-filter-tree-view.js" />
+        </Container>
+        <Container id="script-60" Type="Vertical Stack">
+          <Image id="script-icon-60" source="chrome://calendar/content/calendar-base-view.js" />
+        </Container>
+        <Container id="script-61" Type="Vertical Stack">
+          <Image id="script-icon-61" source="chrome://calendar/content/widgets/calendar-dnd-widgets.js" />
+        </Container>
+        <Container id="script-62" Type="Vertical Stack">
+          <Image id="script-icon-62" source="chrome://calendar/content/calendar-editable-item.js" />
+        </Container>
+        <Container id="script-63" Type="Vertical Stack">
+          <Image id="script-icon-63" source="chrome://calendar/content/calendar-month-view.js" />
+        </Container>
+        <Container id="script-64" Type="Vertical Stack">
+          <Image id="script-icon-64" source="chrome://calendar/content/calendar-multiday-view.js" />
+        </Container>
+        <Container id="script-65" Type="Vertical Stack">
+          <Image id="script-icon-65" source="chrome://calendar/content/calendar-views.js" />
+        </Container>
+        <Container id="script-66" Type="Vertical Stack">
+          <Image id="script-icon-66" source="chrome://calendar/content/calendar-dnd-listener.js" />
+        </Container>
+        <Container id="script-67" Type="Vertical Stack">
+          <Image id="script-icon-67" source="chrome://calendar/content/calendar-statusbar.js" />
+        </Container>
+        <Container id="script-68" Type="Vertical Stack">
+          <Image id="script-icon-68" source="chrome://calendar/content/widgets/calendar-invitation-panel.js" />
+        </Container>
+        <Container id="script-69" Type="Vertical Stack">
+          <Image id="script-icon-69" source="chrome://calendar/content/widgets/calendar-minidate.js" />
+        </Container>
+        <Container id="script-70" Type="Vertical Stack">
+          <Image id="script-icon-70" source="chrome://calendar/content/widgets/calendar-minimonth.js" />
+        </Container>
+        <Container id="script-71" Type="Vertical Stack">
+          <Image id="script-icon-71" source="chrome://calendar/content/widgets/calendar-modebox.js" />
+        </Container>
+        <Container id="script-72" Type="Vertical Stack">
+          <Image id="script-icon-72" source="chrome://messenger/content/drop-indicator.mjs" />
+        </Container>
+        <Container id="script-73" Type="Vertical Stack">
+          <Image id="script-icon-73" source="chrome://calendar/content/calendar-task-editing.js" />
+        </Container>
+        <Container id="script-74" Type="Vertical Stack">
+          <Image id="script-icon-74" source="chrome://calendar/content/calendar-extract.js" />
+        </Container>
+        <Container id="script-75" Type="Vertical Stack">
+          <Image id="script-icon-75" source="chrome://calendar/content/calendar-invitations-manager.js" />
+        </Container>
+        <Container id="script-76" Type="Vertical Stack">
+          <Image id="script-icon-76" source="chrome://calendar/content/calendar-item-panel.js" />
+        </Container>
+        <Container id="script-77" Type="Vertical Stack">
+          <Image id="script-icon-77" source="chrome://calendar/content/calendar-command-controller.js" />
+        </Container>
+        <Container id="script-78" Type="Vertical Stack">
+          <Image id="script-icon-78" source="chrome://calendar/content/calendar-unifinder.js" />
+        </Container>
+        <Container id="script-79" Type="Vertical Stack">
+          <Image id="script-icon-79" source="chrome://messenger/content/orderable-tree-listbox.mjs" />
+        </Container>
+        <Container id="script-80" Type="Vertical Stack">
+          <Image id="script-icon-80" source="chrome://messenger/content/tree-listbox.mjs" />
+        </Container>
+        <Container id="script-81" Type="Vertical Stack">
+          <Image id="script-icon-81" source="chrome://calendar/content/calendar-task-tree-utils.js" />
+        </Container>
+        <Container id="script-82" Type="Vertical Stack">
+          <Image id="script-icon-82" source="chrome://calendar/content/today-pane-agenda.js" />
+        </Container>
+        <Container id="script-83" Type="Vertical Stack">
+          <Image id="script-icon-83" source="chrome://calendar/content/today-pane.js" />
+        </Container>
+        <Container id="script-84" Type="Vertical Stack">
+          <Image id="script-icon-84" source="chrome://calendar/content/calendar-task-tree-view.js" />
+        </Container>
+        <Container id="script-85" Type="Vertical Stack">
+          <Image id="script-icon-85" source="chrome://calendar/content/calendar-task-tree.js" />
+        </Container>
+        <Container id="script-86" Type="Vertical Stack">
+          <Image id="script-icon-86" source="chrome://calendar/content/calendar-task-view.js" />
+        </Container>
+        <Container id="script-87" Type="Vertical Stack">
+          <Image id="script-icon-87" source="chrome://calendar/content/calendar-dialog-utils.js" />
+        </Container>
+        <Container id="script-88" Type="Vertical Stack">
+          <Image id="script-icon-88" source="chrome://calendar/content/calApplicationUtils.js" />
+        </Container>
+        <Container id="script-89" Type="Vertical Stack">
+          <Image id="script-icon-89" source="chrome://calendar/content/calendar-menus.js" />
+        </Container>
+        <Container id="script-90" Type="Vertical Stack">
+          <Image id="script-icon-90" source="chrome://messenger/content/treecol-image.mjs" />
+        </Container>
+        <Container id="script-91" Type="Vertical Stack">
+          <Image id="script-icon-91" source="chrome://calendar/content/calendar-migration.js" />
+        </Container>
+        <Container id="script-92" Type="Vertical Stack">
+          <Image id="script-icon-92" source="chrome://messenger/content/shortcutsOverlay.js" />
+        </Container>
+        <Container id="script-93" Type="Vertical Stack">
+          <Image id="script-icon-93" source="chrome://messenger/content/accountcreation/accountHub.js" />
+        </Container>
+        <Container id="script-94" Type="Vertical Stack">
+          <Image id="script-icon-94" source="chrome://messenger/content/unifiedtoolbar/unified-toolbar.mjs" />
+        </Container>
+        <Container id="script-95" Type="Vertical Stack" />
+        <Container id="folderColorsStyle" Type="Vertical Stack" />
+        <Container id="folderColorsStylePreview" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="bundle_brand" Type="Vertical Stack">
+          <Image id="bundle_brand-icon" source="chrome://branding/locale/brand.properties" />
+        </Container>
+        <Container id="bundle_messenger" Type="Vertical Stack">
+          <Image id="bundle_messenger-icon" source="chrome://messenger/locale/messenger.properties" />
+        </Container>
+        <Container id="mailCommands" Type="Vertical Stack">
+          <Container id="mailSearchMenuItems" Type="Vertical Stack" />
+          <Container id="globalEditMenuItems" Type="Vertical Stack" />
+          <Container id="selectEditMenuItems" Type="Vertical Stack" />
+          <Container id="undoEditMenuItems" Type="Vertical Stack" />
+          <Container id="clipboardEditMenuItems" Type="Vertical Stack" />
+          <Container id="webSearchItems" Type="Vertical Stack" />
+          <Container id="browserCommands" Type="Vertical Stack">
+            <Container id="command" Type="Vertical Stack" />
+            <Container id="command-2" Type="Vertical Stack" />
+          </Container>
+          <Container id="attachmentCommands" Type="Vertical Stack">
+            <Container id="command-3" Type="Vertical Stack" />
+            <Container id="command-4" Type="Vertical Stack" />
+            <Container id="command-5" Type="Vertical Stack" />
+            <Container id="command-6" Type="Vertical Stack" />
+          </Container>
+          <Container id="tasksCommands" Type="Vertical Stack">
+            <Container id="command-7" Type="Vertical Stack" />
+            <Container id="command-8" Type="Vertical Stack" />
+          </Container>
+          <Container id="command-9" Type="Vertical Stack" />
+          <Container id="command-10" Type="Vertical Stack" />
+        </Container>
+        <Container id="browserKeys" Type="Vertical Stack">
+          <Container id="key_goBackKb" Type="Vertical Stack" />
+          <Container id="key_goForwardKb" Type="Vertical Stack" />
+          <Container id="key_goBackKb-2" Type="Vertical Stack" />
+          <Container id="key_goForwardKb-2" Type="Vertical Stack" />
+        </Container>
+        <Container id="mailKeys" Type="Vertical Stack">
+          <Container id="key" Type="Vertical Stack" />
+          <Container id="key-2" Type="Vertical Stack" />
+          <Container id="key-3" Type="Vertical Stack" />
+          <Container id="key-4" Type="Vertical Stack" />
+          <Container id="key-5" Type="Vertical Stack" />
+          <Container id="key-6" Type="Vertical Stack" />
+          <Container id="tasksKeys" Type="Vertical Stack">
+            <Container id="key_newMessage" Type="Vertical Stack" />
+            <Container id="key_newMessage2" Type="Vertical Stack" />
+            <Container id="key_newMessage-2" Type="Vertical Stack" />
+            <Container id="key_newMessage2-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="mainPopupSet" Type="Vertical Stack">
+          <Container id="aboutPagesContext" Type="Menu">
+            <Button id="aboutPagesContext-copy" action="cmd-copy" />
+            <Button id="aboutPagesContext-paste" action="cmd-paste" />
+            <Button id="aboutPagesContext-selectall" action="cmd-select-all" />
+          </Container>
+          <Container id="PopupGlodaAutocomplete" Type="Overlay" />
+          <Container id="attachmentListTooltip" Type="Floating" />
+          <Container id="tabContextMenu" Type="Menu">
+            <Button id="tabContextMenuOpenInWindow" content="{Binding moveToNewWindow.label}" shortcut="{Binding moveToNewWindow.accesskey}" />
+            <Container id="menuseparator" Type="Menu" />
+            <Button id="tabContextMenuCloseOtherTabs" content="{Binding closeOtherTabsCmd2.label}" shortcut="{Binding closeOtherTabsCmd2.accesskey}" />
+            <Container id="menuseparator-2" Type="Menu" />
+            <Button id="tabContextMenuRecentlyClosed" content="{Binding recentlyClosedTabsCmd.label}" shortcut="{Binding recentlyClosedTabsCmd.accesskey}">
+              <Container id="menupopup" Type="Menu" />
+            </Button>
+            <Button id="tabContextMenuClose" content="{Binding closeTabCmd2.label}" shortcut="{Binding closeTabCmd2.accesskey}" />
+          </Container>
+          <Container id="aHTMLTooltip" Type="Floating" />
+          <Container id="notification-popup" Type="Overlay" role="alert" />
+          <Container id="addon-progress-notification" Type="Vertical Stack">
+            <Container id="popupnotificationcontent" Type="Vertical Stack">
+              <Container id="addon-progress-notification-progressmeter" Type="Vertical Stack" />
+              <Text id="addon-progress-notification-progresstext" />
+            </Container>
+          </Container>
+          <Container id="addon-install-confirmation-notification" Type="Vertical Stack">
+            <Container id="addon-install-confirmation-content" Type="Vertical Stack" />
+          </Container>
+          <Container id="addon-webext-permissions-notification" Type="Vertical Stack">
+            <Container id="popupnotificationcontent-2" Type="Vertical Stack">
+              <Text id="addon-webext-perm-text" />
+              <Text id="addon-webext-perm-intro" />
+              <Text id="addon-webext-perm-title-required" />
+              <Container id="addon-webext-perm-list" Type="Vertical Stack" />
+              <Text id="addon-webext-experiment-warning" />
+              <Container id="hbox" Type="Horizontal Stack">
+                <Text id="addon-webext-perm-info" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="addon-installed-notification" Type="Vertical Stack">
+            <Container id="popupnotificationcontent-3" Type="Vertical Stack">
+              <Container id="addon-installed-list" Type="Vertical Stack" />
+            </Container>
+          </Container>
+          <Container id="addon-install-blocked-notification" Type="Vertical Stack">
+            <Container id="addon-install-blocked-content" Type="Vertical Stack">
+              <Text id="addon-install-blocked-message" />
+              <Container id="hbox-2" Type="Horizontal Stack">
+                <Text id="addon-install-blocked-info" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="div" Type="Vertical Stack" role="status" />
+        <Container id="div-2" Type="Vertical Stack" />
+        <Container id="navigation-toolbox" Type="Vertical Stack">
+          <Container id="titlebar" Type="Vertical Stack">
+            <Container id="unified-toolbar" Type="Vertical Stack" />
+            <Container id="toolbar-menubar" Type="Horizontal Stack" />
+            <Container id="tabs-toolbar" Type="Horizontal Stack">
+              <Container id="tabmail-tabs" Type="Horizontal Stack" role="Grow" vertical-alignment="Bottom">
+                <Image id="img" />
+                <Container id="tabmail-arrowscrollbox" Type="Vertical Stack" role="Grow">
+                  <Button id="tab" />
+                </Container>
+              </Container>
+              <Button id="alltabs-button" tooltip="{Binding listAllTabs.label}">
+                <Container id="alltabs-popup" Type="Menu" />
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="messengerBody" Type="Vertical Stack">
+          <Container id="tabmail-container" Type="Horizontal Stack" role="Grow">
+            <Container id="tabmail" Type="Vertical Stack" role="Grow">
+              <Container id="tabmail-tabbox" Type="Vertical Stack" role="Grow">
+                <Container id="tabpanelcontainer" Type="Vertical Stack" role="Grow" />
+              </Container>
+              <Container id="mail3PaneTabTemplate" Type="Vertical Stack">
+                <Container id="stack" Type="Overlay" role="Grow">
+                  <Container id="browser" Type="Overlay" role="Grow">
+                    <Image id="browser-icon" source="about:3pane" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="mailMessageTabTemplate" Type="Vertical Stack">
+                <Container id="stack-2" Type="Overlay" role="Grow">
+                  <Container id="browser-2" Type="Overlay" role="Grow">
+                    <Image id="browser-icon-2" source="about:message" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="hiddenPrintContent" Type="Overlay" />
+            </Container>
+            <Container id="contentTab" Type="Vertical Stack">
+              <Container id="vbox" Type="Vertical Stack" role="Grow">
+                <Container id="dummycontenttoolbox" Type="Vertical Stack">
+                  <Container id="dummycontenttoolbar" Type="Horizontal Stack">
+                    <Button id="toolbarbutton" tooltip="{Binding browseBackButton.tooltip}" />
+                    <Button id="toolbarbutton-2" tooltip="{Binding browseForwardButton.tooltip}" />
+                    <Container id="toolbaritem" Type="Vertical Stack" role="Grow">
+                      <Image id="img-2" />
+                      <Input id="input" Type="Text" />
+                    </Container>
+                  </Container>
+                </Container>
+                <Container id="stack-3" Type="Overlay" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="glodaTab" Type="Vertical Stack">
+              <Container id="vbox-2" Type="Vertical Stack" role="Grow">
+                <Container id="vbox-3" Type="Vertical Stack">
+                  <Container id="hbox-3" Type="Horizontal Stack" role="Grow">
+                    <Container id="spacer" Type="Vertical Stack" role="Grow" />
+                    <Container id="spacer-2" Type="Vertical Stack" role="Grow" />
+                    <Container id="hbox-4" Type="Horizontal Stack" role="Grow">
+                      <Input id="input-2" />
+                    </Container>
+                  </Container>
+                </Container>
+                <Container id="iframe" Type="Overlay" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="preferencesTab" Type="Vertical Stack">
+              <Container id="vbox-4" Type="Vertical Stack" role="Grow">
+                <Container id="hbox-5" Type="Horizontal Stack" role="Grow">
+                  <Container id="preferencesbrowser" Type="Overlay" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="customizeToolbarSheetPopup" Type="Overlay">
+            <Container id="customizeToolbarSheetIFrame" Type="Overlay" />
+          </Container>
+          <Container id="messenger-notification-bottom" Type="Vertical Stack" />
+          <Container id="statusbar-display" Type="Vertical Stack" />
+          <Container id="status-bar" Type="Horizontal Stack">
+            <Button id="spacesToolbarReveal" action="g-spaces-toolbar.toggle-toolbar">
+              <Image id="img-3" source="chrome://messenger/skin/icons/new/compact/collapse.svg" />
+            </Button>
+            <Container id="hbox-6" Type="Horizontal Stack" role="Grow">
+              <Container id="calendar-invitations-panel" Type="Horizontal Stack">
+                <Text id="calendar-invitations-label" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

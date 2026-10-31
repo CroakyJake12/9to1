@@ -1,0 +1,14 @@
+<Cui id="ui-tablestylesbox" product="9-1" version="1">
+  <Container id="table-styles-box" Type="Vertical Stack" cell-gap="6" vertical-alignment="Center" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="4" vertical-alignment="Center" focusable="false">
+      <Input id="chk-header-row2" Type="Checkbox" text="Header Row" role="Grow" column="0" row="0" />
+      <Input id="chk-total-row2" Type="Checkbox" text="Total Row" role="Grow" column="0" row="1" />
+      <Input id="chk-filter-buttons2" Type="Checkbox" text="Filter Buttons" role="Grow" column="3" row="0" />
+      <Input id="chk-first-column2" Type="Checkbox" text="First Column" role="Grow" column="2" row="0" />
+      <Input id="chk-last-column2" Type="Checkbox" text="Last Column" role="Grow" column="2" row="1" />
+      <Input id="chk-banded-rows2" Type="Checkbox" text="Banded Rows" role="Grow" column="1" row="0" />
+      <Input id="chk-banded-cols2" Type="Checkbox" text="Banded Columns" role="Grow" column="1" row="1" />
+      <Input id="tablestyles-cb2" Type="Select" focusable="false" column="3" row="1" />
+    </Container>
+  </Container>
+</Cui>

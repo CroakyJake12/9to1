@@ -1,0 +1,7 @@
+<Cui id="diff-new-comment" product="9-1" version="1">
+  <Page id="diff-new-comment-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,46 @@
+<Cui id="content-about-robots" product="9-1" version="1">
+  <Page id="content-about-robots-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="linkset" Type="Vertical Stack">
+          <Container id="link-4" Type="Vertical Stack" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="div" Type="Vertical Stack">
+          <Container id="div-2" Type="Vertical Stack">
+            <Text id="h1" />
+          </Container>
+          <Container id="div-3" Type="Vertical Stack">
+            <Container id="div-4" Type="Vertical Stack">
+              <Text id="errorShortDescText" />
+            </Container>
+            <Container id="div-5" Type="Vertical Stack">
+              <Container id="ul" Type="Vertical Stack">
+                <Container id="li" Type="Horizontal Stack" />
+                <Container id="li-2" Type="Horizontal Stack" />
+                <Container id="li-3" Type="Horizontal Stack" />
+                <Container id="li-4" Type="Horizontal Stack" />
+              </Container>
+            </Container>
+            <Container id="div-6" Type="Vertical Stack">
+              <Container id="small" Type="Vertical Stack" />
+            </Container>
+          </Container>
+          <Container id="div-7" Type="Vertical Stack">
+            <Button id="errorTryAgain" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="script" Type="Vertical Stack">
+        <Image id="script-icon" source="chrome://browser/content/aboutRobots.js" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

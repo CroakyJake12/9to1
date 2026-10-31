@@ -1,0 +1,113 @@
+<Cui id="content-hidden-window-mac" product="9-1" version="1">
+  <Actions>
+    <Action name="cmd-new-message" command="cmd_newMessage" />
+    <Action name="open-address-book-dock" command="openAddressBookDock();" />
+    <Action name="open-dock-options" command="openDockOptions();" />
+    <Action name="write-new-message-dock" command="writeNewMessageDock();" />
+  </Actions>
+  <Page id="content-hidden-window-mac-root">
+    <Container id="hidden-window" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="link-6" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/globalOverlay.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack">
+          <Image id="script-icon-2" source="chrome://messenger/content/mailWindow.js" />
+        </Container>
+        <Container id="script-3" Type="Vertical Stack">
+          <Image id="script-icon-3" source="chrome://messenger/content/messenger.js" />
+        </Container>
+        <Container id="script-4" Type="Vertical Stack">
+          <Image id="script-icon-4" source="chrome://messenger/content/mail3PaneWindowCommands.js" />
+        </Container>
+        <Container id="script-5" Type="Vertical Stack">
+          <Image id="script-icon-5" source="chrome://messenger/content/searchBar.js" />
+        </Container>
+        <Container id="script-6" Type="Vertical Stack">
+          <Image id="script-icon-6" source="chrome://messenger/content/mailCommands.js" />
+        </Container>
+        <Container id="script-7" Type="Vertical Stack">
+          <Image id="script-icon-7" source="chrome://messenger/content/mailWindowOverlay.js" />
+        </Container>
+        <Container id="script-8" Type="Vertical Stack">
+          <Image id="script-icon-8" source="chrome://messenger/content/mailTabs.js" />
+        </Container>
+        <Container id="script-9" Type="Vertical Stack">
+          <Image id="script-icon-9" source="chrome://messenger-newsblog/content/newsblogOverlay.js" />
+        </Container>
+        <Container id="script-10" Type="Vertical Stack">
+          <Image id="script-icon-10" source="chrome://messenger/content/accountUtils.js" />
+        </Container>
+        <Container id="script-11" Type="Vertical Stack">
+          <Image id="script-icon-11" source="chrome://messenger/content/mail-offline.js" />
+        </Container>
+        <Container id="script-12" Type="Vertical Stack">
+          <Image id="script-icon-12" source="chrome://messenger/content/msgViewPickerOverlay.js" />
+        </Container>
+        <Container id="script-13" Type="Vertical Stack">
+          <Image id="script-icon-13" source="chrome://messenger/content/viewZoomOverlay.js" />
+        </Container>
+        <Container id="script-14" Type="Vertical Stack">
+          <Image id="script-icon-14" source="chrome://communicator/content/utilityOverlay.js" />
+        </Container>
+        <Container id="script-15" Type="Vertical Stack">
+          <Image id="script-icon-15" source="chrome://messenger/content/mailCore.js" />
+        </Container>
+        <Container id="script-16" Type="Vertical Stack">
+          <Image id="script-icon-16" source="chrome://global/content/macWindowMenu.js" />
+        </Container>
+        <Container id="script-17" Type="Vertical Stack">
+          <Image id="script-icon-17" source="chrome://messenger/content/macMessengerMenu.js" />
+        </Container>
+        <Container id="script-18" Type="Vertical Stack">
+          <Image id="script-icon-18" source="chrome://messenger/content/hiddenWindowMac.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="bundle_messenger" Type="Vertical Stack">
+          <Image id="bundle_messenger-icon" source="chrome://messenger/locale/messenger.properties" />
+        </Container>
+        <Container id="bundle_brand" Type="Vertical Stack">
+          <Image id="bundle_brand-icon" source="chrome://branding/locale/brand.properties" />
+        </Container>
+        <Container id="mailKeys" Type="Vertical Stack">
+          <Container id="tasksKeys" Type="Vertical Stack">
+            <Container id="key_newMessage" Type="Vertical Stack" />
+            <Container id="key_newMessage2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="mailCommands" Type="Vertical Stack">
+          <Container id="mailSearchMenuItems" Type="Vertical Stack" />
+          <Container id="globalEditMenuItems" Type="Vertical Stack" />
+          <Container id="selectEditMenuItems" Type="Vertical Stack" />
+          <Container id="clipboardEditMenuItems" Type="Vertical Stack" />
+          <Container id="tasksCommands" Type="Vertical Stack">
+            <Container id="command" Type="Vertical Stack" />
+            <Container id="command-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="popupset" Type="Vertical Stack">
+          <Container id="menu_mac_dockmenu" Type="Menu">
+            <Button id="tasksWriteNewMessage" content="{Binding writeNewMessageDock.label}" action="write-new-message-dock" />
+            <Button id="tasksOpenAddressBook" content="{Binding openAddressBookDock.label}" action="open-address-book-dock" />
+            <Button id="tasksMenuDockOptions" content="{Binding dockOptions.label}" action="open-dock-options" />
+          </Container>
+        </Container>
+        <Container id="navigation-toolbox" Type="Vertical Stack">
+          <Container id="titlebar" Type="Vertical Stack">
+            <Container id="toolbar-menubar" Type="Horizontal Stack" />
+          </Container>
+        </Container>
+        <Container id="hiddenBrowser" Type="Overlay" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,21 @@
+<Cui id="ui-crossfadedialog" product="9-1" version="1">
+  <Container id="cross-fade-dialog" Type="Vertical Stack" modal="True">
+    <Text id="cross-fade-dialog-label" text="Cross-fading" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack">
+        <Container id="grid2" Type="Grid" role="Grow">
+          <Input id="orientation" Type="Checkbox" text="Same orientation" column-span="2" />
+          <Input id="attributes" Type="Checkbox" text="Cross-fade attributes" column-span="2" />
+          <Text id="label2" text="Increments:" />
+          <Input id="increments" Type="Number" />
+        </Container>
+        <Text id="label1" text="Settings" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,26 @@
+<Cui id="ui-sharedocumentdlg" product="9-1" version="1">
+  <Container id="share-document-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="share-document-dialog-label" text="Share Document" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box3" Type="Vertical Stack" cell-gap="18" focusable="false" role="Grow">
+        <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="share" Type="Checkbox" text="Share this spreadsheet with other users" />
+          <Text id="warning" text="Note: Changes to formatting attributes like fonts, colors, and number formats will not be saved and some functionalities like editing charts and drawing objects are not available in shared mode. Turn off shared mode to get exclusive access needed for those changes and functionalities." text-wrapping="Wrap" focusable="false" />
+        </Container>
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+            <Container id="container" Type="Vertical Stack" role="Grow">
+              <Container id="users" Type="Vertical Stack" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="label1" text="Users Currently Accessing This Spreadsheet" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,68 @@
+<Cui id="ui-optredlinepage" product="9-1" version="1">
+  <Container id="opt-red-line-page" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="insert-label" text="Attributes:" focusable="false" column="1" row="0" />
+        <Text id="insertcolor-label" text="Color:" focusable="false" column="1" row="1" />
+        <Input id="insert" Type="Select" vertical-alignment="Center" focusable="false" column="2" row="0" />
+        <Button id="insertcolor" focusable="false" role="Grow" column="2" row="1" />
+        <Container id="container" Type="Vertical Stack" focusable="false" role="Grow" column="3" row="0" row-span="2">
+          <Container id="container-2" Type="Vertical Stack" focusable="false">
+            <Container id="insertedpreview" Type="Overlay" focusable="false" role="Grow" />
+          </Container>
+        </Container>
+        <Image id="lockinsert" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockinsertcolor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      </Container>
+      <Text id="label2" text="Insertions" focusable="false" />
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+      <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="deleted-label" text="Attributes:" focusable="false" column="1" row="0" />
+        <Text id="deletedcolor-label" text="Color:" focusable="false" column="1" row="1" />
+        <Input id="deleted" Type="Select" vertical-alignment="Center" focusable="false" column="2" row="0" />
+        <Button id="deletedcolor" focusable="false" role="Grow" column="2" row="1" />
+        <Container id="container-3" Type="Vertical Stack" focusable="false" role="Grow" column="3" row="0" row-span="2">
+          <Container id="container-4" Type="Vertical Stack" focusable="false">
+            <Container id="deletedpreview" Type="Overlay" focusable="false" role="Grow" />
+          </Container>
+        </Container>
+        <Image id="lockdeleted" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockdeletedcolor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      </Container>
+      <Text id="label3" text="Deletions" focusable="false" />
+    </Container>
+    <Container id="frame4" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="2">
+      <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="changed-label" text="Attributes:" focusable="false" column="1" row="0" />
+        <Text id="changedcolor-label" text="Color:" focusable="false" column="1" row="1" />
+        <Input id="changed" Type="Select" vertical-alignment="Center" focusable="false" column="2" row="0" />
+        <Button id="changedcolor" focusable="false" role="Grow" column="2" row="1" />
+        <Container id="container-5" Type="Vertical Stack" focusable="false" role="Grow" column="3" row="0" row-span="2">
+          <Container id="container-6" Type="Vertical Stack" focusable="false">
+            <Container id="changedpreview" Type="Overlay" focusable="false" role="Grow" />
+          </Container>
+        </Container>
+        <Image id="lockchanged" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockchangedcolor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      </Container>
+      <Text id="label4" text="Changed Attributes" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="3">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="markpos-label" text="Mark:" focusable="false" column="1" row="0" />
+        <Input id="markpos" Type="Select" vertical-alignment="Center" focusable="false" column="2" row="0" />
+        <Text id="markcolor-label" text="Color:" focusable="false" column="1" row="1" />
+        <Button id="markcolor" focusable="false" role="Grow" column="2" row="1" />
+        <Container id="container-7" Type="Vertical Stack" focusable="false" role="Grow" column="3" row="0" row-span="2">
+          <Container id="container-8" Type="Vertical Stack" focusable="false">
+            <Container id="markpreview" Type="Overlay" focusable="false" role="Grow" />
+          </Container>
+        </Container>
+        <Image id="lockmarkpos" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockmarkcolor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      </Container>
+      <Text id="label5" text="Lines Changed" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

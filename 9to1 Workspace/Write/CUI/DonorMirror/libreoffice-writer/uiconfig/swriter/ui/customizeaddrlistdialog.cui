@@ -1,0 +1,33 @@
+<Cui id="ui-customizeaddrlistdialog" product="9-1" version="1">
+  <Page id="ui-customizeaddrlistdialog-root">
+    <Image id="image1" focusable="false" source="go-up" />
+    <Image id="image2" focusable="false" source="go-down" />
+    <Container id="customize-addr-list-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="customize-addr-list-dialog-label" text="Customize Address List" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Close" text="Close" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+          <Container id="buttonbox2" Type="Horizontal Stack" cell-gap="6" focusable="false" column="2" row="0">
+            <Button id="add" content="Add..." text="Add..." />
+            <Button id="delete" content="Delete" text="Delete" />
+            <Button id="rename" content="Rename..." text="Rename..." />
+          </Container>
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+            <Text id="label1" text="Address list elements:" focusable="false" column="0" row="0" />
+            <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+              <Container id="treeview" Type="Vertical Stack" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="grid3" Type="Grid" cell-gap="6" vertical-alignment="Center" focusable="false" column="1" row="0">
+            <Button id="down" vertical-alignment="Center" column="0" row="1" />
+            <Button id="up" column="0" row="0" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

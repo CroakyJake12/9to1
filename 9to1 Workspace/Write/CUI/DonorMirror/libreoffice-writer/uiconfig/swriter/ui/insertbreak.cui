@@ -1,0 +1,27 @@
+<Cui id="ui-insertbreak" product="9-1" version="1">
+  <Container id="break-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="break-dialog-label" text="Insert Break" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="linerb" Type="Radio" text="Line break" column="0" row="0" />
+          <Text id="clearft" text="Restart Location:" focusable="false" column="0" row="1" />
+          <Input id="clearlb" Type="Select" focusable="false" is-enabled="false" column="0" row="2" />
+          <Input id="columnrb" Type="Radio" text="Column break" column="0" row="3" />
+          <Input id="pagerb" Type="Radio" text="Page break" checked="true" column="0" row="4" />
+          <Text id="styleft" text="Page Style:" focusable="false" column="0" row="5" column-span="2" />
+          <Input id="stylelb" Type="Select" focusable="false" column="0" row="6" column-span="2" />
+          <Input id="pagenumcb" Type="Checkbox" text="Change page number" column="0" row="7" column-span="2" />
+          <Input id="pagenumsb" Type="Number" horizontal-alignment="Left" column="0" row="8" column-span="2" />
+          <Image id="im-type" horizontal-alignment="Center" vertical-alignment="Top" focusable="false" role="Grow" column="1" row="0" row-span="5" />
+        </Container>
+        <Text id="label1" text="Type" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

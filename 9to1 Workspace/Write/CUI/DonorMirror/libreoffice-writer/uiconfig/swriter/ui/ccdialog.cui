@@ -1,0 +1,22 @@
+<Cui id="ui-ccdialog" product="9-1" version="1">
+  <Container id="ccdialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="ccdialog-label" text="Copy To" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label2" text="Cc:" focusable="false" column="0" row="0" />
+          <Text id="label3" text="Bcc:" focusable="false" column="0" row="1" />
+          <Text id="label4" text="Note: Separate email addresses with a semicolon (;)." focusable="false" column="0" row="2" column-span="2" />
+          <Input id="cc" Type="Text" role="Grow" column="1" row="0" />
+          <Input id="bcc" Type="Text" role="Grow" column="1" row="1" />
+        </Container>
+        <Text id="label1" text="Send a Copy of This Mail To..." focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

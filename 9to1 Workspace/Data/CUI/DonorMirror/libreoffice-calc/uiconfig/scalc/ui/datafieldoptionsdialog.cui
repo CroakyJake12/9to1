@@ -1,0 +1,56 @@
+<Cui id="ui-datafieldoptionsdialog" product="9-1" version="1">
+  <Container id="data-field-options-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="data-field-options-dialog-label" text="Data Field Options" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="sortby" Type="Select" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2" />
+            <Input id="ascending" Type="Radio" text="Ascending" checked="true" column="1" row="0" />
+            <Input id="descending" Type="Radio" text="Descending" column="1" row="1" />
+            <Input id="manual" Type="Radio" text="Manual" column="1" row="2" />
+          </Container>
+          <Text id="label1" text="Sort by" focusable="false" />
+        </Container>
+        <Container id="layoutframe" Type="Vertical Stack" focusable="false" column="0" row="1">
+          <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+            <Text id="label3" text="Layout:" focusable="false" column="0" row="0" />
+            <Input id="layout" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+            <Input id="emptyline" Type="Checkbox" text="Empty line after each item" column="0" row="1" column-span="2" />
+            <Input id="repeatitemlabels" Type="Checkbox" text="Repeat item labels" column="0" row="2" column-span="2" />
+          </Container>
+          <Text id="label2" text="Display Options" focusable="false" />
+        </Container>
+        <Container id="showframe" Type="Vertical Stack" focusable="false" column="0" row="2">
+          <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="show" Type="Checkbox" text="Show:" column="0" row="0" />
+            <Container id="grid5" Type="Grid" cell-gap="12" focusable="false" column="1" row="0">
+              <Input id="items" Type="Number" column="0" row="0" />
+              <Text id="showft" text="items" focusable="false" column="1" row="0" />
+            </Container>
+            <Text id="showfromft" text="From:" focusable="false" column="0" row="1" />
+            <Input id="from" Type="Select" focusable="false" column="1" row="1" />
+            <Text id="usingft" text="Using field:" focusable="false" column="0" row="2" />
+            <Input id="using" Type="Select" focusable="false" column="1" row="2" />
+          </Container>
+          <Text id="label4" text="Show Automatically" focusable="false" />
+        </Container>
+        <Container id="hideframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="3">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="hideitems" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Text id="label9" text="Hide Items" focusable="false" />
+        </Container>
+        <Container id="grid6" Type="Grid" cell-gap="12" focusable="false" column="0" row="4">
+          <Text id="hierarchyft" text="Hierarchy:" focusable="false" column="0" row="0" />
+          <Input id="hierarchy" Type="Select" focusable="false" column="1" row="0" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,20 @@
+<Cui id="ui-selectindexdialog" product="9-1" version="1">
+  <Container id="select-index-dialog" Type="Vertical Stack" modal="True">
+    <Text id="select-index-dialog-label" text="Index Markings" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="frame" Type="Vertical Stack" role="Grow">
+        <Container id="box1" Type="Vertical Stack" cell-gap="12">
+          <Text id="type" />
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="treeview" Type="Vertical Stack" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="label1" text="Selection" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

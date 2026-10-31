@@ -1,0 +1,18 @@
+<Cui id="settings-githooks" product="9-1" version="1">
+  <Page id="settings-githooks-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h4" text="{Binding Unresolved}" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack" />
+        <Container id="div-4" Type="Vertical Stack" />
+        <Container id="div-5" Type="Vertical Stack">
+          <Container id="div-6" Type="Vertical Stack">
+            <Text id="span" text="{Binding Unresolved}" />
+            <Text id="span-2" text="{Binding Unresolved}" />
+            <Button id="a" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

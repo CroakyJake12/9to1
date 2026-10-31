@@ -1,0 +1,89 @@
+<Cui id="ui-navigatorcontextmenu" product="9-1" version="1">
+  <Container id="navmenu" Type="Menu" focusable="false">
+    <Button id="800" Type="Menu Item" focusable="false" />
+    <Button id="700" Type="Menu Item" content="Send Outline to Clipboard" text="Send Outline to Clipboard" focusable="false" />
+    <Button id="separator1" Type="Menu Item" focusable="false" />
+    <Button id="900" Type="Menu Item" content="Go to" text="Go to" focusable="false" />
+    <Button id="805" Type="Menu Item" content="Select" text="Select" focusable="false" />
+    <Button id="copy" Type="Menu Item" content="Copy" text="Copy" focusable="false" />
+    <Button id="deletechapter" Type="Menu Item" content="Delete Heading" text="Delete Heading" focusable="false" />
+    <Button id="801" Type="Menu Item" content="Move Heading Up" text="Move Heading Up" focusable="false" />
+    <Button id="802" Type="Menu Item" content="Move Heading Down" text="Move Heading Down" focusable="false" />
+    <Button id="803" Type="Menu Item" content="Promote Outline Level" text="Promote Outline Level" focusable="false" />
+    <Button id="804" Type="Menu Item" content="Demote Outline Level" text="Demote Outline Level" focusable="false" />
+    <Button id="sortalphabeticallyindocument" Type="Menu Item" content="Sort Alphabetically in Document" text="Sort Alphabetically in Document" focusable="false" />
+    <Button id="401" Type="Menu Item" content="Remove Index" text="Remove Index" focusable="false" />
+    <Button id="402" Type="Menu Item" content="Update" text="Update" focusable="false" />
+    <Button id="403" Type="Menu Item" content="Edit..." text="Edit..." focusable="false" />
+    <Button id="404" Type="Menu Item" content="Unprotect" text="Unprotect" focusable="false" />
+    <Input id="405" Type="Checkbox" text="Protected against manual changes" focusable="false" />
+    <Button id="deletealltables" Type="Menu Item" content="Delete All Tables" text="Delete All Tables" focusable="false" />
+    <Button id="deletetable" Type="Menu Item" content="Delete Table" text="Delete Table" focusable="false" />
+    <Button id="deleteallframes" Type="Menu Item" content="Delete All Frames" text="Delete All Frames" focusable="false" />
+    <Button id="deleteframe" Type="Menu Item" content="Delete Frame" text="Delete Frame" focusable="false" />
+    <Button id="deleteallimages" Type="Menu Item" content="Delete All Images" text="Delete All Images" focusable="false" />
+    <Button id="deleteimage" Type="Menu Item" content="Delete Image" text="Delete Image" focusable="false" />
+    <Button id="deletealloleobjects" Type="Menu Item" content="Delete All OLE objects" text="Delete All OLE objects" focusable="false" />
+    <Button id="deleteoleobject" Type="Menu Item" content="Delete OLE object" text="Delete OLE object" focusable="false" />
+    <Button id="deleteallbookmarks" Type="Menu Item" content="Delete All Bookmarks" text="Delete All Bookmarks" focusable="false" />
+    <Button id="deletebookmark" Type="Menu Item" content="Delete Bookmark" text="Delete Bookmark" focusable="false" />
+    <Button id="deleteallregions" Type="Menu Item" content="Delete All Sections" text="Delete All Sections" focusable="false" />
+    <Button id="deleteregion" Type="Menu Item" content="Delete Section" text="Delete Section" focusable="false" />
+    <Button id="deleteallhyperlinks" Type="Menu Item" content="Delete All Hyperlinks" text="Delete All Hyperlinks" focusable="false" />
+    <Button id="deletehyperlink" Type="Menu Item" content="Delete Hyperlink" text="Delete Hyperlink" focusable="false" />
+    <Button id="deleteallreferences" Type="Menu Item" content="Delete All References" text="Delete All References" focusable="false" />
+    <Button id="deletereference" Type="Menu Item" content="Delete Reference" text="Delete Reference" focusable="false" />
+    <Button id="deleteallindexes" Type="Menu Item" content="Delete All Indexes" text="Delete All Indexes" focusable="false" />
+    <Button id="deleteindex" Type="Menu Item" content="Delete Index" text="Delete Index" focusable="false" />
+    <Button id="deleteallcomments" Type="Menu Item" content="Delete All Comments" text="Delete All Comments" focusable="false" />
+    <Button id="deletecomment" Type="Menu Item" content="Delete Comment" text="Delete Comment" focusable="false" />
+    <Button id="deletealldrawingobjects" Type="Menu Item" content="Delete All Drawing objects" text="Delete All Drawing objects" focusable="false" />
+    <Button id="deletedrawingobject" Type="Menu Item" content="Delete Drawing object" text="Delete Drawing object" focusable="false" />
+    <Button id="deleteallfields" Type="Menu Item" content="Delete All Fields" text="Delete All Fields" focusable="false" />
+    <Button id="deletefield" Type="Menu Item" content="Delete Field" text="Delete Field" focusable="false" />
+    <Button id="deleteallfootnotes" Type="Menu Item" content="Delete All Footnotes" text="Delete All Footnotes" focusable="false" />
+    <Button id="deletefootnote" Type="Menu Item" content="Delete Footnote" text="Delete Footnote" focusable="false" />
+    <Button id="deleteallendnotes" Type="Menu Item" content="Delete All Endnotes" text="Delete All Endnotes" focusable="false" />
+    <Button id="deleteendnote" Type="Menu Item" content="Delete Endnote" text="Delete Endnote" focusable="false" />
+    <Button id="makeallfootnotesendnotes" Type="Menu Item" content="Make All Footnotes Endnotes" text="Make All Footnotes Endnotes" focusable="false" />
+    <Button id="makeallendnotesfootnotes" Type="Menu Item" content="Make All Endnotes Footnotes" text="Make All Endnotes Footnotes" focusable="false" />
+    <Button id="502" Type="Menu Item" content="Rename" text="Rename" focusable="false" />
+    <Button id="textalternative" Type="Menu Item" content="Text Alternative..." text="Text Alternative..." focusable="false" />
+    <Input id="protectsection" Type="Checkbox" text="Protect Section" focusable="false" />
+    <Input id="hidesection" Type="Checkbox" text="Hide Section" focusable="false" />
+    <Input id="showcomments" Type="Checkbox" text="Show Comments" focusable="false" />
+    <Input id="showresolvedcomments" Type="Checkbox" text="Show Resolved Comments" focusable="false" />
+    <Button id="separator2" Type="Menu Item" focusable="false" />
+    <Button id="5" Type="Menu Item" content="Outline Folding" text="Outline Folding" focusable="false">
+      <Container id="outlinecontent" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="separator3" Type="Menu Item" focusable="false" />
+    <Button id="4" Type="Menu Item" content="Outline Tracking" text="Outline Tracking" focusable="false">
+      <Container id="outlinetracking" Type="Menu" focusable="false" />
+    </Button>
+    <Input id="tabletracking" Type="Checkbox" text="Table Tracking" focusable="false" />
+    <Input id="sectiontracking" Type="Checkbox" text="Section Tracking" focusable="false" />
+    <Input id="frametracking" Type="Checkbox" text="Frame Tracking" focusable="false" />
+    <Input id="imagetracking" Type="Checkbox" text="Image Tracking" focusable="false" />
+    <Input id="oleobjecttracking" Type="Checkbox" text="OLE Object Tracking" focusable="false" />
+    <Input id="bookmarktracking" Type="Checkbox" text="Bookmark Tracking" focusable="false" />
+    <Input id="hyperlinktracking" Type="Checkbox" text="Hyperlink Tracking" focusable="false" />
+    <Input id="referencetracking" Type="Checkbox" text="Reference Tracking" focusable="false" />
+    <Input id="indextracking" Type="Checkbox" text="Index Tracking" focusable="false" />
+    <Input id="commenttracking" Type="Checkbox" text="Comment Tracking" focusable="false" />
+    <Input id="drawingobjecttracking" Type="Checkbox" text="Drawing Object Tracking" focusable="false" />
+    <Input id="fieldtracking" Type="Checkbox" text="Field Tracking" focusable="false" />
+    <Input id="footnotetracking" Type="Checkbox" text="Footnote Tracking" focusable="false" />
+    <Input id="endnotetracking" Type="Checkbox" text="Endnote Tracking" focusable="false" />
+    <Input id="sort" Type="Checkbox" text="Display Alphabetically" focusable="false" />
+    <Button id="button" Type="Menu Item" focusable="false" />
+    <Button id="1" Type="Menu Item" content="Show Up to Outline Level" text="Show Up to Outline Level" focusable="false">
+      <Container id="outlinelevel" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="3" Type="Menu Item" content="Display" text="Display" focusable="false">
+      <Container id="displaymenu" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="button-2" Type="Menu Item" focusable="false" />
+    <Button id="collapseallcategories" Type="Menu Item" content="Collapse All Categories" text="Collapse All Categories" focusable="false" />
+  </Container>
+</Cui>

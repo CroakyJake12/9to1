@@ -1,0 +1,17 @@
+<Cui id="issue-search" product="9-1" version="1">
+  <Page id="issue-search-root">
+    <Container id="form" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack">
+        <Input id="input" Type="Text" />
+        <Input id="input-2" Type="Text" />
+        <Input id="input-3" Type="Text" />
+        <Input id="input-4" Type="Text" />
+        <Input id="input-5" Type="Text" />
+        <Input id="input-6" Type="Text" />
+        <Input id="input-7" Type="Text" />
+        <Input id="input-8" Type="Text" />
+        <Button id="issue-list-quick-goto" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,1062 @@
+{
+  "summary": {
+    "translated": 310,
+    "dropped_nodes": 58,
+    "gap_count": 829,
+    "gap_constructs": {
+      "property not modelled": 517,
+      "unmodelled donor construct": 122,
+      "length value 'Auto'": 32,
+      "n/a": 26,
+      "dialog with typed responses": 14,
+      "grid share sizing": 12,
+      "length value ''": 12,
+      "item collection (list/tree/table)": 9,
+      "parse error: mismatched tag: line 30, column 5": 8,
+      "element indices must be integers": 5,
+      "scroller with explicit bars": 4,
+      "responsive breakpoint rules": 3,
+      "typed value conversion": 2,
+      "parse error: mismatched tag: line 54, column 4": 2,
+      "transient banner": 2,
+      "parse error: mismatched tag: line 34, column 5": 2,
+      "parse error: mismatched tag: line 26, column 5": 2,
+      "parse error: mismatched tag: line 178, column 4": 1,
+      "items layout contract": 1,
+      "numeric stepper": 1,
+      "parse error: mismatched tag: line 158, column 3": 1,
+      "parse error: mismatched tag: line 58, column 3": 1,
+      "parse error: mismatched tag: line 114, column 3": 1,
+      "paged carousel": 1,
+      "parse error: mismatched tag: line 645, column 3": 1,
+      "parse error: mismatched tag: line 295, column 9": 1,
+      "parse error: no element found: line 273, column 0": 1,
+      "parse error: mismatched tag: line 174, column 6": 1,
+      "parse error: mismatched tag: line 416, column 3": 1,
+      "parse error: no element found: line 508, column 0": 1,
+      "parse error: no element found: line 37, column 0": 1,
+      "parse error: mismatched tag: line 1469, column 6": 1,
+      "parse error: no element found: line 1186, column 0": 1,
+      "parse error: mismatched tag: line 70, column 4": 1,
+      "parse error: mismatched tag: line 93, column 4": 1,
+      "parse error: no element found: line 129, column 0": 1,
+      "parse error: no element found: line 157, column 0": 1,
+      "parse error: mismatched tag: line 767, column 4": 1,
+      "parse error: no element found: line 252, column 0": 1,
+      "parse error: no element found: line 136, column 0": 1,
+      "parse error: mismatched tag: line 157, column 3": 1,
+      "parse error: mismatched tag: line 621, column 5": 1,
+      "parse error: no element found: line 455, column 0": 1,
+      "parse error: mismatched tag: line 166, column 4": 1,
+      "parse error: no element found: line 211, column 0": 1,
+      "parse error: mismatched tag: line 230, column 4": 1,
+      "parse error: mismatched tag: line 191, column 4": 1,
+      "parse error: mismatched tag: line 98, column 5": 1,
+      "parse error: mismatched tag: line 311, column 4": 1,
+      "parse error: mismatched tag: line 234, column 4": 1,
+      "parse error: mismatched tag: line 213, column 4": 1,
+      "parse error: mismatched tag: line 369, column 4": 1,
+      "parse error: mismatched tag: line 180, column 4": 1,
+      "parse error: mismatched tag: line 122, column 3": 1,
+      "parse error: mismatched tag: line 344, column 4": 1,
+      "parse error: mismatched tag: line 103, column 5": 1,
+      "parse error: no element found: line 55, column 0": 1,
+      "parse error: no element found: line 208, column 0": 1,
+      "parse error: mismatched tag: line 83, column 7": 1,
+      "parse error: mismatched tag: line 451, column 2": 1,
+      "parse error: mismatched tag: line 108, column 2": 1,
+      "parse error: mismatched tag: line 374, column 2": 1,
+      "parse error: mismatched tag: line 27, column 4": 1,
+      "parse error: mismatched tag: line 32, column 4": 1,
+      "parse error: mismatched tag: line 28, column 5": 1,
+      "parse error: mismatched tag: line 33, column 5": 1,
+      "parse error: mismatched tag: line 35, column 5": 1,
+      "parse error: mismatched tag: line 35, column 4": 1,
+      "parse error: mismatched tag: line 32, column 5": 1,
+      "parse error: mismatched tag: line 20, column 4": 1,
+      "parse error: mismatched tag: line 82, column 2": 1,
+      "parse error: mismatched tag: line 28, column 2": 1
+    },
+    "pruned_stale": 0,
+    "donor": "files",
+    "app": "Files",
+    "source": "9to1 Workspace/Files/Source/Files/src",
+    "translated_files": 39,
+    "untranslated_files": 97,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "Files.App/App.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Dialogs/AddBranchDialog.xaml",
+      "cui": "Files.App/Dialogs/AddBranchDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "c2d5494c9a37a6f3d477812b077a6cd36a2e6798d7bce0d670bb563887c64a45",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/AddItemDialog.xaml",
+      "cui": "Files.App/Dialogs/AddItemDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "e3b580b26ab4ec6b3bf247f9aec2a2c456cac75eef42f44c963e949d641ae677",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/BulkRenameDialog.xaml",
+      "cui": "Files.App/Dialogs/BulkRenameDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "982bf23ae7a581e945442bd1999147783dd42ec445bdb24aa1c472e544b4b568",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/CloneRepoDialog.xaml",
+      "cui": "Files.App/Dialogs/CloneRepoDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "fb269b7a68579df364118f74d4a92fc2ea08427837dc1f27cc1d6fdca2c01fea",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/CompressSkippedItemsDialog.xaml",
+      "cui": "Files.App/Dialogs/CompressSkippedItemsDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "24ef9b4586dbc89fa11ee9e5786038ba7ff1fc4058bee5c32ad174dedfd792f5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/CreateArchiveDialog.xaml",
+      "cui": "Files.App/Dialogs/CreateArchiveDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 47,
+      "actions": 0,
+      "donor_sha256": "097b34576f054580c8476de64f6a64633d6868c7d329bfdc2226e88c97393b47",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/CreateShortcutDialog.xaml",
+      "cui": "Files.App/Dialogs/CreateShortcutDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 18,
+      "actions": 1,
+      "donor_sha256": "b9c3eb3dfdabbff27c78aacfcffd4d32ce7944f372abd308e4b290da75502b79",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/CredentialDialog.xaml",
+      "cui": "Files.App/Dialogs/CredentialDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "62102fc61fd004bdba79aa7194c412bc4687c7b039a9b4c3a0c8c99f690d3aa6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/DecompressArchiveDialog.xaml",
+      "cui": "Files.App/Dialogs/DecompressArchiveDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 21,
+      "actions": 1,
+      "donor_sha256": "ce4df63010b950a23075fc01baa472e05f7c8bf0bdc8e4035bbd2fdf3bed35b2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/DynamicDialog.xaml",
+      "cui": "Files.App/Dialogs/DynamicDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "656b921d9a7e966fb1e8f58a486af7aa395a75a656b95995923eec70b2bad1be",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/ElevateConfirmDialog.xaml",
+      "cui": "Files.App/Dialogs/ElevateConfirmDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "6db1d8f39bd3e0a51b2aa1ae2b978dadb15b99bdf2f77267ab46ba1b51ef7b66",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/FileTooLargeDialog.xaml",
+      "cui": "Files.App/Dialogs/FileTooLargeDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "0034c4aafe9a78574e800b101720db0bc5e78fe96c20fc4def796a562956e9b2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/FilesystemOperationDialog.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Dialogs/GitHubLoginDialog.xaml",
+      "cui": "Files.App/Dialogs/GitHubLoginDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "80d3acd88803a472bd19e2024d203e58af6d9cbd16800dc3369815ee0b7a020e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Dialogs/KeyBindingEditorDialog.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Dialogs/ReorderSidebarItemsDialog.xaml",
+      "cui": "Files.App/Dialogs/ReorderSidebarItemsDialog.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "4c156b4182985e1cb537cddd2fbdeb28d8dad2913aaa87c501bc7898fe7cef9c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/MainWindow.xaml",
+      "cui": "Files.App/MainWindow.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "e937430c785b4561accc9ff3d2aa10cb0a795c6e028d864587fe88280603a0f5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Styles/DefaultGridSplitterStyle.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/MenuFlyoutSubItemWithImageStyle.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/MenuFlyoutSubItemWithThemedIconStyle.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/PathIcons.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/PropertiesStyles.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/StatusCenterInfoBadgeStyles.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/StatusCenterStyles.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/TabBarStyles.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/TextBlockStyles.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/ToolbarButtonStyle.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Styles/TransparentMarkdownTextBlock.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/DataGridHeader.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/FileIcon.xaml",
+      "cui": "Files.App/UserControls/FileIcon.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "34d6c0b8affaba2e2d2b134f5c1338f32b8ceefa0f4fd7f73564be0472d23f22",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/BasicPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/BasicPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "e38ed556aa58e5173125f0626264e0981e362b4c6c95584293c6e24f25e482c5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/CodePreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/CodePreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "2970b3070780b00a27749b252e95038ccdac17077e9d36008366219769176a99",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/FolderPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/FolderPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "d04a42127eb5d9295f5c35bf25c4aaf7314b84e2223edbb4bfc4d0e264bc4f20",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/HtmlPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/HtmlPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "2ac03694f5a3da01dc6cf9b6488fd167ca801ef1788251675b479332467633e1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/ImagePreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/ImagePreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "d025006df27171b79c22c385068eb4409c519ff4383618a7d22ad03645d75520",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/MarkdownPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/MarkdownPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "297817d43fa79cdc6ce39cf4a3b644b177f5bbd05c7bee9f6a4cee9413611a1d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/MediaPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/MediaPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "b42ff18bcff9d9a36d92f188e357e3cf2a3d17684dc68da0ee1db58a1343642b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/PDFPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/PDFPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "2dffe1ddcaf1e2cfcfee69d2259237fed6c1f8ec09ceb6b6757f05b03f588739",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/RichTextPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/RichTextPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "2f3af43b5ef3e2c59db85f4c0bc074bd74e32f222071cc45d030437a5549937f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/ShellPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/ShellPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "4dc2dbace0cfeb40757f5ffbcb7f832c7434cf174acf3761d1d33b2ca6b72047",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FilePreviews/TextPreview.xaml",
+      "cui": "Files.App/UserControls/FilePreviews/TextPreview.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "c078a4068f8dea25f41177a0a59d6eda1f8fe0664ddac237fdb9d8e94e71499d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/FolderEmptyIndicator.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/KeyboardShortcut/KeyboardShortcut.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/LocationUnavailableIndicator.xaml",
+      "cui": "Files.App/UserControls/LocationUnavailableIndicator.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "17e134187e8a3b433e9f732631956add5ddf148aa8cd88e671f132f3b3d68b0d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Menus/MenuFlyoutHeaderItem.xaml",
+      "cui": "Files.App/UserControls/Menus/MenuFlyoutHeaderItem.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "233bdc3b1286532bd3cb770a5e5783a8d75e28b05db5d9a650a264a47f0627f9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Menus/MenuFlyoutItemWithImage.xaml",
+      "cui": "Files.App/UserControls/Menus/MenuFlyoutItemWithImage.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "45c43b60e65d6fee003b673ddd175fffb214e27615a44b5bce6c1267990a614d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Menus/MenuFlyoutItemWithThemedIcon.xaml",
+      "cui": "Files.App/UserControls/Menus/MenuFlyoutItemWithThemedIcon.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "aebda321dcabb0fea6f9efe1159e5bb76708b3f2a5c85f77685b6cd260f6850d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Menus/ToggleMenuFlyoutItemWithThemedIcon.xaml",
+      "cui": "Files.App/UserControls/Menus/ToggleMenuFlyoutItemWithThemedIcon.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "20b6131c7f6b65fdf8f854abce6ff6bfc2ac32551939369a3d7f61bb053b11a0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/NavigationToolbar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/Pane/InfoPane.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/Pane/ShelfPane.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/StatusBar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/StatusCenter/StatusCenter.xaml",
+      "cui": "Files.App/UserControls/StatusCenter/StatusCenter.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 12,
+      "actions": 1,
+      "donor_sha256": "7fa4ba35aa76ff5a437dad5f2098f71cfd0bcb8443f2cb7dcf380cc41fc15302",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/TabBar/TabBar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/Toolbar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/Widgets/DrivesWidget.xaml",
+      "cui": "Files.App/UserControls/Widgets/DrivesWidget.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "f83ca5796c9551edda83f7d02d8b6fa4e58cc132cd5cce68c7ec19589d7541c4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Widgets/FileTagsWidget.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/UserControls/Widgets/NetworkLocationsWidget.xaml",
+      "cui": "Files.App/UserControls/Widgets/NetworkLocationsWidget.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 13,
+      "actions": 1,
+      "donor_sha256": "89a8a08124a2811709218b5b4fa15029a916fceda7c2d5c00afec7639bec1d4f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Widgets/QuickAccessWidget.xaml",
+      "cui": "Files.App/UserControls/Widgets/QuickAccessWidget.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "ffb2e6fcafc66ba5454eefe0d0c41068a23359fc668d639cd558718d26c4ed9d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/UserControls/Widgets/RecentFilesWidget.xaml",
+      "cui": "Files.App/UserControls/Widgets/RecentFilesWidget.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "6247970c980e904ef0bca773a922f0d80c139f50270bfa1d66dcd8fd2fb26147",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Views/HomePage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Layouts/ColumnLayoutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Layouts/ColumnsLayoutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Layouts/DetailsLayoutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Layouts/GridLayoutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/MainPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/CompatibilityPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/CustomizationPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/DetailsPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/GeneralPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/HashesPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/LibraryPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/MainPropertiesPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/SecurityAdvancedPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/SecurityPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/ShortcutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Properties/SignaturesPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/ReleaseNotesPage.xaml",
+      "cui": "Files.App/Views/ReleaseNotesPage.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "e1f5b78a439bbeb7daa70919ca574a12aed77b47dbdbef16dfc4bf571d94b010",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/AboutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/ActionsPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/AdvancedPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/AppearancePage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/DevToolsPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/FoldersPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/GeneralPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/LayoutPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/SettingsPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/TagsPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Settings/ToolbarCustomizationPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/ShellPanesPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Shells/ColumnShellPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/Shells/ModernShellPage.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App/Views/SplashScreenPage.xaml",
+      "cui": "Files.App/Views/SplashScreenPage.cui",
+      "status": "translated",
+      "dialect": "xaml",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "49533ca58ae4810a10f6a4d6b42a39b6e21c3b0d91fc49bda03e12d4491979ba",
+      "refreshed": false
+    },
+    {
+      "donor_file": "Files.App.Controls/BladeView/BladeView.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/BreadcrumbBar/BreadcrumbBar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/GridSplitter/GridSplitter.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Omnibar/Omnibar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/SamplePanel/SamplePanel.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Sidebar/SidebarStyles.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Sidebar/SidebarView.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Storage/StorageBar/StorageBar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Storage/StorageRing/StorageRing.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Action.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Common.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Favorite.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Git.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Misc16.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.New.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Open.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Panel.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Properties.Dialog.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Settings.Sidebar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Settings.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.SizeLayout.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.SizeLayout28.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.Status.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/Styles/Icons.TabPane.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/ThemedIcon.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/ThemedIcon.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/ThemedIcon/ThemedIconLayer/ThemedIconLayer.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Themes/Generic.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/Toolbar.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/Toolbar.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarButton/ToolbarButton.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarButton/ToolbarButton.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarFlyoutButton/ToolbarFlyoutButton.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarFlyoutButton/ToolbarFlyoutButton.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarRadioButton/ToolbarRadioButton.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarRadioButton/ToolbarRadioButton.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarSeparator/ToolbarSeparator.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarSeparator/ToolbarSeparator.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarSplitButton/ToolbarSplitButton.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarSplitButton/ToolbarSplitButton.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarToggleButton/ToolbarToggleButton.ThemeResources.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    },
+    {
+      "donor_file": "Files.App.Controls/Toolbar/ToolbarToggleButton/ToolbarToggleButton.xaml",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "xaml"
+    }
+  ]
+}

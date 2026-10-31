@@ -1,0 +1,59 @@
+<Cui id="ui-optfonttabpage" product="9-1" version="1">
+  <Container id="opt-font-tab-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="font-label" text="Font" focusable="false" role="Grow" column="2" row="0" />
+        <Text id="size-label" text="Size" focusable="false" column="4" row="0" />
+        <Text id="default-label" text="Default:" focusable="false" column="1" row="1" />
+        <Text id="heading-label" text="Heading:" focusable="false" column="1" row="2" />
+        <Text id="list-label" text="List:" focusable="false" column="1" row="3" />
+        <Text id="caption-label" text="Caption:" focusable="false" column="1" row="4" />
+        <Text id="index-label" text="Index:" focusable="false" column="1" row="5" />
+        <Input id="standardbox" Type="Select" focusable="false" role="Grow" column="2" row="1">
+          <Input id="standardbox-entry" Type="Text" />
+        </Input>
+        <Input id="titlebox" Type="Select" focusable="false" role="Grow" column="2" row="2">
+          <Input id="titlebox-entry" Type="Text" />
+        </Input>
+        <Input id="listbox" Type="Select" focusable="false" role="Grow" column="2" row="3">
+          <Input id="listbox-entry" Type="Text" />
+        </Input>
+        <Input id="labelbox" Type="Select" focusable="false" role="Grow" column="2" row="4">
+          <Input id="labelbox-entry" Type="Text" />
+        </Input>
+        <Input id="idxbox" Type="Select" focusable="false" role="Grow" column="2" row="5">
+          <Input id="idxbox-entry" Type="Text" />
+        </Input>
+        <Input id="standardheight" Type="Select" focusable="false" column="4" row="1">
+          <Input id="input" Type="Text" />
+        </Input>
+        <Input id="titleheight" Type="Select" focusable="false" column="4" row="2">
+          <Input id="input-2" Type="Text" />
+        </Input>
+        <Input id="listheight" Type="Select" focusable="false" column="4" row="3">
+          <Input id="input-3" Type="Text" />
+        </Input>
+        <Input id="labelheight" Type="Select" focusable="false" column="4" row="4">
+          <Input id="input-4" Type="Text" />
+        </Input>
+        <Input id="indexheight" Type="Select" focusable="false" column="4" row="5">
+          <Input id="input-5" Type="Text" />
+        </Input>
+        <Image id="lockstandardbox" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Image id="locktitlebox" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        <Image id="locklistbox" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        <Image id="locklabelbox" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+        <Image id="lockidxbox" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+        <Image id="lockstandardheight" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="3" row="1" source="res/lock.png" />
+        <Image id="locktitleheight" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="3" row="2" source="res/lock.png" />
+        <Image id="locklistheight" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="3" row="3" source="res/lock.png" />
+        <Image id="locklabelheight" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="3" row="4" source="res/lock.png" />
+        <Image id="lockindexheight" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="3" row="5" source="res/lock.png" />
+      </Container>
+      <Text id="text" text="Basic Fonts (%1)" focusable="false" />
+    </Container>
+    <Container id="buttonbox1" Type="Horizontal Stack" horizontal-alignment="Right" role="Grow">
+      <Button id="standard" content="Default" text="Default" />
+    </Container>
+  </Container>
+</Cui>

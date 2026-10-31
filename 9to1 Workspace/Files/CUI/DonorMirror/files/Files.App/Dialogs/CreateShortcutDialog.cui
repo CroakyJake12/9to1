@@ -1,0 +1,30 @@
+<Cui id="dialogs-create-shortcut-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="{x:bind-view-model.select-destination-command}" command="{x:Bind ViewModel.SelectDestinationCommand}" />
+  </Actions>
+  <Page id="dialogs-create-shortcut-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="border" Type="Overlay" width="400">
+        <Container id="grid" Type="Grid">
+          <Container id="grid.columndefinitions" Type="Vertical Stack">
+            <Text id="columndefinition" />
+            <Text id="columndefinition-2" />
+          </Container>
+          <Container id="grid.rowdefinitions" Type="Vertical Stack">
+            <Text id="rowdefinition" />
+            <Text id="rowdefinition-2" />
+            <Text id="rowdefinition-3" />
+            <Text id="rowdefinition-4" />
+            <Text id="rowdefinition-5" />
+          </Container>
+          <Text id="textblock" column-span="2" margin="0,0,0,20" text="{helpers:ResourceString Name=NewShortcutDialogDescription}" />
+          <Text id="textblock-2" row="1" column-span="2" text="{helpers:ResourceString Name=NewShortcutDialogPrompt}" />
+          <Input id="textbox" Type="Text" row="2" column="0" horizontal-alignment="Stretch" placeholder-text="{Binding ViewModel.DestinationPlaceholder}" text="{Binding ViewModel.ShortcutTarget}" />
+          <Button id="button" row="2" column="1" content="{helpers:ResourceString Name=Browse}" action="{x:bind-view-model.select-destination-command}" />
+          <Text id="textblock-3" row="3" column-span="2" margin="0,12,0,0" text="{helpers:ResourceString Name=EnterAnItemName}" />
+          <Input id="textbox-2" Type="Text" row="4" column-span="2" horizontal-alignment="Stretch" text="{Binding ViewModel.ShortcutName}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

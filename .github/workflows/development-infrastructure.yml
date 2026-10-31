@@ -8,6 +8,9 @@ on:
       - 'eng/donor-sources.json'
       - '.gitmodules'
       - '.github/scripts/record-donor-audit-baselines.py'
+      - 'eng/cui-mirror/**'
+      - '9to1 Workspace/*/CUI/DonorMirror/**'
+      - 'framework/CUI/**'
       - 'docs/specification/9to1-development-specification-v2.md'
       - '9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py'
       - '9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_benchmark.py'
@@ -23,6 +26,9 @@ on:
       - 'eng/donor-sources.json'
       - '.gitmodules'
       - '.github/scripts/record-donor-audit-baselines.py'
+      - 'eng/cui-mirror/**'
+      - '9to1 Workspace/*/CUI/DonorMirror/**'
+      - 'framework/CUI/**'
       - 'docs/specification/9to1-development-specification-v2.md'
       - '9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py'
       - '9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_benchmark.py'
@@ -91,6 +97,7 @@ jobs:
               ('donor-pin-resolution', 13, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_check_donor_sources.py', '-v']),
               ('donor-fork-equivalence', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_donor_fork_equivalence.py', '-v']),
               ('donor-audit-ratchet', 6, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_record_donor_audit_baselines.py', '-v']),
+              ('cui-donor-mirror', 39, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/cui-mirror', '-p', 'test_*.py', '-v']),
           ]
           failed = False
           for name, expected_tests, command in suites:
@@ -152,3 +159,45 @@ jobs:
           path: ${{ runner.temp }}/infrastructure-evidence/
           if-no-files-found: error
           retention-days: 14
+
+  # Stage A donor-UI mirrors are committed CUI. They are compiled by the real CUI compiler here, so a
+  # mirror that stops compiling cannot be merged quietly. Compile evidence only: nothing in this job
+  # renders, runs natively, packages or accepts anything.
+  mirror-corpus-compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, verified upstream 2026-10-22
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.301'
+      - name: Compile every committed donor mirror against the CUI compiler
+        run: python3 -B eng/cui-mirror/check_corpora.py
+      - name: Record the corpus and mirror-tool identity
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/mirror-evidence"
+          python3 -B - <<'PY'
+          import hashlib, json, os, pathlib, subprocess, sys
+          sys.path.insert(0, "eng/cui-mirror")
+          import mirror
+          data = {
+              "mirror_tool_version": mirror.tool_version(),
+              "baseline": json.loads(pathlib.Path("eng/cui-mirror/mirror_baselines.json").read_text()),
+              "source": subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True,
+                                       text=True).stdout.strip(),
+              "cui_registry_source_sha256": hashlib.sha256(
+                  pathlib.Path("framework/CUI/Runtime/CuiControlRegistry.cs").read_bytes()).hexdigest(),
+          }
+          out = pathlib.Path(os.environ["RUNNER_TEMP"]) / "mirror-evidence" / "corpus-identity.json"
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(data, indent=2) + "\\n")
+          print(json.dumps(data["baseline"], indent=2))
+          PY
+        env:
+          RUNNER_TEMP: ${{ runner.temp }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886067c06451c # v4
+        if: always()
+        with:
+          name: cui-mirror-corpus-identity
+          path: ${{ runner.temp }}/mirror-evidence/

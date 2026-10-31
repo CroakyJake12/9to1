@@ -1,0 +1,30 @@
+<Cui id="ui-selectaddressdialog" product="9-1" version="1">
+  <Container id="select-address-dialog" Type="Vertical Stack" modal="True">
+    <Text id="select-address-dialog-label" text="Select Address List" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Text id="desc" text="Select an address list. Click '%1' to select recipients from a different list. If you do not have an address list you can create one by clicking '%2'." text-wrapping="Wrap" />
+        <Container id="grid2" Type="Grid" role="Grow">
+          <Text id="label2" text="Your recipients are currently selected from:" />
+          <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="6">
+            <Button id="add" content="Add..." text="Add..." />
+            <Button id="remove" content="Remove" text="Remove" />
+            <Button id="create" content="Create..." text="Create..." />
+            <Button id="filter" content="Filter..." text="Filter..." />
+            <Button id="edit" content="Edit..." text="Edit..." />
+            <Button id="changetable" content="Change Table..." text="Change Table..." />
+          </Container>
+          <Text id="connecting" text="Connecting to data source..." />
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="sources" Type="Vertical Stack" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

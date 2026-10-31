@@ -1,0 +1,13 @@
+<Cui id="ui-interactiondialog" product="9-1" version="1">
+  <Container id="interaction-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="interaction-dialog-label" text="Interaction" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="content" Type="Vertical Stack" focusable="false" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

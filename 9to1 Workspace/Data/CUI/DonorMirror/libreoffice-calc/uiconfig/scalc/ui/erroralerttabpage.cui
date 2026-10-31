@@ -1,0 +1,16 @@
+<Cui id="ui-erroralerttabpage" product="9-1" version="1">
+  <Container id="error-alert-tab-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Input id="tsbshow" Type="Checkbox" text="Handle invalid values" role="Grow" />
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+      <Text id="action-label" text="Action:" focusable="false" column="0" row="0" />
+      <Input id="action-cb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+      <Button id="browse-btn" content="Browse..." text="Browse..." column="2" row="0" />
+      <Text id="title-label" text="Title:" focusable="false" column="0" row="1" />
+      <Input id="erroralert-title" Type="Text" column="1" row="1" column-span="2" />
+      <Text id="errormsg-label" text="Error message:" focusable="false" column="0" row="2" />
+      <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="1" row="2" column-span="2">
+        <Input id="error-msg" Type="Text" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

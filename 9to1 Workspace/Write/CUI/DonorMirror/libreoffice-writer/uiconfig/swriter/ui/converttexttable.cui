@@ -1,0 +1,70 @@
+<Cui id="ui-converttexttable" product="9-1" version="1">
+  <Container id="convert-text-table-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="convert-text-table-dialog-label" text="Convert Table to Text" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="container" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Container id="container-2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+            <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="0">
+              <Container id="grid1" Type="Grid" cell-gap="6" horizontal-alignment="Left" vertical-alignment="Top" focusable="false">
+                <Input id="tabs" Type="Radio" text="Tabs" checked="true" column="0" row="0" />
+                <Input id="semicolons" Type="Radio" text="Semicolons" column="1" row="0" column-span="2" />
+                <Input id="paragraph" Type="Radio" text="Paragraph" column="0" row="1" />
+                <Input id="other" Type="Radio" text="Other:" column="1" row="1" />
+                <Input id="othered" Type="Text" text="," column="2" row="1" />
+                <Input id="keepcolumn" Type="Checkbox" text="Equal width for all columns" checked="true" column="0" row="2" column-span="3" />
+              </Container>
+              <Text id="label1" text="Separate Text At" focusable="false" />
+            </Container>
+            <Container id="options" Type="Vertical Stack" focusable="false" column="1" row="0">
+              <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+                <Input id="headingcb" Type="Checkbox" text="Header" column="0" row="0" />
+                <Input id="repeatheading" Type="Checkbox" text="Repeat header" checked="true" column="0" row="1" />
+                <Input id="dontsplitcb" Type="Checkbox" text="Don't split table" column="0" row="3" />
+                <Container id="repeatrows" Type="Grid" cell-gap="12" horizontal-alignment="Left" focusable="false" column="0" row="2">
+                  <Text id="label3" text="The first" focusable="false" column="0" row="0" />
+                  <Text id="label4" text="rows" focusable="false" column="2" row="0" />
+                  <Input id="repeatheadersb" Type="Number" column="1" row="0" />
+                </Container>
+                <Container id="columnnumber" Type="Grid" cell-gap="12" horizontal-alignment="Left" focusable="false" column="0" row="4">
+                  <Text id="label15" text="Add" focusable="false" column="0" row="0" />
+                  <Input id="numcolmsb" Type="Number" column="1" row="0" />
+                  <Text id="lb-columns" text="columns" focusable="false" column="2" row="0" />
+                </Container>
+              </Container>
+              <Text id="label2" text="Options" focusable="false" />
+            </Container>
+          </Container>
+          <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false" column="0" row="1">
+            <Container id="format" Type="Vertical Stack" focusable="false" role="Grow">
+              <Container id="container-3" Type="Grid" cell-gap="12" focusable="false">
+                <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+                  <Container id="preview" Type="Overlay" focusable="false" role="Grow" column="1" row="0" />
+                  <Container id="container-4" Type="Vertical Stack" role="Grow" column="0" row="0">
+                    <Container id="formatlb" Type="Vertical Stack" role="Grow" />
+                  </Container>
+                </Container>
+              </Container>
+              <Text id="label5" text="Format" focusable="false" />
+            </Container>
+          </Container>
+          <Container id="formatting" Type="Vertical Stack" focusable="false" column="0" row="2">
+            <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+              <Input id="numformatcb" Type="Checkbox" text="Number format" column="0" row="0" />
+              <Input id="bordercb" Type="Checkbox" text="Borders" column="1" row="0" />
+              <Input id="fontcb" Type="Checkbox" text="Font" column="2" row="0" />
+              <Input id="patterncb" Type="Checkbox" text="Pattern" column="3" row="0" />
+              <Input id="alignmentcb" Type="Checkbox" text="Alignment" column="4" row="0" />
+            </Container>
+            <Text id="label6" text="Formatting" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

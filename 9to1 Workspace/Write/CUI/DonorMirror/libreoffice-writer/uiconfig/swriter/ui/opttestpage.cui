@@ -1,0 +1,19 @@
+<Cui id="ui-opttestpage" product="9-1" version="1">
+  <Container id="opt-test-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="unused" Type="Checkbox" text="unused" column="0" row="0" />
+        <Input id="noscreenadj" Type="Checkbox" text="No screen adj" column="1" row="0" />
+        <Input id="dynamic" Type="Checkbox" text="dynamic" column="0" row="1" />
+        <Input id="winformat" Type="Checkbox" text="win format" column="1" row="1" />
+        <Input id="nocalm" Type="Checkbox" text="No calm" column="0" row="2" />
+        <Input id="noscroll" Type="Checkbox" text="No Scroll" column="1" row="2" />
+        <Input id="wysiwygdbg" Type="Checkbox" text="WYSIWYG debug" column="0" row="3" />
+        <Input id="drawing-layer-not-loading" Type="Checkbox" text="DrawingLayerNotLoading" column="1" row="3" />
+        <Input id="noidle" Type="Checkbox" text="No idle format" column="0" row="4" />
+        <Input id="auto-format-by-input" Type="Checkbox" text="AutoFormat by Input" column="1" row="4" />
+      </Container>
+      <Text id="label1" text="Settings Only for Testpurposes" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,17 @@
+<Cui id="cite-cite-modal" product="9-1" version="1">
+  <Page id="cite-cite-modal-root">
+    <Container id="cite-repo-modal" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="citation-panel" Type="Vertical Stack">
+            <Button id="goto-citation-btn" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="div-4" Type="Vertical Stack">
+        <Button id="button" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

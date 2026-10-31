@@ -1,0 +1,21 @@
+<Cui id="ui-optchangespage" product="9-1" version="1">
+  <Container id="opt-changes-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Image id="lockchanges" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Text id="label2" text="Changes:" focusable="false" column="1" row="0" />
+        <Button id="changes" focusable="false" role="Grow" column="2" row="0" />
+        <Image id="lockdeletions" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Text id="label3" text="Deletions:" focusable="false" column="1" row="1" />
+        <Button id="deletions" focusable="false" role="Grow" column="2" row="1" />
+        <Image id="lockinsertions" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        <Text id="label4" text="Insertions:" focusable="false" column="1" row="2" />
+        <Button id="insertions" focusable="false" role="Grow" column="2" row="2" />
+        <Image id="lockentries" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        <Text id="label5" text="Moved entries:" focusable="false" column="1" row="3" />
+        <Button id="entries" focusable="false" role="Grow" column="2" row="3" />
+      </Container>
+      <Text id="label1" text="Colors for Changes" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

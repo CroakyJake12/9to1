@@ -1,0 +1,16 @@
+<Cui id="ui-printmonitordialog" product="9-1" version="1">
+  <Container id="print-monitor-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="print-monitor-dialog-label" text="Print monitor" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Text id="docname" focusable="false" />
+        <Text id="printing" text="is being prepared for printing on" focusable="false" />
+        <Text id="printer" focusable="false" />
+        <Text id="printinfo" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

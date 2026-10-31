@@ -1,0 +1,16 @@
+<Cui id="site-identity-file-mixed-content-frames-on-http" product="9-1" version="1">
+  <Page id="site-identity-file-mixed-content-frames-on-http-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Text id="p" text="Test for Bug 1182551.  This is an HTTP top level page.  We include an HTTPS iframe that loads mixed passive content." />
+        <Container id="iframe" Type="Overlay">
+          <Image id="iframe-icon" source="https://example.org/browser/browser/base/content/test/siteIdentity/file_mixedPassiveContent.html" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

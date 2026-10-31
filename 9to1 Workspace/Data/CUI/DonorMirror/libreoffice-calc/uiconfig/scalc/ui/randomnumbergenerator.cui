@@ -1,0 +1,43 @@
+<Cui id="ui-randomnumbergenerator" product="9-1" version="1">
+  <Container id="random-number-generator-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="random-number-generator-dialog-label" text="Random Number Generator" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="apply" content="Apply" text="Apply" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="close" content="Close" text="Close" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame-data" Type="Vertical Stack" focusable="false">
+        <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false">
+          <Text id="cell-range-label" text="Cell range:" focusable="false" />
+          <Input id="cell-range-edit" Type="Text" vertical-alignment="Center" role="Grow" />
+          <Button id="cell-range-button" />
+        </Container>
+        <Text id="label1" text="Data" focusable="false" />
+      </Container>
+      <Container id="frame-statistics" Type="Vertical Stack" focusable="false">
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="distribution-label" text="Distribution:" focusable="false" column="0" row="0" />
+          <Input id="distribution-combo" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+          <Text id="parameter1-label" text="..." focusable="false" role="Grow" column="0" row="1" />
+          <Text id="parameter2-label" text="..." focusable="false" role="Grow" column="0" row="2" />
+          <Input id="parameter1-spin" Type="Number" text="0.0000" role="Grow" column="1" row="1" />
+          <Input id="parameter2-spin" Type="Number" text="1,0000" Value="1" role="Grow" column="1" row="2" />
+        </Container>
+        <Text id="label2" text="Random Number Generator" focusable="false" />
+      </Container>
+      <Container id="frame-options" Type="Vertical Stack" focusable="false">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="enable-seed-check" Type="Checkbox" text="Enable custom seed" column="0" row="0" column-span="2" />
+          <Text id="seed-label" text="Seed:" focusable="false" column="0" row="1" />
+          <Input id="seed-spin" Type="Number" role="Grow" column="1" row="1" />
+          <Input id="enable-rounding-check" Type="Checkbox" text="Enable rounding" column="0" row="2" column-span="2" />
+          <Text id="decimal-places-label" text="Decimal places:" focusable="false" role="Grow" column="0" row="3" />
+          <Input id="decimal-places-spin" Type="Number" text="1" Value="1" role="Grow" column="1" row="3" />
+        </Container>
+        <Text id="label4" text="Options" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

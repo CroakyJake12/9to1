@@ -1,0 +1,2358 @@
+{
+  "summary": {
+    "translated": 11539,
+    "dropped_nodes": 1621,
+    "gap_count": 5083,
+    "gap_constructs": {
+      "toolbar with overflow": 2040,
+      "notebook bar (ribbon) group": 1155,
+      "optional section": 598,
+      "separator": 402,
+      "toolbar overflow": 135,
+      "button row": 133,
+      "menu button": 132,
+      "scroller with explicit bars": 103,
+      "window and dialog chrome": 100,
+      "radio menu item": 95,
+      "item collection (list/tree/table)": 69,
+      "custom drawing surface": 35,
+      "clipped viewport": 25,
+      "unmodelled donor construct": 21,
+      "tab strip": 20,
+      "toggle button": 7,
+      "expander section": 6,
+      "context toolbar": 4,
+      "notebook bar (ribbon) tab": 2,
+      "progress": 1
+    },
+    "pruned_stale": 0,
+    "donor": "libreoffice-writer",
+    "app": "Write",
+    "source": "9to1 Workspace/Write/Source/LibreOffice/sw",
+    "translated_files": 232,
+    "untranslated_files": 0,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "uiconfig/swriter/ui/a11ycheckissuespanel.ui",
+      "cui": "uiconfig/swriter/ui/a11ycheckissuespanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "7e7544e6069ac041d713023ef3910487ce9a8c14637922816f0e1fe64870d729",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/abstractdialog.ui",
+      "cui": "uiconfig/swriter/ui/abstractdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "cea01b65a49a34c84d4d2d066ab1a4890dbfcafb856f0bb61ed62e15e6f97bf3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/addentrydialog.ui",
+      "cui": "uiconfig/swriter/ui/addentrydialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "7c49db828024db572d33cbb9f3278d0842c24bb6d12dffcd2a97128b632503b2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/addressblockdialog.ui",
+      "cui": "uiconfig/swriter/ui/addressblockdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "73374d1d708727854c7406eabe77a7e234427725fd4e606b0d510017a0324864",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/addressfragment.ui",
+      "cui": "uiconfig/swriter/ui/addressfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "f05229a71081631089f7f28227db208628a202dcecd2cd370300a37455609f3d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/alreadyexistsdialog.ui",
+      "cui": "uiconfig/swriter/ui/alreadyexistsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "169eddf6f6b3f88d1031736090b8cf3e910f09de0e1c1a02bae369726b0f9165",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/annotation.ui",
+      "cui": "uiconfig/swriter/ui/annotation.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "59af61b24798e5ed4b0f75dc8193d2fd3061263307db8c951b55664cd7433d36",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/asciifilterdialog.ui",
+      "cui": "uiconfig/swriter/ui/asciifilterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "5e769c4e16ebbf0d92ae16e4f4b972b00cf4d2cbc9e5a5632da5b266482febfc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/asksearchdialog.ui",
+      "cui": "uiconfig/swriter/ui/asksearchdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "645137d4ff08df9bd07ad7679afe24e6bdc0767c4a342e06ddd3752ae279994c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/assignfieldsdialog.ui",
+      "cui": "uiconfig/swriter/ui/assignfieldsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "8929365f3ee12047e1d07bff8342345a3a403b5b430f78d6918283268d1ac66b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/assignfragment.ui",
+      "cui": "uiconfig/swriter/ui/assignfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "b9d1724ad8a75eddcae764dc157400ca15c604e3f0859404f5c2a3cd34e68b32",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/assignstylesdialog.ui",
+      "cui": "uiconfig/swriter/ui/assignstylesdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "3f76ef01ae596828f40c0e7e92647d7f28556df2eb8ed8e7901f0296418c2c34",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/attachnamedialog.ui",
+      "cui": "uiconfig/swriter/ui/attachnamedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "08a55cd5fcac22d561e1aa009355abaf0e25eb65867c694ef9a094c741ab71b2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/authenticationsettingsdialog.ui",
+      "cui": "uiconfig/swriter/ui/authenticationsettingsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "f04e677b8a1b46c0b13b49173f6348e0c908acfa59d8f1a87c414c35db29f497",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/autoformattable.ui",
+      "cui": "uiconfig/swriter/ui/autoformattable.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "d416f39490efa0401f6c6d98b61f70cb3e249e83d75c006d7e6079ae5f7ed1e3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/autotext.ui",
+      "cui": "uiconfig/swriter/ui/autotext.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 40,
+      "actions": 0,
+      "donor_sha256": "c24de84d7971a179910fba96127e4b5963ec70611360511e559ab97d0872569c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/bibliofragment.ui",
+      "cui": "uiconfig/swriter/ui/bibliofragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "c9a66e77c1e39b2c1ec4aa248a455e70d4b5bc718502a6ca88e9f4b05cd13243",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/bibliographyentry.ui",
+      "cui": "uiconfig/swriter/ui/bibliographyentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "7ff640de1e1627115c4f823fe6b2955ade6b486887f6f27e512146e91e8e08f9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/bookmarkmenu.ui",
+      "cui": "uiconfig/swriter/ui/bookmarkmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "fc93fc26425079d7826194b9d7c3ef61d81f0e70c158d53935b91af5a1185c04",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/bulletsandnumbering.ui",
+      "cui": "uiconfig/swriter/ui/bulletsandnumbering.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "9f512417f23d0f4ee64270d863c830c1cc16c099de7e7bb399bed576e4b85302",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/businessdatapage.ui",
+      "cui": "uiconfig/swriter/ui/businessdatapage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 37,
+      "actions": 0,
+      "donor_sha256": "cfed87b55bdd3e416f915900589a7374a9701c1ded78f9a02bfce38b5c7b4eb1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/calendar.ui",
+      "cui": "uiconfig/swriter/ui/calendar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "233133b49b7d9cef1dd310183fee7b6e5aa4e64c6eb00562413d7da4cac7e7e8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/cannotsavelabeldialog.ui",
+      "cui": "uiconfig/swriter/ui/cannotsavelabeldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "5a8d85474a0ef9a248dc324a00bda2b9d5f94b0d7bf5198e0c7377822c80cfc0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/captiondialog.ui",
+      "cui": "uiconfig/swriter/ui/captiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "52f3db15ebd8a4f0b4f06eab16d21169e468f1c15d0943ff77107ada350c7f84",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/captionoptions.ui",
+      "cui": "uiconfig/swriter/ui/captionoptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "6a3169bdea5bf91539bead4ccc40ac75d140b2f232811d4d40ac30baf9d278e7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/cardmediumpage.ui",
+      "cui": "uiconfig/swriter/ui/cardmediumpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 36,
+      "actions": 0,
+      "donor_sha256": "5b9bd5bd2fbfe66d534830664d841627949af58be7cdf16eb3e75a4901cb8078",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/ccdialog.ui",
+      "cui": "uiconfig/swriter/ui/ccdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "d4db7b90056d3e49d04a9f1d6b4028ffcaf854d6f9c2223a99874ccb21b8ce8a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/characterproperties.ui",
+      "cui": "uiconfig/swriter/ui/characterproperties.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "716bca4fd087a006040085f3e627e80fc961e5378117bef3f42911764e514340",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/checkbox.ui",
+      "cui": "uiconfig/swriter/ui/checkbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "540bd1351b030b58156f6977ca8762a8334cf71f0bd39892a2ab227c2241ba51",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/columndialog.ui",
+      "cui": "uiconfig/swriter/ui/columndialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "729541d0a6bd2fc7135771847feb87963795e6fe3fde3a37f0ad36176f4b2ef1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/columnpage.ui",
+      "cui": "uiconfig/swriter/ui/columnpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 54,
+      "actions": 0,
+      "donor_sha256": "d4c20514067db4c84d3ad8237304030995c6a00b97a249317da4b6a42329b420",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/columnwidth.ui",
+      "cui": "uiconfig/swriter/ui/columnwidth.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "b52b69fb938a1486647f881db2b06d007dd103c9cda2290f005a1dc9eab461ad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/combobox.ui",
+      "cui": "uiconfig/swriter/ui/combobox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "765f7091dc4ed2a8ee7328c17b53d2213b11e575df0e7f83261f84c73d5bbe61",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/comboboxfragment.ui",
+      "cui": "uiconfig/swriter/ui/comboboxfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "dfad73295e58063802ae68f7e2094dfe85703bc11eb87464f7e42848611bf0ed",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/commentcontextmenu.ui",
+      "cui": "uiconfig/swriter/ui/commentcontextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "7dc199aa9d26de0392c2425c8983be221c60a6d8e7dd28a48da6df90322f200f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/commentspanel.ui",
+      "cui": "uiconfig/swriter/ui/commentspanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "760919fb05c86f6d61d2e9878905001dc5a0b94b44f389025c029cd1da295055",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/commentsthread.ui",
+      "cui": "uiconfig/swriter/ui/commentsthread.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "9770e67d8359f1830e2a568f419fe7208c17b35a6b630c4248b4be3439fc6d7e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/commentwidget.ui",
+      "cui": "uiconfig/swriter/ui/commentwidget.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "e6c290b29629d3508be5979a3e3398e8e6422075e8e9681247cd07b6e9550aaa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/conditionpage.ui",
+      "cui": "uiconfig/swriter/ui/conditionpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "c0d97360f88a22385c47f2adbfdd533c9d5a7f488d3945bc5a1f533d6b986dab",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/contentcontrolaliasbutton.ui",
+      "cui": "uiconfig/swriter/ui/contentcontrolaliasbutton.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "b3516016587f22d16f04d364f67916a3ed2b2a3990a83b7a4fb9355858d33472",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/contentcontrolcalendar.ui",
+      "cui": "uiconfig/swriter/ui/contentcontrolcalendar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "233133b49b7d9cef1dd310183fee7b6e5aa4e64c6eb00562413d7da4cac7e7e8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/contentcontroldlg.ui",
+      "cui": "uiconfig/swriter/ui/contentcontroldlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 40,
+      "actions": 0,
+      "donor_sha256": "07d6cd061e876f78d15bb70eefe21d9722669f0b42b8204051b5cf5dee39d3d5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/contentcontroldropdown.ui",
+      "cui": "uiconfig/swriter/ui/contentcontroldropdown.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "a52684c3cf3d9bc319a17b6f0322a6232023971f79afae9a68f1b92168dbf894",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/contentcontrollistitemdlg.ui",
+      "cui": "uiconfig/swriter/ui/contentcontrollistitemdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "dd50face936a514b26e087dbc240a6b861b9a4cd1cb26633d8cdb58c6d31d053",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/converttexttable.ui",
+      "cui": "uiconfig/swriter/ui/converttexttable.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 48,
+      "actions": 0,
+      "donor_sha256": "47b48587d1af85ededaa48a943328b47ebb452f01f4a1f69dd7ce190c980549d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/copyfielddialog.ui",
+      "cui": "uiconfig/swriter/ui/copyfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "fdca82d24e64e6ba472e45333375855c4ca6f4a35af6f3da0baded1735398322",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/createaddresslist.ui",
+      "cui": "uiconfig/swriter/ui/createaddresslist.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "f5951de0ef91298d5a5df5814c221c642eee8418b72caa35aa971424069046af",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/createauthorentry.ui",
+      "cui": "uiconfig/swriter/ui/createauthorentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "a37e278b74ad0e670640a6b1ff79148ae9a98638393691227aebf2d4285f65b2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/createautomarkdialog.ui",
+      "cui": "uiconfig/swriter/ui/createautomarkdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "c72479ab3201e636dc27ddab0fa4861c8c1d16190d892177b9d6dfe400d63f0f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/customizeaddrlistdialog.ui",
+      "cui": "uiconfig/swriter/ui/customizeaddrlistdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "75225b0dfd965623859230a165cfdba6be30fe6b835695b80a7239605025829f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/datasourcesunavailabledialog.ui",
+      "cui": "uiconfig/swriter/ui/datasourcesunavailabledialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "c13b080bdf91fec0e5978a2c8bc0260ac95efeab7261963bc129f44a2f07dff7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/dateformfielddialog.ui",
+      "cui": "uiconfig/swriter/ui/dateformfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "08aa3295ec99b8615c4aec36bea3684876bed632bd54e9864624e1d1210bbb83",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/dropcapspage.ui",
+      "cui": "uiconfig/swriter/ui/dropcapspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "8270d468f9b91bd81eaecf9895f6a8861aa59f520248eeda9e7eca62340968ad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/dropdownfielddialog.ui",
+      "cui": "uiconfig/swriter/ui/dropdownfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "2039587bb304dec7e9cc95f0bdb8fe6ae8389f0ef5a05e1e8f98b6ce0c8a2ee7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/dropdownformfielddialog.ui",
+      "cui": "uiconfig/swriter/ui/dropdownformfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "8584ad21ad6ee2a8a4fdeadd3c47142d9938709488c1fb7b2beb1f9aef12b9b3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/editbox.ui",
+      "cui": "uiconfig/swriter/ui/editbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "feef4351b04a3a79bc6a3538b55382ebc22f38ef1a1d03dc87f582b6e5c262a9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/editcategories.ui",
+      "cui": "uiconfig/swriter/ui/editcategories.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "276f42974625dcf5fe6047340b6b69a918e7506dca0f59a0f961707b934b3f08",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/editfielddialog.ui",
+      "cui": "uiconfig/swriter/ui/editfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "df6c988d0b00aa482d1a8ed06a136fc0d803ae7993b6ea5cf97c3c294d1e07c3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/editsectiondialog.ui",
+      "cui": "uiconfig/swriter/ui/editsectiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 48,
+      "actions": 0,
+      "donor_sha256": "1050f87f878ac2a400cc8c6752a45d6f867f8ca0048e8994e3bc24b12ee7c975",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/endnotepage.ui",
+      "cui": "uiconfig/swriter/ui/endnotepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "adca21e64a684ed811b2701012ab9dd8043f8487c34dca47f6c7e4ec15286658",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/envaddresspage.ui",
+      "cui": "uiconfig/swriter/ui/envaddresspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "b94e8682e4be87204173dd03326f3f7378a56ddea65ad506ae3f5854e80cc1d3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/envdialog.ui",
+      "cui": "uiconfig/swriter/ui/envdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "c160b3a126b40aa5ce4ee33c66012f9466d30371bad21d318f0f16081a7d3fb0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/envformatpage.ui",
+      "cui": "uiconfig/swriter/ui/envformatpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 48,
+      "actions": 0,
+      "donor_sha256": "886f95a505f979345ced13dff65f8beced91d6f9c1ed01aa31abbffb9bf64df4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/envprinterpage.ui",
+      "cui": "uiconfig/swriter/ui/envprinterpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 41,
+      "actions": 0,
+      "donor_sha256": "0678c4c2fe5b6cb08be393572175e366225cbb92c27bb9477e18adf7de67cc6d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/exchangedatabases.ui",
+      "cui": "uiconfig/swriter/ui/exchangedatabases.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "bbe32adb971e574bda6b0c43e338c9445ee7f39f78d9c6be60e96f82a4818f73",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/fielddialog.ui",
+      "cui": "uiconfig/swriter/ui/fielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "a11e233ea30524ab144848e99c15ab482e9d88e8e9e7cca943a0bec1342ddcc6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/findentrydialog.ui",
+      "cui": "uiconfig/swriter/ui/findentrydialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "ae5d16da81c0c3952a12e029059d4d8dca9c1b7543d326fa6528ff9892e5c54b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/flddbpage.ui",
+      "cui": "uiconfig/swriter/ui/flddbpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 30,
+      "actions": 0,
+      "donor_sha256": "969bcdd6fd2bfba3ebb81d9f0b9076516dcc2268c11e5294739131009c63c1d4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/flddocinfopage.ui",
+      "cui": "uiconfig/swriter/ui/flddocinfopage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "f3c6cb28d0fb892af7f7d0cdd8c0b433ec6eef0777ea06fae8fe264693ccca7a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/flddocumentpage.ui",
+      "cui": "uiconfig/swriter/ui/flddocumentpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "237f4632eb69fc8ce1fbc0d6c5dd580bffbe997c8f8e5549a8301440de1d1f61",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/fldfuncpage.ui",
+      "cui": "uiconfig/swriter/ui/fldfuncpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 43,
+      "actions": 0,
+      "donor_sha256": "84382980d5d5b9eec8e315e1ab616e4277c282d1e55fbe1289e18c74a5a3d41c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/fldrefpage.ui",
+      "cui": "uiconfig/swriter/ui/fldrefpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "f2a34da1e6894d96fc9130f2fa54385501e8267144069eb7898b2a2ab257366e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/fldvarpage.ui",
+      "cui": "uiconfig/swriter/ui/fldvarpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "4941c45493075daec83c1d26671f71128f72876fb30028fa5ceaefd4bf3eec70",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/floatingsync.ui",
+      "cui": "uiconfig/swriter/ui/floatingsync.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "51d860d1e196236e7c37418a0c9e80a02ea1af2b24b14381fc9627f5251475b8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/footendnotedialog.ui",
+      "cui": "uiconfig/swriter/ui/footendnotedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "d6eb805598052d70434002dd4b837aaf947d5815af8d7bafd3cf2569639f32d0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/footnoteareapage.ui",
+      "cui": "uiconfig/swriter/ui/footnoteareapage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "53924887c66e4a63b95f0b0710884d69c5d10181b6cdb71bb85ba51561703ab0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/footnotepage.ui",
+      "cui": "uiconfig/swriter/ui/footnotepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "a7b84b861b7282ce3506e0a588854cf8223e516ea0d2c43ced278242b9e421fb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/footnotesendnotestabpage.ui",
+      "cui": "uiconfig/swriter/ui/footnotesendnotestabpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 33,
+      "actions": 0,
+      "donor_sha256": "33a2100755d6ea5e052fabc3ceecda7696ca73ebff7265806ac1dc6bbbfac7d4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/formatsectiondialog.ui",
+      "cui": "uiconfig/swriter/ui/formatsectiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "9fbbf319589c26931964012c71b1712bb2ec11b644d01fdfbd04b3a2ef5f70eb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/formattablepage.ui",
+      "cui": "uiconfig/swriter/ui/formattablepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 37,
+      "actions": 0,
+      "donor_sha256": "5734cbf21dec18e4404dd02e62d2b3003399c0884d37488af08813360a34cc26",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/formdropdown.ui",
+      "cui": "uiconfig/swriter/ui/formdropdown.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "ede33cb4c6d616c1e2f0c3515d3767c397405afe6645b6d44dfaf8f6482eb376",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/framedialog.ui",
+      "cui": "uiconfig/swriter/ui/framedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "1f82ce0ada70e47a6fe8274046c100eac1e23ecaee10196196258d3473d66808",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/frmaddpage.ui",
+      "cui": "uiconfig/swriter/ui/frmaddpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 34,
+      "actions": 0,
+      "donor_sha256": "d66b69b42c0f84c97958800c744ae9e8a58c23e19a884138f3c7ecf6c7f9a1dc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/frmtypepage.ui",
+      "cui": "uiconfig/swriter/ui/frmtypepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 56,
+      "actions": 0,
+      "donor_sha256": "e799a736ab5d668c2aadc4ab5a88db8fbcc1f4f2d5ccf2033e00e1e377f557ec",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/frmurlpage.ui",
+      "cui": "uiconfig/swriter/ui/frmurlpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "5cc0e3822daa0afff943e42a8ce6d3c8079c6d60909e9bf0b75152b1ad31ac8c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/hfmenubutton.ui",
+      "cui": "uiconfig/swriter/ui/hfmenubutton.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "7e13cf7e09835133632420c9198904af652417f395bcc24c3058b0cca2bd3aa4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/indentpage.ui",
+      "cui": "uiconfig/swriter/ui/indentpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "420bae926863ee32a7ad5bb110266867a931f073af4729271325cb613266f273",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/indexentry.ui",
+      "cui": "uiconfig/swriter/ui/indexentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 47,
+      "actions": 0,
+      "donor_sha256": "3c7c5516f5f4dabfb0b5220ac67a9fa1eae4015972faef455081fb43a89e1d46",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/infonotfounddialog.ui",
+      "cui": "uiconfig/swriter/ui/infonotfounddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "f47f26c7216ad848c8becf7ed6a744e4f055ac2dd218b60cdb1aba2794395b4a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/inforeadonlydialog.ui",
+      "cui": "uiconfig/swriter/ui/inforeadonlydialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "a892cfaa9c0c9cf5213043b9e7785cf75a6a125c499687b952a5a59d4bcbd033",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/inputeditbox.ui",
+      "cui": "uiconfig/swriter/ui/inputeditbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "02fd177a293a23c42d059e82035dc6777a2052549fb5cccad6bf0e1b45b5ce67",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/inputfielddialog.ui",
+      "cui": "uiconfig/swriter/ui/inputfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "797471ae046bcb148b7544f34f7ecfdd6919458e42c4df6e034cb6487b5dee67",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/inputwinmenu.ui",
+      "cui": "uiconfig/swriter/ui/inputwinmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "e5d8614b8543d8d55eed0b28fda0dbccee0908f3fe7d4f41cc64e3e6bdb14eb7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertautotextdialog.ui",
+      "cui": "uiconfig/swriter/ui/insertautotextdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "665506daf630b7bdc63adc2c6fe662de3fd22208cf29ae739ac3a7584daef430",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertbookmark.ui",
+      "cui": "uiconfig/swriter/ui/insertbookmark.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "7690aa429f3b4247b3a2fe1cd27b5b8b1bdab656241090e4a3dd1c6511ebb117",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertbreak.ui",
+      "cui": "uiconfig/swriter/ui/insertbreak.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "3611e8c323bd301af13481458e3431d683af8f6e4df03fabdf9ac9e2ea3ad448",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertcaption.ui",
+      "cui": "uiconfig/swriter/ui/insertcaption.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "dd725526a81a8a6bc788d47115a7ab840eb1843d465f6ebc3deed81924588d56",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertdbcolumnsdialog.ui",
+      "cui": "uiconfig/swriter/ui/insertdbcolumnsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 54,
+      "actions": 0,
+      "donor_sha256": "e1851a736a17bf110133e45bb7519347d7e7ff5c835ce0e37ea6a2145807656c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertfootnote.ui",
+      "cui": "uiconfig/swriter/ui/insertfootnote.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "c7a50bd9fff6eb304389c96b9eafc7d9a263cf5876e58a6fc1417d9916072e86",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertscript.ui",
+      "cui": "uiconfig/swriter/ui/insertscript.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "2d8edbd4b1f9ea12059a8999d4b260ac082109747a8aa7e72dd862d29a8b706f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/insertsectiondialog.ui",
+      "cui": "uiconfig/swriter/ui/insertsectiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "157cfb6e773aa554eb36c4fe3c15b5a87c852d0d64bb438d4efe708d0b5d23cb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/inserttable.ui",
+      "cui": "uiconfig/swriter/ui/inserttable.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "b182317430f8b312c92d3bb4236a3744ed055b956219704aac0959ae56b00a24",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/jumpposbox.ui",
+      "cui": "uiconfig/swriter/ui/jumpposbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "8ddb44fe621a8d359c74217ed84f3032a870a4bfa5fbca01b6c8b23b3d48cca8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/labeldialog.ui",
+      "cui": "uiconfig/swriter/ui/labeldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "cbffa9cdec5c8c59700ed208fc111205b7bfa8cfcf6ac16770ee8a4ee86316f6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/labelformatpage.ui",
+      "cui": "uiconfig/swriter/ui/labelformatpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "dcbc981d6cc9bfe1c8ef559215a76cc70a771430647382839305301fb7b68735",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/labeloptionspage.ui",
+      "cui": "uiconfig/swriter/ui/labeloptionspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "e583ba8d201f02975f94b6ecad886824871c9b2ab72522ebc294962e3ed8aada",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/linenumbering.ui",
+      "cui": "uiconfig/swriter/ui/linenumbering.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 40,
+      "actions": 0,
+      "donor_sha256": "f806610db22d3cf20ef39e6cb095aea8bee484c4b5c5c1191213dad7f799bed3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mailconfigpage.ui",
+      "cui": "uiconfig/swriter/ui/mailconfigpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 30,
+      "actions": 0,
+      "donor_sha256": "c2073b8f58ef5bb6d1636febfe1adf9b8b76ea4ea9e5383b009f541b4fea806b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mailmerge.ui",
+      "cui": "uiconfig/swriter/ui/mailmerge.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 54,
+      "actions": 0,
+      "donor_sha256": "fa5c1efc837ca425639a0c6a67598c6eb5ce7b93b7b6feed99e63d103702ba3b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mailmergedialog.ui",
+      "cui": "uiconfig/swriter/ui/mailmergedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "115cd93b39fbe338143a2bd9090605cdde54559f7231fc28250c12b662a048ef",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/managechangessidebar.ui",
+      "cui": "uiconfig/swriter/ui/managechangessidebar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "529c266ff97b7811624260f912b7a240dcf210f115fdb278462a063b15b09f44",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mastercontextmenu.ui",
+      "cui": "uiconfig/swriter/ui/mastercontextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "2394032e6c66d33d3f32566238d2745de48e0c11a851966e948a75a522a969fb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mergeconnectdialog.ui",
+      "cui": "uiconfig/swriter/ui/mergeconnectdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "cb85f19092943e65cbfd43a5c958077a0625ec8494baeb5836748f2d62e0434a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mergetabledialog.ui",
+      "cui": "uiconfig/swriter/ui/mergetabledialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "d5724381c9cb61bb6a1e0dda1dfa6e6e475ac9d5983eeb2a860bf4babc2a4c7c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmaddressblockpage.ui",
+      "cui": "uiconfig/swriter/ui/mmaddressblockpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 41,
+      "actions": 0,
+      "donor_sha256": "b06f4ce93b213da86e9e97e967a74c22101d3a077010b14a68cf8632ad09097e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmcreatingdialog.ui",
+      "cui": "uiconfig/swriter/ui/mmcreatingdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "b9a1f6abcae0eb39f2446bcbef483e02ec9f7f5b4dc9c67c046376064b464118",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmlayoutpage.ui",
+      "cui": "uiconfig/swriter/ui/mmlayoutpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "f2d89e19304547570ab595cb7ca659d17ec75e7deb54dd7717644f83c47bd524",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmmailbody.ui",
+      "cui": "uiconfig/swriter/ui/mmmailbody.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "df201984138c5d5bafb5cac67fcbf042e3a66a652f5932bcb751870d0aceb250",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmoutputtypepage.ui",
+      "cui": "uiconfig/swriter/ui/mmoutputtypepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "64b70bd3f8b963ad890af40fd05ab9be5a27a9597e447930627f4dd8f7646dc7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmresultemaildialog.ui",
+      "cui": "uiconfig/swriter/ui/mmresultemaildialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 33,
+      "actions": 0,
+      "donor_sha256": "b9254a9d59bb05b5b96dbbae442a6acf89dff6adae42c8163f6e706658a42a16",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmresultprintdialog.ui",
+      "cui": "uiconfig/swriter/ui/mmresultprintdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "0d71a7e0840a03d3247e6d8d8325a5c8605128e35cdd5f47e1017f4c2ef4f3d4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmresultsavedialog.ui",
+      "cui": "uiconfig/swriter/ui/mmresultsavedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "d6bb8efefd383e1afb3e96e24d09ad27aeb961986a671f33488c1c2b4b0239f8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmsalutationpage.ui",
+      "cui": "uiconfig/swriter/ui/mmsalutationpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "4068f5edeed7e7ec3584b457c085554751d79b0e416f8e752709e0de895cf047",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmselectpage.ui",
+      "cui": "uiconfig/swriter/ui/mmselectpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "2f39b266bc463535811bb55f103c7dc7451025e12e8069573697c5f4cc8db393",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/mmsendmails.ui",
+      "cui": "uiconfig/swriter/ui/mmsendmails.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "74f08c763377c4db1ffe9213b6000142225c76bf674f8c444f47d1276a16645b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/navigatorcontextmenu.ui",
+      "cui": "uiconfig/swriter/ui/navigatorcontextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 82,
+      "actions": 0,
+      "donor_sha256": "f1a0c1cc5ab16abea68d0319c096f553192dfa26c90ac85a39180babea515a2b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/navigatordraginsertmenu.ui",
+      "cui": "uiconfig/swriter/ui/navigatordraginsertmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "bd5d8000982d85c6fc47b9344f25b6c32360282cf8089d84ab92329f74560234",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/navigatorpanel.ui",
+      "cui": "uiconfig/swriter/ui/navigatorpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 130,
+      "actions": 0,
+      "donor_sha256": "fef6dc3b5539f249a5833c4c9fb06e557d8d7a59a6d2111e9f944eb8ecd7088c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/newuserindexdialog.ui",
+      "cui": "uiconfig/swriter/ui/newuserindexdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "61e731ca78549902e11ff740f1c953fbd6678991ef6f878cc7090ef6144f9061",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/notebookbar.ui",
+      "cui": "uiconfig/swriter/ui/notebookbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1337,
+      "actions": 0,
+      "donor_sha256": "b95968c948eaa69b4a9e3c0ed58668683354fbd3fd4256ac65f5d5afeff3dda9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/notebookbar_compact.ui",
+      "cui": "uiconfig/swriter/ui/notebookbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1629,
+      "actions": 0,
+      "donor_sha256": "c49ff911af4806c978b2f62bd0b1034458911bc3d6675ed34f2d13ddb0c68528",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/notebookbar_groupedbar_compact.ui",
+      "cui": "uiconfig/swriter/ui/notebookbar_groupedbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1312,
+      "actions": 0,
+      "donor_sha256": "06d3f59ebbab07def7c565eb8c7d9e0566242d9df0e27e53aa77b682b466259d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/notebookbar_groupedbar_full.ui",
+      "cui": "uiconfig/swriter/ui/notebookbar_groupedbar_full.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1691,
+      "actions": 0,
+      "donor_sha256": "4c6a523559667f5cd03cc45b38df24f47de377b9a37f5a2ddbd3f2ff4e8b9a42",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/notebookbar_groups.ui",
+      "cui": "uiconfig/swriter/ui/notebookbar_groups.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 202,
+      "actions": 0,
+      "donor_sha256": "8b9cfaa969bcdd00920652587f52598ce2e7401702ef0e4aecb1f593925b8d0b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/notebookbar_single.ui",
+      "cui": "uiconfig/swriter/ui/notebookbar_single.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 790,
+      "actions": 0,
+      "donor_sha256": "923783daad0c7d1b6e2ddf978f3d78f7c33fe7b192603b895395d116d1ae3b6c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/numberingnamedialog.ui",
+      "cui": "uiconfig/swriter/ui/numberingnamedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "ae6ee78b37a963448053700384bc8ecd8d7663935853d5840727456d8624994c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/numberinput.ui",
+      "cui": "uiconfig/swriter/ui/numberinput.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "496adc58e50b3bb238c1d74924283e4248711937b8ec47e5fb44ec73e475612c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/numparapage.ui",
+      "cui": "uiconfig/swriter/ui/numparapage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "2975cb7c52164d5473897fc0c853e2d8b92a29fbbe177700ed37b97e466940fb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/objectdialog.ui",
+      "cui": "uiconfig/swriter/ui/objectdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "c264029a2f1fb815574b0100ecb0c13f390a9af1596bf88e7dac8a2072d623e8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optcaptionpage.ui",
+      "cui": "uiconfig/swriter/ui/optcaptionpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 52,
+      "actions": 0,
+      "donor_sha256": "58483bef5b6ef81944f684a9bc4ed4d7389848de7260e217e99911d74231e135",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optcomparison.ui",
+      "cui": "uiconfig/swriter/ui/optcomparison.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "38ecdac6515965a6eae33bcb08bd43cb9cc0aaa744b754e48c40ccd83f65d1a4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optcompatpage.ui",
+      "cui": "uiconfig/swriter/ui/optcompatpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "a6b0ea2be234164d38b4b88a72d88d107eaea06f85e219a0ed147ad75b9bfb6b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optfonttabpage.ui",
+      "cui": "uiconfig/swriter/ui/optfonttabpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 43,
+      "actions": 0,
+      "donor_sha256": "40b7afeca624cadf6f4d9ee0060e8acb3e6e28fddd629b56e16fb9c320998017",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optformataidspage.ui",
+      "cui": "uiconfig/swriter/ui/optformataidspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 76,
+      "actions": 0,
+      "donor_sha256": "d8fd7a7a53d2b31f295a256978256feed9cdfbf85f19571483212fb5dcf3d02a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optgeneralpage.ui",
+      "cui": "uiconfig/swriter/ui/optgeneralpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 45,
+      "actions": 0,
+      "donor_sha256": "65dc77f9c4153e40462d6f2e231578e289802b41ba3cfb10d294ac60db168d07",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/optredlinepage.ui",
+      "cui": "uiconfig/swriter/ui/optredlinepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 49,
+      "actions": 0,
+      "donor_sha256": "d9e2e1040d1e08745f6bd4f7716b904b9c63adc80ae7ab3e9d6a71b83e33ff1a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/opttablepage.ui",
+      "cui": "uiconfig/swriter/ui/opttablepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 51,
+      "actions": 0,
+      "donor_sha256": "e69870626d10e2b5c203f72ac8d00f635d0cc2c4f54d52ac36b2480db080e613",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/opttestpage.ui",
+      "cui": "uiconfig/swriter/ui/opttestpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "b0f9f0c6282ab7ead8e682c5fbe03cddbda42e96762863b688e7bf5990c230d3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/outlinebutton.ui",
+      "cui": "uiconfig/swriter/ui/outlinebutton.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "0cc0a8617b404df70f115c7d813a904db3fc690ea096947fe6db8783eac72e97",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/outlinenumbering.ui",
+      "cui": "uiconfig/swriter/ui/outlinenumbering.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "bb5bdcf2182efcac9fa93b22cdaadd5911b5dabb9dc00125c7ce094f9d164c63",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/outlinenumberingpage.ui",
+      "cui": "uiconfig/swriter/ui/outlinenumberingpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 30,
+      "actions": 0,
+      "donor_sha256": "335577e77ffea7a3d2b623197633e6933ec7c059efea3a539da96dabc765c35a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/outlinepositionpage.ui",
+      "cui": "uiconfig/swriter/ui/outlinepositionpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "c2ece3d4699bb2e68bdf2ac765e565b26dad29c3ec60d429877a2c234af095b7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagecolumncontrol.ui",
+      "cui": "uiconfig/swriter/ui/pagecolumncontrol.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "7f539563a182a1757667116022d63a1455c17f09dcd8d71fa25096c1b98331c2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagefooterpanel.ui",
+      "cui": "uiconfig/swriter/ui/pagefooterpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "968e271aa9f5bf468d54d5979a27a7fc0e8cdd0f3fe1e75dcc427bae94661b5a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pageformatpanel.ui",
+      "cui": "uiconfig/swriter/ui/pageformatpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "74b63be85839030bfc7f5996bc9505bb72673269ac04874cbea37abb04362c36",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pageheaderpanel.ui",
+      "cui": "uiconfig/swriter/ui/pageheaderpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "1280386e2a5bda9fa3633a14a68ebcaedb1bb67b41be1dff4cd52d5c590a1a58",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagemargincontrol.ui",
+      "cui": "uiconfig/swriter/ui/pagemargincontrol.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 39,
+      "actions": 0,
+      "donor_sha256": "2f1099168e8a9021668ab2254b4abf68db41bb0ad65cf27cbb9c921babdfed47",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagenumberdlg.ui",
+      "cui": "uiconfig/swriter/ui/pagenumberdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "e418aefd342817d74a0e31f5a9a518fd5b6f48fffa8ea6efdbabb774a7339680",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pageorientationcontrol.ui",
+      "cui": "uiconfig/swriter/ui/pageorientationcontrol.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "5d4ce8a0ab448ca89d14f7661fa39914f9ec5d34e270484759f18c14e1e8aadc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagesizecontrol.ui",
+      "cui": "uiconfig/swriter/ui/pagesizecontrol.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "7b488be033c142a1cbaa9395717a4b6191f41479ae29d065a1529fee757848e1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagestylemenu.ui",
+      "cui": "uiconfig/swriter/ui/pagestylemenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "fc93fc26425079d7826194b9d7c3ef61d81f0e70c158d53935b91af5a1185c04",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pagestylespanel.ui",
+      "cui": "uiconfig/swriter/ui/pagestylespanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "21ad9ce5021e667663f617befc1bf49b123d2ced24d5ce224646bcf938386784",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/paradialog.ui",
+      "cui": "uiconfig/swriter/ui/paradialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "71202141d3b6dfd0c208f79915283ca36d036c7be6c1aa4791c7fdf9ceb10537",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/pbmenubutton.ui",
+      "cui": "uiconfig/swriter/ui/pbmenubutton.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e592a48076c1cbf6f3fb3206416123df8b77c681254a84e906664d8df5d95d6e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/picturedialog.ui",
+      "cui": "uiconfig/swriter/ui/picturedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "549f43a5c0858ec1dfa5a8ef466a8c43a4546de96f8b973799fa105c2a0ca200",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/picturepage.ui",
+      "cui": "uiconfig/swriter/ui/picturepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "e1c26604c72abe569b814dba162b745372adc0c64b865b5d8bf6e4bf3ae54fb2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/poseditbox.ui",
+      "cui": "uiconfig/swriter/ui/poseditbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "0535f08a1d9f360069672ea1f971c0e59248cdd0be00dce145c85ec060a4768e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/previewmenu.ui",
+      "cui": "uiconfig/swriter/ui/previewmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "48033a7cc4dd69efc55d90e045aad95153ef412e79280d331df96c3e05d4503b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/previewzoomdialog.ui",
+      "cui": "uiconfig/swriter/ui/previewzoomdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "3cb05213c2464178094c2b5ab60c4dde80f2b98d725930701952dae3aeface84",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/printeroptions.ui",
+      "cui": "uiconfig/swriter/ui/printeroptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "7fdc9a9ee257e6c719dd1079549eff59273b1af9dabedae2579a3b4cf9ddc358",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/printmergedialog.ui",
+      "cui": "uiconfig/swriter/ui/printmergedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "219108267bf435c57884bcea778df29868e0d3a3471abdfe258d78d037bd96b6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/printmonitordialog.ui",
+      "cui": "uiconfig/swriter/ui/printmonitordialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "5af2793e3ff285e75459be992bedff835aa68db180dc9e93be1cce00c7b54ac8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/printoptionspage.ui",
+      "cui": "uiconfig/swriter/ui/printoptionspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 49,
+      "actions": 0,
+      "donor_sha256": "327e77e6295d815e2457979b923088272581a5d2f58975a5e047eeb7e6c1c8b3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/privateuserpage.ui",
+      "cui": "uiconfig/swriter/ui/privateuserpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 39,
+      "actions": 0,
+      "donor_sha256": "0ae17e7f073074de8b5b45116ff7bd79af086366c6d47b60e02787f93cb3c771",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/querycontinuebegindialog.ui",
+      "cui": "uiconfig/swriter/ui/querycontinuebegindialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "e45bd44c1026c2bcf86afe70c36bbecbd1f95f98afdb9644037626c72d4f7ee9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/querycontinueenddialog.ui",
+      "cui": "uiconfig/swriter/ui/querycontinueenddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "411a84378dff5ba4cc32e7b14efd7624b1c4edf48c4484afa90aeb61aab97f7f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/querydefaultcompatdialog.ui",
+      "cui": "uiconfig/swriter/ui/querydefaultcompatdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "dd494980b236318b70a42d8b11488a359193c26fd2de9860cd95a6a15b0c62eb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/querysavelabeldialog.ui",
+      "cui": "uiconfig/swriter/ui/querysavelabeldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "160edfe42e23fe8ff04d68a3682ac49b1aa156ab9cfe3bf66123533df512ecb0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/readonlymenu.ui",
+      "cui": "uiconfig/swriter/ui/readonlymenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "9d4eb759cdc8149cbc0eb97851dfa44f50e23295bd5e12540dfc37a1e1a96851",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/renameautotextdialog.ui",
+      "cui": "uiconfig/swriter/ui/renameautotextdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "93a92e1ccd800db2803936cb4ee23143070903fe5f14dc1c640e09003e6b7f09",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/renameentrydialog.ui",
+      "cui": "uiconfig/swriter/ui/renameentrydialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "0d4ea74f8ee67b5a70740a8f08f80766c89b252cc80126c9f2de176fede61dad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/renameobjectdialog.ui",
+      "cui": "uiconfig/swriter/ui/renameobjectdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "b0b8c583cf6e933a7d6a81c8f928f31dc459c88e2aec950da284cb1b32eb4170",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/rowheight.ui",
+      "cui": "uiconfig/swriter/ui/rowheight.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "21b5d90c932f2a6ed4e9eb2a5892b100e156b0c64dba921094a03304f2bac3a3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/saveashtmldialog.ui",
+      "cui": "uiconfig/swriter/ui/saveashtmldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "b8b029824e2d7c07ee2152cc4dd90374da988c265735389c8a7ddc968575fb33",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/savelabeldialog.ui",
+      "cui": "uiconfig/swriter/ui/savelabeldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "6ae750c29c6e27922c040fed57919b9d4929c8eda7d619197dbe285e5f0834c6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/savemonitordialog.ui",
+      "cui": "uiconfig/swriter/ui/savemonitordialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "8a4b0a9c4481df9f60fa1645f262cb3474b0c4dabbee2cb24678a02010dde963",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sectionpage.ui",
+      "cui": "uiconfig/swriter/ui/sectionpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 39,
+      "actions": 0,
+      "donor_sha256": "03706362cf1c83521f80f7d1a8883ce1a6ce87c96d0cb5a68c1c2ed80aad9121",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/selectaddressdialog.ui",
+      "cui": "uiconfig/swriter/ui/selectaddressdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "4f91e2b64246bd0da656ff08a5f77426f0124a9a1ddd29f337bcacd72eaf8f7c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/selectautotextdialog.ui",
+      "cui": "uiconfig/swriter/ui/selectautotextdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "9c9ec5a38306e498ecfe4834dfe4bc68b5e74b14e213c372532c3f6b0cd052f7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/selectblockdialog.ui",
+      "cui": "uiconfig/swriter/ui/selectblockdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "ca6c0d54c0c244fb753bfea55c28157d3a1564fad517a5adb36a2c898ebb5073",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/selectindexdialog.ui",
+      "cui": "uiconfig/swriter/ui/selectindexdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "ce680fa8fd55fb02783943d8b2e6a5dc324d1a6d2f6fa7aa22988b917e5c2cb9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/selecttabledialog.ui",
+      "cui": "uiconfig/swriter/ui/selecttabledialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "34ecf3a855820431947dfec32fd2e16dd786cac74786139bfaeccd6d4c60a278",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sidebarquickfind.ui",
+      "cui": "uiconfig/swriter/ui/sidebarquickfind.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "fda0b15a3a8a51597a218e7d76b0f95996ff0d9c042bacbc485992e75fe3b2b1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sidebarstylepresets.ui",
+      "cui": "uiconfig/swriter/ui/sidebarstylepresets.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "646a5016973a892010936f87117490847a79454dfbdd1d907b94d9db16c47805",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sidebartableedit.ui",
+      "cui": "uiconfig/swriter/ui/sidebartableedit.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 49,
+      "actions": 0,
+      "donor_sha256": "30aed27c150473f81e113a94be7aa21a256a281844ffe05fabc3854b6fde8b5d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sidebartheme.ui",
+      "cui": "uiconfig/swriter/ui/sidebartheme.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "47d58085a48fd5b8b05dafc4439fd2f4fbe76a7064ef8c94773871c20041c950",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sidebarwrap.ui",
+      "cui": "uiconfig/swriter/ui/sidebarwrap.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "3bb9113975034eb7d6ee2b257a97d386e8ffe07b6804988af28e2a62f1019fee",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/sortdialog.ui",
+      "cui": "uiconfig/swriter/ui/sortdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 53,
+      "actions": 0,
+      "donor_sha256": "a23fb4279494c894e46450eba9ea5eb69aa1a242c58733da0b96650c02d8aa31",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/spellmenu.ui",
+      "cui": "uiconfig/swriter/ui/spellmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "c8183ba3af5aae3b57385c183a5e9a8f5190b8637a52f82333701df202345d24",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/splittable.ui",
+      "cui": "uiconfig/swriter/ui/splittable.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "b36cd73f7d5eaa84c38d82eb8072e8e3526db3018eb87fe64c98a897e34f3528",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/statisticsinfopage.ui",
+      "cui": "uiconfig/swriter/ui/statisticsinfopage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "a8ca58b62eabf78a3d4da2585fd60ab2306e807959a9d017647ac94a81268de5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/stringinput.ui",
+      "cui": "uiconfig/swriter/ui/stringinput.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "1c1a92ddf647c5d5e6c13a7c64ec72db473818436c83992fb887efde1f84181e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/subjectdialog.ui",
+      "cui": "uiconfig/swriter/ui/subjectdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "e999207239cc0db7103119bf58e8c97eafdf43253c8095e439e525685de89e6f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tablecolumnpage.ui",
+      "cui": "uiconfig/swriter/ui/tablecolumnpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "155e2cd68c73b7351429ac5c19a0924682898edf2360ab4f63772790817a7df2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tablepreviewdialog.ui",
+      "cui": "uiconfig/swriter/ui/tablepreviewdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "b3537c7a68a03b21079a992421fc404d3349e22ed7392b3139bad4ecd9044c59",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tableproperties.ui",
+      "cui": "uiconfig/swriter/ui/tableproperties.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "6744383cdf9831749b8942dc9f1890f724e47941ed8ab2302ef97bc3d8024fec",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tabletextflowpage.ui",
+      "cui": "uiconfig/swriter/ui/tabletextflowpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 34,
+      "actions": 0,
+      "donor_sha256": "03703ab5b5d12fee77ab879a5a46ec1c63e7939d1a30d412b7d690a6542b8d0f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/templatedialog1.ui",
+      "cui": "uiconfig/swriter/ui/templatedialog1.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "0fc52f61c94cc537d2666cf67df921dbb5c79a0a29681f993d26991ffaa70fdb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/templatedialog16.ui",
+      "cui": "uiconfig/swriter/ui/templatedialog16.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "eb0ae313013720d0e6ab2a65441981f9f0d821946cbce0625acc0f91d68ed170",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/templatedialog2.ui",
+      "cui": "uiconfig/swriter/ui/templatedialog2.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "1fd6d4dc3ccb208c98bee6a42e222790324944cfad2f59ec9c9fddbd8c0ae02c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/templatedialog4.ui",
+      "cui": "uiconfig/swriter/ui/templatedialog4.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "7f61b172111010b6259e63dbebec988f5f9737414a011c3f59c13760d41b8132",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/templatedialog8.ui",
+      "cui": "uiconfig/swriter/ui/templatedialog8.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "e76ff715538ef7500655ad31f8b4baef0482d58ae9380429d0d2a500863c31ac",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/testmailsettings.ui",
+      "cui": "uiconfig/swriter/ui/testmailsettings.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "7e98621d883f737ecf63c612662cf9e15f3a8436a39b171d1cf52f489aa140dd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/textgridpage.ui",
+      "cui": "uiconfig/swriter/ui/textgridpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 36,
+      "actions": 0,
+      "donor_sha256": "3f2188026ceb97432757f552ed0471f79c40801c57642ee5540bbc8022037d66",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/titlepage.ui",
+      "cui": "uiconfig/swriter/ui/titlepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "536fbd51239c3ed57effd2d1d5f37bd96b1f0ec88876960bc7cd8f4102006f0d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tocdialog.ui",
+      "cui": "uiconfig/swriter/ui/tocdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "9def5e28ed8026e07faf94a366f8d0302b71578bf8c9642c240f08e2df259883",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tocentriespage.ui",
+      "cui": "uiconfig/swriter/ui/tocentriespage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 78,
+      "actions": 0,
+      "donor_sha256": "e1a2afa32e0b3855efce0d6290f700a91c99679ac9f526a125cf5521579a8c59",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tocindexpage.ui",
+      "cui": "uiconfig/swriter/ui/tocindexpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 79,
+      "actions": 0,
+      "donor_sha256": "a54abc55b29637a177ee89f3b30bd77dc5cf1650f5bd34da9d69144d97bc3025",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tocstylespage.ui",
+      "cui": "uiconfig/swriter/ui/tocstylespage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "6e8795a288a60302138d0877707311caa7ac0db29f9dd39aab9c87c042adaaca",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/tokenwidget.ui",
+      "cui": "uiconfig/swriter/ui/tokenwidget.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "947e39b3be407c5e25eee7ab35b00aec84a9638282de14063ddc1ac45a0c05ef",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/toxbuttonwidget.ui",
+      "cui": "uiconfig/swriter/ui/toxbuttonwidget.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "41d5586bf129507dba28f27ca7989b96a877717c4424525e89311ab7a4768dce",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/toxentrywidget.ui",
+      "cui": "uiconfig/swriter/ui/toxentrywidget.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "b401a7112b1bcdcc7fe3ec85af477e6d7ac5d837c88d46063f91eb4ded1c10e1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/unfloatbutton.ui",
+      "cui": "uiconfig/swriter/ui/unfloatbutton.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "daf0c005726d5efce7954e0debb2cbabebb032906f65bdb6adcc972ad5d1dc33",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/viewoptionspage.ui",
+      "cui": "uiconfig/swriter/ui/viewoptionspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 72,
+      "actions": 0,
+      "donor_sha256": "34274581b9a6e7b2332b05dd6b02abd81bb9e6de11dba6e9c501f38c1371352b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/warndatasourcedialog.ui",
+      "cui": "uiconfig/swriter/ui/warndatasourcedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "6729b9d12884e74cfdbd1880f76f84adc063a64b1e93f5e6cb490a5e4f6e3dc3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/warnemaildialog.ui",
+      "cui": "uiconfig/swriter/ui/warnemaildialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "95a6d7ab7105ba4c2d1b2d4b00b6f2cdf1aa0abd959fd514e0d02eae599c04fa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/warnhiddensectiondialog.ui",
+      "cui": "uiconfig/swriter/ui/warnhiddensectiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "d7397a671ab98e1e1d8b7b35bda5b9bcf75cb4167237187b1f5d03ff30f5abf9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/watermarkdialog.ui",
+      "cui": "uiconfig/swriter/ui/watermarkdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "e749371585089bd1750a53cc1e2a4d03368f30477d844f1b0e6a5ad243675017",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/wordcount.ui",
+      "cui": "uiconfig/swriter/ui/wordcount.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "09c07209714b5380aeeeda9f9b548f4eeb8ecee7a95a3be2e55c9e72cb345cfb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/wrapdialog.ui",
+      "cui": "uiconfig/swriter/ui/wrapdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "4732fb24576f9bd30da96b8b920313fcec76a44790996a73a66dd3e91de63a81",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/wrappage.ui",
+      "cui": "uiconfig/swriter/ui/wrappage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 48,
+      "actions": 0,
+      "donor_sha256": "a40232933d2f430d4fc7cb3d51c636ea05fcdf0bd84315536548b33b1e8d617e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/swriter/ui/zoombox.ui",
+      "cui": "uiconfig/swriter/ui/zoombox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "90dda8610f723ffe32a56cbe02041d65fcfafc6826f48b0fef39d99dc985bc53",
+      "refreshed": false
+    }
+  ]
+}

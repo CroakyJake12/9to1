@@ -1,0 +1,70 @@
+<Cui id="ui-frmtypepage" product="9-1" version="1">
+  <Container id="frame-type-page" Type="Grid" cell-gap="12" vertical-alignment="Top" focusable="false" role="Grow">
+    <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+      <Container id="frame2" Type="Vertical Stack" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="0" row="0">
+        <Container id="grid4" Type="Grid" cell-gap="12" focusable="false">
+          <Text id="widthft" text="Width" focusable="false" column="0" row="0" />
+          <Input id="width" Type="Number" horizontal-alignment="Left" column="1" row="0" />
+          <Input id="relwidth" Type="Checkbox" text="Relative to" column="0" row="1" />
+          <Input id="relwidthrelation" Type="Select" horizontal-alignment="Left" focusable="false" column="1" row="1" />
+          <Input id="autowidth" Type="Checkbox" text="AutoSize" column="0" row="2" column-span="2" />
+          <Text id="heightft" text="Height" focusable="false" column="0" row="3" />
+          <Input id="height" Type="Number" horizontal-alignment="Left" column="1" row="3" />
+          <Input id="relheight" Type="Checkbox" text="Relative to" column="0" row="4" />
+          <Input id="relheightrelation" Type="Select" horizontal-alignment="Left" focusable="false" column="1" row="4" />
+          <Input id="autoheight" Type="Checkbox" text="AutoSize" column="0" row="5" column-span="2" />
+          <Button id="origsize" content="Original Size" text="Original Size" horizontal-alignment="Right" column="0" row="6" column-span="2" />
+          <Container id="container" Type="Grid" cell-gap="3" focusable="false" column="2" row="0" row-span="4">
+            <Input id="cbx-scale" Type="Checkbox" tooltip="Keep ratio" vertical-alignment="Center" column="0" row="1" />
+            <Image id="im-ratio" horizontal-alignment="Left" vertical-alignment="Center" focusable="false" column="1" row="1" source="res/unlocked.png" />
+            <Container id="da-ratio-top" Type="Overlay" focusable="false" is-enabled="false" role="Grow" column="0" row="0" />
+            <Container id="da-ratio-bottom" Type="Overlay" focusable="false" is-enabled="false" role="Grow" column="0" row="2" />
+          </Container>
+        </Container>
+        <Text id="label2" text="Size" focusable="false" />
+      </Container>
+      <Container id="anchorframe" Type="Vertical Stack" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="1" row="0">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Input id="topage" Type="Radio" text="To page" checked="true" column="0" row="0" />
+          <Input id="topara" Type="Radio" text="To paragraph" column="0" row="1" />
+          <Input id="tochar" Type="Radio" text="To character" column="0" row="2" />
+          <Input id="aschar" Type="Radio" text="As character" column="0" row="3" />
+          <Input id="toframe" Type="Radio" text="To frame" column="0" row="4" />
+        </Container>
+        <Text id="label1" text="Anchor" focusable="false" />
+      </Container>
+      <Container id="frm-preview" Type="Vertical Stack" focusable="false" column="2" row="0" row-span="2">
+        <Container id="preview" Type="Overlay" focusable="false" />
+        <Text id="lb-preview" text="Preview" focusable="false" />
+      </Container>
+      <Container id="protect" Type="Vertical Stack" focusable="false" column="0" row="1" column-span="2">
+        <Container id="grid-protect" Type="Grid" cell-gap="18" focusable="false">
+          <Input id="protectcontent" Type="Checkbox" text="Contents" column="0" row="0" />
+          <Input id="protectframe" Type="Checkbox" text="Position" column="1" row="0" />
+          <Input id="protectsize" Type="Checkbox" text="Size" column="2" row="0" />
+        </Container>
+        <Text id="label8" text="Protect" focusable="false" />
+      </Container>
+    </Container>
+    <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="1">
+      <Container id="grid10" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="horiposft" text="Horizontal" focusable="false" column="0" row="0" />
+        <Text id="horibyft" text="by" focusable="false" column="2" row="0" />
+        <Text id="vertbyft" text="by" focusable="false" column="2" row="2" />
+        <Text id="horitoft" text="to" focusable="false" column="4" row="0" />
+        <Input id="byhori" Type="Number" column="3" row="0" />
+        <Input id="horianchor" Type="Select" focusable="false" column="5" row="0" />
+        <Input id="horipos" Type="Select" focusable="false" column="1" row="0" />
+        <Text id="vertposft" text="Vertical" focusable="false" column="0" row="2" />
+        <Input id="vertpos" Type="Select" focusable="false" column="1" row="2" />
+        <Input id="byvert" Type="Number" column="3" row="2" />
+        <Text id="verttoft" text="to" focusable="false" column="4" row="2" />
+        <Input id="vertanchor" Type="Select" focusable="false" column="5" row="2" />
+        <Input id="mirror" Type="Checkbox" text="Mirror on even pages" column="0" row="1" column-span="6" />
+        <Input id="followtextflow" Type="Checkbox" text="Keep inside text boundaries" column="0" row="3" column-span="6" />
+        <Input id="flysplit" Type="Checkbox" text="Allow frame to split across pages" column="0" row="4" column-span="6" />
+      </Container>
+      <Text id="label11" text="Position" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

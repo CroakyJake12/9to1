@@ -1,0 +1,16 @@
+<Cui id="widgets-toolbar-context.inc" product="9-1" version="1">
+  <Actions>
+    <Action name="cmd-customize-mail-toolbar" command="cmd_CustomizeMailToolbar" />
+    <Action name="toolbar-context-menu.open-about-addons-for-context-action" command="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)" />
+    <Action name="toolbar-context-menu.remove-extension-for-context-action" command="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)" />
+  </Actions>
+  <Page id="widgets-toolbar-context.inc-root">
+    <Container id="toolbar-context-menu" Type="Menu">
+      <Container id="customizeMailToolbarMenuSeparator" Type="Menu" />
+      <Button id="CustomizeMailToolbar" action="cmd-customize-mail-toolbar" content="{Binding customizeToolbar.label}" shortcut="{Binding customizeToolbar.accesskey}" />
+      <Container id="extensionsMailToolbarMenuSeparator" Type="Menu" />
+      <Button id="menuitem" action="toolbar-context-menu.open-about-addons-for-context-action" />
+      <Button id="menuitem-2" action="toolbar-context-menu.remove-extension-for-context-action" />
+    </Container>
+  </Page>
+</Cui>

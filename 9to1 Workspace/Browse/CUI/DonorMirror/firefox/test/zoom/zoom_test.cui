@@ -1,0 +1,13 @@
+<Cui id="zoom-zoom-test" product="9-1" version="1">
+  <Page id="zoom-zoom-test-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Button id="a" />
+        <Text id="p" text="Site specific zoom settings should not apply to image documents." />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

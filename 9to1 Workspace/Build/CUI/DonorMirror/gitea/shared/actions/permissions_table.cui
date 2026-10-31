@@ -1,0 +1,33 @@
+<Cui id="actions-permissions-table" product="9-1" version="1">
+  <Page id="actions-permissions-table-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="label" text="{Binding Unresolved}" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="br" Type="Vertical Stack" />
+      </Container>
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack">
+          <Input id="input" Type="Text" />
+          <Text id="label-2" text="{Binding Unresolved}" />
+        </Container>
+      </Container>
+      <Container id="table" Type="Grid">
+        <Container id="thead" Type="Grid">
+          <Container id="tr" Type="Horizontal Stack">
+            <Text id="th" text="{Binding Unresolved}" />
+            <Text id="th-2">
+              <Text id="span" text="{Binding Unresolved}" />
+            </Text>
+            <Text id="th-3">
+              <Text id="span-2" text="{Binding Unresolved}" />
+            </Text>
+            <Text id="th-4">
+              <Text id="span-3" text="{Binding Unresolved}" />
+            </Text>
+          </Container>
+        </Container>
+        <Container id="tbody" Type="Grid" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

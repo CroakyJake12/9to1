@@ -1,0 +1,14 @@
+<Cui id="ui-pagefooterpanel" product="9-1" version="1">
+  <Container id="page-footer-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" horizontal-alignment="Right" focusable="false" role="Grow" column="0" row="0">
+      <Text id="spacing" text="Spacing:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+      <Input id="footermarginpreset" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+      <Text id="footermargin" text="Margins:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+      <Input id="spacingpreset" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+      <Input id="footertoggle" Type="Checkbox" text="Enable Footer" horizontal-alignment="Left" column="1" row="0" />
+      <Input id="samecontent-lb" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+      <Text id="samecontent" text="Same Content:" horizontal-alignment="Right" focusable="false" column="0" row="3" />
+      <Text id="customlabel" text="Custom" focusable="false" column="1" row="4" />
+    </Container>
+  </Container>
+</Cui>

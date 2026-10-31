@@ -1,0 +1,17 @@
+<Cui id="ui-simplerefdialog" product="9-1" version="1">
+  <Container id="simple-ref-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="simple-ref-dialog-label" text="Set range" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="area" text="Area:" focusable="false" column="0" row="0" />
+        <Input id="assign" Type="Text" role="Grow" column="1" row="0" />
+        <Button id="assignref" column="2" row="0" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

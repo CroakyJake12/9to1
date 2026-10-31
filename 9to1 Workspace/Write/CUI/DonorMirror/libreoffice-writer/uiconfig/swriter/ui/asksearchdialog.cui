@@ -1,0 +1,12 @@
+<Cui id="ui-asksearchdialog" product="9-1" version="1">
+  <Container id="ask-search-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="ask-search-dialog-label" text="To proceed with this action, you must first turn off the &quot;undo&quot; function. Do you want to turn off the &quot;undo&quot; function?" />
+    <Container id="messagedialog-vbox" Type="Vertical Stack" cell-gap="24" focusable="false">
+      <Container id="messagedialog-action-area" Type="Horizontal Stack" focusable="false">
+        <Button id="no" content="No" text="No" />
+        <Button id="yes" content="Yes" text="Yes" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

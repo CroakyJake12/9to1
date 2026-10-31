@@ -1,0 +1,15 @@
+<Cui id="webrtc-get-user-media2" product="9-1" version="1">
+  <Page id="webrtc-get-user-media2-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="message" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Container id="br" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

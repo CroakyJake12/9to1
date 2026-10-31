@@ -1,0 +1,5 @@
+<Cui id="ui-numberbox" product="9-1" version="1">
+  <Container id="number-box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Input id="numbertype" Type="Select" focusable="false" role="Grow" />
+  </Container>
+</Cui>

@@ -1,0 +1,55 @@
+<Cui id="ui-contentcontroldlg" product="9-1" version="1">
+  <Container id="content-control-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="content-control-dialog-label" text="Content Control Properties" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+      <Container id="container" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="container-2" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="showing-place-holder" Type="Checkbox" text="Content is placeholder text" horizontal-alignment="Left" vertical-alignment="Top" column="0" row="0" column-span="2" />
+        <Text id="aliaslabel" text="Title:" focusable="false" column="0" row="1" />
+        <Input id="aliasentry" Type="Text" column="1" row="1" />
+        <Text id="idlabel" text="Id:" focusable="false" column="0" row="2" />
+        <Text id="tabindexlabel" text="Tab order:" focusable="false" column="2" row="2" />
+        <Input id="idspinbutton" Type="Number" text-wrapping="Wrap" column="1" row="2" />
+        <Text id="taglabel" text="Tag:" focusable="false" column="2" row="1" />
+        <Input id="tagentry" Type="Text" column="3" row="1" />
+        <Input id="tabindexspinbutton" Type="Number" column="3" row="2" />
+      </Container>
+      <Container id="checkboxframe" Type="Vertical Stack" focusable="false">
+        <Container id="container-3" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="checkboxcheckedlabel" text="Checked character:" focusable="false" column="0" row="0" />
+          <Text id="checkboxuncheckedlabel" text="Unchecked character:" focusable="false" column="0" row="1" />
+          <Button id="btncheckboxchecked" content="Select..." text="Select..." column="2" row="0" />
+          <Button id="btncheckboxunchecked" content="Select..." text="Select..." column="2" row="1" />
+          <Input id="checkboxcheckedentry" Type="Text" column="1" row="0" />
+          <Input id="checkboxuncheckedentry" Type="Text" column="1" row="1" />
+        </Container>
+        <Text id="lblcheckbox" text="Check Box:" focusable="false" />
+      </Container>
+      <Container id="listitemsframe" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="container-4" Type="Vertical Stack" role="Grow">
+          <Container id="listitems" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Text id="lblistitems" text="List Items:" focusable="false" />
+      </Container>
+      <Container id="listitembuttons" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Button id="add" content="Add" text="Add" />
+        <Button id="modify" content="Modify" text="Modify" is-enabled="false" />
+        <Button id="remove" content="Remove" text="Remove" is-enabled="false" />
+        <Button id="moveup" content="Move Up" text="Move Up" is-enabled="false" />
+        <Button id="movedown" content="Move Down" text="Move Down" is-enabled="false" />
+      </Container>
+      <Container id="dateframe" Type="Vertical Stack" focusable="false">
+        <Container id="list-grid" Type="Grid" cell-gap="12" focusable="false">
+          <Container id="container-5" Type="Vertical Stack" role="Grow" column="0" row="0">
+            <Container id="date-formats-treeview" Type="Vertical Stack" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="lbldate" text="Date Format:" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

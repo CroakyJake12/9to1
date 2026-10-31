@@ -1,0 +1,14 @@
+<Cui id="ui-sortwarning" product="9-1" version="1">
+  <Container id="sort-warning" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="sort-warning-label" text="Sort Range" />
+    <Container id="container" Type="Vertical Stack" cell-gap="2" focusable="false">
+      <Container id="container-2" Type="Horizontal Stack" focusable="false">
+        <Button id="extend" content="Extend selection" text="Extend selection" />
+        <Button id="current" content="Current selection" text="Current selection" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Text id="sorttext" text="The cells next to the current selection also contain data. Do you want to extend the sort range to %1, or sort the currently selected range, %2?" text-wrapping="Wrap" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" />
+      <Text id="sorttip" text="Tip: The sort range can be detected automatically. Place the cell cursor inside a list and execute sort. The whole range of neighboring non-empty cells will then be sorted." text-wrapping="Wrap" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

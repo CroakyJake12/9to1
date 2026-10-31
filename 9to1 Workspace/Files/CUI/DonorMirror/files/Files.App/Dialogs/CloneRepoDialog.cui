@@ -1,0 +1,11 @@
+<Cui id="dialogs-clone-repo-dialog" product="9-1" version="1">
+  <Page id="dialogs-clone-repo-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="grid" Type="Grid" width="340">
+        <Container id="stackpanel" Type="Vertical Stack">
+          <Input id="textbox" Type="Text" text="{Binding ViewModel.RepoUrl}" placeholder-text="https://github.com/files-community/Files" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

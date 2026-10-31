@@ -1,0 +1,31 @@
+<Cui id="ui-dlgfield" product="9-1" version="1">
+  <Container id="edit-fields-dialog" Type="Vertical Stack" modal="True">
+    <Text id="edit-fields-dialog-label" text="Edit Field" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" role="Grow" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" role="Grow">
+          <Container id="box3" Type="Vertical Stack" cell-gap="6">
+            <Input id="fixed-rb" Type="Radio" text="Fixed" checked="true" />
+            <Input id="var-rb" Type="Radio" text="Variable" />
+          </Container>
+          <Text id="label1" text="Field Type" />
+        </Container>
+        <Container id="box2" Type="Vertical Stack" cell-gap="12">
+          <Text id="label2" text="Language:" />
+          <Input id="language-lb" Type="Select">
+            <Input id="input" Type="Text" />
+          </Input>
+        </Container>
+        <Container id="frame2" Type="Vertical Stack">
+          <Input id="format-lb" Type="Select" />
+          <Text id="label3" text="Format" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

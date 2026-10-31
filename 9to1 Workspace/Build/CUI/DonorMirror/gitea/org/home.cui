@@ -1,0 +1,68 @@
+<Cui id="org-home" product="9-1" version="1">
+  <Page id="org-home-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="div-4" Type="Vertical Stack">
+            <Container id="readme_profile" Type="Vertical Stack" />
+            <Container id="div-5" Type="Vertical Stack" />
+            <Container id="div-6" Type="Vertical Stack">
+              <Text id="h2" text="{Binding Unresolved}" />
+              <Text id="p" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-7" Type="Vertical Stack">
+            <Container id="div-8" Type="Vertical Stack">
+              <Button id="a" />
+              <Button id="a-2" />
+            </Container>
+            <Container id="div-9" Type="Vertical Stack" />
+            <Container id="div-10" Type="Vertical Stack">
+              <Container id="org-home-view-as-dropdown" Type="Vertical Stack">
+                <Text id="span" text="[value] [value]" />
+                <Container id="div-11" Type="Vertical Stack">
+                  <Button id="a-3" />
+                  <Button id="a-4" />
+                </Container>
+              </Container>
+              <Container id="div-12" Type="Vertical Stack" />
+            </Container>
+            <Text id="h4">
+              <Text id="strong" text="{Binding Unresolved}" />
+              <Button id="a-5">
+                <Text id="span-2" text="{Binding Unresolved}" />
+              </Button>
+            </Text>
+            <Container id="div-13" Type="Vertical Stack" />
+            <Container id="div-14" Type="Vertical Stack">
+              <Text id="strong-2" text="{Binding Unresolved}" />
+              <Button id="a-6">
+                <Text id="span-3" text="{Binding Unresolved}" />
+              </Button>
+            </Container>
+            <Container id="div-15" Type="Vertical Stack">
+              <Container id="div-16" Type="Vertical Stack">
+                <Container id="div-17" Type="Vertical Stack">
+                  <Button id="a-7">
+                    <Text id="strong-3" text="{Binding Unresolved}" />
+                  </Button>
+                  <Text id="p-2">
+                    <Button id="a-8">
+                      <Text id="strong-4" text="{Binding Unresolved}" />
+                    </Button>
+                    <Button id="a-9">
+                      <Text id="strong-5" text="{Binding Unresolved}" />
+                    </Button>
+                  </Text>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="div-18" Type="Vertical Stack">
+              <Button id="a-10" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

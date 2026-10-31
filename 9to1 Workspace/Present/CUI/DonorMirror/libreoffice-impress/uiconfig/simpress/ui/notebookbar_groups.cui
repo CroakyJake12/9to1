@@ -1,0 +1,207 @@
+<Cui id="ui-notebookbar-groups" product="9-1" version="1">
+  <Page id="ui-notebookbar-groups-root">
+    <Image id="boldi" />
+    <Image id="bulletsi" />
+    <Image id="centeri" />
+    <Image id="charti" />
+    <Image id="growi" />
+    <Image id="italicsi" />
+    <Image id="layouti" />
+    <Container id="layoutmenu" Type="Menu">
+      <Button id="layout01" Type="Menu Item" content="Blank" text="Blank" />
+      <Button id="layout02" Type="Menu Item" content="Title Slide" text="Title Slide" />
+      <Button id="layout03" Type="Menu Item" content="Title, Text" text="Title, Text" />
+      <Button id="layout04" Type="Menu Item" content="Title, Content" text="Title, Content" />
+      <Button id="layout05" Type="Menu Item" content="Centered Text" text="Centered Text" />
+    </Container>
+    <Image id="lefti" />
+    <Image id="linksi" />
+    <Container id="linksmenu" Type="Menu">
+      <Button id="hyperlink" Type="Menu Item" content="Hyperlink" text="Hyperlink" />
+      <Button id="separator9" Type="Menu Item" />
+      <Button id="footnote" Type="Menu Item" content="Footnote" text="Footnote" />
+      <Button id="endnote" Type="Menu Item" content="Endnote" text="Endnote" />
+      <Button id="separator10" Type="Menu Item" />
+      <Button id="bookmark" Type="Menu Item" content="Bookmark" text="Bookmark" />
+      <Button id="crossreference" Type="Menu Item" content="Cross-Reference" text="Cross-Reference" />
+    </Container>
+    <Image id="masteri" />
+    <Container id="mastermenu" Type="Menu">
+      <Button id="master01" Type="Menu Item" content="Master 1" text="Master 1" />
+      <Button id="master02" Type="Menu Item" content="Master 2" text="Master 2" />
+    </Container>
+    <Image id="newi" />
+    <Image id="numberingi" />
+    <Image id="openi" />
+    <Image id="paragraphstylei" />
+    <Image id="pastei" />
+    <Image id="pdfi" />
+    <Image id="printi" />
+    <Image id="redoi" />
+    <Image id="righti" />
+    <Image id="savei" />
+    <Image id="shrinki" />
+    <Image id="startshowi" />
+    <Container id="stylemenu" Type="Menu">
+      <Button id="shapestyledefault" Type="Menu Item" content="Default" text="Default" />
+      <Button id="shapestylenofill" Type="Menu Item" content="No Fill" text="No Fill" />
+      <Button id="shapestyleshadow" Type="Menu Item" content="With Shadow" text="With Shadow" />
+      <Button id="shapestylesep1" Type="Menu Item" />
+      <Button id="shapestyletitle1" Type="Menu Item" content="Title 1" text="Title 1" />
+      <Button id="shapestyletitle2" Type="Menu Item" content="Title 2" text="Title 2" />
+    </Container>
+    <Image id="undoi" />
+    <Container id="notebook-bar" Type="Grid">
+      <Container id="box" Type="Vertical Stack" cell-gap="6" role="Grow">
+        <Container id="filegroup" Type="Vertical Stack" cell-gap="5" role="Grow">
+          <Container id="filegroupbuttons" Type="Vertical Stack">
+            <Container id="box10" Type="Vertical Stack" cell-gap="3">
+              <Button id="newb" vertical-alignment="Center" role="Grow" />
+              <Button id="openb" vertical-alignment="Center" role="Grow" />
+            </Container>
+            <Container id="box11" Type="Vertical Stack">
+              <Button id="saveb" role="Grow" />
+            </Container>
+            <Container id="box12" Type="Vertical Stack" cell-gap="3">
+              <Button id="pdfb" vertical-alignment="Center" role="Grow" />
+              <Button id="printb" vertical-alignment="Center" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="separator4" Type="Horizontal Stack" />
+          <Text id="filegrouplabel" text="File" />
+        </Container>
+        <Container id="separator1" Type="Horizontal Stack" />
+        <Container id="clipboardgroup" Type="Vertical Stack" cell-gap="5">
+          <Container id="clipboardgroupbuttons" Type="Vertical Stack" cell-gap="3">
+            <Container id="box2" Type="Vertical Stack" cell-gap="3">
+              <Button id="pasteb" horizontal-alignment="Left" role="Grow" />
+            </Container>
+            <Container id="box5" Type="Vertical Stack" cell-gap="3">
+              <Button id="redob" vertical-alignment="Center" role="Grow" />
+              <Button id="undob" vertical-alignment="Center" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="separator3" Type="Horizontal Stack" />
+          <Text id="clipboardgrouplabel" text="Clipboard" />
+        </Container>
+        <Container id="separator2" Type="Horizontal Stack" />
+        <Container id="formatgroup" Type="Vertical Stack" cell-gap="5">
+          <Container id="formatgroupbuttons" Type="Vertical Stack" cell-gap="3">
+            <Button id="shapestyleb:stylemenu" content="Style" text="Style" />
+            <Container id="box6" Type="Vertical Stack" cell-gap="6" vertical-alignment="Center">
+              <Container id="box14" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="font" Type="Vertical Stack">
+                  <Button id="fontname" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="box7" Type="Vertical Stack" cell-gap="4" vertical-alignment="Center">
+                <Container id="fontheight" Type="Vertical Stack" horizontal-alignment="Left" role="Grow">
+                  <Button id="fontsize" role="Grow" />
+                </Container>
+                <Container id="fontadjust" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="grow" />
+                  <Button id="shrink" />
+                </Container>
+                <Button id="growb" horizontal-alignment="Right" vertical-alignment="Center" />
+                <Button id="shrinkb" horizontal-alignment="Right" vertical-alignment="Center" />
+              </Container>
+            </Container>
+            <Container id="box3" Type="Vertical Stack" cell-gap="3">
+              <Button id="leftb" />
+              <Button id="centerb" />
+              <Button id="rightb" />
+            </Container>
+            <Container id="box8" Type="Vertical Stack" cell-gap="3">
+              <Button id="boldb" />
+              <Button id="italicsb" />
+              <Button id="underlineb" />
+            </Container>
+            <Container id="box17" Type="Vertical Stack">
+              <Container id="backgroundbox" Type="Vertical Stack">
+                <Button id="backgroundcolor" />
+              </Container>
+              <Container id="highlightbox" Type="Vertical Stack">
+                <Button id="highlight" />
+              </Container>
+              <Container id="colorbox" Type="Vertical Stack">
+                <Button id="fontcolor" />
+              </Container>
+            </Container>
+            <Container id="box13" Type="Vertical Stack" cell-gap="3">
+              <Button id="bulletsb" vertical-alignment="Center" role="Grow" />
+              <Button id="numberingb" vertical-alignment="Center" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="separator5" Type="Horizontal Stack" />
+          <Text id="formatgrouplabel" text="Text" />
+        </Container>
+        <Container id="separator6" Type="Horizontal Stack" />
+        <Container id="context-container" Type="Vertical Stack">
+          <Container id="slidegroup" Type="Vertical Stack" cell-gap="5">
+            <Container id="slidegroupbuttons" Type="Vertical Stack" cell-gap="6">
+              <Button id="startshowb" content="Start" text="Start" />
+              <Container id="slidegrid2" Type="Vertical Stack">
+                <Button id="masterb:mastermenu" content="Master" text="Master" vertical-alignment="Center" role="Grow" />
+                <Button id="layoutb:layoutmenu" content="Layout" text="Layout" vertical-alignment="Center" role="Grow" />
+              </Container>
+              <Container id="slidegrid3" Type="Vertical Stack">
+                <Button id="animationb:animenu" content="Animation" text="Animation" vertical-alignment="Center" role="Grow" />
+                <Button id="transitionb:transmenu" content="Transition" text="Transition" vertical-alignment="Center" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="separator12" Type="Horizontal Stack" />
+            <Text id="slidegrouplabel" text="Slide" />
+          </Container>
+          <Container id="insertgroup" Type="Vertical Stack" cell-gap="5">
+            <Container id="insertgroupbuttons" Type="Vertical Stack">
+              <Container id="box15" Type="Vertical Stack">
+                <Container id="tablebox" Type="Vertical Stack">
+                  <Button id="tableb" role="Grow" />
+                </Container>
+                <Container id="shapesbox" Type="Vertical Stack">
+                  <Button id="shapesb" content="Shapes" text="Shapes" role="Grow" />
+                </Container>
+                <Button id="linksb:linksmenu" content="Links" text="Links" />
+              </Container>
+              <Container id="box16" Type="Vertical Stack" cell-gap="3">
+                <Button id="imageb" />
+                <Button id="chartb" />
+                <Button id="commentb" />
+              </Container>
+            </Container>
+            <Container id="separator7" Type="Horizontal Stack" />
+            <Text id="insertgrouplabel" text="Insert" />
+          </Container>
+          <Container id="imagegroup" Type="Vertical Stack" cell-gap="5">
+            <Container id="imagegroupbuttons" Type="Vertical Stack" cell-gap="6">
+              <Button id="imagestyleb" content="Style" text="Style" />
+              <Container id="imagegrid2" Type="Vertical Stack">
+                <Button id="cropb" vertical-alignment="Center" role="Grow" />
+                <Button id="resetb" content="Reset" text="Reset" vertical-alignment="Center" role="Grow" />
+              </Container>
+              <Container id="imagegrid3" Type="Vertical Stack">
+                <Button id="captionb" />
+                <Button id="wrapb:wrapmenu" content="Wrap" text="Wrap" />
+                <Button id="lockb" content="Lock" text="Lock" />
+              </Container>
+            </Container>
+            <Container id="separator13" Type="Horizontal Stack" />
+            <Text id="imagegrouplabel" text="Image" />
+          </Container>
+        </Container>
+        <Container id="separator8" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+    <Container id="wrapmenu" Type="Menu">
+      <Button id="wrapoff" Type="Menu Item" content="None" text="None" />
+      <Button id="wrapideal" Type="Menu Item" content="Optimal" text="Optimal" />
+      <Button id="wrapon" Type="Menu Item" content="Parallel" text="Parallel" />
+      <Button id="wrapleft" Type="Menu Item" content="Before" text="Before" />
+      <Button id="wrapright" Type="Menu Item" content="After" text="After" />
+      <Button id="wrapthrough" Type="Menu Item" content="Through" text="Through" />
+      <Button id="separator14" Type="Menu Item" />
+      <Button id="wrapcontour" Type="Menu Item" content="Contour" text="Contour" />
+      <Button id="contourdialog" Type="Menu Item" content="Edit Contour" text="Edit Contour" />
+    </Container>
+  </Page>
+</Cui>

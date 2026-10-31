@@ -1,0 +1,11 @@
+<Cui id="admin-stacktrace" product="9-1" version="1">
+  <Page id="admin-stacktrace-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h4" text="[value][value]
+		, [value]" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

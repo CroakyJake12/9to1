@@ -1,0 +1,18 @@
+<Cui id="content-titlebar-items.inc" product="9-1" version="1">
+  <Actions>
+    <Action name="cmd-close-window" command="cmd_closeWindow" />
+    <Action name="cmd-maximize-window" command="cmd_maximizeWindow" />
+    <Action name="cmd-minimize-window" command="cmd_minimizeWindow" />
+    <Action name="cmd-restore-window" command="cmd_restoreWindow" />
+  </Actions>
+  <Page id="content-titlebar-items.inc-root">
+    <Container id="hbox" Type="Horizontal Stack">
+      <Container id="hbox-2" Type="Horizontal Stack">
+        <Button id="toolbarbutton" action="cmd-minimize-window" />
+        <Button id="toolbarbutton-2" action="cmd-maximize-window" />
+        <Button id="toolbarbutton-3" action="cmd-restore-window" />
+        <Button id="toolbarbutton-4" action="cmd-close-window" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

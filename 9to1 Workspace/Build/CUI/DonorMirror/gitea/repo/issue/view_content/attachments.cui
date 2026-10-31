@@ -1,0 +1,25 @@
+<Cui id="view-content-attachments" product="9-1" version="1">
+  <Page id="view-content-attachments-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack" />
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack">
+          <Button id="a" text="{Binding Unresolved}">
+            <Text id="span">
+              <Text id="strong" text="{Binding Unresolved}" />
+            </Text>
+          </Button>
+        </Container>
+        <Container id="div-5" Type="Vertical Stack">
+          <Text id="span-2" text="{Binding Unresolved}" />
+        </Container>
+      </Container>
+      <Container id="div-6" Type="Vertical Stack" />
+      <Container id="div-7" Type="Vertical Stack">
+        <Button id="a-2">
+          <Image id="img" />
+        </Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

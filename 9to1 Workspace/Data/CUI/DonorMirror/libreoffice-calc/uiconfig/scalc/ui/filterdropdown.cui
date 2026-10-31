@@ -1,0 +1,43 @@
+<Cui id="ui-filterdropdown" product="9-1" version="1">
+  <Page id="ui-filterdropdown-root">
+    <Container id="contextmenu" Type="Menu" focusable="false">
+      <Button id="more" Type="Menu Item" content="Add row" text="Add row" focusable="false" />
+      <Button id="less" Type="Menu Item" content="Remove row" text="Remove row" focusable="false" />
+    </Container>
+    <Image id="image1" focusable="false" source="sc/res/popupselectcurrent.png" />
+    <Image id="image2" focusable="false" source="sc/res/popupunselectcurrent.png" />
+    <Container id="filter-drop-down" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="container-2" Type="Vertical Stack">
+          <Container id="menu" Type="Vertical Stack" />
+        </Container>
+        <Container id="nonmenu" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Text id="select-field-label" text="Select Field" focusable="false" />
+          <Input id="multi-field-combo" Type="Select" tooltip="Select Field" />
+          <Input id="search-edit" Type="Text" placeholder-text="Search items..." />
+          <Container id="box" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="container-3" Type="Horizontal Stack" focusable="false" />
+            <Container id="container-4" Type="Vertical Stack" cell-gap="6" focusable="false">
+              <Input id="toggle-all" Type="Checkbox" text="All" role="Grow" />
+              <Input id="lock-checked" Type="Checkbox" text="Lock" role="Grow" />
+              <Button id="select-current" tooltip="Show only the current item." />
+              <Button id="unselect-current" tooltip="Hide only the current item." />
+            </Container>
+            <Container id="container-5" Type="Vertical Stack" focusable="false" role="Grow">
+              <Container id="container-6" Type="Vertical Stack" role="Grow">
+                <Container id="check-list-box" Type="Vertical Stack" role="Grow" />
+              </Container>
+              <Container id="container-7" Type="Vertical Stack" role="Grow">
+                <Container id="check-tree-box" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="buttonbox" Type="Horizontal Stack" cell-gap="6" focusable="false">
+            <Button id="ok" content="OK" text="OK" role="Grow" />
+            <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

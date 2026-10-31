@@ -1,0 +1,8 @@
+<Cui id="ui-printeroptions" product="9-1" version="1">
+  <Container id="box" Type="Vertical Stack" focusable="false" role="Grow">
+    <Container id="pages" Type="Vertical Stack" focusable="false">
+      <Input id="suppressemptypages" Type="Checkbox" text="Suppress output of empty pages" />
+      <Text id="label6" text="Pages" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

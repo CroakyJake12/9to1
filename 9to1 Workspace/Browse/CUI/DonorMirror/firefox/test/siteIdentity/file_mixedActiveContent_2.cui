@@ -1,0 +1,10 @@
+<Cui id="site-identity-file-mixed-active-content-2" product="9-1" version="1">
+  <Page id="site-identity-file-mixed-active-content-2-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack" />
+      <Container id="body" Type="Vertical Stack">
+        <Container id="mixedContentContainer" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

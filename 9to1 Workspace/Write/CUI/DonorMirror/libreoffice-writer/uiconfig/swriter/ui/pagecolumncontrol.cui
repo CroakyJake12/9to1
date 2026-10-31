@@ -1,0 +1,30 @@
+<Cui id="ui-pagecolumncontrol" product="9-1" version="1">
+  <Page id="ui-pagecolumncontrol-root">
+    <Image id="image-column1" focusable="false" source="sw/res/sidebar/pageproppanel/columnL124x24.png" />
+    <Image id="image-column1-l" focusable="false" source="sw/res/sidebar/pageproppanel/column124x24.png" />
+    <Image id="image-column2" focusable="false" source="sw/res/sidebar/pageproppanel/columnL224x24.png" />
+    <Image id="image-column2-l" focusable="false" source="sw/res/sidebar/pageproppanel/column224x24.png" />
+    <Image id="image-column3" focusable="false" source="sw/res/sidebar/pageproppanel/columnL324x24.png" />
+    <Image id="image-column3-l" focusable="false" source="sw/res/sidebar/pageproppanel/column324x24.png" />
+    <Image id="image-columnleft" focusable="false" source="sw/res/sidebar/pageproppanel/columnLleft24x24.png" />
+    <Image id="image-columnleft-l" focusable="false" source="sw/res/sidebar/pageproppanel/columnleft24x24.png" />
+    <Image id="image-columnright" focusable="false" source="sw/res/sidebar/pageproppanel/columnLright24x24.png" />
+    <Image id="image-columnright-l" focusable="false" source="sw/res/sidebar/pageproppanel/columnright24x24.png" />
+    <Image id="image-pagecolumntype" focusable="false" source="cmd/lcpagecolumntype.png" />
+    <Container id="page-column-control" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Button id="column1" content="1 Column" text="1 Column" />
+        <Button id="column2" content="2 Columns" text="2 Columns" />
+        <Button id="column3" content="3 Columns" text="3 Columns" />
+        <Button id="columnleft" content="Left" text="Left" />
+        <Button id="columnright" content="Right" text="Right" />
+        <Button id="column1-l" content="1 Column" text="1 Column" />
+        <Button id="column2-l" content="2 Columns" text="2 Columns" />
+        <Button id="column3-l" content="3 Columns" text="3 Columns" />
+        <Button id="columnleft-l" content="Left" text="Left" />
+        <Button id="columnright-l" content="Right" text="Right" />
+        <Button id="moreoptions" content="More Options" text="More Options" tooltip="More Options" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

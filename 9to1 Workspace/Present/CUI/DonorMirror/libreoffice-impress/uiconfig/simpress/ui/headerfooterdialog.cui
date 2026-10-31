@@ -1,0 +1,19 @@
+<Cui id="ui-headerfooterdialog" product="9-1" version="1">
+  <Container id="header-footer-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="header-footer-dialog-label" text="Header and Footer" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="apply-all" content="Apply to All" text="Apply to All" />
+        <Button id="apply" content="Apply" text="Apply" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow">
+        <Container id="container" Type="Grid" focusable="false" />
+        <Text id="slides" text="Slides" focusable="false" />
+        <Container id="container-2" Type="Grid" focusable="false" />
+        <Text id="notes" text="Notes and Handouts" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

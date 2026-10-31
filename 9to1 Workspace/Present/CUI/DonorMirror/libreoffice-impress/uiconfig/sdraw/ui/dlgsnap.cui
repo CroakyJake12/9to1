@@ -1,0 +1,35 @@
+<Cui id="ui-dlgsnap" product="9-1" version="1">
+  <Container id="snap-object-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="snap-object-dialog-label" text="New Snap Guide" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="delete" content="Delete" text="Delete" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="frame1" Type="Vertical Stack" focusable="false">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="x" Type="Number" column="1" row="0" />
+            <Input id="y" Type="Number" column="1" row="1" />
+            <Text id="xlabel" text="X:" focusable="false" column="0" row="0" />
+            <Text id="ylabel" text="Y:" focusable="false" column="0" row="1" />
+          </Container>
+          <Text id="label1" text="Position" focusable="false" />
+        </Container>
+        <Container id="radiogroup" Type="Vertical Stack" focusable="false">
+          <Container id="container" Type="Grid" cell-gap="6" focusable="false">
+            <Image id="image1" focusable="false" column="0" row="0" source="sd/res/hlppoint.png" />
+            <Image id="image2" focusable="false" column="0" row="1" source="sd/res/hlplvert.png" />
+            <Image id="image3" focusable="false" column="0" row="2" source="sd/res/hlplhorz.png" />
+            <Input id="point" Type="Radio" text="Point" checked="true" column="1" row="0" />
+            <Input id="vert" Type="Radio" text="Vertical" column="1" row="1" />
+            <Input id="horz" Type="Radio" text="Horizontal" column="1" row="2" />
+          </Container>
+          <Text id="label2" text="Type" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

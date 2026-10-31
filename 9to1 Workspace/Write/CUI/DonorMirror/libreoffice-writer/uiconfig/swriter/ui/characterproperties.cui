@@ -1,0 +1,15 @@
+<Cui id="ui-characterproperties" product="9-1" version="1">
+  <Container id="character-properties-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="character-properties-dialog-label" text="Character" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="reset" content="Reset" text="Reset" tooltip="Unsaved modifications to this tab are reverted." />
+        <Button id="standard" content="Standard" text="Standard" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

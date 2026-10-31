@@ -1,0 +1,34 @@
+<Cui id="badge-view" product="9-1" version="1">
+  <Page id="badge-view-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Text id="h4">
+            <Container id="div-4" Type="Vertical Stack">
+              <Button id="a" />
+            </Container>
+          </Text>
+          <Container id="div-5" Type="Vertical Stack">
+            <Container id="div-6" Type="Vertical Stack">
+              <Container id="div-7" Type="Vertical Stack">
+                <Container id="div-8" Type="Vertical Stack">
+                  <Image id="img" />
+                </Container>
+                <Container id="div-9" Type="Vertical Stack">
+                  <Container id="div-10" Type="Vertical Stack" />
+                  <Container id="div-11" Type="Vertical Stack" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Text id="h4-2">
+        <Container id="div-12" Type="Vertical Stack">
+          <Button id="a-2" />
+        </Container>
+      </Text>
+      <Container id="div-13" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

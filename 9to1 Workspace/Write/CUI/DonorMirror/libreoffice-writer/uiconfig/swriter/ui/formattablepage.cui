@@ -1,0 +1,51 @@
+<Cui id="ui-formattablepage" product="9-1" version="1">
+  <Container id="format-table-page" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+    <Container id="grid26" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid27" Type="Grid" focusable="false" role="Grow" column="0" row="0">
+        <Container id="frame12" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid28" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="nameft" text="Name" focusable="false" column="0" row="0" />
+            <Text id="widthft" text="Width" focusable="false" column="0" row="1" />
+            <Input id="name" Type="Text" role="Grow" column="1" row="0" />
+            <Container id="grid29" Type="Grid" cell-gap="12" focusable="false" column="1" row="1">
+              <Input id="widthmf" Type="Number" column="0" row="0" />
+              <Input id="relwidth" Type="Checkbox" text="Relative" column="1" row="0" />
+            </Container>
+          </Container>
+          <Text id="label45" text="Properties" focusable="false" />
+        </Container>
+        <Container id="frame13" Type="Vertical Stack" focusable="false" column="0" row="1">
+          <Container id="grid31" Type="Grid" cell-gap="6" focusable="false">
+            <Text id="leftft" text="Left" focusable="false" column="0" row="0" />
+            <Input id="leftmf" Type="Number" column="1" row="0" />
+            <Text id="rightft" text="Right" focusable="false" column="0" row="1" />
+            <Input id="rightmf" Type="Number" column="1" row="1" />
+            <Text id="aboveft" text="Above" focusable="false" column="0" row="2" />
+            <Input id="abovemf" Type="Number" column="1" row="2" />
+            <Text id="belowft" text="Below" focusable="false" column="0" row="3" />
+            <Input id="belowmf" Type="Number" column="1" row="3" />
+          </Container>
+          <Text id="label46" text="Spacing" focusable="false" />
+        </Container>
+      </Container>
+      <Container id="frame10" Type="Vertical Stack" focusable="false" column="1" row="0">
+        <Container id="grid30" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="full" Type="Radio" text="Automatic" checked="true" column="0" row="0" />
+          <Input id="left" Type="Radio" text="Left" column="0" row="1" />
+          <Input id="fromleft" Type="Radio" text="From left" column="0" row="2" />
+          <Input id="right" Type="Radio" text="Right" column="0" row="3" />
+          <Input id="center" Type="Radio" text="Center" column="0" row="4" />
+          <Input id="free" Type="Radio" text="Manual" column="0" row="5" />
+        </Container>
+        <Text id="label43" text="Alignment" focusable="false" />
+      </Container>
+    </Container>
+    <Container id="properties" Type="Vertical Stack" focusable="false" column="0" row="1">
+      <Container id="grid32" Type="Grid" cell-gap="12" focusable="false">
+        <Text id="label53" text="Text direction" focusable="false" column="0" row="0" />
+        <Input id="textdirection" Type="Select" focusable="false" column="1" row="0" />
+      </Container>
+      <Text id="label44" text="Properties" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

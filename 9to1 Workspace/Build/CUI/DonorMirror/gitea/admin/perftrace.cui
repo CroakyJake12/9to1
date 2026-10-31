@@ -1,0 +1,9 @@
+<Cui id="admin-perftrace" product="9-1" version="1">
+  <Page id="admin-perftrace-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="pre" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

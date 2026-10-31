@@ -1,0 +1,43 @@
+<Cui id="ui-scenariodialog" product="9-1" version="1">
+  <Container id="scenario-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="scenario-dialog-label" text="Create Scenario" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+          <Input id="name" Type="Text" role="Grow" />
+          <Text id="label1" text="Name of Scenario" focusable="false" />
+        </Container>
+        <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="container-2" Type="Vertical Stack" focusable="false">
+              <Input id="comment" Type="Text" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="label2" text="Comment" focusable="false" />
+        </Container>
+        <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="2">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" column="0" row="0">
+              <Input id="showframe" Type="Checkbox" text="Display border" column="0" row="0" />
+              <Button id="bordercolor" column="1" row="0" />
+            </Container>
+            <Input id="copyback" Type="Checkbox" text="Copy back" column="0" row="1" />
+            <Input id="copysheet" Type="Checkbox" text="Copy entire sheet" column="0" row="2" />
+            <Input id="preventchanges" Type="Checkbox" text="Prevent changes" column="0" row="3" />
+          </Container>
+          <Text id="label3" text="Settings" focusable="false" />
+        </Container>
+        <Text id="alttitle" text="Edit Scenario" focusable="false" column="0" row="3" />
+        <Container id="grid4" Type="Grid" cell-gap="12" focusable="false" column="0" row="4">
+          <Text id="createdft" text="Created by" focusable="false" column="0" row="0" />
+          <Text id="onft" text="on" focusable="false" column="1" row="0" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

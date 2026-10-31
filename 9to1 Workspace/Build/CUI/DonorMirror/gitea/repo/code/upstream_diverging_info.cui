@@ -1,0 +1,8 @@
+<Cui id="code-upstream-diverging-info" product="9-1" version="1">
+  <Page id="code-upstream-diverging-info-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack" />
+      <Button id="button" />
+    </Container>
+  </Page>
+</Cui>

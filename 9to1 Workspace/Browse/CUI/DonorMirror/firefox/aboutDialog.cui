@@ -1,0 +1,111 @@
+<Cui id="content-about-dialog" product="9-1" version="1">
+  <Page id="content-about-dialog-root">
+    <Container id="aboutDialog" Type="Vertical Stack" role="dialog">
+      <Container id="script" Type="Vertical Stack">
+        <Image id="script-icon" source="chrome://browser/content/utilityOverlay.js" />
+      </Container>
+      <Container id="linkset" Type="Vertical Stack">
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+      </Container>
+      <Container id="aboutDialogContainer" Type="Vertical Stack">
+        <Container id="clientBox" Type="Horizontal Stack">
+          <Container id="leftBox" Type="Vertical Stack" role="Grow" />
+          <Container id="rightBox" Type="Vertical Stack">
+            <Text id="release" hidden="true" text="Extended Support Release" />
+            <Container id="hbox" Type="Horizontal Stack" vertical-alignment="Top">
+              <Text id="version" />
+              <Text id="releasenotes" hidden="true" />
+            </Container>
+            <Text id="distribution" />
+            <Text id="distributionId" />
+            <Container id="detailsBox" Type="Vertical Stack">
+              <Container id="updateBox" Type="Horizontal Stack">
+                <Image id="updateIcon" role="presentation" />
+                <Container id="updateInfo" Type="Vertical Stack">
+                  <Container id="updateDeck" Type="Overlay">
+                    <Text id="checkForUpdates">
+                      <Button id="checkForUpdatesButton" />
+                    </Text>
+                    <Text id="downloadAndInstall">
+                      <Button id="downloadAndInstallButton" />
+                    </Text>
+                    <Text id="apply">
+                      <Button id="updateButton" />
+                    </Text>
+                    <Text id="checkingForUpdates" />
+                    <Text id="downloading">
+                      <Text id="label" />
+                    </Text>
+                    <Text id="applying" />
+                    <Text id="downloadFailed">
+                      <Text id="failedLink" />
+                    </Text>
+                    <Text id="policyDisabled" />
+                    <Text id="noUpdatesFound" />
+                    <Text id="checkingFailed" />
+                    <Text id="otherInstanceHandlingUpdates" />
+                    <Text id="manualUpdate">
+                      <Text id="label-2" />
+                    </Text>
+                    <Text id="unsupportedSystem">
+                      <Text id="unsupportedLink" />
+                    </Text>
+                    <Text id="restarting" />
+                    <Text id="internalError">
+                      <Text id="label-3" />
+                    </Text>
+                    <Text id="noUpdater" />
+                  </Container>
+                  <Container id="hbox-2" Type="Horizontal Stack" vertical-alignment="Top">
+                    <Text id="version-2" />
+                    <Text id="releasenotes-2" hidden="true" />
+                  </Container>
+                  <Text id="description">
+                    <Text id="aboutDialogHelpLink" />
+                    <Text id="submit-feedback" />
+                  </Text>
+                </Container>
+              </Container>
+              <Text id="currentChannelText">
+                <Text id="currentChannel" />
+              </Text>
+              <Container id="experimental" Type="Vertical Stack" hidden="true">
+                <Text id="warningDesc" />
+                <Text id="communityExperimentalDesc">
+                  <Text id="label-4" />
+                  <Text id="label-5" />
+                </Text>
+              </Container>
+              <Text id="communityDesc">
+                <Text id="label-6" />
+                <Text id="label-7" />
+              </Text>
+              <Text id="contributeDesc">
+                <Text id="label-8" />
+                <Text id="label-9" />
+              </Text>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="bottomBox" Type="Vertical Stack">
+          <Container id="hbox-3" Type="Horizontal Stack" horizontal-alignment="Center">
+            <Text id="label-10" />
+            <Text id="label-11" />
+            <Text id="label-12" />
+          </Container>
+          <Text id="trademark" />
+        </Container>
+      </Container>
+      <Container id="keyset" Type="Vertical Stack">
+        <Container id="aboutDialogEscapeKey" Type="Vertical Stack" />
+      </Container>
+      <Container id="script-2" Type="Vertical Stack">
+        <Image id="script-icon-2" source="chrome://browser/content/aboutDialog.js" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

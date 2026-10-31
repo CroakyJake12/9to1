@@ -1,0 +1,47 @@
+<Cui id="ui-numparapage" product="9-1" version="1">
+  <Container id="num-para-page" Type="Vertical Stack" cell-gap="6" focusable="false">
+    <Container id="frame-fl-outline-start" Type="Vertical Stack" focusable="false">
+      <Container id="box-outline" Type="Vertical Stack" cell-gap="6" horizontal-alignment="Left" focusable="false">
+        <Text id="label-ft-outline-level" text="Outline level:" tooltip="Select or change the Outline Level applied to the selected paragraphs or Paragraph Style." focusable="false" />
+        <Input id="combo-lb-outline-level" Type="Select" tooltip="Assigned Outline Level" focusable="false" />
+      </Container>
+      <Text id="label-outline" text="Outline" focusable="false" />
+    </Container>
+    <Container id="frame-fl-new-start" Type="Vertical Stack" focusable="false">
+      <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Container id="box-number-style" Type="Vertical Stack" cell-gap="6" horizontal-alignment="Left" focusable="false">
+          <Text id="label-ft-number-style" text="List style:" tooltip="Select a List Style to apply to the paragraph." focusable="false" />
+          <Container id="box-sub-number-style" Type="Vertical Stack" cell-gap="6" focusable="false">
+            <Input id="combo-lb-number-style" Type="Select" tooltip="Assigned List Style" focusable="false" />
+            <Button id="editnumstyle" content="Edit Style" text="Edit Style" />
+          </Container>
+        </Container>
+        <Container id="box-list-level" Type="Vertical Stack" horizontal-alignment="Left" focusable="false">
+          <Text id="label-ft-list-level" text="List level:" focusable="false" />
+          <Input id="combo-lb-list-level" Type="Select" tooltip="Assigned List Level" focusable="false" />
+        </Container>
+        <Input id="check-cb-new-start" Type="Checkbox" text="Restart numbering at this paragraph" tooltip="For ordered lists and List Styles with numbering" horizontal-alignment="Left" />
+        <Container id="box-new-start" Type="Vertical Stack" cell-gap="6" horizontal-alignment="Left" focusable="false">
+          <Container id="box4" Type="Vertical Stack" horizontal-alignment="Left" focusable="false">
+            <Input id="check-cb-number-new-start" Type="Checkbox" text="Start with:" horizontal-alignment="Left" />
+          </Container>
+          <Input id="spin-nf-new-start" Type="Number" />
+        </Container>
+      </Container>
+      <Text id="label2" text="Apply List Style" focusable="false" />
+    </Container>
+    <Container id="frame-fl-count-para" Type="Vertical Stack" focusable="false">
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Input id="check-cb-count-para" Type="Checkbox" text="Include this paragraph in line numbering" horizontal-alignment="Left" />
+        <Input id="check-cb-restart-paracount" Type="Checkbox" text="Restart at this paragraph" horizontal-alignment="Left" />
+        <Container id="box-restart-no" Type="Vertical Stack" cell-gap="6" horizontal-alignment="Left" focusable="false" is-enabled="false">
+          <Container id="box3" Type="Vertical Stack" focusable="false">
+            <Text id="label-ft-restart-no" text="Start with:" horizontal-alignment="Left" focusable="false" role="Grow" />
+          </Container>
+          <Input id="spin-nf-restart-para" Type="Number" />
+        </Container>
+      </Container>
+      <Text id="label-line-numbering" text="Line Numbering" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,13 @@
+<Cui id="user-controls-file-icon" product="9-1" version="1">
+  <Page id="user-controls-file-icon-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="stackpanel" Type="Vertical Stack">
+        <Image id="fonticon" width="{Binding ItemSize}" height="{Binding ItemSize}" horizontal-alignment="Stretch" vertical-alignment="Stretch" source="" />
+        <Image id="fonticon-2" horizontal-alignment="Left" vertical-alignment="Stretch" source="" />
+        <Image id="fonticon-3" horizontal-alignment="Left" vertical-alignment="Stretch" source="" />
+        <Image id="image" horizontal-alignment="Center" vertical-alignment="Stretch" source="{Binding CustomIconImageSource}" />
+        <Image id="image-2" height="{Binding ItemSize}" horizontal-alignment="Center" vertical-alignment="Center" source="{Binding FileIconImageSource}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

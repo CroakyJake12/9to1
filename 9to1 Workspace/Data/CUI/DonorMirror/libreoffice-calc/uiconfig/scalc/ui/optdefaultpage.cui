@@ -1,0 +1,17 @@
+<Cui id="ui-optdefaultpage" product="9-1" version="1">
+  <Container id="opt-default-page" Type="Vertical Stack" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+        <Image id="locksheetsnumber" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Text id="textsheetsnumber" text="Number of worksheets in new document:" focusable="false" column="1" row="0" />
+        <Input id="sheetsnumber" Type="Number" horizontal-alignment="Left" column="2" row="0" />
+        <Image id="locksheetprefix" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Text id="textsheetprefix" text="Prefix name for new worksheet:" focusable="false" column="1" row="1" />
+        <Input id="sheetprefix" Type="Text" vertical-alignment="Center" column="2" row="1" />
+        <Image id="lockjumbo-sheets" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        <Input id="jumbo-sheets" Type="Checkbox" text="Enable very large spreadsheets (16m rows, 16384 cols)" column="1" row="2" column-span="2" />
+      </Container>
+      <Text id="label1" text="New Spreadsheet" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

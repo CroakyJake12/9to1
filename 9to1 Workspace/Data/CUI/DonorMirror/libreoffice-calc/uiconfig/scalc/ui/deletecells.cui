@@ -1,0 +1,21 @@
+<Cui id="ui-deletecells" product="9-1" version="1">
+  <Container id="delete-cells-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="delete-cells-dialog-label" text="Delete Cells" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="selection" Type="Vertical Stack" focusable="false">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="up" Type="Radio" text="Shift cells up" checked="true" />
+          <Input id="left" Type="Radio" text="Shift cells left" />
+          <Input id="rows" Type="Radio" text="Delete entire row(s)" />
+          <Input id="cols" Type="Radio" text="Delete entire column(s)" />
+        </Container>
+        <Text id="label1" text="Selection" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

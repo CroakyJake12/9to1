@@ -1,0 +1,80 @@
+<Cui id="ui-headerfootercontent" product="9-1" version="1">
+  <Page id="ui-headerfootercontent-root">
+    <Image id="image-btn-bold" focusable="false" source="cmd/lcbold.png" />
+    <Image id="image-btn-date" focusable="false" source="sc/res/date.png" />
+    <Image id="image-btn-file" focusable="false" source="sc/res/file.png" />
+    <Image id="image-btn-italic" focusable="false" source="cmd/lcitalic.png" />
+    <Image id="image-btn-page" focusable="false" source="sc/res/page.png" />
+    <Image id="image-btn-pages" focusable="false" source="sc/res/pages.png" />
+    <Image id="image-btn-table" focusable="false" source="sc/res/table.png" />
+    <Image id="image-btn-text" focusable="false" source="sc/res/text.png" />
+    <Image id="image-btn-time" focusable="false" source="sc/res/time.png" />
+    <Image id="image-btn-underline" focusable="false" source="cmd/lcunderline.png" />
+    <Container id="popup" Type="Menu" focusable="false">
+      <Button id="title" Type="Menu Item" content="Title" text="Title" focusable="false" />
+      <Button id="filename" Type="Menu Item" content="File Name" text="File Name" focusable="false" />
+      <Button id="pathname" Type="Menu Item" content="Path/File Name" text="Path/File Name" focusable="false" />
+    </Container>
+    <Container id="header-footer-content" Type="Vertical Stack" cell-gap="6" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false">
+        <Input id="check-btn-enable-hf" Type="Checkbox" text="Enable" horizontal-alignment="Left" column="0" row="0" />
+        <Input id="combo-lb-defined" Type="Select" focusable="false" column="2" row="0" />
+        <Text id="label-ft-preset" text="Preset" focusable="false" column="1" row="0" />
+      </Container>
+      <Container id="container" Type="Horizontal Stack" focusable="false" />
+      <Container id="grid2" Type="Grid" cell-gap="12" focusable="false">
+        <Container id="container-2" Type="Vertical Stack" cell-gap="12" focusable="false" column="1" row="0">
+          <Input id="combo-lb-font-family" Type="Select" focusable="false">
+            <Input id="input" Type="Text" focusable="false" />
+          </Input>
+          <Input id="combo-lb-font-height" Type="Select" focusable="false">
+            <Input id="input-2" Type="Text" />
+          </Input>
+          <Button id="button-btn-text" tooltip="Text Attributes" />
+          <Button id="button-btn-bold" tooltip="Bold" />
+          <Button id="button-btn-italic" tooltip="Italic" />
+          <Button id="button-btn-underline" tooltip="Underline" />
+        </Container>
+        <Text id="label-ft-format" text="Format" focusable="false" column="0" row="0" />
+        <Container id="box" Type="Vertical Stack" cell-gap="12" focusable="false" column="1" row="1">
+          <Button id="button-btn-file" tooltip="Title" />
+          <Button id="button-btn-table" tooltip="Sheet Name" />
+          <Button id="button-btn-page" tooltip="Page" />
+          <Button id="button-btn-pages" tooltip="Pages" />
+          <Button id="button-btn-date" tooltip="Date" />
+          <Button id="button-btn-time" tooltip="Time" />
+        </Container>
+        <Text id="label-ft-field" text="Field" focusable="false" column="0" row="1" />
+      </Container>
+      <Container id="areagrid" Type="Grid" cell-gap="12" focusable="false">
+        <Text id="label-ft-left" text="Left area" focusable="false" column="0" row="0" />
+        <Text id="label-ft-center" text="Center area" focusable="false" column="1" row="0" />
+        <Text id="label-ft-right" text="Right area" focusable="false" column="2" row="0" />
+        <Container id="scrolledwindow-left" Type="Vertical Stack" column="0" row="1">
+          <Container id="container-3" Type="Vertical Stack" focusable="false">
+            <Container id="textview-wnd-left" Type="Overlay" />
+          </Container>
+        </Container>
+        <Container id="container-4" Type="Vertical Stack" column="1" row="1">
+          <Container id="container-5" Type="Vertical Stack" focusable="false">
+            <Container id="textview-wnd-center" Type="Overlay" />
+          </Container>
+        </Container>
+        <Container id="scrolledwindow-right" Type="Vertical Stack" column="2" row="1">
+          <Container id="container-6" Type="Vertical Stack" focusable="false">
+            <Container id="textview-wnd-right" Type="Overlay" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Text id="label-str-hf-none-in-brackets" text="(none)" focusable="false" />
+        <Text id="label-str-page" text="Page" focusable="false" />
+        <Text id="label-str-hf-of-question" text="of ?" focusable="false" />
+        <Text id="label-str-hf-confidential" text="Confidential" focusable="false" />
+        <Text id="label-str-hf-created-by" text="Created by" focusable="false" />
+        <Text id="label-str-hf-customized" text="Customized" focusable="false" />
+        <Text id="label-str-hf-of" text="of" focusable="false" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

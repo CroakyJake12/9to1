@@ -1,0 +1,32 @@
+<Cui id="content-system-integration-dialog" product="9-1" version="1">
+  <Page id="content-system-integration-dialog-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/systemIntegrationDialog.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="systemIntegrationDialog" Type="Vertical Stack">
+          <Text id="label" />
+          <Container id="defaultClientList" Type="Vertical Stack" role="group">
+            <Input id="checkMail" Type="Checkbox" />
+            <Input id="checkNews" Type="Checkbox" />
+            <Input id="checkRSS" Type="Checkbox" />
+            <Input id="checkCalendar" Type="Checkbox" />
+          </Container>
+          <Container id="separator" Type="Vertical Stack" />
+          <Input id="searchIntegration" Type="Checkbox" />
+          <Container id="separator-2" Type="Vertical Stack" />
+          <Input id="checkOnStartup" Type="Checkbox" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

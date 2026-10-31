@@ -1,0 +1,35 @@
+<Cui id="ui-xmlsourcedialog" product="9-1" version="1">
+  <Page id="ui-xmlsourcedialog-root">
+    <Image id="image1" focusable="false" source="sc/res/file.png" />
+    <Container id="xmlsource-dialog" Type="Vertical Stack" focusable="false">
+      <Text id="xmlsource-dialog-label" text="XML Source" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="ok" content="Import" text="Import" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="itemframe" Type="Vertical Stack" focusable="false">
+          <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Button id="selectsource" tooltip="Browse to set source file." column="0" row="0" />
+            <Text id="sourcefile" text="- not set -" focusable="false" role="Grow" column="1" row="0" />
+          </Container>
+          <Text id="label1" text="Source File" focusable="false" />
+        </Container>
+        <Container id="itemframe1" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Container id="mapgrid" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" column="1" row="0">
+              <Text id="label5" text="Mapped cell:" focusable="false" column="0" row="0" column-span="2" />
+              <Input id="edit" Type="Text" column="0" row="1" />
+              <Button id="ref" column="1" row="1" />
+            </Container>
+            <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="0">
+              <Container id="tree" Type="Vertical Stack" width="-1" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="label4" text="Map to Document" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

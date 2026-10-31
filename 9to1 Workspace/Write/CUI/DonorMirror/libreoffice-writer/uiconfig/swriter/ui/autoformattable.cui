@@ -1,0 +1,40 @@
+<Cui id="ui-autoformattable" product="9-1" version="1">
+  <Container id="auto-format-table-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="auto-format-table-dialog-label" text="AutoFormat" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="format" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="container" Type="Grid" cell-gap="12" focusable="false">
+            <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+              <Container id="preview" Type="Overlay" focusable="false" role="Grow" column="1" row="0" />
+              <Container id="container-2" Type="Vertical Stack" role="Grow" column="0" row="0">
+                <Container id="formatlb" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="container-3" Type="Horizontal Stack" cell-gap="6" focusable="false" column="1" row="0">
+              <Button id="add" content="Add" text="Add" />
+              <Button id="remove" content="Delete" text="Delete" />
+              <Button id="rename" content="Rename" text="Rename" />
+            </Container>
+          </Container>
+          <Text id="label1" text="Format" focusable="false" />
+        </Container>
+        <Container id="formatting" Type="Vertical Stack" focusable="false">
+          <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="numformatcb" Type="Checkbox" text="Number format" column="0" row="0" />
+            <Input id="bordercb" Type="Checkbox" text="Borders" column="0" row="1" />
+            <Input id="fontcb" Type="Checkbox" text="Font" column="1" row="0" />
+            <Input id="patterncb" Type="Checkbox" text="Pattern" column="1" row="1" />
+            <Input id="alignmentcb" Type="Checkbox" text="Alignment" column="2" row="0" />
+          </Container>
+          <Text id="label2" text="Formatting" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,103 @@
+<Cui id="ui-tocentriespage" product="9-1" version="1">
+  <Page id="ui-tocentriespage-root">
+    <Image id="image1" focusable="false" source="res/sc10712.png" />
+    <Image id="image2" focusable="false" source="res/sc10713.png" />
+    <Image id="image3" focusable="false" source="res/sc10712.png" />
+    <Image id="image4" focusable="false" source="res/sc10712.png" />
+    <Image id="image5" focusable="false" source="res/sc10713.png" />
+    <Image id="image6" focusable="false" source="res/sc10713.png" />
+    <Container id="toc-entries-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Container id="container" Type="Vertical Stack" focusable="false" column="0" row="0" column-span="2">
+          <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="grid6" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Text id="mainstyleft" text="Character style for main entries:" focusable="false" column="0" row="0" />
+              <Input id="mainstyle" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+              <Input id="alphadelim" Type="Checkbox" text="Alphabetical delimiter" column="0" row="1" column-span="2" />
+              <Input id="commasep" Type="Checkbox" text="Key separated by commas" column="0" row="2" column-span="2" />
+              <Input id="reltostyle" Type="Checkbox" text="Tab position relative to paragraph style indent" column="0" row="3" column-span="2" />
+            </Container>
+            <Text id="label3" text="Format" focusable="false" />
+          </Container>
+          <Container id="sortingframe" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="grid7" Type="Grid" cell-gap="18" focusable="false" role="Grow">
+              <Input id="sortpos" Type="Radio" text="Document position" checked="true" column="0" row="0" />
+              <Input id="sortcontents" Type="Radio" text="Content" column="1" row="0" />
+            </Container>
+            <Text id="label14" text="Sort by" focusable="false" />
+          </Container>
+          <Container id="sortkeyframe" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="grid8" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Text id="label15" text="1:" focusable="false" column="0" row="0" />
+              <Input id="key1lb" Type="Select" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" />
+              <Button id="up1cb" tooltip="Ascending" checked="true" column="2" row="0" />
+              <Button id="down1cb" tooltip="Descending" column="3" row="0" />
+              <Text id="label16" text="2:" focusable="false" column="0" row="1" />
+              <Input id="key2lb" Type="Select" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1" />
+              <Button id="up2cb" tooltip="Ascending" checked="true" column="2" row="1" />
+              <Button id="down2cb" tooltip="Descending" column="3" row="1" />
+              <Text id="label17" text="3:" focusable="false" column="0" row="2" />
+              <Input id="key3lb" Type="Select" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="2" />
+              <Button id="up3cb" tooltip="Ascending" checked="true" column="2" row="2" />
+              <Button id="down3cb" tooltip="Descending" column="3" row="2" />
+            </Container>
+            <Text id="label13" text="Sort Keys" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="levelframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+          <Container id="container-2" Type="Vertical Stack" role="Grow">
+            <Container id="level" Type="Vertical Stack" width="120" />
+          </Container>
+          <Text id="levelft" text="Level" focusable="false" />
+        </Container>
+        <Container id="grid2" Type="Grid" cell-gap="12" vertical-alignment="Top" focusable="false" role="Grow" column="1" row="1">
+          <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+            <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Container id="grid4" Type="Grid" cell-gap="12" focusable="false" column="0" row="0">
+                <Text id="label4" text="Structure:" focusable="false" column="0" row="0" />
+                <Container id="token" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" />
+              </Container>
+              <Container id="fieldbox" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+                <Input id="authfield" Type="Select" focusable="false" />
+                <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="12" focusable="false" role="Grow">
+                  <Button id="insert" content="Insert" text="Insert" />
+                  <Button id="remove" content="Remove" text="Remove" />
+                  <Button id="chapterno" content="Numbering" text="Numbering" tooltip="Insert in the “Structure” to include the heading number or list number of the entry text in the generated index." />
+                  <Button id="entrytext" content="Entry Text" text="Entry Text" tooltip="Insert to include the text of the index entries generated from the settings in the “Type“ tab." />
+                  <Button id="tabstop" content="Tab Stop" text="Tab Stop" />
+                  <Button id="chapterinfo" content="Heading Info" text="Heading Info" tooltip="Insert to include heading number or contents. Select inserted icon to choose what information to display." />
+                  <Button id="pageno" content="Page No." text="Page No." />
+                  <Button id="hyperlink" content="Hyperlink" text="Hyperlink" />
+                </Container>
+              </Container>
+              <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="2">
+                <Text id="label5" text="Character style:" focusable="false" column="0" row="0" />
+                <Input id="charstyle" Type="Select" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" />
+                <Button id="edit" content="Edit..." text="Edit..." column="2" row="0" />
+                <Text id="numberformatft" text="Format:" focusable="false" column="0" row="1" />
+                <Input id="numberformat" Type="Select" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1" />
+                <Text id="fillcharft" text="Fill character:" focusable="false" column="0" row="2" />
+                <Input id="fillchar" Type="Select" horizontal-alignment="Left" focusable="false" role="Grow" column="1" row="2">
+                  <Input id="input" Type="Text" focusable="false" />
+                </Input>
+                <Text id="tabstopposft" text="Tab stop position:" focusable="false" column="0" row="3" />
+                <Container id="container-3" Type="Vertical Stack" cell-gap="12" horizontal-alignment="Left" focusable="false" column="1" row="3">
+                  <Input id="tabstoppos" Type="Number" horizontal-alignment="Left" role="Grow" />
+                  <Input id="alignright" Type="Checkbox" text="Align right" />
+                </Container>
+                <Text id="chapterentryft" text="Heading info:" focusable="false" column="0" row="4" />
+                <Input id="chapterentry" Type="Select" tooltip="Select the heading information to include in the index entry." vertical-alignment="Center" focusable="false" role="Grow" column="1" row="4" />
+                <Text id="entryoutlinelevelft" text="Show up to level:" focusable="false" column="0" row="5" />
+                <Input id="entryoutlinelevel" Type="Number" tooltip="Enter the number of levels of the heading number or list number to show in the index. For example, select “2” to show the first two levels of the number." horizontal-alignment="Left" role="Grow" column="1" row="5" />
+              </Container>
+              <Container id="applytoallbox" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="3">
+                <Button id="all" content="Apply to all levels" text="Apply to all levels" />
+              </Container>
+            </Container>
+            <Text id="label1" text="Structure and Formatting" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

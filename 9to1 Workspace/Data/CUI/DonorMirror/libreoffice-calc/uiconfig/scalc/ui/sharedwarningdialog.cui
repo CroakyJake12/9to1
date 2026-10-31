@@ -1,0 +1,9 @@
+<Cui id="ui-sharedwarningdialog" product="9-1" version="1">
+  <Container id="shared-warning-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="shared-warning-dialog-label" text="The spreadsheet is in shared mode. This allows multiple users to access and edit the spreadsheet at the same time." />
+    <Container id="container" Type="Vertical Stack" cell-gap="2" focusable="false">
+      <Container id="container-2" Type="Horizontal Stack" focusable="false" />
+      <Input id="ask" Type="Checkbox" text="Do not show warning again." horizontal-alignment="Left" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,18 @@
+<Cui id="ui-selectrange" product="9-1" version="1">
+  <Container id="select-range-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="select-range-dialog-label" text="Select Database Range" />
+    <Container id="select-range" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="container" Type="Vertical Stack" role="Grow">
+          <Container id="treeview" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Text id="label1" text="Ranges" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

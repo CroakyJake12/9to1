@@ -1,0 +1,13 @@
+<Cui id="ui-pmobjectspage" product="9-1" version="1">
+  <Container id="pmobjects-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="str-ole-replace" Type="Checkbox" text="Create static replacement images for OLE objects" checked="true" column="0" row="0" />
+        <Input id="str-all-ole-objects" Type="Radio" text="For all OLE objects" checked="true" column="0" row="1" />
+        <Input id="str-alien-ole-objects-only" Type="Radio" text="For OLE objects not based on OpenDocument format" column="0" row="2" />
+        <Text id="str-ole-objects-desc" text-wrapping="Wrap" focusable="false" role="Grow" column="0" row="3" />
+      </Container>
+      <Text id="str-ole-optimization" text="Choose settings for replacing OLE objects" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

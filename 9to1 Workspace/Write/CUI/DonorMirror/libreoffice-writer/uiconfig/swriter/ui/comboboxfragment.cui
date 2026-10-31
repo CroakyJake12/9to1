@@ -1,0 +1,10 @@
+<Cui id="ui-comboboxfragment" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack" focusable="false">
+    <Container id="container-2" Type="Vertical Stack" cell-gap="2" focusable="false">
+      <Container id="container-3" Type="Horizontal Stack" focusable="false" />
+      <Container id="container-4" Type="Vertical Stack" focusable="false">
+        <Input id="combobox" Type="Select" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

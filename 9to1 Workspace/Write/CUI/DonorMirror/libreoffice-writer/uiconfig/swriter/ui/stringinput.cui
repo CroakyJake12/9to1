@@ -1,0 +1,14 @@
+<Cui id="ui-stringinput" product="9-1" version="1">
+  <Container id="string-input-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="name" text="Name" focusable="false" column="0" row="0" />
+        <Input id="edit" Type="Text" column="0" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

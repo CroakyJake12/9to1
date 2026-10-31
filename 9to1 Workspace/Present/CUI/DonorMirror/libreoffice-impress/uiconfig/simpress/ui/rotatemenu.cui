@@ -1,0 +1,11 @@
+<Cui id="ui-rotatemenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="90" Type="Menu Item" content="Quarter Spin" text="Quarter Spin" />
+    <Button id="180" Type="Menu Item" content="Half Spin" text="Half Spin" />
+    <Button id="360" Type="Menu Item" content="Full Spin" text="Full Spin" />
+    <Button id="720" Type="Menu Item" content="Two Spins" text="Two Spins" />
+    <Button id="menuitem1" Type="Menu Item" />
+    <Button id="clockwise" Type="Menu Item" content="Clockwise" text="Clockwise" />
+    <Button id="counterclock" Type="Menu Item" content="Counter-clockwise" text="Counter-clockwise" />
+  </Container>
+</Cui>

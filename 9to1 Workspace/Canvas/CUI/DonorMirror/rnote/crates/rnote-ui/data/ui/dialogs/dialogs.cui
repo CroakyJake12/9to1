@@ -1,0 +1,54 @@
+<Cui id="dialogs-dialogs" product="9-1" version="1">
+  <Actions>
+    <Action name="cancel" command="cancel" />
+    <Action name="clear" command="clear" />
+    <Action name="discard" command="discard" />
+    <Action name="save" command="save" />
+    <Action name="trash" command="trash" />
+  </Actions>
+  <Page id="dialogs-dialogs-root">
+    <Container id="dialog-clear-doc" Type="Vertical Stack">
+      <Text id="dialog-clear-doc-label" text="This clears the entire document. Please confirm." />
+      <Button id="response-cancel" content="Cancel" action="cancel" />
+      <Button id="response-clear" content="Clear" action="clear" />
+    </Container>
+    <Container id="dialog-new-doc" Type="Vertical Stack">
+      <Text id="dialog-new-doc-label" text="Creating a new document will discard any unsaved changes.
+Do you want to save the current document?" />
+      <Button id="response-cancel-2" content="Cancel" action="cancel" />
+      <Button id="response-discard" content="Discard" action="discard" />
+      <Button id="response-save" content="Save" action="save" />
+    </Container>
+    <Container id="dialog-close-tab" Type="Vertical Stack">
+      <Text id="dialog-close-tab-label" text="This tab contains unsaved changes.
+Changes which are not saved will be permanently lost." />
+      <Button id="response-cancel-3" content="Cancel" action="cancel" />
+      <Button id="response-discard-2" content="Discard" action="discard" />
+      <Button id="response-save-2" content="Save" action="save" />
+    </Container>
+    <Container id="dialog-close-window" Type="Vertical Stack">
+      <Text id="dialog-close-window-label" text="Some opened files contain unsaved changes.
+Changes which are not saved will be permanently lost." />
+      <Button id="response-cancel-4" content="Cancel" action="cancel" />
+      <Button id="response-discard-3" content="Discard All" action="discard" />
+      <Button id="response-save-3" content="Save" action="save" />
+    </Container>
+    <Container id="dialog-edit-selected-workspace" Type="Vertical Stack">
+      <Text id="dialog-edit-selected-workspace-label" text="Edit Workspace" />
+      <Container id="container" Type="Vertical Stack">
+        <Container id="container-2" Type="Horizontal Stack">
+          <Button id="edit-selected-workspace-button-cancel" content="Cancel" text="Cancel" />
+          <Button id="edit-selected-workspace-button-apply" content="Apply" text="Apply" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="edit-selected-workspace-icon-popover" Type="Menu">
+      <Container id="edit-selected-workspace-icon-picker" Type="Vertical Stack" />
+    </Container>
+    <Container id="dialog-trash-file" Type="Vertical Stack">
+      <Text id="dialog-trash-file-label" text="Are you sure you want to move this file to the trash?" />
+      <Button id="response-cancel-5" content="Cancel" action="cancel" />
+      <Button id="response-trash" content="Trash" action="trash" />
+    </Container>
+  </Page>
+</Cui>

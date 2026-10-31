@@ -1,0 +1,16 @@
+<Cui id="ui-validationhelptabpage" product="9-1" version="1">
+  <Container id="validation-help-tab-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Input id="tsbhelp" Type="Checkbox" text="Show input help when cell is selected" role="Grow" />
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="title" Type="Text" role="Grow" column="1" row="0" />
+        <Text id="title-label" text="Title:" focusable="false" column="0" row="0" />
+        <Text id="inputhelp-label" text="Input help:" focusable="false" column="0" row="1" />
+        <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="1" row="1">
+          <Input id="inputhelp-text" Type="Text" role="Grow" />
+        </Container>
+      </Container>
+      <Text id="label1" text="Contents" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

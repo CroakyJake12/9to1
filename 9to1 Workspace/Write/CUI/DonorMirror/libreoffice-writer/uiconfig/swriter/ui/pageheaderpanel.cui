@@ -1,0 +1,14 @@
+<Cui id="ui-pageheaderpanel" product="9-1" version="1">
+  <Container id="page-header-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" horizontal-alignment="Right" focusable="false" role="Grow" column="0" row="0">
+      <Text id="customlabel" text="Custom" focusable="false" column="1" row="4" />
+      <Text id="spacing" text="Spacing:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+      <Text id="samecontent" text="Same Content:" horizontal-alignment="Right" focusable="false" column="0" row="3" />
+      <Text id="headermargin" text="Margins:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+      <Input id="headermarginpreset" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+      <Input id="spacingpreset" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+      <Input id="samecontent-lb" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+      <Input id="headertoggle" Type="Checkbox" text="Enable Header" horizontal-alignment="Left" column="1" row="0" />
+    </Container>
+  </Container>
+</Cui>

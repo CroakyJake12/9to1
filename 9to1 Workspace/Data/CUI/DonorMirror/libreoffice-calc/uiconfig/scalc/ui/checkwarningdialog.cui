@@ -1,0 +1,13 @@
+<Cui id="ui-checkwarningdialog" product="9-1" version="1">
+  <Container id="check-warning-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="check-warning-dialog-label" text="You are pasting data into cells that already contain data." />
+    <Container id="container" Type="Vertical Stack" cell-gap="2" focusable="false">
+      <Container id="container-2" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" role="Grow" />
+        <Button id="no" content="No" text="No" role="Grow" />
+        <Button id="yes" content="Yes" text="Yes" role="Grow" />
+      </Container>
+      <Input id="ask" Type="Checkbox" text="Warn me about this in the future." horizontal-alignment="Left" checked="true" />
+    </Container>
+  </Container>
+</Cui>

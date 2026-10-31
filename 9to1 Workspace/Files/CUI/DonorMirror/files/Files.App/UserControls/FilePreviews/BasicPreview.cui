@@ -1,0 +1,11 @@
+<Cui id="file-previews-basic-preview" product="9-1" version="1">
+  <Page id="file-previews-basic-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="border" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Center">
+        <Container id="viewbox" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch">
+          <Image id="image" horizontal-alignment="Stretch" vertical-alignment="Stretch" source="{Binding Model.FileImage}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

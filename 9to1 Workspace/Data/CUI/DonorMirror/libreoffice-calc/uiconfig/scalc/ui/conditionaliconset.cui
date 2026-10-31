@@ -1,0 +1,10 @@
+<Cui id="ui-conditionaliconset" product="9-1" version="1">
+  <Container id="conditional-icon-set" Type="Grid" horizontal-alignment="Left" focusable="false">
+    <Container id="container" Type="Grid" cell-gap="6" focusable="false" column="0" row="0">
+      <Input id="condition-mode" Type="Select" focusable="false" column="1" row="0" />
+      <Input id="entry" Type="Text" role="Grow" column="2" row="0" />
+      <Input id="listbox" Type="Select" focusable="false" column="3" row="0" />
+      <Image id="icon" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="missing-image" />
+    </Container>
+  </Container>
+</Cui>

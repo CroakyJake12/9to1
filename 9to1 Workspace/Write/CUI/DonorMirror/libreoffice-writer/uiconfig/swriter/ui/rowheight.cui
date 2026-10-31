@@ -1,0 +1,19 @@
+<Cui id="ui-rowheight" product="9-1" version="1">
+  <Container id="row-height-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="row-height-dialog-label" text="Row Height" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="heightmf" Type="Number" horizontal-alignment="Left" />
+          <Input id="fit" Type="Checkbox" text="Fit to size" />
+        </Container>
+        <Text id="label1" text="Height" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

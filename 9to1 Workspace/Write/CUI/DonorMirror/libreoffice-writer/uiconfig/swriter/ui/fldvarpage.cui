@@ -1,0 +1,53 @@
+<Cui id="ui-fldvarpage" product="9-1" version="1">
+  <Page id="ui-fldvarpage-root">
+    <Image id="image1" focusable="false" source="svx/res/nu02.png" />
+    <Image id="image2" focusable="false" source="svx/res/nu01.png" />
+    <Container id="field-var-page" Type="Grid" width="700" cell-gap="12" focusable="false" role="Grow">
+      <Container id="gd-name-value" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="1" column-span="3" row-span="3">
+        <Text id="nameft" text="Name:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+        <Input id="name" Type="Text" role="Grow" column="1" row="0" column-span="2" />
+        <Text id="valueft" text="Value:" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="0" row="1" />
+        <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="1" row="1" column-span="2" row-span="2">
+          <Input id="value" Type="Text" role="Grow" />
+        </Container>
+        <Container id="toolbar" Type="Grid" cell-gap="6" vertical-alignment="Bottom" focusable="false" column="3" row="2">
+          <Button id="apply" tooltip="Apply" vertical-alignment="Center" column="0" row="0" />
+          <Button id="delete" tooltip="Delete" vertical-alignment="Center" column="1" row="0" />
+        </Container>
+      </Container>
+      <Container id="typeframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+        <Container id="container" Type="Vertical Stack" role="Grow">
+          <Container id="type" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Text id="label1" text="Type" focusable="false" />
+      </Container>
+      <Container id="selectframe" Type="Vertical Stack" focusable="false" role="Grow" column="1" row="0">
+        <Container id="container-2" Type="Vertical Stack" role="Grow">
+          <Container id="select" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Text id="label2" text="Select" focusable="false" />
+      </Container>
+      <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow" column="2" row="0">
+        <Container id="box5" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Container id="container-3" Type="Vertical Stack" role="Grow">
+            <Container id="numformat" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="container-4" Type="Vertical Stack" role="Grow">
+            <Container id="format" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Input id="invisible" Type="Checkbox" text="Invisible" />
+          <Container id="chapterframe" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Text id="label5" text="Up to level:" focusable="false" column="0" row="0" />
+              <Text id="separatorft" text="Separator:" focusable="false" column="0" row="1" />
+              <Input id="level" Type="Select" tooltip="Choose heading number to prepend to displayed field, where the number comes from the first prior heading whose outline level is equal to or less than the selected outline level. If [None] is selected, no heading number is displayed." focusable="false" column="1" row="0" />
+              <Input id="separator" Type="Text" text="." tooltip="Enter the character to use as a separator between the heading number and the field number." column="1" row="1" />
+            </Container>
+            <Text id="label4" text="With Heading Number" focusable="false" />
+          </Container>
+        </Container>
+        <Text id="label3" text="Format" focusable="false" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

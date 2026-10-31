@@ -1,0 +1,12 @@
+<Cui id="ui-captiondialog" product="9-1" version="1">
+  <Container id="caption-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="caption-dialog-label" text="Caption" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

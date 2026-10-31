@@ -1,0 +1,15 @@
+<Cui id="ui-attachnamedialog" product="9-1" version="1">
+  <Container id="attach-name-dialog" Type="Vertical Stack">
+    <Text id="attach-name-dialog-label" text="No Attachment Name" />
+    <Container id="container" Type="Vertical Stack" cell-gap="24">
+      <Container id="container-2" Type="Horizontal Stack">
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+      </Container>
+      <Container id="grid" Type="Grid" role="Grow">
+        <Input id="edit1" Type="Text" role="Grow" />
+        <Text id="label2" text="Name:" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

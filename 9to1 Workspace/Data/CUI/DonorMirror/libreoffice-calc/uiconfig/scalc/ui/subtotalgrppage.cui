@@ -1,0 +1,19 @@
+<Cui id="ui-subtotalgrppage" product="9-1" version="1">
+  <Container id="sub-total-grp-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Text id="label1" text="Group by:" horizontal-alignment="Left" focusable="false" />
+      <Input id="group-by" Type="Select" focusable="false" />
+      <Input id="select-all-columns-button" Type="Checkbox" text="Select all columns" />
+    </Container>
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+      <Text id="label2" text="Calculate subtotals for:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+      <Text id="label3" text="Use function:" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+      <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+        <Container id="columns" Type="Vertical Stack" width="-1" role="Grow" />
+      </Container>
+      <Container id="container-2" Type="Vertical Stack" role="Grow" column="1" row="1">
+        <Container id="functions" Type="Vertical Stack" width="-1" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,88 @@
+<Cui id="ui-textimportcsv" product="9-1" version="1">
+  <Page id="ui-textimportcsv-root">
+    <Container id="text-import-csv-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="text-import-csv-dialog-label" text="Text Import" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+          <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+              <Text id="textencoding" text="Encoding:" focusable="false" column="0" row="0" />
+              <Text id="textlanguage" text="Locale:" focusable="false" column="0" row="2" />
+              <Text id="textfromrow" text="From row:" focusable="false" column="0" row="3" />
+              <Input id="encoding" Type="Select" focusable="false" column="1" row="0" />
+              <Text id="textdetectedencoding" horizontal-alignment="Left" focusable="false" column="1" row="1" />
+              <Input id="language" Type="Select" focusable="false" column="1" row="2" />
+              <Input id="fromrow" Type="Number" horizontal-alignment="Left" column="1" row="3" />
+            </Container>
+            <Text id="label1" text="Import" focusable="false" />
+          </Container>
+          <Container id="frame2" Type="Vertical Stack" focusable="false">
+            <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false">
+              <Container id="box6" Type="Vertical Stack" cell-gap="12" focusable="false">
+                <Input id="tofixedwidth" Type="Radio" text="Fixed width" />
+                <Input id="toseparatedby" Type="Radio" text="Separated by" />
+                <Input id="todetectseparator" Type="Radio" text="Detected" checked="true" />
+              </Container>
+              <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+                <Input id="tab" Type="Checkbox" text="Tab" column="0" row="0" />
+                <Input id="mergedelimiters" Type="Checkbox" text="Merge delimiters" horizontal-alignment="Left" column="0" row="1" column-span="2" />
+                <Input id="removespace" Type="Checkbox" text="Trim spaces" horizontal-alignment="Left" column="2" row="1" column-span="2" />
+                <Input id="comma" Type="Checkbox" text="Comma" column="1" row="0" />
+                <Input id="semicolon" Type="Checkbox" text="Semicolon" column="2" row="0" />
+                <Input id="space" Type="Checkbox" text="Space" column="3" row="0" />
+                <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" column="4" row="0">
+                  <Input id="other" Type="Checkbox" text="Other" column="0" row="0" />
+                  <Input id="inputother" Type="Text" column="1" row="0" />
+                </Container>
+                <Container id="grid4" Type="Grid" cell-gap="12" focusable="false" column="4" row="1">
+                  <Text id="texttextdelimiter" text="String delimiter:" focusable="false" column="0" row="0" />
+                  <Input id="textdelimiter" Type="Select" focusable="false" column="1" row="0">
+                    <Input id="comboboxtext-entry" Type="Text" />
+                  </Input>
+                </Container>
+              </Container>
+            </Container>
+            <Text id="separatoroptions" text="Separator Options" focusable="false" />
+          </Container>
+          <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false">
+              <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+                <Input id="quotedfieldastext" Type="Checkbox" text="Format quoted field as text" column="0" row="0" />
+                <Input id="detectspecialnumbers" Type="Checkbox" text="Detect special numbers" column="1" row="0" />
+                <Input id="evaluateformulas" Type="Checkbox" text="Evaluate formulas" tooltip="If enabled, cells starting with '=' will be evaluated as formulas." column="0" row="1" />
+                <Input id="skipemptycells" Type="Checkbox" text="Skip empty cells" tooltip="If enabled, blank cells in source will not override the target." column="2" row="0" />
+                <Input id="detectscientificnumbers" Type="Checkbox" text="Detect scientific notation" column="1" row="1" />
+              </Container>
+            </Container>
+            <Text id="label3" text="Other Options" focusable="false" />
+          </Container>
+          <Container id="frame4" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false">
+              <Container id="box5" Type="Vertical Stack" cell-gap="12" focusable="false">
+                <Text id="textcolumntype" text="Column type:" focusable="false" />
+                <Input id="columntype" Type="Select" focusable="false" />
+              </Container>
+              <Container id="scrolledwindow" Type="Vertical Stack" role="Grow">
+                <Container id="viewport" Type="Vertical Stack" focusable="false">
+                  <Container id="box" Type="Vertical Stack" focusable="false">
+                    <Container id="csvruler" Type="Overlay" role="Grow" />
+                    <Container id="csvgrid" Type="Overlay" role="Grow" />
+                  </Container>
+                </Container>
+              </Container>
+              <Text id="textalttitle" text="Text to Columns" focusable="false" />
+              <Input id="alwaysshowonimport" Type="Checkbox" text="Always show on import" checked="true" />
+            </Container>
+            <Text id="label4" text="Fields" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+    <Container id="popup" Type="Menu" focusable="false" />
+  </Page>
+</Cui>

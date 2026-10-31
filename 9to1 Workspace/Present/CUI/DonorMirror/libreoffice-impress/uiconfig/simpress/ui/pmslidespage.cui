@@ -1,0 +1,14 @@
+<Cui id="ui-pmslidespage" product="9-1" version="1">
+  <Container id="pmslides-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="str-delete-master-pages" Type="Checkbox" text="Delete unused master slides" column="0" row="0" />
+        <Input id="str-delete-hidden-slides" Type="Checkbox" text="Delete hidden slides" column="0" row="1" />
+        <Input id="str-custom-show" Type="Checkbox" text="Delete slides that are not used for the custom slide show" is-enabled="false" column="0" row="2" />
+        <Input id="lb-slides" Type="Select" focusable="false" is-enabled="false" column="0" row="3" />
+        <Input id="str-delete-notes-pages" Type="Checkbox" text="Clear notes" column="0" row="4" />
+      </Container>
+      <Text id="str-choose-slides" text="Choose which slides to delete" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

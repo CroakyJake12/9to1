@@ -1,0 +1,43 @@
+<Cui id="ui-photoalbum" product="9-1" version="1">
+  <Container id="photo-album-creator-dialog" Type="Vertical Stack" modal="True">
+    <Text id="photo-album-creator-dialog-label" text="Create Photo Album" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="ok" content="Insert Slides" text="Insert Slides" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box4" Type="Vertical Stack" cell-gap="12" role="Grow">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="images-tree" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="6">
+            <Button id="add-btn" content="Add" text="Add" />
+            <Button id="rem-btn" content="Remove" text="Remove" />
+            <Button id="up-btn" content="Up" text="Up" />
+            <Button id="down-btn" content="Down" text="Down" />
+          </Container>
+        </Container>
+        <Container id="box2" Type="Vertical Stack" cell-gap="12" role="Grow">
+          <Container id="frame1" Type="Vertical Stack" role="Grow">
+            <Container id="box3" Type="Vertical Stack" cell-gap="6" role="Grow">
+              <Container id="preview-img" Type="Overlay" vertical-alignment="Top" role="Grow" />
+            </Container>
+            <Text id="label2" text="Preview" />
+          </Container>
+          <Container id="box5" Type="Vertical Stack" cell-gap="6">
+            <Container id="box6" Type="Vertical Stack" cell-gap="12">
+              <Text id="label7" text="Slide layout:" />
+              <Input id="opt-combo" Type="Select" />
+            </Container>
+            <Input id="cap-check" Type="Checkbox" text="Add caption to each slide" />
+            <Input id="asr-check" Type="Checkbox" text="Keep aspect ratio" checked="true" />
+            <Input id="asr-check-crop" Type="Checkbox" text="Fill Screen" />
+            <Input id="insert-as-link-check" Type="Checkbox" text="Link images" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

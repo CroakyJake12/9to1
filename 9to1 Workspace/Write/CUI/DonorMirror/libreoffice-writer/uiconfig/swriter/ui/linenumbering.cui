@@ -1,0 +1,56 @@
+<Cui id="ui-linenumbering" product="9-1" version="1">
+  <Container id="line-numbering-dialog" Type="Vertical Stack" modal="True">
+    <Text id="line-numbering-dialog-label" text="Line Numbering" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" role="Grow">
+        <Input id="shownumbering" Type="Checkbox" text="Show numbering" horizontal-alignment="Left" />
+        <Container id="content" Type="Grid">
+          <Container id="frame1" Type="Vertical Stack">
+            <Container id="grid2" Type="Grid">
+              <Text id="characterstyle" text="Character style:" />
+              <Text id="format" text="Format:" />
+              <Text id="position" text="Position:" />
+              <Text id="spacing" text="Spacing:" />
+              <Text id="interval" text="Interval:" />
+              <Input id="styledropdown" Type="Select" column-span="2" />
+              <Input id="formatdropdown" Type="Select" column-span="2" />
+              <Input id="positiondropdown" Type="Select" column-span="2" />
+              <Input id="spacingspin" Type="Number" horizontal-alignment="Left" column-span="2" />
+              <Container id="box4" Type="Vertical Stack" cell-gap="12" column-span="2">
+                <Input id="intervalspin" Type="Number" />
+                <Text id="intervallines" text="lines" />
+              </Container>
+            </Container>
+            <Text id="view" text="View" />
+          </Container>
+          <Container id="frame2" Type="Vertical Stack">
+            <Container id="grid1" Type="Grid">
+              <Text id="text" text="Text:" />
+              <Text id="every" text="Every:" />
+              <Input id="textentry" Type="Text" horizontal-alignment="Left" column-span="2" />
+              <Container id="box6" Type="Vertical Stack" cell-gap="6" column-span="2">
+                <Input id="linesspin" Type="Number" />
+                <Text id="lines" text="lines" />
+              </Container>
+            </Container>
+            <Text id="separator" text="Separator" />
+          </Container>
+          <Container id="frame3" Type="Vertical Stack">
+            <Container id="box5" Type="Vertical Stack" cell-gap="6">
+              <Input id="blanklines" Type="Checkbox" text="Blank lines" checked="true" />
+              <Input id="linesintextframes" Type="Checkbox" text="Lines in text frames" />
+              <Input id="showfooterheadernumbering" Type="Checkbox" text="Include header and footer" />
+              <Input id="restarteverynewpage" Type="Checkbox" text="Restart every new page" />
+            </Container>
+            <Text id="count" text="Count" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

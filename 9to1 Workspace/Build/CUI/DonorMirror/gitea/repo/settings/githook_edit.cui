@@ -1,0 +1,19 @@
+<Cui id="settings-githook-edit" product="9-1" version="1">
+  <Page id="settings-githook-edit-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="form" Type="Vertical Stack">
+        <Text id="h4">
+          <Container id="div-2" Type="Vertical Stack" />
+        </Text>
+        <Container id="div-3" Type="Vertical Stack" />
+        <Container id="div-4" Type="Vertical Stack">
+          <Input id="content" Type="Text" placeholder-text="{Binding Unresolved}" />
+          <Container id="div-5" Type="Vertical Stack" />
+        </Container>
+        <Container id="div-6" Type="Vertical Stack">
+          <Button id="button" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,107 @@
+<Cui id="content-buildconfig" product="9-1" version="1">
+  <Page id="content-buildconfig-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+        <Container id="meta-3" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="div" Type="Vertical Stack">
+          <Text id="h1" text="Build Configuration" />
+          <Text id="h2" text="@MOZ_APP_DISPLAYNAME@ @MOZ_APP_VERSION_DISPLAY@ - @MOZ_BUILDID@" />
+          <Container id="table" Type="Grid">
+            <Container id="tbody" Type="Grid">
+              <Container id="tr" Type="Horizontal Stack">
+                <Text id="th" text="@MOZ_APP_DISPLAYNAME@ source" />
+              </Container>
+              <Container id="tr-2" Type="Horizontal Stack">
+                <Container id="td" Type="Vertical Stack">
+                  <Button id="a" />
+                </Container>
+              </Container>
+              <Container id="tr-3" Type="Horizontal Stack">
+                <Text id="th-2" text="Platform source" />
+              </Container>
+              <Container id="tr-4" Type="Horizontal Stack">
+                <Container id="td-2" Type="Vertical Stack">
+                  <Button id="a-2" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="p">
+            <Button id="a-3" />
+          </Text>
+          <Text id="h2-2" text="Build platform" />
+          <Container id="table-2" Type="Grid">
+            <Container id="tbody-2" Type="Grid">
+              <Container id="tr-5" Type="Horizontal Stack">
+                <Text id="th-3" text="Target" />
+              </Container>
+              <Container id="tr-6" Type="Horizontal Stack">
+                <Container id="td-3" Type="Vertical Stack" />
+              </Container>
+            </Container>
+          </Container>
+          <Text id="h2-3" text="Build tools" />
+          <Container id="table-3" Type="Grid">
+            <Container id="tbody-3" Type="Grid">
+              <Container id="tr-7" Type="Horizontal Stack">
+                <Text id="th-4" text="Compiler" />
+                <Text id="th-5" text="Version" />
+                <Text id="th-6" text="Compiler flags" />
+              </Container>
+              <Container id="tr-8" Type="Horizontal Stack">
+                <Container id="td-4" Type="Vertical Stack">
+                  <Container id="code" Type="Vertical Stack" />
+                </Container>
+                <Container id="td-5" Type="Vertical Stack">
+                  <Container id="code-2" Type="Vertical Stack" />
+                </Container>
+                <Container id="td-6" Type="Vertical Stack">
+                  <Container id="code-3" Type="Vertical Stack" />
+                </Container>
+              </Container>
+              <Container id="tr-9" Type="Horizontal Stack">
+                <Container id="td-7" Type="Vertical Stack">
+                  <Container id="code-4" Type="Vertical Stack" />
+                </Container>
+                <Container id="td-8" Type="Vertical Stack">
+                  <Container id="code-5" Type="Vertical Stack" />
+                </Container>
+                <Container id="td-9" Type="Vertical Stack">
+                  <Container id="code-6" Type="Vertical Stack" />
+                </Container>
+              </Container>
+              <Container id="tr-10" Type="Horizontal Stack">
+                <Container id="td-10" Type="Vertical Stack">
+                  <Container id="code-7" Type="Vertical Stack" />
+                </Container>
+                <Container id="td-11" Type="Vertical Stack">
+                  <Container id="code-8" Type="Vertical Stack" />
+                </Container>
+                <Container id="td-12" Type="Vertical Stack">
+                  <Container id="code-9" Type="Vertical Stack" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="h2-4" text="Configure options" />
+          <Container id="table-4" Type="Grid">
+            <Container id="tbody-4" Type="Grid">
+              <Container id="tr-11" Type="Horizontal Stack">
+                <Container id="td-13" Type="Vertical Stack">
+                  <Container id="code-10" Type="Vertical Stack" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

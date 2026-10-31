@@ -1,0 +1,20 @@
+<Cui id="worktime-table-members" product="9-1" version="1">
+  <Page id="worktime-table-members-root">
+    <Container id="table" Type="Grid">
+      <Container id="thead" Type="Grid">
+        <Container id="tr" Type="Horizontal Stack">
+          <Text id="th" text="{Binding Unresolved}" />
+          <Text id="th-2" text="{Binding Unresolved}" />
+        </Container>
+      </Container>
+      <Container id="tbody" Type="Grid">
+        <Container id="tr-2" Type="Horizontal Stack">
+          <Container id="td" Type="Vertical Stack">
+            <Button id="a" />
+          </Container>
+          <Container id="td-2" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

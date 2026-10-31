@@ -1,0 +1,15 @@
+<Cui id="ui-subjectdialog" product="9-1" version="1">
+  <Container id="subject-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="subject-dialog-label" text="No Subject" />
+    <Container id="container" Type="Vertical Stack" cell-gap="24" focusable="false">
+      <Container id="container-2" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+      </Container>
+      <Container id="grid" Type="Grid" cell-gap="7" focusable="false" role="Grow">
+        <Input id="edit" Type="Text" role="Grow" column="0" row="1" />
+        <Text id="label1" text="Subject:" focusable="false" column="0" row="0" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,35 @@
+<Cui id="ui-commentspanel" product="9-1" version="1">
+  <Container id="comments-panel" Type="Grid" focusable="false" role="Grow">
+    <Container id="container" Type="Grid" focusable="false" role="Grow" column="0" row="0">
+      <Container id="options" Type="Vertical Stack" column="0" row="0">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label-sortby" text="Sort by:" horizontal-alignment="Center" focusable="false" role="Grow" column="0" row="2" />
+          <Container id="sortby-options" Type="Grid" focusable="false" role="Grow" column="1" row="2">
+            <Input id="sortby-position" Type="Radio" text="Position" horizontal-alignment="Center" checked="true" role="Grow" column="0" row="0" />
+            <Input id="sortby-time" Type="Radio" text="Time" horizontal-alignment="Center" role="Grow" column="1" row="0" />
+          </Container>
+          <Text id="label-show" text="Show:" horizontal-alignment="Center" focusable="false" role="Grow" column="0" row="1" />
+          <Container id="show-options" Type="Grid" focusable="false" column="1" row="1">
+            <Input id="show-time" Type="Checkbox" text="Time" horizontal-alignment="Center" checked="true" role="Grow" column="0" row="0" />
+            <Input id="show-resolved" Type="Checkbox" text="Resolved" horizontal-alignment="Center" checked="true" role="Grow" column="1" row="0" />
+            <Input id="show-reference" Type="Checkbox" text="Reference" horizontal-alignment="Center" checked="true" role="Grow" column="2" row="0" />
+          </Container>
+          <Text id="label-filter" text="Filter:" horizontal-alignment="Center" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="0" />
+          <Container id="filter-options" Type="Grid" cell-gap="3" focusable="false" column="1" row="0">
+            <Text id="label-author" text="Author" horizontal-alignment="Left" focusable="false" role="Grow" column="1" row="0" />
+            <Text id="label-date" text="Date" horizontal-alignment="Left" focusable="false" role="Grow" column="1" row="1" />
+            <Input id="filter-author" Type="Select" focusable="false" role="Grow" column="0" row="0" />
+            <Button id="filter-date" column="0" row="1" />
+            <Button id="reset" content="Reset" text="Reset" column="2" row="1" />
+          </Container>
+        </Container>
+        <Text id="options-label" text="Options" focusable="false" />
+      </Container>
+      <Container id="scrolledwindow" Type="Vertical Stack" role="Grow" column="0" row="1">
+        <Container id="container-2" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="comment-threads" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

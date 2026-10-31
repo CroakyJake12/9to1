@@ -1,0 +1,63 @@
+<Cui id="ui-printoptionspage" product="9-1" version="1">
+  <Container id="print-options-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+      <Container id="frame2" Type="Vertical Stack" focusable="false" column="0" row="0">
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="graphics" Type="Checkbox" text="Images and objects" column="1" row="0" />
+          <Input id="formcontrols" Type="Checkbox" text="Form controls" column="1" row="1" />
+          <Input id="background" Type="Checkbox" text="Page background" column="1" row="2" />
+          <Input id="inblack" Type="Checkbox" text="Print text in black" column="1" row="3" />
+          <Input id="hiddentext" Type="Checkbox" text="Hidden text" column="1" row="4" />
+          <Input id="textplaceholder" Type="Checkbox" text="Text placeholder" column="1" row="5" />
+          <Image id="lockgraphics" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Image id="lockformcontrols" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Image id="lockbackground" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Image id="lockinblack" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+          <Image id="lockhiddentext" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+          <Image id="locktextplaceholder" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+        </Container>
+        <Text id="label2" text="Contents" focusable="false" />
+      </Container>
+      <Container id="pagesframe" Type="Vertical Stack" focusable="false" column="0" row="1">
+        <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="leftpages" Type="Checkbox" text="Left pages" column="1" row="0" />
+          <Input id="rightpages" Type="Checkbox" text="Right pages" column="1" row="1" />
+          <Input id="brochure" Type="Checkbox" text="Brochure" column="1" row="2" />
+          <Input id="rtl" Type="Checkbox" text="Right to Left" column="1" row="3" />
+          <Image id="lockleftpages" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Image id="lockrightpages" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Image id="lockbrochure" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Image id="lockrtl" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        </Container>
+        <Text id="label10" text="Pages" focusable="false" />
+      </Container>
+      <Container id="commentsframe" Type="Vertical Stack" focusable="false" column="1" row="0">
+        <Container id="container" Type="Grid" focusable="false">
+          <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" column="1" row="0">
+            <Input id="none" Type="Radio" text="None" checked="true" column="0" row="0" />
+            <Input id="only" Type="Radio" text="Comments only" column="0" row="1" />
+            <Input id="end" Type="Radio" text="End of document" column="0" row="2" />
+            <Input id="endpage" Type="Radio" text="End of page" column="0" row="3" />
+            <Input id="inmargins" Type="Radio" text="In margins" column="0" row="4" />
+          </Container>
+          <Image id="lockcomments" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        </Container>
+        <Text id="4" text="Comments" focusable="false" />
+      </Container>
+    </Container>
+    <Container id="frame1" Type="Vertical Stack" focusable="false">
+      <Container id="grid6" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="blankpages" Type="Checkbox" text="Print automatically inserted blank pages" column="1" row="0" />
+        <Input id="papertray" Type="Checkbox" text="Paper tray from printer settings" column="1" row="1" />
+        <Image id="lockblankpages" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockpapertray" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Image id="lockfax" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        <Container id="grid7" Type="Grid" cell-gap="12" focusable="false" column="1" row="2">
+          <Text id="label5" text="Fax:" focusable="false" column="0" row="0" />
+          <Input id="fax" Type="Select" focusable="false" column="1" row="0" />
+        </Container>
+      </Container>
+      <Text id="label1" text="Other" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

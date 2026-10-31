@@ -1,0 +1,13 @@
+<Cui id="projects-view" product="9-1" version="1">
+  <Page id="projects-view-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Button id="a" />
+          <Button id="a-2" />
+          <Button id="a-3" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

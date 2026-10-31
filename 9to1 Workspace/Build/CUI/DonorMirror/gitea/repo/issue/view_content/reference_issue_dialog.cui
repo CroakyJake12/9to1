@@ -1,0 +1,35 @@
+<Cui id="view-content-reference-issue-dialog" product="9-1" version="1">
+  <Page id="view-content-reference-issue-dialog-root">
+    <Container id="reference-issue-modal" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="form" Type="Vertical Stack">
+          <Container id="div-3" Type="Vertical Stack">
+            <Text id="label">
+              <Text id="strong" text="{Binding Unresolved}" />
+            </Text>
+            <Container id="div-4" Type="Vertical Stack">
+              <Container id="div-5" Type="Vertical Stack" />
+              <Container id="div-6" Type="Vertical Stack" />
+            </Container>
+          </Container>
+          <Container id="div-7" Type="Vertical Stack">
+            <Text id="label-2">
+              <Text id="strong-2" text="{Binding Unresolved}" />
+            </Text>
+            <Input id="input" Type="Text" />
+          </Container>
+          <Container id="div-8" Type="Vertical Stack">
+            <Text id="label-3">
+              <Text id="strong-3" text="{Binding Unresolved}" />
+            </Text>
+            <Input id="textarea" Type="Text" />
+          </Container>
+          <Container id="div-9" Type="Vertical Stack">
+            <Button id="button" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

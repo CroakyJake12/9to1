@@ -1,0 +1,14 @@
+<Cui id="file-previews-pdfpreview" product="9-1" version="1">
+  <Page id="file-previews-pdfpreview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="grid.rowdefinitions" Type="Vertical Stack">
+          <Text id="rowdefinition" />
+          <Text id="rowdefinition-2" />
+        </Container>
+        <Text id="flipview" />
+        <Text id="pipspager" row="1" horizontal-alignment="Center" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,13 @@
+<Cui id="widgets-recent-files-widget" product="9-1" version="1">
+  <Page id="widgets-recent-files-widget-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="stackpanel" Type="Vertical Stack">
+        <Container id="infobar" Type="Horizontal Stack" />
+        <Text id="textblock" horizontal-alignment="Stretch" font-size="14" text="{helpers:ResourceString Name=RecentItemDescription/Text}" />
+        <Container id="listview" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch">
+          <Container id="listview.itemtemplate" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

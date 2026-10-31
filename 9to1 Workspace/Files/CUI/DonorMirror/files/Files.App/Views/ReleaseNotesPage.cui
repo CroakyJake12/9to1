@@ -1,0 +1,16 @@
+<Cui id="views-release-notes-page" product="9-1" version="1">
+  <Page id="views-release-notes-page-root">
+    <Container id="page" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="grid.rowdefinitions" Type="Vertical Stack">
+          <Text id="rowdefinition" />
+          <Text id="rowdefinition-2" />
+        </Container>
+        <Text id="webview2" horizontal-alignment="Stretch" vertical-alignment="Stretch" />
+        <Container id="border" Type="Overlay" row="1" padding="12" background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+          <Button id="hyperlinkbutton" horizontal-alignment="Left" content="{helpers:ResourceString Name=SponsorUsOnGitHub}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,15 @@
+<Cui id="penssidebar-shaperpage" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Container id="container-2" Type="Vertical Stack">
+      <Button id="shapebuildertype-menubutton">
+        <Button id="button">
+          <Image id="image" source="shapebuilder-line-symbolic" />
+        </Button>
+      </Button>
+      <Button id="shapeconfig-menubutton" icon-source="settings-symbolic" />
+    </Container>
+    <Container id="container-3" Type="Horizontal Stack" />
+    <Container id="stroke-width-picker" Type="Vertical Stack" />
+    <Container id="container-4" Type="Horizontal Stack" />
+  </Container>
+</Cui>

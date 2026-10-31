@@ -1,0 +1,56 @@
+<Cui id="ui-mmsalutationpage" product="9-1" version="1">
+  <Page id="ui-mmsalutationpage-root">
+    <Image id="image1" source="go-previous" />
+    <Image id="image2" source="go-next" />
+    <Container id="mmsalutation-page" Type="Vertical Stack" cell-gap="12" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" role="Grow">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Container id="grid2" Type="Grid" role="Grow">
+            <Text id="previewft" text="Preview" />
+            <Container id="grid3" Type="Grid" role="Grow">
+              <Button id="assign" content="Match fields..." text="Match fields..." vertical-alignment="Top" row-span="2" />
+              <Container id="previewwin" Type="Vertical Stack" role="Grow">
+                <Container id="container" Type="Vertical Stack">
+                  <Container id="preview" Type="Overlay" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="grid10" Type="Grid">
+                <Button id="prev" />
+                <Button id="next" />
+                <Text id="documentindex" text="Document: %1" role="Grow" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="grid4" Type="Grid" role="Grow">
+            <Input id="greeting" Type="Checkbox" text="This document should contain a salutation" />
+            <Container id="grid5" Type="Grid" role="Grow">
+              <Text id="generalft" text="General salutation" />
+              <Input id="general" Type="Select" horizontal-alignment="Left">
+                <Input id="comboboxtext-entry" Type="Text" />
+              </Input>
+              <Container id="grid6" Type="Grid" role="Grow">
+                <Container id="grid8" Type="Grid" role="Grow">
+                  <Text id="femalefi" text="Address list field indicating a female recipient" column-span="3" />
+                  <Text id="femaleft" text="Female" />
+                  <Text id="maleft" text="Male" />
+                  <Text id="femalecolft" text="Field name" />
+                  <Text id="femalefieldft" text="Field value" />
+                  <Button id="newfemale" content="New..." text="New..." vertical-alignment="Center" />
+                  <Button id="newmale" content="New..." text="New..." vertical-alignment="Center" />
+                  <Input id="female" Type="Select" vertical-alignment="Center" role="Grow" />
+                  <Input id="male" Type="Select" vertical-alignment="Center" role="Grow" />
+                  <Input id="femalecol" Type="Select" vertical-alignment="Center" role="Grow" />
+                  <Input id="femalefield" Type="Select" vertical-alignment="Center" role="Grow">
+                    <Input id="comboboxtext-entry2" Type="Text" />
+                  </Input>
+                </Container>
+                <Input id="personalized" Type="Checkbox" text="Insert personalized salutation" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Text id="label1" text="Create a Salutation" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

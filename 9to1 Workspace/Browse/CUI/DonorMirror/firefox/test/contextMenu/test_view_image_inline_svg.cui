@@ -1,0 +1,10 @@
+<Cui id="context-menu-test-view-image-inline-svg" product="9-1" version="1">
+  <Page id="context-menu-test-view-image-inline-svg-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="style" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

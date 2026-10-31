@@ -1,0 +1,14 @@
+<Cui id="pypi-simple" product="9-1" version="1">
+  <Page id="pypi-simple-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Text id="h1" text="Links for [value]" />
+        <Button id="a" />
+        <Container id="br" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

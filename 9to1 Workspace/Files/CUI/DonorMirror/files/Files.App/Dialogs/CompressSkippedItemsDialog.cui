@@ -1,0 +1,18 @@
+<Cui id="dialogs-compress-skipped-items-dialog" product="9-1" version="1">
+  <Page id="dialogs-compress-skipped-items-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="stackpanel" Type="Vertical Stack">
+        <Text id="textblock" text="{Binding ViewModel.Description}" />
+        <Container id="listview" Type="Vertical Stack" max-height="200">
+          <Container id="listview.itemtemplate" Type="Vertical Stack" />
+          <Container id="listview.itemspanel" Type="Vertical Stack">
+            <Container id="itemspaneltemplate" Type="Vertical Stack">
+              <Text id="itemsstackpanel" horizontal-alignment="Stretch" />
+            </Container>
+          </Container>
+          <Container id="listview.itemcontainerstyle" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

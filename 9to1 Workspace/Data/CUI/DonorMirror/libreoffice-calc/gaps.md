@@ -1,0 +1,32 @@
+# libreoffice-calc Stage A mirror gaps - constructs CUI cannot express yet
+
+Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
+reason to keep donor markup. Nothing here is rendered or accepted evidence.
+
+- donor UI constructs translated: 8342
+- donor nodes dropped: 988
+- gap reports: 3507
+
+| CUI construct needed / rejected | occurrences | donor constructs seen |
+|---|---|---|
+| `toolbar with overflow` | 1309 | GtkMenuToolButton, GtkToggleToolButton, GtkToolButton, GtkToolbar |
+| `notebook bar (ribbon) group` | 798 | sfxlo-NotebookbarToolBox |
+| `optional section` | 352 | VclOptionalBox |
+| `separator` | 304 | GtkSeparator |
+| `button row` | 134 | GtkButtonBox |
+| `toolbar overflow` | 118 | sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox |
+| `window and dialog chrome` | 117 | GtkDialog |
+| `menu button` | 115 | svtlo-ManagedMenuButton |
+| `scroller with explicit bars` | 70 | GtkScrolledWindow |
+| `radio menu item` | 67 | GtkRadioMenuItem |
+| `item collection (list/tree/table)` | 47 | GtkTreeView |
+| `tab strip` | 23 | GtkNotebook |
+| `clipped viewport` | 16 | GtkViewport |
+| `expander section` | 10 | GtkExpander |
+| `custom drawing surface` | 9 | GtkDrawingArea |
+| `toggle button` | 6 | GtkToggleButton |
+| `unmodelled donor construct` | 5 | GtkMessageDialog |
+| `context toolbar` | 3 | sfxlo-ContextVBox |
+| `notebook bar (ribbon) tab` | 2 | sfxlo-NotebookbarTabControl |
+| `split view` | 1 | GtkPaned |
+| `meter` | 1 | GtkLevelBar |

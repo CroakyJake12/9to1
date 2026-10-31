@@ -1,0 +1,5 @@
+<Cui id="actions-view-component" product="9-1" version="1">
+  <Page id="actions-view-component-root">
+    <Container id="repo-action-view" Type="Vertical Stack" />
+  </Page>
+</Cui>

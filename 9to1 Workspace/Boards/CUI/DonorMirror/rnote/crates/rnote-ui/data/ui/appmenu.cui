@@ -1,0 +1,5 @@
+<Cui id="ui-appmenu" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Button id="menubutton" />
+  </Container>
+</Cui>

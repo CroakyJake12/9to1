@@ -1,0 +1,20 @@
+<Cui id="repo-file-info" product="9-1" version="1">
+  <Page id="repo-file-info-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack" />
+      <Container id="div-3" Type="Vertical Stack" />
+      <Container id="div-4" Type="Vertical Stack">
+        <Text id="span" text="{Binding Unresolved}" />
+        <Text id="span-2" text="LFS" />
+      </Container>
+      <Container id="div-5" Type="Vertical Stack">
+        <Button id="a" />
+      </Container>
+      <Container id="div-6" Type="Vertical Stack" />
+      <Container id="div-7" Type="Vertical Stack" />
+      <Container id="div-8" Type="Vertical Stack" />
+      <Container id="div-9" Type="Vertical Stack" />
+      <Container id="div-10" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

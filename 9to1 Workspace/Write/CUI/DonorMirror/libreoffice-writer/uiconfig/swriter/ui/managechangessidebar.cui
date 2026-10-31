@@ -1,0 +1,23 @@
+<Cui id="ui-managechangessidebar" product="9-1" version="1">
+  <Page id="ui-managechangessidebar-root">
+    <Container id="manage-changes-panel" Type="Grid" focusable="false" role="Grow">
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" column="0" row="0">
+        <Container id="box9" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Container id="content-area" Type="Grid" focusable="false" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="writermenu" Type="Menu" focusable="false">
+      <Button id="writeredit" Type="Menu Item" content="Edit Comment..." text="Edit Comment..." focusable="false" />
+      <Button id="writersort" Type="Menu Item" content="Sort By" text="Sort By" focusable="false">
+        <Container id="writersortmenu" Type="Menu" focusable="false">
+          <Button id="writersort0" content="Action" text="Action" focusable="false" />
+          <Button id="writersort1" content="Author" text="Author" focusable="false" />
+          <Button id="writersort2" content="Date" text="Date" focusable="false" />
+          <Button id="writersort3" content="Comment" text="Comment" focusable="false" />
+          <Button id="writersort4" content="Document Position" text="Document Position" focusable="false" />
+        </Container>
+      </Button>
+    </Container>
+  </Page>
+</Cui>

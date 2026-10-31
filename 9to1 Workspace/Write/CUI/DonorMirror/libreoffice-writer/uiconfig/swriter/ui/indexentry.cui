@@ -1,0 +1,61 @@
+<Cui id="ui-indexentry" product="9-1" version="1">
+  <Page id="ui-indexentry-root">
+    <Image id="image1" horizontal-alignment="Left" focusable="false" source="vcl/res/index.png" />
+    <Image id="image2" focusable="false" source="go-previous" />
+    <Image id="image3" focusable="false" source="go-next" />
+    <Image id="image4" focusable="false" source="go-first" />
+    <Image id="image5" focusable="false" source="go-last" />
+    <Image id="image6" focusable="false" source="view-refresh" />
+    <Container id="index-entry-dialog" Type="Vertical Stack" focusable="false">
+      <Text id="index-entry-dialog-label" text="Insert Index Entry" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="close" content="Close" text="Close" tooltip="Close dialog without saving non-applied changes." />
+          <Button id="delete" content="Delete" text="Delete" />
+          <Button id="reset" content="Reset" text="Reset" />
+          <Button id="insert" content="Insert" text="Insert" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="indexentrygrid" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="typeft" text="Index:" focusable="false" column="0" row="0" />
+          <Input id="typecb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+          <Button id="new" tooltip="New User-defined Index" column="2" row="0" />
+          <Text id="label3" text="Entry:" focusable="false" column="0" row="1" />
+          <Input id="entryed" Type="Text" column="1" row="1" />
+          <Button id="sync" tooltip="Update entry from selection" column="2" row="1" />
+          <Text id="phonetic0ft" text="Phonetic reading:" focusable="false" column="3" row="1" />
+          <Input id="phonetic0ed" Type="Text" column="4" row="1" />
+          <Text id="phonetic1ft" text="Phonetic reading:" focusable="false" column="3" row="2" />
+          <Input id="phonetic1ed" Type="Text" column="4" row="2" />
+          <Text id="phonetic2ft" text="Phonetic reading:" focusable="false" column="3" row="3" />
+          <Input id="phonetic2ed" Type="Text" column="4" row="3" />
+          <Text id="key1ft" text="1st key:" focusable="false" is-enabled="false" column="0" row="2" />
+          <Input id="key1cb" Type="Select" focusable="false" is-enabled="false" column="1" row="2" column-span="2">
+            <Input id="comboboxtext-entry" Type="Text" />
+          </Input>
+          <Text id="key2ft" text="2nd key:" focusable="false" is-enabled="false" column="0" row="3" />
+          <Input id="key2cb" Type="Select" focusable="false" is-enabled="false" column="1" row="3" column-span="2">
+            <Input id="comboboxtext-entry2" Type="Text" />
+          </Input>
+          <Text id="levelft" text="Index level:" focusable="false" column="0" row="4" />
+          <Input id="levelnf" Type="Number" tooltip="Enter the index level for the entry, which determines the appearance of the entry in the generated index." horizontal-alignment="Left" column="1" row="4" column-span="2" />
+          <Input id="mainentrycb" Type="Checkbox" text="Main entry" horizontal-alignment="Left" column="0" row="5" column-span="3" />
+        </Container>
+        <Container id="selectedentryframe" Type="Vertical Stack" focusable="false">
+          <Container id="selectedentrygrid" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="applytoallcb" Type="Checkbox" text="Apply to all other occurrences" tooltip="Add an index entry to any other occurrences of the text selected into “Entry”." horizontal-alignment="Left" column="0" row="0" />
+            <Input id="searchcasewordonlycb" Type="Checkbox" text="Whole words only" horizontal-alignment="Left" column="0" row="1" />
+            <Input id="searchcasesensitivecb" Type="Checkbox" text="Match case" horizontal-alignment="Left" column="0" row="2" />
+          </Container>
+          <Text id="text" focusable="false" />
+        </Container>
+        <Container id="buttongrid" Type="Grid" cell-gap="6" focusable="false">
+          <Button id="last" tooltip="Next entry (same name)" horizontal-alignment="Left" vertical-alignment="Center" role="Grow" column="4" row="0" />
+          <Button id="first" tooltip="Previous entry (same name)" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" column="3" row="0" />
+          <Button id="previous" tooltip="Previous entry" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" column="3" row="1" />
+          <Button id="next" tooltip="Next entry" horizontal-alignment="Left" vertical-alignment="Center" role="Grow" column="4" row="1" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,27 @@
+<Cui id="content-help-menu.inc" product="9-1" version="1">
+  <Actions>
+    <Action name="open-about-dialog" command="openAboutDialog();" />
+    <Action name="open-about-support" command="openAboutSupport();" />
+    <Action name="open-link-text" command="openLinkText(event, 'feedbackURL');" />
+    <Action name="open-support-url" command="openSupportURL();" />
+    <Action name="safe-mode-restart" command="safeModeRestart();" />
+  </Actions>
+  <Page id="content-help-menu.inc-root">
+    <Button id="helpMenu">
+      <Container id="menu_HelpPopup" Type="Menu">
+        <Button id="menu_openHelp" action="open-support-url" />
+        <Button id="menu_openReleaseHelp" action="open-link-text" />
+        <Button id="menu_keyboardShortcuts" action="open-link-text" />
+        <Container id="menuseparator" Type="Menu" />
+        <Button id="getInvolved" action="open-link-text" />
+        <Button id="donationsPage" action="open-link-text" />
+        <Button id="feedbackPage" action="open-link-text" />
+        <Container id="functionsSeparator" Type="Menu" />
+        <Button id="helpTroubleshootMode" action="safe-mode-restart" />
+        <Button id="aboutsupport_open" action="open-about-support" />
+        <Container id="aboutSeparator" Type="Menu" />
+        <Button id="aboutName" action="open-about-dialog" />
+      </Container>
+    </Button>
+  </Page>
+</Cui>

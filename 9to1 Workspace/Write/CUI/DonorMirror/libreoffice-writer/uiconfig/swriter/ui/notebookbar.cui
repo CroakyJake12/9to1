@@ -1,0 +1,1770 @@
+<Cui id="ui-notebookbar" product="9-1" version="1">
+  <Page id="ui-notebookbar-root">
+    <Container id="menu-addons" Type="Menu" focusable="false">
+      <Button id="addon-section-separator" Type="Menu Item" focusable="false" />
+      <Button id="menu-extension-package-manager-dialog" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-draw" Type="Menu" focusable="false">
+      <Button id="menu-draw-toggle-object-bezier-mode" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-extrusion-tilt-down" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-extrusion-tilt-up" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-extrusion-tilt-left" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-extrusion-tilt-right" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-name-group" Type="Menu Item" focusable="false" />
+      <Button id="menu-draw-object-title-description" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-file" Type="Menu" focusable="false">
+      <Button id="menu-file-add-direct" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-recent-file-list" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-close-doc" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-save" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-save-as" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-save-as-remote" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-save-acopy" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-save-all" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-check-out" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-cancel-check-out" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-check-in" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-reload" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-export-to" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-export-to-pdf" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-export-to-epub" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator5" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-send-mail" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-send-mail-doc-as-pdf" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-send-via-bluetooth" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator6" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-print-preview" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-print" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-print-default" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-printer-setup" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-separator7" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-signature" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-sign-pdf" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-set-document-properties" Type="Menu Item" focusable="false" />
+      <Button id="separator43" Type="Menu Item" focusable="false" />
+      <Button id="menu-file-quit" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-form" Type="Menu" focusable="false">
+      <Button id="menu-form-label" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-edit" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-check-box" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-radio-button" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-list-box" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-combo-box" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-pushbutton" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-imagebutton" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-formatted-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-date-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-time-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-numeric-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-currency-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-pattern-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-separator5" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-image-control" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-file-control" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-separator7" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-grid" Type="Menu Item" focusable="false" />
+      <Button id="menu-form-navigation-bar" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-help" Type="Menu" focusable="false">
+      <Button id="menu-help-help-index" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-extended-help" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-documentation" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-tip-of-the-day" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-separator" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-question-answers" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-safe-mode" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-get-involved" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-donation" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-show-license" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-help-about" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-home" Type="Menu" focusable="false">
+      <Button id="menu-home-shadowed" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-outline-font" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-overline" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-change-case-to-upper" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-change-case-to-lower" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-change-case-rotate-case" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-change-case-to-sentence-case" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-change-case-to-title-case" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-change-case-to-toggle-case" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-decrement-level" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-increment-level" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-decrement-sub-levels" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-increment-sub-levels" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator7" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-neutral-paragraph" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-numbering-start" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-continue-numbering" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator8" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-non-breaking-space" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-hard-hyphen" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-soft-hyphen" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-zwsp" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-wj" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-lrm" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-insert-rlm" Type="Menu Item" focusable="false" />
+      <Button id="separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-font-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-bullets-and-numbering-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-paragraph-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-chapter-numbering-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-para-left-to-right" focusable="false" />
+      <Button id="menu-home-para-right-to-left" focusable="false" />
+      <Button id="menu-home-separator5" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-select-all" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-selection-mode-default" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-selection-mode-block" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-select-text-mode" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-shadow-cursor" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-separator6" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-focus-to-findbar" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-search-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-home-goto-page" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-image" Type="Menu" focusable="false">
+      <Button id="menu-image-image-crop" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-external-edit" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-change-picture" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-compress-graphic" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-save-graphic" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-format-area" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-image-map-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-name-group" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-object-title-description" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-graphic-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-image-insert-caption-dialog" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-insert" Type="Menu" focusable="false">
+      <Button id="menu-insert-title-page-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-page-number-wizard" Type="Menu Item" focusable="false" />
+      <Button id="separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-break" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-section" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-horizontal-line" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-gallery" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-twain-select" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-avmedia" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-qr-code" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-object" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-doc" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-formula" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-draw-text" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-vertical-text" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-fontwork-gallery-floater" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-edit-glossary" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-frame-interact" Type="Menu Item" focusable="false" />
+      <Button id="separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-signature-line" Type="Menu Item" focusable="false" />
+      <Button id="menu-insert-insert-envelope" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-media" Type="Menu" focusable="false">
+      <Button id="menu-media-avmedia-player" Type="Menu Item" focusable="false" />
+      <Button id="menu-media-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-media-name-group" Type="Menu Item" focusable="false" />
+      <Button id="menu-media-object-title-description" Type="Menu Item" focusable="false" />
+      <Button id="menu-media-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-media-insert-caption-dialog" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-object" Type="Menu" focusable="false">
+      <Button id="menu-object-object-menue" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-chain-frames" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-unhain-frames" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-separator" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-name-group" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-object-title-description" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-object-frame-dialog" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-page" Type="Menu" focusable="false">
+      <Button id="menu-page-title-page-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-page-number-wizard" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-watermark" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-theme" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-page-column-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-border-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-insert-page-header" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-insert-page-footer" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-use-header-footer-menu" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-page-page-dialog" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-print" Type="Menu" focusable="false">
+      <Button id="menu-print-show-single-page" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-show-two-pages" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-show-bookview" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-show-multiple-pages" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-go-to-start-of-doc" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-page-up" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-page-down" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-go-to-end-of-doc" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-print" Type="Menu Item" focusable="false" />
+      <Button id="menu-print-close-preview" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-references" Type="Menu" focusable="false">
+      <Button id="menu-reference-insert-indexes-entry" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-insert-multi-index" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-insert-endnote" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-insert-footnote-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-insert-page-number-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-insert-field-ctrl" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-insert-authorities-entry" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-bibliography-component" Type="Menu Item" focusable="false" />
+      <Button id="menu-reference-separator4" Type="Menu Item" focusable="false" />
+      <Button id="repaginate-d" Type="Menu Item" focusable="false" />
+      <Button id="update-fields-d" Type="Menu Item" focusable="false" />
+      <Button id="update-all-indexes-d" Type="Menu Item" focusable="false" />
+      <Button id="update-cur-index-d" Type="Menu Item" focusable="false" />
+      <Button id="update-all-links-d" Type="Menu Item" focusable="false" />
+      <Button id="update-charts-d" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-review" Type="Menu" focusable="false">
+      <Button id="menu-review-spelling-and-grammar-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-spell-online" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-thesaurus-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-more-dictionaries" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-auto-correct" Type="Menu Item" focusable="false">
+        <Container id="menu-auto-correct" Type="Menu" focusable="false">
+          <Button id="menu-review-auto-correct-while-typing" Type="Menu Item" focusable="false" />
+          <Button id="menu-review-auto-format-apply" Type="Menu Item" focusable="false" />
+          <Button id="menu-review-auto-format-apply-and-edit" Type="Menu Item" focusable="false" />
+          <Button id="menu-review-separator6" Type="Menu Item" focusable="false" />
+          <Button id="menu-review-auto-correct-dialog" Type="Menu Item" focusable="false" />
+        </Container>
+      </Button>
+      <Button id="menu-review-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-set-language-selection-menu" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-set-language-paragraph-menu" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-set-language-all-text-menu" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-chinese-conversion" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-hangul-hanja-conversion" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-hyphenate" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-word-count-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-track-changes" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-show-tracked-changes" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-accept-tracked-changes" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-separator7" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-previous-tracked-change" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-next-tracked-change" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-accept-tracked-change" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-accept-tracked-change-to-next" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-accept-all-tracked-changes" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-reject-tracked-change" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-reject-tracked-change-to-next" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-reject-all-tracked-changes" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-protect-trace-change-mode" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-compare-documents" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-merge-documents" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-separator5" Type="Menu Item" focusable="false" />
+      <Button id="menu-review-redact-doc" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-table" Type="Menu" focusable="false">
+      <Button id="menu-table-auto-format" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-insert-row-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-insert-column-dialog" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-set-row-height" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-set-minimal-row-height" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-set-optimal-row-height" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-distribute-rows" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-set-column-width" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-set-minimal-column-width" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-set-optimal-column-width" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-distribute-columns" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-protect" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-unset-cells-read-only" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-heading-rows-repeat" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-row-split" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator5" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-convert-text-to-table" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-convert-table-to-text" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator6" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-table-sort" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-separator7" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-merge-table" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-table-number-recognition" Type="Menu Item" focusable="false" />
+      <Button id="menu-table-table-boundaries" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="menu-tools" Type="Menu" focusable="false">
+      <Button id="menu-tools-macro-recorder" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-run-macro" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-basic-ideappear" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-macro-organizer" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-script-organizer" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-macro-signature" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-dev-tools" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-mail-merge-wizard" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-insert-envelope" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-address-book-source" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-bibliography-component" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-change-database-field" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-view-data-source-browser" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-open-xmlfilter-settings" Type="Menu Item" focusable="false" />
+      <Button id="menu-tools-auto-correct" Type="Menu Item" focusable="false">
+        <Container id="menu-tools-popup" Type="Menu" focusable="false">
+          <Input id="menu-tools-online-auto-format" Type="Checkbox" focusable="false" />
+          <Button id="menu-tools-auto-format-apply" Type="Menu Item" focusable="false" />
+          <Button id="menu-tools-auto-format-redline-apply" Type="Menu Item" focusable="false" />
+          <Button id="menu-tools-auto-correct-dlg" Type="Menu Item" focusable="false" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="menu-view" Type="Menu" focusable="false">
+      <Button id="menu-view-print-layout" focusable="false" />
+      <Button id="menu-view-browse-view" focusable="false" />
+      <Button id="menu-view-show-whitespace" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-resolved-comments" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-separator1" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-menubar" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-sidebar" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-status-bar-visible" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-separator2" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-ruler" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-grid-visible" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-grid-use" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-baseline-grid-visible" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-separator3" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-view-bounds" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-show-graphics" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-separator4" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-marks" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-fieldnames" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-separator5" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-zoom-page" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-zoom-page-width" Type="Menu Item" focusable="false" />
+      <Button id="menu-view-full-screen" Type="Menu Item" focusable="false" />
+    </Container>
+    <Container id="notebook-bar" Type="Grid" focusable="false">
+      <Container id="box" Type="Vertical Stack" focusable="false" column="0" row="0">
+        <Container id="context-container" Type="Horizontal Stack" role="Grow">
+          <Container id="file-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-file" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-file-new" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-file-new" text="New" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="bx-file-add-direct" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-file-add-direct" />
+                </Container>
+                <Container id="bx-file-search-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-file-new-doc" />
+                </Container>
+                <Container id="container" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+              </Container>
+              <Container id="gd-file-file" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-file-file" text="Document" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="bx-file-open" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-file-open" />
+                </Container>
+                <Container id="bx-file-save" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-file-save" />
+                </Container>
+                <Container id="bx-file-export-to" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
+                  <Button id="btn-file-export-to" />
+                </Container>
+                <Container id="bx-file-export-pdf" Type="Vertical Stack" focusable="false" column="3" row="0">
+                  <Button id="btn-file-export-direct-to-pdf" />
+                  <Button id="btn-file-export-to-pdf" />
+                </Container>
+                <Container id="bx-file-export-epub" Type="Vertical Stack" focusable="false" column="3" row="1">
+                  <Button id="btn-file-export-direct-to-epub" />
+                  <Button id="btn-file-export-to-epub" />
+                </Container>
+                <Container id="container-2" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+              </Container>
+              <Container id="gd-file-print" Type="Grid" cell-gap="3" focusable="false">
+                <Container id="bx-file-print" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="bt-file-print" />
+                </Container>
+                <Text id="lb-file-print" text="Print" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="bx-file-print-default" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-file-print-default" />
+                </Container>
+                <Container id="bx-file-print-preview" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-file-print-preview" />
+                </Container>
+                <Container id="container-3" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+              </Container>
+              <Container id="gd-file-properties" Type="Grid" cell-gap="3" focusable="false">
+                <Container id="bx-file-set-document-properties" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-file-set-document-properties" />
+                </Container>
+                <Container id="bx-file-signature" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-file-signature" />
+                </Container>
+                <Container id="bx-file-sign-pdf" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-file-sign-pdf" />
+                </Container>
+                <Container id="container-4" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Text id="lb-file-properties" text="Properties" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+              </Container>
+            </Container>
+            <Container id="file-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b7" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="file-file-button:menu-file" content="File" text="File" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Button id="file-help-button:menu-help" content="Help" text="Help" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+              </Container>
+            </Container>
+          </Container>
+          <Text id="file-label" text="~File" focusable="false" />
+          <Container id="home-tab" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-home" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-home-clipboard" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-home-clipboard" text="Clipboard" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="bx-home-paste" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-home-paste" />
+                </Container>
+                <Container id="bx-home-cut" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-home-cut" />
+                </Container>
+                <Container id="bx-home-copy" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-home-copy" />
+                </Container>
+                <Container id="container-5" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+              </Container>
+              <Container id="gd-home-font" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-home-font" text="Font" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="5" />
+                <Container id="bx-home-format-paintbrush" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0">
+                  <Button id="btn-home-format-paintbrush" />
+                </Container>
+                <Container id="bx-home-reset-attributes" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="1">
+                  <Button id="btn-home-reset-attributes" />
+                </Container>
+                <Container id="bx-home-char-font-name" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" column-span="2">
+                  <Button id="btn-home-char-font-name" role="Grow" />
+                </Container>
+                <Container id="bx-home-font-height" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="3" row="0">
+                  <Button id="btn-home-font-height" role="Grow" />
+                </Container>
+                <Container id="bx-home-char-format" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="1" row="1">
+                  <Button id="btn-home-bold" />
+                  <Button id="btn-home-italic" />
+                  <Button id="btn-home-underline" />
+                  <Button id="btn-home-strikeout" />
+                  <Button id="btn-home-shadowed" />
+                </Container>
+                <Container id="bx-home-script" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="2" row="1">
+                  <Button id="btn-home-sub-script" />
+                  <Button id="btn-home-super-script" />
+                </Container>
+                <Container id="bx-home-char-color" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="3" row="1" column-span="2">
+                  <Button id="btn-home-spacing" />
+                  <Button id="btn-home-back-color" />
+                  <Button id="btn-home-color" />
+                </Container>
+                <Container id="bx-home-font-size" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="4" row="0">
+                  <Button id="btn-home-grow" />
+                  <Button id="btn-home-shrink" />
+                </Container>
+                <Container id="container-6" Type="Horizontal Stack" focusable="false" column="5" row="0" row-span="3" />
+              </Container>
+              <Container id="gd-home-paragraph" Type="Grid" focusable="false">
+                <Text id="lb-home-paragraph" text="Paragraph" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="container-7" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-home-list" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="0" row="0">
+                  <Button id="btn-home-default-bullet" />
+                  <Button id="btn-home-default-numbering" />
+                  <Button id="btn-home-set-outline" />
+                </Container>
+                <Container id="bx-home-alignment" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="0" row="1">
+                  <Button id="btn-home-start-para" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-center-para" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-right-para" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-justify-para" horizontal-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-home-indentation" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-home-increment-indent" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-decrement-indent" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-hanging-indent" horizontal-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-home-orientation" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-home-para-left-to-right" />
+                  <Button id="btn-home-para-right-to-left" />
+                </Container>
+                <Container id="bx-home-spacing" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-home-paraspace-increase" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-paraspace-decrease" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-home-line-spacing" horizontal-alignment="Right" />
+                </Container>
+                <Container id="bx-home-color-and-code" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-home-background-color" />
+                  <Button id="btn-home-control-codes" />
+                </Container>
+              </Container>
+              <Container id="gd-home-style" Type="Grid" focusable="false" role="Grow">
+                <Text id="lb-home-style" text="Style" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
+                <Container id="container-8" Type="Horizontal Stack" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-home-styles-preview" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-home-styles-preview" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="home-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="paste-box1" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="home-home-button:menu-home" content="Home" text="Home" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom10" Type="Vertical Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
+                  <Button id="home-focus-to-findbar" vertical-alignment="Center" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="home-label" text="~Home" focusable="false" />
+          <Container id="insert-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-insert" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-insert-page" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-insert-page" text="Page" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="container-9" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-insert-pagebreak" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="bt-insert-pagebreak" />
+                </Container>
+                <Container id="bx-insert-title-page-dialog" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-insert-title-page-dialog" />
+                </Container>
+                <Container id="bx-insert-insert-section" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-insert-insert-section" />
+                </Container>
+              </Container>
+              <Container id="gd-insert-data" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-insert-data" text="Data" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="container-10" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bo-insert-table" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-insert-insert-table" />
+                </Container>
+                <Container id="bx-insert-insert-object-chart" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-insert-insert-object-chart" />
+                </Container>
+                <Container id="bx-insert-insert-object" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-insert-insert-object" />
+                </Container>
+                <Container id="bx-insert-insert-object-star-math" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
+                  <Button id="btn-insert-insert-object-star-math" />
+                </Container>
+              </Container>
+              <Container id="gd-insert-graphic" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-insert-graphic" text="Graphic" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="container-11" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-insert-insert-graphic" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-insert-insert-graphic" />
+                </Container>
+                <Container id="bx-insert-gallery" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-insert-gallery" />
+                </Container>
+                <Container id="bx-insert-insert-avmedia" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-insert-insert-avmedia" />
+                </Container>
+              </Container>
+              <Container id="gd-insert-references" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-insert-references" text="References" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="container-12" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="bx-insert-hyperlink-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-insert-hyperlink-dialog" />
+                </Container>
+                <Container id="bx-insert-insert-bookmark" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-insert-insert-bookmark" />
+                </Container>
+                <Container id="bx-insert-insert-reference-field" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-insert-insert-reference-field" />
+                </Container>
+                <Container id="bx-insert-insert-field-ctrl" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
+                  <Button id="btn-insert-insert-field-ctrl" />
+                </Container>
+                <Container id="bx-insert-page-field" Type="Vertical Stack" focusable="false" column="3" row="1">
+                  <Button id="btn-insert-insert-page-number-field" />
+                  <Button id="btn-insert-insert-page-count-field" />
+                </Container>
+                <Container id="bx-insert-date-title-field" Type="Vertical Stack" focusable="false" column="3" row="0">
+                  <Button id="btn-insert-insert-date-field" />
+                  <Button id="btn-insert-insert-title-field" />
+                </Container>
+              </Container>
+              <Container id="gd-insert-text" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-insert-text" text="Text" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="container-13" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-insert-text-box" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-insert-draw-text" />
+                  <Button id="btn-insert-vertical-text" />
+                </Container>
+                <Container id="bx-insert-fontwork-gallery-floater" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-insert-fontwork-gallery-floater" />
+                </Container>
+                <Container id="bx-insert-edit-glossary" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-insert-edit-glossary" />
+                </Container>
+                <Container id="bx-insert-charmap-control" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-insert-charmap-control" />
+                </Container>
+              </Container>
+              <Container id="gd-insert-drawing-objects" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-insert-drawing-objects" text="Drawing Objects" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="container-14" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-insert-shapes1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-insert-line" role="Grow" />
+                  <Button id="btn-insert-connector-toolbox" />
+                  <Button id="btn-insert-arrows-toolbox" />
+                </Container>
+                <Container id="bx-insert-shapes2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-insert-basic-shapes.rectangle" role="Grow" />
+                  <Button id="btn-insert-basic-shapes.ellipse" role="Grow" />
+                  <Button id="btn-insert-draw-caption" role="Grow" />
+                  <Button id="btn-insert-line-toolbox" />
+                </Container>
+                <Container id="bx-insert-shapes3" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-insert-basic-shapes" role="Grow" />
+                  <Button id="btn-insert-symbol-shapes" role="Grow" />
+                  <Button id="btn-insert-arrow-shapes" role="Grow" />
+                </Container>
+                <Container id="bx-insert-shapes4" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-insert-star-shapes" role="Grow" />
+                  <Button id="btn-insert-callout-shapes" role="Grow" />
+                  <Button id="btn-insert-flow-chart-shapes" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="insert-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b18" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="insert-insert-button:menu-insert" content="Insert" text="Insert" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom32" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="insert-insert-graphic1" />
+                  <Button id="insert-insert-draw" vertical-alignment="Center" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="insert-label" text="~Insert" focusable="false" />
+          <Container id="layout-tab" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow">
+            <Container id="pmhb-layout" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-layout-page-layout" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-layout-page-layout" text="Page" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="container-15" Type="Horizontal Stack" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="box-margin" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
+                  <Button id="btn-layout-margin" />
+                </Container>
+                <Container id="bo-orientation" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-layout-orientation" />
+                </Container>
+                <Container id="box-attribute-page-size" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-layout-attribute-page-size" />
+                </Container>
+                <Container id="box-page-column-type" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="3" row="0" row-span="2">
+                  <Button id="btn-layout-page-column-type" />
+                </Container>
+              </Container>
+              <Container id="gd-layout-breaks" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-layout-breaks" text="Breaks" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
+                <Container id="container-16" Type="Horizontal Stack" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bo-insert-pagebreak" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-layout-insert-pagebreak" />
+                </Container>
+                <Container id="box-insert-break" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-layout-insert-break" horizontal-alignment="Left" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-layout-paragraph-layout" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-layout-paragraph-layout" text="Paragraph" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="container-17" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="box-left-para-margin" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-layout-left-para-margin" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="box-right-para-margin" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-layout-right-para-margin" role="Grow" />
+                </Container>
+                <Container id="box-above-spacing" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-layout-above-spacing" role="Grow" />
+                </Container>
+                <Container id="box-below-spacing" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-layout-below-spacing" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-layout-tools" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-layout-tools" text="Tools" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="container-18" Type="Horizontal Stack" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="box-page-number-wizard" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-layout-page-number-wizard" />
+                </Container>
+                <Container id="box-title-page-dialog" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="bt-title-page-dialog" />
+                </Container>
+                <Container id="box-watermark" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-layout-watermark" />
+                </Container>
+                <Container id="box-hyphenate" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0">
+                  <Button id="btn-layout-hyphenate" />
+                </Container>
+                <Container id="box-line-numbering-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="1">
+                  <Button id="btn-layout-line-numbering-dialog" horizontal-alignment="Left" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-layout-objects" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-layout-objects" text="Objects" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="5" />
+                <Container id="container-19" Type="Horizontal Stack" focusable="false" column="5" row="0" row-span="3" />
+                <Container id="box-select-object" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-layout-select-object" />
+                </Container>
+                <Container id="box-format-group" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-layout-format-group" />
+                </Container>
+                <Container id="box-wrap-on-off" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-layout-wrap-off" />
+                  <Button id="btn-layout-wrap-on" />
+                  <Button id="btn-layout-wrap-ideal" />
+                </Container>
+                <Container id="box-wrap-left-right" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-layout-wrap-left" />
+                  <Button id="btn-layout-wrap-through" />
+                  <Button id="btn-layout-wrap-right" />
+                </Container>
+                <Container id="box-contour-dialog" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-layout-contour-dialog" />
+                </Container>
+                <Container id="box-text-wrap" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-layout-text-wrap" />
+                </Container>
+                <Container id="box-bring-to-front" Type="Vertical Stack" focusable="false" column="3" row="0">
+                  <Button id="btn-layout-bring-to-front" />
+                </Container>
+                <Container id="box-send-to-back" Type="Vertical Stack" focusable="false" column="3" row="1">
+                  <Button id="btn-layout-send-to-back" />
+                </Container>
+                <Container id="box-object-forward-one" Type="Vertical Stack" focusable="false" column="4" row="0">
+                  <Button id="btn-layout-object-forward-one" />
+                </Container>
+                <Container id="box-object-back-one" Type="Vertical Stack" focusable="false" column="4" row="1">
+                  <Button id="btn-layout-object-back-one" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="layout-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b24" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="layout-page-button:menu-page" content="Layout" text="Layout" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom15" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="layout-page-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="layout-label" text="~Layout" focusable="false" />
+          <Container id="references-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-references" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-references-index" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-references-index" text="Index" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator3" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-references-insert-multi-index" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-references-insert-multi-index" />
+                </Container>
+                <Container id="bx-references-insert-indexes-entry" Type="Vertical Stack" column="1" row="0">
+                  <Button id="btn-references-insert-indexes-entry" />
+                </Container>
+                <Container id="bx-references-update-cur-index" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-references-update-cur-index" />
+                </Container>
+              </Container>
+              <Container id="gd-references-reference" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-references-reference" text="References" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="5" />
+                <Container id="separator5" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="5" row="0" row-span="3" />
+                <Container id="bx-references-insert-footnote" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-references-insert-footnote" />
+                </Container>
+                <Container id="bx-references-insert-endnote" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-references-insert-endnote" />
+                </Container>
+                <Container id="bo-insert-reference-field" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="3" row="0" row-span="2">
+                  <Button id="bt-insert-reference-field" />
+                </Container>
+                <Container id="bo-insert-bookmark" Type="Vertical Stack" focusable="false" column="4" row="0">
+                  <Button id="bt-insert-bookmark" />
+                </Container>
+                <Container id="bx-references-insert-caption-dialog" Type="Vertical Stack" focusable="false" column="4" row="1">
+                  <Button id="btn-references-insert-caption-dialog" />
+                </Container>
+                <Container id="container-20" Type="Horizontal Stack" focusable="false" column="2" row="0" row-span="2" />
+              </Container>
+              <Container id="gd-references-bibliography" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-references-bibliography" text="Bibliography" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator6" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-references-insert-authorities-entry" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-references-insert-authorities-entry" />
+                </Container>
+                <Container id="bx-references-bibliography-component" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-references-bibliography-component" />
+                </Container>
+                <Container id="bx-references-view-data-source-browser" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-references-view-data-source-browser" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="references-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b34" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="references-references-button:menu-references" content="References" text="References" horizontal-alignment="Right" vertical-alignment="Center" />
+                <Container id="section-bottom8" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="references-update-all" vertical-alignment="Center" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="references-label" text="Reference~s" focusable="false" />
+          <Container id="review-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-review" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-review-spelling" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-review-spelling" text="Spelling" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator7" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-review-spelling-thesaurus" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-review-spelling-and-grammar-dialog" />
+                  <Button id="btn-review-thesaurus-dialog" />
+                </Container>
+                <Container id="bx-review-spell-online" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-review-spell-online" role="Grow" />
+                </Container>
+                <Container id="bx-review-word-count-dialog" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-review-word-count-dialog" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-review-comments" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-review-comments" text="Comments" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator8" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-review-review-insert-annotation" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-review-insert-annotation" role="Grow" />
+                </Container>
+                <Container id="bx-review-reply-comment" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                  <Button id="btn-review-reply-comment" />
+                </Container>
+                <Container id="bx-review-delete-comment" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                  <Button id="btn-review-delete-comment" />
+                </Container>
+              </Container>
+              <Container id="gd-review-track-changes" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-review-track-changes" text="Track Changes" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
+                <Container id="separator9" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-review-track-changes" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-review-track-changes" />
+                  <Button id="btn-review-show-tracked-changes" />
+                </Container>
+              </Container>
+              <Container id="gd-review-resolve-changes" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-review-resolve-changes" text="Resolve Changes" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="separator10" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="bx-review-next-tracked-change" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-review-next-tracked-change" />
+                </Container>
+                <Container id="bx-review-previous-tracked-change" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-review-previous-tracked-change" />
+                </Container>
+                <Container id="bx-review-accept-tracked-change" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-review-accept-tracked-change" />
+                </Container>
+                <Container id="bo-accept-tracked-change" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-review-reject-tracked-change" />
+                </Container>
+                <Container id="bx-review-accept-tracked-change-to-next" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-review-accept-tracked-change-to-next" />
+                </Container>
+                <Container id="bx-review-reject-tracked-change-to-next" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-review-reject-tracked-change-to-next" />
+                </Container>
+                <Container id="bx-review-accept-all-tracked-changes" Type="Vertical Stack" focusable="false" column="3" row="0">
+                  <Button id="btn-review-accept-all-tracked-changes" />
+                </Container>
+                <Container id="bx-review-reject-all-tracked-changes" Type="Vertical Stack" focusable="false" column="3" row="1">
+                  <Button id="btn-review-reject-all-tracked-changes" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="review-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b37" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="review-review-button:menu-review" content="Review" text="Review" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom17" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="review-accept-tracked-changes" vertical-alignment="Center" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="review-label" text="~Review" focusable="false" />
+          <Container id="view-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-view" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-view-mode" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-view-mode" text="Mode" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator11" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-view-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-view-mode-print-layout" />
+                  <Button id="btn-view-mode-browse-view" />
+                  <Button id="btn-view-mode-print-preview" />
+                </Container>
+              </Container>
+              <Container id="gd-view-marks" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-view-marks" text="Marks" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator12" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-view-control-codes" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-view-control-codes" />
+                </Container>
+                <Container id="bx-view-show-whitespace" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-view-show-whitespace" />
+                </Container>
+              </Container>
+              <Container id="gd-view-zoom" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-view-zoom" text="Zoom" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator13" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-view-zoom-optimal" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-view-zoom-optimal" />
+                </Container>
+                <Container id="bx-view-zoom100-percent" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-view-zoom100-percent" />
+                </Container>
+                <Container id="bx-view-zoom-page" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-view-zoom-page" />
+                </Container>
+                <Container id="bx-view-full-screen" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-view-full-screen" />
+                </Container>
+                <Container id="bx-view-zoom-page-width" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-view-zoom-page-width" />
+                </Container>
+              </Container>
+              <Container id="gd-view-widgets" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-view-widgets" text="Widgets" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="separator14" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="bx-view-sidebar" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-view-sidebar" />
+                </Container>
+                <Container id="bx-view-ruler" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                  <Button id="btn-view-ruler" role="Grow" />
+                </Container>
+                <Container id="bx-view-grid-visible" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                  <Button id="btn-view-grid-visible" role="Grow" />
+                </Container>
+                <Container id="bx-view-menubar" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0">
+                  <Button id="btn-view-menubar" />
+                </Container>
+                <Container id="bx-view-navigator" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="1">
+                  <Button id="bt-navigator" />
+                </Container>
+                <Container id="bx-view-dark-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="3" row="0" row-span="2">
+                  <Button id="btn-view-dark-mode" />
+                </Container>
+              </Container>
+              <Container id="gd-view-objects" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-view-objects" text="Objects" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator15" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bo-select-object" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="bt-select-object" />
+                </Container>
+                <Container id="bx-view-helplines-move" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                  <Button id="btn-view-helplines-move" role="Grow" />
+                </Container>
+                <Container id="bx-view-grid-use" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                  <Button id="btn-view-grid-use" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="view-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="view-menu2" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="view-view-button:menu-view" content="View" text="View" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom20" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="view-zoom" vertical-alignment="Center" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="view-label" text="~View" focusable="false" />
+          <Container id="table-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-table" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-table-layout" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-table-layout" text="Layout" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="separator16" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="bx-table-insert-caption-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-table-insert-caption-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-table-colum" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-table-insert-columns-before" />
+                  <Button id="btn-table-insert-columns-after" />
+                  <Button id="btn-table-delete-columns" />
+                </Container>
+                <Container id="bx-table-row" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-table-insert-rows-before" />
+                  <Button id="btn-table-insert-rows-after" />
+                  <Button id="btn-table-delete-rows" />
+                </Container>
+                <Container id="bx-table-merge-cells" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
+                  <Button id="btn-table-merge-cells" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-table-split-cell" Type="Vertical Stack" focusable="false" column="3" row="0">
+                  <Button id="btn-table-split-cell" />
+                </Container>
+                <Container id="bx-table-split-table" Type="Vertical Stack" focusable="false" column="3" row="1">
+                  <Button id="btn-table-split-table" />
+                </Container>
+              </Container>
+              <Container id="gd-table-select" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-table-select" text="Selection" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator17" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-table-entire-cell" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-table-entire-cell" />
+                </Container>
+                <Container id="bx-table-select-cell" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-table-entire-column" role="Grow" />
+                  <Button id="btn-table-select-table" role="Grow" />
+                </Container>
+                <Container id="bx-table-select-row" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-table-entire-row" role="Grow" />
+                  <Button id="btn-table-delete-table" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-table-style" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-table-style" text="Style" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator18" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-table-auto-format" Type="Vertical Stack" focusable="false" column="0" row="0" row-span="2">
+                  <Button id="btn-table-auto-format" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-table-border-line" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-table-set-border-style" vertical-alignment="Center" />
+                  <Button id="btn-table-line-style" role="Grow" />
+                </Container>
+                <Container id="bx-table-border-background-color" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-table-frame-line-color" role="Grow" />
+                  <Button id="btn-table-cell-background-color" />
+                </Container>
+              </Container>
+              <Container id="gd-table-alignment" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-table-alignment" text="Alignment" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator19" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-table-optimize-table" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-table-optimize-table" />
+                </Container>
+                <Container id="bx-table-vert-align" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-table-cell-vert-top" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-table-cell-vert-center" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-table-cell-vert-bottom" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-table-para-right-to-left1" />
+                </Container>
+                <Container id="bx-table-horz-align" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-table-start-para" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-table-center-para" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-table-right-para" horizontal-alignment="Center" role="Grow" />
+                  <Button id="btn-table-justify-para" horizontal-alignment="Center" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-table-functions" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-table-functions" text="Functions" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator20" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-table-sort" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-table-sort" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-table-insert-formula" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-table-insert-formula" />
+                </Container>
+                <Container id="bx-table-auto-sum" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-table-auto-sum" />
+                </Container>
+              </Container>
+              <Container id="gd-table-numbers" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-table-numbers" text="Numbers" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator21" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-table-number-format-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-table-number-format-dialog" />
+                </Container>
+                <Container id="bx-table-number-format1" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-table-number-format-currency" />
+                  <Button id="btn-table-number-format-decimal" />
+                </Container>
+                <Container id="bx-table-number-format2" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-table-number-format-percent" />
+                  <Button id="btn-table-number-format-date" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="table-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b58" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="table-table-button:menu-table" content="Table" text="Table" horizontal-alignment="Right" vertical-alignment="Center" />
+                <Container id="section-bottom29" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="table-table-dialog" vertical-alignment="Center" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="table-label" text="~Table" focusable="false" />
+          <Container id="image-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-image" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-image" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-image" text="Image" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator22" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-image-insert-caption-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-image-insert-caption-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-image-compress-graphic" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-image-compress-graphic" />
+                </Container>
+                <Container id="bx-image-crop" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-image-crop" />
+                </Container>
+                <Container id="bx-image-toggle-rotate" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                  <Button id="btn-image-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
+                  <Button id="btn-image-rotate-right" />
+                  <Button id="btn-image-flip-vertical" />
+                  <Button id="btn-image-flip-horizontal" />
+                </Container>
+              </Container>
+              <Container id="gd-image-fill-border" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-image-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator23" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-image-border-dialog" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-image-border-dialog" />
+                </Container>
+                <Container id="bx-image-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-image-format-area" />
+                </Container>
+                <Container id="bx-image-border-line-style" Type="Vertical Stack" horizontal-alignment="Left" focusable="false" column="1" row="0">
+                  <Button id="btn-image-set-border-style" vertical-alignment="Center" />
+                  <Button id="btn-image-line-style" role="Grow" />
+                </Container>
+                <Container id="bx-image-frame-line-color" Type="Vertical Stack" horizontal-alignment="Left" focusable="false" column="2" row="0">
+                  <Button id="btn-image-frame-line-color" role="Grow" />
+                </Container>
+                <Container id="bx-image-fill-style" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                  <Button id="btn-image-fill-style" />
+                </Container>
+              </Container>
+              <Container id="gd-image-anchor-wrap" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-image-anchor-wrap" text="Anchor &amp; Wrap" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator24" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-image-anchor" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-image-anchor" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-image-wrap1" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-image-wrap-off" />
+                  <Button id="btn-image-wrap-on" />
+                  <Button id="btn-image-wrap-ideal" />
+                </Container>
+                <Container id="bx-image-wrap2" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-image-wrap-left" />
+                  <Button id="btn-image-wrap-through" />
+                  <Button id="btn-image-wrap-right" />
+                </Container>
+                <Container id="bx-image-contour-dialog" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-image-contour-dialog" />
+                </Container>
+                <Container id="bx-image-text-wrap" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-image-text-wrap" />
+                </Container>
+              </Container>
+              <Container id="gd-image-positioning" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-image-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator26" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-image-align1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-image-object-align-left" />
+                  <Button id="btn-image-align-center" />
+                  <Button id="btn-image-object-align-right" />
+                </Container>
+                <Container id="bx-image-align2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-image-align-up" />
+                  <Button id="btn-image-align-middle" />
+                  <Button id="btn-image-align-down" />
+                </Container>
+                <Container id="bx-image-bring-to-front" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-image-bring-to-front" />
+                </Container>
+                <Container id="bx-image-send-to-back" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-image-send-to-back" />
+                </Container>
+                <Container id="bx-image-object-forward-one" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-image-object-forward-one" />
+                </Container>
+                <Container id="bx-image-object-back-one" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-image-object-back-one" />
+                </Container>
+              </Container>
+              <Container id="gd-image-modify" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-image-modify" text="Modify" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
+                <Container id="separator27" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
+                <Container id="bx-image-graphic-filter-toolbox" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-image-graphic-filter-toolbox" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-image-graf-luminance" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-image-graf-luminance" vertical-alignment="Center" />
+                </Container>
+                <Container id="bx-image-graf-contrast" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-image-graf-contrast" vertical-alignment="Center" />
+                </Container>
+                <Container id="bx-image-graf-transparence" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-image-graf-transparence" vertical-alignment="Center" />
+                </Container>
+                <Container id="bx-image-graf-gamma" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-image-graf-gamma" vertical-alignment="Center" />
+                </Container>
+                <Container id="bx-image-graf-mode" Type="Vertical Stack" focusable="false" column="3" row="0">
+                  <Button id="btn-image-graf-mode" />
+                </Container>
+                <Container id="bx-image-color-settings" Type="Vertical Stack" focusable="false" column="3" row="1">
+                  <Button id="btn-image-color-settings" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="image-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b67" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="image-graphic-button:menu-image" content="Image" text="Image" horizontal-alignment="Right" vertical-alignment="Center" />
+                <Container id="section-bottom83" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="image-save-graphic" vertical-alignment="Center" role="Grow" />
+                  <Button id="image-graphic-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="image-label" text="Ima~ge" focusable="false" />
+          <Container id="draw-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-draw" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-draw" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-draw" text="Drawing Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator28" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-draw-insert-caption-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-draw-insert-caption-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-draw-toggle-rotate" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-draw-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
+                  <Button id="btn-draw-rotate-right" />
+                  <Button id="btn-draw-flip-vertical" />
+                  <Button id="btn-draw-flip-horizontal" />
+                </Container>
+                <Container id="bx-draw-toggle-object-bezier-mode" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-draw-toggle-object-bezier-mode" />
+                </Container>
+              </Container>
+              <Container id="gd-draw-fill-border" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-draw-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator29" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-draw-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-draw-format-area" />
+                </Container>
+                <Container id="bx-draw-fill-style" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                  <Button id="btn-draw-fill-style" />
+                </Container>
+                <Container id="bx-draw-format-line" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-draw-format-line" />
+                </Container>
+                <Container id="bx-draw-line-style1" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-draw-xline-style" width="100" vertical-alignment="Center" />
+                  <Button id="btn-draw-line-width" role="Grow" />
+                </Container>
+                <Container id="bx-draw-line-style2" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-draw-line-end-style" role="Grow" />
+                  <Button id="btn-draw-xline-color" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-draw-anchor-wrap" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-draw-anchor-wrap" text="Anchor &amp; Wrap" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator30" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-draw-anchor" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-draw-anchor" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="btn-draw-wrap3" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-draw-wrap-off" />
+                  <Button id="btn-draw-wrap-on" />
+                  <Button id="btn-draw-wrap-ideal" />
+                </Container>
+                <Container id="btn-draw-wrap4" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-draw-wrap-left" />
+                  <Button id="btn-draw-wrap-through" />
+                  <Button id="btn-draw-wrap-right" />
+                </Container>
+                <Container id="bx-draw-contour-dialog" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-draw-contour-dialog" />
+                </Container>
+                <Container id="bx-draw-text-wrap" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-draw-text-wrap" />
+                </Container>
+              </Container>
+              <Container id="gd-draw-positioning" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-draw-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator25" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-draw-align3" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-draw-object-align-left" />
+                  <Button id="btn-draw-align-center" />
+                  <Button id="btn-draw-object-align-right" />
+                </Container>
+                <Container id="bx-draw-align4" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-draw-align-up" />
+                  <Button id="btn-draw-align-middle" />
+                  <Button id="btn-draw-align-down" />
+                </Container>
+                <Container id="bx-draw-bring-to-front" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-draw-bring-to-front" />
+                </Container>
+                <Container id="bx-draw-send-to-back" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-draw-send-to-back" />
+                </Container>
+                <Container id="bx-draw-object-forward-one" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-draw-object-forward-one" />
+                </Container>
+                <Container id="bx-draw-object-back-one" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-draw-object-back-one" />
+                </Container>
+              </Container>
+              <Container id="gd-draw-grouping" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-draw-grouping" text="Grouping" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator32" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-draw-format-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-draw-format-group" role="Grow" />
+                </Container>
+                <Container id="bx-draw-enter-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                  <Button id="btn-draw-enter-group" role="Grow" />
+                </Container>
+                <Container id="bx-draw-leave-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                  <Button id="btn-draw-leave-group" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-draw3-d" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-draw3-d" text="3D" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
+                <Container id="separator34" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-draw-extrusion-toggle" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-draw-extrusion-toggle" role="Grow" />
+                </Container>
+                <Container id="bx-draw-extrusion-options" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-draw-extrusion-depth-floater" role="Grow" />
+                  <Button id="btn-draw-extrusion-direction-floater" role="Grow" />
+                  <Button id="btn-draw-extrusion3-dcolor" />
+                  <Button id="btn-draw-extrusion-surface-floater" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="draw-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b74" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="draw-draw-button:menu-draw" content="Draw" text="Draw" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom48" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="draw-format-area" vertical-alignment="Center" />
+                  <Button id="draw-format-line" vertical-alignment="Center" />
+                  <Button id="draw-transform-dialog" vertical-alignment="Center" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="draw-label" text="~Draw" focusable="false" />
+          <Container id="object-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-object" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-object" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-object" text="Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator31" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-object-insert-caption-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-object-insert-caption-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-object-chain-frames" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-object-chain-frames" />
+                </Container>
+                <Container id="bx-object-unhain-frames" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-object-unhain-frames" />
+                </Container>
+              </Container>
+              <Container id="gd-object-fill-border" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-object-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator35" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-object-border-dialog" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-object-border-dialog" />
+                </Container>
+                <Container id="bx-object-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-object-format-area" />
+                </Container>
+                <Container id="bx-object-border-line-style" Type="Vertical Stack" horizontal-alignment="Left" focusable="false" column="1" row="0">
+                  <Button id="btn-object-set-border-style" vertical-alignment="Center" />
+                  <Button id="btn-object-line-style" role="Grow" />
+                </Container>
+                <Container id="bx-object-frame-line-color" Type="Vertical Stack" horizontal-alignment="Left" focusable="false" column="2" row="0">
+                  <Button id="btn-object-frame-line-color" role="Grow" />
+                </Container>
+                <Container id="bx-object-fill-style" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                  <Button id="btn-object-fill-style" />
+                </Container>
+              </Container>
+              <Container id="gd-object-anchor-wrap" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-object-anchor-wrap" text="Anchor &amp; Wrap" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator36" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-object-anchor" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-object-anchor" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-object-wrap1" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-object-wrap-off" />
+                  <Button id="btn-object-wrap-on" />
+                  <Button id="btn-object-wrap-ideal" />
+                </Container>
+                <Container id="bx-object-wrap2" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-object-wrap-left" />
+                  <Button id="btn-object-wrap-through" />
+                  <Button id="btn-object-wrap-right" />
+                </Container>
+                <Container id="bx-object-contour-dialog" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-object-contour-dialog" />
+                </Container>
+                <Container id="bx-object-text-wrap" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-object-text-wrap" />
+                </Container>
+              </Container>
+              <Container id="gd-object-positioning" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-object-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator37" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-object-align1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-object-object-align-left" />
+                  <Button id="btn-object-align-center" />
+                  <Button id="btn-object-object-align-right" />
+                </Container>
+                <Container id="bx-object-align2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-object-align-up" />
+                  <Button id="btn-object-align-middle" />
+                  <Button id="btn-object-align-down" />
+                </Container>
+                <Container id="bx-object-bring-to-front" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-object-bring-to-front" />
+                </Container>
+                <Container id="bx-object-send-to-back" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-object-send-to-back" />
+                </Container>
+                <Container id="bx-object-object-forward-one" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-object-object-forward-one" />
+                </Container>
+                <Container id="bx-object-object-back-one" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-object-object-back-one" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="object-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b1" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="object-object-button:menu-object" content="Object" text="Object" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom86" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="object-frame-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="object-label" text="~Object" focusable="false" />
+          <Container id="media-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-media" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-media" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-media" text="Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator39" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-media-insert-caption-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-media-insert-caption-dialog" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-media-toggle-rotate1" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-media-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
+                  <Button id="btn-media-flip-vertical" />
+                </Container>
+                <Container id="bx-media-toggle-rotate2" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-media-rotate-right" />
+                  <Button id="btn-media-flip-horizontal" />
+                </Container>
+              </Container>
+              <Container id="gd-media-anchor-wrap" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-media-anchor-wrap" text="Anchor &amp; Wrap" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator33" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-media-anchor" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-media-anchor" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-media-wrap1" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-media-wrap-off" />
+                  <Button id="btn-media-wrap-on" />
+                  <Button id="btn-media-wrap-ideal" />
+                </Container>
+                <Container id="bx-media-wrap2" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-media-wrap-left" />
+                  <Button id="btn-media-wrap-through" />
+                  <Button id="btn-media-wrap-right" />
+                </Container>
+                <Container id="bx-media-contour-dialog" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-contour-dialog" />
+                </Container>
+                <Container id="bx-media-text-wrap" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-media-text-wrap" />
+                </Container>
+              </Container>
+              <Container id="gd-media-positioning" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-media-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator42" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-media-align1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-media-object-align-left" />
+                  <Button id="btn-media-align-center" />
+                  <Button id="btn-media-object-align-right" />
+                </Container>
+                <Container id="bx-media-align2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-media-align-up" />
+                  <Button id="btn-media-align-middle" />
+                  <Button id="btn-media-align-down" />
+                </Container>
+                <Container id="bx-media-bring-to-front" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-media-bring-to-front" />
+                </Container>
+                <Container id="bx-media-send-to-back" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-media-send-to-back" />
+                </Container>
+                <Container id="bx-media-object-forward-one" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-media-object-forward-one" />
+                </Container>
+                <Container id="bx-media-object-back-one" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-media-object-back-one" />
+                </Container>
+              </Container>
+              <Container id="gd-media-player" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-media-player" text="Media Player" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
+                <Container id="separator38" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-media-avmedia-tool-box" Type="Vertical Stack" width="200" focusable="false" column="0" row="0">
+                  <Button id="btn-media-avmedia-tool-box" />
+                </Container>
+                <Container id="bx-media-avmedia-player" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-media-avmedia-player" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="media-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b53" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="media:menu-media" content="Media" text="Media" horizontal-alignment="Right" />
+                <Container id="section-bottom25" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="media-format-area" vertical-alignment="Center" />
+                  <Button id="media-format-line" vertical-alignment="Center" />
+                  <Button id="media-transform-dialog" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="media-label" text="~Media" focusable="false" />
+          <Container id="print-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-print" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-print-mode" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-print-mode" text="Mode" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator41" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-print-show-single-page" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-print-show-single-page" />
+                </Container>
+                <Container id="bx-print-show-multiple-pages" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-print-show-multiple-pages" vertical-alignment="Center" role="Grow" />
+                </Container>
+                <Container id="bx-print-show-two-pages" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-print-show-two-pages" />
+                </Container>
+                <Container id="bx-print-show-bookview" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-print-show-bookview" />
+                </Container>
+              </Container>
+              <Container id="gd-print-zoom" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-print-zoom" text="Zoom" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
+                <Container id="separator44" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
+                <Container id="bx-print-arrange" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-print-go-to-start-of-doc" />
+                  <Button id="btn-print-page-up" />
+                  <Button id="btn-print-jump-to-specific-page" role="Grow" />
+                  <Button id="btn-print-page-down" />
+                  <Button id="btn-print-go-to-end-of-doc" />
+                </Container>
+                <Container id="bx-print-zoom" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-print-zoom-minus" />
+                  <Button id="btn-print-preview-zoom" role="Grow" />
+                  <Button id="btn-print-zoom-plus" />
+                </Container>
+              </Container>
+              <Container id="gd-print-print" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-print-print" text="Print" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator45" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-print-print" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-print-print" />
+                </Container>
+                <Container id="bx-print-close-preview" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                  <Button id="btn-print-close-preview" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="print-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="group-b78" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="print:menu-print" content="Print" text="Print" horizontal-alignment="Right" />
+                <Container id="section-bottom79" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="print-full-screen" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="separator114" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" />
+          </Container>
+          <Text id="print-label" text="~Print" focusable="false" />
+          <Container id="form-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-form" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-form-mode" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-form-mode" text="Mode" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator46" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-form-switch-control-design-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-form-switch-control-design-mode" />
+                </Container>
+                <Container id="bx-form-use-wizards" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                  <Button id="btn-form-use-wizards" />
+                </Container>
+                <Container id="bx-form-group-box" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                  <Button id="btn-form-group-box" />
+                </Container>
+              </Container>
+              <Container id="gd-form-properties" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-form-properties" text="Properties" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator47" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-form-form-properties" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-form-form-properties" />
+                </Container>
+                <Container id="bx-form-show-fm-explorer" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-form-show-fm-explorer" />
+                </Container>
+                <Container id="bx-form-tab-dialog" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-form-tab-dialog" />
+                </Container>
+                <Container id="bx-form-open-read-only" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-form-open-read-only" />
+                </Container>
+                <Container id="bx-form-control-properties" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-form-control-properties" />
+                </Container>
+                <Container id="bx-form-auto-control-focus" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-form-auto-control-focus" />
+                </Container>
+              </Container>
+              <Container id="gd-form-controls" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-form-controls" text="Controls" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
+                <Container id="separator48" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
+                <Container id="bx-form-controls1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                  <Button id="btn-form-label" />
+                  <Button id="btn-form-edit" />
+                  <Button id="btn-form-check-box" />
+                </Container>
+                <Container id="bx-form-controls2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                  <Button id="btn-form-radio-button" />
+                  <Button id="btn-form-list-box" />
+                  <Button id="btn-form-combo-box" />
+                </Container>
+                <Container id="bx-form-controls3" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-form-numeric-field" />
+                  <Button id="btn-form-currency-field" />
+                  <Button id="btn-form-pattern-field" />
+                </Container>
+                <Container id="bx-form-controls4" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-form-formatted-field" />
+                  <Button id="btn-form-date-field" />
+                  <Button id="btn-form-time-field" />
+                </Container>
+                <Container id="bx-form-controls5" Type="Vertical Stack" focusable="false" column="2" row="0">
+                  <Button id="btn-form-pushbutton" />
+                  <Button id="btn-form-imagebutton" />
+                  <Button id="btn-form-image-control" />
+                </Container>
+                <Container id="bx-form-controls6" Type="Vertical Stack" focusable="false" column="2" row="1">
+                  <Button id="btn-form-file-control" />
+                  <Button id="btn-form-navigation-bar" />
+                  <Button id="btn-form-grid" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="form-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="form-section" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="form-form-button:menu-form" content="Form" text="Form" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom97" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="form-menu-form-properties" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="form-label" text="Fo~rm" focusable="false" />
+          <Container id="extension-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-extension" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="extension" Type="Horizontal Stack" vertical-alignment="Center" focusable="false" role="Grow" />
+            </Container>
+            <Container id="extension-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="extension-section" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="extension-extension-button:menu-addons" content="Extension" text="Extension" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom21" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="separator50" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" />
+          </Container>
+          <Text id="extension-label" text="E~xtension" focusable="false" />
+          <Container id="tools-tab" Type="Horizontal Stack" focusable="false">
+            <Container id="pmhb-tools" Type="Horizontal Stack" focusable="false" role="Grow">
+              <Container id="gd-tools-macro" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-tools-macro" text="Macro" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator40" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-tools-run-macro" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-tools-run-macro" />
+                </Container>
+                <Container id="bx-tools-basic-ideappear" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-tools-basic-ideappear" />
+                </Container>
+                <Container id="bx-tools-macro-dialog" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-tools-macro-dialog" />
+                </Container>
+              </Container>
+              <Container id="gd-tools-message" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-tools-message" text="Message" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="separator49" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-tools-mail-merge-wizard" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-tools-mail-merge-wizard" />
+                </Container>
+                <Container id="bx-tools-insert-envelope" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                  <Button id="btn-tools-insert-envelope" role="Grow" />
+                </Container>
+                <Container id="bx-tools-send-mail" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                  <Button id="btn-tools-send-mail" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="gd-tools-auto-correction" Type="Grid" cell-gap="3" focusable="false">
+                <Text id="lb-tools-auto-correction" text="AutoCorrection" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
+                <Container id="container-21" Type="Horizontal Stack" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
+                <Container id="bx-tools-auto-format-apply" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                  <Button id="btn-tools-auto-format-apply" />
+                </Container>
+                <Container id="bx-tools-online-auto-format" Type="Vertical Stack" focusable="false" column="1" row="0">
+                  <Button id="btn-tools-online-auto-format" />
+                </Container>
+                <Container id="bx-tools-auto-format-redline-apply" Type="Vertical Stack" focusable="false" column="1" row="1">
+                  <Button id="btn-tools-auto-correct-dlg" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="tool-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
+              <Container id="view-menu3" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
+                <Button id="tools-tools-button:menu-tools" content="Tools" text="Tools" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
+                <Container id="section-bottom88" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Button id="tools-options-tree-dialog" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="tools-label" text="~Tools" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

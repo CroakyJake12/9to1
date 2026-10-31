@@ -1,0 +1,6 @@
+<Cui id="workspacesbar-workspacerow" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Image id="folder-image" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" />
+    <Text id="name-label" text-trimming="PathSegmentEllipsis" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" />
+  </Container>
+</Cui>

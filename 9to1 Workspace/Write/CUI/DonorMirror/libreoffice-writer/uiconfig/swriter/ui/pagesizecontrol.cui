@@ -1,0 +1,14 @@
+<Cui id="ui-pagesizecontrol" product="9-1" version="1">
+  <Page id="ui-pagesizecontrol-root">
+    <Image id="image-portrait7" focusable="false" source="cmd/lcattributepagesize.png" />
+    <Container id="page-size-control" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="box" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="pagesizetreeview" Type="Vertical Stack" />
+          <Input id="metric" Type="Number" />
+        </Container>
+        <Button id="moreoptions" content="More Options" text="More Options" tooltip="More Options" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

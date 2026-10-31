@@ -1,0 +1,22 @@
+<Cui id="ui-conditionpage" product="9-1" version="1">
+  <Container id="condition-page" Type="Grid" cell-gap="18" focusable="false" role="Grow">
+    <Container id="frame4" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="0" column-span="2">
+          <Container id="links" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="12" horizontal-alignment="Right" focusable="false" column="0" row="1" column-span="3">
+          <Button id="remove" content="Remove" text="Remove" is-enabled="false" />
+          <Button id="apply" content="Apply" text="Apply" is-enabled="false" />
+        </Container>
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="2" row="0">
+          <Container id="container-2" Type="Vertical Stack" role="Grow">
+            <Container id="styles" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Input id="filter" Type="Select" focusable="false" />
+        </Container>
+      </Container>
+      <Text id="label11" text="Options" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

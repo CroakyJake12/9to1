@@ -1,0 +1,10 @@
+<Cui id="general-test-remote-troubleshoot" product="9-1" version="1">
+  <Page id="general-test-remote-troubleshoot-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="script" Type="Vertical Stack" />
+      <Container id="body" Type="Vertical Stack">
+        <Container id="troubleshooting" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

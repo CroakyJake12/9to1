@@ -1,0 +1,34 @@
+<Cui id="ui-groupbynumber" product="9-1" version="1">
+  <Container id="pivot-table-group-by-number" Type="Vertical Stack" modal="True">
+    <Text id="pivot-table-group-by-number-label" text="Grouping" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack">
+        <Container id="frame1" Type="Vertical Stack">
+          <Container id="grid1" Type="Grid" role="Grow">
+            <Input id="auto-start" Type="Radio" text="Automatically" checked="true" />
+            <Input id="manual-start" Type="Radio" text="Manually at:" />
+            <Input id="edit-start" Type="Text" role="Grow" />
+          </Container>
+          <Text id="label1" text="Start" />
+        </Container>
+        <Container id="frame2" Type="Vertical Stack">
+          <Container id="grid2" Type="Grid" role="Grow">
+            <Input id="auto-end" Type="Radio" text="Automatically" checked="true" />
+            <Input id="manual-end" Type="Radio" text="Manually at:" />
+            <Input id="edit-end" Type="Text" role="Grow" />
+          </Container>
+          <Text id="label2" text="End" />
+        </Container>
+        <Container id="frame3" Type="Vertical Stack">
+          <Input id="edit-by" Type="Text" />
+          <Text id="label3" text="Group by" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,28 @@
+<Cui id="ui-watermarkdialog" product="9-1" version="1">
+  <Container id="watermark-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="watermark-dialog-label" text="Watermark" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="24" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="text-grid" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="text-label" text="Text" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+          <Input id="text-input" Type="Text" role="Grow" column="1" row="0" />
+          <Text id="font-label" text="Font" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+          <Text id="angle-label" text="Angle" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+          <Text id="transparency-label" text="Transparency" horizontal-alignment="Right" focusable="false" column="0" row="3" />
+          <Text id="color-label" text="Color" horizontal-alignment="Right" focusable="false" column="0" row="4" />
+          <Input id="angle" Type="Number" column="1" row="2" />
+          <Input id="transparency" Type="Number" Value="50" column="1" row="3" />
+          <Button id="color" column="1" row="4" />
+          <Input id="font-box" Type="Select" focusable="false" column="1" row="1">
+            <Input id="input" Type="Text" />
+          </Input>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

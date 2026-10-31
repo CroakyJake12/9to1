@@ -1,0 +1,18 @@
+<Cui id="ui-showdetaildialog" product="9-1" version="1">
+  <Container id="show-detail" Type="Vertical Stack" modal="True" role="Grow">
+    <Text id="show-detail-label" text="Show Detail" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" role="Grow">
+        <Text id="label1" text="Choose the field containing the detail you want to show" text-wrapping="Wrap" />
+        <Container id="container" Type="Vertical Stack" role="Grow">
+          <Container id="dims-treeview" Type="Vertical Stack" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

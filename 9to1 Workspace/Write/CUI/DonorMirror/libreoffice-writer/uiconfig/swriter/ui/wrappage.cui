@@ -1,0 +1,70 @@
+<Cui id="ui-wrappage" product="9-1" version="1">
+  <Container id="wrap-page" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+    <Container id="backgroundgradientframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid11" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="container" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="1" row="0">
+          <Input id="before" Type="Radio" text="Before" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" column="0" row="1" />
+          <Container id="container-2" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Bottom" focusable="false" column="0" row="0">
+            <Image id="beforeimg" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="container-3" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="2" row="0">
+          <Input id="after" Type="Radio" text="After" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" column="0" row="1" />
+          <Container id="container-4" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Bottom" focusable="false" column="0" row="0">
+            <Image id="afterimg" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="container-5" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1">
+          <Input id="parallel" Type="Radio" text="Parallel" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" column="0" row="1" />
+          <Container id="container-6" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Bottom" focusable="false" column="0" row="0">
+            <Image id="parallelimg" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="container-7" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="1" row="1">
+          <Input id="through" Type="Radio" text="Through" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" column="0" row="1" />
+          <Container id="container-8" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Bottom" focusable="false" column="0" row="0">
+            <Image id="throughimg" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="container-9" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0">
+          <Input id="none" Type="Radio" text="Wrap Off" horizontal-alignment="Center" vertical-alignment="Center" checked="true" role="Grow" column="0" row="1" />
+          <Container id="container-10" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Bottom" focusable="false" column="0" row="0">
+            <Image id="noneimg" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="container-11" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="2" row="1">
+          <Input id="optimal" Type="Radio" text="Optimal" horizontal-alignment="Center" vertical-alignment="Center" role="Grow" column="0" row="1" />
+          <Container id="container-12" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Bottom" focusable="false" column="0" row="0">
+            <Image id="optimalimg" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+      <Text id="label1" text="Settings" focusable="false" />
+    </Container>
+    <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="1">
+      <Container id="backgroundgradientframe1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label4" text="Left:" focusable="false" column="0" row="0" />
+          <Text id="label5" text="Right:" focusable="false" column="0" row="1" />
+          <Text id="label6" text="Top:" focusable="false" column="0" row="2" />
+          <Text id="label7" text="Bottom:" focusable="false" column="0" row="3" />
+          <Input id="left" Type="Number" column="1" row="0" />
+          <Input id="right" Type="Number" column="1" row="1" />
+          <Input id="top" Type="Number" column="1" row="2" />
+          <Input id="bottom" Type="Number" column="1" row="3" />
+        </Container>
+        <Text id="label2" text="Spacing" focusable="false" />
+      </Container>
+      <Container id="backgroundgradientframe2" Type="Vertical Stack" focusable="false" role="Grow" column="1" row="0">
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Input id="anchoronly" Type="Checkbox" text="First paragraph" column="0" row="0" />
+          <Input id="transparent" Type="Checkbox" text="In background" column="0" row="1" />
+          <Input id="outline" Type="Checkbox" text="Contour" column="0" row="2" />
+          <Input id="outside" Type="Checkbox" text="Outside only" column="0" row="3" />
+          <Input id="allowoverlap" Type="Checkbox" text="Allow overlap" column="0" row="4" />
+        </Container>
+        <Text id="label3" text="Options" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

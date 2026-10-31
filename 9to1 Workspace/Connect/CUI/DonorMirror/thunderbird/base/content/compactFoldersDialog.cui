@@ -1,0 +1,39 @@
+<Cui id="content-compact-folders-dialog" product="9-1" version="1">
+  <Page id="content-compact-folders-dialog-root">
+    <Container id="html" Type="Vertical Stack" role="alert">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="link-6" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/globalOverlay.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack">
+          <Image id="script-icon-2" source="chrome://global/content/editMenuOverlay.js" />
+        </Container>
+        <Container id="script-3" Type="Vertical Stack">
+          <Image id="script-icon-3" source="chrome://messenger/content/dialogShadowDom.js" />
+        </Container>
+        <Container id="script-4" Type="Vertical Stack">
+          <Image id="script-icon-4" source="chrome://messenger/content/compactFoldersDialog.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="folderCompactDialog" Type="Vertical Stack">
+          <Container id="contentWrapper" Type="Vertical Stack">
+            <Image id="img" />
+            <Container id="div" Type="Vertical Stack">
+              <Text id="compactFoldersText" />
+              <Input id="neverAskCheckbox" Type="Checkbox" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

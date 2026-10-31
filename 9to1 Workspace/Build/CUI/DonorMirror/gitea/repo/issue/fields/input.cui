@@ -1,0 +1,7 @@
+<Cui id="fields-input" product="9-1" version="1">
+  <Page id="fields-input-root">
+    <Container id="div" Type="Vertical Stack">
+      <Input id="input" Type="Text" />
+    </Container>
+  </Page>
+</Cui>

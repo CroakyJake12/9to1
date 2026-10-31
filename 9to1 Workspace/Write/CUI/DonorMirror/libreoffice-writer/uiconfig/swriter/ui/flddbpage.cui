@@ -1,0 +1,47 @@
+<Cui id="ui-flddbpage" product="9-1" version="1">
+  <Container id="field-db-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+      <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+        <Container id="typeframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="type" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Text id="label1" text="Type" focusable="false" />
+        </Container>
+        <Container id="grid3" Type="Grid" cell-gap="12" focusable="false">
+          <Container id="condgroup" Type="Grid" cell-gap="6" focusable="false" column="0" row="0">
+            <Text id="label5" text="Condition" focusable="false" column="0" row="0" />
+            <Input id="condition" Type="Text" role="Grow" column="0" row="1" />
+          </Container>
+          <Container id="recgroup" Type="Grid" cell-gap="6" focusable="false" column="0" row="1">
+            <Input id="recnumber" Type="Text" role="Grow" column="0" row="1" />
+            <Text id="label4" text="Record number" focusable="false" column="0" row="0" />
+          </Container>
+        </Container>
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow" column="1" row="0" column-span="2">
+        <Container id="selectframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="container-2" Type="Vertical Stack" role="Grow">
+            <Container id="select" Type="Vertical Stack" width="-1" role="Grow" />
+          </Container>
+          <Text id="label2" text="Database Selection" focusable="false" />
+        </Container>
+        <Container id="grid6" Type="Grid" cell-gap="1" focusable="false">
+          <Text id="browseft" text="Add database file" focusable="false" column="0" row="0" />
+          <Button id="browse" content="Browse..." text="Browse..." column="1" row="0" />
+        </Container>
+        <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid7" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="fromdatabasecb" Type="Radio" text="From database" checked="true" column="0" row="0" column-span="2" />
+            <Input id="userdefinedcb" Type="Radio" text="User-defined" column="0" row="1" />
+            <Container id="box3" Type="Vertical Stack" focusable="false" column="1" row="1">
+              <Input id="format" Type="Select" role="Grow" />
+              <Input id="numformat" Type="Select" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="label3" text="Format" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

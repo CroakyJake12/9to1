@@ -1,0 +1,90 @@
+<Cui id="ui-pivottablelayoutdialog" product="9-1" version="1">
+  <Container id="pivot-table-layout" Type="Vertical Stack" focusable="false">
+    <Text id="pivot-table-layout-label" text="Pivot Table Layout" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Container id="grid7" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="1" row="0">
+              <Text id="label3" text="Column Fields:" focusable="false" />
+              <Container id="container" Type="Vertical Stack" width="200" height="100" role="Grow">
+                <Container id="listbox-column" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="box5" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="1" row="1">
+              <Text id="label5" text="Data Fields:" focusable="false" />
+              <Container id="container-2" Type="Vertical Stack" width="240" height="120" role="Grow">
+                <Container id="listbox-data" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="box6" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="0" row="1">
+              <Text id="label4" text="Row Fields:" focusable="false" />
+              <Container id="container-3" Type="Vertical Stack" width="180" height="100" role="Grow">
+                <Container id="listbox-row" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+            <Container id="box7" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+              <Text id="label2" text="Filters:" focusable="false" />
+              <Container id="container-4" Type="Vertical Stack" width="200" height="100" role="Grow">
+                <Container id="listbox-page" Type="Vertical Stack" role="Grow" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="boxline" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+            <Container id="separator1" Type="Horizontal Stack" focusable="false" role="Grow" />
+          </Container>
+          <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+            <Text id="label1" text="Available Fields:" focusable="false" />
+            <Container id="container-5" Type="Vertical Stack" width="180" height="150" role="Grow">
+              <Container id="listbox-fields" Type="Vertical Stack" role="Grow" />
+            </Container>
+          </Container>
+        </Container>
+        <Text id="label6" text="Drag the Items into the Desired Position" focusable="false" role="Grow" />
+        <Container id="options" Type="Vertical Stack">
+          <Container id="grid5" Type="Grid" cell-gap="3" focusable="false">
+            <Input id="check-ignore-empty-rows" Type="Checkbox" text="Ignore empty rows" column="0" row="0" />
+            <Input id="check-identify-categories" Type="Checkbox" text="Identify categories" column="1" row="0" />
+            <Input id="check-total-rows" Type="Checkbox" text="Show totals row" column="1" row="1" />
+            <Input id="check-total-columns" Type="Checkbox" text="Show totals column" column="0" row="1" />
+            <Input id="check-add-filter" Type="Checkbox" text="Add filter" column="0" row="2" />
+            <Input id="check-drill-to-details" Type="Checkbox" text="Enable drill to details" column="1" row="2" />
+            <Input id="check-show-expand-collapse" Type="Checkbox" text="Show expand/collapse buttons" column="1" row="3" />
+          </Container>
+          <Text id="label11" text="Options" focusable="false" />
+        </Container>
+        <Container id="more" Type="Vertical Stack">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+              <Container id="grid3" Type="Grid" cell-gap="3" focusable="false" role="Grow">
+                <Input id="destination-radio-new-sheet" Type="Radio" text="New sheet" checked="true" column="0" row="0" column-span="3" />
+                <Input id="destination-radio-selection" Type="Radio" text="Selection" column="0" row="2" />
+                <Input id="destination-edit" Type="Text" role="Grow" column="1" row="2" />
+                <Button id="destination-button" column="2" row="2" />
+                <Input id="destination-list" Type="Select" focusable="false" column="1" row="1" column-span="2" />
+                <Input id="destination-radio-named-range" Type="Radio" text="Named range" column="0" row="1" />
+              </Container>
+              <Text id="label8" text="Destination" focusable="false" />
+            </Container>
+            <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+              <Container id="grid4" Type="Grid" cell-gap="3" focusable="false" role="Grow">
+                <Input id="source-radio-selection" Type="Radio" text="Selection" checked="true" column="0" row="1" />
+                <Input id="source-edit" Type="Text" role="Grow" column="1" row="1" />
+                <Button id="source-button" column="2" row="1" />
+                <Input id="source-radio-named-range" Type="Radio" text="Named range" column="0" row="0" />
+                <Input id="source-list" Type="Select" focusable="false" column="1" row="0" column-span="2" />
+              </Container>
+              <Text id="label9" text="Source" focusable="false" />
+            </Container>
+          </Container>
+          <Text id="label7" text="Source and Destination" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

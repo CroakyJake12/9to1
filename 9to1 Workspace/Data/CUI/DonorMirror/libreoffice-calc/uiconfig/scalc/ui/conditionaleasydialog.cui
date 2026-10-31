@@ -1,0 +1,34 @@
+<Cui id="ui-conditionaleasydialog" product="9-1" version="1">
+  <Container id="cond-format-easy-dlg" Type="Vertical Stack" focusable="false">
+    <Text id="cond-format-easy-dlg-label" text="Highlight cells..." />
+    <Container id="container" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="container-2" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" role="Grow" />
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+      </Container>
+      <Container id="container-3" Type="Vertical Stack" cell-gap="24" focusable="false">
+        <Container id="condition" Type="Vertical Stack" focusable="false">
+          <Container id="container-4" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Container id="all-inputs" Type="Vertical Stack" cell-gap="12" focusable="false">
+              <Input id="entry-number" Type="Text" />
+              <Input id="entry-number2" Type="Text" />
+              <Text id="with" text="Apply cell style" focusable="false" />
+            </Container>
+            <Container id="container-5" Type="Vertical Stack" cell-gap="12" focusable="false">
+              <Input id="theme-combo" Type="Select" focusable="false" />
+            </Container>
+          </Container>
+          <Text id="description" text="Highlight cells with values %1" focusable="false" />
+        </Container>
+        <Container id="container-6" Type="Vertical Stack" focusable="false">
+          <Container id="container-7" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Input id="entry-range" Type="Text" role="Grow" />
+            <Button id="rbassign" vertical-alignment="Center" />
+          </Container>
+          <Text id="range" text="Range:" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

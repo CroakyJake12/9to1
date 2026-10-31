@@ -1,0 +1,13 @@
+<Cui id="out-of-process-file-frame1" product="9-1" version="1">
+  <Page id="out-of-process-file-frame1-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="body" Type="Vertical Stack">
+        <Container id="insertPoint" Type="Vertical Stack" />
+        <Container id="br" Type="Vertical Stack" />
+        <Container id="iframe" Type="Overlay" width="300" height="100">
+          <Image id="iframe-icon" source="file_innerframe.html" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,40 @@
+<Cui id="ui-envaddresspage" product="9-1" version="1">
+  <Page id="ui-envaddresspage-root">
+    <Image id="image1" focusable="false" source="go-previous" />
+    <Container id="env-address-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="grid3" Type="Grid" cell-gap="18" focusable="false" role="Grow">
+        <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+          <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Input id="addredit" Type="Text" role="Grow" />
+          </Container>
+          <Text id="label2" text="Addressee" focusable="false" role="Grow" column="0" row="0" />
+        </Container>
+        <Container id="grid6" Type="Grid" cell-gap="12" focusable="false" column="2" row="0">
+          <Container id="grid8" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="0">
+            <Text id="label4" text="Database" focusable="false" column="0" row="0" />
+            <Input id="database" Type="Select" focusable="false" role="Grow" column="0" row="1" />
+          </Container>
+          <Container id="grid9" Type="Grid" cell-gap="6" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="1">
+            <Text id="label7" text="Table" focusable="false" column="0" row="0" />
+            <Input id="table" Type="Select" focusable="false" role="Grow" column="0" row="1" />
+          </Container>
+          <Container id="grid10" Type="Grid" cell-gap="6" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2">
+            <Text id="label8" text="Database field" focusable="false" column="0" row="0" />
+            <Input id="field" Type="Select" focusable="false" role="Grow" column="0" row="1" />
+          </Container>
+        </Container>
+        <Button id="insert" tooltip="Insert" vertical-alignment="Center" column="1" row="0" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="18" focusable="false" role="Grow">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+          <Container id="scrolledwindow2" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Input id="senderedit" Type="Text" role="Grow" />
+          </Container>
+          <Input id="sender" Type="Checkbox" text="Sender" column="0" row="0" />
+        </Container>
+        <Container id="box1" Type="Vertical Stack" focusable="false" column="1" row="0" />
+        <Container id="preview" Type="Overlay" focusable="false" column="2" row="0" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

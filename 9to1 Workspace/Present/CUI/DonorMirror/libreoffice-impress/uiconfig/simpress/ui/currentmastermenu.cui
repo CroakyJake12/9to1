@@ -1,0 +1,12 @@
+<Cui id="ui-currentmastermenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id="applyall" Type="Menu Item" content="Apply to All Slides" text="Apply to All Slides" focusable="false" />
+    <Button id="applyselect" Type="Menu Item" content="Apply to Selected Slides" text="Apply to Selected Slides" focusable="false" />
+    <Button id="menuitem1" Type="Menu Item" focusable="false" />
+    <Button id="edit" Type="Menu Item" content="Edit Master..." text="Edit Master..." focusable="false" />
+    <Button id="delete" Type="Menu Item" content="Delete Master" text="Delete Master" focusable="false" />
+    <Button id="menuitem2" Type="Menu Item" focusable="false" />
+    <Button id="large" Type="Menu Item" content="Show Large Preview" text="Show Large Preview" focusable="false" />
+    <Button id="small" Type="Menu Item" content="Show Small Preview" text="Show Small Preview" focusable="false" />
+  </Container>
+</Cui>

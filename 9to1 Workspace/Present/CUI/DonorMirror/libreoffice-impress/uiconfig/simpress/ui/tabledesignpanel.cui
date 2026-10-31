@@ -1,0 +1,36 @@
+<Cui id="ui-tabledesignpanel" product="9-1" version="1">
+  <Page id="ui-tabledesignpanel-root">
+    <Container id="menu" Type="Menu" focusable="false">
+      <Button id="new" Type="Menu Item" content="New" text="New" focusable="false" />
+      <Button id="clone" Type="Menu Item" content="Clone" text="Clone" focusable="false" />
+      <Button id="delete" Type="Menu Item" content="Delete" text="Delete" focusable="false" />
+      <Button id="reset" Type="Menu Item" content="Reset" text="Reset" focusable="false" />
+      <Button id="format" Type="Menu Item" content="Format" text="Format" focusable="false">
+        <Container id="menu1" Type="Menu" focusable="false">
+          <Button id="first-row" Type="Menu Item" content="Header row..." text="Header row..." focusable="false" />
+          <Button id="last-row" Type="Menu Item" content="Total row..." text="Total row..." focusable="false" />
+          <Button id="odd-rows" Type="Menu Item" content="Banded rows..." text="Banded rows..." focusable="false" />
+          <Button id="button" Type="Menu Item" focusable="false" />
+          <Button id="first-column" Type="Menu Item" content="First column..." text="First column..." focusable="false" />
+          <Button id="last-column" Type="Menu Item" content="Last column..." text="Last column..." focusable="false" />
+          <Button id="odd-columns" Type="Menu Item" content="Banded columns..." text="Banded columns..." focusable="false" />
+          <Button id="button-2" Type="Menu Item" focusable="false" />
+          <Button id="body" Type="Menu Item" content="Other cells..." text="Other cells..." focusable="false" />
+        </Container>
+      </Button>
+    </Container>
+    <Container id="table-design-panel" Type="Vertical Stack" cell-gap="12" vertical-alignment="Top" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="use-first-row-style" Type="Checkbox" text="Header row" column="0" row="1" />
+        <Input id="use-last-row-style" Type="Checkbox" text="Total row" column="0" row="2" />
+        <Input id="use-banding-row-style" Type="Checkbox" text="Banded rows" column="0" row="3" />
+        <Input id="use-first-column-style" Type="Checkbox" text="First column" column="1" row="1" />
+        <Input id="use-last-column-style" Type="Checkbox" text="Last column" column="1" row="2" />
+        <Input id="use-banding-column-style" Type="Checkbox" text="Banded columns" column="1" row="3" />
+        <Container id="previewswin" Type="Vertical Stack" role="Grow" column="0" row="0" column-span="2">
+          <Container id="previews" Type="Wrap" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

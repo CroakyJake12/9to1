@@ -1,0 +1,29 @@
+<Cui id="ui-showchangesdialog" product="9-1" version="1">
+  <Container id="show-changes-dialog" Type="Vertical Stack">
+    <Text id="show-changes-dialog-label" text="Show Changes" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid">
+        <Container id="grid2" Type="Grid">
+          <Input id="showchanges" Type="Checkbox" text="Show changes in spreadsheet" />
+          <Container id="frame1" Type="Vertical Stack">
+            <Container id="grid3" Type="Grid">
+              <Input id="showaccepted" Type="Checkbox" text="Show accepted changes" />
+              <Input id="showrejected" Type="Checkbox" text="Show rejected changes" />
+              <Container id="box" Type="Vertical Stack" />
+            </Container>
+            <Text id="label1" text="Filter Settings" />
+          </Container>
+        </Container>
+        <Container id="grid4" Type="Grid" role="Grow">
+          <Input id="range" Type="Text" role="Grow" />
+          <Button id="rangeref" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

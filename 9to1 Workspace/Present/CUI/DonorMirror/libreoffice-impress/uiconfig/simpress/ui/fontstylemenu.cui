@@ -1,0 +1,7 @@
+<Cui id="ui-fontstylemenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Input id="bold" Type="Checkbox" text="Bold" />
+    <Input id="italic" Type="Checkbox" text="Italic" />
+    <Input id="underline" Type="Checkbox" text="Underlined" />
+  </Container>
+</Cui>

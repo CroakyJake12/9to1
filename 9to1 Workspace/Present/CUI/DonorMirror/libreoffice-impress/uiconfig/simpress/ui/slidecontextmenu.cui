@@ -1,0 +1,31 @@
+<Cui id="ui-slidecontextmenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id="goto" Type="Menu Item" content="Go to Slide" text="Go to Slide" focusable="false">
+      <Container id="gotomenu" Type="Menu" focusable="false">
+        <Button id="menuitem3" Type="Menu Item" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="menuitem1" Type="Menu Item" focusable="false" />
+    <Input id="pen" Type="Checkbox" text="Mouse Pointer as Pen" focusable="false" />
+    <Button id="width" Type="Menu Item" content="Pen Thickness" text="Pen Thickness" focusable="false">
+      <Container id="widthmenu" Type="Menu" focusable="false">
+        <Button id="4" content="Very Thin" text="Very Thin" focusable="false" />
+        <Button id="100" content="Thin" text="Thin" focusable="false" />
+        <Button id="150" content="Normal" text="Normal" focusable="false" />
+        <Button id="200" content="Thick" text="Thick" focusable="false" />
+        <Button id="400" content="Very Thick" text="Very Thick" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="color" Type="Menu Item" content="Change Pen Color..." text="Change Pen Color..." focusable="false" />
+    <Button id="erase" Type="Menu Item" content="Erase All Ink on Slide" text="Erase All Ink on Slide" focusable="false" />
+    <Button id="menuitem2" Type="Menu Item" focusable="false" />
+    <Button id="screen" Type="Menu Item" content="Screen" text="Screen" focusable="false">
+      <Container id="screenmenu" Type="Menu" focusable="false">
+        <Input id="black" Type="Checkbox" text="Black" focusable="false" />
+        <Input id="white" Type="Checkbox" text="White" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="edit" Type="Menu Item" content="Edit Presentation" text="Edit Presentation" focusable="false" />
+    <Button id="end" Type="Menu Item" content="End Show" text="End Show" focusable="false" />
+  </Container>
+</Cui>

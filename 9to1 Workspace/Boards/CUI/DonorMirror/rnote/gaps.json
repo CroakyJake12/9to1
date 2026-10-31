@@ -1,0 +1,1466 @@
+{
+  "translated": 304,
+  "dropped_nodes": 12,
+  "gap_count": 205,
+  "gap_constructs": {
+    "custom donor widget": 56,
+    "shortcut browser": 49,
+    "toggle button": 25,
+    "separator": 18,
+    "header bar": 15,
+    "dialog with typed responses": 12,
+    "unmodelled donor construct": 9,
+    "scroller with explicit bars": 8,
+    "item collection (list/tree/table)": 5,
+    "layered overlay container": 2,
+    "progress": 2,
+    "responsive breakpoint rules": 1,
+    "transient notice layer": 1,
+    "tab strip": 1,
+    "adaptive width clamp": 1
+  },
+  "gaps": [
+    {
+      "donor": "RnAppMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/appmenu.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnAppWindow",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/appwindow.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwBreakpoint",
+      "construct": "responsive breakpoint rules",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/appwindow.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnCanvasMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/canvasmenu.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnCanvasWrapper",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/canvaswrapper.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/canvaswrapper.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnCanvas",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/canvaswrapper.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnContextMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/canvaswrapper.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorPad",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorPad",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/colorpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnContextMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/contextmenu.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwAlertDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwAlertDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwAlertDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwAlertDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnIconPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwAlertDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/export.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwAlertDialog",
+      "construct": "dialog with typed responses",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/dialogs/import.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnFileRow",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/filerow.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnGroupedIconPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/groupediconpicker/groupediconpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/groupediconpicker/groupediconpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkListBox",
+      "construct": "item collection (list/tree/table)",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/groupediconpicker/groupediconpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnGroupedIconPickerGroup",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/groupediconpicker/groupediconpickergroup.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkFlowBox",
+      "construct": "item collection (list/tree/table)",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/groupediconpicker/groupediconpickergroup.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnIconPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/iconpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/iconpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkGridView",
+      "construct": "item collection (list/tree/table)",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/iconpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnMainHeader",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnCanvasMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnAppMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/mainheader.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnOverlays",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkOverlay",
+      "construct": "layered overlay container",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkProgressBar",
+      "construct": "progress",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnPenPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnColorPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnPensSideBar",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToastOverlay",
+      "construct": "transient notice layer",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/overlays.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnPenPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnPenShortcutRow",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penshortcutrow.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkDropDown",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penshortcutrow.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnBrushPage",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnEraserPage",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnPensSideBar",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStack",
+      "construct": "tab strip",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStackPage",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStackPage",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStackPage",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStackPage",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStackPage",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkStackPage",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnSelectorPage",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnShaperPage",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnToolsPage",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnTypewriterPage",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkToggleButton",
+      "construct": "toggle button",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnSettingsPanel",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/settingspanel.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/settingspanel.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwClamp",
+      "construct": "adaptive width clamp",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/settingspanel.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsWindow",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsSection",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsGroup",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsGroup",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsGroup",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsGroup",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsGroup",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkShortcutsShortcut",
+      "construct": "shortcut browser",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/shortcuts.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnSidebar",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/sidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwToolbarView",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/sidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "AdwHeaderBar",
+      "construct": "header bar",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/sidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnAppMenu",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/sidebar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeContentPreview",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokecontentpreview.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkOverlay",
+      "construct": "layered overlay container",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokecontentpreview.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkProgressBar",
+      "construct": "progress",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokecontentpreview.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokecontentpreview.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkPicture",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokecontentpreview.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthPicker",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokewidthpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokewidthpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokewidthpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnStrokeWidthSetter",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/strokewidthpicker.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnUnitEntry",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/unitentry.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkDropDown",
+      "construct": "unmodelled donor construct",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/unitentry.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnWorkspaceBrowser",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkListView",
+      "construct": "item collection (list/tree/table)",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnWorkspacesBar",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnWorkspaceRow",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacerow.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "RnWorkspacesBar",
+      "construct": "custom donor widget",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkScrolledWindow",
+      "construct": "scroller with explicit bars",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkListBox",
+      "construct": "item collection (list/tree/table)",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    },
+    {
+      "donor": "GtkSeparator",
+      "construct": "separator",
+      "file": "9to1 Workspace/Boards/Source/Rnote/crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
+      "line": 0,
+      "why": "approximated with the nearest CUI construct; verify in Stage B"
+    }
+  ],
+  "pruned_stale": 0,
+  "donor": "rnote",
+  "app": "Boards",
+  "source": "9to1 Workspace/Boards/Source/Rnote",
+  "translated_files": 33,
+  "untranslated_files": 0,
+  "unsupported_suffixes": {}
+}

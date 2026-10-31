@@ -1,0 +1,21 @@
+<Cui id="ui-columnwidth" product="9-1" version="1">
+  <Container id="column-width-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="column-width-dialog-label" text="Column Width" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="label2" text="Column:" focusable="false" column="0" row="0" />
+          <Text id="label3" text="Width:" focusable="false" column="0" row="1" />
+          <Input id="column" Type="Number" column="1" row="0" />
+          <Input id="width" Type="Number" column="1" row="1" />
+        </Container>
+        <Text id="label1" text="Width" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,23 @@
+<Cui id="ui-savelabeldialog" product="9-1" version="1">
+  <Container id="save-label-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="save-label-dialog-label" text="Save Label Format" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="label2" text="Brand" focusable="false" column="0" row="0" />
+          <Input id="brand" Type="Select" focusable="false" role="Grow" column="1" row="0">
+            <Input id="comboboxtext-entry" Type="Text" />
+          </Input>
+          <Text id="label3" text="Type" focusable="false" column="0" row="1" />
+          <Input id="type" Type="Text" role="Grow" column="1" row="1" />
+        </Container>
+        <Text id="label1" text="Options" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

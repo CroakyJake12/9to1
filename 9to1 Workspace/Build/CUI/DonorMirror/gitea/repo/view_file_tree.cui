@@ -1,0 +1,11 @@
+<Cui id="repo-view-file-tree" product="9-1" version="1">
+  <Page id="repo-view-file-tree-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Button id="button" />
+        <Container id="b" Type="Vertical Stack" />
+      </Container>
+      <Container id="view-file-tree" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

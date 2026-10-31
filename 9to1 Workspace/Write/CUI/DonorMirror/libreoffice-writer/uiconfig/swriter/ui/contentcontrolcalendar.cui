@@ -1,0 +1,7 @@
+<Cui id="ui-contentcontrolcalendar" product="9-1" version="1">
+  <Container id="calendar" Type="Menu" focusable="false">
+    <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false">
+      <Container id="date" Type="Vertical Stack" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,39 @@
+<Cui id="notification-notification-div" product="9-1" version="1">
+  <Page id="notification-notification-div-root">
+    <Container id="notification_div" Type="Vertical Stack" role="main">
+      <Container id="div" Type="Vertical Stack">
+        <Container id="div-2" Type="Vertical Stack">
+          <Container id="div-3" Type="Vertical Stack">
+            <Button id="a">
+              <Container id="div-4" Type="Vertical Stack" />
+            </Button>
+            <Button id="a-2" />
+          </Container>
+          <Container id="div-5" Type="Vertical Stack">
+            <Button id="button" />
+            <Button id="button-2" />
+          </Container>
+        </Container>
+        <Container id="notification_table" Type="Vertical Stack">
+          <Container id="notification_[value]" Type="Vertical Stack">
+            <Container id="div-6" Type="Vertical Stack" />
+            <Button id="a-3">
+              <Container id="div-7" Type="Vertical Stack">
+                <Text id="span" text="#[value]" />
+              </Container>
+              <Container id="div-8" Type="Vertical Stack" />
+            </Button>
+            <Container id="div-9" Type="Vertical Stack" />
+            <Container id="form" Type="Vertical Stack">
+              <Input id="input" Type="Text" />
+              <Button id="button-3" text="pin" />
+              <Button id="button-4" text="mark_as_read" />
+              <Button id="button-5" text="mark_as_unread" />
+            </Container>
+          </Container>
+          <Container id="div-10" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

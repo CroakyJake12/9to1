@@ -1,0 +1,19 @@
+<Cui id="ui-renameobjectdialog" product="9-1" version="1">
+  <Container id="rename-object-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="rename-object-dialog-label" text="Rename object:" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label2" text="New name:" focusable="false" column="0" row="0" />
+          <Input id="entry" Type="Text" role="Grow" column="1" row="0" />
+        </Container>
+        <Text id="label1" text="Change Name" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

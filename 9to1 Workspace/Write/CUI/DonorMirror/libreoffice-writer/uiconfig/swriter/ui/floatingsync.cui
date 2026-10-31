@@ -1,0 +1,9 @@
+<Cui id="ui-floatingsync" product="9-1" version="1">
+  <Container id="floating-sync" Type="Vertical Stack">
+    <Text id="floating-sync-label" text="Synchronize" />
+    <Container id="container" Type="Vertical Stack">
+      <Container id="container-2" Type="Horizontal Stack" />
+      <Button id="sync" content="Synchronize Labels" text="Synchronize Labels" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,10 @@
+<Cui id="auth-signup-openid-navbar" product="9-1" version="1">
+  <Page id="auth-signup-openid-navbar-root">
+    <Container id="overflow-menu" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack">
+        <Button id="a" />
+        <Button id="a-2" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

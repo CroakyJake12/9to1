@@ -1,0 +1,334 @@
+<Cui id="settings-protected-branch" product="9-1" version="1">
+  <Page id="settings-protected-branch-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="form" Type="Vertical Stack">
+        <Text id="h4" text="[value]
+				
+					[value]" />
+        <Container id="div-2" Type="Vertical Stack">
+          <Text id="h5" text="{Binding Unresolved}" />
+          <Container id="div-3" Type="Vertical Stack">
+            <Text id="label" text="{Binding Unresolved}" />
+            <Input id="input" Type="Text" />
+            <Input id="input-2" Type="Text" />
+            <Text id="p" text="{Binding Unresolved}" />
+          </Container>
+          <Container id="div-4" Type="Vertical Stack">
+            <Text id="label-2" text="{Binding Unresolved}" />
+            <Input id="input-3" Type="Text" />
+            <Text id="p-2" text="{Binding Unresolved}" />
+          </Container>
+          <Container id="div-5" Type="Vertical Stack">
+            <Text id="label-3" text="{Binding Unresolved}" />
+            <Input id="input-4" Type="Text" />
+            <Text id="p-3" text="{Binding Unresolved}" />
+          </Container>
+          <Text id="h5-2" text="{Binding Unresolved}" />
+          <Container id="div-6" Type="Vertical Stack">
+            <Container id="div-7" Type="Vertical Stack">
+              <Input id="input-5" Type="Text" />
+              <Text id="label-4" text="{Binding Unresolved}" />
+              <Text id="p-4" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-8" Type="Vertical Stack">
+            <Container id="div-9" Type="Vertical Stack">
+              <Input id="input-6" Type="Text" />
+              <Text id="label-5" text="{Binding Unresolved}" />
+              <Text id="p-5" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-10" Type="Vertical Stack">
+            <Container id="div-11" Type="Vertical Stack">
+              <Container id="div-12" Type="Vertical Stack">
+                <Input id="input-7" Type="Text" />
+                <Text id="label-6" text="{Binding Unresolved}" />
+                <Text id="p-6" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="whitelist_box" Type="Vertical Stack">
+              <Container id="div-13" Type="Vertical Stack">
+                <Text id="label-7" text="{Binding Unresolved}" />
+                <Container id="div-14" Type="Vertical Stack">
+                  <Input id="input-8" Type="Text" />
+                  <Container id="div-15" Type="Vertical Stack" />
+                  <Container id="div-16" Type="Vertical Stack">
+                    <Container id="div-17" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-18" Type="Vertical Stack">
+                <Text id="label-8" text="{Binding Unresolved}" />
+                <Container id="div-19" Type="Vertical Stack">
+                  <Input id="input-9" Type="Text" />
+                  <Container id="div-20" Type="Vertical Stack" />
+                  <Container id="div-21" Type="Vertical Stack">
+                    <Container id="div-22" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-23" Type="Vertical Stack">
+                <Container id="div-24" Type="Vertical Stack">
+                  <Input id="input-10" Type="Text" />
+                  <Text id="label-9" text="{Binding Unresolved}" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="div-25" Type="Vertical Stack">
+            <Container id="div-26" Type="Vertical Stack">
+              <Input id="input-11" Type="Text" />
+              <Text id="label-10" text="{Binding Unresolved}" />
+              <Text id="p-7" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Text id="h5-3" text="{Binding Unresolved}" />
+          <Container id="div-27" Type="Vertical Stack">
+            <Container id="div-28" Type="Vertical Stack">
+              <Input id="input-12" Type="Text" />
+              <Text id="label-11" text="{Binding Unresolved}" />
+              <Text id="p-8" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-29" Type="Vertical Stack">
+            <Container id="div-30" Type="Vertical Stack">
+              <Input id="input-13" Type="Text" />
+              <Text id="label-12" text="{Binding Unresolved}" />
+              <Text id="p-9" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-31" Type="Vertical Stack">
+            <Container id="div-32" Type="Vertical Stack">
+              <Container id="div-33" Type="Vertical Stack">
+                <Input id="input-14" Type="Text" />
+                <Text id="label-13" text="{Binding Unresolved}" />
+                <Text id="p-10" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="force_push_allowlist_box" Type="Vertical Stack">
+              <Container id="div-34" Type="Vertical Stack">
+                <Text id="label-14" text="{Binding Unresolved}" />
+                <Container id="div-35" Type="Vertical Stack">
+                  <Input id="input-15" Type="Text" />
+                  <Container id="div-36" Type="Vertical Stack" />
+                  <Container id="div-37" Type="Vertical Stack">
+                    <Container id="div-38" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-39" Type="Vertical Stack">
+                <Text id="label-15" text="{Binding Unresolved}" />
+                <Container id="div-40" Type="Vertical Stack">
+                  <Input id="input-16" Type="Text" />
+                  <Container id="div-41" Type="Vertical Stack" />
+                  <Container id="div-42" Type="Vertical Stack">
+                    <Container id="div-43" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-44" Type="Vertical Stack">
+                <Container id="div-45" Type="Vertical Stack">
+                  <Input id="input-17" Type="Text" />
+                  <Text id="label-16" text="{Binding Unresolved}" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="h5-4" text="{Binding Unresolved}" />
+          <Container id="div-46" Type="Vertical Stack">
+            <Text id="label-17" text="{Binding Unresolved}" />
+            <Input id="input-18" Type="Text" />
+            <Text id="p-11" text="{Binding Unresolved}" />
+          </Container>
+          <Container id="div-47" Type="Vertical Stack">
+            <Container id="div-48" Type="Vertical Stack">
+              <Container id="div-49" Type="Vertical Stack">
+                <Input id="input-19" Type="Text" />
+                <Text id="label-18" text="{Binding Unresolved}" />
+                <Text id="p-12" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="approvals_whitelist_box" Type="Vertical Stack">
+              <Container id="div-50" Type="Vertical Stack">
+                <Text id="label-19" text="{Binding Unresolved}" />
+                <Container id="div-51" Type="Vertical Stack">
+                  <Input id="input-20" Type="Text" />
+                  <Container id="div-52" Type="Vertical Stack" />
+                  <Container id="div-53" Type="Vertical Stack">
+                    <Container id="div-54" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-55" Type="Vertical Stack">
+                <Text id="label-20" text="{Binding Unresolved}" />
+                <Container id="div-56" Type="Vertical Stack">
+                  <Input id="input-21" Type="Text" />
+                  <Container id="div-57" Type="Vertical Stack" />
+                  <Container id="div-58" Type="Vertical Stack">
+                    <Container id="div-59" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="div-60" Type="Vertical Stack">
+            <Container id="div-61" Type="Vertical Stack">
+              <Input id="input-22" Type="Text" />
+              <Text id="label-21" text="{Binding Unresolved}" />
+              <Text id="p-13" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="ignore_stale_approvals_box" Type="Vertical Stack">
+            <Container id="div-62" Type="Vertical Stack">
+              <Input id="input-23" Type="Text" />
+              <Text id="label-22" text="{Binding Unresolved}" />
+              <Text id="p-14" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-63" Type="Vertical Stack">
+            <Container id="div-64" Type="Vertical Stack">
+              <Container id="div-65" Type="Vertical Stack">
+                <Input id="input-24" Type="Text" />
+                <Text id="label-23" text="{Binding Unresolved}" />
+                <Text id="p-15" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="statuscheck_contexts_box" Type="Vertical Stack">
+              <Text id="label-24" text="{Binding Unresolved}" />
+              <Input id="status_check_contexts" Type="Text" />
+              <Text id="p-16" text="{Binding Unresolved}" />
+              <Container id="table" Type="Grid">
+                <Container id="thead" Type="Grid">
+                  <Container id="tr" Type="Horizontal Stack">
+                    <Text id="th" text="{Binding Unresolved}" />
+                  </Container>
+                </Container>
+                <Container id="tbody" Type="Grid">
+                  <Container id="tr-2" Type="Horizontal Stack">
+                    <Container id="td" Type="Vertical Stack">
+                      <Text id="span" text="{Binding Unresolved}" />
+                      <Text id="span-2" text="{Binding Unresolved}" />
+                    </Container>
+                  </Container>
+                  <Container id="tr-3" Type="Horizontal Stack">
+                    <Container id="td-2" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="h5-5" text="{Binding Unresolved}" />
+          <Container id="div-66" Type="Vertical Stack">
+            <Container id="div-67" Type="Vertical Stack">
+              <Container id="div-68" Type="Vertical Stack">
+                <Input id="input-25" Type="Text" />
+                <Text id="label-25" text="{Binding Unresolved}" />
+                <Text id="p-17" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="div-69" Type="Vertical Stack">
+              <Container id="div-70" Type="Vertical Stack">
+                <Input id="input-26" Type="Text" />
+                <Text id="label-26" text="{Binding Unresolved}" />
+                <Text id="p-18" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="merge_whitelist_box" Type="Vertical Stack">
+              <Container id="div-71" Type="Vertical Stack">
+                <Text id="label-27" text="{Binding Unresolved}" />
+                <Container id="div-72" Type="Vertical Stack">
+                  <Input id="input-27" Type="Text" />
+                  <Container id="div-73" Type="Vertical Stack" />
+                  <Container id="div-74" Type="Vertical Stack">
+                    <Container id="div-75" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-76" Type="Vertical Stack">
+                <Text id="label-28" text="{Binding Unresolved}" />
+                <Container id="div-77" Type="Vertical Stack">
+                  <Input id="input-28" Type="Text" />
+                  <Container id="div-78" Type="Vertical Stack" />
+                  <Container id="div-79" Type="Vertical Stack">
+                    <Container id="div-80" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="h5-6" text="{Binding Unresolved}" />
+          <Container id="div-81" Type="Vertical Stack">
+            <Container id="div-82" Type="Vertical Stack">
+              <Container id="div-83" Type="Vertical Stack">
+                <Input id="input-29" Type="Text" />
+                <Text id="label-29" text="{Binding Unresolved}" />
+                <Text id="p-19" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="bypass_allowlist_box" Type="Vertical Stack">
+              <Container id="div-84" Type="Vertical Stack">
+                <Text id="label-30" text="{Binding Unresolved}" />
+                <Container id="div-85" Type="Vertical Stack">
+                  <Input id="input-30" Type="Text" />
+                  <Container id="div-86" Type="Vertical Stack" />
+                  <Container id="div-87" Type="Vertical Stack">
+                    <Container id="div-88" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="div-89" Type="Vertical Stack">
+                <Text id="label-31" text="{Binding Unresolved}" />
+                <Container id="div-90" Type="Vertical Stack">
+                  <Input id="input-31" Type="Text" />
+                  <Container id="div-91" Type="Vertical Stack" />
+                  <Container id="div-92" Type="Vertical Stack">
+                    <Container id="div-93" Type="Vertical Stack" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="div-94" Type="Vertical Stack">
+            <Container id="div-95" Type="Vertical Stack">
+              <Input id="input-32" Type="Text" />
+              <Text id="label-32" text="{Binding Unresolved}" />
+              <Text id="p-20" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-96" Type="Vertical Stack">
+            <Container id="div-97" Type="Vertical Stack">
+              <Input id="input-33" Type="Text" />
+              <Text id="label-33" text="{Binding Unresolved}" />
+              <Text id="p-21" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-98" Type="Vertical Stack">
+            <Container id="div-99" Type="Vertical Stack">
+              <Input id="input-34" Type="Text" />
+              <Text id="label-34" text="{Binding Unresolved}" />
+              <Text id="p-22" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-100" Type="Vertical Stack">
+            <Container id="div-101" Type="Vertical Stack">
+              <Input id="input-35" Type="Text" />
+              <Text id="label-35" text="{Binding Unresolved}" />
+              <Text id="p-23" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-102" Type="Vertical Stack">
+            <Container id="div-103" Type="Vertical Stack">
+              <Input id="input-36" Type="Text" />
+              <Text id="label-36" text="{Binding Unresolved}" />
+              <Text id="p-24" text="{Binding Unresolved}" />
+            </Container>
+          </Container>
+          <Container id="div-104" Type="Vertical Stack" />
+          <Container id="div-105" Type="Vertical Stack">
+            <Button id="button" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

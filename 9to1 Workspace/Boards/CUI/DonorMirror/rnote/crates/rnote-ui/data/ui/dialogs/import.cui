@@ -1,0 +1,31 @@
+<Cui id="dialogs-import" product="9-1" version="1">
+  <Actions>
+    <Action name="cancel" command="cancel" />
+    <Action name="unlock" command="unlock" />
+  </Actions>
+  <Page id="dialogs-import-root">
+    <Container id="dialog-import-pdf-w-prefs" Type="Vertical Stack">
+      <Text id="dialog-import-pdf-w-prefs-label" text="Import Pdf" />
+      <Container id="container" Type="Vertical Stack">
+        <Container id="container-2" Type="Horizontal Stack">
+          <Button id="import-pdf-button-cancel" content="Cancel" text="Cancel" />
+          <Button id="import-pdf-button-confirm" content="Import" text="Import" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="dialog-import-xopp-w-prefs" Type="Vertical Stack">
+      <Text id="dialog-import-xopp-w-prefs-label" text="Import Xournal++ File" />
+      <Container id="container-3" Type="Vertical Stack">
+        <Container id="container-4" Type="Horizontal Stack">
+          <Button id="import-xopp-button-cancel" content="Cancel" text="Cancel" />
+          <Button id="import-xopp-button-confirm" content="Import" text="Import" />
+        </Container>
+      </Container>
+    </Container>
+    <Container id="dialog-import-pdf-password" Type="Vertical Stack">
+      <Text id="dialog-import-pdf-password-label" text="is password protected" />
+      <Button id="response-cancel" content="Cancel" action="cancel" />
+      <Button id="response-unlock" content="Unlock" action="unlock" />
+    </Container>
+  </Page>
+</Cui>

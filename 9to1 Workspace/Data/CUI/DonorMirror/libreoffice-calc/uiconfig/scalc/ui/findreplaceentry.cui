@@ -1,0 +1,10 @@
+<Cui id="ui-findreplaceentry" product="9-1" version="1">
+  <Container id="grid" Type="Grid" cell-gap="6" focusable="false">
+    <Container id="container" Type="Horizontal Stack" focusable="false" column="0" row="0" column-span="4" />
+    <Text id="label1" text="Find and Replace" horizontal-alignment="Left" focusable="false" column="0" row="1" column-span="4" />
+    <Input id="ed-find" Type="Text" placeholder-text="Find" role="Grow" column="0" row="2" />
+    <Input id="ed-replace" Type="Text" placeholder-text="Replace With" role="Grow" column="1" row="2" />
+    <Input id="ed-columns" Type="Text" placeholder-text="Column" role="Grow" column="2" row="2" />
+    <Button id="ed-delete" content="Delete" text="Delete" horizontal-alignment="Right" column="3" row="2" />
+  </Container>
+</Cui>

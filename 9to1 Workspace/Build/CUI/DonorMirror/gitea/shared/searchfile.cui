@@ -1,0 +1,20 @@
+<Cui id="shared-searchfile" product="9-1" version="1">
+  <Page id="shared-searchfile-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="table" Type="Grid">
+        <Container id="tbody" Type="Grid">
+          <Container id="tr" Type="Horizontal Stack">
+            <Container id="td" Type="Vertical Stack">
+              <Button id="a">
+                <Text id="span" text="{Binding Unresolved}" />
+              </Button>
+            </Container>
+            <Container id="td-2" Type="Vertical Stack">
+              <Container id="code" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

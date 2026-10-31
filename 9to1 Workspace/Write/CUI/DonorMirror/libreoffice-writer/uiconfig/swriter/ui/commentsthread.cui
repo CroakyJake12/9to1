@@ -1,0 +1,8 @@
+<Cui id="ui-commentsthread" product="9-1" version="1">
+  <Container id="thread" Type="Grid" focusable="false">
+    <Container id="expander" Type="Vertical Stack" role="Grow" column="0" row="0">
+      <Container id="comments-box" Type="Vertical Stack" focusable="false" />
+      <Text id="commentedtext" text="commentedtext" text-trimming="PathSegmentEllipsis" focusable="false" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

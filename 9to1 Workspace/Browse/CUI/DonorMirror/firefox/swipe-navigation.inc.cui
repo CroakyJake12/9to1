@@ -1,0 +1,16 @@
+<Cui id="content-swipe-navigation.inc" product="9-1" version="1">
+  <Page id="content-swipe-navigation.inc-root">
+    <Container id="hbox" Type="Horizontal Stack" hidden="true">
+      <Image id="swipe-nav-icon" width="25" height="49">
+        <Container id="path" Type="Vertical Stack" />
+        <Container id="path-2" Type="Vertical Stack" />
+        <Container id="path-3" Type="Vertical Stack" />
+      </Image>
+      <Image id="swipe-nav-icon-2" width="66" height="66">
+        <Container id="circle" Type="Vertical Stack" />
+        <Container id="circle-2" Type="Vertical Stack" />
+        <Container id="path-4" Type="Vertical Stack" />
+      </Image>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,49 @@
+<Cui id="ui-pagemargincontrol" product="9-1" version="1">
+  <Page id="ui-pagemargincontrol-root">
+    <Image id="last-img" focusable="false" source="sw/res/sidebar/pageproppanel/formatLcopy24x24.png" />
+    <Image id="last-limg" focusable="false" source="sw/res/sidebar/pageproppanel/formatcopy24x24.png" />
+    <Image id="mirrore" focusable="false" source="sw/res/sidebar/pageproppanel/formatLmirror24x24.png" />
+    <Image id="mirrored-limg" focusable="false" source="sw/res/sidebar/pageproppanel/formatmirror24x24.png" />
+    <Image id="narrow-img" focusable="false" source="sw/res/sidebar/pageproppanel/formatLnarrow24x24.png" />
+    <Image id="narrow-limg" focusable="false" source="sw/res/sidebar/pageproppanel/formatnarrow24x24.png" />
+    <Image id="normal-img" focusable="false" source="sw/res/sidebar/pageproppanel/formatLnomal24x24.png" />
+    <Image id="normal-limg" focusable="false" source="sw/res/sidebar/pageproppanel/formatnormal24x24.png" />
+    <Image id="wide-img" focusable="false" source="sw/res/sidebar/pageproppanel/formatLwide24x24.png" />
+    <Image id="wide-limg" focusable="false" source="sw/res/sidebar/pageproppanel/formatwide24x24.png" />
+    <Container id="page-margin-control" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Button id="narrow" content="Narrow" text="Narrow" />
+        <Button id="normal" content="Normal" text="Normal" />
+        <Button id="wide" content="Wide" text="Wide" />
+        <Button id="mirrored" content="Mirrored" text="Mirrored" />
+        <Button id="last" content="Last Custom Value" text="Last Custom Value" />
+        <Button id="narrow-l" content="Narrow" text="Narrow" />
+        <Button id="normal-l" content="Normal" text="Normal" />
+        <Button id="wide-l" content="Wide" text="Wide" />
+        <Button id="mirrored-l" content="Mirrored" text="Mirrored" />
+        <Button id="last-l" content="Last Custom Value" text="Last Custom Value" />
+        <Container id="frame1" Type="Vertical Stack" focusable="false">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+            <Text id="label4" text="Top" focusable="false" column="0" row="2" />
+            <Text id="label5" text="Bottom" focusable="false" column="0" row="3" />
+            <Container id="box1" Type="Vertical Stack" focusable="false" column="0" row="0">
+              <Text id="left-label" text="Left" focusable="false" />
+              <Text id="inner-label" text="Inner" focusable="false" />
+            </Container>
+            <Container id="box2" Type="Vertical Stack" focusable="false" column="0" row="1">
+              <Text id="right-label" text="Right" focusable="false" />
+              <Text id="outer-label" text="Outer" focusable="false" />
+            </Container>
+            <Input id="left" Type="Number" role="Grow" column="1" row="0" />
+            <Input id="right" Type="Number" role="Grow" column="1" row="1" />
+            <Input id="top" Type="Number" role="Grow" column="1" row="2" />
+            <Input id="bottom" Type="Number" role="Grow" column="1" row="3" />
+          </Container>
+          <Text id="label1" text="Custom" focusable="false" />
+        </Container>
+        <Input id="hidden" Type="Number" role="Grow" />
+        <Button id="moreoptions" content="More Options" text="More Options" tooltip="More Options" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,5 @@
+<Cui id="ui-inputeditbox" product="9-1" version="1">
+  <Container id="input-edit-box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Input id="entry" Type="Text" role="Grow" />
+  </Container>
+</Cui>

@@ -1,0 +1,44 @@
+<Cui id="ui-headerfootertab" product="9-1" version="1">
+  <Container id="header-footer-tab" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="header-cb" Type="Checkbox" text="Header" />
+          <Container id="header-box" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Text id="header-label" text="Header text:" focusable="false" />
+            <Input id="header-text" Type="Text" />
+          </Container>
+          <Input id="datetime-cb" Type="Checkbox" text="Date and time" />
+          <Container id="datetimebox" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Container id="box6" Type="Vertical Stack" cell-gap="12" focusable="false">
+              <Input id="rb-fixed" Type="Radio" text="Fixed" checked="true" />
+              <Input id="datetime-value" Type="Text" />
+            </Container>
+            <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+              <Input id="rb-auto" Type="Radio" text="Variable" column="0" row="0" />
+              <Container id="variablebox" Type="Grid" cell-gap="6" focusable="false" column="0" row="1">
+                <Input id="language-list" Type="Select" focusable="false" column="1" row="1" />
+                <Text id="language-label" text="Language:" focusable="false" column="0" row="1" />
+                <Input id="datetime-format-list" Type="Select" focusable="false" column="1" row="0" />
+                <Text id="language-label1" text="Format:" focusable="false" column="0" row="0" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="box7" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Input id="footer-cb" Type="Checkbox" text="Footer" />
+            <Container id="footer-box" Type="Vertical Stack" cell-gap="12" focusable="false">
+              <Text id="footer-label" text="Footer text:" focusable="false" />
+              <Input id="footer-text" Type="Text" />
+            </Container>
+          </Container>
+          <Input id="slide-number" Type="Checkbox" text="Slide number" />
+        </Container>
+        <Text id="include-label" text="Include on Slide" focusable="false" />
+      </Container>
+      <Input id="not-on-title" Type="Checkbox" text="Do not show on the first slide" />
+      <Text id="replacement-a" text="Page Number" focusable="false" />
+      <Text id="replacement-b" text="Include on page" focusable="false" />
+    </Container>
+    <Container id="preview" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Top" focusable="false" role="Grow" />
+  </Container>
+</Cui>

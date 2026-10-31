@@ -1,0 +1,19 @@
+<Cui id="ui-groupdialog" product="9-1" version="1">
+  <Container id="group-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="group-dialog-label" text="Group" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Input id="rows" Type="Radio" text="Rows" checked="true" />
+          <Input id="cols" Type="Radio" text="Columns" />
+        </Container>
+        <Text id="include-label" text="Include" focusable="false" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

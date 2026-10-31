@@ -1,0 +1,18 @@
+<Cui id="ui-previewzoomdialog" product="9-1" version="1">
+  <Container id="preview-zoom-dialog" Type="Vertical Stack" modal="True">
+    <Text id="preview-zoom-dialog-label" text="Multiple Pages" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Text id="label1" text="Rows" />
+        <Text id="label2" text="Columns" />
+        <Input id="rows" Type="Number" role="Grow" />
+        <Input id="cols" Type="Number" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

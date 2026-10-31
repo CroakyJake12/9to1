@@ -1,0 +1,8 @@
+<Cui id="ui-tabviewbar" product="9-1" version="1">
+  <Container id="tab-view-bar" Type="Vertical Stack">
+    <Container id="tabcontrol" Type="Vertical Stack" role="Grow">
+      <Container id="container" Type="Grid" />
+      <Text id="1" text="placeholder" />
+    </Container>
+  </Container>
+</Cui>

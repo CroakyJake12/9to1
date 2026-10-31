@@ -1,0 +1,21 @@
+<Cui id="ui-splittable" product="9-1" version="1">
+  <Container id="split-table-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="split-table-dialog-label" text="Split Table" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="copyheading" Type="Radio" text="Copy heading" checked="true" column="0" row="0" />
+          <Input id="customheadingapplystyle" Type="Radio" text="Custom heading (apply Style)" column="0" row="1" />
+          <Input id="customheading" Type="Radio" text="Custom heading" column="0" row="2" />
+          <Input id="noheading" Type="Radio" text="No heading" column="0" row="3" />
+        </Container>
+        <Text id="label1" text="Mode" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

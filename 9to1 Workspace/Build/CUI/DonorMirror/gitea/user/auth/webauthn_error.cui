@@ -1,0 +1,17 @@
+<Cui id="auth-webauthn-error" product="9-1" version="1">
+  <Page id="auth-webauthn-error-root">
+    <Container id="webauthn-error" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack" />
+      <Container id="webauthn-error-msg" Type="Vertical Stack" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack" />
+        <Container id="div-4" Type="Vertical Stack" />
+        <Container id="div-5" Type="Vertical Stack" />
+        <Container id="div-6" Type="Vertical Stack" />
+        <Container id="div-7" Type="Vertical Stack" />
+        <Container id="div-8" Type="Vertical Stack" />
+        <Container id="div-9" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

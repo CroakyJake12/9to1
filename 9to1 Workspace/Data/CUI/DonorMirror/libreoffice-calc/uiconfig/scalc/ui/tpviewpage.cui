@@ -1,0 +1,85 @@
+<Cui id="ui-tpviewpage" product="9-1" version="1">
+  <Container id="tp-view-page" Type="Vertical Stack" focusable="false">
+    <Container id="grid3" Type="Grid" cell-gap="12" focusable="false">
+      <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="0">
+        <Container id="grid6" Type="Grid" focusable="false">
+          <Image id="lockformula" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="formula" Type="Checkbox" text="Formulas" column="1" row="0" />
+          <Image id="locknil" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Input id="nil" Type="Checkbox" text="Zero values" column="1" row="1" />
+          <Image id="lockannot" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Input id="annot" Type="Checkbox" text="Comment indicator" column="1" row="2" />
+          <Image id="im-note-author" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+          <Input id="cb-note-author" Type="Checkbox" text="Comment authorship" column="1" row="3" />
+          <Image id="lockformulamark" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+          <Input id="formulamark" Type="Checkbox" text="Formula indicator and hint" column="1" row="4" />
+          <Image id="lockvalue" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+          <Input id="value" Type="Checkbox" text="Value highlighting" column="1" row="5" />
+          <Image id="lockcolrowhigh" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="6" source="res/lock.png" />
+          <Input id="colrowhigh" Type="Checkbox" text="Column/Row highlighting" column="1" row="6" />
+          <Image id="lockeditcellbghigh" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="7" source="res/lock.png" />
+          <Input id="editcellbg" Type="Checkbox" text="Highlight cell in edit mode" column="1" row="7" />
+          <Image id="lockanchor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="8" source="res/lock.png" />
+          <Input id="anchor" Type="Checkbox" text="Anchor" column="1" row="8" />
+          <Image id="lockrangefind" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="9" source="res/lock.png" />
+          <Input id="rangefind" Type="Checkbox" text="Show references in color" column="1" row="9" />
+        </Container>
+        <Text id="label4" text="Display" focusable="false" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" column="1" row="0">
+        <Container id="grid5" Type="Grid" cell-gap="3" focusable="false">
+          <Image id="lockgrid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Text id="grid-label" text="Grid lines:" focusable="false" column="1" row="0" />
+          <Input id="grid" Type="Select" focusable="false" column="2" row="0" column-span="2" />
+          <Image id="lock-cursor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Text id="lb-cursor" text="Pointer:" focusable="false" column="1" row="1" />
+          <Input id="rb-themed-cursor" Type="Radio" text="Themed" tooltip="Show the pointer as defined in the icon theme, typically as fat cross." column="2" row="1" />
+          <Input id="rb-system-cursor" Type="Radio" text="System" tooltip="Show the pointer as system default, typically an arrow pointer." checked="true" column="3" row="1" />
+          <Image id="lockbreak" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Input id="break" Type="Checkbox" text="Page breaks" column="1" row="2" column-span="3" />
+          <Image id="lockguideline" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+          <Input id="guideline" Type="Checkbox" text="Helplines while moving" column="1" row="3" column-span="3" />
+        </Container>
+        <Text id="label1" text="Visual Aids" focusable="false" />
+      </Container>
+      <Container id="frame5" Type="Vertical Stack" focusable="false" column="0" row="1">
+        <Container id="grid4" Type="Grid" focusable="false">
+          <Image id="lockrowcolheader" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="rowcolheader" Type="Checkbox" text="Column/row headers" column="1" row="0" />
+          <Image id="lockhscroll" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Input id="hscroll" Type="Checkbox" text="Horizontal scroll bar" column="1" row="1" />
+          <Image id="lockvscroll" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Input id="vscroll" Type="Checkbox" text="Vertical scroll bar" column="1" row="2" />
+          <Image id="locktblreg" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+          <Input id="tblreg" Type="Checkbox" text="Sheet tabs" column="1" row="3" />
+          <Image id="lockoutline" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+          <Input id="outline" Type="Checkbox" text="Outline symbols" column="1" row="4" />
+          <Image id="lockcb-summary" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+          <Input id="cb-summary" Type="Checkbox" text="Summary on search" checked="true" column="1" row="5" />
+        </Container>
+        <Text id="label5" text="Window" focusable="false" />
+      </Container>
+      <Container id="frame2" Type="Vertical Stack" focusable="false" column="1" row="1">
+        <Container id="grid2" Type="Grid" cell-gap="3" focusable="false">
+          <Image id="lockobjgrf" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Text id="objgrf-label" text="Objects/Images:" focusable="false" column="1" row="0" />
+          <Input id="objgrf" Type="Select" focusable="false" column="2" row="0" />
+          <Image id="lockdiagram" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Text id="diagram-label" text="Charts:" focusable="false" column="1" row="1" />
+          <Input id="diagram" Type="Select" focusable="false" column="2" row="1" />
+          <Image id="lockdraw" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Text id="draw-label" text="Drawing objects:" focusable="false" column="1" row="2" />
+          <Input id="draw" Type="Select" focusable="false" column="2" row="2" />
+        </Container>
+        <Text id="label2" text="Objects" focusable="false" />
+      </Container>
+      <Container id="frame3" Type="Vertical Stack" focusable="false" column="0" row="2">
+        <Container id="container" Type="Grid" focusable="false">
+          <Image id="locksynczoom" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="synczoom" Type="Checkbox" text="Synchronize sheets" column="1" row="0" />
+        </Container>
+        <Text id="label3" text="Zoom" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,11 @@
+<Cui id="ui-effectmenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="onclick" content="Start On Click" text="Start On Click" checked="true" />
+    <Button id="withprev" content="Start With Previous" text="Start With Previous" />
+    <Button id="afterprev" content="Start After Previous" text="Start After Previous" />
+    <Button id="menuitem1" Type="Menu Item" />
+    <Button id="options" Type="Menu Item" content="Effect Options..." text="Effect Options..." />
+    <Button id="timing" Type="Menu Item" content="Timing..." text="Timing..." />
+    <Button id="remove" Type="Menu Item" content="Remove" text="Remove" />
+  </Container>
+</Cui>

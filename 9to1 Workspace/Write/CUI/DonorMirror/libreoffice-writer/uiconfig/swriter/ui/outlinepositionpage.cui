@@ -1,0 +1,42 @@
+<Cui id="ui-outlinepositionpage" product="9-1" version="1">
+  <Container id="outline-position-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame3" Type="Vertical Stack" focusable="false">
+      <Container id="container" Type="Vertical Stack" width="50">
+        <Container id="levellb" Type="Vertical Stack" />
+      </Container>
+      <Text id="1" text="Level" focusable="false" />
+    </Container>
+    <Container id="numberingframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="num2align" text="Alignment:" focusable="false" column="0" row="0" />
+        <Input id="num2alignlb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+        <Text id="alignedat" text="Aligned at:" focusable="false" column="0" row="1" />
+        <Input id="alignedatmf" Type="Number" role="Grow" column="1" row="1" />
+        <Text id="numfollowedby" text="Followed by:" focusable="false" column="0" row="2" />
+        <Input id="numfollowedbylb" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+        <Text id="at" text="Tab stop at:" focusable="false" column="0" row="3" />
+        <Input id="atmf" Type="Number" role="Grow" column="1" row="3" />
+        <Text id="indentat" text="Indent at:" focusable="false" column="0" row="4" />
+        <Input id="indentatmf" Type="Number" role="Grow" column="1" row="4" />
+        <Text id="indent" text="Indent:" focusable="false" column="0" row="5" />
+        <Input id="indentmf" Type="Number" role="Grow" column="1" row="5" />
+        <Input id="relative" Type="Checkbox" text="Relative" column="1" row="6" />
+        <Text id="numberingwidth" text="Width of numbering:" focusable="false" column="0" row="7" />
+        <Input id="numberingwidthmf" Type="Number" role="Grow" column="1" row="7" />
+        <Text id="numdist" text="Minimum space between
+numbering and text:" focusable="false" column="0" row="8" />
+        <Input id="numdistmf" Type="Number" role="Grow" column="1" row="8" />
+        <Text id="numalign" text="Alignment:" focusable="false" column="0" row="9" />
+        <Input id="numalignlb" Type="Select" focusable="false" role="Grow" column="1" row="9" />
+        <Button id="standard" content="Default" text="Default" horizontal-alignment="Right" column="1" row="10" />
+      </Container>
+      <Text id="label10" text="Position and Spacing" focusable="false" />
+    </Container>
+    <Container id="preview" Type="Vertical Stack" focusable="false">
+      <Container id="box2" Type="Grid" focusable="false">
+        <Container id="preview-2" Type="Overlay" width="150" height="130" focusable="false" column="0" row="0" />
+      </Container>
+      <Text id="label17" text="Preview" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

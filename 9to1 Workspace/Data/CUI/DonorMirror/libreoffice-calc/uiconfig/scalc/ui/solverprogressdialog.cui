@@ -1,0 +1,14 @@
+<Cui id="ui-solverprogressdialog" product="9-1" version="1">
+  <Container id="solver-progress-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="solver-progress-dialog-label" text="Solving..." />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" is-enabled="false" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="24" focusable="false">
+        <Text id="label2" text="Solving in progress..." focusable="false" column="0" row="0" />
+        <Text id="progress" text="(time limit # seconds)" focusable="false" column="0" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,22 @@
+<Cui id="ui-masterlayoutdlg" product="9-1" version="1">
+  <Container id="master-layout-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="master-layout-dialog-label" text="Master Elements" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="placeholders-frame" Type="Vertical Stack" focusable="false">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="header" Type="Checkbox" text="Header" />
+          <Input id="datetime" Type="Checkbox" text="Date/time" />
+          <Input id="footer" Type="Checkbox" text="Footer" />
+          <Input id="pagenumber" Type="Checkbox" text="Page number" />
+          <Input id="slidenumber" Type="Checkbox" text="Slide number" />
+        </Container>
+        <Text id="placeholders" text="Placeholders" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

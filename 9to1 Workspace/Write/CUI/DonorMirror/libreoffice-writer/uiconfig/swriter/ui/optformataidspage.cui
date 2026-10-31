@@ -1,0 +1,101 @@
+<Cui id="ui-optformataidspage" product="9-1" version="1">
+  <Container id="opt-format-aids-page" Type="Vertical Stack" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="12" focusable="false">
+      <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="0">
+        <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+          <Image id="lockmathbaseline" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="mathbaseline" Type="Checkbox" text="Math baseline alignment" column="1" row="0" />
+        </Container>
+        <Text id="layoutopt" text="Layout Assistance" focusable="false" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="1">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="paragraph" Type="Checkbox" text="Paragraph end" column="1" row="0" />
+          <Input id="hyphens" Type="Checkbox" text="Soft hyphens" column="1" row="1" />
+          <Input id="spaces" Type="Checkbox" text="Spaces" column="1" row="2" />
+          <Input id="tabs" Type="Checkbox" text="Tabs" column="1" row="3" />
+          <Input id="break" Type="Checkbox" text="Breaks" column="1" row="4" />
+          <Input id="bookmarks" Type="Checkbox" text="Bookmarks" column="1" row="5" />
+          <Input id="hiddentext" Type="Checkbox" text="Hidden characters" column="1" row="6" column-span="2" />
+          <Input id="nonbreak" Type="Checkbox" text="Non-breaking spaces and hyphen" column="1" row="7" column-span="2" />
+          <Text id="text" text="¶" horizontal-alignment="Left" focusable="false" column="2" row="0" />
+          <Text id="text-2" text="-" horizontal-alignment="Left" focusable="false" column="2" row="1" />
+          <Text id="text-3" text="·" horizontal-alignment="Left" focusable="false" column="2" row="2" />
+          <Text id="tabs-label" text="→" horizontal-alignment="Left" focusable="false" column="2" row="3" />
+          <Text id="text-4" text="↵" horizontal-alignment="Left" focusable="false" column="2" row="4" />
+          <Text id="bookmarks-label" text="⌶ […]" tooltip="⌶ indicates a point bookmark,
+[ and ] indicate the start and end of a bookmark on a text range" horizontal-alignment="Left" focusable="false" column="2" row="5" />
+          <Image id="lockparagraph" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Image id="lockhyphens" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Image id="lockspaces" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Image id="locknonbreak" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+          <Image id="locktabs" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+          <Image id="lockbreak" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+          <Image id="lockhiddentext" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="6" source="res/lock.png" />
+          <Image id="lockbookmarks" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="7" source="res/lock.png" />
+        </Container>
+        <Text id="displayfl" text="Display Formatting" focusable="false" />
+      </Container>
+      <Container id="crsrprotframe" Type="Vertical Stack" vertical-alignment="Top" focusable="false" column="1" row="0">
+        <Container id="grid6" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="cursorinprot" Type="Checkbox" text="Enable cursor" column="1" row="0" />
+          <Image id="lockcursorinprot" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        </Container>
+        <Text id="cursoropt" text="Protected Areas" focusable="false" />
+      </Container>
+      <Container id="container" Type="Vertical Stack" cell-gap="12" focusable="false" column="1" row="1">
+        <Container id="directcrsrframe" Type="Vertical Stack" focusable="false">
+          <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="cursoronoff" Type="Checkbox" text="Direct cursor" column="1" row="0" />
+            <Container id="bx-fill-mode" Type="Vertical Stack" cell-gap="6" focusable="false" column="1" row="1">
+              <Text id="fillmode" text="Insert:" focusable="false" />
+              <Input id="cx-direct-cursor-fill-mode" Type="Select" focusable="false" />
+            </Container>
+            <Image id="lockcursoronoff" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+            <Image id="lockfillmode" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          </Container>
+          <Text id="cursorlabel" text="Direct Cursor" focusable="false" />
+        </Container>
+        <Container id="frm-image" Type="Vertical Stack" vertical-alignment="Top" focusable="false">
+          <Container id="container-2" Type="Vertical Stack" cell-gap="6" focusable="false">
+            <Image id="lock-anchor" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" source="res/lock.png" />
+            <Text id="lb-default-anchor" text="Anchor:" focusable="false" />
+            <Input id="cx-default-anchor" Type="Select" focusable="false" />
+          </Container>
+          <Text id="lb-image" text="Image" focusable="false" />
+        </Container>
+        <Container id="fmtaidsautocompleteframe" Type="Vertical Stack" vertical-alignment="Top" focusable="false">
+          <Container id="grid7" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="enclosewithcharacters" Type="Checkbox" text="Enclose with characters" tooltip="When enabled you can enclose selected text with parentheses, square brackets, curly braces or double/single quotation marks when pressing the respective button." column="1" row="0" />
+            <Image id="lockenclosewithcharacters" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          </Container>
+          <Text id="autocomplete" text="Auto complete" focusable="false" />
+        </Container>
+        <Container id="frm-drag-drop" Type="Vertical Stack" vertical-alignment="Top" focusable="false">
+          <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="allowdragdrop" Type="Checkbox" text="Allow text to be dragged and dropped" column="1" row="0" />
+            <Image id="lockallowdragdrop" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          </Container>
+          <Text id="lb-drag-drop" text="Drag 'n Drop" focusable="false" />
+        </Container>
+        <Container id="frm-typing" Type="Vertical Stack" vertical-alignment="Top" focusable="false">
+          <Container id="grid8" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="typingreplacesselection" Type="Checkbox" text="Typing replaces selection" column="1" row="0" />
+            <Image id="locktypingreplacesselection" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          </Container>
+          <Text id="lb-typing" text="Typing" focusable="false" />
+        </Container>
+      </Container>
+      <Container id="container-3" Type="Vertical Stack" focusable="false" column="0" row="2">
+        <Container id="container-4" Type="Grid" cell-gap="3" focusable="false">
+          <Input id="cb-text-boundaries" Type="Checkbox" text="Text" horizontal-alignment="Left" checked="true" column="0" row="0" />
+          <Input id="rb-text-boundaries-full" Type="Radio" text="Border Outline" horizontal-alignment="Left" column="1" row="0" />
+          <Input id="rb-text-boundaries-crop" Type="Radio" text="Crop marks" horizontal-alignment="Left" checked="true" column="1" row="1" />
+          <Input id="cb-section-boundaries" Type="Checkbox" text="Sections and Frames" horizontal-alignment="Left" checked="true" column="0" row="2" column-span="2" />
+          <Input id="cb-table-boundaries" Type="Checkbox" text="Tables" horizontal-alignment="Left" checked="true" column="0" row="3" column-span="2" />
+        </Container>
+        <Text id="text-5" text="Object Boundaries" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

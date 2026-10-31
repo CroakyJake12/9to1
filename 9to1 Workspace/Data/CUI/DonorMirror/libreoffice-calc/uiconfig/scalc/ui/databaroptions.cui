@@ -1,0 +1,56 @@
+<Cui id="ui-databaroptions" product="9-1" version="1">
+  <Container id="data-bar-options" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="data-bar-options-label" text="Data Bar" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="frame1" Type="Vertical Stack" focusable="false">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="label4" text="Minimum:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+            <Text id="label5" text="Maximum:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+            <Input id="min" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+            <Input id="max" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+            <Input id="min-value" Type="Text" column="2" row="0" />
+            <Input id="max-value" Type="Text" column="2" row="1" />
+          </Container>
+          <Text id="label1" text="Entry Values" focusable="false" />
+        </Container>
+        <Container id="frame2" Type="Vertical Stack" focusable="false">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="label6" text="Positive:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+            <Text id="label7" text="Negative:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+            <Button id="positive-colour" focusable="false" role="Grow" column="1" row="0" />
+            <Button id="negative-colour" focusable="false" role="Grow" column="1" row="1" />
+            <Text id="label10" text="Fill:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+            <Input id="fill-type" Type="Select" focusable="false" column="1" row="2" />
+          </Container>
+          <Text id="label2" text="Bar Colors" focusable="false" />
+        </Container>
+        <Container id="frame3" Type="Vertical Stack" focusable="false">
+          <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="label8" text="Position of vertical axis:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+            <Text id="label9" text="Color of vertical axis:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+            <Input id="axis-pos" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+            <Button id="axis-colour" focusable="false" role="Grow" column="1" row="1" />
+          </Container>
+          <Text id="label3" text="Axis" focusable="false" />
+        </Container>
+        <Container id="frame4" Type="Vertical Stack" focusable="false">
+          <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="label12" text="Minimum bar length (%):" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+            <Text id="label13" text="Maximum bar length (%):" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+            <Input id="min-length" Type="Text" column="1" row="0" />
+            <Input id="max-length" Type="Text" column="1" row="1" />
+          </Container>
+          <Text id="label11" text="Bar Lengths" focusable="false" />
+        </Container>
+        <Input id="only-bar" Type="Checkbox" text="Display bar only" />
+        <Text id="str-same-value" text="The minimum value must be less than the maximum value." focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

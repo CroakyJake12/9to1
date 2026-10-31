@@ -1,0 +1,16 @@
+<Cui id="ui-solversuccessdialog" product="9-1" version="1">
+  <Container id="solver-success-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="solver-success-dialog-label" text="Solving Result" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="Keep Result" text="Keep Result" />
+        <Button id="cancel" content="Restore Previous" text="Restore Previous" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="24" focusable="false">
+        <Text id="label1" text="Do you want to keep the result or do you want to restore previous values?" text-wrapping="Wrap" focusable="false" column="0" row="2" />
+        <Text id="label2" text="Solving successfully finished." focusable="false" column="0" row="0" />
+        <Text id="result" text="Result:" focusable="false" column="0" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,10 @@
+<Cui id="ui-floatinglinestyle" product="9-1" version="1">
+  <Container id="floating-line-style" Type="Menu" focusable="false">
+    <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false">
+      <Container id="container-2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Container id="linestyletreeview" Type="Vertical Stack" column="0" row="0" />
+        <Button id="more" content="More Options..." text="More Options..." column="0" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

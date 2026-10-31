@@ -1,0 +1,23 @@
+<Cui id="ui-tocstylespage" product="9-1" version="1">
+  <Page id="ui-tocstylespage-root">
+    <Image id="image1" focusable="false" source="sw/res/oneleft.png" />
+    <Container id="toc-styles-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label1" text="Levels" focusable="false" column="0" row="0" />
+          <Text id="label2" text="Paragraph Styles" focusable="false" column="2" row="0" />
+          <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Container id="levels" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="container-2" Type="Vertical Stack" role="Grow" column="2" row="1">
+            <Container id="styles" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Button id="default" content="Default" text="Default" horizontal-alignment="Right" vertical-alignment="Center" column="0" row="2" />
+          <Button id="edit" content="Edit" text="Edit" horizontal-alignment="Right" vertical-alignment="Center" column="2" row="2" />
+          <Button id="assign" tooltip="Assign" horizontal-alignment="Center" vertical-alignment="Center" column="1" row="1" />
+        </Container>
+        <Text id="label-grid" text="Assignment" focusable="false" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

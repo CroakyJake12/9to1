@@ -1,0 +1,7 @@
+<Cui id="ui-layoutmenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id="apply" Type="Menu Item" content="Apply to Selected Slides" text="Apply to Selected Slides" focusable="false" />
+    <Button id="menuitem1" Type="Menu Item" focusable="false" />
+    <Button id="insert" Type="Menu Item" content="Insert Slide" text="Insert Slide" focusable="false" />
+  </Container>
+</Cui>

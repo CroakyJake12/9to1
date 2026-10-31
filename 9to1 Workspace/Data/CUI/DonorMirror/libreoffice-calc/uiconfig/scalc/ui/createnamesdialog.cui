@@ -1,0 +1,21 @@
+<Cui id="ui-createnamesdialog" product="9-1" version="1">
+  <Container id="create-names-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="create-names-dialog-label" text="Create Names" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="top" Type="Checkbox" text="Top row" />
+          <Input id="left" Type="Checkbox" text="Left column" />
+          <Input id="bottom" Type="Checkbox" text="Bottom row" />
+          <Input id="right" Type="Checkbox" text="Right column" />
+        </Container>
+        <Text id="label1" text="Create Names From" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

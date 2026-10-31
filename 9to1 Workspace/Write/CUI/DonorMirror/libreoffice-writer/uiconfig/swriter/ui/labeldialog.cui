@@ -1,0 +1,14 @@
+<Cui id="ui-labeldialog" product="9-1" version="1">
+  <Container id="label-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="label-dialog-label" text="Labels" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="New Document" text="New Document" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+        <Button id="reset" content="Reset" text="Reset" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

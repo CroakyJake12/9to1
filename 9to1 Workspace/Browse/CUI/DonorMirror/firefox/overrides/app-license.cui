@@ -1,0 +1,9 @@
+<Cui id="overrides-app-license" product="9-1" version="1">
+  <Page id="overrides-app-license-root">
+    <Text id="p">
+      <Container id="b" Type="Vertical Stack" />
+      <Button id="a" />
+      <Button id="a-2" />
+    </Text>
+  </Page>
+</Cui>

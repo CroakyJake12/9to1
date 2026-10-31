@@ -1,0 +1,26 @@
+<Cui id="ui-sidebarnumberformat" product="9-1" version="1">
+  <Container id="number-format-property-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="3" focusable="false" role="Grow" column="0" row="0">
+      <Text id="numberformatcomboboxlabel" text="Category" focusable="false" column="0" row="0" column-span="2" />
+      <Input id="numberformatcombobox" Type="Select" tooltip="Select a category of contents." vertical-alignment="Center" focusable="false" role="Grow" column="0" row="1" />
+      <Container id="numberformat" Type="Horizontal Stack" column="1" row="1">
+        <Button id=".uno:number-format-decimal" />
+        <Button id=".uno:number-format-percent" />
+        <Button id=".uno:number-format-currency" />
+      </Container>
+      <Container id="box4" Type="Vertical Stack" vertical-alignment="Center" focusable="false" column="0" row="2">
+        <Text id="decimalplaceslabel" text="Decimal places:" focusable="false" />
+        <Text id="denominatorplaceslabel" text="Denominator places:" focusable="false" />
+      </Container>
+      <Container id="box2" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="2">
+        <Input id="decimalplaces" Type="Number" tooltip="Enter the number of decimal places that you want to display." />
+        <Input id="denominatorplaces" Type="Number" tooltip="Enter the number of places for the denominator that you want to display." />
+      </Container>
+      <Text id="leadingzeroeslabel" text="Leading zeroes:" focusable="false" column="0" row="3" />
+      <Input id="leadingzeroes" Type="Number" tooltip="Enter the maximum number of zeroes to display before the decimal point." role="Grow" column="1" row="3" />
+      <Input id="negativenumbersred" Type="Checkbox" text="Negative numbers in red" tooltip="Changes the font color of negative numbers to red." horizontal-alignment="Left" column="0" row="4" column-span="2" />
+      <Input id="thousandseparator" Type="Checkbox" text="Thousands separator" tooltip="Inserts a separator between thousands." horizontal-alignment="Left" column="0" row="5" column-span="2" />
+      <Input id="engineeringnotation" Type="Checkbox" text="Engineering notation" tooltip="Ensures that exponent is a multiple of 3." horizontal-alignment="Left" column="0" row="6" column-span="2" />
+    </Container>
+  </Container>
+</Cui>

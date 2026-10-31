@@ -1,0 +1,7 @@
+<Cui id="ui-assignfragment" product="9-1" version="1">
+  <Page id="ui-assignfragment-root">
+    <Input id="combobox" Type="Select" focusable="false" role="Grow" />
+    <Text id="label" focusable="false" />
+    <Text id="preview" focusable="false" />
+  </Page>
+</Cui>

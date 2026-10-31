@@ -1,0 +1,29 @@
+<Cui id="issue-label-precolors" product="9-1" version="1">
+  <Page id="issue-label-precolors-root">
+    <Container id="div" Type="Vertical Stack">
+      <Button id="button" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Button id="a" />
+          <Button id="a-2" />
+          <Button id="a-3" />
+          <Button id="a-4" />
+          <Button id="a-5" />
+          <Button id="a-6" />
+          <Button id="a-7" />
+          <Button id="a-8" />
+        </Container>
+        <Container id="div-4" Type="Vertical Stack">
+          <Button id="a-9" />
+          <Button id="a-10" />
+          <Button id="a-11" />
+          <Button id="a-12" />
+          <Button id="a-13" />
+          <Button id="a-14" />
+          <Button id="a-15" />
+          <Button id="a-16" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

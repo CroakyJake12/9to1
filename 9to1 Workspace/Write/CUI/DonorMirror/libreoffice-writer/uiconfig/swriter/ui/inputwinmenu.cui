@@ -1,0 +1,47 @@
+<Cui id="ui-inputwinmenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="sum" Type="Menu Item" content="Sum" text="Sum" />
+    <Button id="round" Type="Menu Item" content="Round" text="Round" />
+    <Button id="sqrt" Type="Menu Item" content="Square Root" text="Square Root" />
+    <Button id="pow" Type="Menu Item" content="Power" text="Power" />
+    <Button id="operators" Type="Menu Item" content="Operators" text="Operators">
+      <Container id="container" Type="Menu">
+        <Button id="|" Type="Menu Item" content="List Separator" text="List Separator" />
+        <Button id="eq" Type="Menu Item" content="Equal" text="Equal" />
+        <Button id="neq" Type="Menu Item" content="Not Equal" text="Not Equal" />
+        <Button id="leq" Type="Menu Item" content="Less Than or Equal" text="Less Than or Equal" />
+        <Button id="geq" Type="Menu Item" content="Greater Than or Equal" text="Greater Than or Equal" />
+        <Button id="l" Type="Menu Item" content="Less" text="Less" />
+        <Button id="g" Type="Menu Item" content="Greater" text="Greater" />
+        <Button id="separator1" Type="Menu Item" />
+        <Button id="or" Type="Menu Item" content="Boolean Or" text="Boolean Or" />
+        <Button id="xor" Type="Menu Item" content="Boolean Xor" text="Boolean Xor" />
+        <Button id="and" Type="Menu Item" content="Boolean And" text="Boolean And" />
+        <Button id="not" Type="Menu Item" content="Boolean Not" text="Boolean Not" />
+      </Container>
+    </Button>
+    <Button id="statistics" Type="Menu Item" content="Statistical Functions" text="Statistical Functions">
+      <Container id="container-2" Type="Menu">
+        <Button id="mean" Type="Menu Item" content="Mean" text="Mean" />
+        <Button id="min" Type="Menu Item" content="Minimum" text="Minimum" />
+        <Button id="max" Type="Menu Item" content="Maximum" text="Maximum" />
+        <Button id="count" Type="Menu Item" content="Count" text="Count" />
+        <Button id="product" Type="Menu Item" content="Product" text="Product" />
+      </Container>
+    </Button>
+    <Button id="functions" Type="Menu Item" content="Functions" text="Functions">
+      <Container id="container-3" Type="Menu">
+        <Button id="sin" Type="Menu Item" content="Sine" text="Sine" />
+        <Button id="cos" Type="Menu Item" content="Cosine" text="Cosine" />
+        <Button id="tag" Type="Menu Item" content="Tangent" text="Tangent" />
+        <Button id="asin" Type="Menu Item" content="Arcsine" text="Arcsine" />
+        <Button id="acos" Type="Menu Item" content="Arccosine" text="Arccosine" />
+        <Button id="atan" Type="Menu Item" content="Arctangent" text="Arctangent" />
+        <Button id="separator2" Type="Menu Item" />
+        <Button id="abs" Type="Menu Item" content="Abs" text="Abs" />
+        <Button id="sign" Type="Menu Item" content="Sign" text="Sign" />
+        <Button id="int" Type="Menu Item" content="Int" text="Int" />
+      </Container>
+    </Button>
+  </Container>
+</Cui>

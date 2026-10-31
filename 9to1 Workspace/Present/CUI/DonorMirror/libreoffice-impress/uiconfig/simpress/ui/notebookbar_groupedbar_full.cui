@@ -1,0 +1,1655 @@
+<Cui id="ui-notebookbar-groupedbar-full" product="9-1" version="1">
+  <Page id="ui-notebookbar-groupedbar-full-root">
+    <Container id="menu3-d" Type="Menu">
+      <Button id="extrusion-toggle-d1" Type="Menu Item" />
+      <Button id="separator138" Type="Menu Item" />
+      <Button id="extrusion-tilt-down-d" Type="Menu Item" />
+      <Button id="extrusion-tilt-up-d" Type="Menu Item" />
+      <Button id="extrusion-tilt-left-d" Type="Menu Item" />
+      <Button id="extrusion-tilt-right-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-arrange" Type="Menu">
+      <Button id="bring-to-front-d" Type="Menu Item" />
+      <Button id="forward-d" Type="Menu Item" />
+      <Button id="backward-d" Type="Menu Item" />
+      <Button id="send-to-back-d" Type="Menu Item" />
+      <Button id="set-object-to-foreground-d" Type="Menu Item" />
+      <Button id="set-object-to-background-d" Type="Menu Item" />
+      <Button id="separator130" Type="Menu Item" />
+      <Button id="object-align-left-d" Type="Menu Item" />
+      <Button id="align-center-d" Type="Menu Item" />
+      <Button id="object-align-right-d" Type="Menu Item" />
+      <Button id="align-up-d" Type="Menu Item" />
+      <Button id="align-middle-d" Type="Menu Item" />
+      <Button id="align-down-d" Type="Menu Item" />
+      <Button id="separator128" Type="Menu Item" />
+      <Button id="distribute-selection-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-calculate" Type="Menu">
+      <Button id="table-sort-d" Type="Menu Item" />
+      <Button id="auto-sum-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-color" Type="Menu">
+      <Button id="graphic-filter-sepia-d" Type="Menu Item" />
+      <Button id="graphic-filter-sobel-d" Type="Menu Item" />
+      <Button id="graphic-filter-invert-d" Type="Menu Item" />
+      <Button id="graphic-filter-mosaic-d" Type="Menu Item" />
+      <Button id="graphic-filter-popart" Type="Menu Item" />
+      <Button id="graphic-filter-poster-d" Type="Menu Item" />
+      <Button id="graphic-filter-relief-d" Type="Menu Item" />
+      <Button id="graphic-filter-remove-noise-d" Type="Menu Item" />
+      <Button id="graphic-filter-sharpen-d" Type="Menu Item" />
+      <Button id="graphic-filter-smooth-d" Type="Menu Item" />
+      <Button id="graphic-filter-solarize-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-draw" Type="Menu">
+      <Button id="menu-draw-line" Type="Menu Item" />
+      <Button id="menu-draw-basic-shapes.rectangle" Type="Menu Item" />
+      <Button id="menu-draw-basic-shapes.ellipse" Type="Menu Item" />
+      <Button id="menu-draw-draw-caption" Type="Menu Item" />
+      <Button id="menu-draw-vertical-caption" Type="Menu Item" />
+      <Button id="menu-draw-draw-text" Type="Menu Item" />
+      <Button id="menu-draw-vertical-text" Type="Menu Item" />
+      <Button id="menu-draw-separator1" Type="Menu Item" />
+      <Button id="menu-draw-arrows-toolbox" Type="Menu Item" />
+      <Button id="menu-draw-line-toolbox" Type="Menu Item" />
+      <Button id="menu-draw-connector-toolbox" Type="Menu Item" />
+      <Button id="menu-draw-separator2" Type="Menu Item" />
+      <Button id="menu-draw-basic-shapes" Type="Menu Item" />
+      <Button id="menu-draw-symbol-shapes" Type="Menu Item" />
+      <Button id="menu-draw-arrow-shapes" Type="Menu Item" />
+      <Button id="menu-draw-flow-chart-shapes" Type="Menu Item" />
+      <Button id="menu-draw-callout-shapes" Type="Menu Item" />
+      <Button id="menu-draw-star-shapes" Type="Menu Item" />
+      <Button id="menu-draw-objects3-dtoolbox" Type="Menu Item" />
+      <Button id="menu-draw-separator3" Type="Menu Item" />
+      <Button id="menu-draw-add-text-box" Type="Menu Item" />
+      <Button id="menu-draw-insert-graphic" Type="Menu Item" />
+      <Button id="menu-draw-fontwork-gallery-floater" Type="Menu Item" />
+      <Button id="menu-draw-text-marquee" Type="Menu Item" />
+      <Button id="menu-draw-separator4" Type="Menu Item" />
+      <Button id="menu-draw-extrusion-toggle" Type="Menu Item" />
+      <Button id="menu-draw-toggle-object-bezier-mode" Type="Menu Item" />
+    </Container>
+    <Container id="menu-draw-edit" Type="Menu">
+      <Button id="draw-edit-select-object" Type="Menu Item" />
+      <Button id="draw-edit-toggle-object-bezier-mode" Type="Menu Item" />
+      <Button id="draw-edit-separator1" Type="Menu Item" />
+      <Button id="draw-edit-toggle-object-rotate-mode" Type="Menu Item" />
+      <Button id="draw-edit-flip-vertical" Type="Menu Item" />
+      <Button id="draw-edit-flip-horizontal" Type="Menu Item" />
+      <Button id="draw-edit-advanced-mode" Type="Menu Item" />
+      <Button id="draw-edit-separator2" Type="Menu Item" />
+      <Button id="draw-edit-transform-dialog" Type="Menu Item" />
+      <Button id="draw-edit-format-line" Type="Menu Item" />
+      <Button id="draw-edit-format-area" Type="Menu Item" />
+      <Button id="draw-edit-text-attributes" Type="Menu Item" />
+      <Button id="draw-edit-font-work" Type="Menu Item" />
+    </Container>
+    <Container id="menu-edit" Type="Menu">
+      <Button id="menu-edit-repeat" Type="Menu Item" />
+      <Button id="menu-edit-separator1" Type="Menu Item" />
+      <Button id="menu-edit-cut" Type="Menu Item" />
+      <Button id="menu-edit-copy" Type="Menu Item" />
+      <Button id="menu-edit-paste" Type="Menu Item" />
+      <Button id="menu-edit-paste-unformatted" Type="Menu Item" />
+      <Button id="menu-edit-paste-special" Type="Menu Item" />
+      <Button id="menu-edit-separator2" Type="Menu Item" />
+      <Button id="menu-edit-copy-objects" Type="Menu Item" />
+      <Button id="menu-edit-select-all" Type="Menu Item" />
+      <Button id="menu-edit-separator3" Type="Menu Item" />
+      <Button id="menu-edit-focus-to-findbar" Type="Menu Item" />
+      <Button id="menu-edit-search-dialog" Type="Menu Item" />
+      <Button id="menu-edit-restore-editing-view" Type="Menu Item" />
+      <Button id="menu-edit-separator4" Type="Menu Item" />
+      <Button id="menu-edit-edit-hyperlink" Type="Menu Item" />
+      <Button id="menu-edit-modify-field" Type="Menu Item" />
+      <Button id="menu-edit-manage-links" Type="Menu Item" />
+      <Button id="menu-edit-image-map-dialog" Type="Menu Item" />
+      <Button id="menu-edit-object-menue" Type="Menu Item" />
+      <Button id="menu-edit-separator5" Type="Menu Item" />
+      <Button id="menu-edit-toggle-object-bezier-mode" Type="Menu Item" />
+      <Button id="menu-edit-glue-edit-mode" Type="Menu Item" />
+      <Button id="menu-edit-edit-doc" Type="Menu Item" />
+      <Button id="menu-edit-separator6" Type="Menu Item" />
+      <Button id="menu-edit-page-setup" Type="Menu Item" />
+    </Container>
+    <Container id="menu-file" Type="Menu">
+      <Button id="add-direct-d" Type="Menu Item" />
+      <Button id="recent-file-list-d" Type="Menu Item" />
+      <Button id="close-doc-d" Type="Menu Item" />
+      <Button id="separator39" Type="Menu Item" />
+      <Button id="save-d" Type="Menu Item" />
+      <Button id="save-as-d" Type="Menu Item" />
+      <Button id="save-as-remote-d" Type="Menu Item" />
+      <Button id="separator61" Type="Menu Item" />
+      <Button id="menu-file-reload" Type="Menu Item" />
+      <Button id="menu-file-separator" Type="Menu Item" />
+      <Button id="export-to-d" Type="Menu Item" />
+      <Button id="export-to-pdfd" Type="Menu Item" />
+      <Button id="send-mail" Type="Menu Item" />
+      <Button id="separator44" Type="Menu Item" />
+      <Button id="send-mail-d" Type="Menu Item" />
+      <Button id="send-mail-doc-as-pdfd" Type="Menu Item" />
+      <Button id="send-via-bluetooth-d" Type="Menu Item" />
+      <Button id="separator48" Type="Menu Item" />
+      <Button id="web-html-d" Type="Menu Item" />
+      <Button id="menu-file-print" Type="Menu Item" />
+      <Button id="print-default-d" Type="Menu Item" hidden="true" />
+      <Button id="printer-setup-d" Type="Menu Item" />
+      <Button id="separator50" Type="Menu Item" />
+      <Button id="signature-d" Type="Menu Item" />
+      <Button id="sign-pdfd" Type="Menu Item" />
+      <Button id="set-document-properties-d" Type="Menu Item" />
+      <Button id="separator42" Type="Menu Item" />
+      <Button id="quit-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-format" Type="Menu">
+      <Button id="grow-d" Type="Menu Item" />
+      <Button id="shrink-d" Type="Menu Item" />
+      <Button id="separator72" Type="Menu Item" />
+      <Button id="shadowed-d" Type="Menu Item" />
+      <Button id="outline-font-d" Type="Menu Item" />
+      <Button id="overline-d" Type="Menu Item" />
+      <Button id="separator52" Type="Menu Item" />
+      <Button id="super-script1" Type="Menu Item" />
+      <Button id="sub-script-d" Type="Menu Item" />
+      <Button id="separator40" Type="Menu Item" />
+      <Button id="change-case-to-upper-d" Type="Menu Item" />
+      <Button id="change-case-to-lower-d" Type="Menu Item" />
+      <Button id="change-case-rotate-case-d" Type="Menu Item" />
+      <Button id="separator54" Type="Menu Item" />
+      <Button id="change-case-to-sentence-case-d" Type="Menu Item" />
+      <Button id="change-case-to-title-case-d" Type="Menu Item" />
+      <Button id="change-case-to-toggle-case-d" Type="Menu Item" />
+      <Button id="separator155" Type="Menu Item" />
+      <Button id="insert-non-breaking-space-d" Type="Menu Item" />
+      <Button id="insert-hard-hyphen-d" Type="Menu Item" />
+      <Button id="insert-soft-hyphen-d" Type="Menu Item" />
+      <Button id="insert-zwspd" Type="Menu Item" />
+      <Button id="insert-wjd" Type="Menu Item" />
+      <Button id="insert-lrmd" Type="Menu Item" />
+      <Button id="insert-rlmd" Type="Menu Item" />
+      <Button id="separator156" Type="Menu Item" />
+      <Button id="insert-rlmd1" Type="Menu Item" />
+    </Container>
+    <Container id="menu-graphic" Type="Menu">
+      <Button id="crop-d1" Type="Menu Item" />
+      <Button id="external-edit-d1" Type="Menu Item" />
+      <Button id="change-picture-d1" Type="Menu Item" />
+      <Button id="compress-graphic-d1" Type="Menu Item" />
+      <Button id="save-graphic-d1" Type="Menu Item" />
+      <Button id="separator18" Type="Menu Item" />
+      <Button id="object-mirror-vertical-d" Type="Menu Item" />
+      <Button id="object-mirror-horizontal-d" Type="Menu Item" />
+      <Button id="separator21" Type="Menu Item" />
+      <Button id="change-bezier1" Type="Menu Item" />
+      <Button id="change-polygon-d2" Type="Menu Item" />
+      <Button id="convert-to-contour-d2" Type="Menu Item" />
+      <Button id="convert-into3-dd2" Type="Menu Item" />
+      <Button id="convert-into3-dlathe-fast-d2" Type="Menu Item" />
+      <Button id="convert-into-bitmap-d2" Type="Menu Item" />
+      <Button id="convert-into-meta-file-d2" Type="Menu Item" />
+      <Button id="separator22" Type="Menu Item" />
+      <Button id="image-map-dialog-d1" Type="Menu Item" />
+      <Button id="separator142" Type="Menu Item" />
+      <Button id="animation-effects-d" Type="Menu Item" />
+      <Button id="object-title-description1" Type="Menu Item" />
+    </Container>
+    <Container id="menu-grid" Type="Menu">
+      <Button id="show-ruler" Type="Menu Item" />
+      <Button id="separator28" Type="Menu Item" />
+      <Button id="grid-visible-d" Type="Menu Item" />
+      <Button id="grid-use-d" Type="Menu Item" />
+      <Button id="helplines-move-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-group" Type="Menu">
+      <Button id="group-box-d" Type="Menu Item" />
+      <Button id="name-group-d" Type="Menu Item" />
+      <Button id="object-title-description-d" Type="Menu Item" />
+      <Button id="separator119" Type="Menu Item" />
+      <Button id="format-group-d" Type="Menu Item" />
+      <Button id="format-ungroup-d" Type="Menu Item" />
+      <Button id="enter-group-d" Type="Menu Item" />
+      <Button id="leave-group-d" Type="Menu Item" />
+      <Button id="separator137" Type="Menu Item" />
+      <Button id="change-bezier-d" Type="Menu Item" />
+      <Button id="change-polygon-d" Type="Menu Item" />
+      <Button id="convert-to-contour-d" Type="Menu Item" />
+      <Button id="convert-into3-dd" Type="Menu Item" />
+      <Button id="convert-into3-dlathe-fast-d" Type="Menu Item" />
+      <Button id="convert-into-bitmap-d" Type="Menu Item" />
+      <Button id="convert-into-meta-file-d" Type="Menu Item" />
+      <Button id="separator144" Type="Menu Item" />
+      <Button id="combine-d" Type="Menu Item" />
+      <Button id="dismantle-d" Type="Menu Item" />
+      <Button id="connect-d" Type="Menu Item" />
+      <Button id="break-d" Type="Menu Item" />
+      <Button id="merge-d" Type="Menu Item" />
+      <Button id="substract-d" Type="Menu Item" />
+      <Button id="intersect-d" Type="Menu Item" />
+      <Button id="equalize-width-d" Type="Menu Item" />
+      <Button id="equalize-height-d" Type="Menu Item" />
+      <Button id="separator150" Type="Menu Item" />
+      <Button id="distribute-selection1" Type="Menu Item" />
+    </Container>
+    <Container id="menu-help" Type="Menu">
+      <Button id="help-index-d" Type="Menu Item" />
+      <Button id="extended-help-d" Type="Menu Item" />
+      <Button id="documentation-d" Type="Menu Item" />
+      <Button id="separator94" Type="Menu Item" />
+      <Button id="question-answers-d1" Type="Menu Item" />
+      <Button id="donation-d1" Type="Menu Item" />
+      <Button id="separator43" Type="Menu Item" />
+      <Button id="safe-mode-d1" Type="Menu Item" />
+      <Button id="separator113" Type="Menu Item" />
+      <Button id="show-license-d1" Type="Menu Item" />
+      <Button id="about-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-insert" Type="Menu">
+      <Button id="photo-album-dialog-d" Type="Menu Item" />
+      <Button id="animation-objects-d" Type="Menu Item" />
+      <Button id="separator80" Type="Menu Item" />
+      <Button id="gallery-d" Type="Menu Item" />
+      <Button id="twain-select-d" Type="Menu Item" />
+      <Button id="insert-avmedia-d" Type="Menu Item" />
+      <Button id="separator8" Type="Menu Item" />
+      <Button id="insert-qr-code-d" Type="Menu Item" />
+      <Button id="insert-object-d" Type="Menu Item" />
+      <Button id="import-from-file" Type="Menu Item" />
+      <Button id="insert-math-d" Type="Menu Item" />
+      <Button id="separator49" Type="Menu Item" />
+      <Button id="draw-text-d" Type="Menu Item" />
+      <Button id="fontwork-gallery-floater-d" Type="Menu Item" />
+      <Button id="separator56" Type="Menu Item" />
+      <Button id="hyperlink-dialog-d" Type="Menu Item" />
+      <Button id="capture-point-d" Type="Menu Item" />
+      <Button id="separator76" Type="Menu Item" />
+      <Button id="insert-page-field-d" Type="Menu Item" />
+      <Button id="insert-pages-field-d" Type="Menu Item" />
+      <Button id="header-and-footer-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-master-page" Type="Menu">
+      <Button id="insert-master-page-d1" Type="Menu Item" />
+      <Button id="rename-master-page-d1" Type="Menu Item" />
+      <Button id="delete-master-page-d1" Type="Menu Item" />
+      <Button id="close-master-view-d1" Type="Menu Item" />
+    </Container>
+    <Container id="menu-ole" Type="Menu">
+      <Button id="object-menue" Type="Menu Item" />
+      <Button id="separator154" Type="Menu Item" />
+      <Button id="insert-caption-dialog3" Type="Menu Item" />
+      <Button id="separator148" Type="Menu Item" />
+      <Button id="change-bezier-d1" Type="Menu Item" />
+      <Button id="change-polygon-d1" Type="Menu Item" />
+      <Button id="convert-to-contour-d1" Type="Menu Item" />
+      <Button id="convert-into3-dd1" Type="Menu Item" />
+      <Button id="convert-into3-dlathe-fast-d1" Type="Menu Item" />
+      <Button id="convert-into-bitmap-d1" Type="Menu Item" />
+      <Button id="convert-into-meta-file-d1" Type="Menu Item" />
+      <Button id="separator149" Type="Menu Item" />
+      <Button id="combine-d1" Type="Menu Item" />
+      <Button id="dismantle-d1" Type="Menu Item" />
+      <Button id="connect-d1" Type="Menu Item" />
+      <Button id="break-d1" Type="Menu Item" />
+      <Button id="merge-d1" Type="Menu Item" />
+      <Button id="substract-d1" Type="Menu Item" />
+      <Button id="intersect-d1" Type="Menu Item" />
+      <Button id="equalize-width-d1" Type="Menu Item" />
+      <Button id="equalize-height-d1" Type="Menu Item" />
+      <Button id="separator151" Type="Menu Item" />
+      <Button id="distribute-selection2" Type="Menu Item" />
+    </Container>
+    <Container id="menu-paragraph" Type="Menu">
+      <Button id="para-left-to-right-d" />
+      <Button id="para-right-to-left-d" />
+      <Button id="separator78" Type="Menu Item" />
+      <Button id="paraspace-increase-d" Type="Menu Item" />
+      <Button id="paraspace-decrease-d" Type="Menu Item" />
+      <Button id="separator79" Type="Menu Item" />
+      <Button id="space-para1-d" />
+      <Button id="space-para15-d" />
+      <Button id="space-para2-d" />
+      <Button id="separator16" Type="Menu Item" />
+      <Button id="paragraph-dialog-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-review" Type="Menu">
+      <Button id="menu-review-spell-dialog" Type="Menu Item" />
+      <Button id="menu-review-spell-online" Type="Menu Item" />
+      <Button id="menu-review-thesaurus-dialog" Type="Menu Item" />
+      <Button id="menu-review-more-dictionaries" Type="Menu Item" />
+      <Button id="menu-review-separator1" Type="Menu Item" />
+      <Button id="menu-review-set-language-all-text-menu" Type="Menu Item" />
+      <Button id="menu-review-separator2" Type="Menu Item" />
+      <Button id="menu-review-chinese-conversion" Type="Menu Item" />
+      <Button id="menu-review-hangul-hanja-conversion" Type="Menu Item" />
+      <Button id="menu-review-hyphenation" Type="Menu Item" />
+      <Button id="menu-review-separator3" Type="Menu Item" />
+      <Button id="menu-review-separator4" Type="Menu Item" />
+      <Button id="menu-review-redact-doc" Type="Menu Item" />
+    </Container>
+    <Container id="menu-rows-columns" Type="Menu">
+      <Button id="insert-rows-before-d" Type="Menu Item" />
+      <Button id="insert-rows-after-d" Type="Menu Item" />
+      <Button id="insert-row-dialog-d" Type="Menu Item" />
+      <Button id="separator35" Type="Menu Item" />
+      <Button id="insert-columns-before-d" Type="Menu Item" />
+      <Button id="insert-columns-after-d" Type="Menu Item" />
+      <Button id="insert-column-dialog-d" Type="Menu Item" />
+      <Button id="separator45" Type="Menu Item" />
+      <Button id="delete-rows-d" Type="Menu Item" />
+      <Button id="delete-columns-d" Type="Menu Item" />
+      <Button id="separator29" Type="Menu Item" />
+      <Button id="entire-row-d" Type="Menu Item" />
+      <Button id="entire-column-d" Type="Menu Item" />
+      <Button id="select-table-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-settings" Type="Menu">
+      <Button id="menubar-d" Type="Menu Item" />
+      <Button id="sidebar-d" Type="Menu Item" />
+      <Button id="separator99" Type="Menu Item" />
+      <Button id="uipicker" Type="Menu Item" />
+      <Button id="available-toolbars-d1" Type="Menu Item" />
+      <Button id="options-tree-dialog-d" Type="Menu Item" />
+      <Button id="separator55" Type="Menu Item" />
+      <Button id="extensions-d" Type="Menu Item" />
+      <Button id="separator58" Type="Menu Item" />
+      <Button id="help-index-d1" Type="Menu Item" />
+      <Button id="about-d1" Type="Menu Item" />
+    </Container>
+    <Container id="menu-slide" Type="Menu">
+      <Button id="insert-slide-d" Type="Menu Item" />
+      <Button id="duplicate-slide" Type="Menu Item" />
+      <Button id="delete-slide" Type="Menu Item" />
+      <Button id="separator102" Type="Menu Item" />
+      <Button id="modify-page-d" Type="Menu Item" />
+      <Button id="slide-setup-d" Type="Menu Item" />
+      <Button id="select-background-d" Type="Menu Item" />
+      <Button id="separator36" Type="Menu Item" />
+      <Button id="insert-master-page-d" Type="Menu Item" />
+      <Button id="delete-master-page-d" Type="Menu Item" />
+      <Button id="separator103" Type="Menu Item" />
+      <Button id="presentation-layout-d" Type="Menu Item" />
+      <Button id="display-master-background-d" Type="Menu Item" />
+      <Button id="display-master-objects-d" Type="Menu Item" />
+      <Button id="separator157" Type="Menu Item" />
+      <Button id="hide-slide-d" Type="Menu Item" />
+      <Button id="show-slide-d" Type="Menu Item" />
+      <Button id="rename-slide-d" Type="Menu Item" />
+      <Button id="separator153" Type="Menu Item" />
+      <Button id="import-slide-from-file-d" Type="Menu Item" />
+      <Button id="summary-page-d" Type="Menu Item" />
+      <Button id="expand-page-d" Type="Menu Item" />
+      <Button id="separator165" Type="Menu Item" />
+      <Button id="move-slide-up-d" Type="Menu Item" />
+      <Button id="move-slide-down-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-slide-show" Type="Menu">
+      <Button id="presentation-d" Type="Menu Item" />
+      <Button id="presentation-current-slide-d" Type="Menu Item" />
+      <Button id="separator2" Type="Menu Item" />
+      <Button id="rehearse-timings-d" Type="Menu Item" />
+      <Button id="custom-show-dialog-d" Type="Menu Item" />
+      <Button id="remote-d" Type="Menu Item" />
+      <Button id="separator32" Type="Menu Item" />
+      <Button id="slide-change-window-d" Type="Menu Item" />
+      <Button id="custom-animation-d" Type="Menu Item" />
+      <Button id="separator114" Type="Menu Item" />
+      <Button id="output-quality-color-d2" />
+      <Button id="output-quality-grayscale-d2" />
+      <Button id="separator75" Type="Menu Item" />
+      <Button id="presentation-minimizer-d2" Type="Menu Item" />
+      <Button id="presentation-dialog-d" Type="Menu Item" />
+    </Container>
+    <Container id="menu-table" Type="Menu">
+      <Button id="auto-format-d1" Type="Menu Item" />
+      <Button id="separator47" Type="Menu Item" />
+      <Button id="auto-format-d" Type="Menu Item" />
+      <Button id="menu-table-object-align" Type="Menu Item" />
+      <Button id="menu-table-separator1" Type="Menu Item" />
+      <Button id="heading-rows-repeat-d" Type="Menu Item" />
+      <Button id="row-split-d" Type="Menu Item" />
+      <Button id="separator33" Type="Menu Item" />
+      <Button id="convert-text-to-table-d" Type="Menu Item" />
+      <Button id="convert-table-to-text-d" Type="Menu Item" />
+      <Button id="separator34" Type="Menu Item" />
+      <Button id="table-number-recognition-d" Type="Menu Item" />
+      <Button id="table-boundaries" Type="Menu Item" />
+    </Container>
+    <Container id="menu-tools" Type="Menu">
+      <Button id="macro-organizer-d" Type="Menu Item" />
+      <Button id="macro-signature-d" Type="Menu Item" />
+      <Button id="script-organizer-d" Type="Menu Item" />
+      <Button id="view-data-source-browser-d" Type="Menu Item" />
+      <Button id="basic-ideappear-d" Type="Menu Item" />
+      <Button id="run-macro-d" Type="Menu Item" />
+      <Button id="macro-recorder-d" Type="Menu Item" />
+      <Button id="separator64" Type="Menu Item" />
+      <Button id="presentation-minimizer-d" Type="Menu Item" />
+      <Button id="bmp-mask-d" Type="Menu Item" />
+      <Button id="avmedia-player-d" Type="Menu Item" />
+      <Button id="separator69" Type="Menu Item" />
+      <Button id="open-xmlfilter-settings-d" Type="Menu Item" />
+      <Button id="package-manager-dialog-d" Type="Menu Item" />
+      <Button id="options-tree-dialog-d2" Type="Menu Item" />
+    </Container>
+    <Container id="menu-view" Type="Menu">
+      <Button id="menu-view-normal-multi-pane-gui" />
+      <Button id="menu-view-outline-mode" />
+      <Button id="menu-view-notes-mode" />
+      <Button id="menu-view-dia-mode" />
+      <Button id="menu-view-separator1" Type="Menu Item" />
+      <Button id="menu-view-slide-master-page" />
+      <Button id="menu-view-notes-master-page" />
+      <Button id="menu-view-handout-mode" />
+      <Button id="menu-view-separator2" Type="Menu Item" />
+      <Button id="menu-view-menubar" Type="Menu Item" />
+      <Button id="menu-view-sidebar" Type="Menu Item" />
+      <Button id="menu-view-status-bar-visible" Type="Menu Item" />
+      <Button id="menu-view-separator3" Type="Menu Item" />
+      <Button id="menu-view-left-pane-impress" Type="Menu Item" />
+      <Button id="menu-view-toggle-tab-bar-visibility" Type="Menu Item" />
+      <Button id="menu-view-show-ruler" Type="Menu Item" />
+      <Button id="menu-view-separator4" Type="Menu Item" />
+      <Button id="menu-view-grid-visible" Type="Menu Item" />
+      <Button id="menu-view-snap-frame" Type="Menu Item" />
+      <Button id="menu-view-snap-points" Type="Menu Item" />
+      <Button id="menu-view-snap-border" Type="Menu Item" />
+      <Button id="menu-view-separator5" Type="Menu Item" />
+      <Button id="menu-view-output-quality-color" />
+      <Button id="menu-view-output-quality-grayscale" />
+      <Button id="menu-view-separator6" Type="Menu Item" />
+      <Button id="menu-view-zoom-page" Type="Menu Item" />
+      <Button id="menu-view-zoom-page-width" Type="Menu Item" />
+      <Button id="menu-view-zoom100-percent" Type="Menu Item" />
+      <Button id="menu-view-separator7" Type="Menu Item" />
+      <Button id="menu-view-zoom" Type="Menu Item" />
+    </Container>
+    <Container id="notebook-bar" Type="Grid">
+      <Container id="box8" Type="Vertical Stack">
+        <Container id="default-box1" Type="Horizontal Stack">
+          <Container id="section-tools" Type="Horizontal Stack" horizontal-alignment="Right">
+            <Container id="horizontal2" Type="Vertical Stack">
+              <Container id="vertical2" Type="Vertical Stack" horizontal-alignment="Right">
+                <Container id="box45" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Container id="section-bottom2" Type="Vertical Stack">
+                    <Button id="search-dialog1" />
+                  </Container>
+                  <Button id="menub:menu-settings" content="Menu" text="Menu" />
+                </Container>
+                <Container id="box46" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Container id="section-bottom3" Type="Vertical Stack">
+                    <Button id="presentation-current-slide" />
+                  </Container>
+                  <Button id="toolsb:menu-tools" content="Tools" text="Tools" />
+                </Container>
+                <Container id="box44" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                  <Container id="third-ext2" Type="Vertical Stack">
+                    <Button id="help-index1" />
+                  </Container>
+                  <Button id="helpb:menu-help" content="Help" text="Help" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="section-file" Type="Horizontal Stack">
+            <Container id="horizontal" Type="Vertical Stack">
+              <Container id="vertical" Type="Vertical Stack">
+                <Container id="first" Type="Vertical Stack">
+                  <Button id="open" />
+                </Container>
+                <Container id="second" Type="Vertical Stack">
+                  <Button id="save" />
+                </Container>
+                <Container id="third" Type="Vertical Stack">
+                  <Button id="fileb:menu-file" content="File" text="File" horizontal-alignment="Left" />
+                  <Container id="third-ext" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                    <Button id="print" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="separator7" Type="Horizontal Stack" horizontal-alignment="Right" />
+          <Container id="section-edit" Type="Horizontal Stack">
+            <Container id="horizontal1" Type="Vertical Stack">
+              <Container id="separator1" Type="Horizontal Stack" />
+              <Container id="vertical1" Type="Vertical Stack">
+                <Container id="box5" Type="Vertical Stack">
+                  <Container id="first1" Type="Vertical Stack">
+                    <Button id="undo1" />
+                  </Container>
+                  <Container id="first12" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                    <Button id="redo" />
+                  </Container>
+                </Container>
+                <Container id="box6" Type="Vertical Stack">
+                  <Container id="second1" Type="Vertical Stack">
+                    <Button id="paste1" />
+                  </Container>
+                  <Container id="second13" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                    <Button id="cut" />
+                  </Container>
+                </Container>
+                <Container id="box7" Type="Vertical Stack">
+                  <Button id="editb:menu-edit" content="Edit" text="Edit" horizontal-alignment="Left" />
+                  <Container id="third-ext1" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                    <Button id="copy" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="context-container" Type="Vertical Stack" role="Grow">
+            <Container id="default-box" Type="Horizontal Stack">
+              <Container id="section-slide-show" Type="Horizontal Stack">
+                <Container id="horizontal11" Type="Vertical Stack">
+                  <Container id="separator10" Type="Horizontal Stack" />
+                  <Container id="vertical11" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="second14" Type="Vertical Stack">
+                      <Button id="presentation" />
+                    </Container>
+                    <Container id="first10" Type="Vertical Stack">
+                      <Button id="presentation-current-slide2" />
+                    </Container>
+                    <Container id="box19" Type="Vertical Stack">
+                      <Button id="slideshowb:menu-slide-show" content="Slide Show" text="Slide Show" horizontal-alignment="Left" />
+                      <Container id="third15" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="slide-change-window3" />
+                        <Button id="rehearse-timings" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-slide" Type="Horizontal Stack">
+                <Container id="horizontal3" Type="Vertical Stack">
+                  <Container id="separator3" Type="Horizontal Stack" />
+                  <Container id="vertical3" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="third24" Type="Vertical Stack">
+                      <Container id="first32" Type="Vertical Stack">
+                        <Button id="insert-page" />
+                      </Container>
+                      <Container id="first19" Type="Vertical Stack">
+                        <Button id="duplicate-slide2" />
+                      </Container>
+                    </Container>
+                    <Container id="first31" Type="Vertical Stack">
+                      <Button id="assign-layout3" />
+                    </Container>
+                    <Container id="third3" Type="Vertical Stack">
+                      <Button id="paragraphstylet:menu-slide" content="Slide" text="Slide" horizontal-alignment="Left" />
+                      <Container id="third30" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="modify-page2" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-insert3" Type="Horizontal Stack">
+                <Container id="horizontal8" Type="Vertical Stack" role="Grow">
+                  <Container id="separator6" Type="Horizontal Stack" />
+                  <Container id="vertical8" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first36" Type="Vertical Stack">
+                      <Button id="insert-graphic3" />
+                    </Container>
+                    <Container id="first7" Type="Vertical Stack">
+                      <Button id="draw-text4" role="Grow" />
+                    </Container>
+                    <Container id="box9" Type="Vertical Stack" role="Grow">
+                      <Button id="insert-text:menu-insert" content="Insert" text="Insert" horizontal-alignment="Left" />
+                      <Container id="third-ext14" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw1" Type="Horizontal Stack">
+                <Container id="horizontal42" Type="Vertical Stack">
+                  <Container id="separator162" Type="Horizontal Stack" />
+                  <Container id="vertical43" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box65" Type="Vertical Stack">
+                      <Container id="box79" Type="Vertical Stack">
+                        <Container id="shapes9" Type="Vertical Stack">
+                          <Button id="line1" role="Grow" />
+                          <Button id="polygon-unfilled1" />
+                          <Button id="bezier-unfilled1" />
+                          <Button id="arrows-toolbox1" />
+                        </Container>
+                        <Container id="shapes10" Type="Vertical Stack">
+                          <Button id="rectangle1" role="Grow" />
+                          <Button id="basic-shapes.round-rectangle1" role="Grow" />
+                          <Button id="ellipse1" role="Grow" />
+                          <Button id="line-toolbox1" />
+                        </Container>
+                      </Container>
+                      <Container id="separator164" Type="Horizontal Stack" />
+                      <Container id="box81" Type="Vertical Stack">
+                        <Container id="shapes11" Type="Vertical Stack">
+                          <Button id="basic-shapes2" role="Grow" />
+                          <Button id="symbol-shapes2" role="Grow" />
+                          <Button id="arrow-shapes2" role="Grow" />
+                        </Container>
+                        <Container id="shapes12" Type="Vertical Stack">
+                          <Button id="star-shapes2" role="Grow" />
+                          <Button id="callout-shapes2" role="Grow" />
+                          <Button id="flow-chart-shapes2" role="Grow" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="third16" Type="Vertical Stack">
+                      <Button id="draw:menu-draw" content="Draw" text="Draw" horizontal-alignment="Left" />
+                      <Container id="third3-ext4" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="toggle-object-bezier-mode1" role="Grow" />
+                        <Button id="custom-animation4" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-review" Type="Horizontal Stack">
+                <Container id="horizontal49" Type="Vertical Stack">
+                  <Container id="separator25" Type="Horizontal Stack" />
+                  <Container id="vertical50" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box84" Type="Vertical Stack">
+                      <Container id="first18" Type="Vertical Stack">
+                        <Button id="spell-dialog" />
+                      </Container>
+                    </Container>
+                    <Container id="box85" Type="Vertical Stack">
+                      <Container id="second23" Type="Vertical Stack">
+                        <Button id="insert-annotation1" />
+                      </Container>
+                    </Container>
+                    <Container id="box86" Type="Vertical Stack">
+                      <Button id="reviewb:menu-review" content="Review" text="Review" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-view" Type="Horizontal Stack">
+                <Container id="horizontal12" Type="Vertical Stack">
+                  <Container id="separator11" Type="Horizontal Stack" />
+                  <Container id="vertical12" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first11" Type="Vertical Stack">
+                      <Button id="zoom" />
+                    </Container>
+                    <Container id="second11" Type="Vertical Stack">
+                      <Button id="normal-multi-pane-gui" />
+                      <Button id="dia-mode" />
+                      <Button id="slide-master-page" />
+                    </Container>
+                    <Container id="box20" Type="Vertical Stack">
+                      <Button id="viewb:menu-view" content="View" text="View" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-arrang1" Type="Horizontal Stack">
+                <Container id="horizontal23" Type="Vertical Stack">
+                  <Container id="separator9" Type="Horizontal Stack" />
+                  <Container id="vertical24" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box1" Type="Vertical Stack">
+                      <Container id="box4" Type="Vertical Stack">
+                        <Container id="wrap8" Type="Vertical Stack">
+                          <Button id="forward2" />
+                          <Button id="forward3" />
+                        </Container>
+                        <Container id="align7" Type="Vertical Stack" vertical-alignment="Bottom" role="Grow">
+                          <Button id="backward4" />
+                          <Button id="forward6" />
+                        </Container>
+                      </Container>
+                      <Container id="separator57" Type="Horizontal Stack" />
+                      <Container id="wrap-group3" Type="Vertical Stack">
+                        <Container id="wrap9" Type="Vertical Stack">
+                          <Button id="object-align-left" />
+                          <Button id="object-align-right" />
+                          <Button id="align-center" />
+                        </Container>
+                        <Container id="wrap10" Type="Vertical Stack">
+                          <Button id="align-up" />
+                          <Button id="align-middle" />
+                          <Button id="align-down" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box11" Type="Vertical Stack">
+                      <Button id="arrangedraw:menu-arrange" content="Arrange" text="Arrange" horizontal-alignment="Left" />
+                      <Container id="third-ext3" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="draw-text-box" Type="Horizontal Stack">
+              <Container id="section-slide-show1" Type="Horizontal Stack">
+                <Container id="horizontal10" Type="Vertical Stack">
+                  <Container id="separator62" Type="Horizontal Stack" />
+                  <Container id="vertical10" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="second6" Type="Vertical Stack">
+                      <Button id="presentation3" />
+                    </Container>
+                    <Container id="first2" Type="Vertical Stack">
+                      <Button id="presentation-current-slide3" />
+                    </Container>
+                    <Container id="box3" Type="Vertical Stack">
+                      <Button id="slideshowt:menu-slide-show" content="Slide Show" text="Slide Show" horizontal-alignment="Left" />
+                      <Container id="third18" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="rehearse-timings1" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-format" Type="Horizontal Stack">
+                <Container id="horizontal5" Type="Vertical Stack">
+                  <Container id="separator4" Type="Horizontal Stack" />
+                  <Container id="vertical5" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box10" Type="Vertical Stack">
+                      <Container id="box12" Type="Vertical Stack">
+                        <Container id="first3" Type="Vertical Stack" role="Grow">
+                          <Button id="char-font-name3" role="Grow" />
+                          <Button id="font-height3" role="Grow" />
+                        </Container>
+                        <Container id="second3" Type="Vertical Stack" horizontal-alignment="Left">
+                          <Button id="bold2" />
+                          <Button id="italic2" />
+                          <Button id="underline2" />
+                          <Button id="strikeout3" />
+                          <Button id="shadowed1" />
+                          <Button id="fontcolor3" />
+                          <Button id="char-back-color1" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box13" Type="Vertical Stack">
+                      <Button id="format:menu-format" content="Format" text="Format" horizontal-alignment="Left" />
+                      <Container id="third-ext4" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="grow1" />
+                        <Button id="shrink1" />
+                      </Container>
+                      <Container id="third-ext5" Type="Vertical Stack">
+                        <Button id="font-dialog3" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-paragraph" Type="Horizontal Stack">
+                <Container id="horizontal7" Type="Vertical Stack">
+                  <Container id="separator5" Type="Horizontal Stack" />
+                  <Container id="vertical7" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box21" Type="Vertical Stack">
+                      <Container id="first5" Type="Vertical Stack">
+                        <Button id="paraspace-increase1" />
+                        <Button id="paraspace-decrease1" />
+                        <Button id="left-para2" />
+                        <Button id="center-para2" />
+                        <Button id="right-para2" />
+                        <Button id="justify-para2" />
+                      </Container>
+                      <Container id="box58" Type="Vertical Stack">
+                        <Container id="second5" Type="Vertical Stack">
+                          <Button id="default-bullet2" />
+                          <Button id="default-numbering2" />
+                        </Container>
+                        <Container id="second4" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                          <Button id="cell-vert-top1" />
+                          <Button id="cell-vert-center1" />
+                          <Button id="cell-vert-bottom1" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box14" Type="Vertical Stack">
+                      <Button id="paragraph:menu-paragraph" content="Paragraph" text="Paragraph" horizontal-alignment="Left" />
+                      <Container id="third5" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="paragraph-dialog3" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-insert1" Type="Horizontal Stack">
+                <Container id="horizontal38" Type="Vertical Stack">
+                  <Container id="separator141" Type="Horizontal Stack" />
+                  <Container id="vertical39" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box91" Type="Vertical Stack">
+                      <Container id="first39" Type="Vertical Stack">
+                        <Button id="insert-graphic1" />
+                      </Container>
+                      <Container id="first35" Type="Vertical Stack">
+                        <Button id="insert-page-field3" />
+                        <Button id="insert-author-field3" />
+                      </Container>
+                    </Container>
+                    <Container id="box92" Type="Vertical Stack">
+                      <Container id="second34" Type="Vertical Stack">
+                        <Button id="insert-symbole1" role="Grow" />
+                      </Container>
+                      <Container id="second2" Type="Vertical Stack">
+                        <Button id="insert-pages-field3" />
+                        <Button id="insert-file-field3" />
+                      </Container>
+                    </Container>
+                    <Container id="box76" Type="Vertical Stack">
+                      <Button id="insert-textt:menu-insert" content="Insert" text="Insert" horizontal-alignment="Left" />
+                      <Container id="third-ext19" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-view1" Type="Horizontal Stack">
+                <Container id="horizontal32" Type="Vertical Stack">
+                  <Container id="separator139" Type="Horizontal Stack" />
+                  <Container id="vertical33" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first9" Type="Vertical Stack">
+                      <Button id="zoom2" />
+                    </Container>
+                    <Container id="second9" Type="Vertical Stack">
+                      <Button id="normal-multi-pane-gui1" />
+                      <Button id="dia-mode1" />
+                      <Button id="slide-master-page1" />
+                    </Container>
+                    <Container id="box15" Type="Vertical Stack">
+                      <Button id="viewt:menu-view" content="View" text="View" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-review1" Type="Horizontal Stack">
+                <Container id="horizontal50" Type="Vertical Stack">
+                  <Container id="separator161" Type="Horizontal Stack" />
+                  <Container id="vertical51" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box87" Type="Vertical Stack">
+                      <Container id="first20" Type="Vertical Stack">
+                        <Button id="spell-dialog1" />
+                      </Container>
+                    </Container>
+                    <Container id="box88" Type="Vertical Stack">
+                      <Container id="second36" Type="Vertical Stack">
+                        <Button id="insert-annotation2" />
+                      </Container>
+                    </Container>
+                    <Container id="box89" Type="Vertical Stack">
+                      <Button id="reviewp:menu-review" content="Review" text="Review" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="table-box" Type="Horizontal Stack">
+              <Container id="section-slide-show2" Type="Horizontal Stack">
+                <Container id="horizontal14" Type="Vertical Stack">
+                  <Container id="separator19" Type="Horizontal Stack" />
+                  <Container id="vertical15" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="second18" Type="Vertical Stack">
+                      <Button id="presentation5" />
+                    </Container>
+                    <Container id="first13" Type="Vertical Stack">
+                      <Button id="presentation-current-slide5" />
+                    </Container>
+                    <Container id="box18" Type="Vertical Stack">
+                      <Button id="slideshowtt:menu-slide-show" content="Slide Show" text="Slide Show" horizontal-alignment="Left" />
+                      <Container id="third4" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="rehearse-timings2" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-format1" Type="Horizontal Stack">
+                <Container id="horizontal15" Type="Vertical Stack">
+                  <Container id="separator23" Type="Horizontal Stack" />
+                  <Container id="vertical16" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box23" Type="Vertical Stack">
+                      <Container id="box24" Type="Vertical Stack">
+                        <Container id="first14" Type="Vertical Stack" role="Grow">
+                          <Button id="char-font-name1" role="Grow" />
+                          <Button id="font-height1" role="Grow" />
+                        </Container>
+                        <Container id="second20" Type="Vertical Stack" horizontal-alignment="Left">
+                          <Button id="bold1" />
+                          <Button id="italic1" />
+                          <Button id="underline1" />
+                          <Button id="strikeout1" />
+                          <Button id="shadowed2" />
+                          <Button id="fontcolor1" />
+                          <Button id="char-back-color2" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box26" Type="Vertical Stack">
+                      <Button id="formatt:menu-format" content="Format" text="Format" horizontal-alignment="Left" />
+                      <Container id="third-ext7" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="grow2" />
+                        <Button id="shrink2" />
+                      </Container>
+                      <Container id="third-ext9" Type="Vertical Stack">
+                        <Button id="font-dialog1" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-paragraph1" Type="Horizontal Stack">
+                <Container id="horizontal16" Type="Vertical Stack">
+                  <Container id="separator24" Type="Horizontal Stack" />
+                  <Container id="vertical17" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box27" Type="Vertical Stack">
+                      <Container id="first16" Type="Vertical Stack">
+                        <Button id="left-para1" />
+                        <Button id="left-para5" />
+                        <Button id="left-para6" />
+                        <Button id="center-para1" />
+                        <Button id="right-para1" />
+                        <Button id="justify-para1" />
+                      </Container>
+                      <Container id="box28" Type="Vertical Stack">
+                        <Container id="second21" Type="Vertical Stack">
+                          <Button id="default-bullet1" />
+                          <Button id="default-numbering1" />
+                        </Container>
+                        <Container id="second22" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                          <Button id="cell-vert-top2" />
+                          <Button id="cell-vert-center2" />
+                          <Button id="cell-vert-bottom2" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box62" Type="Vertical Stack">
+                      <Button id="paragrapht:menu-paragraph" content="Paragraph" text="Paragraph" horizontal-alignment="Left" />
+                      <Container id="third6" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="paragraph-dialog1" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-table" Type="Horizontal Stack">
+                <Container id="horizontal17" Type="Vertical Stack">
+                  <Container id="separator26" Type="Horizontal Stack" />
+                  <Container id="vertical18" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first21" Type="Vertical Stack">
+                      <Button id="set-border-style1" />
+                      <Button id="line-style" />
+                      <Button id="frame-line-color" />
+                    </Container>
+                    <Container id="second24" Type="Vertical Stack">
+                      <Button id="fill-style3" vertical-alignment="Center" role="Grow" />
+                    </Container>
+                    <Container id="box31" Type="Vertical Stack">
+                      <Button id="tabled:menu-table" content="Table" text="Table" horizontal-alignment="Left" />
+                      <Container id="third-ext10" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="table-dialog" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-rows-columns" Type="Horizontal Stack">
+                <Container id="horizontal18" Type="Vertical Stack">
+                  <Container id="separator27" Type="Horizontal Stack" />
+                  <Container id="vertical19" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box30" Type="Vertical Stack">
+                      <Container id="cell-group1" Type="Vertical Stack">
+                        <Button id="insert-columns-before" />
+                        <Button id="insert-columns-after" />
+                        <Button id="delete-columns" />
+                      </Container>
+                      <Container id="first25" Type="Vertical Stack">
+                        <Button id="merge-cells" role="Grow" />
+                      </Container>
+                    </Container>
+                    <Container id="box32" Type="Vertical Stack">
+                      <Container id="cell-group2" Type="Vertical Stack">
+                        <Button id="insert-rows-before" />
+                        <Button id="insert-rows-after" />
+                        <Button id="delete-rows" />
+                      </Container>
+                      <Container id="second28" Type="Vertical Stack">
+                        <Button id="split-cell" />
+                      </Container>
+                    </Container>
+                    <Container id="box34" Type="Vertical Stack">
+                      <Button id="rowscolumnst:menu-rows-columns" content="Rows" text="Rows" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-calculate" Type="Horizontal Stack">
+                <Container id="horizontal21" Type="Vertical Stack">
+                  <Container id="separator30" Type="Horizontal Stack" />
+                  <Container id="vertical22" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first23" Type="Vertical Stack">
+                      <Button id="table-sort" role="Grow" />
+                    </Container>
+                    <Container id="second26" Type="Vertical Stack">
+                      <Button id="auto-sum" role="Grow" />
+                    </Container>
+                    <Button id="calculatet:menu-calculate" content="Calc" text="Calc" horizontal-alignment="Left" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="draw-box" Type="Horizontal Stack">
+              <Container id="section-draw3" Type="Horizontal Stack">
+                <Container id="horizontal25" Type="Vertical Stack">
+                  <Container id="separator116" Type="Horizontal Stack" />
+                  <Container id="vertical26" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box49" Type="Vertical Stack">
+                      <Container id="box55" Type="Vertical Stack">
+                        <Container id="shapes1" Type="Vertical Stack">
+                          <Button id="line3" role="Grow" />
+                          <Button id="polygon-unfilled3" />
+                          <Button id="bezier-unfilled3" />
+                          <Button id="arrows-toolbox3" />
+                        </Container>
+                        <Container id="shapes2" Type="Vertical Stack">
+                          <Button id="rectangle3" role="Grow" />
+                          <Button id="basic-shapes.round-rectangle3" role="Grow" />
+                          <Button id="ellipse3" role="Grow" />
+                          <Button id="line-toolbox3" />
+                        </Container>
+                      </Container>
+                      <Container id="separator123" Type="Horizontal Stack" />
+                      <Container id="box72" Type="Vertical Stack">
+                        <Container id="shapes3" Type="Vertical Stack">
+                          <Button id="basic-shapes1" role="Grow" />
+                          <Button id="symbol-shapes1" role="Grow" />
+                          <Button id="arrow-shapes1" role="Grow" />
+                        </Container>
+                        <Container id="shapes4" Type="Vertical Stack">
+                          <Button id="star-shapes1" role="Grow" />
+                          <Button id="callout-shapes1" role="Grow" />
+                          <Button id="flow-chart-shapes1" role="Grow" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="third9" Type="Vertical Stack">
+                      <Button id="drawd:menu-draw" content="Draw" text="Draw" horizontal-alignment="Left" />
+                      <Container id="third3-ext2" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="toggle-object-bezier-mode3" role="Grow" />
+                        <Button id="custom-animation1" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw-edit" Type="Horizontal Stack">
+                <Container id="horizontal28" Type="Vertical Stack">
+                  <Container id="separator117" Type="Horizontal Stack" />
+                  <Container id="vertical29" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box52" Type="Vertical Stack">
+                      <Container id="box59" Type="Vertical Stack">
+                        <Container id="third10" Type="Vertical Stack">
+                          <Button id="format-line1" role="Grow" />
+                        </Container>
+                        <Container id="third13" Type="Vertical Stack">
+                          <Button id="format-area2" role="Grow" />
+                        </Container>
+                      </Container>
+                      <Container id="box56" Type="Vertical Stack">
+                        <Container id="first41" Type="Vertical Stack">
+                          <Button id="line-end-style1" role="Grow" />
+                          <Button id="xline-style" vertical-alignment="Center" />
+                          <Button id="xline-color" role="Grow" />
+                          <Button id="line-width2" vertical-alignment="Center" />
+                        </Container>
+                        <Container id="section-bottom29" Type="Vertical Stack">
+                          <Button id="fill-style" role="Grow" />
+                          <Button id="add-text-box" role="Grow" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box75" Type="Vertical Stack">
+                      <Button id="editdrawb:menu-draw-edit" content="Edit" text="Edit" horizontal-alignment="Left" />
+                      <Container id="first33" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="toggle-object-rotate-mode" role="Grow" />
+                      </Container>
+                      <Container id="second37" Type="Vertical Stack" horizontal-alignment="Left">
+                        <Button id="flip-vertical" role="Grow" />
+                        <Button id="flip-horizontal1" role="Grow" />
+                      </Container>
+                      <Container id="separator118" Type="Horizontal Stack" />
+                      <Container id="third11" Type="Vertical Stack">
+                        <Button id="transform-dialog" />
+                        <Button id="format-line" />
+                        <Button id="format-area" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-arrang3" Type="Horizontal Stack">
+                <Container id="horizontal34" Type="Vertical Stack">
+                  <Container id="separator121" Type="Horizontal Stack" />
+                  <Container id="vertical35" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box68" Type="Vertical Stack">
+                      <Container id="box73" Type="Vertical Stack">
+                        <Container id="wrap1" Type="Vertical Stack">
+                          <Button id="forward1" />
+                          <Button id="forward4" />
+                        </Container>
+                        <Container id="align3" Type="Vertical Stack" vertical-alignment="Bottom" role="Grow">
+                          <Button id="backward1" />
+                          <Button id="forward5" />
+                        </Container>
+                      </Container>
+                      <Container id="separator124" Type="Horizontal Stack" />
+                      <Container id="wrap-group1" Type="Vertical Stack">
+                        <Container id="wrap2" Type="Vertical Stack">
+                          <Button id="object-align-left3" />
+                          <Button id="align-center3" />
+                          <Button id="object-align-right3" />
+                        </Container>
+                        <Container id="wrap4" Type="Vertical Stack">
+                          <Button id="align-up2" />
+                          <Button id="align-middle3" />
+                          <Button id="align-down3" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box90" Type="Vertical Stack">
+                      <Button id="arrangedrad:menu-arrange" content="Arrange" text="Arrange" horizontal-alignment="Left" />
+                      <Container id="third-ext18" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw-grid" Type="Horizontal Stack">
+                <Container id="horizontal36" Type="Vertical Stack">
+                  <Container id="separator126" Type="Horizontal Stack" />
+                  <Container id="vertical37" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first34" Type="Vertical Stack">
+                      <Button id="grid-visible1" role="Grow" />
+                    </Container>
+                    <Container id="second38" Type="Vertical Stack">
+                      <Button id="grid-use1" role="Grow" />
+                      <Button id="helplines-move1" role="Grow" />
+                    </Container>
+                    <Container id="third12" Type="Vertical Stack">
+                      <Button id="grid-draw-b:menu-grid" content="Grid" text="Grid" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw-view" Type="Horizontal Stack">
+                <Container id="horizontal35" Type="Vertical Stack">
+                  <Container id="separator122" Type="Horizontal Stack" />
+                  <Container id="vertical36" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first45" Type="Vertical Stack">
+                      <Button id="format-group" role="Grow" />
+                    </Container>
+                    <Container id="second50" Type="Vertical Stack">
+                      <Button id="enter-group" role="Grow" />
+                      <Button id="leave-group" role="Grow" />
+                      <Button id="format-ungroup" role="Grow" />
+                    </Container>
+                    <Button id="view-drawb:menu-group" content="Group" text="Group" horizontal-alignment="Left" />
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section3-d" Type="Horizontal Stack">
+                <Container id="horizontal37" Type="Vertical Stack">
+                  <Container id="separator127" Type="Horizontal Stack" />
+                  <Container id="vertical38" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first38" Type="Vertical Stack">
+                      <Button id="extrusion-toggle" role="Grow" />
+                    </Container>
+                    <Container id="second39" Type="Vertical Stack">
+                      <Button id="fill-color" />
+                      <Button id="extrusion3-dcolor" />
+                      <Button id="extrusion-lighting-floater" />
+                    </Container>
+                    <Container id="box64" Type="Vertical Stack">
+                      <Button id="3-db:menu3-d" content="3D" text="3D" horizontal-alignment="Left" />
+                      <Container id="third-ext16" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="extrusion-depth-floater" role="Grow" />
+                        <Button id="extrusion-direction-floater" role="Grow" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="graphic-box" Type="Horizontal Stack">
+              <Container id="section-graphic" Type="Horizontal Stack">
+                <Container id="horizontal4" Type="Vertical Stack">
+                  <Container id="separator12" Type="Horizontal Stack" />
+                  <Container id="vertical4" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first222" Type="Vertical Stack">
+                      <Container id="first15" Type="Vertical Stack">
+                        <Button id="crop" />
+                      </Container>
+                      <Container id="compress-graphic-group" Type="Vertical Stack">
+                        <Button id="compress-graphic" />
+                      </Container>
+                    </Container>
+                    <Container id="second222" Type="Vertical Stack">
+                      <Container id="second16" Type="Vertical Stack">
+                        <Button id="rotate-right" />
+                      </Container>
+                      <Container id="second17" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="flip-horizontal" />
+                        <Button id="save-graphic" />
+                      </Container>
+                    </Container>
+                    <Container id="third222" Type="Vertical Stack">
+                      <Button id="graphic-b:menu-graphic" content="Graphic" text="Graphic" horizontal-alignment="Left" />
+                      <Container id="third3-ext1" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="animation-effects" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-color" Type="Horizontal Stack">
+                <Container id="horizontal9" Type="Vertical Stack">
+                  <Container id="separator14" Type="Horizontal Stack" />
+                  <Container id="vertical9" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="graf-mode-group" Type="Vertical Stack">
+                      <Button id="graf-mode" role="Grow" />
+                    </Container>
+                    <Container id="graphic-filter-toolbox-group" Type="Vertical Stack">
+                      <Button id="graphic-filter-toolbox" />
+                      <Button id="fill-shadow" />
+                      <Button id="background-color1" />
+                    </Container>
+                    <Button id="colorb:menu-color" content="Color" text="Color" />
+                  </Container>
+                  <Container id="vertical13" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="colorbox1" Type="Vertical Stack">
+                      <Button id="graf-luminance1" vertical-alignment="Center" />
+                      <Button id="graf-contrast1" vertical-alignment="Center" />
+                    </Container>
+                    <Container id="colorbox2" Type="Vertical Stack">
+                      <Button id="graf-transparence1" vertical-alignment="Center" />
+                      <Button id="graf-gamma1" vertical-alignment="Center" />
+                    </Container>
+                    <Container id="third1" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                      <Button id="color-settings1" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-arrang4" Type="Horizontal Stack">
+                <Container id="horizontal6" Type="Vertical Stack">
+                  <Container id="separator13" Type="Horizontal Stack" />
+                  <Container id="vertical6" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box22" Type="Vertical Stack">
+                      <Container id="box25" Type="Vertical Stack">
+                        <Container id="wrap14" Type="Vertical Stack">
+                          <Button id="forward10" />
+                          <Button id="forward11" />
+                        </Container>
+                        <Container id="align1" Type="Vertical Stack" vertical-alignment="Bottom" role="Grow">
+                          <Button id="backward6" />
+                          <Button id="forward12" />
+                        </Container>
+                      </Container>
+                      <Container id="separator20" Type="Horizontal Stack" />
+                      <Container id="wrap-group5" Type="Vertical Stack">
+                        <Container id="wrap15" Type="Vertical Stack">
+                          <Button id="object-align-left2" />
+                          <Button id="align-center2" />
+                          <Button id="object-align-right2" />
+                        </Container>
+                        <Container id="wrap16" Type="Vertical Stack">
+                          <Button id="align-up3" />
+                          <Button id="align-middle2" />
+                          <Button id="align-down2" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box33" Type="Vertical Stack">
+                      <Button id="arrangedrao:menu-arrange" content="Arrange" text="Arrange" horizontal-alignment="Left" />
+                      <Container id="third-ext8" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw-grid1" Type="Horizontal Stack">
+                <Container id="horizontal13" Type="Vertical Stack">
+                  <Container id="separator15" Type="Horizontal Stack" />
+                  <Container id="vertical14" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first17" Type="Vertical Stack">
+                      <Button id="grid-visible3" role="Grow" />
+                    </Container>
+                    <Container id="second10" Type="Vertical Stack">
+                      <Button id="grid-use3" role="Grow" />
+                      <Button id="helplines-move3" role="Grow" />
+                    </Container>
+                    <Container id="third2" Type="Vertical Stack">
+                      <Button id="grid-draw-o:menu-grid" content="Grid" text="Grid" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="media-box" Type="Horizontal Stack">
+              <Container id="section-format2" Type="Horizontal Stack">
+                <Container id="horizontal31" Type="Vertical Stack">
+                  <Container id="separator125" Type="Horizontal Stack" />
+                  <Container id="vertical32" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first22" Type="Vertical Stack">
+                      <Button id="avmedia-tool-box" role="Grow" />
+                    </Container>
+                    <Container id="box57" Type="Vertical Stack">
+                      <Container id="wrap3" Type="Vertical Stack">
+                        <Button id="wrap-off1" />
+                        <Button id="wrap-on1" />
+                        <Button id="wrap-ideal1" />
+                      </Container>
+                      <Container id="separator145" Type="Horizontal Stack" />
+                      <Container id="wrap5" Type="Vertical Stack">
+                        <Button id="wrap-left1" />
+                        <Button id="wrap-through1" />
+                        <Button id="wrap-right1" />
+                        <Button id="wrap-contour" />
+                      </Container>
+                      <Container id="separator146" Type="Horizontal Stack" />
+                      <Container id="align4" Type="Vertical Stack">
+                        <Button id="align-left1" />
+                        <Button id="align-horizontal-center1" />
+                        <Button id="align-right1" />
+                        <Button id="align-top1" />
+                        <Button id="align-vertical-center1" />
+                        <Button id="align-bottom2" />
+                      </Container>
+                      <Container id="separator147" Type="Horizontal Stack" />
+                      <Container id="one-step1" Type="Vertical Stack">
+                        <Button id="align-bottom3" />
+                        <Button id="backward2" />
+                        <Button id="bring-to-front1" />
+                        <Button id="send-to-back1" />
+                      </Container>
+                    </Container>
+                    <Container id="box74" Type="Vertical Stack">
+                      <Button id="media:menu-arrange" content="Media" text="Media" horizontal-alignment="Left" />
+                      <Container id="third-ext23" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="transform-dialog1" role="Grow" />
+                        <Button id="anchor-menu2" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="olebox" Type="Horizontal Stack">
+              <Container id="section-slide-show3" Type="Horizontal Stack">
+                <Container id="horizontal26" Type="Vertical Stack">
+                  <Container id="separator106" Type="Horizontal Stack" />
+                  <Container id="vertical27" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="second25" Type="Vertical Stack">
+                      <Button id="presentation7" />
+                    </Container>
+                    <Container id="first30" Type="Vertical Stack">
+                      <Button id="presentation-current-slide7" />
+                    </Container>
+                    <Container id="box39" Type="Vertical Stack">
+                      <Button id="slideshow-ole:menu-slide-show" content="Slide Show" text="Slide Show" horizontal-alignment="Left" />
+                      <Container id="third21" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="rehearse-timings3" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw-edit1" Type="Horizontal Stack">
+                <Container id="horizontal27" Type="Vertical Stack">
+                  <Container id="separator110" Type="Horizontal Stack" />
+                  <Container id="vertical28" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box40" Type="Vertical Stack">
+                      <Container id="box41" Type="Vertical Stack">
+                        <Container id="third14" Type="Vertical Stack">
+                          <Button id="format-line2" role="Grow" />
+                        </Container>
+                        <Container id="third23" Type="Vertical Stack">
+                          <Button id="format-area1" role="Grow" />
+                        </Container>
+                      </Container>
+                      <Container id="box42" Type="Vertical Stack">
+                        <Container id="first37" Type="Vertical Stack">
+                          <Button id="line-end-style2" role="Grow" />
+                          <Button id="xline-style1" vertical-alignment="Center" />
+                          <Button id="xline-color1" role="Grow" />
+                          <Button id="line-width1" vertical-alignment="Center" />
+                        </Container>
+                        <Container id="section-bottom1" Type="Vertical Stack">
+                          <Button id="fill-style1" role="Grow" />
+                          <Button id="add-text-box1" role="Grow" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box43" Type="Vertical Stack">
+                      <Button id="editdraw-ole:menu-ole" content="Frame" text="Frame" horizontal-alignment="Left" />
+                      <Container id="first40" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="toggle-object-rotate-mode1" role="Grow" />
+                      </Container>
+                      <Container id="second27" Type="Vertical Stack" horizontal-alignment="Left">
+                        <Button id="flip-vertical1" role="Grow" />
+                        <Button id="flip-horizontal2" role="Grow" />
+                      </Container>
+                      <Container id="separator111" Type="Horizontal Stack" />
+                      <Container id="third25" Type="Vertical Stack">
+                        <Button id="transform-dialog2" />
+                        <Button id="format-line3" />
+                        <Button id="format-area3" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-arrang5" Type="Horizontal Stack">
+                <Container id="horizontal20" Type="Vertical Stack">
+                  <Container id="separator31" Type="Horizontal Stack" />
+                  <Container id="vertical21" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box35" Type="Vertical Stack">
+                      <Container id="box36" Type="Vertical Stack">
+                        <Container id="wrap6" Type="Vertical Stack">
+                          <Button id="forward13" />
+                          <Button id="forward14" />
+                        </Container>
+                        <Container id="align2" Type="Vertical Stack" vertical-alignment="Bottom" role="Grow">
+                          <Button id="backward3" />
+                          <Button id="forward15" />
+                        </Container>
+                      </Container>
+                      <Container id="separator51" Type="Horizontal Stack" />
+                      <Container id="wrap-group2" Type="Vertical Stack">
+                        <Container id="wrap7" Type="Vertical Stack">
+                          <Button id="object-align-left4" />
+                          <Button id="align-center4" />
+                          <Button id="object-align-right4" />
+                        </Container>
+                        <Container id="wrap17" Type="Vertical Stack">
+                          <Button id="align-up4" />
+                          <Button id="align-middle4" />
+                          <Button id="align-down4" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box37" Type="Vertical Stack">
+                      <Button id="arrangedra-ole:menu-arrange" content="Arrange" text="Arrange" horizontal-alignment="Left" />
+                      <Container id="third-ext11" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw-grid2" Type="Horizontal Stack">
+                <Container id="horizontal22" Type="Vertical Stack">
+                  <Container id="separator59" Type="Horizontal Stack" />
+                  <Container id="vertical23" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first28" Type="Vertical Stack">
+                      <Button id="grid-visible2" role="Grow" />
+                    </Container>
+                    <Container id="second15" Type="Vertical Stack">
+                      <Button id="grid-use2" role="Grow" />
+                      <Button id="helplines-move2" role="Grow" />
+                    </Container>
+                    <Container id="third17" Type="Vertical Stack">
+                      <Button id="grid-draw-ole:menu-grid" content="Grid" text="Grid" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-view2" Type="Horizontal Stack">
+                <Container id="horizontal24" Type="Vertical Stack">
+                  <Container id="separator104" Type="Horizontal Stack" />
+                  <Container id="vertical25" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first29" Type="Vertical Stack">
+                      <Button id="zoom1" />
+                    </Container>
+                    <Container id="second19" Type="Vertical Stack">
+                      <Button id="normal-multi-pane-gui3" />
+                      <Button id="dia-mode3" />
+                      <Button id="slide-master-page3" />
+                    </Container>
+                    <Container id="box38" Type="Vertical Stack">
+                      <Button id="viewt-ole:menu-view" content="View" text="View" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="master-page-box" Type="Horizontal Stack">
+              <Container id="section-graphic4" Type="Horizontal Stack">
+                <Container id="horizontal33" Type="Vertical Stack">
+                  <Container id="separator73" Type="Horizontal Stack" />
+                  <Container id="vertical34" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="section-bottom4" Type="Vertical Stack">
+                      <Button id="insert-master-page" role="Grow" />
+                      <Button id="rename-master-page" role="Grow" />
+                    </Container>
+                    <Container id="section-bottom5" Type="Vertical Stack">
+                      <Button id="delete-master-page" role="Grow" />
+                      <Button id="close-master-view" role="Grow" />
+                    </Container>
+                    <Container id="third19" Type="Vertical Stack">
+                      <Button id="masterm:menu-master-page" content="Master Page" text="Master Page" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-insert2" Type="Horizontal Stack">
+                <Container id="horizontal46" Type="Vertical Stack">
+                  <Container id="separator159" Type="Horizontal Stack" />
+                  <Container id="vertical47" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box17" Type="Vertical Stack">
+                      <Container id="first8" Type="Vertical Stack">
+                        <Button id="insert-graphic2" />
+                      </Container>
+                      <Container id="first27" Type="Vertical Stack">
+                        <Button id="insert-page-field1" />
+                        <Button id="insert-pages-field1" />
+                        <Button id="insert-author-field1" />
+                      </Container>
+                    </Container>
+                    <Container id="box29" Type="Vertical Stack">
+                      <Container id="second12" Type="Vertical Stack">
+                        <Button id="insert-symbole3" role="Grow" />
+                      </Container>
+                      <Container id="second7" Type="Vertical Stack">
+                        <Button id="insert-page-title-field1" />
+                        <Button id="insert-file-field1" />
+                        <Button id="insert-date-field-fix1" />
+                      </Container>
+                    </Container>
+                    <Container id="box2" Type="Vertical Stack">
+                      <Button id="insert-textm:menu-insert" content="Insert" text="Insert" horizontal-alignment="Left" />
+                      <Container id="third-ext15" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-draw2" Type="Horizontal Stack">
+                <Container id="horizontal47" Type="Vertical Stack">
+                  <Container id="separator160" Type="Horizontal Stack" />
+                  <Container id="vertical48" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box60" Type="Vertical Stack">
+                      <Container id="box61" Type="Vertical Stack">
+                        <Container id="shapes5" Type="Vertical Stack">
+                          <Button id="line2" role="Grow" />
+                          <Button id="polygon-unfilled2" />
+                          <Button id="bezier-unfilled2" />
+                          <Button id="arrows-toolbox2" />
+                        </Container>
+                        <Container id="shapes7" Type="Vertical Stack">
+                          <Button id="rectangle2" role="Grow" />
+                          <Button id="basic-shapes.round-rectangle2" role="Grow" />
+                          <Button id="ellipse2" role="Grow" />
+                          <Button id="line-toolbox2" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="third22" Type="Vertical Stack">
+                      <Button id="drawm:menu-draw" content="Draw" text="Draw" horizontal-alignment="Left" />
+                      <Container id="third3-ext6" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                        <Button id="animation-effects1" />
+                        <Button id="toggle-object-bezier-mode2" role="Grow" />
+                      </Container>
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-arrang2" Type="Horizontal Stack">
+                <Container id="horizontal48" Type="Vertical Stack">
+                  <Container id="separator163" Type="Horizontal Stack" />
+                  <Container id="vertical49" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="box66" Type="Vertical Stack">
+                      <Container id="box78" Type="Vertical Stack">
+                        <Container id="wrap11" Type="Vertical Stack">
+                          <Button id="forward7" />
+                          <Button id="forward8" />
+                        </Container>
+                        <Container id="align8" Type="Vertical Stack" vertical-alignment="Bottom" role="Grow">
+                          <Button id="backward5" />
+                          <Button id="forward9" />
+                        </Container>
+                      </Container>
+                      <Container id="separator166" Type="Horizontal Stack" />
+                      <Container id="wrap-group4" Type="Vertical Stack">
+                        <Container id="wrap12" Type="Vertical Stack">
+                          <Button id="object-align-left1" />
+                          <Button id="align-center1" />
+                          <Button id="object-align-right1" />
+                        </Container>
+                        <Container id="wrap13" Type="Vertical Stack">
+                          <Button id="align-up1" />
+                          <Button id="align-middle1" />
+                          <Button id="align-down1" />
+                        </Container>
+                      </Container>
+                    </Container>
+                    <Container id="box83" Type="Vertical Stack">
+                      <Button id="arrangedrawm:menu-arrange" content="Arrange" text="Arrange" horizontal-alignment="Left" />
+                      <Container id="third-ext6" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+              <Container id="section-view4" Type="Horizontal Stack">
+                <Container id="horizontal44" Type="Vertical Stack">
+                  <Container id="separator77" Type="Horizontal Stack" />
+                  <Container id="vertical44" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                    <Container id="first4" Type="Vertical Stack">
+                      <Button id="zoom4" />
+                    </Container>
+                    <Container id="second8" Type="Vertical Stack">
+                      <Button id="normal-multi-pane-gui2" />
+                      <Button id="dia-mode2" />
+                      <Button id="slide-master-page2" />
+                    </Container>
+                    <Container id="box16" Type="Vertical Stack">
+                      <Button id="masterviewm:menu-view" content="View" text="View" horizontal-alignment="Left" />
+                    </Container>
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,5 @@
+<Cui id="settings-applications-oauth2" product="9-1" version="1">
+  <Page id="settings-applications-oauth2-root">
+    <Text id="h4" text="{Binding Unresolved}" />
+  </Page>
+</Cui>

@@ -1,0 +1,29 @@
+<Cui id="ui-annotation" product="9-1" version="1">
+  <Page id="ui-annotation-root">
+    <Image id="image7" focusable="false" source="open-menu-symbolic" />
+    <Container id="menu" Type="Menu" focusable="false">
+      <Button id=".uno:reply-to-annotation" Type="Menu Item" content="Reply" text="Reply" focusable="false" />
+      <Button id="separator" Type="Menu Item" focusable="false" />
+      <Button id=".uno:delete-annotation" Type="Menu Item" content="Delete Comment" text="Delete Comment" focusable="false" />
+      <Button id=".uno:delete-all-annotation-by-author" Type="Menu Item" content="Delete All Comments by %1" text="Delete All Comments by %1" focusable="false" />
+      <Button id=".uno:delete-all-annotation" Type="Menu Item" content="Delete All Comments" text="Delete All Comments" focusable="false" />
+    </Container>
+    <Container id="annotation" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="scrolledwindow" Type="Vertical Stack" role="Grow">
+          <Container id="container-2" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="container-3" Type="Vertical Stack" focusable="false" role="Grow">
+              <Container id="editview" Type="Overlay" role="Grow" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="container-4" Type="Vertical Stack" focusable="false">
+          <Container id="container-5" Type="Vertical Stack" focusable="false" role="Grow">
+            <Text id="meta" text="label" focusable="false" />
+          </Container>
+          <Button id="menubutton" vertical-alignment="Top" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

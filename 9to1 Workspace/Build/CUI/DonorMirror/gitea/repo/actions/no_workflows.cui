@@ -1,0 +1,9 @@
+<Cui id="actions-no-workflows" product="9-1" version="1">
+  <Page id="actions-no-workflows-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h2" text="{Binding Unresolved}" />
+      <Text id="p" text="{Binding Unresolved}" />
+      <Text id="p-2" text="{Binding Unresolved}" />
+    </Container>
+  </Page>
+</Cui>

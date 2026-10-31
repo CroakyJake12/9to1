@@ -1,0 +1,27 @@
+<Cui id="diff-comment-form" product="9-1" version="1">
+  <Page id="diff-comment-form-root">
+    <Container id="form" Type="Vertical Stack">
+      <Input id="input" Type="Text" />
+      <Input id="input-2" Type="Text" />
+      <Input id="input-3" Type="Text" />
+      <Input id="input-4" Type="Text" />
+      <Input id="input-5" Type="Text" />
+      <Input id="input-6" Type="Text" />
+      <Input id="input-7" Type="Text" />
+      <Input id="input-8" Type="Text" />
+      <Container id="div" Type="Vertical Stack" />
+      <Container id="div-2" Type="Vertical Stack" />
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack">
+          <Button id="button" />
+          <Input id="input-9" Type="Text" />
+          <Input id="input-10" Type="Text" />
+          <Button id="button-2" />
+          <Button id="button-3" />
+          <Button id="button-4" text="true" />
+          <Button id="button-5" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

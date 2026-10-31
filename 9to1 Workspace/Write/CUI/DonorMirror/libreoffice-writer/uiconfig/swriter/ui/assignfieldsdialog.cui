@@ -1,0 +1,35 @@
+<Cui id="ui-assignfieldsdialog" product="9-1" version="1">
+  <Container id="assign-fields-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="assign-fields-dialog-label" text="Match Fields" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Text id="matching-label" text="Assign the fields from your data source to match the address elements." horizontal-alignment="Left" focusable="false" />
+        <Container id="container" Type="Grid" focusable="false" role="Grow">
+          <Container id="scroll" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Container id="container-2" Type="Vertical Stack" focusable="false">
+              <Container id="container-3" Type="Grid" focusable="false" role="Grow">
+                <Container id="fields" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="container-4" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+            <Text id="addresselem" text="Address elements" focusable="false" column="0" row="0" />
+            <Text id="previewelem" text="Preview" focusable="false" column="2" row="0" />
+            <Text id="matchelem" text="Matches to field" focusable="false" role="Grow" column="1" row="0" />
+          </Container>
+        </Container>
+        <Text id="preview-label" text="Address block preview" horizontal-alignment="Left" focusable="false" />
+        <Container id="previewwin" Type="Vertical Stack">
+          <Container id="container-5" Type="Vertical Stack" focusable="false">
+            <Container id="preview" Type="Overlay" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

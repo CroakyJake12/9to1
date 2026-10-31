@@ -1,0 +1,5 @@
+<Cui id="repo-view-file-tree-toggle-button" product="9-1" version="1">
+  <Page id="repo-view-file-tree-toggle-button-root">
+    <Button id="button" />
+  </Page>
+</Cui>

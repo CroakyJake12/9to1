@@ -1,0 +1,12 @@
+<Cui id="shared-searchbottom" product="9-1" version="1">
+  <Page id="shared-searchbottom-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="i" Type="Vertical Stack" />
+      </Container>
+      <Container id="div-3" Type="Vertical Stack">
+        <Text id="span" text="{Binding Unresolved}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

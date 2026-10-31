@@ -1,0 +1,64 @@
+<Cui id="ui-dockinganimation" product="9-1" version="1">
+  <Page id="ui-dockinganimation-root">
+    <Image id="image1" />
+    <Image id="image2" />
+    <Image id="image3" />
+    <Image id="image4" />
+    <Image id="image5" source="go-first" />
+    <Image id="image6" source="media-skip-backward" />
+    <Image id="image7" source="media-playback-stop" />
+    <Image id="image8" source="media-skip-forward" />
+    <Image id="image9" source="go-last" />
+    <Container id="docking-animation" Type="Vertical Stack" cell-gap="12" role="Grow">
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Container id="grid2" Type="Grid" role="Grow">
+          <Container id="grid3" Type="Grid" role="Grow">
+            <Input id="loopcount" Type="Select" />
+            <Input id="duration" Type="Number" />
+            <Input id="numbitmap" Type="Number" text="1" Value="1" />
+            <Container id="grid9" Type="Grid" vertical-alignment="Center">
+              <Button id="first" />
+              <Button id="prev" />
+              <Button id="stop" />
+              <Button id="next" />
+              <Button id="last" />
+            </Container>
+          </Container>
+          <Container id="preview" Type="Overlay" role="Grow" />
+        </Container>
+        <Container id="frame1" Type="Vertical Stack">
+          <Container id="grid6" Type="Grid">
+            <Input id="group" Type="Radio" text="Group object" checked="true" />
+            <Input id="bitmap" Type="Radio" text="Bitmap object" />
+            <Container id="grid10" Type="Grid">
+              <Text id="alignmentft" text="Alignment" />
+              <Input id="alignment" Type="Select" />
+            </Container>
+          </Container>
+          <Text id="label1" text="Animation Group" />
+        </Container>
+        <Container id="frame2" Type="Vertical Stack">
+          <Container id="grid7" Type="Grid" role="Grow">
+            <Container id="grid11" Type="Grid" horizontal-alignment="Left" role="Grow">
+              <Button id="getone" />
+              <Button id="getall" />
+            </Container>
+            <Container id="grid12" Type="Grid" horizontal-alignment="Right" role="Grow">
+              <Text id="label3" text="Number" />
+              <Text id="count" text="67" />
+            </Container>
+            <Container id="grid13" Type="Grid" horizontal-alignment="Center" role="Grow">
+              <Button id="delone" />
+              <Button id="delall" />
+            </Container>
+          </Container>
+          <Text id="label2" text="Image" />
+        </Container>
+      </Container>
+      <Container id="buttonbox" Type="Horizontal Stack">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="create" content="Create" text="Create" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

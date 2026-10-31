@@ -1,0 +1,5 @@
+<Cui id="actions-view" product="9-1" version="1">
+  <Page id="actions-view-root">
+    <Container id="div" Type="Vertical Stack" />
+  </Page>
+</Cui>

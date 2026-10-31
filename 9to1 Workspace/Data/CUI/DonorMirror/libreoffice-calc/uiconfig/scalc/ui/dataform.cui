@@ -1,0 +1,30 @@
+<Cui id="ui-dataform" product="9-1" version="1">
+  <Container id="data-form-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="data-form-dialog-label" text="Data Form" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="close" content="Close" text="Close" />
+      </Container>
+      <Container id="container" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="scrollbar" Type="Vertical Stack" role="Grow" column="0" row="0">
+          <Container id="container-2" Type="Vertical Stack" focusable="false">
+            <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+              <Container id="box2" Type="Vertical Stack" focusable="false" role="Grow">
+                <Container id="grid" Type="Grid" cell-gap="6" focusable="false" role="Grow" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+        <Container id="container-3" Type="Horizontal Stack" cell-gap="6" focusable="false" column="1" row="0">
+          <Text id="label" text="New Record" focusable="false" />
+          <Button id="new" content="New" text="New" />
+          <Button id="delete" content="Delete" text="Delete" />
+          <Button id="restore" content="Restore" text="Restore" />
+          <Button id="prev" content="Previous Record" text="Previous Record" />
+          <Button id="next" content="Next Record" text="Next Record" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

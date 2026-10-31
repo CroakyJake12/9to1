@@ -1,0 +1,23 @@
+<Cui id="ui-formulacalculationoptions" product="9-1" version="1">
+  <Container id="formula-calculation-options" Type="Vertical Stack" modal="True" focusable="false" role="Grow">
+    <Text id="formula-calculation-options-label" text="Detailed Calculation Settings" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" role="Grow" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid7" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="label-conv-t2-n" text="Conversion from text to number:" focusable="false" column="0" row="0" />
+          <Input id="combo-conversion" Type="Select" focusable="false" column="1" row="0" />
+          <Input id="check-empty-as-zero" Type="Checkbox" text="Treat empty string as zero" column="0" row="1" column-span="2" />
+          <Text id="label-syntax-ref" text="Reference syntax for string reference:" focusable="false" column="0" row="2" />
+          <Input id="combo-syntax-ref" Type="Select" focusable="false" column="1" row="2" />
+          <Input id="current-doc" Type="Checkbox" text="Apply those settings to current document only" column="0" row="3" column-span="2" />
+        </Container>
+        <Text id="label3" text="Contents to Numbers" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

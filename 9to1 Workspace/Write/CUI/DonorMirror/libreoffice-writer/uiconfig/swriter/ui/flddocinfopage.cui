@@ -1,0 +1,30 @@
+<Cui id="ui-flddocinfopage" product="9-1" version="1">
+  <Container id="field-doc-info-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="typeframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="container" Type="Vertical Stack" focusable="false">
+        <Container id="container-2" Type="Vertical Stack" role="Grow">
+          <Container id="type-list" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Container id="container-3" Type="Vertical Stack" role="Grow">
+          <Container id="type-tree" Type="Vertical Stack" role="Grow" />
+        </Container>
+      </Container>
+      <Text id="label1" text="Type" focusable="false" />
+    </Container>
+    <Container id="selectframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="container-4" Type="Vertical Stack" role="Grow">
+        <Container id="select" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="label2" text="Select" focusable="false" />
+    </Container>
+    <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="container-5" Type="Vertical Stack" role="Grow">
+          <Container id="format" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Input id="fixed" Type="Checkbox" text="Fixed content" />
+      </Container>
+      <Text id="label3" text="Format" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

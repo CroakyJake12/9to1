@@ -1,0 +1,5 @@
+<Cui id="ui-contentcontrolaliasbutton" product="9-1" version="1">
+  <Container id="content-control-alias-button" Type="Vertical Stack" focusable="false" role="Grow">
+    <Button id="button" role="Grow" />
+  </Container>
+</Cui>

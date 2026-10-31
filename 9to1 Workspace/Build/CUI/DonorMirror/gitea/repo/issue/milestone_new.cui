@@ -1,0 +1,38 @@
+<Cui id="issue-milestone-new" product="9-1" version="1">
+  <Page id="issue-milestone-new-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="div-4" Type="Vertical Stack">
+            <Button id="a" />
+          </Container>
+        </Container>
+        <Container id="div-5" Type="Vertical Stack" />
+        <Text id="h2">
+          <Container id="div-6" Type="Vertical Stack" />
+          <Container id="div-7" Type="Vertical Stack" />
+        </Text>
+        <Container id="form" Type="Vertical Stack">
+          <Container id="div-8" Type="Vertical Stack">
+            <Text id="label" text="{Binding Unresolved}" />
+            <Input id="input" Type="Text" />
+          </Container>
+          <Container id="div-9" Type="Vertical Stack">
+            <Text id="label-2">
+              <Button id="milestone-clear-deadline" />
+            </Text>
+            <Input id="input-2" Type="Text" />
+          </Container>
+          <Container id="div-10" Type="Vertical Stack">
+            <Text id="label-3" text="{Binding Unresolved}" />
+          </Container>
+          <Container id="div-11" Type="Vertical Stack">
+            <Button id="a-2" />
+            <Button id="button" />
+            <Button id="button-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

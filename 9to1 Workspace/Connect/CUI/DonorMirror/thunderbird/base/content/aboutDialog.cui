@@ -1,0 +1,141 @@
+<Cui id="content-about-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="g-app-updater.button-restart-after-download" command="gAppUpdater.buttonRestartAfterDownload();" />
+    <Action name="g-app-updater.check-for-updates" command="gAppUpdater.checkForUpdates();" />
+    <Action name="g-app-updater.start-download" command="gAppUpdater.startDownload();" />
+    <Action name="window.close" command="window.close();" />
+  </Actions>
+  <Page id="content-about-dialog-root">
+    <Container id="aboutDialog" Type="Vertical Stack" role="dialog">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/aboutDialog.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="mainKeyset" Type="Vertical Stack">
+          <Container id="key" Type="Vertical Stack" />
+          <Container id="key_close" Type="Vertical Stack" />
+        </Container>
+        <Container id="aboutDialogContainer" Type="Vertical Stack">
+          <Container id="clientBox" Type="Horizontal Stack">
+            <Container id="leftBox" Type="Vertical Stack" role="Grow" />
+            <Container id="rightBox" Type="Vertical Stack">
+              <Container id="hbox" Type="Horizontal Stack" vertical-alignment="Top">
+                <Text id="version" />
+                <Button id="releasenotes" />
+              </Container>
+              <Image id="img" />
+              <Text id="distribution" />
+              <Text id="distributionId" />
+              <Container id="detailsBox" Type="Vertical Stack">
+                <Container id="updateBox" Type="Horizontal Stack">
+                  <Image id="img-2" />
+                  <Container id="vbox" Type="Vertical Stack">
+                    <Container id="updateDeck" Type="Overlay">
+                      <Container id="checkForUpdates" Type="Vertical Stack">
+                        <Button id="checkForUpdatesButton" action="g-app-updater.check-for-updates" />
+                      </Container>
+                      <Container id="downloadAndInstall" Type="Vertical Stack">
+                        <Button id="downloadAndInstallButton" action="g-app-updater.start-download" />
+                        <Button id="updateNotes" />
+                      </Container>
+                      <Container id="apply" Type="Vertical Stack">
+                        <Button id="updateButton" action="g-app-updater.button-restart-after-download" />
+                      </Container>
+                      <Container id="checkingForUpdates" Type="Vertical Stack">
+                        <Text id="span" />
+                      </Container>
+                      <Container id="downloading" Type="Vertical Stack">
+                        <Text id="downloadStatus" />
+                      </Container>
+                      <Container id="applying" Type="Vertical Stack">
+                        <Text id="span-2" />
+                      </Container>
+                      <Container id="downloadFailed" Type="Vertical Stack">
+                        <Text id="span-3">
+                          <Button id="failedLink" />
+                        </Text>
+                      </Container>
+                      <Container id="policyDisabled" Type="Vertical Stack">
+                        <Text id="span-4" />
+                      </Container>
+                      <Container id="noUpdatesFound" Type="Vertical Stack">
+                        <Text id="span-5" />
+                      </Container>
+                      <Container id="checkingFailed" Type="Vertical Stack">
+                        <Text id="span-6" />
+                      </Container>
+                      <Container id="otherInstanceHandlingUpdates" Type="Vertical Stack">
+                        <Text id="span-7" />
+                      </Container>
+                      <Container id="manualUpdate" Type="Vertical Stack">
+                        <Text id="span-8">
+                          <Button id="manualLink" />
+                        </Text>
+                      </Container>
+                      <Container id="unsupportedSystem" Type="Vertical Stack">
+                        <Text id="span-9">
+                          <Button id="unsupportedLink" />
+                        </Text>
+                      </Container>
+                      <Container id="restarting" Type="Vertical Stack">
+                        <Text id="span-10" />
+                      </Container>
+                      <Container id="internalError" Type="Vertical Stack">
+                        <Text id="span-11">
+                          <Button id="internalErrorLink" />
+                        </Text>
+                      </Container>
+                      <Container id="noUpdater" Type="Vertical Stack" />
+                    </Container>
+                    <Container id="hbox-2" Type="Horizontal Stack" vertical-alignment="Top">
+                      <Text id="version-2" />
+                      <Button id="releasenotes-2" />
+                    </Container>
+                  </Container>
+                </Container>
+                <Container id="currentChannelText" Type="Vertical Stack">
+                  <Text id="currentChannel" />
+                </Container>
+                <Container id="experimental" Type="Vertical Stack">
+                  <Container id="warningDesc" Type="Vertical Stack">
+                    <Text id="span-12" />
+                    <Text id="span-13" />
+                  </Container>
+                  <Container id="communityExperimentalDesc" Type="Vertical Stack">
+                    <Button id="a" />
+                    <Button id="a-2" />
+                  </Container>
+                </Container>
+                <Container id="communityDesc" Type="Vertical Stack">
+                  <Button id="a-3" />
+                  <Button id="a-4" />
+                </Container>
+                <Container id="contributeDesc" Type="Vertical Stack">
+                  <Button id="a-5" />
+                  <Button id="a-6" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="bottomBox" Type="Vertical Stack">
+            <Container id="hbox-3" Type="Horizontal Stack" horizontal-alignment="Center">
+              <Button id="a-7" />
+              <Button id="a-8" />
+              <Button id="a-9" />
+            </Container>
+            <Text id="trademark" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

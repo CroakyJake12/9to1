@@ -1,0 +1,31 @@
+<Cui id="auth-grant" product="9-1" version="1">
+  <Page id="auth-grant-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Text id="h3" text="{Binding Unresolved}" />
+        <Container id="div-3" Type="Vertical Stack">
+          <Text id="p">
+            <Container id="b" Type="Vertical Stack" />
+            <Container id="br" Type="Vertical Stack" />
+            <Container id="br-2" Type="Vertical Stack" />
+            <Container id="br-3" Type="Vertical Stack" />
+          </Text>
+        </Container>
+        <Container id="div-4" Type="Vertical Stack">
+          <Text id="p-2" text="{Binding Unresolved}" />
+        </Container>
+        <Container id="div-5" Type="Vertical Stack">
+          <Container id="form" Type="Vertical Stack">
+            <Input id="input" Type="Text" />
+            <Input id="input-2" Type="Text" />
+            <Input id="input-3" Type="Text" />
+            <Input id="input-4" Type="Text" />
+            <Input id="input-5" Type="Text" />
+            <Button id="authorize-app" text="true" />
+            <Button id="button" text="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

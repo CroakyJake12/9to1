@@ -1,0 +1,65 @@
+<Cui id="ui-opttablepage" product="9-1" version="1">
+  <Container id="opt-table-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Input id="header" Type="Checkbox" text="Header" column="1" row="0" />
+          <Input id="repeatheader" Type="Checkbox" text="Repeat on each page" column="1" row="1" />
+          <Input id="dontsplit" Type="Checkbox" text="Do not split" column="1" row="2" />
+          <Input id="border" Type="Checkbox" text="Border" column="1" row="3" />
+          <Image id="lockheader" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Image id="lockrepeatheader" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Image id="lockdontsplit" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Image id="lockborder" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        </Container>
+        <Text id="label1" text="New Table Defaults" focusable="false" />
+      </Container>
+      <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Input id="numformatting" Type="Checkbox" text="Number recognition" column="1" row="0" />
+          <Input id="numfmtformatting" Type="Checkbox" text="Number format recognition" column="1" row="1" />
+          <Input id="numalignment" Type="Checkbox" text="Alignment" column="1" row="2" />
+          <Image id="locknumformatting" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Image id="locknumfmtformatting" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Image id="locknumalignment" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        </Container>
+        <Text id="label2" text="Input in Tables" focusable="false" />
+      </Container>
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid4" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
+            <Text id="label4" text="Move cells" focusable="false" column="1" row="0" column-span="2" />
+            <Input id="rowmove" Type="Number" horizontal-alignment="Left" column="2" row="1" />
+            <Input id="colmove" Type="Number" horizontal-alignment="Left" column="2" row="2" />
+            <Text id="label5" text="Row:" focusable="false" column="1" row="1" />
+            <Text id="label6" text="Column:" focusable="false" column="1" row="2" />
+            <Image id="lockrowmove" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+            <Image id="lockcolmove" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          </Container>
+          <Container id="grid6" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
+            <Input id="rowinsert" Type="Number" horizontal-alignment="Left" column="2" row="1" />
+            <Input id="colinsert" Type="Number" horizontal-alignment="Left" column="2" row="2" />
+            <Text id="label15" text="Row:" focusable="false" column="1" row="1" />
+            <Text id="label16" text="Column:" focusable="false" column="1" row="2" />
+            <Text id="label14" text="Insert cell" focusable="false" column="1" row="0" column-span="2" />
+            <Image id="lockrowinsert" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+            <Image id="lockcolinsert" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          </Container>
+        </Container>
+        <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" column="0" row="1">
+          <Text id="label10" text="Behavior of rows/columns" focusable="false" column="1" row="0" column-span="2" />
+          <Input id="fix" Type="Radio" text="Fixed" checked="true" column="1" row="1" />
+          <Input id="fixprop" Type="Radio" text="Fixed, proportional" column="1" row="2" />
+          <Input id="var" Type="Radio" text="Variable" column="1" row="3" />
+          <Text id="label11" text="Changes affect the adjacent area only" text-wrapping="Wrap" focusable="false" role="Grow" column="2" row="1" />
+          <Text id="label12" text="Changes affect the entire table" text-wrapping="Wrap" focusable="false" role="Grow" column="2" row="2" />
+          <Text id="label13" text="Changes affect the table size" text-wrapping="Wrap" focusable="false" role="Grow" column="2" row="3" />
+          <Image id="lockbehaviorof" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+        </Container>
+      </Container>
+      <Text id="label3" text="Keyboard Handling" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

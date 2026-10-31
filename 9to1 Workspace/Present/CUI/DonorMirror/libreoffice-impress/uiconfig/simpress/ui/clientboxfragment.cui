@@ -1,0 +1,8 @@
+<Cui id="ui-clientboxfragment" product="9-1" version="1">
+  <Container id="clientbox-fragment" Type="Grid">
+    <Button id="button" content="Remove Client Authorization" text="Remove Client Authorization" column-span="2" />
+    <Text id="name" />
+    <Text id="pinlabel" text="Enter PIN:" />
+    <Input id="pin" Type="Text" horizontal-alignment="Left" />
+  </Container>
+</Cui>

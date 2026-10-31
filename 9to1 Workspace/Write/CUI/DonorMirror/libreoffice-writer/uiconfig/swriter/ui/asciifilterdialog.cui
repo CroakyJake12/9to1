@@ -1,0 +1,32 @@
+<Cui id="ui-asciifilterdialog" product="9-1" version="1">
+  <Container id="ascii-filter-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="ascii-filter-dialog-label" text="ASCII Filter Options" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false">
+          <Text id="label2" text="Encoding:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+          <Text id="fontft" text="Default fonts:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+          <Text id="languageft" text="Language:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+          <Text id="label5" text="Paragraph break:" horizontal-alignment="Right" focusable="false" column="0" row="3" />
+          <Input id="encoding" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+          <Input id="font" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+          <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow" column="1" row="3">
+            <Input id="crlf" Type="Radio" text="CR &amp; LF" checked="true" />
+            <Input id="cr" Type="Radio" text="CR" horizontal-alignment="Center" />
+            <Input id="lf" Type="Radio" text="LF" horizontal-alignment="Right" />
+          </Container>
+          <Input id="language" Type="Select" focusable="false" role="Grow" column="1" row="2">
+            <Input id="input" Type="Text" />
+          </Input>
+          <Input id="includebom" Type="Checkbox" text="Include byte-order mark" horizontal-alignment="Left" column="1" row="4" />
+        </Container>
+        <Text id="label1" text="Properties" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,17 @@
+<Cui id="ui-hfmenubutton" product="9-1" version="1">
+  <Page id="ui-hfmenubutton-root">
+    <Image id="image7" focusable="false" />
+    <Container id="menu" Type="Menu" focusable="false">
+      <Button id="edit" Type="Menu Item" focusable="false" />
+      <Button id="borderback" Type="Menu Item" content="Border and Background..." text="Border and Background..." focusable="false" />
+      <Button id="delete" Type="Menu Item" focusable="false" />
+      <Button id="insert-pagenumber" Type="Menu Item" content="Insert Page Number" text="Insert Page Number" focusable="false" />
+      <Button id="insert-pagecount" Type="Menu Item" content="Insert Page Count" text="Insert Page Count" focusable="false" />
+      <Button id="insert-pagecount-in-range" Type="Menu Item" content="Insert Page Count In Page Numbering Range" text="Insert Page Count In Page Numbering Range" focusable="false" />
+    </Container>
+    <Container id="hfmenu-button" Type="Vertical Stack" focusable="false" role="Grow">
+      <Button id="menubutton" role="Grow" />
+      <Button id="button" role="Grow" />
+    </Container>
+  </Page>
+</Cui>

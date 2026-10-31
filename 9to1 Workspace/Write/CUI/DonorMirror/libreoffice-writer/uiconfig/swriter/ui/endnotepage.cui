@@ -1,0 +1,30 @@
+<Cui id="ui-endnotepage" product="9-1" version="1">
+  <Container id="endnote-page" Type="Grid" cell-gap="12" focusable="false">
+    <Container id="frame2" Type="Vertical Stack" focusable="false" column="0" row="0">
+      <Container id="grid6" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="label19" text="Numbering" focusable="false" column="0" row="0" />
+        <Input id="numberinglb" Type="Select" focusable="false" column="1" row="0" />
+        <Text id="offset" text="Start at" focusable="false" column="0" row="1" />
+        <Input id="offsetnf" Type="Number" column="1" row="1" />
+        <Text id="label22" text="Before" focusable="false" column="0" row="2" />
+        <Input id="prefix" Type="Text" column="1" row="2" />
+        <Text id="label25" text="After" focusable="false" column="0" row="3" />
+        <Input id="suffix" Type="Text" column="1" row="3" />
+      </Container>
+      <Text id="label26" text="Autonumbering" focusable="false" />
+    </Container>
+    <Container id="allstyles" Type="Vertical Stack" focusable="false" column="1" row="0">
+      <Container id="grid8" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="label20" text="Paragraph" focusable="false" column="0" row="0" />
+        <Input id="parastylelb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+        <Text id="pagestyleft" text="Page" focusable="false" column="0" row="1" />
+        <Input id="pagestylelb" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+        <Text id="label27" text="Text area" focusable="false" column="0" row="2" />
+        <Input id="charanchorstylelb" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+        <Text id="label28" text="Endnote area" focusable="false" column="0" row="3" />
+        <Input id="charstylelb" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+      </Container>
+      <Text id="label23" text="Styles" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

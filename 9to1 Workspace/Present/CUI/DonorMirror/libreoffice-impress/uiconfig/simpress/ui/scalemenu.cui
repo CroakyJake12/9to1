@@ -1,0 +1,12 @@
+<Cui id="ui-scalemenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="25" Type="Menu Item" content="Tiny" text="Tiny" />
+    <Button id="50" Type="Menu Item" content="Smaller" text="Smaller" />
+    <Button id="150" Type="Menu Item" content="Larger" text="Larger" />
+    <Button id="400" Type="Menu Item" content="Extra Large" text="Extra Large" />
+    <Button id="menuitem1" Type="Menu Item" />
+    <Button id="hori" Type="Menu Item" content="Horizontal" text="Horizontal" />
+    <Button id="vert" Type="Menu Item" content="Vertical" text="Vertical" />
+    <Button id="both" Type="Menu Item" content="Both" text="Both" />
+  </Container>
+</Cui>

@@ -1,0 +1,76 @@
+<Cui id="ui-solverdlg" product="9-1" version="1">
+  <Container id="solver-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="solver-dialog-label" text="Solver" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="resetall" content="Reset All" text="Reset All" role="Grow" />
+        <Button id="options" content="Options..." text="Options..." />
+        <Button id="ok" content="Solve" text="Solve" />
+        <Button id="close" content="Close" text="Close" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="targetlabel" text="Target cell" focusable="false" column="0" row="0" />
+          <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="1" row="0">
+            <Input id="targetedit" Type="Text" role="Grow" />
+            <Button id="targetbutton" />
+          </Container>
+          <Text id="result" text="Optimize result to" focusable="false" column="0" row="1" row-span="3" />
+          <Input id="max" Type="Radio" text="Maximum" checked="true" column="1" row="1" />
+          <Input id="min" Type="Radio" text="Minimum" column="1" row="2" />
+          <Container id="box5" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow" column="1" row="3">
+            <Input id="value" Type="Radio" text="Value of" />
+            <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+              <Input id="valueedit" Type="Text" role="Grow" />
+              <Button id="valuebutton" />
+            </Container>
+          </Container>
+          <Text id="changelabel" text="By changing cells" focusable="false" column="0" row="4" />
+          <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="1" row="4">
+            <Input id="changeedit" Type="Text" role="Grow" />
+            <Button id="changebutton" />
+          </Container>
+        </Container>
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="scrollbar" Type="Vertical Stack" role="Grow">
+            <Container id="container" Type="Vertical Stack" focusable="false" role="Grow">
+              <Container id="grid" Type="Grid" focusable="false" role="Grow">
+                <Container id="grid1" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="0">
+                  <Text id="cellreflabel" text="Cell reference" focusable="false" column="0" row="0" column-span="2" />
+                  <Text id="oplabel" text="Operator" focusable="false" column="2" row="0" />
+                  <Text id="constraintlabel" text="Value" focusable="false" column="3" row="0" column-span="3" />
+                  <Input id="ref1edit" Type="Text" role="Grow" column="0" row="1" />
+                  <Button id="ref1button" column="1" row="1" />
+                  <Input id="op1list" Type="Select" focusable="false" column="2" row="1" />
+                  <Input id="val1edit" Type="Text" role="Grow" column="3" row="1" />
+                  <Button id="val1button" column="4" row="1" />
+                  <Button id="del1" tooltip="Remove" column="5" row="1" />
+                  <Input id="ref2edit" Type="Text" role="Grow" column="0" row="2" />
+                  <Button id="ref2button" column="1" row="2" />
+                  <Input id="op2list" Type="Select" focusable="false" column="2" row="2" />
+                  <Input id="val2edit" Type="Text" role="Grow" column="3" row="2" />
+                  <Button id="val2button" column="4" row="2" />
+                  <Button id="del2" tooltip="Remove" column="5" row="2" />
+                  <Input id="ref3edit" Type="Text" role="Grow" column="0" row="3" />
+                  <Button id="ref3button" column="1" row="3" />
+                  <Input id="op3list" Type="Select" focusable="false" column="2" row="3" />
+                  <Input id="val3edit" Type="Text" role="Grow" column="3" row="3" />
+                  <Button id="val3button" column="4" row="3" />
+                  <Button id="del3" tooltip="Remove" column="5" row="3" />
+                  <Input id="ref4edit" Type="Text" role="Grow" column="0" row="4" />
+                  <Button id="ref4button" column="1" row="4" />
+                  <Input id="op4list" Type="Select" focusable="false" column="2" row="4" />
+                  <Input id="val4edit" Type="Text" role="Grow" column="3" row="4" />
+                  <Button id="val4button" column="4" row="4" />
+                  <Button id="del4" tooltip="Remove" column="5" row="4" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Text id="label1" text="Limiting Conditions" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

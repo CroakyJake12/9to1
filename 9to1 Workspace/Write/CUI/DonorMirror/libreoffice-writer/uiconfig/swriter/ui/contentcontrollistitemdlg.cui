@@ -1,0 +1,18 @@
+<Cui id="ui-contentcontrollistitemdlg" product="9-1" version="1">
+  <Container id="content-control-list-item-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="content-control-list-item-dialog-label" text="Content Control List Item Properties" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="lbdisplayname" text="Display name:" focusable="false" column="0" row="0" />
+        <Input id="displayname" Type="Text" role="Grow" column="1" row="0" />
+        <Text id="lbvalue" text="Value:" focusable="false" column="0" row="1" />
+        <Input id="value" Type="Text" role="Grow" column="1" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

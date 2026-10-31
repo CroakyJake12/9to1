@@ -1,0 +1,20 @@
+<Cui id="ui-customanimationproperties" product="9-1" version="1">
+  <Container id="custom-animation-properties" Type="Vertical Stack" modal="True">
+    <Text id="custom-animation-properties-label" text="Effect Options" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow">
+        <Container id="container" Type="Grid" />
+        <Text id="effect" text="Effect" />
+        <Container id="container-2" Type="Grid" />
+        <Text id="timing" text="Timing" />
+        <Container id="container-3" Type="Grid" />
+        <Text id="textanim" text="Text Animation" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

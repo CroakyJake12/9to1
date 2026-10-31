@@ -1,0 +1,44 @@
+<Cui id="ui-managenamesdialog" product="9-1" version="1">
+  <Container id="manage-names-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="manage-names-dialog-label" text="Manage Names" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="box6" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="names" Type="Vertical Stack" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="info" text="Select cells in the document to update the range." text-wrapping="Wrap" horizontal-alignment="Left" focusable="false" />
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label2" text="Name:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+          <Text id="label4" text="Scope:" horizontal-alignment="Left" focusable="false" column="0" row="4" />
+          <Input id="scope" Type="Select" focusable="false" role="Grow" column="0" row="5" />
+          <Container id="box5" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="0" row="3">
+            <Input id="range" Type="Text" role="Grow" />
+            <Button id="assign" />
+          </Container>
+          <Text id="label3" text="Range or formula expression:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+          <Input id="name" Type="Text" role="Grow" column="0" row="1" />
+        </Container>
+        <Container id="more" Type="Vertical Stack">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="printrange" Type="Checkbox" text="Print range" column="0" row="0" />
+            <Input id="filter" Type="Checkbox" text="Filter" column="0" row="1" />
+            <Input id="colheader" Type="Checkbox" text="Repeat column" column="1" row="0" />
+            <Input id="rowheader" Type="Checkbox" text="Repeat row" column="1" row="1" />
+          </Container>
+          <Text id="label1" text="Range Options" focusable="false" />
+        </Container>
+        <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="6" focusable="false">
+          <Button id="add" content="Add" text="Add" />
+          <Button id="delete" content="Delete" text="Delete" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,20 @@
+<Cui id="ui-indentpage" product="9-1" version="1">
+  <Container id="indent-page" Type="Grid" role="Grow">
+    <Container id="grid3" Type="Grid" role="Grow">
+      <Container id="frame2" Type="Vertical Stack" vertical-alignment="Top" role="Grow">
+        <Container id="grid4" Type="Grid" role="Grow">
+          <Text id="label1" text="Before section" />
+          <Text id="label3" text="After section" />
+          <Input id="before" Type="Number" />
+          <Input id="after" Type="Number" />
+        </Container>
+        <Text id="label2" text="Indent" />
+      </Container>
+      <Container id="container" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Top" role="Grow">
+        <Container id="container-2" Type="Vertical Stack">
+          <Container id="preview" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Top" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

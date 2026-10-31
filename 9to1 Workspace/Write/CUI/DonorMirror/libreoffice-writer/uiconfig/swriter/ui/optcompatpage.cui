@@ -1,0 +1,13 @@
+<Cui id="ui-optcompatpage" product="9-1" version="1">
+  <Container id="opt-compat-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="compatframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="5" focusable="false" role="Grow">
+        <Container id="optionsscroll" Type="Vertical Stack" role="Grow" column="0" row="0">
+          <Container id="options" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Button id="default" content="Use as Default" text="Use as Default" horizontal-alignment="Right" column="0" row="1" />
+      </Container>
+      <Text id="label11" text="Compatibility options for “%DOCNAME”" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

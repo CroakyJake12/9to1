@@ -1,0 +1,9 @@
+<Cui id="ui-contentcontroldropdown" product="9-1" version="1">
+  <Container id="content-control-drop-down" Type="Menu" focusable="false">
+    <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+      <Container id="container-2" Type="Vertical Stack" role="Grow">
+        <Container id="list" Type="Vertical Stack" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

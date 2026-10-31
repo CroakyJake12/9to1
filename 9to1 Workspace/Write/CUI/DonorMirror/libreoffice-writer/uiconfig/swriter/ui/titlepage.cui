@@ -1,0 +1,50 @@
+<Cui id="ui-titlepage" product="9-1" version="1">
+  <Container id="dlg-titlepage" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="dlg-titlepage-label" text="Title Page" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+            <Text id="label6" text="Number of title pages:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+            <Text id="label7" text="Place title pages at:" focusable="false" column="0" row="3" />
+            <Input id="nf-page-count" Type="Number" horizontal-alignment="Left" vertical-alignment="Center" column="1" row="2" />
+            <Input id="nf-page-start" Type="Number" horizontal-alignment="Left" vertical-alignment="Center" is-enabled="false" column="2" row="4" />
+            <Input id="rb-use-existing-pages" Type="Radio" text="Converting existing pages to title pages" horizontal-alignment="Left" checked="true" column="0" row="0" column-span="3" />
+            <Input id="rb-insert-new-pages" Type="Radio" text="Insert new title pages" horizontal-alignment="Left" column="0" row="1" column-span="3" />
+            <Input id="rb-document-start" Type="Radio" text="Document start" checked="true" column="1" row="3" column-span="2" />
+            <Input id="rb-page-start" Type="Radio" text="Page" column="1" row="4" />
+          </Container>
+          <Text id="label1" text="Make Title Pages" focusable="false" />
+        </Container>
+        <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false">
+            <Input id="cb-restart-numbering" Type="Checkbox" text="Reset page numbering after title pages" />
+            <Container id="box4" Type="Vertical Stack" cell-gap="12" focusable="false">
+              <Text id="ft-page-count" text="Page number:" focusable="false" />
+              <Input id="nf-restart-numbering" Type="Number" vertical-alignment="Center" is-enabled="false" />
+            </Container>
+            <Input id="cb-set-page-number" Type="Checkbox" text="Set page number for first title page" />
+            <Container id="box5" Type="Vertical Stack" cell-gap="12" focusable="false">
+              <Text id="ft-page-pages" text="Page number:" focusable="false" />
+              <Input id="nf-set-page-number" Type="Number" vertical-alignment="Center" is-enabled="false" />
+            </Container>
+          </Container>
+          <Text id="label2" text="Page Numbering" focusable="false" />
+        </Container>
+        <Container id="frame3" Type="Vertical Stack" focusable="false">
+          <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Text id="label4" text="Style:" focusable="false" />
+            <Input id="lb-page-properties" Type="Select" focusable="false" role="Grow" />
+            <Button id="pb-page-properties" content="Edit..." text="Edit..." />
+          </Container>
+          <Text id="label3" text="Edit Page Properties" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,16 @@
+<Cui id="ui-dropmenu" product="9-1" version="1">
+  <Container id="contextmenu" Type="Menu" focusable="false">
+    <Button id="dragmodeitem" Type="Menu Item" content="Drag Mode" text="Drag Mode" focusable="false">
+      <Container id="dragmodesubmenu" Type="Menu" focusable="false">
+        <Button id="hyperlink" content="Insert as Hyperlink" text="Insert as Hyperlink" focusable="false" checked="true" />
+        <Button id="link" content="Insert as Link" text="Insert as Link" focusable="false" />
+        <Button id="copy" content="Insert as Copy" text="Insert as Copy" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="displayitem" Type="Menu Item" content="Display" text="Display" focusable="false">
+      <Container id="displaymenu" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="edit" Type="Menu Item" content="Edit Comment" text="Edit Comment" focusable="false" />
+    <Button id="delete" Type="Menu Item" content="Delete Comment" text="Delete Comment" focusable="false" />
+  </Container>
+</Cui>

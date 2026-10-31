@@ -1,0 +1,21 @@
+<Cui id="ui-pmimagespage" product="9-1" version="1">
+  <Container id="pmimages-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="str-remove-crop-area" Type="Checkbox" text="Delete cropped image areas" column="0" row="4" />
+        <Input id="str-embed-linked-graphics" Type="Checkbox" text="Embed external images" column="0" row="5" />
+        <Container id="container" Type="Vertical Stack" cell-gap="12" focusable="false" column="0" row="3">
+          <Text id="str-image-resolution" text="Reduce image resolution" focusable="false" />
+          <Input id="lb-resolution" Type="Select" focusable="false" />
+        </Container>
+        <Input id="str-lossless-compression" Type="Radio" text="Lossless compression" checked="true" column="0" row="0" />
+        <Input id="str-jpeg-compression" Type="Radio" text="JPEG compression" column="0" row="1" />
+        <Container id="container-2" Type="Vertical Stack" cell-gap="12" focusable="false" column="0" row="2">
+          <Text id="str-quality" text="Quality in %" focusable="false" is-enabled="false" />
+          <Input id="sb-quality" Type="Number" is-enabled="false" />
+        </Container>
+      </Container>
+      <Text id="str-graphic-optimization" text="Choose settings for optimizing images" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

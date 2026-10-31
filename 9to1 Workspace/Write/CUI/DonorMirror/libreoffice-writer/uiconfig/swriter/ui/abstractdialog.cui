@@ -1,0 +1,22 @@
+<Cui id="ui-abstractdialog" product="9-1" version="1">
+  <Container id="abstract-dialog" Type="Vertical Stack" modal="True">
+    <Text id="abstract-dialog-label" text="Create AutoAbstract" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" role="Grow">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Text id="label2" text="Included outline levels" role="Grow" />
+          <Text id="label3" text="Paragraphs per level" role="Grow" />
+          <Text id="label4" text="The abstract contains the selected number of paragraphs from the included outline levels." text-wrapping="Wrap" role="Grow" column-span="2" />
+          <Input id="outlines" Type="Number" horizontal-alignment="Right" />
+          <Input id="paras" Type="Number" horizontal-alignment="Right" />
+        </Container>
+        <Text id="label1" text="Properties" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

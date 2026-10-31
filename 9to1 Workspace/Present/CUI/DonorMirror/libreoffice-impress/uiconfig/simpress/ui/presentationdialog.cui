@@ -1,0 +1,80 @@
+<Cui id="ui-presentationdialog" product="9-1" version="1">
+  <Container id="presentation-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="presentation-dialog-label" text="Slide Show Settings" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="allslides" Type="Radio" text="All slides" checked="true" column="0" row="0" />
+            <Container id="grid6" Type="Grid" cell-gap="12" focusable="false" column="0" row="1">
+              <Input id="from" Type="Radio" text="From:" column="0" row="0" />
+              <Input id="from-cb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+            </Container>
+            <Container id="grid" Type="Grid" cell-gap="12" focusable="false" column="0" row="2">
+              <Input id="customslideshow" Type="Radio" text="Custom slide show:" column="0" row="0" />
+              <Input id="customslideshow-cb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+            </Container>
+          </Container>
+          <Text id="label1" text="Range" focusable="false" />
+        </Container>
+        <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" column="0" row="1">
+          <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+            <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Input id="default" Type="Radio" text="Full screen" checked="true" column="0" row="0" />
+              <Input id="window" Type="Radio" text="In a window" column="0" row="1" />
+              <Input id="auto" Type="Checkbox" text="Loop and repeat after:" column="0" row="2" />
+              <Input id="pauseduration" Type="Number" tooltip="Duration of pause" is-enabled="false" column="0" row="3" />
+              <Input id="showlogo" Type="Checkbox" text="Show logo during pause" column="0" row="4" />
+            </Container>
+            <Text id="label2" text="Presentation Mode" focusable="false" />
+          </Container>
+          <Container id="frame4" Type="Vertical Stack" focusable="false" role="Grow" column="1" row="0">
+            <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Input id="manualslides" Type="Checkbox" text="Disable automatic change of slides" column="0" row="0" />
+              <Input id="changeslidesbyclick" Type="Checkbox" text="Change slides by clicking on background" column="0" row="1" />
+              <Input id="pointervisible" Type="Checkbox" text="Mouse pointer visible" column="0" row="2" />
+              <Input id="pointeraspen" Type="Checkbox" text="Mouse pointer as pen" column="0" row="3" />
+              <Input id="animationsallowed" Type="Checkbox" text="Enable animated images" column="0" row="4" />
+              <Input id="alwaysontop" Type="Checkbox" text="Keep Presentation always on top" column="0" row="5" />
+              <Input id="enableinteractivemode" Type="Checkbox" text="Live-mode slideshow editing" column="0" row="6" />
+            </Container>
+            <Text id="label4" text="Presentation Options" focusable="false" />
+          </Container>
+        </Container>
+        <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="2">
+          <Container id="grid7" Type="Grid" focusable="false" role="Grow">
+            <Container id="grid8" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+              <Input id="presdisplay-cb" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+              <Text id="presdisplay-label" text="Presentation display:" focusable="false" column="0" row="0" />
+              <Input id="console-cb" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+              <Text id="console-label" text="Presenter console:" focusable="false" column="0" row="1" />
+              <Input id="shownavigationbutton" Type="Checkbox" text="Show navigation bar" tooltip="Show navigation bar at the bottom of the presentation" column="0" row="2" column-span="2" />
+              <Text id="navbar-btn-size-label" text="Buttons size:" horizontal-alignment="Left" focusable="false" column="0" row="3" />
+              <Input id="navigation-buttons-size-cb" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+            </Container>
+            <Container id="grid9" Type="Grid" focusable="false" column="0" row="1">
+              <Text id="externalmonitor-str" text="Display %1 (external)" focusable="false" column="0" row="0" />
+              <Text id="monitor-str" text="Display %1" focusable="false" column="0" row="1" />
+              <Text id="allmonitors-str" text="All displays" focusable="false" column="0" row="2" />
+              <Text id="external-str" text="Auto External (Display %1)" focusable="false" column="0" row="3" />
+            </Container>
+          </Container>
+          <Text id="label3" text="Display" focusable="false" />
+        </Container>
+        <Container id="frameremote" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="3">
+          <Container id="grid10" Type="Grid" focusable="false" role="Grow">
+            <Input id="enableremote" Type="Checkbox" text="Enable remote control" column="0" row="0" />
+            <Button id="learnmore" content="Download App ..." text="Download App ..." tooltip="Download LibreOffice Impress Remote to remotely control the presentation from your smartphone or smartwatch." horizontal-alignment="Right" role="Grow" column="1" row="0" />
+            <Input id="enableremoteinsecure" Type="Checkbox" text="Enable insecure WiFi connections" tooltip="In addition to Bluetooth connections, enable insecure and unencrypted connections via IP on all network interfaces. Not recommended in public settings." column="0" row="1" />
+          </Container>
+          <Text id="label5" text="Remote control" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

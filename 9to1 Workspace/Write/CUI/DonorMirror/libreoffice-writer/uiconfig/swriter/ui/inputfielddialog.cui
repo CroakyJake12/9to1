@@ -1,0 +1,23 @@
+<Cui id="ui-inputfielddialog" product="9-1" version="1">
+  <Container id="input-field-dialog" Type="Vertical Stack" modal="True">
+    <Text id="input-field-dialog-label" text="Review Fields" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Container id="grid2" Type="Grid">
+          <Button id="prev" content="Previous" text="Previous" />
+          <Button id="next" content="Next" text="Next" />
+        </Container>
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Text id="inputfieldname" text="Reference:" horizontal-alignment="Left" />
+        <Input id="name" Type="Text" is-enabled="false" role="Grow" />
+        <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column-span="2">
+          <Input id="text" Type="Text" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,31 @@
+<Cui id="ui-duplicaterecordsdlg" product="9-1" version="1">
+  <Container id="duplicate-records-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="duplicate-records-dialog-label" text="Handle Duplicate Records" />
+    <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false">
+      <Container id="container-2" Type="Horizontal Stack" focusable="false" role="Grow">
+        <Button id="help" content="Help" text="Help" role="Grow" />
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="compare" text="Compare:" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="0" row="0" />
+        <Text id="header" text="Header:" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="0" row="1" />
+        <Text id="action" text="Action:" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="0" row="4" />
+        <Container id="container-3" Type="Vertical Stack" width="280" height="140" column="1" row="3">
+          <Container id="checklist" Type="Vertical Stack" />
+        </Container>
+        <Container id="box1" Type="Vertical Stack" focusable="false" column="1" row="0">
+          <Input id="row" Type="Radio" text="Rows" tooltip="Compare rows." checked="true" />
+          <Input id="column" Type="Radio" text="Columns" tooltip="Compare columns." />
+        </Container>
+        <Container id="box2" Type="Vertical Stack" focusable="false" column="1" row="4">
+          <Input id="select" Type="Radio" text="Select" tooltip="Select duplicate records." checked="true" />
+          <Input id="remove" Type="Radio" text="Remove" tooltip="Remove duplicate records." />
+        </Container>
+        <Input id="includesheaders" Type="Checkbox" text="Data contains row/col headers" tooltip="Select to exclude the row/column headers from duplicate comparison." column="1" row="1" />
+        <Text id="compareby" text="Compare by:" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" column="0" row="2" />
+        <Input id="allcheckbtn" Type="Checkbox" text="All" tooltip="Select/unselect all records." column="1" row="2" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,22 @@
+<Cui id="ui-findentrydialog" product="9-1" version="1">
+  <Container id="find-entry-dialog" Type="Vertical Stack">
+    <Text id="find-entry-dialog-label" text="Find Entry" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="find" content="Find" text="Find" />
+        <Button id="cancel" content="Close" text="Close" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+          <Text id="label1" text="Find" focusable="false" column="0" row="0" />
+          <Input id="entry" Type="Text" role="Grow" column="1" row="0" />
+        </Container>
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" column="0" row="1">
+          <Input id="findin" Type="Checkbox" text="Find only in" column="0" row="0" />
+          <Input id="area" Type="Select" focusable="false" column="0" row="1" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

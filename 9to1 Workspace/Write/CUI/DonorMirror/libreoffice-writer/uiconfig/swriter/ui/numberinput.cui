@@ -1,0 +1,15 @@
+<Cui id="ui-numberinput" product="9-1" version="1">
+  <Container id="number-input-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="label1" focusable="false" column="0" row="0" />
+        <Input id="spinbutton" Type="Number" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="label2" focusable="false" hidden="true" />
+    </Container>
+  </Container>
+</Cui>

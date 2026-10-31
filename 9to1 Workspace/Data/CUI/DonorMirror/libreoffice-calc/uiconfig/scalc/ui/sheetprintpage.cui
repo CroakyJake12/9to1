@@ -1,0 +1,54 @@
+<Cui id="ui-sheetprintpage" product="9-1" version="1">
+  <Container id="sheet-print-page" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="box1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid3" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
+          <Input id="radio-btn-topdown" Type="Radio" text="Top to bottom, then right" vertical-alignment="Center" column="0" row="0" />
+          <Input id="radio-btn-leftright" Type="Radio" text="Left to right, then down" horizontal-alignment="Left" vertical-alignment="Center" checked="true" column="0" row="1" />
+          <Input id="check-btn-pageno" Type="Checkbox" text="First page number:" column="0" row="2" />
+          <Input id="spin-ed-pageno" Type="Number" column="1" row="2" />
+        </Container>
+        <Container id="container" Type="Vertical Stack" horizontal-alignment="Left" vertical-alignment="Center" focusable="false">
+          <Image id="image-bmp-pagedir" focusable="false" source="missing-image" />
+        </Container>
+      </Container>
+      <Text id="label-page-order" text="Page Order" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false" column="0" row="1">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="check-btn-header" Type="Checkbox" text="Column and row headers" column="0" row="0" />
+        <Input id="check-btn-grid" Type="Checkbox" text="Grid" column="0" row="1" />
+        <Input id="check-btn-notes" Type="Checkbox" text="Comments" column="0" row="2" />
+        <Input id="check-btn-objects" Type="Checkbox" text="Objects/Images" column="0" row="3" />
+        <Input id="check-btn-charts" Type="Checkbox" text="Charts" column="2" row="0" />
+        <Input id="check-btn-drawings" Type="Checkbox" text="Drawing objects" column="2" row="1" />
+        <Input id="check-btn-formulas" Type="Checkbox" text="Formulas" column="2" row="2" />
+        <Input id="check-btn-nullvals" Type="Checkbox" text="Zero values" column="2" row="3" />
+      </Container>
+      <Text id="label-print" text="Print" focusable="false" />
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" column="0" row="2">
+      <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="label-scaling-mode" text="Scaling mode:" focusable="false" column="0" row="0" />
+        <Input id="combo-lb-scalemode" Type="Select" focusable="false" column="1" row="0" />
+        <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false" column="1" row="1">
+          <Container id="box-scaleall" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Text id="label-sf" text="Scaling factor:" focusable="false" />
+            <Input id="spin-ed-scaleall" Type="Number" />
+          </Container>
+          <Container id="grid-wh" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="label-wp" Type="Checkbox" text="Width in pages:" column="0" row="0" />
+            <Input id="spin-ed-scalepagewidth" Type="Number" column="1" row="0" />
+            <Input id="label-hp" Type="Checkbox" text="Height in pages:" column="0" row="1" />
+            <Input id="spin-ed-scalepageheight" Type="Number" column="1" row="1" />
+          </Container>
+          <Container id="box-np" Type="Vertical Stack" cell-gap="12" focusable="false">
+            <Text id="label-np" text="Number of pages:" focusable="false" />
+            <Input id="spin-ed-scalepagenum" Type="Number" />
+          </Container>
+        </Container>
+      </Container>
+      <Text id="label-scale" text="Scale" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,40 @@
+<Cui id="ui-protectsheetdlg" product="9-1" version="1">
+  <Container id="protect-sheet-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="protect-sheet-dialog-label" text="Protect Sheet" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Input id="protect" Type="Checkbox" text="Protect this sheet and the contents of protected cells" />
+          <Container id="passwords" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Text id="label1" text="Password:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+            <Text id="label2" text="Confirm:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+            <Input id="password1" Type="Text" role="Grow" column="1" row="0" />
+            <Input id="password2" Type="Text" role="Grow" column="1" row="2" />
+            <Input id="passwordbar" Type="Progress" focusable="false" column="1" row="1" />
+          </Container>
+        </Container>
+        <Container id="options" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label4" text="Allow all users of this sheet to:" focusable="false" />
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="checklist" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="box4" Type="Vertical Stack" focusable="false">
+            <Text id="protected" text="Select protected cells" focusable="false" />
+            <Text id="delete-columns" text="Delete columns with unprotected cells" focusable="false" />
+            <Text id="delete-rows" text="Delete rows with unprotected cells" focusable="false" />
+            <Text id="insert-columns" text="Insert columns" focusable="false" />
+            <Text id="insert-rows" text="Insert rows" focusable="false" />
+            <Text id="unprotected" text="Select unprotected cells" focusable="false" />
+            <Text id="useautofilter" text="Use AutoFilter" focusable="false" />
+            <Text id="usepivot" text="Use Pivot Table and Pivot Chart" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

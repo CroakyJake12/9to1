@@ -1,0 +1,25 @@
+<Cui id="ui-validationcriteriapage" product="9-1" version="1">
+  <Container id="validation-criteria-page" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+    <Text id="label1" text="Allow:" focusable="false" column="0" row="0" />
+    <Input id="allow" Type="Select" focusable="false" column="1" row="0" />
+    <Input id="allowempty" Type="Checkbox" text="Allow empty cells" column="1" row="1" />
+    <Input id="casesens" Type="Checkbox" text="Case sensitive" column="1" row="2" />
+    <Input id="showlist" Type="Checkbox" text="Show selection list" column="1" row="3" />
+    <Input id="sortascend" Type="Checkbox" text="Sort entries ascending" checked="true" column="1" row="4" />
+    <Text id="valueft" text="Data:" focusable="false" column="0" row="5" />
+    <Input id="data" Type="Select" focusable="false" column="1" row="5" />
+    <Text id="minft" text="Minimum:" focusable="false" column="0" row="6" />
+    <Container id="mingrid" Type="Grid" focusable="false" role="Grow" column="1" row="6">
+      <Container id="refgrid" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+        <Input id="min" Type="Text" role="Grow" column="0" row="0" />
+        <Button id="validref" horizontal-alignment="Center" vertical-alignment="Center" column="1" row="0" />
+      </Container>
+      <Container id="scrolledwindow2" Type="Vertical Stack" role="Grow" column="0" row="1">
+        <Input id="minlist" Type="Text" role="Grow" />
+      </Container>
+    </Container>
+    <Text id="hintft" text="A valid source can only consist of a contiguous selection of rows and columns, or a formula that results in an area or array." text-wrapping="Wrap" focusable="false" column="1" row="7" />
+    <Text id="maxft" text="Maximum:" focusable="false" column="0" row="8" />
+    <Input id="max" Type="Text" role="Grow" column="1" row="8" />
+  </Container>
+</Cui>

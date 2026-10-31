@@ -1,0 +1,69 @@
+<Cui id="ui-sparklinedialog" product="9-1" version="1">
+  <Container id="sparkline-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="sparkline-dialog-label" text="Sparkline Properties" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="container" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frm-data" Type="Vertical Stack" focusable="false" column="0" row="0" column-span="2">
+          <Container id="container-2" Type="Grid" cell-gap="6" focusable="false">
+            <Text id="lb-input-range" text="Input range:" focusable="false" column="0" row="0" />
+            <Input id="ed-input-range" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+            <Button id="btn-input-range" column="2" row="0" />
+            <Text id="lb-output-range" text="Output range:" focusable="false" column="0" row="1" />
+            <Input id="ed-output-range" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="1" />
+            <Button id="btn-output-range" column="2" row="1" />
+          </Container>
+          <Text id="lb-data" text="Data" focusable="false" />
+        </Container>
+        <Container id="frm-properties" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="1">
+          <Container id="gd-properties" Type="Grid" cell-gap="3" vertical-alignment="Top" focusable="false">
+            <Text id="lb-type" text="Type:" focusable="false" column="0" row="0" />
+            <Input id="cb-type" Type="Select" vertical-alignment="Top" focusable="false" column="1" row="0" />
+            <Text id="lb-line-width" text="Line thickness:" focusable="false" column="0" row="1" />
+            <Input id="se-line-width" Type="Number" text="1,00" Value="1" role="Grow" column="1" row="1" />
+            <Text id="lb-empyt-cells" text="Display empty cells as:" focusable="false" column="0" row="2" />
+            <Input id="cb-empty-cells" Type="Select" focusable="false" column="1" row="2" />
+            <Input id="cb-hidden" Type="Checkbox" text="Display hidden" column="0" row="3" column-span="2" />
+            <Input id="cb-rtl" Type="Checkbox" text="Right-to-left" column="0" row="4" column-span="2" />
+          </Container>
+          <Text id="lb-properties" text="Properties" focusable="false" />
+        </Container>
+        <Container id="frm-colors" Type="Vertical Stack" focusable="false" column="1" row="1">
+          <Container id="container-3" Type="Grid" cell-gap="3" focusable="false">
+            <Text id="lb-series" text="Series:" focusable="false" column="0" row="0" />
+            <Button id="col-series" horizontal-alignment="Left" column="1" row="0" />
+            <Input id="cb-negative" Type="Checkbox" text="Negative points:" column="0" row="1" />
+            <Button id="col-negative" horizontal-alignment="Left" column="1" row="1" />
+            <Input id="cb-high" Type="Checkbox" text="High points:" column="0" row="2" />
+            <Button id="col-high" horizontal-alignment="Left" column="1" row="2" />
+            <Input id="cb-low" Type="Checkbox" text="Low points:" column="0" row="3" />
+            <Button id="col-low" horizontal-alignment="Left" column="1" row="3" />
+            <Input id="cb-marker" Type="Checkbox" text="Marker:" column="0" row="4" />
+            <Button id="col-marker" horizontal-alignment="Left" column="1" row="4" />
+            <Input id="cb-first" Type="Checkbox" text="First point:" column="0" row="5" />
+            <Button id="col-first" horizontal-alignment="Left" column="1" row="5" />
+            <Input id="cb-last" Type="Checkbox" text="Last point:" column="0" row="6" />
+            <Button id="col-last" horizontal-alignment="Left" column="1" row="6" />
+          </Container>
+          <Text id="lb-colors" text="Colors" focusable="false" />
+        </Container>
+        <Container id="frm-axes" Type="Vertical Stack" focusable="false" column="0" row="2" column-span="2">
+          <Container id="container-4" Type="Grid" cell-gap="3" focusable="false">
+            <Input id="cb-display-xaxis" Type="Checkbox" text="Display X axis" horizontal-alignment="Left" column="0" row="0" column-span="3" />
+            <Text id="lb-min-axis" text="Vertical minimum:" horizontal-alignment="Left" focusable="false" column="0" row="1" />
+            <Input id="cb-min-axis-type" Type="Select" focusable="false" column="1" row="1" />
+            <Input id="se-min-axis" Type="Number" column="2" row="1" />
+            <Text id="lb-max-axis" text="Vertical maximum:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+            <Input id="cb-max-axis-type" Type="Select" focusable="false" column="1" row="2" />
+            <Input id="se-max-axis" Type="Number" column="2" row="2" />
+          </Container>
+          <Text id="lb-axes" text="Axes" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

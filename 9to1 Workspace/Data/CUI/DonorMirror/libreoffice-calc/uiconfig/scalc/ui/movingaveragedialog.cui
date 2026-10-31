@@ -1,0 +1,38 @@
+<Cui id="ui-movingaveragedialog" product="9-1" version="1">
+  <Container id="moving-average-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="moving-average-dialog-label" text="Moving Average" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame-data" Type="Vertical Stack" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="input-range-label" text="Input range:" focusable="false" column="0" row="0" />
+          <Input id="input-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+          <Button id="input-range-button" column="2" row="0" />
+          <Text id="output-range-label" text="Results to:" focusable="false" column="0" row="1" />
+          <Input id="output-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="1" />
+          <Button id="output-range-button" column="2" row="1" />
+          <Input id="trimrange-check" Type="Checkbox" text="Trim input range to actual data content" checked="true" column="0" row="2" column-span="2" />
+        </Container>
+        <Text id="label3" text="Data" focusable="false" />
+      </Container>
+      <Container id="frame-group" Type="Vertical Stack" focusable="false">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="groupedby-columns-radio" Type="Radio" text="Columns" checked="true" column="0" row="0" />
+          <Input id="groupedby-rows-radio" Type="Radio" text="Rows" column="1" row="0" />
+        </Container>
+        <Text id="label2" text="Grouped by" focusable="false" />
+      </Container>
+      <Container id="frame-param" Type="Vertical Stack" focusable="false">
+        <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="interval-label" text="Interval:" focusable="false" column="0" row="0" />
+          <Input id="interval-spin" Type="Number" text="2" Value="2" column="1" row="0" />
+        </Container>
+        <Text id="label1" text="Parameters" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,48 @@
+<Cui id="ui-frmaddpage" product="9-1" version="1">
+  <Container id="frame-add-page" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+    <Container id="a11yframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid0" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Container id="nameframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="name" Type="Text" role="Grow" column="1" row="0" />
+            <Input id="altname" Type="Text" role="Grow" column="1" row="1" />
+            <Text id="name-label" text="Name:" focusable="false" column="0" row="0" />
+            <Text id="altname-label" text="Text Alternative:" tooltip="Give a short description for users who do not see this object." focusable="false" column="0" row="1" />
+            <Text id="description-label" text="Description:" tooltip="Give a longer explanation of the content if it is too complex to be described briefly in “Text Alternative.”" focusable="false" column="0" row="2" />
+            <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="1" row="2">
+              <Input id="description" Type="Text" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="dummylabelfor-vcl" focusable="false" hidden="true" />
+        </Container>
+        <Input id="decorative" Type="Checkbox" text="Decorative" column="0" row="1" />
+      </Container>
+      <Text id="label1" text="Accessibility" focusable="false" />
+    </Container>
+    <Container id="contentalign" Type="Vertical Stack" focusable="false" column="0" row="2">
+      <Container id="grid8" Type="Grid" cell-gap="12" focusable="false">
+        <Text id="label2" text="Vertical alignment:" focusable="false" column="0" row="0" />
+        <Input id="vertalign" Type="Select" focusable="false" column="1" row="0" />
+      </Container>
+      <Text id="label7" text="Content Alignment" focusable="false" />
+    </Container>
+    <Container id="properties" Type="Vertical Stack" focusable="false" column="0" row="3">
+      <Container id="grid3" Type="Grid" cell-gap="3" focusable="false" role="Grow">
+        <Input id="editinreadonly" Type="Checkbox" text="Editable in read-only document" column="0" row="0" column-span="2" />
+        <Input id="printframe" Type="Checkbox" text="Print" column="0" row="1" column-span="2" />
+        <Input id="textflow" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+        <Text id="textflow-label" text="Text direction:" focusable="false" column="0" row="2" />
+      </Container>
+      <Text id="label3" text="Properties" focusable="false" />
+    </Container>
+    <Container id="frm-sequence" Type="Vertical Stack" focusable="false" column="0" row="1">
+      <Container id="gd-sequence" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="prev-label" text="Previous link:" tooltip="Link this frame prior to current frame." focusable="false" column="0" row="0" />
+        <Input id="prev" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+        <Text id="next-label" text="Next link:" tooltip="Link this frame after the current frame." focusable="false" column="0" row="1" />
+        <Input id="next" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+      </Container>
+      <Text id="lb-sequence" text="Sequence" tooltip="Specify the sequence for linked frames." focusable="false" />
+    </Container>
+  </Container>
+</Cui>

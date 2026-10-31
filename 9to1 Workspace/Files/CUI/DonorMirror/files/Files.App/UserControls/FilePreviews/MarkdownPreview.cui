@@ -1,0 +1,9 @@
+<Cui id="file-previews-markdown-preview" product="9-1" version="1">
+  <Page id="file-previews-markdown-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="scrollviewer" Type="Vertical Stack">
+        <Text id="markdowntextblock" text="{Binding ViewModel.TextValue}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

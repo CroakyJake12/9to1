@@ -1,0 +1,16 @@
+<Cui id="ui-createautomarkdialog" product="9-1" version="1">
+  <Container id="create-automark-dialog" Type="Vertical Stack" modal="True">
+    <Text id="create-automark-dialog-label" text="Edit Concordance File" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" role="Grow">
+        <Container id="area" Type="Vertical Stack" />
+        <Text id="label1" text="Entries" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

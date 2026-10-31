@@ -1,0 +1,9 @@
+<Cui id="ui-mastermenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="applyall" Type="Menu Item" content="Apply to All Slides" text="Apply to All Slides" />
+    <Button id="applyselect" Type="Menu Item" content="Apply to Selected Slides" text="Apply to Selected Slides" />
+    <Button id="menuitem1" Type="Menu Item" />
+    <Button id="large" Type="Menu Item" content="Show Large Preview" text="Show Large Preview" />
+    <Button id="small" Type="Menu Item" content="Show Small Preview" text="Show Small Preview" />
+  </Container>
+</Cui>

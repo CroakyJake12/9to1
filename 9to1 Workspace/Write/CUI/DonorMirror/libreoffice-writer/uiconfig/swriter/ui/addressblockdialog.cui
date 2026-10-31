@@ -1,0 +1,52 @@
+<Cui id="ui-addressblockdialog" product="9-1" version="1">
+  <Page id="ui-addressblockdialog-root">
+    <Image id="image1" focusable="false" source="go-next" />
+    <Image id="image2" focusable="false" source="go-previous" />
+    <Image id="image3" focusable="false" source="go-up" />
+    <Image id="image4" focusable="false" source="go-down" />
+    <Image id="image5" tooltip="Add to address" focusable="false" source="go-next" />
+    <Image id="image6" focusable="false" source="go-previous" />
+    <Container id="address-block-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="address-block-dialog-label" text="New Address Block" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="addressesft" text="Address elements" focusable="false" column="0" row="0" />
+          <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1" row-span="5">
+            <Container id="addresses" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Text id="addressdestft" text="1. Drag address elements here" focusable="false" column="2" row="0" />
+          <Container id="grid3" Type="Grid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="3" row="1">
+            <Button id="up" tooltip="Move up" column="1" row="0" />
+            <Button id="left" tooltip="Move left" column="0" row="1" />
+            <Button id="right" tooltip="Move right" column="2" row="1" />
+            <Button id="down" tooltip="Move down" column="1" row="2" />
+          </Container>
+          <Text id="label3" text="Preview" focusable="false" column="2" row="4" />
+          <Text id="customft" text="2. Customize salutation" focusable="false" column="2" row="2" />
+          <Input id="custom" Type="Select" focusable="false" column="2" row="3">
+            <Input id="comboboxtext-entry" Type="Text" />
+          </Input>
+          <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="2" row="1">
+            <Container id="container-2" Type="Vertical Stack" focusable="false">
+              <Container id="addressdest" Type="Overlay" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="previewwin" Type="Vertical Stack" focusable="false" role="Grow" column="2" row="5">
+            <Container id="container-3" Type="Vertical Stack" focusable="false">
+              <Container id="addrpreview" Type="Overlay" focusable="false" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="grid2" Type="Grid" cell-gap="6" vertical-alignment="Center" focusable="false" column="1" row="1">
+            <Button id="fromaddr" tooltip="Remove from address" column="0" row="1" />
+            <Button id="toaddr" column="0" row="0" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

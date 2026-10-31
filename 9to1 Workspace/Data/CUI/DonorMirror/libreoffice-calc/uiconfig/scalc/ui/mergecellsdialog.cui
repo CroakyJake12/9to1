@@ -1,0 +1,21 @@
+<Cui id="ui-mergecellsdialog" product="9-1" version="1">
+  <Container id="merge-cells-dialog" Type="Vertical Stack" modal="True">
+    <Text id="merge-cells-dialog-label" text="Merge Cells" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" role="Grow" />
+        <Button id="cancel" content="Cancel" text="Cancel" role="Grow" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Text id="label" text="Some cells are not empty." />
+      <Container id="container" Type="Grid">
+        <Input id="move-cells-radio" Type="Radio" text="Move the contents of the hidden cells into the first cell" />
+        <Input id="empty-cells-radio" Type="Radio" text="Empty the contents of the hidden cells" />
+        <Input id="keep-content-radio" Type="Radio" text="Keep the contents of the hidden cells" checked="true" />
+        <Image id="im-merge-first-cell" horizontal-alignment="Left" />
+        <Image id="im-merge-keep-hidden" horizontal-alignment="Left" role="Grow" />
+        <Image id="im-merge-empty-hidden" horizontal-alignment="Left" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

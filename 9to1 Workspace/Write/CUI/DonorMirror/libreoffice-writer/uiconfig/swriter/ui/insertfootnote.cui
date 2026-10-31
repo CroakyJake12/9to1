@@ -1,0 +1,36 @@
+<Cui id="ui-insertfootnote" product="9-1" version="1">
+  <Page id="ui-insertfootnote-root">
+    <Image id="image1" focusable="false" source="go-previous" />
+    <Image id="image2" focusable="false" source="go-next" />
+    <Container id="insert-footnote-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="insert-footnote-dialog-label" text="Insert Footnote/Endnote" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="help" content="Help" text="Help" />
+          <Button id="prev" tooltip="Previous footnote/endnote" role="Grow" />
+          <Button id="next" tooltip="Next footnote/endnote" role="Grow" />
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+        </Container>
+        <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false">
+          <Container id="numberingframe" Type="Vertical Stack" focusable="false">
+            <Container id="grid1" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false">
+              <Input id="automatic" Type="Radio" text="Automatic" vertical-alignment="Center" checked="true" column="0" row="0" column-span="3" />
+              <Input id="character" Type="Radio" text="Character:" vertical-alignment="Center" column="0" row="1" />
+              <Input id="characterentry" Type="Text" horizontal-alignment="Left" vertical-alignment="Center" column="1" row="1" />
+              <Button id="choosecharacter" content="Choose…" text="Choose…" horizontal-alignment="Left" vertical-alignment="Center" column="2" row="1" />
+            </Container>
+            <Text id="label1" text="Numbering" focusable="false" />
+          </Container>
+          <Container id="frame2" Type="Vertical Stack" focusable="false">
+            <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false">
+              <Input id="footnote" Type="Radio" text="Footnote" vertical-alignment="Center" checked="true" />
+              <Input id="endnote" Type="Radio" text="Endnote" vertical-alignment="Center" />
+            </Container>
+            <Text id="label2" text="Type" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,46 @@
+<Cui id="ui-tabletextflowpage" product="9-1" version="1">
+  <Container id="table-text-flow-page" Type="Grid" cell-gap="5" focusable="false" role="Grow">
+    <Container id="frame8" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+      <Container id="grid19" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="grid20" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false" column="0" row="0">
+          <Input id="break" Type="Checkbox" text="Break" column="0" row="0" />
+          <Text id="breakposition" text="Position:" horizontal-alignment="Left" focusable="false" column="2" row="0" />
+          <Text id="breaktype" text="Type:" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+          <Input id="page" Type="Radio" text="Page" checked="true" column="1" row="1" />
+          <Input id="column" Type="Radio" text="Column" column="1" row="2" />
+          <Input id="before" Type="Radio" text="Before" checked="true" column="2" row="1" />
+          <Input id="after" Type="Radio" text="After" column="2" row="2" />
+        </Container>
+        <Container id="grid21" Type="Grid" cell-gap="10" focusable="false" column="0" row="1">
+          <Input id="pagestyle" Type="Checkbox" text="With Page Style" column="0" row="0" />
+          <Input id="pagestylelb" Type="Select" focusable="false" column="1" row="0" />
+          <Input id="pagenoft" Type="Checkbox" text="Page number" column="2" row="0" />
+          <Input id="pagenonf" Type="Number" column="3" row="0" />
+        </Container>
+        <Input id="split" Type="Checkbox" text="Allow table to split across pages and columns" column="0" row="2" />
+        <Input id="splitrow" Type="Checkbox" text="Allow row to break across pages and columns" column="0" row="3" />
+        <Input id="keep" Type="Checkbox" text="Keep with next paragraph" column="0" row="4" />
+        <Container id="grid1" Type="Grid" cell-gap="24" focusable="false" column="0" row="5">
+          <Input id="headline" Type="Checkbox" text="Repeat header" column="0" row="0" />
+          <Container id="repeatheader" Type="Grid" cell-gap="10" focusable="false" column="1" row="0">
+            <Text id="label38" text="The first" focusable="false" column="0" row="0" />
+            <Text id="label39" text="rows" focusable="false" column="2" row="0" />
+            <Input id="repeatheadernf" Type="Number" column="1" row="0" />
+          </Container>
+        </Container>
+        <Container id="grid23" Type="Grid" cell-gap="12" focusable="false" column="0" row="6">
+          <Text id="label40" text="Text orientation" focusable="false" column="0" row="0" />
+          <Input id="textorientation" Type="Select" focusable="false" column="1" row="0" />
+        </Container>
+      </Container>
+      <Text id="label35" text="Text Flow" focusable="false" />
+    </Container>
+    <Container id="frame9" Type="Vertical Stack" focusable="false" column="0" row="1">
+      <Container id="grid24" Type="Grid" cell-gap="12" focusable="false">
+        <Text id="label41" text="Vertical alignment" focusable="false" column="0" row="0" />
+        <Input id="vertorient" Type="Select" focusable="false" column="1" row="0" />
+      </Container>
+      <Text id="label36" text="Alignment" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

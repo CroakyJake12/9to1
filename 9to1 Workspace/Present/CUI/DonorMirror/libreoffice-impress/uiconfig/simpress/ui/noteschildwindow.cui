@@ -1,0 +1,9 @@
+<Cui id="ui-noteschildwindow" product="9-1" version="1">
+  <Container id="notes-child-edit-window" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Container id="scrolledwin" Type="Vertical Stack" role="Grow">
+      <Container id="container" Type="Vertical Stack" focusable="false">
+        <Container id="noteschildeditview" Type="Overlay" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

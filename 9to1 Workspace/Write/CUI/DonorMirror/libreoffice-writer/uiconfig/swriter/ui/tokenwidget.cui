@@ -1,0 +1,17 @@
+<Cui id="ui-tokenwidget" product="9-1" version="1">
+  <Page id="ui-tokenwidget-root">
+    <Image id="image1" focusable="false" source="go-previous" />
+    <Image id="image2" focusable="false" source="go-next" />
+    <Container id="token-widget" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Button id="left" tooltip="Scroll left" />
+      <Container id="scrollwin" Type="Vertical Stack" width="5" role="Grow">
+        <Container id="container" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="container-2" Type="Grid" focusable="false" role="Grow">
+            <Container id="ctrl" Type="Grid" horizontal-alignment="Left" focusable="false" role="Grow" column="0" row="0" />
+          </Container>
+        </Container>
+      </Container>
+      <Button id="right" tooltip="Scroll right" />
+    </Container>
+  </Page>
+</Cui>

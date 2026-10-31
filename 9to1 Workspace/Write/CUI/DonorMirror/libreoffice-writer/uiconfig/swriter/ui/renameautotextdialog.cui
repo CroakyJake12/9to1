@@ -1,0 +1,25 @@
+<Cui id="ui-renameautotextdialog" product="9-1" version="1">
+  <Container id="rename-auto-text-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="rename-auto-text-dialog-label" text="Rename AutoText" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" is-enabled="false" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="18" focusable="false" role="Grow">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+          <Text id="label2" text="Name" focusable="false" column="0" row="0" />
+          <Text id="label3" text="New" focusable="false" column="0" row="1" />
+          <Input id="oldname" Type="Text" role="Grow" column="1" row="0" />
+          <Input id="newname" Type="Text" role="Grow" column="1" row="1" />
+        </Container>
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" column="1" row="0">
+          <Text id="label4" text="Shortcut" focusable="false" column="0" row="0" />
+          <Text id="label5" text="Shortcut" focusable="false" column="0" row="1" />
+          <Input id="oldsc" Type="Text" column="1" row="0" />
+          <Input id="newsc" Type="Text" column="1" row="1" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

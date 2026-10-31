@@ -1,0 +1,8 @@
+<Cui id="issue-navbar" product="9-1" version="1">
+  <Page id="issue-navbar-root">
+    <Text id="h2">
+      <Button id="a" />
+      <Button id="a-2" />
+    </Text>
+  </Page>
+</Cui>

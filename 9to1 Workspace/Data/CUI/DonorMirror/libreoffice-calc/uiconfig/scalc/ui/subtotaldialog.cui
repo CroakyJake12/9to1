@@ -1,0 +1,15 @@
+<Cui id="ui-subtotaldialog" product="9-1" version="1">
+  <Container id="sub-total-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="sub-total-dialog-label" text="Subtotals" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="help" content="Help" text="Help" />
+        <Button id="reset" content="Reset" text="Reset" />
+        <Button id="remove" content="Remove" text="Remove" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

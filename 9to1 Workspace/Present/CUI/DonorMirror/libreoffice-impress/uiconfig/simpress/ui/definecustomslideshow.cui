@@ -1,0 +1,32 @@
+<Cui id="ui-definecustomslideshow" product="9-1" version="1">
+  <Container id="define-custom-slide-show" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="define-custom-slide-show-label" text="Define Custom Slide Show" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="box3" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+          <Text id="label1" text="Name:" focusable="false" />
+          <Input id="customname" Type="Text" role="Grow" />
+        </Container>
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label2" text="Existing slides:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+          <Text id="label3" text="Selected slides:" horizontal-alignment="Left" focusable="false" column="2" row="0" />
+          <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+            <Container id="pages" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="container-2" Type="Vertical Stack" role="Grow" column="2" row="1">
+            <Container id="custompages" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="box4" Type="Vertical Stack" cell-gap="6" vertical-alignment="Center" focusable="false" column="1" row="1">
+            <Button id="add" content="&gt;&gt;" text="&gt;&gt;" />
+            <Button id="remove" content="&lt;&lt;" text="&lt;&lt;" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

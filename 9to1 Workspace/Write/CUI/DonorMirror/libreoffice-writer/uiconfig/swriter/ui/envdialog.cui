@@ -1,0 +1,16 @@
+<Cui id="ui-envdialog" product="9-1" version="1">
+  <Container id="env-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="env-dialog-label" text="Envelope" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="New Document" text="New Document" />
+        <Button id="user" content="Insert" text="Insert" />
+        <Button id="modify" content="Modify" text="Modify" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+        <Button id="reset" content="Reset" text="Reset" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

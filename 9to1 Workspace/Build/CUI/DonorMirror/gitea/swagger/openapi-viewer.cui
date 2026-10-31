@@ -1,0 +1,19 @@
+<Cui id="swagger-openapi-viewer" product="9-1" version="1">
+  <Page id="swagger-openapi-viewer-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="div" Type="Vertical Stack">
+          <Button id="a" />
+          <Button id="a-2" />
+          <Button id="a-3" />
+        </Container>
+        <Container id="swagger-ui" Type="Vertical Stack" />
+        <Container id="footer" Type="Horizontal Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

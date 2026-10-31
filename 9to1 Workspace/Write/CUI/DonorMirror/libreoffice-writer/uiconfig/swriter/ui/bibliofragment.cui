@@ -1,0 +1,20 @@
+<Cui id="ui-bibliofragment" product="9-1" version="1">
+  <Container id="biblioentry" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" role="Grow">
+    <Container id="vbox" Type="Vertical Stack" focusable="false" column="1" row="0">
+      <Container id="hbox" Type="Vertical Stack" focusable="false">
+        <Input id="entry" Type="Text" role="Grow" />
+        <Button id="browse" content="Browse..." text="Browse..." />
+      </Container>
+      <Container id="hbox2" Type="Vertical Stack" focusable="false">
+        <Input id="pagecb" Type="Checkbox" text="Page" />
+        <Input id="pagesb" Type="Number" is-enabled="false" role="Grow" />
+      </Container>
+    </Container>
+    <Input id="listbox" Type="Select" focusable="false" role="Grow" column="3" row="0" />
+    <Input id="combobox" Type="Select" focusable="false" role="Grow" column="2" row="0">
+      <Input id="input" Type="Text" />
+    </Input>
+    <Text id="label" focusable="false" column="0" row="0" />
+    <Input id="listbox-target-type" Type="Select" focusable="false" role="Grow" column="3" row="0" />
+  </Container>
+</Cui>

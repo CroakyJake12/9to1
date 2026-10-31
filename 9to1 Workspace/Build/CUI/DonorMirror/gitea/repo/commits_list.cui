@@ -1,0 +1,37 @@
+<Cui id="repo-commits-list" product="9-1" version="1">
+  <Page id="repo-commits-list-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="commits-table" Type="Grid">
+        <Container id="thead" Type="Grid">
+          <Container id="tr" Type="Horizontal Stack">
+            <Text id="th" text="{Binding Unresolved}" />
+            <Text id="th-2" text="{Binding Unresolved}" />
+            <Text id="th-3" text="{Binding Unresolved}" />
+            <Text id="th-4" text="{Binding Unresolved}" />
+            <Text id="th-5" />
+          </Container>
+        </Container>
+        <Container id="tbody" Type="Grid">
+          <Container id="tr-2" Type="Horizontal Stack">
+            <Container id="td" Type="Vertical Stack" />
+            <Container id="td-2" Type="Vertical Stack" />
+            <Container id="td-3" Type="Vertical Stack">
+              <Text id="span">
+                <Text id="span-2" text="{Binding Unresolved}" />
+                <Text id="span-3" text="{Binding Unresolved}" />
+              </Text>
+              <Button id="button" />
+              <Container id="pre" Type="Vertical Stack" />
+            </Container>
+            <Container id="td-4" Type="Vertical Stack" />
+            <Container id="td-5" Type="Vertical Stack">
+              <Button id="button-2" />
+              <Button id="a" />
+              <Button id="a-2" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

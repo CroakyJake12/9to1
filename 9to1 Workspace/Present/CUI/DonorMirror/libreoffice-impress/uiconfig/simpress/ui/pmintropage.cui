@@ -1,0 +1,18 @@
+<Cui id="ui-pmintropage" product="9-1" version="1">
+  <Container id="pmintro-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="str-introduction-t" text="The Presentation Minimizer is used to reduce the file size of the current presentation. Images will be compressed and data, that is no longer needed, will be removed.
+
+        At the last step of the wizard you can choose to apply the changes to the current presentation or to create an optimized new version of the presentation." text-wrapping="Wrap" focusable="false" role="Grow" column="0" row="0" />
+        <Container id="container" Type="Grid" cell-gap="12" focusable="false" column="0" row="3">
+          <Input id="lb-settings" Type="Select" focusable="false" role="Grow" column="0" row="0" />
+          <Button id="str-remove" content="Delete" text="Delete" column="1" row="0" />
+        </Container>
+        <Text id="str-chose-settings" text="Choose settings for Presentation Minimizer" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+        <Container id="container-2" Type="Horizontal Stack" focusable="false" column="0" row="1" />
+      </Container>
+      <Text id="str-introduction" text="Introduction" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

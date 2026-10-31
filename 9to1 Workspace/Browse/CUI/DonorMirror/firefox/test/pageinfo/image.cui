@@ -1,0 +1,13 @@
+<Cui id="pageinfo-image" product="9-1" version="1">
+  <Page id="pageinfo-image-root">
+    <Container id="html" Type="Vertical Stack">
+      <Image id="img" />
+      <Container id="test-video" Type="Vertical Stack">
+        <Image id="test-video-icon" source="video.webm" />
+      </Container>
+      <Container id="test-audio" Type="Vertical Stack">
+        <Image id="test-audio-icon" source="audio.ogg" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

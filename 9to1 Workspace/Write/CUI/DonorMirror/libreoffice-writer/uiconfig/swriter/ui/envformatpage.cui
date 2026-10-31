@@ -1,0 +1,72 @@
+<Cui id="ui-envformatpage" product="9-1" version="1">
+  <Page id="ui-envformatpage-root">
+    <Container id="editmenu1" Type="Menu" focusable="false">
+      <Button id="character1" Type="Menu Item" content="Character..." text="Character..." focusable="false" />
+      <Button id="paragraph1" Type="Menu Item" content="Paragraph..." text="Paragraph..." focusable="false" />
+    </Container>
+    <Container id="editmenu2" Type="Menu" focusable="false">
+      <Button id="character2" Type="Menu Item" content="Character..." text="Character..." focusable="false" />
+      <Button id="paragraph2" Type="Menu Item" content="Paragraph..." text="Paragraph..." focusable="false" />
+    </Container>
+    <Container id="env-format-page" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" vertical-alignment="Top" focusable="false" column="0" row="0">
+        <Container id="frame4" Type="Vertical Stack" focusable="false">
+          <Container id="grid4" Type="Grid" cell-gap="18" focusable="false">
+            <Container id="grid7" Type="Grid" cell-gap="6" focusable="false" column="0" row="0">
+              <Container id="box1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Text id="label5" text="from left" focusable="false" />
+              </Container>
+              <Input id="leftaddr" Type="Number" column="1" row="0" />
+              <Container id="box2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Text id="label6" text="from top" focusable="false" />
+              </Container>
+              <Input id="topaddr" Type="Number" column="1" row="1" />
+            </Container>
+            <Container id="grid8" Type="Grid" cell-gap="6" focusable="false" column="1" row="0">
+              <Text id="label7" text="Format" focusable="false" column="0" row="0" />
+              <Button id="addredit" content="Edit" text="Edit" column="1" row="0" />
+            </Container>
+          </Container>
+          <Text id="label4" text="Position" focusable="false" />
+        </Container>
+        <Text id="label1" text="Addressee" focusable="false" />
+      </Container>
+      <Container id="frame2" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="1">
+        <Container id="frame5" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid2" Type="Grid" cell-gap="18" focusable="false">
+            <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" column="0" row="0">
+              <Container id="box3" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Text id="label8" text="from left" focusable="false" />
+              </Container>
+              <Input id="leftsender" Type="Number" column="1" row="0" />
+              <Container id="box4" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Text id="label9" text="from top" focusable="false" />
+              </Container>
+              <Input id="topsender" Type="Number" column="1" row="1" />
+            </Container>
+            <Container id="grid6" Type="Grid" cell-gap="6" focusable="false" column="1" row="0">
+              <Text id="label10" text="Format" focusable="false" column="0" row="0" />
+              <Button id="senderedit" content="Edit" text="Edit" column="1" row="0" />
+            </Container>
+          </Container>
+          <Text id="label11" text="Position" focusable="false" />
+        </Container>
+        <Text id="label2" text="Sender" focusable="false" />
+      </Container>
+      <Container id="frame3" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="2">
+        <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+          <Container id="grid3" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" column="0" row="0">
+            <Text id="label12" text="Format" focusable="false" column="0" row="0" />
+            <Input id="format" Type="Select" focusable="false" column="1" row="0" />
+            <Text id="label13" text="Width" focusable="false" column="0" row="1" />
+            <Input id="width" Type="Number" horizontal-alignment="Left" column="1" row="1" />
+            <Text id="label14" text="Height" focusable="false" column="0" row="2" />
+            <Input id="height" Type="Number" horizontal-alignment="Left" column="1" row="2" />
+          </Container>
+          <Container id="preview" Type="Overlay" focusable="false" column="1" row="0" />
+        </Container>
+        <Text id="label3" text="Size" focusable="false" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

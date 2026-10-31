@@ -1,0 +1,15 @@
+<Cui id="ui-searchresults" product="9-1" version="1">
+  <Container id="search-results-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="search-results-dialog-label" text="Search Results" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false" role="Grow">
+        <Input id="cb-show" Type="Checkbox" text="Show this dialog" tooltip="Enable the dialog again at Tools - Options - %PRODUCTNAME Calc - View" checked="true" role="Grow" />
+        <Button id="close" content="Close" text="Close" />
+      </Container>
+      <Container id="container" Type="Vertical Stack" role="Grow">
+        <Container id="results" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="lb-search-results" horizontal-alignment="Left" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

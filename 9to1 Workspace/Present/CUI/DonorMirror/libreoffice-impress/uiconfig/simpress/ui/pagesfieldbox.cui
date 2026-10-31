@@ -1,0 +1,5 @@
+<Cui id="ui-pagesfieldbox" product="9-1" version="1">
+  <Container id="pages-field-box" Type="Vertical Stack" cell-gap="6" role="Grow">
+    <Input id="pagesfield" Type="Number" role="Grow" />
+  </Container>
+</Cui>

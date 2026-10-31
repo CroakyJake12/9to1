@@ -1,0 +1,19 @@
+<Cui id="ui-mmselectpage" product="9-1" version="1">
+  <Container id="mmselect-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="currentdoc" Type="Radio" text="Use the current document" checked="true" column="0" row="0" />
+        <Input id="newdoc" Type="Radio" text="Create a new document" column="0" row="3" />
+        <Input id="loaddoc" Type="Radio" text="Start from existing document" role="Grow" column="0" row="4" />
+        <Input id="template" Type="Radio" text="Start from a template" role="Grow" column="0" row="6" />
+        <Input id="recentdoc" Type="Radio" text="Start from a recently saved starting document" column="0" row="8" />
+        <Input id="recentdoclb" Type="Select" focusable="false" column="0" row="9" />
+        <Button id="browsedoc" content="Browse..." text="Browse..." horizontal-alignment="Left" column="0" row="5" />
+        <Button id="browsetemplate" content="Browse..." text="Browse..." horizontal-alignment="Left" column="0" row="7" />
+        <Text id="datasourcewarning" text="Data source of the current document is not registered. Please exchange database." horizontal-alignment="Left" focusable="false" column="0" row="1" />
+        <Button id="exchangedatabase" content="Exchange Databases..." text="Exchange Databases..." horizontal-alignment="Left" column="0" row="2" />
+      </Container>
+      <Text id="label1" text="Select Starting Document for the Mail Merge" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

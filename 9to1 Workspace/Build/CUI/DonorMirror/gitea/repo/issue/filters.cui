@@ -1,0 +1,16 @@
+<Cui id="issue-filters" product="9-1" version="1">
+  <Page id="issue-filters-root">
+    <Container id="issue-filters" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack">
+        <Input id="input" Type="Text" />
+        <Container id="div-2" Type="Vertical Stack">
+          <Text id="span" text="[value]
+					[value]" />
+        </Container>
+      </Container>
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

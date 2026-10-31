@@ -1,0 +1,7 @@
+<Cui id="ui-posbox" product="9-1" version="1">
+  <Container id="pos-box" Type="Vertical Stack" focusable="false">
+    <Input id="pos-window" Type="Select" focusable="false" role="Grow">
+      <Input id="input" Type="Text" />
+    </Input>
+  </Container>
+</Cui>

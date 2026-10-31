@@ -1,0 +1,28 @@
+<Cui id="views-splash-screen-page" product="9-1" version="1">
+  <Page id="views-splash-screen-page-root">
+    <Container id="page" Type="Vertical Stack" background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+      <Container id="grid" Type="Grid">
+        <Container id="viewbox" Type="Vertical Stack" width="620" height="300" horizontal-alignment="Center" vertical-alignment="Center">
+          <Image id="image" source="\Assets\AppTiles\Dev\SplashScreen.png" />
+        </Container>
+        <Text id="textblock" margin="0,164,0,0" horizontal-alignment="Center" vertical-alignment="Center" font-size="20" foreground="{ThemeResource TextFillColorTertiaryBrush}">
+          <Text id="run" font-weight="SemiBold" text="Files" />
+          <Text id="run-2" font-weight="SemiLight" text="{Binding BranchLabel}" />
+        </Text>
+        <Input id="progressring" Type="Progress" margin="0,0,0,48" vertical-alignment="Bottom" foreground="{ThemeResource ApplicationForegroundThemeBrush}" />
+        <Container id="visualstatemanager.visualstategroups" Type="Vertical Stack">
+          <Container id="visualstategroup" Type="Vertical Stack">
+            <Container id="visualstate" Type="Vertical Stack">
+              <Container id="visualstate.statetriggers" Type="Vertical Stack">
+                <Text id="adaptivetrigger" />
+              </Container>
+              <Container id="visualstate.setters" Type="Vertical Stack">
+                <Text id="setter" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

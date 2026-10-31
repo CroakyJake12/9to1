@@ -1,0 +1,60 @@
+<Cui id="ui-sidebartableedit" product="9-1" version="1">
+  <Container id="table-edit-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="3" focusable="false" role="Grow" column="0" row="0">
+      <Input id="rowheight" Type="Number" text="0" tooltip="Row Height" role="Grow" column="0" row="6" />
+      <Text id="insert-label" text="Insert:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+      <Container id="insert" Type="Horizontal Stack" column="0" row="1">
+        <Button id=".uno:insert-rows-before" />
+        <Button id=".uno:insert-rows-after" />
+        <Button id=".uno:insert-columns-before" />
+        <Button id=".uno:insert-columns-after" />
+      </Container>
+      <Text id="select-label" text="Select:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+      <Container id="select" Type="Horizontal Stack" column="0" row="3">
+        <Button id=".uno:entire-cell" />
+        <Button id=".uno:entire-row" />
+        <Button id=".uno:entire-column" />
+        <Button id=".uno:select-table" />
+      </Container>
+      <Container id="container" Type="Horizontal Stack" focusable="false" column="0" row="4" column-span="2" />
+      <Input id="columnwidth" Type="Number" text="0" tooltip="Column Width" role="Grow" column="1" row="6" />
+      <Text id="row-height-label" text="Row height:" horizontal-alignment="Left" vertical-alignment="Center" focusable="false" column="0" row="5" />
+      <Text id="column-width-label" text="Column width:" horizontal-alignment="Left" vertical-alignment="Center" focusable="false" column="1" row="5" />
+      <Container id="rowsizing" Type="Horizontal Stack" column="0" row="7">
+        <Button id=".uno:set-minimal-row-height" />
+        <Button id=".uno:set-optimal-row-height" />
+        <Button id=".uno:distribute-rows" />
+      </Container>
+      <Container id="columnsizing" Type="Horizontal Stack" column="1" row="7">
+        <Button id=".uno:set-minimal-column-width" />
+        <Button id=".uno:set-optimal-column-width" />
+        <Button id=".uno:distribute-columns" />
+      </Container>
+      <Text id="delete-label" text="Delete:" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+      <Container id="delete" Type="Horizontal Stack" column="1" row="1">
+        <Button id=".uno:delete-rows" />
+        <Button id=".uno:delete-columns" />
+        <Button id=".uno:delete-table" />
+      </Container>
+      <Text id="split-merge-label" text="Split/Merge:" horizontal-alignment="Left" focusable="false" column="1" row="2" />
+      <Container id="split-merge" Type="Horizontal Stack" column="1" row="3">
+        <Button id=".uno:merge-cells" />
+        <Button id=".uno:split-cell" />
+        <Button id=".uno:split-table" />
+      </Container>
+      <Text id="align-label" text="Alignment:" focusable="false" role="Grow" column="0" row="9" />
+      <Input id="alignment-lb" Type="Select" tooltip="Set the alignment options for the selected table." focusable="false" role="Grow" column="1" row="9" />
+      <Text id="leftspace-label" text="Left spacing:" focusable="false" role="Grow" column="0" row="10" />
+      <Text id="rightspace-label" text="Right spacing:" focusable="false" role="Grow" column="1" row="10" />
+      <Input id="leftspace" Type="Number" text="0" tooltip="Left Spacing" role="Grow" column="0" row="11" />
+      <Input id="rightspace" Type="Number" text="0" tooltip="Right Spacing" role="Grow" column="1" row="11" />
+      <Container id="misc" Type="Horizontal Stack" horizontal-alignment="Left" column="1" row="13">
+        <Button id=".uno:table-cell-background-color" />
+        <Button id=".uno:set-border-style" />
+        <Button id=".uno:insert-formula" />
+      </Container>
+      <Text id="misc-label" text="Miscellaneous:" horizontal-alignment="Left" focusable="false" column="0" row="13" />
+      <Container id="container-2" Type="Horizontal Stack" focusable="false" column="0" row="12" column-span="2" />
+    </Container>
+  </Container>
+</Cui>

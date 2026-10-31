@@ -1,0 +1,5 @@
+<Cui id="repo-code-frequency" product="9-1" version="1">
+  <Page id="repo-code-frequency-root">
+    <Container id="repo-code-frequency-chart" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,12 @@
+<Cui id="tabcrashed-file-contains-emptyiframe" product="9-1" version="1">
+  <Page id="tabcrashed-file-contains-emptyiframe-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="iframe" Type="Overlay" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

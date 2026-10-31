@@ -1,0 +1,9 @@
+<Cui id="ui-previewmenu" product="9-1" version="1">
+  <Container id="previewmenu" Type="Menu" focusable="false">
+    <Button id="zoom20" focusable="false" />
+    <Button id="zoom40" focusable="false" />
+    <Button id="zoom50" focusable="false" />
+    <Button id="zoom75" focusable="false" />
+    <Button id="zoom100" focusable="false" />
+  </Container>
+</Cui>

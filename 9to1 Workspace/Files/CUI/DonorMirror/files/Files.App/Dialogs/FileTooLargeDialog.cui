@@ -1,0 +1,9 @@
+<Cui id="dialogs-file-too-large-dialog" product="9-1" version="1">
+  <Page id="dialogs-file-too-large-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="listview" Type="Vertical Stack" max-height="300">
+        <Container id="listview.itemtemplate" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

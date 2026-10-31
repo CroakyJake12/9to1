@@ -1,0 +1,6 @@
+<Cui id="ui-addressfragment" product="9-1" version="1">
+  <Page id="ui-addressfragment-root">
+    <Input id="entry" Type="Text" role="Grow" />
+    <Text id="label" horizontal-alignment="Right" focusable="false" />
+  </Page>
+</Cui>

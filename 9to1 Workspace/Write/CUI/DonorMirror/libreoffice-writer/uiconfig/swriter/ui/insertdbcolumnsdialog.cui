@@ -1,0 +1,78 @@
+<Cui id="ui-insertdbcolumnsdialog" product="9-1" version="1">
+  <Page id="ui-insertdbcolumnsdialog-root">
+    <Image id="image1" focusable="false" source="sw/res/oneright.png" />
+    <Image id="image2" focusable="false" source="sw/res/allright.png" />
+    <Image id="image3" focusable="false" source="sw/res/oneleft.png" />
+    <Image id="image4" focusable="false" source="sw/res/allleft.png" />
+    <Image id="image5" focusable="false" source="sw/res/oneright.png" />
+    <Container id="insert-db-columns-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="insert-db-columns-dialog-label" text="Insert Database Columns" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+          <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+            <Text id="label1" text="Insert data as:" focusable="false" column="0" row="0" />
+            <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="1" row="0">
+              <Input id="astable" Type="Radio" text="Table" checked="true" column="0" row="0" />
+              <Input id="asfields" Type="Radio" text="Fields" column="1" row="0" />
+              <Input id="astext" Type="Radio" text="Text" column="2" row="0" />
+            </Container>
+          </Container>
+          <Container id="dbframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+            <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Text id="label4" text="Database columns" focusable="false" column="0" row="0" />
+              <Text id="tablecolft" text="Table column(s)" focusable="false" column="2" row="0" />
+              <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="12" focusable="false" role="Grow" column="1" row="1">
+                <Button id="allright" />
+                <Button id="oneright" />
+                <Button id="toedit" />
+                <Button id="oneleft" />
+                <Button id="allleft" />
+              </Container>
+              <Container id="box1" Type="Vertical Stack" focusable="false" role="Grow" column="2" row="1">
+                <Container id="container" Type="Vertical Stack" role="Grow">
+                  <Container id="tablecols" Type="Vertical Stack" role="Grow" />
+                </Container>
+                <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow">
+                  <Input id="textview" Type="Text" role="Grow" />
+                </Container>
+              </Container>
+              <Container id="box2" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+                <Container id="container-2" Type="Vertical Stack" role="Grow">
+                  <Container id="tabledbcols" Type="Vertical Stack" role="Grow" />
+                </Container>
+                <Container id="container-3" Type="Vertical Stack" role="Grow">
+                  <Container id="tabletxtcols" Type="Vertical Stack" role="Grow" />
+                </Container>
+              </Container>
+            </Container>
+            <Text id="label2" focusable="false" />
+          </Container>
+          <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="2">
+            <Container id="grid5" Type="Grid" cell-gap="18" focusable="false" role="Grow">
+              <Container id="grid6" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="1" row="0">
+                <Input id="tableheading" Type="Checkbox" text="Insert table heading" column="0" row="1" />
+                <Input id="columnname" Type="Radio" text="Apply column name" checked="true" column="0" row="2" />
+                <Input id="rowonly" Type="Radio" text="Create row only" column="0" row="3" />
+                <Button id="tableformat" content="Properties..." text="Properties..." column="1" row="1" />
+                <Button id="autoformat" content="AutoFormat..." text="AutoFormat..." column="1" row="2" />
+                <Text id="parastylelabel" text="Paragraph style:" focusable="false" column="0" row="0" />
+                <Input id="parastyle" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+              </Container>
+              <Container id="grid7" Type="Grid" cell-gap="6" focusable="false" column="0" row="0">
+                <Input id="fromdatabase" Type="Radio" text="From database" checked="true" column="0" row="0" />
+                <Input id="userdefined" Type="Radio" text="User-defined" column="0" row="1" />
+                <Input id="numformat" Type="Select" focusable="false" column="0" row="2" />
+              </Container>
+            </Container>
+            <Text id="label3" text="Format" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

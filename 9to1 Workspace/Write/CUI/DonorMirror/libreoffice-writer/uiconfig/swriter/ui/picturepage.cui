@@ -1,0 +1,47 @@
+<Cui id="ui-picturepage" product="9-1" version="1">
+  <Container id="picture-page" Type="Grid" cell-gap="18" vertical-alignment="Top" focusable="false" role="Grow">
+    <Container id="linkframe" Type="Vertical Stack" focusable="false" column="0" row="1" column-span="2">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+        <Button id="browse" content="Browse..." text="Browse..." column="2" row="0" />
+        <Input id="entry" Type="Text" role="Grow" column="1" row="0" />
+        <Text id="label1" text="File name" focusable="false" column="0" row="0" />
+      </Container>
+      <Text id="label11" text="Link" focusable="false" />
+    </Container>
+    <Container id="flipframe" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="0" column-span="2">
+      <Container id="grid1" Type="Grid" cell-gap="3" focusable="false" role="Grow">
+        <Input id="vert" Type="Checkbox" text="Vertically" column="0" row="0" />
+        <Input id="hori" Type="Checkbox" text="Horizontally" column="0" row="1" />
+        <Input id="allpages" Type="Radio" text="On all pages" checked="true" column="0" row="2" />
+        <Input id="leftpages" Type="Radio" text="On left pages" column="0" row="3" />
+        <Input id="rightpages" Type="Radio" text="On right pages" column="0" row="4" />
+        <Container id="container" Type="Vertical Stack" role="Grow" column="1" row="0" row-span="5">
+          <Container id="container-2" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="preview" Type="Overlay" focusable="false" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+      <Text id="label2" text="Flip" focusable="false" />
+    </Container>
+    <Container id="fl-angle" Type="Vertical Stack" focusable="false" column="0" row="2" column-span="2">
+      <Container id="box4" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="box5" Type="Vertical Stack" cell-gap="12" vertical-alignment="Top" focusable="false">
+          <Text id="ft-angle" text="Angle:" focusable="false" />
+          <Input id="nf-angle" Type="Number" text-wrapping="Wrap" />
+        </Container>
+        <Container id="box6" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Container id="ctl-angle" Type="Overlay" tooltip="Rotation Angle" horizontal-alignment="Center" focusable="false" />
+          <Text id="ft-anglepresets" text="Default settings:" focusable="false" />
+        </Container>
+      </Container>
+      <Text id="label3" text="Rotation Angle" focusable="false" />
+    </Container>
+    <Container id="infoframe" Type="Vertical Stack" focusable="false" column="0" row="3" column-span="2">
+      <Container id="grid3" Type="Grid" cell-gap="3" vertical-alignment="Top" focusable="false">
+        <Text id="label15" text="Type:" focusable="false" column="0" row="0" />
+        <Text id="label-graphic-type" text="???" focusable="false" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="label16" text="Image Information" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

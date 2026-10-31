@@ -1,0 +1,13 @@
+<Cui id="site-identity-file-mixed-content-from-onunload-test1" product="9-1" version="1">
+  <Page id="site-identity-file-mixed-content-from-onunload-test1-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Text id="p" text="There are no insecure resource loads on this page" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

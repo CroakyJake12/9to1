@@ -1,0 +1,22 @@
+<Cui id="ui-editfielddialog" product="9-1" version="1">
+  <Page id="ui-editfielddialog-root">
+    <Image id="image3" focusable="false" source="media-skip-backward" />
+    <Image id="image4" focusable="false" source="media-skip-forward" />
+    <Container id="edit-field-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="edit-field-dialog-label" text="Edit Fields" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false" role="Grow">
+          <Button id="help" content="Help" text="Help" />
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+        </Container>
+        <Container id="content" Type="Vertical Stack" focusable="false" />
+        <Container id="edit-field-grid" Type="Grid" cell-gap="6" focusable="false">
+          <Button id="prev" tooltip="Previous field of same type" vertical-alignment="Center" column="0" row="0" />
+          <Button id="next" tooltip="Next field of same type" vertical-alignment="Center" column="1" row="0" />
+          <Button id="edit" content="Edit" text="Edit" tooltip="Edit variable field content" column="2" row="0" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

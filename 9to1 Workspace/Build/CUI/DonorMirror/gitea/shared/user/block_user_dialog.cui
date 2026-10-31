@@ -1,0 +1,30 @@
+<Cui id="user-block-user-dialog" product="9-1" version="1">
+  <Page id="user-block-user-dialog-root">
+    <Container id="block-user-modal" Type="Vertical Stack">
+      <Container id="div" Type="Vertical Stack" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Button id="a" />
+        </Container>
+        <Container id="form" Type="Vertical Stack">
+          <Input id="input" Type="Text" />
+          <Input id="input-2" Type="Text" />
+          <Container id="div-4" Type="Vertical Stack">
+            <Text id="label">
+              <Text id="span" />
+            </Text>
+          </Container>
+          <Container id="div-5" Type="Vertical Stack">
+            <Text id="label-2" text="{Binding Unresolved}" />
+            <Input id="input-3" Type="Text" />
+            <Text id="p" text="{Binding Unresolved}" />
+          </Container>
+          <Container id="div-6" Type="Vertical Stack">
+            <Button id="button" />
+            <Button id="button-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

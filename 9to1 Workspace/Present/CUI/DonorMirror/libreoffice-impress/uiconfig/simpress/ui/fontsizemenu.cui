@@ -1,0 +1,8 @@
+<Cui id="ui-fontsizemenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="25" Type="Menu Item" content="Tiny" text="Tiny" />
+    <Button id="50" Type="Menu Item" content="Smaller" text="Smaller" />
+    <Button id="150" Type="Menu Item" content="Larger" text="Larger" />
+    <Button id="400" Type="Menu Item" content="Extra Large" text="Extra Large" />
+  </Container>
+</Cui>

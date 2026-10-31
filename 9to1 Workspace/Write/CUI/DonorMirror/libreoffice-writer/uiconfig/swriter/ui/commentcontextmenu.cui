@@ -1,0 +1,11 @@
+<Cui id="ui-commentcontextmenu" product="9-1" version="1">
+  <Container id="contextmenu" Type="Menu" focusable="false">
+    <Button id="edit" Type="Menu Item" content="Edit" text="Edit" focusable="false" />
+    <Button id="reply" Type="Menu Item" content="Reply" text="Reply" focusable="false" />
+    <Button id="delete" Type="Menu Item" content="Delete" text="Delete" focusable="false" />
+    <Button id="toggle-resolved" Type="Menu Item" content="Toggle Resolved" text="Toggle Resolved" focusable="false" />
+    <Button id="separator" Type="Menu Item" focusable="false" />
+    <Button id="delete-thread" Type="Menu Item" content="Delete Thread" text="Delete Thread" focusable="false" />
+    <Button id="resolve-thread" Type="Menu Item" content="Resolve Thread" text="Resolve Thread" focusable="false" />
+  </Container>
+</Cui>

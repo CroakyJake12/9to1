@@ -1,0 +1,363 @@
+{
+  "summary": {
+    "translated": 304,
+    "dropped_nodes": 12,
+    "gap_count": 205,
+    "gap_constructs": {
+      "custom donor widget": 56,
+      "shortcut browser": 49,
+      "toggle button": 25,
+      "separator": 18,
+      "header bar": 15,
+      "dialog with typed responses": 12,
+      "unmodelled donor construct": 9,
+      "scroller with explicit bars": 8,
+      "item collection (list/tree/table)": 5,
+      "layered overlay container": 2,
+      "progress": 2,
+      "responsive breakpoint rules": 1,
+      "transient notice layer": 1,
+      "tab strip": 1,
+      "adaptive width clamp": 1
+    },
+    "pruned_stale": 0,
+    "donor": "rnote",
+    "app": "Boards",
+    "source": "9to1 Workspace/Boards/Source/Rnote",
+    "translated_files": 33,
+    "untranslated_files": 0,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "crates/rnote-ui/data/ui/appmenu.ui",
+      "cui": "crates/rnote-ui/data/ui/appmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "0a2faa8610cc1361e0862ceb6f9b9b30bb95e4fff7b213dcb7e0ddda17c94967",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/appwindow.ui",
+      "cui": "crates/rnote-ui/data/ui/appwindow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "84906268d11a1aeae2f50cf3ae930c5dde3b123370392d7b45b3866ebb4c4b77",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/canvasmenu.ui",
+      "cui": "crates/rnote-ui/data/ui/canvasmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "e4905e3838ce791005c59e8cbfa740fe20c10d732688e621d9ae11a6052129b1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/canvaswrapper.ui",
+      "cui": "crates/rnote-ui/data/ui/canvaswrapper.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "4adcd3d1c68509bc95c51b036602b942b5c291d97e4f313ac963f670f12e3bb4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/colorpicker.ui",
+      "cui": "crates/rnote-ui/data/ui/colorpicker.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "5fc7595a314f88da57aa4a50c4059e6c8f7947591cd7a63d2545941fdf0bafc2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/contextmenu.ui",
+      "cui": "crates/rnote-ui/data/ui/contextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "a096fd53580fb0611fe7af79b7bd1b686554a7278543070029fe0e026ea18424",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/dialogs/dialogs.ui",
+      "cui": "crates/rnote-ui/data/ui/dialogs/dialogs.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 5,
+      "donor_sha256": "45fe0b790ccf222d9d79b028364a4f34e303613cf543d44c00a76318c8849a6f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/dialogs/export.ui",
+      "cui": "crates/rnote-ui/data/ui/dialogs/export.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "616bff0ce3da7898ec313a4c11d7e797096a037bd9c9facaca485c32edcfa778",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/dialogs/import.ui",
+      "cui": "crates/rnote-ui/data/ui/dialogs/import.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 2,
+      "donor_sha256": "10f7c8a29dbacaab353cddf0d2bd97a36e3d8edfb5ca347a34573502ccdcaee2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/filerow.ui",
+      "cui": "crates/rnote-ui/data/ui/filerow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "96ce0de71283008472acd831009d642208da9f3d19a5c7ad796137ff05c14b75",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/groupediconpicker/groupediconpicker.ui",
+      "cui": "crates/rnote-ui/data/ui/groupediconpicker/groupediconpicker.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "afb6a339d49507b928bf278ab65eecd155c00670f4fca032f80b9270fcd10896",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/groupediconpicker/groupediconpickergroup.ui",
+      "cui": "crates/rnote-ui/data/ui/groupediconpicker/groupediconpickergroup.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "95026e61346443cecb2edeca4222d5ce1ed7350839bbd850c3df2f80efebc1f5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/iconpicker.ui",
+      "cui": "crates/rnote-ui/data/ui/iconpicker.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "485086a8615ce48e9078c862cf76237df6d17bae3639e686dc9ceea3e440a4be",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/mainheader.ui",
+      "cui": "crates/rnote-ui/data/ui/mainheader.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "be1e200324388b4ee7b56cd3b920b2268cd5a65f52887f233ec75317275c2bc6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/overlays.ui",
+      "cui": "crates/rnote-ui/data/ui/overlays.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "0c6aebb5ef93eca3b4ca88c090a24d96ee03d8fce028e3e80febcf2077165918",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penpicker.ui",
+      "cui": "crates/rnote-ui/data/ui/penpicker.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "3d703f3694163661bb185eed2876958ae1ecff597c6d8e678c2847e7798d0f65",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penshortcutrow.ui",
+      "cui": "crates/rnote-ui/data/ui/penshortcutrow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "3235bd05d46b7e3f64b38150e72d2f58427e8346cf617f058f94ae4af7bf849c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/brushpage.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/brushpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "678d29a333677fd6b2a30cc4f679cd4b100e1617168a799e77a2a2ad446079df",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/eraserpage.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/eraserpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "c4d4aa5f274fa487ea590de9dfc95cfe8bdc9678fcaae9f807b4b6c368c58c6b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/penssidebar.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/penssidebar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "879f2272de0d4023b852df59943478f6495fc4915f7c1d0c93372d6966a32a2c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/selectorpage.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/selectorpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "19d65115aedf751a8d1c1c9c5cb37c435fc1cd09eadbbd6d8ca954c828e835f0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/shaperpage.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/shaperpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "025c1f97ce31f29d67c16b111f157828c7bb64b01a91a3484d8ee41462d5871c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/toolspage.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/toolspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "00dfb234e0614b35a193222f05bcb002d2887091e85fcc09ac9aadfed4293fce",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/penssidebar/typewriterpage.ui",
+      "cui": "crates/rnote-ui/data/ui/penssidebar/typewriterpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "5669cd28bd45b40a7e0ad4f9bea1b6b55512bf33ac1077e595cec9227da6556e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/settingspanel.ui",
+      "cui": "crates/rnote-ui/data/ui/settingspanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "145c2e181455dc5e2abf455c014e0ace5173525162a53955a53e54d288762387",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/shortcuts.ui",
+      "cui": "crates/rnote-ui/data/ui/shortcuts.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 49,
+      "actions": 0,
+      "donor_sha256": "31f6b367260eae5e1fd340ea174604b818c82a1ebb7372a9d3de1481451f7e46",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/sidebar.ui",
+      "cui": "crates/rnote-ui/data/ui/sidebar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "8321fa7a8f53cb982edae6a83bb4beeba723567ae5dbf8fccb4f1b71d54a4473",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/strokecontentpreview.ui",
+      "cui": "crates/rnote-ui/data/ui/strokecontentpreview.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "8240384f6128933747a3f36132e89275cf2d4d9f13a8eb1e9eaadf803438c770",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/strokewidthpicker.ui",
+      "cui": "crates/rnote-ui/data/ui/strokewidthpicker.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "ee639f2d3a8bfe5220a9b2f4178b6d36c29f8b830b070ba35b761158951aaf90",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/unitentry.ui",
+      "cui": "crates/rnote-ui/data/ui/unitentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "89a10cc9f6f627de6459c96fda1921cbfc553f1eeac92f31529056988c61e2fb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/workspacebrowser.ui",
+      "cui": "crates/rnote-ui/data/ui/workspacebrowser.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "b31a628eb3a930b1a89f7f810f411214a51a72965f7e6d50fb4d53f0d13dd6ad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/workspacesbar/workspacerow.ui",
+      "cui": "crates/rnote-ui/data/ui/workspacesbar/workspacerow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "98d50d6ef596d68f4d974df6a65b04125088b43d250c366e72e131bbe5da093b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "crates/rnote-ui/data/ui/workspacesbar/workspacesbar.ui",
+      "cui": "crates/rnote-ui/data/ui/workspacesbar/workspacesbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "e6763822508e65352004226d5e5a826e175ae6c3588a1d29a3e996ca967b63eb",
+      "refreshed": false
+    }
+  ]
+}

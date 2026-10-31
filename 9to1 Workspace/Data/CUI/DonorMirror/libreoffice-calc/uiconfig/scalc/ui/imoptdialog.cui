@@ -1,0 +1,36 @@
+<Cui id="ui-imoptdialog" product="9-1" version="1">
+  <Container id="im-opt-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="im-opt-dialog-label" text="Import File" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="fieldframe" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="encodingft" text="Encoding:" focusable="false" column="0" row="0" />
+          <Container id="grid2" Type="Grid" focusable="false" role="Grow" column="1" row="0">
+            <Input id="encodingdropdown" Type="Select" focusable="false" role="Grow" column="0" row="0" />
+            <Container id="container" Type="Vertical Stack" role="Grow" column="1" row="0">
+              <Container id="encodinglist" Type="Vertical Stack" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="fieldft" text="Field delimiter:" focusable="false" column="0" row="1" />
+          <Input id="field" Type="Select" focusable="false" column="1" row="1">
+            <Input id="comboboxtext-entry" Type="Text" />
+          </Input>
+          <Input id="text" Type="Select" focusable="false" column="1" row="2">
+            <Input id="comboboxtext-entry2" Type="Text" />
+          </Input>
+          <Text id="textft" text="String delimiter:" focusable="false" column="0" row="2" />
+          <Input id="asshown" Type="Checkbox" text="Save cell content as shown" column="0" row="3" column-span="2" />
+          <Input id="formulas" Type="Checkbox" text="Save cell formulas instead of calculated values" column="0" row="4" column-span="2" />
+          <Input id="quoteall" Type="Checkbox" text="Quote all text cells" column="0" row="5" column-span="2" />
+          <Input id="fixedwidth" Type="Checkbox" text="Fixed column width" column="0" row="6" column-span="2" />
+        </Container>
+        <Text id="label" text="Field Options" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

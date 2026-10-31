@@ -1,0 +1,37 @@
+<Cui id="settings-lfs-file-find" product="9-1" version="1">
+  <Page id="settings-lfs-file-find-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Text id="h4">
+          <Button id="a" />
+          <Text id="span" text="{Binding Unresolved}" />
+        </Text>
+        <Container id="lfs-files-find-table" Type="Grid">
+          <Container id="tbody" Type="Grid">
+            <Container id="tr" Type="Horizontal Stack">
+              <Container id="td" Type="Vertical Stack">
+                <Button id="a-2" text="{Binding Unresolved}" />
+              </Container>
+              <Container id="td-2" Type="Vertical Stack">
+                <Text id="span-2">
+                  <Button id="a-3" text="{Binding Unresolved}" />
+                </Text>
+              </Container>
+              <Container id="td-3" Type="Vertical Stack">
+                <Text id="span-3" text="[value][value]" />
+              </Container>
+              <Container id="td-4" Type="Vertical Stack">
+                <Button id="a-4" />
+                <Button id="a-5" />
+              </Container>
+              <Container id="td-5" Type="Vertical Stack" />
+            </Container>
+            <Container id="tr-2" Type="Horizontal Stack">
+              <Container id="td-6" Type="Vertical Stack" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

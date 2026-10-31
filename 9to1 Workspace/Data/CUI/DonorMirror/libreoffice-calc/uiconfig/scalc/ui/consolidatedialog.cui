@@ -1,0 +1,54 @@
+<Cui id="ui-consolidatedialog" product="9-1" version="1">
+  <Container id="consolidate-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="consolidate-dialog-label" text="Consolidate" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false" role="Grow">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="label1" text="Function:" focusable="false" role="Grow" column="0" row="0" />
+        <Text id="label2" text="Consolidation ranges:" focusable="false" role="Grow" column="0" row="2" />
+        <Input id="func" Type="Select" focusable="false" role="Grow" column="0" row="1" />
+        <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="3">
+          <Container id="consareas" Type="Vertical Stack" width="-1" role="Grow" />
+        </Container>
+      </Container>
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+        <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="1">
+          <Input id="lbdataarea" Type="Select" focusable="false" role="Grow" column="0" row="0" />
+          <Input id="eddataarea" Type="Text" role="Grow" column="1" row="0" />
+          <Button id="rbdataarea" column="2" row="0" />
+        </Container>
+        <Container id="grid4" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="3">
+          <Input id="lbdestarea" Type="Select" focusable="false" role="Grow" column="0" row="0" />
+          <Input id="eddestarea" Type="Text" role="Grow" column="1" row="0" />
+          <Button id="rbdestarea" column="2" row="0" />
+        </Container>
+        <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="12" focusable="false" role="Grow" column="0" row="4">
+          <Button id="add" content="Add" text="Add" />
+          <Button id="delete" content="Delete" text="Delete" />
+        </Container>
+        <Text id="ftdataarea" text="Source data ranges:" focusable="false" column="0" row="0" />
+        <Text id="ftdestarea" text="Copy results to:" focusable="false" column="0" row="2" />
+      </Container>
+      <Container id="more" Type="Vertical Stack" role="Grow">
+        <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+          <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="grid5" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+              <Input id="byrow" Type="Checkbox" text="Row labels" role="Grow" column="0" row="0" />
+              <Input id="bycol" Type="Checkbox" text="Column labels" role="Grow" column="0" row="1" />
+            </Container>
+            <Text id="label3" text="Consolidate by" focusable="false" />
+          </Container>
+          <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+            <Input id="refs" Type="Checkbox" text="Link to source data" vertical-alignment="Top" role="Grow" />
+            <Text id="label4" text="Options" focusable="false" />
+          </Container>
+        </Container>
+        <Text id="more-label" text="Options" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

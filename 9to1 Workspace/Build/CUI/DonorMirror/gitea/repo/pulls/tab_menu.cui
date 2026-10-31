@@ -1,0 +1,18 @@
+<Cui id="pulls-tab-menu" product="9-1" version="1">
+  <Page id="pulls-tab-menu-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Button id="a">
+          <Text id="span" text="{Binding Unresolved}" />
+        </Button>
+        <Button id="a-2">
+          <Text id="span-2" text="[value]-" />
+        </Button>
+        <Button id="a-3">
+          <Text id="span-3" text="[value]-" />
+        </Button>
+      </Container>
+      <Container id="div-3" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

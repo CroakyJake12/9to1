@@ -1,0 +1,926 @@
+{
+  "summary": {
+    "translated": 13214,
+    "dropped_nodes": 353,
+    "gap_count": 8439,
+    "gap_constructs": {
+      "toolbar with overflow": 3512,
+      "notebook bar (ribbon) group": 2093,
+      "optional section": 1313,
+      "separator": 802,
+      "toolbar overflow": 270,
+      "menu button": 212,
+      "radio menu item": 89,
+      "button row": 33,
+      "window and dialog chrome": 27,
+      "scroller with explicit bars": 27,
+      "item collection (list/tree/table)": 23,
+      "tab strip": 9,
+      "clipped viewport": 8,
+      "custom drawing surface": 7,
+      "context toolbar": 6,
+      "notebook bar (ribbon) tab": 4,
+      "unmodelled donor construct": 2,
+      "progress": 2
+    },
+    "pruned_stale": 0,
+    "donor": "libreoffice-impress",
+    "app": "Present",
+    "source": "9to1 Workspace/Write/Source/LibreOffice/sd",
+    "translated_files": 89,
+    "untranslated_files": 0,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "uiconfig/sdraw/ui/breakdialog.ui",
+      "cui": "uiconfig/sdraw/ui/breakdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "eae1e73344c333183ac91d9bd2e4a92d3e3c8c8431380941f1e6357a793c5f8d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/bulletsandnumbering.ui",
+      "cui": "uiconfig/sdraw/ui/bulletsandnumbering.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "09c897b8a49dbf3300bc8e9ae240650a251d24e07e6e0a567c0fd440c2c2ce0f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/copydlg.ui",
+      "cui": "uiconfig/sdraw/ui/copydlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 41,
+      "actions": 0,
+      "donor_sha256": "b0eccca66fb15d43a4082c557094cbf12fdf1e32693c15d48b173e4b25bb9bc6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/crossfadedialog.ui",
+      "cui": "uiconfig/sdraw/ui/crossfadedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "37b07974cd208a827371315e84b4962241306b5426ae0d43edc031d907e20387",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/dlgsnap.ui",
+      "cui": "uiconfig/sdraw/ui/dlgsnap.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "35cd261af5e87d240ddc5077876069b2b6db0300112ef0c0ec258a54ed4b4af6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/drawchardialog.ui",
+      "cui": "uiconfig/sdraw/ui/drawchardialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "293f997f3a7ab43e9c7de30be923684768f30af8dd159d3c51879608d0aae338",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/drawpagedialog.ui",
+      "cui": "uiconfig/sdraw/ui/drawpagedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "472702a4677ea173aafff8ee58f41293a1f0a5604f94f47711b330528e86f179",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/drawparadialog.ui",
+      "cui": "uiconfig/sdraw/ui/drawparadialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "28da037bddc668839b40e9ad790786a09dbb59402b3cc96f2525b4e094f04a0c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/drawprinteroptions.ui",
+      "cui": "uiconfig/sdraw/ui/drawprinteroptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "4d690a844d3c0a01c77f7ea0d1e3ae054e591621b43de2495d1bbc9c3c25c78d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/drawprtldialog.ui",
+      "cui": "uiconfig/sdraw/ui/drawprtldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "5698dc5074f45462cf419ec387dba2ac27f940e7f37d0ba9fd9410ec2024b561",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/insertlayer.ui",
+      "cui": "uiconfig/sdraw/ui/insertlayer.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "e6be98e35502490d8a097fad190fe17a0d0dbc82e1eb6479d4692ff92a0b2b8b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/insertslidesdialog.ui",
+      "cui": "uiconfig/sdraw/ui/insertslidesdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "3d397e50204cc6569d66c09bb95cd570226bc23f993c272c289a3dd5ff20ec7a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/namedesign.ui",
+      "cui": "uiconfig/sdraw/ui/namedesign.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "85cdc01f5b44436c17d15e5b4ba1de145dcd90d7fb2393459c3c7d508e3432c3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/navigatorcontextmenu.ui",
+      "cui": "uiconfig/sdraw/ui/navigatorcontextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "d8596f6d95e4548a68633c6a9cbd5057ca1f612943e3b51afd976a843ba75f6a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/notebookbar.ui",
+      "cui": "uiconfig/sdraw/ui/notebookbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1201,
+      "actions": 0,
+      "donor_sha256": "eb4fe6286c34fb98c111a6c93e33631e318439028a96628ab4a613276e1cdb69",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/notebookbar_compact.ui",
+      "cui": "uiconfig/sdraw/ui/notebookbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1780,
+      "actions": 0,
+      "donor_sha256": "702485dc8830cf537b83c918d2c6fba1d17673f4b68f37aeda0b54e6ae543bb6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/notebookbar_groupedbar_compact.ui",
+      "cui": "uiconfig/sdraw/ui/notebookbar_groupedbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1384,
+      "actions": 0,
+      "donor_sha256": "c0dfa96fa72d00e0fa615066c0a11b488d780aa478e0f9866bdbcb51cbcbfb66",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/notebookbar_single.ui",
+      "cui": "uiconfig/sdraw/ui/notebookbar_single.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 931,
+      "actions": 0,
+      "donor_sha256": "3eddbe2a8cdc971e77c48776b063a5fb8d414de323836a69c26e4340bd637551",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/paranumberingtab.ui",
+      "cui": "uiconfig/sdraw/ui/paranumberingtab.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "37fff391a937c8215952752cadcba4214db814a65d41f61e0abeeded0f63c5cc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/queryunlinkimagedialog.ui",
+      "cui": "uiconfig/sdraw/ui/queryunlinkimagedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "67eb8c66f74c573f40668cac703158141e5ff4afde91fdc00fb270aab394f93d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/selectlayerdialog.ui",
+      "cui": "uiconfig/sdraw/ui/selectlayerdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "fd563bd3171c0f2cbf531a0b3e9ed32035680714e2af9d0558a4d450dc151619",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/sdraw/ui/vectorize.ui",
+      "cui": "uiconfig/sdraw/ui/vectorize.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "c933cbbc4c0178b8011a49f330a590d06e5f44177dd585347d66d47c6e20ae34",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/annotation.ui",
+      "cui": "uiconfig/simpress/ui/annotation.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "ed8bcfd9ae762aec2e5342560384c300f312b7aee4323ece5bca1b1f571237c9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/annotationtagmenu.ui",
+      "cui": "uiconfig/simpress/ui/annotationtagmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "c315982ed0e6456d029dabc22251a35f6cf9e4faec9064c0da0f51ad27037887",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/clientboxfragment.ui",
+      "cui": "uiconfig/simpress/ui/clientboxfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "bfdd9b17dfef464c531631a48001839843a44ba67c70ab24681162d4c13dba98",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/currentmastermenu.ui",
+      "cui": "uiconfig/simpress/ui/currentmastermenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "f8a5975937574318df5aa9cfa97d2ced4b37b69bbb1321fcd453a77a0ac96c32",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customanimationeffecttab.ui",
+      "cui": "uiconfig/simpress/ui/customanimationeffecttab.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "a4520be6cc5add56bbf7628dc318749488ccfd0f4dcfbf19e22e423aea94575f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customanimationfragment.ui",
+      "cui": "uiconfig/simpress/ui/customanimationfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 42,
+      "actions": 0,
+      "donor_sha256": "fa37344382f4ac161bba8fe67329a3163ea99d40af0a0e9d92ff32301e10375b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customanimationproperties.ui",
+      "cui": "uiconfig/simpress/ui/customanimationproperties.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "f48f3582401207ce65cc77d4678f85e04e6feb87cc33ab266503ce43499e2800",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customanimationspanel.ui",
+      "cui": "uiconfig/simpress/ui/customanimationspanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 45,
+      "actions": 0,
+      "donor_sha256": "7b5b46d0cdd2dad907cada7ab8873ed8810bcf5fc5db84c5821d06b04d87f0d9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customanimationtexttab.ui",
+      "cui": "uiconfig/simpress/ui/customanimationtexttab.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "191d2421d57d352e0878661a5cb06900608e7265b3ac794cce2dfe5b5ae149db",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customanimationtimingtab.ui",
+      "cui": "uiconfig/simpress/ui/customanimationtimingtab.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "60101aa59332ee5dde5e59b199d0be6fa02ac08bb8fcd6f8a072d5b2c10d1213",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/customslideshows.ui",
+      "cui": "uiconfig/simpress/ui/customslideshows.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "9322e8bcf9a24bd65c32dbc2aac26c7bcd845951f808a208942bb676a2ca945b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/definecustomslideshow.ui",
+      "cui": "uiconfig/simpress/ui/definecustomslideshow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "ce042c351f205bde0d87b91af6c95397571717109f3612e6875d4e35b776cd63",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/displaywindow.ui",
+      "cui": "uiconfig/simpress/ui/displaywindow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "f1e095844860d8db887466b4a142b5c33f2fc9822f87693d667ef841acfd68bd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/dlgfield.ui",
+      "cui": "uiconfig/simpress/ui/dlgfield.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "48f13635ffdf09f7bbdb5db86621f5dae7a7bb7dcbefc07b86be552a54d4b4e8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/dockinganimation.ui",
+      "cui": "uiconfig/simpress/ui/dockinganimation.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 46,
+      "actions": 0,
+      "donor_sha256": "b718a737e81c984fe23169d5826f3e5215029860ef15cb1e076a9b566d2d9faf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/effectmenu.ui",
+      "cui": "uiconfig/simpress/ui/effectmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "77e87500d8158f51a49186eef97666ace1fe0222c69be44d6e4aa877bf805d80",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/fieldmenu.ui",
+      "cui": "uiconfig/simpress/ui/fieldmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c7a8371ca3ea7b5794d73c3ea6bd185f26373c579fdc2410f3ca4f1a9fa0166d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/fontsizemenu.ui",
+      "cui": "uiconfig/simpress/ui/fontsizemenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "baa07202d684eaf4f95bf6a119e63792ecb6b2ea89552581e5eb9ae32267d5df",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/fontstylemenu.ui",
+      "cui": "uiconfig/simpress/ui/fontstylemenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "8ab8c898703a09226abd5203147fdf894663e76d9bd84281c14711a7451236ee",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/gluebox.ui",
+      "cui": "uiconfig/simpress/ui/gluebox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "7aa62bf1b290f70d1682b8a5b82ac1020e7df12272c60e0fac7ea276386cd324",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/headerfooterdialog.ui",
+      "cui": "uiconfig/simpress/ui/headerfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "d09f141bfd16ba4e44190f1e35ea89fdcd29bc821f3bd5e126772852bb1ae881",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/headerfootertab.ui",
+      "cui": "uiconfig/simpress/ui/headerfootertab.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "7e337debde9549933e4b1da3d996bccee61e6928265a5b273e6b648ab1e9a540",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/impressprinteroptions.ui",
+      "cui": "uiconfig/simpress/ui/impressprinteroptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 29,
+      "actions": 0,
+      "donor_sha256": "bd9193594647f72a02113304c1d2d69cf8303de99aaa8d96611c88c5b2dd4f89",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/insertslides.ui",
+      "cui": "uiconfig/simpress/ui/insertslides.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "7174a5b25b7ba24ab1eb3eb0e37002a0b1e16736bf9a99b0b8aa22a79c179e1f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/interactiondialog.ui",
+      "cui": "uiconfig/simpress/ui/interactiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "292e91498471f238aef6e1e7bca4ded0ae1d7deca76507962c8f0a6f402f957b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/interactionpage.ui",
+      "cui": "uiconfig/simpress/ui/interactionpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "b9ae2fb5e6902f7b69f0404d4774f5fe0f6bb72e4eea4941c7cbade232e42891",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/layoutmenu.ui",
+      "cui": "uiconfig/simpress/ui/layoutmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "b83668f122ee9efe6feffbafc1a6121a4e2f5cccf2e746fd08b97eb1aae62dc9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/layoutpanel.ui",
+      "cui": "uiconfig/simpress/ui/layoutpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "49b8c57332b4a73ccc00c95352fa62a7e042aa14d6287740131890f89dc2b507",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/layoutwindow.ui",
+      "cui": "uiconfig/simpress/ui/layoutwindow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "e549177196696eccfa056c422fe14078072e17abf71dc1bf08467f9ab87db696",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/masterlayoutdlg.ui",
+      "cui": "uiconfig/simpress/ui/masterlayoutdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "00cbba6202e51ec91e785a4e140923ed12928ef67c10a87ffb5325e7e242f14d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/mastermenu.ui",
+      "cui": "uiconfig/simpress/ui/mastermenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e8027f95344126f6af8b2f777afcdcd9790ed6c01655be1b944ed615bc6bbeeb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/masterpagemenu.ui",
+      "cui": "uiconfig/simpress/ui/masterpagemenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c7a8371ca3ea7b5794d73c3ea6bd185f26373c579fdc2410f3ca4f1a9fa0166d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/masterpagepanel.ui",
+      "cui": "uiconfig/simpress/ui/masterpagepanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "6e2bfaaec5757a894b614edcf0b6263255bc14a2262d07f7576cff1d8a1b4690",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/masterpagepanelall.ui",
+      "cui": "uiconfig/simpress/ui/masterpagepanelall.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "256466c1344a6e5c5a90f112275dd2c64519033fb7bdff46beb57550c30c679e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/masterpagepanelrecent.ui",
+      "cui": "uiconfig/simpress/ui/masterpagepanelrecent.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "ead00035410c56e9590e64c909835b5afa16bf25c21295f09a41b20f6f289588",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/navigatorpanel.ui",
+      "cui": "uiconfig/simpress/ui/navigatorpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "eaa1d8f1968d7d139acde52916c654912777f6ba3ddb7c89f0f736b87509ddca",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notebookbar.ui",
+      "cui": "uiconfig/simpress/ui/notebookbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1280,
+      "actions": 0,
+      "donor_sha256": "8f938ecad16df713c75b9935abee59fb98aacd3a7d76ed081023d77311181f37",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notebookbar_compact.ui",
+      "cui": "uiconfig/simpress/ui/notebookbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1772,
+      "actions": 0,
+      "donor_sha256": "6d11b115161496e1b0814a29a500d07c44a73972accddfe65600609cf88dabdc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notebookbar_groupedbar_compact.ui",
+      "cui": "uiconfig/simpress/ui/notebookbar_groupedbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1386,
+      "actions": 0,
+      "donor_sha256": "4d36102605861d90c68eaa3cbec0ce60d616b854fae25bcfdfdf941931e9e824",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notebookbar_groupedbar_full.ui",
+      "cui": "uiconfig/simpress/ui/notebookbar_groupedbar_full.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1239,
+      "actions": 0,
+      "donor_sha256": "ee10365423eb39272fd470d541db51eda5975afb34349bc330c60548ef895802",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notebookbar_groups.ui",
+      "cui": "uiconfig/simpress/ui/notebookbar_groups.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 157,
+      "actions": 0,
+      "donor_sha256": "ddf1233c42f74a337e8b10f8d778d64add437aef36c6afdc1a3c368b648168db",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notebookbar_single.ui",
+      "cui": "uiconfig/simpress/ui/notebookbar_single.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 908,
+      "actions": 0,
+      "donor_sha256": "4ba07a1be20fbbedc90b7bef8cebb0a6ac152d66429f1ce5e014a8a7ae452793",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/noteschildwindow.ui",
+      "cui": "uiconfig/simpress/ui/noteschildwindow.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "699abb0ce5f0856b9db56e016f1453ebcf18f0c3c0946e54fd3f2e75931357b9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/notespanelcontextmenu.ui",
+      "cui": "uiconfig/simpress/ui/notespanelcontextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "38389b22821bb4fadf622e76d60dea05458f58e24beb598817fdf8fb8caa7665",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/optimpressgeneralpage.ui",
+      "cui": "uiconfig/simpress/ui/optimpressgeneralpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 54,
+      "actions": 0,
+      "donor_sha256": "1eb9b684dc288f565bf985b3b8391b21b854a982af363e41ea6f2fe6618e0a08",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pagesfieldbox.ui",
+      "cui": "uiconfig/simpress/ui/pagesfieldbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "3b7f7b5ba4c6cea390c8bc2bd3b347f28bc709e289696128183dbe64ceaf7ad1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/photoalbum.ui",
+      "cui": "uiconfig/simpress/ui/photoalbum.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "1ca630cf57faafd5b746eba377d216ef3da8af62de6ed8f7ec5c85fe41c3b6b5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pmimagespage.ui",
+      "cui": "uiconfig/simpress/ui/pmimagespage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "b92ecddb8530949f69da4eb82e7b087d6f29e3a96939b95c7212846cbc20872d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pminfodialog.ui",
+      "cui": "uiconfig/simpress/ui/pminfodialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "b7bfa390fa427491b7456d6cd3e04282ace84e1cc3a9f94f2b028fa518a7a1eb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pmintropage.ui",
+      "cui": "uiconfig/simpress/ui/pmintropage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "6b217433505367a0cfb1377326e3cf1737b6f2c605de017b61661408cfa9fed0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pmobjectspage.ui",
+      "cui": "uiconfig/simpress/ui/pmobjectspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "8f3538b381e0999751d4b0166771174efb03b30ee320bab33f870ecc3180402d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pmslidespage.ui",
+      "cui": "uiconfig/simpress/ui/pmslidespage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "00b0fe676d03f110c6a4b571b80057094ab659d7066d06784a9898bc00696c9a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/pmsummarypage.ui",
+      "cui": "uiconfig/simpress/ui/pmsummarypage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "308eefa625894e8461f33f329b56f63610a8b1dfe70225eedb81e36e3906ee8f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/presentationdialog.ui",
+      "cui": "uiconfig/simpress/ui/presentationdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 58,
+      "actions": 0,
+      "donor_sha256": "9126c90010a6ec110167797887d955ea6120dc8d987fcc87905f3d442172fe04",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/prntopts.ui",
+      "cui": "uiconfig/simpress/ui/prntopts.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 43,
+      "actions": 0,
+      "donor_sha256": "814458eb4fcda2fed2126e7070d9247383b8fb76a934451ed29c42db9c804490",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/remotedialog.ui",
+      "cui": "uiconfig/simpress/ui/remotedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "95d75143d82bf5949afcf858ac4f4b62f89f19a1a9d87f55a8b5d85e312341a8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/rotatemenu.ui",
+      "cui": "uiconfig/simpress/ui/rotatemenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "19a95ed75d4f65f5c42c12863bfe82017c10a675ad26dc1471ac47f89e576e6c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/scalemenu.ui",
+      "cui": "uiconfig/simpress/ui/scalemenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "46adf25947bd6202fa7d1cd59a64745e4690ad1f860ceeddd7edc245efdf4471",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/sdviewpage.ui",
+      "cui": "uiconfig/simpress/ui/sdviewpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "b315204f71a6b45e1b66e7ccb421671a4b0422a3fdfb87f46667c343b540160d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/sidebarslidebackground.ui",
+      "cui": "uiconfig/simpress/ui/sidebarslidebackground.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "32357cfc816a3036f6579097691602eef5b0acf2269852f10817f4fa84391a3e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/slidecontextmenu.ui",
+      "cui": "uiconfig/simpress/ui/slidecontextmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "217c0041c16c88116f38b93cd1c1e24590b5c842419dfc520e25212bbaf35fd7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/slidedesigndialog.ui",
+      "cui": "uiconfig/simpress/ui/slidedesigndialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "ae91bb99bd407fdfc800746ce08d3043a81beb1bd61e19c41a3bc954b8959e87",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/slidetransitionspanel.ui",
+      "cui": "uiconfig/simpress/ui/slidetransitionspanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 34,
+      "actions": 0,
+      "donor_sha256": "4fd1e25b44155b3319abf2704b1d581ab650d494f5a5128d8ca89e8073b51dd7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/snapmenu.ui",
+      "cui": "uiconfig/simpress/ui/snapmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c7a8371ca3ea7b5794d73c3ea6bd185f26373c579fdc2410f3ca4f1a9fa0166d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/tabledesignpanel.ui",
+      "cui": "uiconfig/simpress/ui/tabledesignpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "52c85273f64bc72172d1619d3fefaa238a08e5aaca80cb93963faa29e0781c60",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/tabviewbar.ui",
+      "cui": "uiconfig/simpress/ui/tabviewbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "b3b09b626d25b7c0ac3580b056178565e70376c0d6569da97a2c683dfc026b9c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/simpress/ui/templatedialog.ui",
+      "cui": "uiconfig/simpress/ui/templatedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "954703355da322aaa332b734fb0d27da54355d89dba4f607f4253dc559ee195b",
+      "refreshed": false
+    }
+  ]
+}

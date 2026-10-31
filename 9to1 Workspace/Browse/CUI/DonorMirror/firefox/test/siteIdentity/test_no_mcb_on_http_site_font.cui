@@ -1,0 +1,18 @@
+<Cui id="site-identity-test-no-mcb-on-http-site-font" product="9-1" version="1">
+  <Page id="site-identity-test-no-mcb-on-http-site-font-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="/tests/SimpleTest/SimpleTest.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="testDiv" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

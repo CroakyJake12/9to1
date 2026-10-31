@@ -1,0 +1,16 @@
+<Cui id="dialogs-bulk-rename-dialog" product="9-1" version="1">
+  <Page id="dialogs-bulk-rename-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="stackpanel" Type="Vertical Stack" width="440">
+        <Container id="grid" Type="Grid" padding="12" background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+          <Container id="grid.columndefinitions" Type="Vertical Stack">
+            <Text id="columndefinition" />
+            <Text id="columndefinition-2" />
+          </Container>
+          <Text id="textblock" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=Name}" />
+          <Input id="textbox" Type="Text" column="1" width="260" placeholder-text="{helpers:ResourceString Name=EnterName}" text="{Binding ViewModel.FileName}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

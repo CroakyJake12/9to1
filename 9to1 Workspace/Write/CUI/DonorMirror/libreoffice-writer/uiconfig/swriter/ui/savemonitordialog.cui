@@ -1,0 +1,16 @@
+<Cui id="ui-savemonitordialog" product="9-1" version="1">
+  <Container id="save-monitor-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="save-monitor-dialog-label" text="Save monitor" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Text id="docname" focusable="false" />
+        <Text id="saving" text="is being saved to" focusable="false" />
+        <Text id="printer" focusable="false" />
+        <Text id="printinfo" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

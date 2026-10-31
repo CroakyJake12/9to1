@@ -1,0 +1,31 @@
+<Cui id="base-footer-content" product="9-1" version="1">
+  <Page id="base-footer-content-root">
+    <Container id="footer" Type="Horizontal Stack" role="group">
+      <Container id="div" Type="Vertical Stack" role="contentinfo">
+        <Button id="a" />
+        <Text id="span">
+          <Button id="a-2" />
+        </Text>
+        <Text id="span-2">
+          <Text id="strong" text="{Binding Unresolved}" />
+          <Text id="strong-2" text="{Binding Unresolved}" />
+        </Text>
+        <Text id="span-3" text="ViteDevMode" />
+      </Container>
+      <Container id="div-2" Type="Vertical Stack" role="group">
+        <Container id="footer-theme-selector" Type="Vertical Stack">
+          <Text id="span-4" text="{Binding Unresolved}" />
+          <Container id="div-3" Type="Vertical Stack" />
+        </Container>
+        <Container id="div-4" Type="Vertical Stack">
+          <Text id="span-5" text="[value] [value]" />
+          <Container id="div-5" Type="Vertical Stack">
+            <Button id="a-3" />
+          </Container>
+        </Container>
+        <Button id="a-4" />
+        <Button id="a-5" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,70 @@
+<Cui id="admin-system-status" product="9-1" version="1">
+  <Page id="admin-system-status-root">
+    <Container id="dl" Type="Vertical Stack">
+      <Container id="dt" Type="Vertical Stack" />
+      <Container id="dd" Type="Vertical Stack">
+        <Container id="relative-time" Type="Vertical Stack" />
+      </Container>
+      <Container id="dt-2" Type="Vertical Stack" />
+      <Container id="dd-2" Type="Vertical Stack" />
+      <Container id="div" Type="Vertical Stack" />
+      <Container id="dt-3" Type="Vertical Stack" />
+      <Container id="dd-3" Type="Vertical Stack" />
+      <Container id="dt-4" Type="Vertical Stack" />
+      <Container id="dd-4" Type="Vertical Stack" />
+      <Container id="dt-5" Type="Vertical Stack" />
+      <Container id="dd-5" Type="Vertical Stack" />
+      <Container id="dt-6" Type="Vertical Stack" />
+      <Container id="dd-6" Type="Vertical Stack" />
+      <Container id="dt-7" Type="Vertical Stack" />
+      <Container id="dd-7" Type="Vertical Stack" />
+      <Container id="dt-8" Type="Vertical Stack" />
+      <Container id="dd-8" Type="Vertical Stack" />
+      <Container id="div-2" Type="Vertical Stack" />
+      <Container id="dt-9" Type="Vertical Stack" />
+      <Container id="dd-9" Type="Vertical Stack" />
+      <Container id="dt-10" Type="Vertical Stack" />
+      <Container id="dd-10" Type="Vertical Stack" />
+      <Container id="dt-11" Type="Vertical Stack" />
+      <Container id="dd-11" Type="Vertical Stack" />
+      <Container id="dt-12" Type="Vertical Stack" />
+      <Container id="dd-12" Type="Vertical Stack" />
+      <Container id="dt-13" Type="Vertical Stack" />
+      <Container id="dd-13" Type="Vertical Stack" />
+      <Container id="dt-14" Type="Vertical Stack" />
+      <Container id="dd-14" Type="Vertical Stack" />
+      <Container id="div-3" Type="Vertical Stack" />
+      <Container id="dt-15" Type="Vertical Stack" />
+      <Container id="dd-15" Type="Vertical Stack" />
+      <Container id="dt-16" Type="Vertical Stack" />
+      <Container id="dd-16" Type="Vertical Stack" />
+      <Container id="dt-17" Type="Vertical Stack" />
+      <Container id="dd-17" Type="Vertical Stack" />
+      <Container id="dt-18" Type="Vertical Stack" />
+      <Container id="dd-18" Type="Vertical Stack" />
+      <Container id="dt-19" Type="Vertical Stack" />
+      <Container id="dd-19" Type="Vertical Stack" />
+      <Container id="dt-20" Type="Vertical Stack" />
+      <Container id="dd-20" Type="Vertical Stack" />
+      <Container id="dt-21" Type="Vertical Stack" />
+      <Container id="dd-21" Type="Vertical Stack" />
+      <Container id="dt-22" Type="Vertical Stack" />
+      <Container id="dd-22" Type="Vertical Stack" />
+      <Container id="dt-23" Type="Vertical Stack" />
+      <Container id="dd-23" Type="Vertical Stack" />
+      <Container id="div-4" Type="Vertical Stack" />
+      <Container id="dt-24" Type="Vertical Stack" />
+      <Container id="dd-24" Type="Vertical Stack" />
+      <Container id="dt-25" Type="Vertical Stack" />
+      <Container id="dd-25" Type="Vertical Stack">
+        <Container id="relative-time-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="dt-26" Type="Vertical Stack" />
+      <Container id="dd-26" Type="Vertical Stack" />
+      <Container id="dt-27" Type="Vertical Stack" />
+      <Container id="dd-27" Type="Vertical Stack" />
+      <Container id="dt-28" Type="Vertical Stack" />
+      <Container id="dd-28" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

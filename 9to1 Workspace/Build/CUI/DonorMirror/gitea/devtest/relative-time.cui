@@ -1,0 +1,129 @@
+<Cui id="devtest-relative-time" product="9-1" version="1">
+  <Page id="devtest-relative-time-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Text id="h2" text="Relative (auto)" />
+          <Container id="div-4" Type="Vertical Stack">
+            <Container id="relative-time" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-5" Type="Vertical Stack">
+            <Container id="relative-time-2" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-6" Type="Vertical Stack">
+            <Container id="relative-time-3" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-7" Type="Vertical Stack">
+            <Container id="relative-time-4" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-8" Type="Vertical Stack">
+            <Container id="relative-time-5" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-9" Type="Vertical Stack">
+            <Container id="relative-time-6" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-10" Type="Vertical Stack">
+            <Container id="relative-time-7" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-11" Type="Vertical Stack">
+          <Text id="h2-2" text="tense=past" />
+          <Container id="div-12" Type="Vertical Stack">
+            <Container id="relative-time-8" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-13" Type="Vertical Stack">
+            <Container id="relative-time-9" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-14" Type="Vertical Stack">
+            <Container id="relative-time-10" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-15" Type="Vertical Stack">
+          <Text id="h2-3" text="tense=future" />
+          <Container id="div-16" Type="Vertical Stack">
+            <Container id="relative-time-11" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-17" Type="Vertical Stack">
+            <Container id="relative-time-12" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-18" Type="Vertical Stack">
+          <Text id="h2-4" text="Duration" />
+          <Container id="div-19" Type="Vertical Stack">
+            <Container id="relative-time-13" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-20" Type="Vertical Stack">
+            <Container id="relative-time-14" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-21" Type="Vertical Stack">
+            <Container id="relative-time-15" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-22" Type="Vertical Stack">
+            <Container id="relative-time-16" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-23" Type="Vertical Stack">
+            <Container id="relative-time-17" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-24" Type="Vertical Stack">
+          <Text id="h2-5" text="Datetime (absolute)" />
+          <Container id="div-25" Type="Vertical Stack">
+            <Container id="relative-time-18" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-26" Type="Vertical Stack">
+            <Container id="relative-time-19" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-27" Type="Vertical Stack">
+            <Container id="relative-time-20" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-28" Type="Vertical Stack">
+            <Container id="relative-time-21" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-29" Type="Vertical Stack">
+            <Container id="relative-time-22" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-30" Type="Vertical Stack">
+            <Container id="relative-time-23" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-31" Type="Vertical Stack">
+            <Container id="relative-time-24" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-32" Type="Vertical Stack">
+          <Text id="h2-6" text="Threshold" />
+          <Container id="div-33" Type="Vertical Stack">
+            <Container id="relative-time-25" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-34" Type="Vertical Stack">
+            <Container id="relative-time-26" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-35" Type="Vertical Stack">
+            <Container id="relative-time-27" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-36" Type="Vertical Stack">
+          <Text id="h2-7" text="Prefix" />
+          <Container id="div-37" Type="Vertical Stack">
+            <Container id="relative-time-28" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-38" Type="Vertical Stack">
+            <Container id="relative-time-29" Type="Vertical Stack" />
+          </Container>
+          <Container id="div-39" Type="Vertical Stack">
+            <Container id="relative-time-30" Type="Vertical Stack" />
+          </Container>
+        </Container>
+        <Container id="div-40" Type="Vertical Stack">
+          <Text id="h2-8" text="TimeSince (Go helper)" />
+          <Container id="div-41" Type="Vertical Stack" />
+          <Container id="div-42" Type="Vertical Stack" />
+          <Container id="div-43" Type="Vertical Stack" />
+          <Container id="div-44" Type="Vertical Stack" />
+          <Container id="div-45" Type="Vertical Stack" />
+          <Container id="div-46" Type="Vertical Stack" />
+          <Container id="div-47" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

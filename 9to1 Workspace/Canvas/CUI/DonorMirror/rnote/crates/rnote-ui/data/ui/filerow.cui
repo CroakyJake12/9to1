@@ -1,0 +1,9 @@
+<Cui id="ui-filerow" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
+    <Image id="file-image" />
+    <Text id="file-label" text-trimming="CharacterEllipsis" horizontal-alignment="Left" role="Grow" />
+    <Container id="menubutton-box" Type="Horizontal Stack" horizontal-alignment="Right">
+      <Button id="menubutton" />
+    </Container>
+  </Container>
+</Cui>

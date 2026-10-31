@@ -1,0 +1,5 @@
+<Cui id="ui-gluebox" product="9-1" version="1">
+  <Container id="glue-box" Type="Vertical Stack" cell-gap="6" role="Grow">
+    <Input id="gluetype" Type="Select" role="Grow" />
+  </Container>
+</Cui>

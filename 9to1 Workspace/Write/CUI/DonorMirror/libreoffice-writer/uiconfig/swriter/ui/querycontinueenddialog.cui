@@ -1,0 +1,8 @@
+<Cui id="ui-querycontinueenddialog" product="9-1" version="1">
+  <Container id="query-continue-end-dialog" Type="Vertical Stack" modal="True">
+    <Text id="query-continue-end-dialog-label" text="Continue at the end?" />
+    <Container id="messagedialog-vbox" Type="Vertical Stack" cell-gap="12">
+      <Container id="messagedialog-action-area" Type="Horizontal Stack" />
+    </Container>
+  </Container>
+</Cui>

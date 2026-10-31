@@ -1,0 +1,32 @@
+<Cui id="ui-insertbookmark" product="9-1" version="1">
+  <Container id="insert-bookmark-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="insert-bookmark-dialog-label" text="Bookmark" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+      <Container id="container" Type="Horizontal Stack" focusable="false">
+        <Button id="close" content="Close" text="Close" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="container-2" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="lb-forbidden-chars" text="Forbidden characters:" horizontal-alignment="Right" vertical-alignment="Top" focusable="false" role="Grow" column="1" row="1" />
+        <Input id="name" Type="Text" role="Grow" column="1" row="0" />
+        <Button id="insert" content="Insert" text="Insert" horizontal-alignment="Right" column="2" row="0" />
+        <Text id="lb-name" text="Name:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+        <Input id="hide" Type="Checkbox" text="Hide" horizontal-alignment="Left" vertical-alignment="Top" column="1" row="2" />
+        <Text id="condlabel" text="Condition:" horizontal-alignment="Left" focusable="false" column="0" row="3" />
+        <Input id="withcond" Type="Text" column="1" row="3" column-span="2" />
+      </Container>
+      <Container id="container-3" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="container-4" Type="Vertical Stack" role="Grow">
+          <Container id="bookmarks" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Text id="lb-bookmarks" text="Bookmarks:" focusable="false" />
+      </Container>
+      <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Button id="goto" content="Go to" text="Go to" />
+        <Button id="delete" content="Delete" text="Delete" />
+        <Button id="edittext" content="Edit Text" text="Edit Text" />
+        <Button id="rename" content="Rename" text="Rename" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

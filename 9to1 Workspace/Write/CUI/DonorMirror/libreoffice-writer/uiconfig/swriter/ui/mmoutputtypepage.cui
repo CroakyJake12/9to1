@@ -1,0 +1,16 @@
+<Cui id="ui-mmoutputtypepage" product="9-1" version="1">
+  <Container id="mmoutput-type-page" Type="Vertical Stack" cell-gap="12" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" role="Grow">
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Text id="letterft" text="Send letters to a group of recipients. The letters can contain an address block and a salutation. The letters can be personalized for each recipient." text-wrapping="Wrap" role="Grow" />
+        <Text id="emailft" text="Send email messages to a group of recipients. The email messages can contain a salutation. The email messages can be personalized for each recipient." text-wrapping="Wrap" role="Grow" />
+        <Container id="grid2" Type="Grid">
+          <Input id="letter" Type="Radio" text="Letter" />
+          <Input id="email" Type="Radio" text="Email message" checked="true" />
+          <Button id="button1" content="layoutdetail-forheight" text="layoutdetail-forheight" />
+        </Container>
+      </Container>
+      <Text id="label1" text="What Type of Document Do You Want to Create?" />
+    </Container>
+  </Container>
+</Cui>

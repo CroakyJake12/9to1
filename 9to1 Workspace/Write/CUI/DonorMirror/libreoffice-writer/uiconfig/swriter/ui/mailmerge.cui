@@ -1,0 +1,72 @@
+<Cui id="ui-mailmerge" product="9-1" version="1">
+  <Container id="mailmerge-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="mailmerge-dialog-label" text="Mail Merge" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="beamer" Type="Vertical Stack" height="150" focusable="false" role="Grow" />
+        <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+          <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="box3" Type="Vertical Stack" cell-gap="6" vertical-alignment="Top" focusable="false">
+              <Input id="all" Type="Radio" text="All" checked="true" />
+              <Input id="selected" Type="Radio" text="Selected records" />
+              <Container id="box4" Type="Vertical Stack" cell-gap="12" focusable="false">
+                <Input id="rbfrom" Type="Radio" text="From:" />
+                <Input id="from" Type="Number" />
+                <Text id="label3" text="To:" focusable="false" />
+                <Input id="to" Type="Number" />
+              </Container>
+            </Container>
+            <Text id="recordslabel" text="Records" focusable="false" />
+          </Container>
+          <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="box5" Type="Vertical Stack" cell-gap="6" focusable="false">
+              <Container id="box6" Type="Vertical Stack" cell-gap="6" focusable="false">
+                <Input id="printer" Type="Radio" text="Printer" checked="true" />
+                <Input id="electronic" Type="Radio" text="Electronic" />
+                <Input id="file" Type="Radio" text="File" />
+              </Container>
+              <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow">
+                <Container id="container" Type="Vertical Stack" focusable="false">
+                  <Container id="box7" Type="Vertical Stack" cell-gap="6" focusable="false">
+                    <Input id="singledocument" Type="Radio" text="Save as single document" checked="true" />
+                    <Input id="individualdocuments" Type="Radio" text="Save as individual documents" />
+                  </Container>
+                  <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+                    <Input id="generate" Type="Checkbox" text="Generate file name from database" column="0" row="0" column-span="3" />
+                    <Text id="fieldlabel" text="Field:" horizontal-alignment="Left" focusable="false" column="0" row="1" />
+                    <Text id="pathlabel" text="Path:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+                    <Text id="fileformatlabel" text="File format:" horizontal-alignment="Left" focusable="false" column="0" row="3" />
+                    <Input id="field" Type="Select" focusable="false" column="1" row="1" column-span="2" />
+                    <Input id="fileformat" Type="Select" focusable="false" column="1" row="3" column-span="2" />
+                    <Button id="pathpb" content="..." text="..." column="2" row="2" />
+                    <Input id="path" Type="Text" column="1" row="2" />
+                    <Text id="subjectlabel" text="Subject:" horizontal-alignment="Left" focusable="false" is-enabled="false" column="0" row="7" />
+                    <Input id="subject" Type="Text" is-enabled="false" column="1" row="7" />
+                    <Text id="attachmentslabel" text="Attachments:" horizontal-alignment="Left" focusable="false" is-enabled="false" column="0" row="8" />
+                    <Input id="attachments" Type="Text" is-enabled="false" column="1" row="8" />
+                    <Button id="attach" content="..." text="..." is-enabled="false" column="2" row="8" />
+                    <Text id="mailformatlabel" text="Mail format:" horizontal-alignment="Left" focusable="false" is-enabled="false" column="0" row="9" />
+                    <Input id="address" Type="Select" focusable="false" is-enabled="false" role="Grow" column="1" row="6" />
+                    <Input id="html" Type="Checkbox" text="HTML" is-enabled="false" column="1" row="9" />
+                    <Input id="rtf" Type="Checkbox" text="RTF" is-enabled="false" column="1" row="10" />
+                    <Input id="swriter" Type="Checkbox" text="%PRODUCTNAME Writer" is-enabled="false" column="1" row="11" />
+                    <Input id="passwd-check" Type="Checkbox" text="Save with password" column="0" row="4" column-span="2" />
+                    <Text id="passwd-label" text="Password field:" horizontal-alignment="Left" focusable="false" column="0" row="5" />
+                    <Input id="passwd-combobox" Type="Select" focusable="false" role="Grow" column="1" row="5" />
+                  </Container>
+                </Container>
+                <Text id="savemergeddoclabel" text="Save Merged Document" focusable="false" />
+              </Container>
+            </Container>
+            <Text id="outputlabel" text="Output" focusable="false" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

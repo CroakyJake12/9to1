@@ -1,0 +1,7 @@
+<Cui id="ui-passfragment" product="9-1" version="1">
+  <Container id="pass-entry" Type="Grid" cell-gap="12" vertical-alignment="Top" focusable="false" role="Grow">
+    <Text id="name" focusable="false" column="0" row="0" />
+    <Text id="status" focusable="false" column="1" row="0" />
+    <Button id="button" is-enabled="false" column="2" row="0" />
+  </Container>
+</Cui>

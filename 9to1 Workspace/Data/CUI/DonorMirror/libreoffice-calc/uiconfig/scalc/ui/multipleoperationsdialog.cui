@@ -1,0 +1,26 @@
+<Cui id="ui-multipleoperationsdialog" product="9-1" version="1">
+  <Container id="multiple-operations-dialog" Type="Vertical Stack">
+    <Text id="multiple-operations-dialog-label" text="Multiple operations" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="itemframe" Type="Vertical Stack">
+        <Container id="grid3" Type="Grid" role="Grow">
+          <Text id="formulasft" text="Formulas:" />
+          <Text id="rowft" text="Row input cell:" />
+          <Text id="colft" text="Column input cell:" />
+          <Input id="formulas" Type="Text" role="Grow" />
+          <Input id="row" Type="Text" role="Grow" />
+          <Input id="col" Type="Text" role="Grow" />
+          <Button id="formulasref" />
+          <Button id="rowref" />
+          <Button id="colref" />
+        </Container>
+        <Text id="label1" text="Default Settings" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

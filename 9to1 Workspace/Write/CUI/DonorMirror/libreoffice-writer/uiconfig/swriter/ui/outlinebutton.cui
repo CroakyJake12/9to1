@@ -1,0 +1,10 @@
+<Cui id="ui-outlinebutton" product="9-1" version="1">
+  <Page id="ui-outlinebutton-root">
+    <Image id="image3" focusable="false" source="go-next" />
+    <Image id="image5" focusable="false" source="go-down" />
+    <Container id="outline-button" Type="Vertical Stack" focusable="false" role="Grow">
+      <Button id="show" />
+      <Button id="hide" />
+    </Container>
+  </Page>
+</Cui>

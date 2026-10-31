@@ -1,0 +1,5 @@
+<Cui id="settings-hooks" product="9-1" version="1">
+  <Page id="settings-hooks-root">
+    <Container id="div" Type="Vertical Stack" />
+  </Page>
+</Cui>

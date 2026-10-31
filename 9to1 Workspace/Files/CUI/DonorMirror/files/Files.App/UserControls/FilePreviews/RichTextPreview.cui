@@ -1,0 +1,9 @@
+<Cui id="file-previews-rich-text-preview" product="9-1" version="1">
+  <Page id="file-previews-rich-text-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="border" Type="Overlay">
+        <Input id="richeditbox" Type="Text" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

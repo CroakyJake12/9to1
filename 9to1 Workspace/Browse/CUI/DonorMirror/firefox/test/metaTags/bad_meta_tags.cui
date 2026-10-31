@@ -1,0 +1,17 @@
+<Cui id="meta-tags-bad-meta-tags" product="9-1" version="1">
+  <Page id="meta-tags-bad-meta-tags-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+        <Container id="meta-3" Type="Vertical Stack" />
+        <Container id="meta-4" Type="Vertical Stack" />
+        <Container id="meta-5" Type="Vertical Stack" />
+        <Container id="meta-6" Type="Vertical Stack" />
+        <Container id="meta-7" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

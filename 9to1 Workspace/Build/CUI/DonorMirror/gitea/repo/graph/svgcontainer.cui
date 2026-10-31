@@ -1,0 +1,12 @@
+<Cui id="graph-svgcontainer" product="9-1" version="1">
+  <Page id="graph-svgcontainer-root">
+    <Container id="rel-container" Type="Vertical Stack">
+      <Image id="svg">
+        <Container id="flow-[value]" Type="Vertical Stack">
+          <Container id="flow-[value]-path" Type="Vertical Stack" />
+          <Container id="flow-commit-[value]" Type="Vertical Stack" />
+        </Container>
+      </Image>
+    </Container>
+  </Page>
+</Cui>

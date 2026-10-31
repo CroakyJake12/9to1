@@ -1,0 +1,40 @@
+<Cui id="ui-impressprinteroptions" product="9-1" version="1">
+  <Container id="box" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="document" Type="Vertical Stack" focusable="false">
+      <Container id="container" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="label2" text="Type:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+        <Text id="label7" text="Slides per page:" horizontal-alignment="Left" focusable="false" column="0" row="1" />
+        <Text id="label1" text="Order:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+        <Input id="impressdocument" Type="Select" focusable="false" column="1" row="0" />
+        <Input id="slidesperpage" Type="Select" focusable="false" column="1" row="1" />
+        <Input id="slidesperpageorder" Type="Select" focusable="false" column="1" row="2" />
+      </Container>
+      <Text id="label3" text="Document" focusable="false" />
+    </Container>
+    <Container id="contents" Type="Vertical Stack" focusable="false">
+      <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Input id="printname" Type="Checkbox" text="Slide name" />
+        <Input id="printdatetime" Type="Checkbox" text="Date and time" />
+        <Input id="printhidden" Type="Checkbox" text="Hidden pages" />
+      </Container>
+      <Text id="label4" text="Contents" focusable="false" />
+    </Container>
+    <Container id="color" Type="Vertical Stack" focusable="false">
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Input id="originalcolors" Type="Radio" text="Original colors" checked="true" />
+        <Input id="grayscale" Type="Radio" text="Grayscale" />
+        <Input id="blackandwhite" Type="Radio" text="Black &amp; white" />
+      </Container>
+      <Text id="label5" text="Color" focusable="false" />
+    </Container>
+    <Container id="pagesizes" Type="Vertical Stack" focusable="false">
+      <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Input id="originalsize" Type="Radio" text="Original size" checked="true" />
+        <Input id="fittoprintable" Type="Radio" text="Fit to printable page" />
+        <Input id="distributeonmultiple" Type="Radio" text="Distribute on multiple sheets of paper" />
+        <Input id="tilesheet" Type="Radio" text="Tile sheet of paper with repeated slides" />
+      </Container>
+      <Text id="label6" text="Size" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,29 @@
+# libreoffice-impress Stage A mirror gaps - constructs CUI cannot express yet
+
+Produced by eng/cui-mirror/mirror.py. Each row is a CUI framework extension request, not a
+reason to keep donor markup. Nothing here is rendered or accepted evidence.
+
+- donor UI constructs translated: 13214
+- donor nodes dropped: 353
+- gap reports: 8439
+
+| CUI construct needed / rejected | occurrences | donor constructs seen |
+|---|---|---|
+| `toolbar with overflow` | 3512 | GtkMenuToolButton, GtkSeparatorToolItem, GtkToolButton, GtkToolbar |
+| `notebook bar (ribbon) group` | 2093 | sfxlo-NotebookbarToolBox |
+| `optional section` | 1313 | VclOptionalBox |
+| `separator` | 802 | GtkSeparator |
+| `toolbar overflow` | 270 | sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox |
+| `menu button` | 212 | svtlo-ManagedMenuButton |
+| `radio menu item` | 89 | GtkRadioMenuItem |
+| `button row` | 33 | GtkButtonBox |
+| `window and dialog chrome` | 27 | GtkDialog |
+| `scroller with explicit bars` | 27 | GtkScrolledWindow |
+| `item collection (list/tree/table)` | 23 | GtkIconView, GtkTreeView |
+| `tab strip` | 9 | GtkNotebook |
+| `clipped viewport` | 8 | GtkViewport |
+| `custom drawing surface` | 7 | GtkDrawingArea |
+| `context toolbar` | 6 | sfxlo-ContextVBox |
+| `notebook bar (ribbon) tab` | 4 | sfxlo-NotebookbarTabControl |
+| `unmodelled donor construct` | 2 | GtkMessageDialog |
+| `progress` | 2 | GtkProgressBar |

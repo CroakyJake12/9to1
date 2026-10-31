@@ -1,0 +1,52 @@
+<Cui id="ui-envprinterpage" product="9-1" version="1">
+  <Page id="ui-envprinterpage-root">
+    <Image id="image1" focusable="false" source="sw/res/envhll.png" />
+    <Image id="image10" focusable="false" source="sw/res/envvlu.png" />
+    <Image id="image11" focusable="false" source="sw/res/envvcu.png" />
+    <Image id="image12" focusable="false" source="sw/res/envvru.png" />
+    <Image id="image2" focusable="false" source="sw/res/envhcl.png" />
+    <Image id="image3" focusable="false" source="sw/res/envhrl.png" />
+    <Image id="image4" focusable="false" source="sw/res/envvll.png" />
+    <Image id="image5" focusable="false" source="sw/res/envvcl.png" />
+    <Image id="image6" focusable="false" source="sw/res/envvrl.png" />
+    <Image id="image7" focusable="false" source="sw/res/envhlu.png" />
+    <Image id="image8" focusable="false" source="sw/res/envhcu.png" />
+    <Image id="image9" focusable="false" source="sw/res/envhru.png" />
+    <Container id="env-printer-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Container id="lower" Type="Grid" cell-gap="6" focusable="false" column="0" row="0" column-span="2">
+            <Input id="horileftl" Type="Radio" tooltip="Horizontal Left" checked="true" column="0" row="0" />
+            <Input id="horicenterl" Type="Radio" tooltip="Horizontal Center" column="1" row="0" />
+            <Input id="horirightl" Type="Radio" tooltip="Horizontal Right" column="2" row="0" />
+            <Input id="vertleftl" Type="Radio" tooltip="Vertical Left" column="3" row="0" />
+            <Input id="vertcenterl" Type="Radio" tooltip="Vertical Center" column="4" row="0" />
+            <Input id="vertrightl" Type="Radio" tooltip="Vertical Right" column="5" row="0" />
+          </Container>
+          <Container id="upper" Type="Grid" cell-gap="6" focusable="false" column="0" row="1" column-span="2">
+            <Input id="horileftu" Type="Radio" tooltip="Horizontal Left" checked="true" column="0" row="0" />
+            <Input id="horicenteru" Type="Radio" tooltip="Horizontal Center" column="1" row="0" />
+            <Input id="horirightu" Type="Radio" tooltip="Horizontal Right" column="2" row="0" />
+            <Input id="vertleftu" Type="Radio" tooltip="Vertical Left" column="3" row="0" />
+            <Input id="vertcenteru" Type="Radio" tooltip="Vertical Center" column="4" row="0" />
+            <Input id="vertrightu" Type="Radio" tooltip="Vertical Right" column="5" row="0" />
+          </Container>
+          <Input id="top" Type="Radio" text="Print from top" checked="true" column="0" row="2" column-span="2" />
+          <Input id="bottom" Type="Radio" text="Print from bottom" column="0" row="3" column-span="2" />
+          <Text id="label3" text="Shift right" focusable="false" column="0" row="4" />
+          <Input id="right" Type="Number" column="1" row="4" />
+          <Text id="label4" text="Shift down" focusable="false" column="0" row="5" />
+          <Input id="down" Type="Number" column="1" row="5" />
+        </Container>
+        <Text id="label1" text="Envelope Orientation" focusable="false" />
+      </Container>
+      <Container id="printerframe" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+          <Button id="setup" content="Setup..." text="Setup..." column="1" row="0" />
+          <Text id="printername" text="Printer Name" focusable="false" role="Grow" column="0" row="0" />
+        </Container>
+        <Text id="label2" text="Current Printer" focusable="false" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

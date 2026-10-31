@@ -1,0 +1,16 @@
+<Cui id="dialogs-dynamic-dialog" product="9-1" version="1">
+  <Page id="dialogs-dynamic-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="grid.rowdefinitions" Type="Vertical Stack">
+          <Text id="rowdefinition" />
+          <Text id="rowdefinition-2" />
+        </Container>
+        <Text id="textblock" row="0" horizontal-alignment="Left" vertical-alignment="Center" text="{Binding ViewModel.SubtitleText}" />
+        <Container id="contentcontrol" Type="Overlay" row="1" horizontal-alignment="Stretch" vertical-alignment="Stretch">
+          <Text id="contentcontrol-label" text="{Binding ViewModel.DisplayControl}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

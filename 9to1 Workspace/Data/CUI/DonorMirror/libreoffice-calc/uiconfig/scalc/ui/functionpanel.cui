@@ -1,0 +1,26 @@
+<Cui id="ui-functionpanel" product="9-1" version="1">
+  <Page id="ui-functionpanel-root">
+    <Image id="image1" focusable="false" source="sc/res/fx.png" />
+    <Container id="function-panel" Type="Grid" focusable="false" role="Grow">
+      <Container id="container" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+        <Container id="container-2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+          <Container id="container-3" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="1">
+            <Button id="insert" tooltip="Insert Function into calculation sheet" column="0" row="0" />
+            <Input id="category" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+          </Container>
+          <Container id="container-4" Type="Vertical Stack" role="Grow" column="0" row="2">
+            <Container id="funclist" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="container-5" Type="Horizontal Stack" cell-gap="6" focusable="false" column="0" row="0">
+            <Input id="search" Type="Text" placeholder-text="Search all functions" role="Grow" />
+            <Input id="similaritysearch" Type="Checkbox" text="Similar" />
+          </Container>
+        </Container>
+        <Container id="funcscroll" Type="Vertical Stack" vertical-alignment="Bottom" column="0" row="1">
+          <Input id="funcdesc" Type="Text" />
+        </Container>
+        <Button id="help" content="Help" text="Help" tooltip="Go to Function's Help Page" horizontal-alignment="Right" column="0" row="2" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

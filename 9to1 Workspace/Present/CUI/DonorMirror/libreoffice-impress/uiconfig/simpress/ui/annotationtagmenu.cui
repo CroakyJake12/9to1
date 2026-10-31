@@ -1,0 +1,9 @@
+<Cui id="ui-annotationtagmenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id=".uno:reply-to-annotation" Type="Menu Item" content="Reply" text="Reply" focusable="false" />
+    <Button id="separator" Type="Menu Item" focusable="false" />
+    <Button id=".uno:delete-annotation" Type="Menu Item" content="Delete Comment" text="Delete Comment" focusable="false" />
+    <Button id=".uno:delete-all-annotation-by-author" Type="Menu Item" content="Delete All Comments by %1" text="Delete All Comments by %1" focusable="false" />
+    <Button id=".uno:delete-all-annotation" Type="Menu Item" content="Delete All Comments" text="Delete All Comments" focusable="false" />
+  </Container>
+</Cui>

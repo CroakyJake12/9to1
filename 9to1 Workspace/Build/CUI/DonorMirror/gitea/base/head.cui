@@ -1,0 +1,24 @@
+<Cui id="base-head" product="9-1" version="1">
+  <Page id="base-head-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+        <Container id="meta-3" Type="Vertical Stack" />
+        <Container id="meta-4" Type="Vertical Stack" />
+        <Container id="meta-5" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="div" Type="Vertical Stack">
+          <Container id="noscript" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

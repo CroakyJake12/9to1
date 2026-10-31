@@ -1,0 +1,27 @@
+<Cui id="ui-deletecontents" product="9-1" version="1">
+  <Container id="delete-contents-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="delete-contents-dialog-label" text="Delete Contents" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame2" Type="Vertical Stack" focusable="false">
+        <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false">
+          <Input id="deleteall" Type="Checkbox" text="Delete all" />
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="text" Type="Checkbox" text="Text" column="0" row="0" />
+            <Input id="numbers" Type="Checkbox" text="Numbers" column="1" row="0" />
+            <Input id="datetime" Type="Checkbox" text="Date &amp; time" column="0" row="1" />
+            <Input id="formulas" Type="Checkbox" text="Formulas" column="1" row="1" />
+            <Input id="comments" Type="Checkbox" text="Comments" column="0" row="2" />
+            <Input id="formats" Type="Checkbox" text="Formats" column="1" row="2" />
+            <Input id="objects" Type="Checkbox" text="Objects" column="0" row="3" />
+          </Container>
+        </Container>
+        <Text id="label2" text="Selection" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,32 @@
+<Cui id="ui-labelformatpage" product="9-1" version="1">
+  <Container id="label-format-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+      <Text id="label1" text="Horizontal pitch:" focusable="false" column="0" row="0" />
+      <Input id="hori" Type="Number" column="1" row="0" />
+      <Text id="label2" text="Vertical pitch:" focusable="false" column="0" row="1" />
+      <Input id="vert" Type="Number" column="1" row="1" />
+      <Text id="label3" text="Width:" focusable="false" column="0" row="2" />
+      <Input id="width" Type="Number" column="1" row="2" />
+      <Text id="label4" text="Height:" focusable="false" column="0" row="3" />
+      <Input id="height" Type="Number" column="1" row="3" />
+      <Text id="label5" text="Left margin:" focusable="false" column="0" row="4" />
+      <Input id="left" Type="Number" column="1" row="4" />
+      <Text id="label6" text="Top margin:" focusable="false" column="0" row="5" />
+      <Input id="top" Type="Number" column="1" row="5" />
+      <Text id="label7" text="Columns:" focusable="false" column="0" row="6" />
+      <Input id="cols" Type="Number" column="1" row="6" />
+      <Text id="label8" text="Rows:" focusable="false" column="0" row="7" />
+      <Input id="rows" Type="Number" column="1" row="7" />
+      <Text id="label9" text="Page width:" focusable="false" column="0" row="8" />
+      <Input id="pagewidth" Type="Number" column="1" row="8" />
+      <Text id="label10" text="Page height:" focusable="false" column="0" row="9" />
+      <Input id="pageheight" Type="Number" column="1" row="9" />
+      <Button id="save" content="Save..." text="Save..." horizontal-alignment="Right" column="0" row="10" column-span="2" />
+    </Container>
+    <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+      <Container id="preview" Type="Overlay" focusable="false" role="Grow" column="0" row="1" column-span="2" />
+      <Text id="make" focusable="false" column="0" row="0" />
+      <Text id="type" focusable="false" column="1" row="0" />
+    </Container>
+  </Container>
+</Cui>

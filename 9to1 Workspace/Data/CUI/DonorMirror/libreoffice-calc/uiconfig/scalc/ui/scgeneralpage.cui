@@ -1,0 +1,56 @@
+<Cui id="ui-scgeneralpage" product="9-1" version="1">
+  <Container id="sc-general-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="3" focusable="false">
+        <Image id="lockunitlb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Text id="label4" text="Measurement unit:" focusable="false" column="1" row="0" />
+        <Input id="unitlb" Type="Select" focusable="false" column="2" row="0" />
+        <Image id="locktabmf" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Text id="label5" text="Tab stops:" focusable="false" column="1" row="1" />
+        <Input id="tabmf" Type="Number" column="2" row="1" />
+      </Container>
+      <Text id="label1" text="Metrics" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false">
+      <Container id="container" Type="Grid" focusable="false">
+        <Image id="lockupdatelinks" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Container id="container-2" Type="Vertical Stack" cell-gap="3" focusable="false" column="1" row="0">
+          <Input id="alwaysrb" Type="Radio" text="Always (from trusted locations)" checked="true" />
+          <Input id="requestrb" Type="Radio" text="On request" />
+          <Input id="neverrb" Type="Radio" text="Never" />
+        </Container>
+      </Container>
+      <Text id="label6" text="Update links when opening" focusable="false" />
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="container-3" Type="Vertical Stack" role="Grow">
+        <Container id="container-4" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid3" Type="Grid" cell-gap="3" focusable="false" role="Grow">
+            <Image id="lockaligncb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+            <Input id="aligncb" Type="Checkbox" text="Press Enter to move selection" column="1" row="0" />
+            <Input id="alignlb" Type="Select" horizontal-alignment="Left" focusable="false" role="Grow" column="2" row="0" />
+            <Image id="lockeditmodecb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+            <Input id="editmodecb" Type="Checkbox" text="Press Enter to switch to edit mode" column="1" row="1" column-span="2" />
+            <Image id="lockenter-paste" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+            <Input id="enter-paste-mode-cb" Type="Checkbox" text="Press Enter to paste and clear clipboard" column="1" row="2" column-span="2" />
+            <Image id="lockformatcb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+            <Input id="formatcb" Type="Checkbox" text="Expand formatting" column="1" row="3" column-span="2" />
+            <Image id="lockexprefcb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+            <Input id="exprefcb" Type="Checkbox" text="Expand references when new columns/rows are inserted" column="1" row="4" column-span="2" />
+            <Image id="locksortrefupdatecb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+            <Input id="sortrefupdatecb" Type="Checkbox" text="Update references when sorting range of cells" column="1" row="5" column-span="2" />
+            <Image id="lockmarkhdrcb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="6" source="res/lock.png" />
+            <Input id="markhdrcb" Type="Checkbox" text="Highlight selection in column/row headers" column="1" row="6" column-span="2" />
+            <Image id="lockreplwarncb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="7" source="res/lock.png" />
+            <Input id="replwarncb" Type="Checkbox" text="Show overwrite warning when pasting data" column="1" row="7" column-span="2" />
+            <Image id="locklegacy-cell" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="8" source="res/lock.png" />
+            <Input id="legacy-cell-selection-cb" Type="Checkbox" text="Position cell reference with selection" column="1" row="8" column-span="2" />
+            <Image id="lockwarnactivesheet" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="9" source="res/lock.png" />
+            <Input id="warnactivesheet-cb" Type="Checkbox" text="Warn when saving only the active sheet" column="1" row="9" column-span="2" />
+          </Container>
+        </Container>
+      </Container>
+      <Text id="label3" text="Input Settings" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

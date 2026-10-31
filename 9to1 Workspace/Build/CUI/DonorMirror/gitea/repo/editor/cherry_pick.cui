@@ -1,0 +1,21 @@
+<Cui id="editor-cherry-pick" product="9-1" version="1">
+  <Page id="editor-cherry-pick-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="form" Type="Vertical Stack">
+          <Input id="input" Type="Text" />
+          <Container id="div-3" Type="Vertical Stack">
+            <Container id="div-4" Type="Vertical Stack">
+              <Button id="a" />
+              <Container id="div-5" Type="Vertical Stack" />
+              <Button id="a-2" />
+              <Text id="span">
+                <Button id="a-3" />
+              </Text>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

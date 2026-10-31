@@ -1,0 +1,73 @@
+<Cui id="ui-columnpage" product="9-1" version="1">
+  <Page id="ui-columnpage-root">
+    <Image id="image7" focusable="false" source="go-previous" />
+    <Image id="image8" focusable="false" source="go-next" />
+    <Container id="column-page" Type="Grid" cell-gap="12" vertical-alignment="Top" focusable="false" role="Grow">
+      <Container id="spacing" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+        <Container id="container" Type="Vertical Stack" focusable="false">
+          <Input id="autowidth" Type="Checkbox" text="AutoWidth" />
+          <Container id="grid8" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
+            <Text id="columnft" text="Column" focusable="false" column="0" row="0" />
+            <Text id="1" text="1" focusable="false" role="Grow" column="2" row="0" />
+            <Text id="2" text="2" focusable="false" role="Grow" column="3" row="0" />
+            <Text id="3" text="3" focusable="false" role="Grow" column="4" row="0" />
+            <Text id="widthft" text="Width:" focusable="false" column="0" row="1" />
+            <Input id="width3mf" Type="Number" horizontal-alignment="Center" role="Grow" column="4" row="1" />
+            <Input id="width2mf" Type="Number" horizontal-alignment="Center" role="Grow" column="3" row="1" />
+            <Input id="width1mf" Type="Number" horizontal-alignment="Center" role="Grow" column="2" row="1" />
+            <Text id="distft" text="Spacing:" focusable="false" column="0" row="2" />
+            <Container id="grid15" Type="Grid" cell-gap="24" horizontal-alignment="Center" focusable="false" column="2" row="2" column-span="3">
+              <Input id="spacing1mf" Type="Number" horizontal-alignment="Center" column="0" row="0" />
+              <Input id="spacing2mf" Type="Number" horizontal-alignment="Center" column="1" row="0" />
+            </Container>
+            <Button id="back" column="1" row="0" />
+            <Button id="next" column="5" row="0" />
+          </Container>
+        </Container>
+        <Text id="label4" text="Width and Spacing" focusable="false" />
+      </Container>
+      <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="2">
+        <Container id="grid10" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="linestyleft" text="Style:" focusable="false" column="0" row="0" />
+          <Text id="linewidthft" text="Width:" focusable="false" column="0" row="1" />
+          <Text id="lineheightft" text="Height:" focusable="false" column="0" row="3" />
+          <Text id="lineposft" text="Position:" focusable="false" column="2" row="3" />
+          <Button id="linestylelb" column="1" row="0" />
+          <Input id="lineposlb" Type="Select" focusable="false" column="3" row="3" />
+          <Input id="lineheightmf" Type="Number" column="1" row="3" />
+          <Input id="linewidthmf" Type="Number" column="1" row="1" />
+          <Button id="colorlb" column="1" row="2" />
+          <Text id="linecolorft" text="Color:" focusable="false" column="0" row="2" />
+        </Container>
+        <Text id="label11" text="Separator Line" focusable="false" />
+      </Container>
+      <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+        <Container id="frame2" Type="Vertical Stack" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid4" Type="Grid" cell-gap="6" horizontal-alignment="Left" focusable="false" role="Grow">
+            <Container id="grid5" Type="Grid" cell-gap="12" vertical-alignment="Center" focusable="false" column="0" row="0">
+              <Text id="label3" text="Columns:" focusable="false" column="0" row="0" />
+              <Input id="colsnf" Type="Number" column="1" row="0" />
+            </Container>
+            <Container id="grid6" Type="Grid" cell-gap="6" focusable="false" column="0" row="1" column-span="2">
+              <Input id="balance" Type="Checkbox" text="Evenly distribute contents to all columns" column="0" row="1" />
+              <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" column="0" row="0">
+                <Input id="applytolb" Type="Select" focusable="false" column="1" row="0" />
+                <Text id="applytoft" text="Apply to:" focusable="false" column="0" row="0" />
+              </Container>
+              <Container id="grid7" Type="Grid" cell-gap="6" focusable="false" column="0" row="2">
+                <Text id="textdirectionft" text="Text direction:" focusable="false" column="0" row="0" />
+                <Input id="textdirectionlb" Type="Select" focusable="false" column="1" row="0" />
+              </Container>
+            </Container>
+            <Container id="iconview" Type="Wrap" column="1" row="0" />
+          </Container>
+          <Text id="label2" text="Settings" focusable="false" />
+        </Container>
+        <Container id="grid1" Type="Grid" focusable="false" column="1" row="0">
+          <Container id="pageexample" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" />
+          <Container id="frameexample" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="1" row="0" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,52 @@
+<Cui id="ui-customanimationfragment" product="9-1" version="1">
+  <Page id="ui-customanimationfragment-root">
+    <Container id="menu" Type="Menu">
+      <Button id="25" Type="Menu Item" content="Tiny" text="Tiny" />
+      <Button id="50" Type="Menu Item" content="Smaller" text="Smaller" />
+      <Button id="150" Type="Menu Item" content="Larger" text="Larger" />
+      <Button id="400" Type="Menu Item" content="Extra Large" text="Extra Large" />
+    </Container>
+    <Container id="menu1" Type="Menu">
+      <Input id="90" Type="Checkbox" text="Quarter Spin" />
+      <Input id="180" Type="Checkbox" text="Half Spin" />
+      <Input id="360" Type="Checkbox" text="Full Spin" />
+      <Input id="720" Type="Checkbox" text="Two Spins" />
+      <Button id="menuitem1" Type="Menu Item" />
+      <Input id="clockwise" Type="Checkbox" text="Clockwise" />
+      <Input id="counterclock" Type="Checkbox" text="Counter-clockwise" />
+    </Container>
+    <Container id="menu2" Type="Menu" />
+    <Container id="menu3" Type="Menu">
+      <Input id="25scale" Type="Checkbox" text="Tiny" />
+      <Input id="50scale" Type="Checkbox" text="Smaller" />
+      <Input id="150scale" Type="Checkbox" text="Larger" />
+      <Input id="400scale" Type="Checkbox" text="Extra Large" />
+      <Button id="menuitem2" Type="Menu Item" />
+      <Input id="hori" Type="Checkbox" text="Horizontal" />
+      <Input id="vert" Type="Checkbox" text="Vertical" />
+      <Input id="both" Type="Checkbox" text="Both" />
+    </Container>
+    <Container id="menu4" Type="Menu">
+      <Input id="bold" Type="Checkbox" text="Bold" />
+      <Input id="italic" Type="Checkbox" text="Italic" />
+      <Input id="underline" Type="Checkbox" text="Underlined" />
+    </Container>
+    <Container id="effect-fragment" Type="Vertical Stack" cell-gap="3" role="Grow">
+      <Input id="combo" Type="Select" role="Grow" />
+      <Button id="color" role="Grow" />
+      <Input id="fontname" Type="Select" role="Grow">
+        <Input id="input" Type="Text" />
+      </Input>
+      <Input id="fontsize" Type="Number" role="Grow" />
+      <Button id="fontsizemenu" />
+      <Input id="rotate" Type="Number" role="Grow" />
+      <Button id="rotatemenu" />
+      <Input id="transparent" Type="Number" role="Grow" />
+      <Button id="transparentmenu" />
+      <Input id="scale" Type="Number" role="Grow" />
+      <Button id="scalemenu" />
+      <Input id="entry" Type="Text" role="Grow" />
+      <Button id="entrymenu" />
+    </Container>
+  </Page>
+</Cui>

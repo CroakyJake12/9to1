@@ -1,0 +1,67 @@
+<Cui id="dialogs-create-archive-dialog" product="9-1" version="1">
+  <Page id="dialogs-create-archive-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="scrollviewer" Type="Vertical Stack">
+        <Container id="stackpanel" Type="Vertical Stack" width="440">
+          <Container id="grid" Type="Grid" padding="12" background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Container id="grid.columndefinitions" Type="Vertical Stack">
+              <Text id="columndefinition" />
+              <Text id="columndefinition-2" />
+            </Container>
+            <Text id="textblock" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=Name}" />
+            <Input id="textbox" Type="Text" column="1" width="260" placeholder-text="{helpers:ResourceString Name=EnterName}" text="{Binding ViewModel.FileName}" />
+          </Container>
+          <Container id="grid-2" Type="Grid" padding="12" background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Container id="grid.columndefinitions-2" Type="Vertical Stack">
+              <Text id="columndefinition-3" />
+              <Text id="columndefinition-4" />
+            </Container>
+            <Container id="grid.rowdefinitions" Type="Vertical Stack">
+              <Text id="rowdefinition" />
+              <Text id="rowdefinition-2" />
+              <Text id="rowdefinition-3" />
+              <Text id="rowdefinition-4" />
+              <Text id="rowdefinition-5" />
+              <Text id="rowdefinition-6" />
+            </Container>
+            <Text id="textblock-2" row="0" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=Format}" />
+            <Input id="combobox" Type="Select" row="0" column="1" width="160" />
+            <Text id="textblock-3" row="1" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=CompressionLevel}" />
+            <Input id="combobox-2" Type="Select" row="1" column="1" width="160" horizontal-alignment="Right" />
+            <Text id="textblock-4" row="2" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=SplittingSize}" />
+            <Input id="combobox-3" Type="Select" row="2" column="1" width="160" horizontal-alignment="Right" is-enabled="{Binding ViewModel.CanSplit}">
+              <Container id="combobox.itemtemplate" Type="Vertical Stack" />
+            </Input>
+            <Text id="textblock-5" row="3" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=DictionarySize}" />
+            <Input id="combobox-4" Type="Select" row="3" column="1" width="160" horizontal-alignment="Right" is-enabled="{Binding ViewModel.CanSplit}" />
+            <Text id="textblock-6" row="4" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=WordSize}" />
+            <Input id="combobox-5" Type="Select" row="4" column="1" width="160" horizontal-alignment="Right" is-enabled="{Binding ViewModel.CanSplit}" />
+            <Text id="textblock-7" row="5" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=CPUThreads}" />
+            <Input id="numberbox" Type="Number" row="5" column="1" horizontal-alignment="Right" accessible-name="{helpers:ResourceString Name=CPUThreads}" />
+          </Container>
+          <Container id="expander" Type="Vertical Stack" horizontal-alignment="Stretch">
+            <Text id="expander-label" text="{helpers:ResourceString Name=Encryption}" />
+            <Container id="expander.content" Type="Vertical Stack">
+              <Container id="grid-3" Type="Grid" width="400">
+                <Container id="grid.columndefinitions-3" Type="Vertical Stack">
+                  <Text id="columndefinition-5" />
+                  <Text id="columndefinition-6" />
+                </Container>
+                <Text id="textblock-8" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=Password}" />
+                <Input id="passwordbox" Type="Text" column="1" width="260" placeholder-text="{helpers:ResourceString Name=Password}" />
+              </Container>
+            </Container>
+          </Container>
+          <Container id="grid-4" Type="Grid" padding="12" background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Container id="grid.rowdefinitions-2" Type="Vertical Stack">
+              <Text id="rowdefinition-7" />
+              <Text id="rowdefinition-8" />
+            </Container>
+            <Text id="textblock-9" row="0" font-size="12" foreground="{ThemeResource TextFillColorSecondaryBrush}" text="{Binding ViewModel.EstimatedMemoryText}" />
+            <Text id="textblock-10" row="1" font-size="12" foreground="{ThemeResource TextFillColorSecondaryBrush}" text="{Binding ViewModel.AvailableMemoryText}" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,22 @@
+<Cui id="ui-optcomparison" product="9-1" version="1">
+  <Container id="opt-comparison" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="auto" Type="Radio" text="Auto" checked="true" column="1" row="0" />
+        <Input id="byword" Type="Radio" text="By word" column="1" row="1" />
+        <Input id="bycharacter" Type="Radio" text="By character" column="1" row="2" />
+        <Image id="lockcomparemode" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      </Container>
+      <Text id="label1" text="Compare Documents" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="use-rsid" Type="Checkbox" text="Take it into account when comparing" column="1" row="0" />
+        <Input id="store-rsid" Type="Checkbox" text="Store it when changing the document" column="1" row="1" />
+        <Image id="lockuse-rsid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockstore-rsid" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      </Container>
+      <Text id="setting" text="Random number to improve accuracy of document comparison" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

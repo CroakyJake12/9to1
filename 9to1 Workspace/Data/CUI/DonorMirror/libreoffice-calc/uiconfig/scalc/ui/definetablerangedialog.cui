@@ -1,0 +1,23 @@
+<Cui id="ui-definetablerangedialog" product="9-1" version="1">
+  <Container id="tablerangedialog" Type="Vertical Stack" focusable="false" role="Grow">
+    <Text id="tablerangedialog-label" text="Create Table" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" horizontal-alignment="Center" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="rangeframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="box3" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+            <Input id="assign" Type="Text" role="Grow" />
+            <Button id="assgnrb" focusable="false" />
+          </Container>
+          <Text id="range" text="Range" focusable="false" />
+        </Container>
+        <Container id="options" Type="Vertical Stack" cell-gap="3" focusable="false" role="Grow">
+          <Input id="bheaders" Type="Checkbox" text="Contains column labels" checked="true" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,20 @@
+<Cui id="ui-mergeconnectdialog" product="9-1" version="1">
+  <Container id="merge-connect-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="merge-connect-dialog-label" text="Data Source Connection" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Input id="existing" Type="Radio" text="Use existing" checked="true" column="0" row="0" />
+          <Input id="new" Type="Radio" text="Create new connection" column="0" row="1" />
+          <Text id="label2" text="Fields are used to personalize form letters. The fields are placeholders for data from a data source, such as a database. The fields in the form letter must be connected to the data source." text-wrapping="Wrap" focusable="false" column="0" row="2" />
+        </Container>
+        <Text id="label1" text="Connect" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,49 @@
+<Cui id="ui-textgridpage" product="9-1" version="1">
+  <Container id="text-grid-page" Type="Vertical Stack" cell-gap="12" focusable="false">
+    <Container id="frame-grid" Type="Vertical Stack" focusable="false">
+      <Container id="box1" Type="Vertical Stack" focusable="false">
+        <Container id="grid-grid" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="radio-rb-nogrid" Type="Radio" text="No grid" checked="true" column="0" row="0" />
+          <Input id="radio-rb-linesgrid" Type="Radio" text="Grid (lines only)" column="0" row="1" />
+          <Input id="radio-rb-charsgrid" Type="Radio" text="Grid (lines and characters)" column="0" row="2" />
+          <Input id="check-cb-snaptochars" Type="Checkbox" text="Snap to characters" horizontal-alignment="Left" column="0" row="3" />
+        </Container>
+        <Container id="drawingarea-wn-example" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" role="Grow" />
+      </Container>
+      <Text id="label-grid" text="Grid" focusable="false" />
+    </Container>
+    <Container id="frame-fl-layout" Type="Vertical Stack" horizontal-alignment="Left" focusable="false">
+      <Container id="box4" Type="Vertical Stack" cell-gap="6" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="18" focusable="false">
+          <Container id="grid4" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" column="0" row="0">
+            <Text id="label-ft-linesperpage" text="Lines per page:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+            <Input id="spin-nf-linesperpage" Type="Number" column="1" row="0" />
+            <Text id="label-ft-linerange" text="(1-48)" horizontal-alignment="Left" focusable="false" column="2" row="0" />
+            <Text id="label-ft-charsperline" text="Characters per line:" horizontal-alignment="Left" focusable="false" column="0" row="1" />
+            <Input id="spin-nf-charsperline" Type="Number" column="1" row="1" />
+            <Text id="label-ft-charrange" text="(1-45)" horizontal-alignment="Left" focusable="false" column="2" row="1" />
+          </Container>
+          <Container id="grid3" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" column="1" row="0">
+            <Text id="label-ft-textsize" text="Max. base text size:" horizontal-alignment="Left" focusable="false" column="0" row="0" />
+            <Input id="spin-mf-textsize" Type="Number" column="1" row="0" />
+            <Text id="label-ft-rubysize" text="Max. Ruby text size:" horizontal-alignment="Left" focusable="false" column="0" row="1" />
+            <Input id="spin-mf-rubysize" Type="Number" column="1" row="1" />
+            <Text id="label-ft-charwidth" text="Character width:" horizontal-alignment="Left" focusable="false" column="0" row="2" />
+            <Input id="spin-mf-charwidth" Type="Number" column="1" row="2" />
+          </Container>
+        </Container>
+        <Input id="check-cb-rubybelow" Type="Checkbox" text="Ruby text below/left from base text" horizontal-alignment="Left" />
+      </Container>
+      <Text id="label-grid-layout" text="Grid Layout" focusable="false" />
+    </Container>
+    <Container id="frame-fl-display" Type="Vertical Stack" focusable="false">
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+        <Input id="check-cb-display" Type="Checkbox" text="Display grid" horizontal-alignment="Left" column="0" row="0" />
+        <Input id="check-cb-print" Type="Checkbox" text="Print grid" horizontal-alignment="Left" column="0" row="1" />
+        <Text id="label-ft-color" text="Grid color:" horizontal-alignment="Right" focusable="false" column="1" row="0" />
+        <Button id="list-lb-color" horizontal-alignment="Left" vertical-alignment="Center" column="2" row="0" />
+      </Container>
+      <Text id="label-fl-display" text="Grid Display" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

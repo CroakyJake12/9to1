@@ -1,0 +1,17 @@
+<Cui id="ui-optimalrowheightdialog" product="9-1" version="1">
+  <Container id="optimal-row-height-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="optimal-row-height-dialog-label" text="Optimal Row Height" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid2" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" role="Grow">
+        <Text id="label1" text="Add:" focusable="false" column="0" row="0" />
+        <Input id="value" Type="Number" role="Grow" column="1" row="0" />
+        <Input id="default" Type="Checkbox" text="Default value" column="1" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

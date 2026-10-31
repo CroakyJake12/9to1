@@ -1,0 +1,80 @@
+<Cui id="content-common-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="cmd-copy" command="cmd_copy" />
+    <Action name="cmd-select-all" command="cmd_selectAll" />
+  </Actions>
+  <Page id="content-common-dialog-root">
+    <Container id="commonDialogWindow" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="link-6" Type="Vertical Stack" />
+        <Container id="style" Type="Vertical Stack" />
+        <Container id="link-7" Type="Vertical Stack" />
+        <Container id="link-8" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://global/content/adjustableTitle.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack">
+          <Image id="script-icon-2" source="chrome://global/content/commonDialog.js" />
+        </Container>
+        <Container id="script-3" Type="Vertical Stack">
+          <Image id="script-icon-3" source="chrome://messenger/content/globalOverlay.js" />
+        </Container>
+        <Container id="script-4" Type="Vertical Stack">
+          <Image id="script-icon-4" source="chrome://global/content/editMenuOverlay.js" />
+        </Container>
+        <Container id="script-5" Type="Vertical Stack">
+          <Image id="script-icon-5" source="chrome://global/content/customElements.js" />
+        </Container>
+        <Container id="script-6" Type="Vertical Stack">
+          <Image id="script-icon-6" source="chrome://messenger/content/dialogShadowDom.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="commonDialog" Type="Vertical Stack">
+          <Container id="selectEditMenuItems" Type="Vertical Stack">
+            <Container id="command" Type="Vertical Stack" />
+            <Container id="command-2" Type="Vertical Stack" />
+          </Container>
+          <Container id="contentAreaContextSet" Type="Vertical Stack">
+            <Container id="contentAreaContextMenu" Type="Menu">
+              <Button id="context-copy" action="cmd-copy" />
+              <Button id="context-selectall" action="cmd-select-all" />
+            </Container>
+          </Container>
+          <Container id="div" Type="Vertical Stack">
+            <Container id="dialogGrid" Type="Vertical Stack">
+              <Container id="infoRow" Type="Vertical Stack">
+                <Container id="iconContainer" Type="Vertical Stack">
+                  <Image id="img" />
+                </Container>
+                <Container id="infoContainer" Type="Vertical Stack">
+                  <Text id="infoTitle" />
+                  <Text id="infoBody" />
+                </Container>
+              </Container>
+              <Container id="loginContainer" Type="Vertical Stack">
+                <Text id="loginLabel" />
+                <Input id="input" Type="Text" />
+              </Container>
+              <Container id="password1Container" Type="Vertical Stack">
+                <Text id="password1Label" />
+                <Input id="input-2" Type="Text" />
+              </Container>
+              <Container id="checkboxContainer" Type="Vertical Stack">
+                <Container id="div-2" Type="Vertical Stack" />
+                <Input id="checkbox" Type="Checkbox" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

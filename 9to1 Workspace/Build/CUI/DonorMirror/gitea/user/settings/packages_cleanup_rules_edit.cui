@@ -1,0 +1,5 @@
+<Cui id="settings-packages-cleanup-rules-edit" product="9-1" version="1">
+  <Page id="settings-packages-cleanup-rules-edit-root">
+    <Container id="div" Type="Vertical Stack" />
+  </Page>
+</Cui>

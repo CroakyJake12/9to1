@@ -1,0 +1,11 @@
+<Cui id="settings-labels" product="9-1" version="1">
+  <Page id="settings-labels-root">
+    <Container id="div" Type="Vertical Stack">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack" />
+        <Button id="button" />
+      </Container>
+      <Container id="div-4" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

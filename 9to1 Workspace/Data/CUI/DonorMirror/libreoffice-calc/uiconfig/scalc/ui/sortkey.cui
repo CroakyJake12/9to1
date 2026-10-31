@@ -1,0 +1,11 @@
+<Cui id="ui-sortkey" product="9-1" version="1">
+  <Container id="sort-key-frame" Type="Vertical Stack" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+      <Input id="sortlb" Type="Select" width="600" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2" />
+      <Input id="up" Type="Radio" text="Ascending" checked="true" column="2" row="0" />
+      <Input id="down" Type="Radio" text="Descending" column="2" row="1" />
+      <Text id="lb-col-row" text="Column/Row:" focusable="false" column="0" row="0" row-span="2" />
+    </Container>
+    <Text id="sortft" text="Sort Key" focusable="false" />
+  </Container>
+</Cui>

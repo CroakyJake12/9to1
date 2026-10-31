@@ -1,0 +1,42 @@
+<Cui id="ui-outlinenumberingpage" product="9-1" version="1">
+  <Container id="outline-numbering-page" Type="Grid" cell-gap="6" focusable="false">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="0">
+      <Container id="container" Type="Vertical Stack" width="50">
+        <Container id="level" Type="Vertical Stack" />
+      </Container>
+      <Text id="label1" text="Level" focusable="false" />
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow" column="2" row="0">
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="preview" Type="Overlay" width="150" height="260" focusable="false" role="Grow" />
+      </Container>
+      <Text id="label17" text="Preview" focusable="false" />
+    </Container>
+    <Container id="container-2" Type="Grid" cell-gap="6" focusable="false" column="1" row="0">
+      <Container id="frame2" Type="Vertical Stack" focusable="false" column="0" row="0">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="label4" text="Number:" focusable="false" column="0" row="0" />
+          <Input id="numbering" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+          <Text id="label10" text="Start at:" focusable="false" column="0" row="1" />
+          <Input id="startat" Type="Number" role="Grow" column="1" row="1" />
+          <Text id="label3" text="Paragraph style:" focusable="false" column="0" row="2" />
+          <Input id="style" Type="Select" tooltip="Select the paragraph style to assign to the selected outline level. Select [None] to skip the outline level." focusable="false" role="Grow" column="1" row="2" />
+          <Text id="label5" text="Character style:" focusable="false" column="0" row="3" />
+          <Input id="charstyle" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+          <Text id="sublevelsft" text="Show sublevels:" focusable="false" column="0" row="4" />
+          <Input id="sublevelsnf" Type="Number" Value="1" is-enabled="false" role="Grow" column="1" row="4" />
+        </Container>
+        <Text id="label2" text="Numbering" focusable="false" />
+      </Container>
+      <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="1">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="prefix" Type="Text" role="Grow" column="1" row="0" />
+          <Input id="suffix" Type="Text" role="Grow" column="1" row="1" />
+          <Text id="label8" text="Before:" focusable="false" column="0" row="0" />
+          <Text id="label9" text="After:" focusable="false" column="0" row="1" />
+        </Container>
+        <Text id="label6" text="Separator" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

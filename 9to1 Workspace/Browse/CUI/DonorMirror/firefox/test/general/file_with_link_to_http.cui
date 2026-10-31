@@ -1,0 +1,13 @@
+<Cui id="general-file-with-link-to-http" product="9-1" version="1">
+  <Page id="general-file-with-link-to-http-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Button id="linkToExample" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

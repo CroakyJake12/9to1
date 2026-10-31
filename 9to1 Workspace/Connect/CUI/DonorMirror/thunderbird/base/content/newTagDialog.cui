@@ -1,0 +1,45 @@
+<Cui id="content-new-tag-dialog" product="9-1" version="1">
+  <Page id="content-new-tag-dialog-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/globalOverlay.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack">
+          <Image id="script-icon-2" source="chrome://global/content/editMenuOverlay.js" />
+        </Container>
+        <Container id="script-3" Type="Vertical Stack">
+          <Image id="script-icon-3" source="chrome://messenger/content/dialogShadowDom.js" />
+        </Container>
+        <Container id="script-4" Type="Vertical Stack">
+          <Image id="script-icon-4" source="chrome://messenger/content/newTagDialog.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="dialog" Type="Vertical Stack">
+          <Container id="bundle_messenger" Type="Vertical Stack">
+            <Image id="bundle_messenger-icon" source="chrome://messenger/locale/messenger.properties" />
+          </Container>
+          <Container id="box" Type="Vertical Stack">
+            <Text id="nameLabel" />
+            <Container id="hbox" Type="Horizontal Stack">
+              <Input id="name" />
+            </Container>
+            <Container id="hbox-2" Type="Horizontal Stack" vertical-alignment="Center">
+              <Text id="colorLabel" />
+            </Container>
+            <Input id="tagColorPicker" />
+          </Container>
+          <Container id="separator" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

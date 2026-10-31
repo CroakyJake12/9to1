@@ -1,0 +1,11 @@
+<Cui id="favicons-file-favicon-redirect" product="9-1" version="1">
+  <Page id="favicons-file-favicon-redirect-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

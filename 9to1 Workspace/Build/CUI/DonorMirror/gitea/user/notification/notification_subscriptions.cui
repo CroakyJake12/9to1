@@ -1,0 +1,48 @@
+<Cui id="notification-notification-subscriptions" product="9-1" version="1">
+  <Page id="notification-notification-subscriptions-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="div-3" Type="Vertical Stack">
+          <Button id="a" />
+          <Button id="a-2" />
+        </Container>
+        <Container id="div-4" Type="Vertical Stack">
+          <Container id="div-5" Type="Vertical Stack">
+            <Container id="div-6" Type="Vertical Stack">
+              <Container id="div-7" Type="Vertical Stack">
+                <Button id="a-3" />
+                <Button id="a-4" />
+                <Button id="a-5" />
+              </Container>
+            </Container>
+            <Container id="div-8" Type="Vertical Stack">
+              <Container id="div-9" Type="Vertical Stack">
+                <Text id="span" text="{Binding Unresolved}" />
+                <Container id="div-10" Type="Vertical Stack">
+                  <Button id="a-6" />
+                  <Button id="a-7" />
+                  <Button id="a-8" />
+                </Container>
+              </Container>
+              <Container id="div-11" Type="Vertical Stack">
+                <Text id="span-2" text="{Binding Unresolved}" />
+                <Container id="div-12" Type="Vertical Stack">
+                  <Button id="a-9" />
+                  <Button id="a-10" />
+                  <Button id="a-11" />
+                  <Button id="a-12" />
+                  <Button id="a-13" />
+                  <Button id="a-14" />
+                  <Button id="a-15" />
+                  <Button id="a-16" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+          <Container id="div-13" Type="Vertical Stack" />
+          <Container id="div-14" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

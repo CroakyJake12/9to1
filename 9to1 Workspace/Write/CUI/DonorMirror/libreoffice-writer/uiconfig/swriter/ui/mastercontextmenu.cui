@@ -1,0 +1,24 @@
+<Cui id="ui-mastercontextmenu" product="9-1" version="1">
+  <Container id="navmenu" Type="Menu" focusable="false">
+    <Button id="update" Type="Menu Item" content="Update" text="Update" focusable="false">
+      <Container id="updatemenu" Type="Menu" focusable="false">
+        <Button id="updatesel" Type="Menu Item" content="Selection" text="Selection" focusable="false" />
+        <Button id="updateindex" Type="Menu Item" content="Indexes" text="Indexes" focusable="false" />
+        <Button id="updatelinks" Type="Menu Item" content="Links" text="Links" focusable="false" />
+        <Button id="updateall" Type="Menu Item" content="All" text="All" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="editcontent" Type="Menu Item" content="Edit" text="Edit" focusable="false" />
+    <Button id="editlink" Type="Menu Item" content="Edit link" text="Edit link" focusable="false" />
+    <Button id="insert" Type="Menu Item" content="Insert" text="Insert" focusable="false">
+      <Container id="insertmenu" Type="Menu" focusable="false">
+        <Button id="insertindex" Type="Menu Item" content="Index" text="Index" focusable="false" />
+        <Button id="insertfile" Type="Menu Item" content="File" text="File" focusable="false" />
+        <Button id="insertnewfile" Type="Menu Item" content="New Document" text="New Document" focusable="false" />
+        <Button id="inserttext" Type="Menu Item" content="Text" text="Text" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="menuitem3" Type="Menu Item" focusable="false" />
+    <Button id="deleteentry" Type="Menu Item" content="Delete" text="Delete" focusable="false" />
+  </Container>
+</Cui>

@@ -1,0 +1,72 @@
+<Cui id="ui-optimpressgeneralpage" product="9-1" version="1">
+  <Container id="opt-save-page" Type="Vertical Stack" focusable="false">
+    <Container id="box-left" Type="Vertical Stack" focusable="false">
+      <Container id="newdocumentframe" Type="Vertical Stack" focusable="false">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Image id="lockstartwithwizard" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="startwithwizard" Type="Checkbox" text="Start with Template Selection" column="1" row="0" />
+        </Container>
+        <Text id="newdoclbl" text="New Document" focusable="false" />
+      </Container>
+      <Container id="frame4" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Image id="lockcopywhenmove" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="copywhenmove" Type="Checkbox" text="Copy when moving" horizontal-alignment="Left" column="1" row="0" />
+          <Image id="lockbackgroundback" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Input id="backgroundback" Type="Checkbox" text="Use background cache" horizontal-alignment="Left" column="1" row="1" />
+          <Image id="lockobjalwymov" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+          <Input id="objalwymov" Type="Checkbox" text="Objects always moveable" horizontal-alignment="Left" column="1" row="2" />
+          <Image id="lockdistortcb" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+          <Input id="distortcb" Type="Checkbox" text="Do not distort objects in curve" horizontal-alignment="Left" column="1" row="3" />
+          <Image id="lockunits" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+          <Container id="grid4" Type="Grid" cell-gap="12" focusable="false" column="1" row="4">
+            <Text id="label6" text="Unit of measurement:" focusable="false" column="0" row="0" />
+            <Input id="units" Type="Select" focusable="false" column="1" row="0" />
+          </Container>
+          <Image id="locktabstop" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+          <Container id="grid8" Type="Grid" cell-gap="12" focusable="false" column="1" row="5">
+            <Text id="tabstoplabel" text="Tab stops:" focusable="false" column="0" row="0" />
+            <Input id="metric-fields" Type="Number" text="5,00" Value="5" column="1" row="0" />
+          </Container>
+        </Container>
+        <Text id="label4" text="Settings" focusable="false" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid6" Type="Grid" cell-gap="6" focusable="false">
+          <Image id="lockcb-compatibility" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="cb-compatibility" Type="Checkbox" text="Add spacing between paragraphs and tables" column="1" row="0" />
+        </Container>
+        <Text id="label1" text="Compatibility" focusable="false" />
+      </Container>
+    </Container>
+    <Container id="box-right" Type="Vertical Stack" focusable="false">
+      <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Image id="lockqickedit" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Input id="qickedit" Type="Checkbox" text="Allow quick editing" horizontal-alignment="Left" column="1" row="0" />
+          <Image id="locktextselected" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+          <Input id="textselected" Type="Checkbox" text="Only text area selectable" column="1" row="1" />
+        </Container>
+        <Text id="label2" text="Text Objects" focusable="false" />
+      </Container>
+      <Container id="scaleframe" Type="Vertical Stack" focusable="false">
+        <Container id="grid7" Type="Grid" cell-gap="6" focusable="false">
+          <Image id="lockscale-box" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+          <Text id="label8" text="Drawing scale:" focusable="false" column="1" row="0" />
+          <Input id="scale-box" Type="Select" focusable="false" column="2" row="0">
+            <Input id="input" Type="Text" horizontal-alignment="Left" focusable="false" />
+          </Input>
+          <Text id="widthlbl" text="Page width:" focusable="false" column="1" row="1" />
+          <Input id="metric-width-fields" Type="Number" text="0,00" column="2" row="1" />
+          <Text id="heightlbl" text="Page height:" focusable="false" column="3" row="1" />
+          <Input id="metric-height-fields" Type="Number" text="0,00" column="4" row="1" />
+          <Text id="info1" text="info1" focusable="false" column="1" row="2" />
+          <Input id="metric-info1-fields" Type="Number" text="0" column="2" row="2" />
+          <Text id="info2" text="info2" focusable="false" column="3" row="2" />
+          <Input id="metric-info2-fields" Type="Number" text="0" column="4" row="2" />
+        </Container>
+        <Text id="label5" text="Scale" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

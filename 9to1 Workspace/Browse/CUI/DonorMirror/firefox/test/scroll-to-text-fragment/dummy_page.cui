@@ -1,0 +1,13 @@
+<Cui id="scroll-to-text-fragment-dummy-page" product="9-1" version="1">
+  <Page id="scroll-to-text-fragment-dummy-page-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Text id="p" text="Dummy test page" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,14 @@
+<Cui id="ui-fielddialog" product="9-1" version="1">
+  <Container id="field-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="field-dialog-label" text="Fields" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="reset" content="Reset" text="Reset" />
+        <Button id="ok" content="Insert" text="Insert" />
+        <Button id="cancel" content="Close" text="Close" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,62 @@
+<Cui id="ui-customanimationspanel" product="9-1" version="1">
+  <Page id="ui-customanimationspanel-root">
+    <Image id="image1" focusable="false" source="sfx2/res/symphony/sidebar-property-small.png" />
+    <Image id="image-add" focusable="false" source="cmd/scadd.png" />
+    <Image id="image-down" focusable="false" source="cmd/scmovedown.png" />
+    <Image id="image-play" focusable="false" source="sd/res/playblue16.png" />
+    <Image id="image-remove" focusable="false" source="cmd/sclistremove.png" />
+    <Image id="image-up" focusable="false" source="cmd/scmoveup.png" />
+    <Container id="custom-animations-panel" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="container" Type="Vertical Stack" role="Grow">
+        <Container id="container-2" Type="Vertical Stack" focusable="false">
+          <Container id="bx-applied" Type="Vertical Stack" focusable="false" role="Grow">
+            <Container id="container-3" Type="Vertical Stack" role="Grow">
+              <Container id="custom-animation-list" Type="Vertical Stack" width="260" role="Grow" />
+            </Container>
+            <Container id="custom-animation-label-parent" Type="Vertical Stack" role="Grow">
+              <Container id="container-4" Type="Vertical Stack" focusable="false">
+                <Text id="custom-animation-label" text="First select the slide element and then click 'Add' to add an animation effect." width="260" text-wrapping="Wrap" focusable="false" role="Grow" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="container-5" Type="Vertical Stack" role="Grow">
+        <Container id="container-6" Type="Vertical Stack" focusable="false">
+          <Container id="container-7" Type="Grid" cell-gap="3" focusable="false">
+            <Text id="lb-effect" text="Effects" focusable="false" column="0" row="0" column-span="3" />
+            <Container id="box2" Type="Vertical Stack" cell-gap="3" focusable="false" column="0" row="1" column-span="3">
+              <Button id="add-effect" content="Add" text="Add" tooltip="Add Effect" />
+              <Button id="remove-effect" tooltip="Remove Effect" />
+              <Button id="move-up" tooltip="Move Up" />
+              <Button id="move-down" tooltip="Move Down" />
+            </Container>
+            <Text id="categorylabel" text="Category:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+            <Input id="categorylb" Type="Select" column="1" row="2" column-span="2" />
+            <Text id="effectlabel" text="Effect:" horizontal-alignment="Right" vertical-alignment="Top" focusable="false" column="0" row="3" />
+            <Container id="container-8" Type="Vertical Stack" min-width="1" role="Grow" column="1" row="3" column-span="2">
+              <Container id="effect-list" Type="Vertical Stack" role="Grow" />
+            </Container>
+            <Text id="effect-label" text="Options" focusable="false" role="Grow" column="0" row="4" column-span="3" />
+            <Text id="start-effect" text="Start:" horizontal-alignment="Right" focusable="false" column="0" row="5" />
+            <Input id="start-effect-list" Type="Select" role="Grow" column="1" row="5" column-span="2" />
+            <Text id="effect-property" text="Direction:" horizontal-alignment="Right" focusable="false" column="0" row="6" />
+            <Text id="effect-duration" text="Duration:" horizontal-alignment="Right" focusable="false" column="0" row="7" />
+            <Input id="anim-duration" Type="Number" role="Grow" column="1" row="7" column-span="2" />
+            <Text id="delay-label" text="Delay:" horizontal-alignment="Right" focusable="false" column="0" row="8" />
+            <Input id="delay-value" Type="Number" role="Grow" column="1" row="8" column-span="2" />
+            <Container id="separator1" Type="Horizontal Stack" focusable="false" column="0" row="9" column-span="3" />
+            <Input id="auto-preview" Type="Checkbox" text="Automatic Preview" column="0" row="10" column-span="2" />
+            <Button id="play" content="Play" text="Play" tooltip="Preview Effect" column="2" row="10" />
+            <Text id="box1-label" text="Animation Deck" focusable="false" column="0" row="11" column-span="3" />
+            <Text id="custom-animation-list-label" text="Animation List" focusable="false" column="0" row="12" column-span="3" />
+            <Container id="dirspan" Type="Vertical Stack" focusable="false" column="1" row="6" column-span="2">
+              <Container id="placeholder" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" />
+              <Button id="more-properties" tooltip="Options" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

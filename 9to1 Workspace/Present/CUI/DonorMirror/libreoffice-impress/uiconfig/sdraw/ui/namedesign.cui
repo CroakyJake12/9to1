@@ -1,0 +1,15 @@
+<Cui id="ui-namedesign" product="9-1" version="1">
+  <Container id="name-design-dialog" Type="Vertical Stack" modal="True">
+    <Text id="name-design-dialog-label" text="Name HTML Design" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" role="Grow">
+        <Input id="entry" Type="Text" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

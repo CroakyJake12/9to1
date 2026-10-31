@@ -1,0 +1,5 @@
+<Cui id="sidebar-wip-switch" product="9-1" version="1">
+  <Page id="sidebar-wip-switch-root">
+    <Button id="a" />
+  </Page>
+</Cui>

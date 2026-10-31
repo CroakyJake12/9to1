@@ -1,0 +1,30 @@
+<Cui id="ui-pagenumberdlg" product="9-1" version="1">
+  <Container id="page-number-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="page-number-dialog-label" text="Page Number Wizard" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="hbox" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="left-vbox" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Text id="position-label" text="Position:" horizontal-alignment="Left" focusable="false" />
+          <Input id="position-combo" Type="Select" focusable="false" checked="true" />
+          <Text id="alignment-label" text="Alignment:" horizontal-alignment="Left" focusable="false" />
+          <Input id="alignment-combo" Type="Select" focusable="false" />
+          <Input id="mirror-checkbox" Type="Checkbox" text="Mirror on even pages" />
+          <Input id="pagetotal-checkbox" Type="Checkbox" text="Include page total" />
+          <Input id="pagerangetotal-checkbox" Type="Checkbox" text="Include page total in page numbering range" />
+          <Input id="fitintoexistingmargins-checkbox" Type="Checkbox" text="Fit into existing margins" />
+          <Text id="numfmt-label" text="Page numbers:" horizontal-alignment="Left" focusable="false" />
+          <Input id="numfmtlb" Type="Select" focusable="false" />
+        </Container>
+        <Container id="right-vbox" Type="Vertical Stack" focusable="false">
+          <Text id="preview-label" text="Preview" horizontal-alignment="Left" focusable="false" />
+          <Image id="preview-image" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

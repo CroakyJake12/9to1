@@ -1,0 +1,31 @@
+<Cui id="ui-insertscript" product="9-1" version="1">
+  <Page id="ui-insertscript-root">
+    <Image id="image1" source="go-previous" />
+    <Image id="image2" source="go-next" />
+    <Container id="insert-script-dialog" Type="Vertical Stack" modal="True">
+      <Text id="insert-script-dialog-label" text="Insert Script" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+        <Container id="dialog-action-area1" Type="Horizontal Stack">
+          <Container id="grid2" Type="Grid">
+            <Button id="previous" />
+            <Button id="next" />
+          </Container>
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Text id="label1" text="Script type:" />
+          <Input id="scripttype" Type="Text" text="JavaScript" column-span="2" />
+          <Input id="url" Type="Radio" text="URL:" horizontal-alignment="Left" />
+          <Input id="urlentry" Type="Text" role="Grow" />
+          <Button id="browse" content="Browse…" text="Browse…" horizontal-alignment="Right" />
+          <Input id="text" Type="Radio" text="Text:" horizontal-alignment="Left" checked="true" />
+          <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column-span="3">
+            <Input id="textentry" Type="Text" role="Grow" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

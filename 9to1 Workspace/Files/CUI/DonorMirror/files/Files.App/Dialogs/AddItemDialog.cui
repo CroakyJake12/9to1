@@ -1,0 +1,20 @@
+<Cui id="dialogs-add-item-dialog" product="9-1" version="1">
+  <Page id="dialogs-add-item-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack" row-span="4">
+      <Container id="grid" Type="Grid">
+        <Container id="grid.rowdefinitions" Type="Vertical Stack">
+          <Text id="rowdefinition" />
+          <Text id="rowdefinition-2" />
+        </Container>
+        <Container id="grid-2" Type="Grid">
+          <Text id="textblock" text="{helpers:ResourceString Name=AddDialogDescription/Text}" />
+        </Container>
+        <Container id="grid-3" Type="Grid" row="1" horizontal-alignment="Stretch">
+          <Container id="listview" Type="Vertical Stack" width="400">
+            <Container id="listview.itemtemplate" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

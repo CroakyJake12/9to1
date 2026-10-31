@@ -1,0 +1,19 @@
+<Cui id="ui-colorrowdialog" product="9-1" version="1">
+  <Container id="col-or-row-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="col-or-row-dialog-label" text="Copy List" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame" Type="Vertical Stack" focusable="false">
+        <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false">
+          <Input id="columns" Type="Radio" text="Columns" checked="true" />
+          <Input id="rows" Type="Radio" text="Rows" />
+        </Container>
+        <Text id="label" text="List From" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,5 @@
+<Cui id="repo-contributors" product="9-1" version="1">
+  <Page id="repo-contributors-root">
+    <Container id="repo-contributors-chart" Type="Vertical Stack" />
+  </Page>
+</Cui>

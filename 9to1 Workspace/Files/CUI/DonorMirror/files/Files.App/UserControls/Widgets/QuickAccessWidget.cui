@@ -1,0 +1,14 @@
+<Cui id="widgets-quick-access-widget" product="9-1" version="1">
+  <Page id="widgets-quick-access-widget-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="itemsrepeater" Type="Vertical Stack">
+          <Container id="itemsrepeater.layout" Type="Vertical Stack">
+            <Text id="uniformgridlayout" />
+          </Container>
+          <Container id="itemsrepeater.itemtemplate" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

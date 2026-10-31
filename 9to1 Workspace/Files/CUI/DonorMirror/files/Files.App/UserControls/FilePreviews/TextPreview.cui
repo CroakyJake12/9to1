@@ -1,0 +1,15 @@
+<Cui id="file-previews-text-preview" product="9-1" version="1">
+  <Page id="file-previews-text-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="border" Type="Overlay">
+        <Container id="scrollviewer" Type="Vertical Stack">
+          <Text id="richtextblock">
+            <Container id="paragraph" Type="Vertical Stack">
+              <Text id="run" text="{Binding ViewModel.TextValue}" />
+            </Container>
+          </Text>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

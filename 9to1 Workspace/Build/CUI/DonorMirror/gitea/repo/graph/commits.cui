@@ -1,0 +1,20 @@
+<Cui id="graph-commits" product="9-1" version="1">
+  <Page id="graph-commits-root">
+    <Container id="rev-container" Type="Vertical Stack">
+      <Container id="rev-list" Type="Vertical Stack">
+        <Container id="commit-[value]" Type="Horizontal Stack">
+          <Text id="span" />
+          <Text id="span-2" />
+          <Text id="span-3" text="{Binding Unresolved}" />
+          <Text id="span-4">
+            <Button id="a" />
+            <Button id="a-2" />
+            <Button id="a-3" />
+          </Text>
+          <Text id="span-5" text="{Binding Unresolved}" />
+          <Text id="span-6" text="{Binding Unresolved}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

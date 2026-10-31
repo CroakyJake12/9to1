@@ -1,0 +1,5 @@
+<Cui id="ui-navigatorcontextmenu" product="9-1" version="1">
+  <Container id="navmenu" Type="Menu" focusable="false">
+    <Button id="rename" Type="Menu Item" content="Rename" text="Rename" focusable="false" />
+  </Container>
+</Cui>

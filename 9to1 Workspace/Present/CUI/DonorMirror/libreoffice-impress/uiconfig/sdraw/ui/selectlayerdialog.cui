@@ -1,0 +1,18 @@
+<Cui id="ui-selectlayerdialog" product="9-1" version="1">
+  <Container id="select-layer-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="select-layer-dialog-label" text="Select Layer" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="container" Type="Vertical Stack" role="Grow">
+          <Container id="treeview" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Text id="label1" text="Layer" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

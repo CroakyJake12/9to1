@@ -1,0 +1,17 @@
+<Cui id="ui-penpicker" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Container id="container-2" Type="Vertical Stack" width="350" cell-gap="6">
+      <Button id="brush-toggle" role="Grow" />
+      <Button id="shaper-toggle" role="Grow" />
+      <Button id="typewriter-toggle" role="Grow" />
+      <Button id="eraser-toggle" role="Grow" />
+      <Button id="selector-toggle" role="Grow" />
+      <Button id="tools-toggle" role="Grow" />
+    </Container>
+    <Container id="container-3" Type="Horizontal Stack" />
+    <Container id="container-4" Type="Vertical Stack">
+      <Button id="undo-button" is-enabled="false" />
+      <Button id="redo-button" is-enabled="false" />
+    </Container>
+  </Container>
+</Cui>

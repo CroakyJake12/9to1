@@ -1,0 +1,11 @@
+<Cui id="file-previews-code-preview" product="9-1" version="1">
+  <Page id="file-previews-code-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="border" Type="Overlay">
+        <Container id="scrollviewer" Type="Vertical Stack">
+          <Text id="richtextblock" font-family="Consolas" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

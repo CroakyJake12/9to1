@@ -1,0 +1,14 @@
+<Cui id="permissions-browser-autoplay-blocked" product="9-1" version="1">
+  <Page id="permissions-browser-autoplay-blocked-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="audio" Type="Vertical Stack">
+          <Container id="source" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

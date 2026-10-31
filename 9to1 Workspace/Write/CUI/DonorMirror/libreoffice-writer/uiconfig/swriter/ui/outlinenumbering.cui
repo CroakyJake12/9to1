@@ -1,0 +1,30 @@
+<Cui id="ui-outlinenumbering" product="9-1" version="1">
+  <Page id="ui-outlinenumbering-root">
+    <Container id="form" Type="Menu" focusable="false">
+      <Button id="form1" Type="Menu Item" content="Untitled 1" text="Untitled 1" focusable="false" />
+      <Button id="form2" Type="Menu Item" content="Untitled 2" text="Untitled 2" focusable="false" />
+      <Button id="form3" Type="Menu Item" content="Untitled 3" text="Untitled 3" focusable="false" />
+      <Button id="form4" Type="Menu Item" content="Untitled 4" text="Untitled 4" focusable="false" />
+      <Button id="form5" Type="Menu Item" content="Untitled 5" text="Untitled 5" focusable="false" />
+      <Button id="form6" Type="Menu Item" content="Untitled 6" text="Untitled 6" focusable="false" />
+      <Button id="form7" Type="Menu Item" content="Untitled 7" text="Untitled 7" focusable="false" />
+      <Button id="form8" Type="Menu Item" content="Untitled 8" text="Untitled 8" focusable="false" />
+      <Button id="form9" Type="Menu Item" content="Untitled 9" text="Untitled 9" focusable="false" />
+      <Button id="menuitem10" Type="Menu Item" focusable="false" />
+      <Button id="saveas" Type="Menu Item" content="Save As..." text="Save As..." focusable="false" />
+    </Container>
+    <Container id="outline-numbering-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="outline-numbering-dialog-label" text="Heading Numbering" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="format" content="Load/Save" text="Load/Save" />
+          <Button id="reset" content="Reset" text="Reset" />
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

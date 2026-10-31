@@ -1,0 +1,23 @@
+<Cui id="security-twofa-enroll" product="9-1" version="1">
+  <Page id="security-twofa-enroll-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h4" text="{Binding Unresolved}" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Text id="p" text="{Binding Unresolved}" />
+        <Image id="img" />
+        <Text id="p-2" text="{Binding Unresolved}" />
+        <Text id="p-3" text="{Binding Unresolved}" />
+        <Container id="form" Type="Vertical Stack">
+          <Container id="div-3" Type="Vertical Stack">
+            <Text id="label" text="{Binding Unresolved}" />
+            <Input id="input" Type="Text" />
+          </Container>
+          <Container id="div-4" Type="Vertical Stack">
+            <Text id="label-2" />
+            <Button id="button" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

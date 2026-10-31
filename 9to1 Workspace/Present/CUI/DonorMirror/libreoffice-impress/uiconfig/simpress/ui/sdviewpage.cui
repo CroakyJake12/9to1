@@ -1,0 +1,17 @@
+<Cui id="ui-sdviewpage" product="9-1" version="1">
+  <Container id="sd-view-page" Type="Vertical Stack" focusable="false" role="Grow">
+    <Container id="container" Type="Grid" cell-gap="6" focusable="false">
+      <Input id="ruler" Type="Checkbox" text="Rulers visible" column="1" row="0" />
+      <Input id="dragstripes" Type="Checkbox" text="Helplines while moving" column="1" row="1" />
+      <Input id="handlesbezier" Type="Checkbox" text="All control points in Bézier editor" column="1" row="2" />
+      <Input id="moveoutline" Type="Checkbox" text="Contour of each individual object" column="1" row="3" />
+      <Input id="zoomwithwheel" Type="Checkbox" text="Swap mouse wheel zoom and scroll" column="1" row="4" />
+      <Image id="lockruler" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+      <Image id="lockdragstripes" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+      <Image id="lockhandlesbezier" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="2" source="res/lock.png" />
+      <Image id="lockmoveoutline" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+      <Image id="lockzoomwithwheel" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="4" source="res/lock.png" />
+    </Container>
+    <Text id="label1" text="Display" focusable="false" />
+  </Container>
+</Cui>

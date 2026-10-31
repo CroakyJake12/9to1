@@ -1,0 +1,27 @@
+<Cui id="ui-spellmenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id="ignoreall" Type="Menu Item" content="Ignore All" text="Ignore All" focusable="false" />
+    <Button id="addmenu" Type="Menu Item" content="Add to Dictionary" text="Add to Dictionary" focusable="false">
+      <Container id="container" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="add" Type="Menu Item" content="Add to Dictionary" text="Add to Dictionary" focusable="false" />
+    <Button id="spelldialog" Type="Menu Item" focusable="false" />
+    <Button id="separator1" Type="Menu Item" focusable="false" />
+    <Button id="correctmenu" Type="Menu Item" content="Always AutoCorrect to" text="Always AutoCorrect to" tooltip="Add selected correction as replacement for incorrect word in AutoCorrect replacement table." focusable="false">
+      <Container id="container-2" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="correctdialog" Type="Menu Item" focusable="false" />
+    <Button id="separator2" Type="Menu Item" focusable="false" />
+    <Button id="langselection" Type="Menu Item" content="Set Language for Selection" text="Set Language for Selection" focusable="false">
+      <Container id="container-3" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="langpara" Type="Menu Item" content="Set Language for Paragraph" text="Set Language for Paragraph" focusable="false">
+      <Container id="container-4" Type="Menu" focusable="false" />
+    </Button>
+    <Button id="separator3" Type="Menu Item" focusable="false" />
+    <Button id="accept" Type="Menu Item" content="Accept Change" text="Accept Change" focusable="false" />
+    <Button id="reject" Type="Menu Item" content="Reject Change" text="Reject Change" focusable="false" />
+    <Button id="next" Type="Menu Item" content="Next Change" text="Next Change" focusable="false" />
+    <Button id="prev" Type="Menu Item" content="Previous Change" text="Previous Change" focusable="false" />
+  </Container>
+</Cui>

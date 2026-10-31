@@ -1,0 +1,6 @@
+<Cui id="ui-scenariomenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu">
+    <Button id="delete" Type="Menu Item" content="Delete" text="Delete" />
+    <Button id="edit" Type="Menu Item" content="Properties..." text="Properties..." />
+  </Container>
+</Cui>

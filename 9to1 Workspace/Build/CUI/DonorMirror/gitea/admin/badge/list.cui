@@ -1,0 +1,55 @@
+<Cui id="badge-list" product="9-1" version="1">
+  <Page id="badge-list-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h4">
+        <Container id="div-2" Type="Vertical Stack">
+          <Button id="a" />
+        </Container>
+      </Text>
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="user-list-search-form" Type="Vertical Stack">
+          <Container id="div-4" Type="Vertical Stack" />
+          <Container id="div-5" Type="Vertical Stack">
+            <Container id="div-6" Type="Vertical Stack">
+              <Text id="span" text="{Binding Unresolved}" />
+              <Container id="div-7" Type="Vertical Stack">
+                <Button id="button" text="oldest" />
+                <Button id="button-2" text="newest" />
+                <Button id="button-3" text="alphabetically" />
+                <Button id="button-4" text="reversealphabetically" />
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="div-8" Type="Vertical Stack">
+        <Container id="table" Type="Grid">
+          <Container id="thead" Type="Grid">
+            <Container id="tr" Type="Horizontal Stack">
+              <Text id="th" text="ID[value]" />
+              <Text id="th-2" text="[value]
+							[value]" />
+              <Text id="th-3" text="{Binding Unresolved}" />
+              <Text id="th-4" />
+            </Container>
+          </Container>
+          <Container id="tbody" Type="Grid">
+            <Container id="tr-2" Type="Horizontal Stack">
+              <Container id="td" Type="Vertical Stack" />
+              <Container id="td-2" Type="Vertical Stack">
+                <Button id="a-2" />
+              </Container>
+              <Container id="td-3" Type="Vertical Stack" />
+              <Container id="td-4" Type="Vertical Stack">
+                <Container id="div-9" Type="Vertical Stack">
+                  <Button id="a-3" />
+                  <Button id="a-4" />
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

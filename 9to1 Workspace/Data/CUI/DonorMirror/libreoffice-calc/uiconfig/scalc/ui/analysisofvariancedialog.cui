@@ -1,0 +1,46 @@
+<Cui id="ui-analysisofvariancedialog" product="9-1" version="1">
+  <Container id="analysis-of-variance-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="analysis-of-variance-dialog-label" text="Analysis of Variance (ANOVA)" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame-data" Type="Vertical Stack" focusable="false">
+        <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="input-range-label" text="Input range:" focusable="false" column="0" row="0" />
+          <Input id="input-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+          <Button id="input-range-button" column="2" row="0" />
+          <Text id="output-range-label" text="Results to:" focusable="false" column="0" row="1" />
+          <Input id="output-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="1" />
+          <Button id="output-range-button" column="2" row="1" />
+        </Container>
+        <Text id="label4" text="Data" focusable="false" />
+      </Container>
+      <Container id="frame-type" Type="Vertical Stack" focusable="false">
+        <Container id="grid8" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="radio-single-factor" Type="Radio" text="Single factor" checked="true" column="0" row="0" />
+          <Input id="radio-two-factor" Type="Radio" text="Two factor" column="1" row="0" />
+        </Container>
+        <Text id="label3" text="Type" focusable="false" />
+      </Container>
+      <Container id="frame-grouped-by" Type="Vertical Stack" focusable="false">
+        <Container id="grid7" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="groupedby-columns-radio" Type="Radio" text="Columns" checked="true" column="0" row="0" />
+          <Input id="groupedby-rows-radio" Type="Radio" text="Rows" column="1" row="0" />
+        </Container>
+        <Text id="label2" text="Grouped by" focusable="false" />
+      </Container>
+      <Container id="frame-options" Type="Vertical Stack" focusable="false">
+        <Container id="grid6" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="alpha-label" text="Alpha:" focusable="false" column="0" row="0" />
+          <Input id="alpha-spin" Type="Number" text="0.05" Value="0.05" column="1" row="0" />
+          <Text id="rows-per-sample-label" text="Rows per sample:" focusable="false" column="0" row="1" />
+          <Input id="rows-per-sample-spin" Type="Number" text="1" Value="1" column="1" row="1" />
+        </Container>
+        <Text id="label1" text="Parameters" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

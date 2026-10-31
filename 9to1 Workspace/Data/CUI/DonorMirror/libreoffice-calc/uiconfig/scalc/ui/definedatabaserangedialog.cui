@@ -1,0 +1,48 @@
+<Cui id="ui-definedatabaserangedialog" product="9-1" version="1">
+  <Container id="define-database-range-dialog" Type="Vertical Stack" focusable="false" role="Grow">
+    <Text id="define-database-range-dialog-label" text="Define Database Range" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="name-frame" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="entrygrid" Type="Grid" cell-gap="3" focusable="false" role="Grow">
+            <Container id="container" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+              <Container id="entry-list" Type="Vertical Stack" role="Grow" />
+            </Container>
+            <Input id="entry" Type="Text" role="Grow" column="0" row="0" />
+          </Container>
+          <Text id="name" text="Name" focusable="false" />
+        </Container>
+        <Container id="range-frame" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="box3" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+            <Input id="assign" Type="Text" role="Grow" />
+            <Button id="assignrb" focusable="false" />
+          </Container>
+          <Text id="range" text="Range" focusable="false" />
+        </Container>
+        <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="6" focusable="false">
+          <Button id="add" content="Add" text="Add" />
+          <Button id="modify" content="Modify" text="Modify" />
+          <Button id="delete" content="Delete" text="Delete" />
+        </Container>
+        <Container id="more" Type="Vertical Stack">
+          <Container id="options" Type="Vertical Stack" cell-gap="3" focusable="false" role="Grow">
+            <Input id="contains-column-labels" Type="Checkbox" text="Contains column labels" />
+            <Input id="contains-totals-row" Type="Checkbox" text="Contains totals row" />
+            <Input id="insert-or-delete-cells" Type="Checkbox" text="Insert or delete cells" />
+            <Input id="keep-formatting" Type="Checkbox" text="Keep formatting" />
+            <Input id="dont-save-imported-data" Type="Checkbox" text="Don't save imported data" />
+            <Text id="source" text="Source:" focusable="false" />
+            <Text id="operations" text="Operations:" focusable="false" />
+            <Text id="invalid" text="Invalid range" focusable="false" />
+          </Container>
+          <Text id="label1" text="Options" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

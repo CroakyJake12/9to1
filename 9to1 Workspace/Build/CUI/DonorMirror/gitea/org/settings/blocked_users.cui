@@ -1,0 +1,5 @@
+<Cui id="settings-blocked-users" product="9-1" version="1">
+  <Page id="settings-blocked-users-root">
+    <Container id="div" Type="Vertical Stack" />
+  </Page>
+</Cui>

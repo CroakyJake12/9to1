@@ -1,0 +1,5 @@
+<Cui id="ui-checkbox" product="9-1" version="1">
+  <Container id="check-box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Input id="checkbutton" Type="Checkbox" role="Grow" />
+  </Container>
+</Cui>

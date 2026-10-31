@@ -1,0 +1,19 @@
+<Cui id="ui-inputbar" product="9-1" version="1">
+  <Page id="ui-inputbar-root">
+    <Image id="image1" />
+    <Image id="image2" />
+    <Container id="input-bar" Type="Grid" role="Grow">
+      <Button id="down" vertical-alignment="Top" />
+      <Button id="up" vertical-alignment="Top" />
+      <Container id="background" Type="Vertical Stack" role="Grow">
+        <Container id="scrolledwindow" Type="Vertical Stack" role="Grow">
+          <Container id="container" Type="Vertical Stack" role="Grow">
+            <Container id="container-2" Type="Vertical Stack" role="Grow">
+              <Container id="sc-input-window" Type="Overlay" role="Grow" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

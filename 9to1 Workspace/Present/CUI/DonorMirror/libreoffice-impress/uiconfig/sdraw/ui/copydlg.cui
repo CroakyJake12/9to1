@@ -1,0 +1,58 @@
+<Cui id="ui-copydlg" product="9-1" version="1">
+  <Page id="ui-copydlg-root">
+    <Image id="image1" />
+    <Container id="duplicate-dialog" Type="Vertical Stack" modal="True">
+      <Text id="duplicate-dialog-label" text="Duplicate" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+        <Container id="dialog-action-area1" Type="Horizontal Stack">
+          <Button id="default" content="Default" text="Default" />
+          <Button id="ok" content="OK" text="OK" />
+          <Button id="cancel" content="Cancel" text="Cancel" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="box1" Type="Vertical Stack" cell-gap="12" role="Grow">
+          <Container id="box2" Type="Vertical Stack" cell-gap="6" role="Grow">
+            <Text id="label4" text="Number of copies:" />
+            <Input id="copies" Type="Number" role="Grow" />
+            <Button id="viewdata" />
+          </Container>
+          <Container id="frame1" Type="Vertical Stack" role="Grow">
+            <Container id="grid1" Type="Grid" role="Grow">
+              <Text id="label5" text="X axis:" />
+              <Text id="label6" text="Y axis:" />
+              <Text id="label7" text="Angle:" />
+              <Input id="x" Type="Number" role="Grow" />
+              <Input id="y" Type="Number" role="Grow" />
+              <Input id="angle" Type="Number" role="Grow" />
+            </Container>
+            <Text id="label1" text="Placement" />
+          </Container>
+          <Container id="frame2" Type="Vertical Stack" role="Grow">
+            <Container id="grid2" Type="Grid" role="Grow">
+              <Text id="label8" text="Width:" />
+              <Text id="label9" text="Height:" />
+              <Input id="width" Type="Number" role="Grow" />
+              <Input id="height" Type="Number" role="Grow" />
+            </Container>
+            <Text id="label2" text="Enlargement" />
+          </Container>
+          <Container id="frame3" Type="Vertical Stack" role="Grow">
+            <Container id="grid3" Type="Grid" role="Grow">
+              <Text id="label10" text="Start:" />
+              <Text id="endlabel" text="End:" />
+              <Text id="kindlabel" text="Interpolation:" />
+              <Button id="start" role="Grow" />
+              <Button id="end" role="Grow" />
+              <Container id="boxinterpolationrb" Type="Vertical Stack" focusable="false">
+                <Input id="rgb" Type="Radio" text="RGB" checked="true" />
+                <Input id="hslinc" Type="Radio" text="HSL increasing" />
+                <Input id="hsldec" Type="Radio" text="HSL decreasing" />
+              </Container>
+            </Container>
+            <Text id="label3" text="Colors" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

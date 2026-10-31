@@ -1,0 +1,17 @@
+<Cui id="ui-pageformatpanel" product="9-1" version="1">
+  <Container id="page-format-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" horizontal-alignment="Right" focusable="false" role="Grow" column="0" row="0">
+      <Text id="size" text="Size:" focusable="false" column="0" row="0" />
+      <Text id="width" text="Width:" focusable="false" column="0" row="1" />
+      <Text id="height" text="Height:" focusable="false" column="0" row="2" />
+      <Text id="orientation" text="Orientation:" focusable="false" column="0" row="3" />
+      <Input id="paperwidth" Type="Number" text="0" tooltip="Paper Width" role="Grow" column="1" row="1" />
+      <Input id="paperheight" Type="Number" text="0" tooltip="Paper Height" role="Grow" column="1" row="2" />
+      <Input id="paperorientation" Type="Select" focusable="false" role="Grow" column="1" row="3" />
+      <Input id="papersize" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+      <Text id="margin" text="Margins:" focusable="false" column="0" row="4" />
+      <Input id="margin-lb" Type="Select" focusable="false" role="Grow" column="1" row="4" />
+      <Text id="customlabel" text="Custom" focusable="false" column="1" row="5" />
+    </Container>
+  </Container>
+</Cui>

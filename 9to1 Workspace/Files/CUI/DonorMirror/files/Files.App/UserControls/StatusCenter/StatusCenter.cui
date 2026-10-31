@@ -1,0 +1,24 @@
+<Cui id="status-center-status-center" product="9-1" version="1">
+  <Actions>
+    <Action name="close-all-items-button-click" command="CloseAllItemsButton_Click" />
+  </Actions>
+  <Page id="status-center-status-center-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="grid.rowdefinitions" Type="Vertical Stack">
+          <Text id="rowdefinition" />
+          <Text id="rowdefinition-2" />
+        </Container>
+        <Container id="grid-2" Type="Grid" padding="12,8,12,8">
+          <Text id="textblock" margin="4" vertical-alignment="Center" font-size="14" text="{helpers:ResourceString Name=StatusCenter}" />
+          <Button id="button" height="24" padding="8,0" horizontal-alignment="Right" content="{helpers:ResourceString Name=ClearCompleted}" font-size="12" is-enabled="{Binding ViewModel.HasAnyItem}" action="close-all-items-button-click" />
+        </Container>
+        <Container id="listview" Type="Vertical Stack" row="1" padding="12,0,12,12" vertical-alignment="Stretch">
+          <Container id="listview.itemcontainerstyle" Type="Vertical Stack" />
+          <Container id="listview.itemtemplate" Type="Vertical Stack" />
+        </Container>
+        <Text id="textblock-2" row="1" horizontal-alignment="Center" vertical-alignment="Center" text="{helpers:ResourceString Name=NoFileOperations}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

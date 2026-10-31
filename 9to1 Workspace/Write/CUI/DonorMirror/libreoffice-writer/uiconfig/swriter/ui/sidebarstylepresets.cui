@@ -1,0 +1,9 @@
+<Cui id="ui-sidebarstylepresets" product="9-1" version="1">
+  <Container id="style-presets-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" column="0" row="0">
+      <Container id="valuesetwin" Type="Vertical Stack" role="Grow" column="0" row="0">
+        <Container id="iconview" Type="Wrap" role="Grow" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

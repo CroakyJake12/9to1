@@ -1,0 +1,7 @@
+<Cui id="ui-zoombox" product="9-1" version="1">
+  <Container id="zoom-box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Text id="zoom-label" text="Scale" focusable="false" />
+    <Container id="zoom" Type="Overlay" role="Grow" />
+    <Text id="current-zoom" text="percentage" focusable="false" />
+  </Container>
+</Cui>

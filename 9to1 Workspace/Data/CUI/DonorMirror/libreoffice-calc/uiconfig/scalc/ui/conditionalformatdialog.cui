@@ -1,0 +1,36 @@
+<Cui id="ui-conditionalformatdialog" product="9-1" version="1">
+  <Container id="conditional-format-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="conditional-format-dialog-label" text="Conditional Formatting for" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="framecondition" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Container id="listwindow" Type="Vertical Stack" role="Grow">
+            <Container id="container" Type="Vertical Stack" focusable="false">
+              <Container id="list" Type="Grid" focusable="false" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="buttonbox1" Type="Horizontal Stack" cell-gap="12" focusable="false">
+            <Button id="add" content="Add" text="Add" />
+            <Button id="delete" content="Delete" text="Delete" />
+            <Button id="up" content="Up" text="Up" />
+            <Button id="down" content="Down" text="Down" />
+          </Container>
+        </Container>
+        <Text id="label1" text="Conditions" focusable="false" />
+      </Container>
+      <Container id="framerange" Type="Vertical Stack" focusable="false">
+        <Container id="box2" Type="Vertical Stack" cell-gap="12" focusable="false">
+          <Text id="ftassign" text="Range:" vertical-alignment="Center" focusable="false" />
+          <Input id="edassign" Type="Text" vertical-alignment="Center" role="Grow" />
+          <Button id="rbassign" vertical-alignment="Center" />
+        </Container>
+        <Text id="label2" text="Cell Range" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

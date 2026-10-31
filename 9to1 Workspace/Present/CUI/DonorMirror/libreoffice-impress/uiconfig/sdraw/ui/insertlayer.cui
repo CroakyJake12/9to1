@@ -1,0 +1,36 @@
+<Cui id="ui-insertlayer" product="9-1" version="1">
+  <Container id="insert-layer-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="insert-layer-dialog-label" text="Insert Layer" />
+    <Container id="dialog-vbox4" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area4" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Container id="nameframe" Type="Vertical Stack" focusable="false">
+          <Input id="name" Type="Text" />
+          <Text id="label4" text="Name" focusable="false" />
+        </Container>
+        <Container id="titleframe" Type="Vertical Stack" focusable="false">
+          <Input id="title" Type="Text" />
+          <Text id="label5" text="Title" focusable="false" />
+        </Container>
+        <Container id="description" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow">
+            <Input id="textview" Type="Text" role="Grow" />
+          </Container>
+          <Text id="description1" text="Description" focusable="false" />
+        </Container>
+        <Container id="container" Type="Vertical Stack" focusable="false">
+          <Container id="container-2" Type="Vertical Stack" focusable="false">
+            <Input id="visible" Type="Checkbox" text="Visible" />
+            <Input id="printable" Type="Checkbox" text="Printable" />
+            <Input id="locked" Type="Checkbox" text="Locked" />
+          </Container>
+          <Text id="label6" text="Properties" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

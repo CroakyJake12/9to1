@@ -1,0 +1,19 @@
+<Cui id="ui-insertslides" product="9-1" version="1">
+  <Container id="insert-slides-dialog" Type="Vertical Stack" modal="True">
+    <Text id="insert-slides-dialog-label" text="Insert Slides" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="action" Type="Vertical Stack">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6">
+          <Input id="before" Type="Radio" text="Before" checked="true" role="Grow" />
+          <Input id="after" Type="Radio" text="After" role="Grow" />
+        </Container>
+        <Text id="label1" text="Position" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

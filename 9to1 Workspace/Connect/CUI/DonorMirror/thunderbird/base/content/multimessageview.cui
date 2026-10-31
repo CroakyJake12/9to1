@@ -1,0 +1,67 @@
+<Cui id="content-multimessageview" product="9-1" version="1">
+  <Page id="content-multimessageview-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="link-6" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://messenger/content/multimessageview.js" />
+        </Container>
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="headingWrapper" Type="Vertical Stack">
+          <Container id="header-view-toolbox" Type="Vertical Stack">
+            <Container id="header-view-toolbar" Type="Horizontal Stack">
+              <Button id="hdrArchiveButton" />
+              <Button id="hdrTrashButton" />
+            </Container>
+          </Container>
+          <Text id="heading">
+            <Text id="summaryTitle" />
+            <Text id="summarySubtitle" />
+          </Text>
+        </Container>
+        <Container id="content" Type="Vertical Stack">
+          <Container id="messageList" Type="Vertical Stack" />
+          <Container id="footer" Type="Vertical Stack">
+            <Text id="size" />
+            <Text id="notice" />
+          </Container>
+        </Container>
+        <Container id="threadTemplate" Type="Vertical Stack">
+          <Container id="li" Type="Horizontal Stack">
+            <Text id="span" />
+            <Text id="h2">
+              <Text id="span-2">
+                <Text id="span-3" />
+                <Text id="span-4" />
+              </Text>
+              <Text id="span-5" />
+            </Text>
+            <Text id="p" />
+          </Container>
+        </Container>
+        <Container id="multiSelectionTemplate" Type="Vertical Stack">
+          <Container id="li-2" Type="Horizontal Stack">
+            <Text id="span-6" />
+            <Text id="h2-2">
+              <Text id="span-7">
+                <Text id="span-8" />
+                <Text id="span-9" />
+                <Text id="span-10" />
+              </Text>
+              <Text id="span-11" />
+            </Text>
+            <Text id="p-2" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

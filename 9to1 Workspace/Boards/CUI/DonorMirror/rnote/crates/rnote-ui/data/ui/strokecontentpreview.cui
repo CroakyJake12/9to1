@@ -1,0 +1,20 @@
+<Cui id="ui-strokecontentpreview" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Container id="preview-overlay" Type="Overlay" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
+      <Input id="progressbar" Type="Progress" horizontal-alignment="Stretch" vertical-alignment="Top" />
+      <Container id="pages-controls-box" Type="Horizontal Stack" horizontal-alignment="Stretch" vertical-alignment="Top" role="Grow">
+        <Container id="container-2" Type="Horizontal Stack" horizontal-alignment="Left" role="Grow">
+          <Button id="prev-page-button" icon-source="dir-left-symbolic" />
+          <Button id="next-page-button" icon-source="dir-right-symbolic" />
+        </Container>
+        <Container id="container-3" Type="Vertical Stack" horizontal-alignment="Right">
+          <Input id="page-entry" Type="Text" placeholder-text="Page" />
+          <Button id="n-pages-button" content="1" text="1" is-enabled="false" />
+        </Container>
+      </Container>
+      <Container id="preview-scroller" Type="Vertical Stack" min-width="400" min-height="400" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
+        <Container id="preview-picture" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Center" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

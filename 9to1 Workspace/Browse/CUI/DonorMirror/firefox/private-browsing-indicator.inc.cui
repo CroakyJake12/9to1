@@ -1,0 +1,8 @@
+<Cui id="content-private-browsing-indicator.inc" product="9-1" version="1">
+  <Page id="content-private-browsing-indicator.inc-root">
+    <Container id="hbox" Type="Horizontal Stack">
+      <Image id="image" />
+      <Text id="label" />
+    </Container>
+  </Page>
+</Cui>

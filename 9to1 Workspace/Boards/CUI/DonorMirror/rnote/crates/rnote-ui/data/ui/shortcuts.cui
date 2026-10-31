@@ -1,0 +1,63 @@
+<Cui id="ui-shortcuts" product="9-1" version="1">
+  <Container id="shortcuts-window" Type="Vertical Stack" modal="true">
+    <Container id="container" Type="Vertical Stack">
+      <Container id="container-2" Type="Vertical Stack">
+        <Text id="container-label" text="General" />
+        <Text id="text" text="Show Keyboard Shortcuts" />
+        <Text id="text-2" text="New Window" />
+        <Text id="text-3" text="New Tab" />
+        <Text id="text-4" text="Close the Active Tab" />
+        <Text id="text-5" text="Quit the Application" />
+        <Text id="text-6" text="Toggle Tabs Overview" />
+        <Text id="text-7" text="Open the Canvas-Menu" />
+        <Text id="text-8" text="Open the App-Menu" />
+        <Text id="text-9" text="Toggle Fullscreen" />
+      </Container>
+      <Container id="container-3" Type="Vertical Stack">
+        <Text id="container-label-2" text="Navigation" />
+        <Text id="text-10" text="Switch to the 'Brush'" />
+        <Text id="text-11" text="Switch to the 'Shaper'" />
+        <Text id="text-12" text="Switch to the 'Typewriter'" />
+        <Text id="text-13" text="Switch to the 'Eraser'" />
+        <Text id="text-14" text="Switch to the 'Selector'" />
+        <Text id="text-15" text="Switch to the 'Tools'" />
+        <Text id="text-16" text="Select Color" />
+      </Container>
+      <Container id="container-4" Type="Vertical Stack">
+        <Text id="container-label-3" text="View" />
+        <Text id="text-17" text="Move View" />
+        <Text id="text-18" text="Zoom in" />
+        <Text id="text-19" text="Zoom in" />
+        <Text id="text-20" text="Zoom in" />
+        <Text id="text-21" text="Zoom out" />
+        <Text id="text-22" text="Zoom out" />
+        <Text id="text-23" text="Zoom out" />
+        <Text id="text-24" text="Zoom in/out" />
+      </Container>
+      <Container id="container-5" Type="Vertical Stack">
+        <Text id="container-label-4" text="Document" />
+        <Text id="text-25" text="Open Document" />
+        <Text id="text-26" text="Save Document" />
+        <Text id="text-27" text="Save Document As" />
+        <Text id="text-28" text="Snap Positions" />
+        <Text id="text-29" text="Clear Document" />
+        <Text id="text-30" text="Add Page (When in Fixed-Size Layout)" />
+        <Text id="text-31" text="Remove Last Page (When in Fixed-Size Layout)" />
+        <Text id="text-32" text="Print Document" />
+        <Text id="text-33" text="Import File" />
+        <Text id="text-34" text="Bold" />
+        <Text id="text-35" text="Italic" />
+        <Text id="text-36" text="Underline" />
+        <Container id="container-6" Type="Vertical Stack">
+          <Text id="container-label-5" text="Drawing" />
+          <Text id="text-37" text="Copy to Clipboard" />
+          <Text id="text-38" text="Cut to Clipboard" />
+          <Text id="text-39" text="Paste Clipboard" />
+          <Text id="text-40" text="Duplicate Selection" />
+          <Text id="text-41" text="Undo" />
+          <Text id="text-42" text="Redo" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,18 @@
+<Cui id="content-messenger-titlebar-items.inc" product="9-1" version="1">
+  <Actions>
+    <Action name="window.close" command="window.close()" />
+    <Action name="window.maximize" command="window.maximize();" />
+    <Action name="window.minimize" command="window.minimize();" />
+    <Action name="window.restore" command="window.restore();" />
+  </Actions>
+  <Page id="content-messenger-titlebar-items.inc-root">
+    <Container id="hbox" Type="Horizontal Stack">
+      <Container id="hbox-2" Type="Horizontal Stack">
+        <Button id="toolbarbutton" action="window.minimize" />
+        <Button id="toolbarbutton-2" action="window.maximize" />
+        <Button id="toolbarbutton-3" action="window.restore" />
+        <Button id="toolbarbutton-4" action="window.close" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

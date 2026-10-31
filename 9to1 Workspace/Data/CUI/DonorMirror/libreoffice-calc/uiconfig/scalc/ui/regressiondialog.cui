@@ -1,0 +1,52 @@
+<Cui id="ui-regressiondialog" product="9-1" version="1">
+  <Container id="regression-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="regression-dialog-label" text="Regression" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame-data" Type="Vertical Stack" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="variable1-range-label" text="Independent variable(s) (X) range:" focusable="false" column="0" row="0" />
+          <Input id="variable1-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+          <Button id="variable1-range-button" column="2" row="0" />
+          <Text id="variable2-range-label" text="Dependent variable (Y) range:" focusable="false" column="0" row="1" />
+          <Input id="variable2-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="1" />
+          <Button id="variable2-range-button" column="2" row="1" />
+          <Input id="withlabels-check" Type="Checkbox" text="Both X and Y ranges have labels" horizontal-alignment="Left" column="0" row="2" column-span="3" />
+          <Text id="output-range-label" text="Results to:" focusable="false" column="0" row="3" />
+          <Input id="output-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="3" />
+          <Button id="output-range-button" column="2" row="3" />
+        </Container>
+        <Text id="label1" text="Data" focusable="false" />
+      </Container>
+      <Container id="frame-group" Type="Vertical Stack" focusable="false">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="groupedby-columns-radio" Type="Radio" text="Columns" checked="true" column="0" row="0" />
+          <Input id="groupedby-rows-radio" Type="Radio" text="Rows" column="1" row="0" />
+        </Container>
+        <Text id="label2" text="Grouped by" focusable="false" />
+      </Container>
+      <Container id="frame-param" Type="Vertical Stack" focusable="false">
+        <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="linear-radio" Type="Radio" text="Linear Regression" horizontal-alignment="Left" vertical-alignment="Center" checked="true" column="0" row="0" />
+          <Input id="logarithmic-radio" Type="Radio" text="Logarithmic Regression" horizontal-alignment="Left" vertical-alignment="Center" column="0" row="1" />
+          <Input id="power-radio" Type="Radio" text="Power Regression" horizontal-alignment="Left" vertical-alignment="Center" column="0" row="2" />
+        </Container>
+        <Text id="label3" text="Output Regression Types" focusable="false" />
+      </Container>
+      <Container id="frame-options" Type="Vertical Stack" focusable="false">
+        <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="label5" text="Confidence level" horizontal-alignment="Left" vertical-alignment="Center" focusable="false" column="0" row="0" />
+          <Input id="confidencelevel-spin" Type="Number" text="0.95" Value="0.94999999999999996" horizontal-alignment="Left" vertical-alignment="Center" column="1" row="0" />
+          <Input id="calcresiduals-check" Type="Checkbox" text="Calculate residuals" checked="true" column="0" row="1" />
+          <Input id="nointercept-check" Type="Checkbox" text="Force intercept to be zero" column="1" row="1" />
+        </Container>
+        <Text id="label4" text="Options" focusable="false" />
+      </Container>
+      <Text id="error-message" text-wrapping="Wrap" focusable="false" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,15 @@
+<Cui id="ui-inputstringdialog" product="9-1" version="1">
+  <Container id="input-string-dialog" Type="Vertical Stack" modal="True">
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area1" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="6" role="Grow">
+        <Text id="description-label" text-wrapping="Wrap" />
+        <Input id="name-entry" Type="Text" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

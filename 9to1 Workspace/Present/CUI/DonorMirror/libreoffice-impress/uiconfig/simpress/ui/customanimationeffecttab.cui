@@ -1,0 +1,40 @@
+<Cui id="ui-customanimationeffecttab" product="9-1" version="1">
+  <Page id="ui-customanimationeffecttab-root">
+    <Image id="image1" source="media-playback-start" />
+    <Container id="effect-tab" Type="Vertical Stack" cell-gap="12">
+      <Container id="settings" Type="Vertical Stack">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6">
+          <Container id="box3" Type="Vertical Stack" cell-gap="12">
+            <Text id="prop-label1" text="Direction:" vertical-alignment="Center" />
+            <Container id="placeholder" Type="Grid" role="Grow" />
+          </Container>
+          <Container id="box2" Type="Vertical Stack" cell-gap="18">
+            <Input id="smooth-start" Type="Checkbox" text="Accelerated start" />
+            <Input id="smooth-end" Type="Checkbox" text="Decelerated end" />
+          </Container>
+        </Container>
+        <Text id="label3" text="Settings" />
+      </Container>
+      <Container id="frame2" Type="Vertical Stack">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Text id="aeffect-label" text="After animation:" />
+          <Text id="sound-label" text="Sound:" />
+          <Text id="text-animation-label" text="Text animation:" />
+          <Text id="dim-color-label" text="Dim color:" />
+          <Container id="box4" Type="Vertical Stack" cell-gap="6">
+            <Input id="sound-list" Type="Select" vertical-alignment="Center" role="Grow" />
+            <Button id="sound-preview" vertical-alignment="Center" />
+          </Container>
+          <Button id="dim-color-list" vertical-alignment="Center" role="Grow" />
+          <Container id="box5" Type="Vertical Stack" cell-gap="12" column-span="2">
+            <Text id="text-delay-label" text="Delay between characters" />
+            <Input id="text-delay" Type="Number" role="Grow" />
+          </Container>
+          <Input id="aeffect-list" Type="Select" vertical-alignment="Center" role="Grow" />
+          <Input id="text-animation-list" Type="Select" vertical-alignment="Center" role="Grow" />
+        </Container>
+        <Text id="label4" text="Enhancement" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

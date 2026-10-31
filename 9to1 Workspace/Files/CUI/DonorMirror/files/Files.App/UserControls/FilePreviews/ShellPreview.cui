@@ -1,0 +1,7 @@
+<Cui id="file-previews-shell-preview" product="9-1" version="1">
+  <Page id="file-previews-shell-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="contentpresenter" Type="Vertical Stack" background="Transparent" />
+    </Container>
+  </Page>
+</Cui>

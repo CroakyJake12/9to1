@@ -1,0 +1,1919 @@
+{
+  "summary": {
+    "translated": 8342,
+    "dropped_nodes": 988,
+    "gap_count": 3507,
+    "gap_constructs": {
+      "toolbar with overflow": 1309,
+      "notebook bar (ribbon) group": 798,
+      "optional section": 352,
+      "separator": 304,
+      "button row": 134,
+      "toolbar overflow": 118,
+      "window and dialog chrome": 117,
+      "menu button": 115,
+      "scroller with explicit bars": 70,
+      "radio menu item": 67,
+      "item collection (list/tree/table)": 47,
+      "tab strip": 23,
+      "clipped viewport": 16,
+      "expander section": 10,
+      "custom drawing surface": 9,
+      "toggle button": 6,
+      "unmodelled donor construct": 5,
+      "context toolbar": 3,
+      "notebook bar (ribbon) tab": 2,
+      "split view": 1,
+      "meter": 1
+    },
+    "pruned_stale": 0,
+    "donor": "libreoffice-calc",
+    "app": "Data",
+    "source": "9to1 Workspace/Write/Source/LibreOffice/sc",
+    "translated_files": 188,
+    "untranslated_files": 0,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "uiconfig/scalc/ui/advancedfilterdialog.ui",
+      "cui": "uiconfig/scalc/ui/advancedfilterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 29,
+      "actions": 0,
+      "donor_sha256": "8c51ae1f67ef122da1c2feff2f5e587f38160237b051dbc1ef06bfeb6252396f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/aggregatefunctionentry.ui",
+      "cui": "uiconfig/scalc/ui/aggregatefunctionentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "fc93551e362ee1e91d994a1cdab10de30eee32857326e3a0cf2dae47d5ee01f1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/allheaderfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/allheaderfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "ea30f1794364003c4403ada9d034e2ee67176a6d39c4013747bfcede7307ccb8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/analysisofvariancedialog.ui",
+      "cui": "uiconfig/scalc/ui/analysisofvariancedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "f1a82995df459846c4d4246f77b53d7cfaee2a35509bc64238d25bf550ff98e2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/autoformattable.ui",
+      "cui": "uiconfig/scalc/ui/autoformattable.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "e414fc0f7ba5502a7bb611a1f91baaeb89f84d2ca014598653cd5052675a8ce9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/autosum.ui",
+      "cui": "uiconfig/scalc/ui/autosum.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "593f907d5091fe280dabbabb9a19a9b4c148b0e553845599c9f470b995c139d8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/cellprotectionpage.ui",
+      "cui": "uiconfig/scalc/ui/cellprotectionpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "9d9a4db54a3815aeb47d622260a3e05d0ff35bf308aa97b75b863233d57b1ad5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/changesourcedialog.ui",
+      "cui": "uiconfig/scalc/ui/changesourcedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "e239f481d30c58f3943f8c9a0f62fcd70b51e500c48333dcbdc3200bd8dbe552",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/chardialog.ui",
+      "cui": "uiconfig/scalc/ui/chardialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "e67c75c0577571ab5f8c15acf1f23f592187eba5dcf7740ce0cb256565ff8a31",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/checkwarningdialog.ui",
+      "cui": "uiconfig/scalc/ui/checkwarningdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "eaff51c8449867c593266e3b1ca913753e64e5e4e7ce8442027d7e45c8998e9b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/chisquaretestdialog.ui",
+      "cui": "uiconfig/scalc/ui/chisquaretestdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "d6e0769e8c06fda7bbc64985be3ea18b539c1a40c2f10a8e400cd7dfc6e3f44a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/colormenu.ui",
+      "cui": "uiconfig/scalc/ui/colormenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "a4ff769e61c8732ac4fc450235f9f624ceb227ef6a9ee2925accc41913f5819a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/colorrowdialog.ui",
+      "cui": "uiconfig/scalc/ui/colorrowdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "99312917223dbb9c7aa73a0e8adb1b9ce72c1d0855998addafee81ee3e1f74d4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/colwidthdialog.ui",
+      "cui": "uiconfig/scalc/ui/colwidthdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "0bb124c12af8a7c752cf8b1455f463334c94f0bc20fe3e589acc416538e5ae5b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/condformatmanager.ui",
+      "cui": "uiconfig/scalc/ui/condformatmanager.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "3c2b705e770b3ce56c8826cb9f3a63711ad18792b6ed7471c4e78d6ea7d4746f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/conditionaleasydialog.ui",
+      "cui": "uiconfig/scalc/ui/conditionaleasydialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "e9e949fa8e9b09bbbed44a7e291389bc477698d6c2ae80a2f88d32a8f4a147ac",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/conditionalentry.ui",
+      "cui": "uiconfig/scalc/ui/conditionalentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 36,
+      "actions": 0,
+      "donor_sha256": "4628673b01e4f9d5a3e60c9befce2e3eecca3771e66da88c20800b520f9524d7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/conditionalformatdialog.ui",
+      "cui": "uiconfig/scalc/ui/conditionalformatdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "6156f28096f4aad90f27f8b3eefe22ea6220e1a1a5bc05157217def516afcd61",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/conditionaliconset.ui",
+      "cui": "uiconfig/scalc/ui/conditionaliconset.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "5be520d12a1b1ee632537a8ca54d266517e2381e8459eb156458d3869b138286",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/conflictsdialog.ui",
+      "cui": "uiconfig/scalc/ui/conflictsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "d77f2ae298a9227dbaf895f23629b1e8477caeaf4541b860e2880ffb71817f5a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/consolidatedialog.ui",
+      "cui": "uiconfig/scalc/ui/consolidatedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 37,
+      "actions": 0,
+      "donor_sha256": "078e2347113a83c8ecd8ae307c2344e4ff9edef365374e8fedbf301cf48a194d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/correlationdialog.ui",
+      "cui": "uiconfig/scalc/ui/correlationdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "6b09fc5a19ec2ba4b2923ca2cde74371c72816d1ed23299753cfc7df34da757e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/covariancedialog.ui",
+      "cui": "uiconfig/scalc/ui/covariancedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "178cbc3f629d975d33548894ab1319db6b36cba860607f243fa0dc5031ceb500",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/createnamesdialog.ui",
+      "cui": "uiconfig/scalc/ui/createnamesdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "a1b003473a24cec7b1b812794091154ea687fb9bd7cea3a1573d268366985e80",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/dapiservicedialog.ui",
+      "cui": "uiconfig/scalc/ui/dapiservicedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "6848e2787381bbbcc9580f51b3c977a561cdb254732706177a9e39d83e99f83b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/databaroptions.ui",
+      "cui": "uiconfig/scalc/ui/databaroptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 41,
+      "actions": 0,
+      "donor_sha256": "57dafce4366644bec346a1e12bbab94e261053ecc0984736a31fd8034bdf19f1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/datafielddialog.ui",
+      "cui": "uiconfig/scalc/ui/datafielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "054ec656de01cb2e15dd605354001724c27f193d781885246a5ba392388bc31a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/datafieldoptionsdialog.ui",
+      "cui": "uiconfig/scalc/ui/datafieldoptionsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 39,
+      "actions": 0,
+      "donor_sha256": "06f476883bd42cbe0ea5a5156df96066f5b34e5ad9a59fc2eb1e9c6e826bee94",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/dataform.ui",
+      "cui": "uiconfig/scalc/ui/dataform.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "4f699ba589f8807fb2c763dc3281ccb70be415f791b7e903b8d4ce43b8ca59c6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/dataformfragment.ui",
+      "cui": "uiconfig/scalc/ui/dataformfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "fc258c457501e6c64dcd3206e7096bd2777a5d0972386f0bebc8a83da9fe836e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/dataproviderdlg.ui",
+      "cui": "uiconfig/scalc/ui/dataproviderdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 33,
+      "actions": 0,
+      "donor_sha256": "94d8dc4b7b3fbfc312d73cf3d9d41955698b15280e4d2760174dcfd8395f74a4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/datastreams.ui",
+      "cui": "uiconfig/scalc/ui/datastreams.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "9741184499b13c709c3be6cae24bbeb8539011705035952db7b6c9ce6cd6e5c2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/datetimetransformationentry.ui",
+      "cui": "uiconfig/scalc/ui/datetimetransformationentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "858796ebb2d98196de8f9e7921144c6a2bf1c47460a68da8733c46d0a0faeecc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/definedatabaserangedialog.ui",
+      "cui": "uiconfig/scalc/ui/definedatabaserangedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 33,
+      "actions": 0,
+      "donor_sha256": "6ed4b3d24311b4c68c6af29bf48dea5803ae8de0719e1eec51728ea68d1ea306",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/definename.ui",
+      "cui": "uiconfig/scalc/ui/definename.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "6922424cceb0e1248ca9283095f90a037ceab31f2ae5978b5db5dc59e6077744",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/definetablerangedialog.ui",
+      "cui": "uiconfig/scalc/ui/definetablerangedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "68bb9ce3518bc03817d20e4d8ec264144f3cc39445401167bc3a7438699baae6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/deletecells.ui",
+      "cui": "uiconfig/scalc/ui/deletecells.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "8ecb6268bedd696c4f9258348e05b0f17d99ab30f8a36266fa29482b3c253c79",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/deletecolumnentry.ui",
+      "cui": "uiconfig/scalc/ui/deletecolumnentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "a64a3edce3b8dc7fddb4c6d4c56c70c2585804f541a388398d5c9fd4990afe67",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/deletecontents.ui",
+      "cui": "uiconfig/scalc/ui/deletecontents.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "5f448c1a89719a31fa3a07b5335eed573f610188a3b532528d56aabd85ce144c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/deleterowentry.ui",
+      "cui": "uiconfig/scalc/ui/deleterowentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e2b5468d81ff580e6dd182deb9a932e826be7f1fd49190490e3f821349559e5a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/descriptivestatisticsdialog.ui",
+      "cui": "uiconfig/scalc/ui/descriptivestatisticsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "6fba02daa467649f9b1b3ec575c7671d1e4668ae0fed1b0722194a27ebf05f57",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/doubledialog.ui",
+      "cui": "uiconfig/scalc/ui/doubledialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "1604808ac4b5e888c19008320eccdb33443d8e3c8425d46713e17260e3e136e3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/drawtemplatedialog.ui",
+      "cui": "uiconfig/scalc/ui/drawtemplatedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "6b7fdd94aa50c8960494764a1f44ef65caac1ecfb1100575478272804e6afe7b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/dropmenu.ui",
+      "cui": "uiconfig/scalc/ui/dropmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "c7a69519b5631cffa834593e2947534d8c1d3786ff3a3bc5ada5a2509c6392a0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/duplicaterecordsdlg.ui",
+      "cui": "uiconfig/scalc/ui/duplicaterecordsdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "946f2f38b2a8e8c5d0eafbb3fe521ce9931fe9da8c332b0c3a6b3d7282d08cd3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/erroralerttabpage.ui",
+      "cui": "uiconfig/scalc/ui/erroralerttabpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "579264578b093a09a63599d0e96a4fedf30c49202bc747e58407f530c9100676",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/exponentialsmoothingdialog.ui",
+      "cui": "uiconfig/scalc/ui/exponentialsmoothingdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "0a4de5a5e8ddc567c75b656e079e649b3caf7f139a4a9d482fdc7cbc16425589",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/externaldata.ui",
+      "cui": "uiconfig/scalc/ui/externaldata.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "ade2bd0a6137bf750a6d011c7db85d8b1f9bccd1cea0822b72bd6fe63038b8a5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/filldlg.ui",
+      "cui": "uiconfig/scalc/ui/filldlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "a22b57bb9ff011328715c5633c4d51e77c3be0349b0e2a1d47bf96ca81162d8d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/filterdropdown.ui",
+      "cui": "uiconfig/scalc/ui/filterdropdown.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "10690b3fe4f63480bf3abc952046e5a2c422edab714fdd9c9f6c674fc8910d69",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/filterlist.ui",
+      "cui": "uiconfig/scalc/ui/filterlist.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "ca561780b3a57b9eec9f52b32e43da2e470d7320307ddfbea0f991dc266bc551",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/filtersubdropdown.ui",
+      "cui": "uiconfig/scalc/ui/filtersubdropdown.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "79e07d5ca6b0b4b336887d1d701a45c301dab75fe93683d27dffcbc109ffa29d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/findreplaceentry.ui",
+      "cui": "uiconfig/scalc/ui/findreplaceentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "c7ad0cc2b499034bc8880da7ec9af8aff961765771740704534b5a7b36f0e851",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/floatingborderstyle.ui",
+      "cui": "uiconfig/scalc/ui/floatingborderstyle.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "74b08d5f24b32682af3023f4765bfbc34b6e719f53d39b387166c3a4729c3714",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/floatinglinestyle.ui",
+      "cui": "uiconfig/scalc/ui/floatinglinestyle.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "2ca516355ead4f11107103ded99d5c8dcfb137450fc822107a6f965666012c15",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/footerdialog.ui",
+      "cui": "uiconfig/scalc/ui/footerdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "5d0fd09a25b1eb95d119c9c6c42c4033fe712381ebe933aa65c117b8be46db62",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/formatcellsdialog.ui",
+      "cui": "uiconfig/scalc/ui/formatcellsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "8fc8e945f2ca4f64c4cab1782c1b9f696019c59e419adc9140fd02151cac0631",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/formulacalculationoptions.ui",
+      "cui": "uiconfig/scalc/ui/formulacalculationoptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "1058f941a89e25a7c142b5045d7b06f17ee8a0d6b09c8352a26c0b1c82c0f13b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/fourieranalysisdialog.ui",
+      "cui": "uiconfig/scalc/ui/fourieranalysisdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 29,
+      "actions": 0,
+      "donor_sha256": "84a37b321d49754a1d047bf5f9bcbaaa44eeaf59de35017a07622ad61b7d476f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/functionpanel.ui",
+      "cui": "uiconfig/scalc/ui/functionpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "b8de2faaec2aeed51e1f1654fad344fb2f32e8b9d1b01b6e3f081bfd7cd8af19",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/goalseekdlg.ui",
+      "cui": "uiconfig/scalc/ui/goalseekdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "2434323b1e840509dd492b98bdb151c974a61ed79f75cbaf1b93b08907873c9a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/gotosheetdialog.ui",
+      "cui": "uiconfig/scalc/ui/gotosheetdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "29368fdb5fbc30ddd2c678777f7865aa281efb332d233d22bbacf4805c474543",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/groupbydate.ui",
+      "cui": "uiconfig/scalc/ui/groupbydate.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "58a18c3d2264a69470e1a2dbfa8ae5c052902690a868ea125fe4fb17ea062162",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/groupbynumber.ui",
+      "cui": "uiconfig/scalc/ui/groupbynumber.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "ee74073aa995f8ffff363bba28df0f94c780269e809d8e0a23b5efcf2b64ca5d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/groupdialog.ui",
+      "cui": "uiconfig/scalc/ui/groupdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "7262c63aa91482b98dc3cc87f18b0bdb5846c2215bae3aa4da233e5335737a63",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/headerdialog.ui",
+      "cui": "uiconfig/scalc/ui/headerdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "7f7ddc669ad4307ac961f191d1936b6155a43c9d4a8d9c89db005601fdab2ccd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/headerfootercontent.ui",
+      "cui": "uiconfig/scalc/ui/headerfootercontent.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 60,
+      "actions": 0,
+      "donor_sha256": "7c3d94f2ec960f269d3c1b6eef6f4aa07565a1b31b02cf37365d3035ed3384db",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/headerfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/headerfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "184f54e8a7d5903c4ebf647d91a1ded8a08640cfa44cb648279bdfde119549c7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/imoptdialog.ui",
+      "cui": "uiconfig/scalc/ui/imoptdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "4498ef92ef90728e7c8fdbb6fb6d124e94e8bf942b27c4a32908d5079b7e3fb2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/inputbar.ui",
+      "cui": "uiconfig/scalc/ui/inputbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "c5b51dd004e8deb4733802295d25d884a5c42e64fb5109d4eb36116f23c6613c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/inputstringdialog.ui",
+      "cui": "uiconfig/scalc/ui/inputstringdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "3ed862e928fd382dedb4debd1fb0808227fd309b7aa5b5a64b0d45b5627a8d55",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/insertcells.ui",
+      "cui": "uiconfig/scalc/ui/insertcells.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "e09f98862945df20787eec4d12b2b43adc31511c8c607c37fa909f1e6a14b215",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/insertname.ui",
+      "cui": "uiconfig/scalc/ui/insertname.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "2ab1cbd364fccc3c48745049e2347e824d6e13a57dd045fa46e3ddc3b3193c94",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/insertsheet.ui",
+      "cui": "uiconfig/scalc/ui/insertsheet.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "10d277f897d4aa5725d3a8986b523dc8e5f750dfb694e8cb8548a6374c0f1a67",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/integerdialog.ui",
+      "cui": "uiconfig/scalc/ui/integerdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "6db5fe8d03e027e49c7bed029fd436e6aea354a2a6938d9631e258d86e60b799",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/leftfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/leftfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "6b6481d49e2b7da7234be63a14409e40af63fe53341a4215ac145e129c6da488",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/leftheaderdialog.ui",
+      "cui": "uiconfig/scalc/ui/leftheaderdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "52ae7b0d8b7be80b3b850c8ca8fc13604869aa1956f4cf7b834979dd710e856a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/listmenu.ui",
+      "cui": "uiconfig/scalc/ui/listmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "55007bca222cc55cae9f1ca119c930eefd693b9610af6922b5054b71c312d48b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/managenamesdialog.ui",
+      "cui": "uiconfig/scalc/ui/managenamesdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 30,
+      "actions": 0,
+      "donor_sha256": "22d07aed93cac1a4ecfb255c59db95925b2ecc5146f4e462eb3b0a917a7c176c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/mergecellsdialog.ui",
+      "cui": "uiconfig/scalc/ui/mergecellsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "ed340f55506d1ea23da936e53cdb698facf6b23320a8db2b616f0c5ff1a4b731",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/mergecolumnentry.ui",
+      "cui": "uiconfig/scalc/ui/mergecolumnentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "4b79e532cdd8655b3deffbe87410e5e4e04cc7d186984d79f2edaff0a93a11b4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/movecopysheet.ui",
+      "cui": "uiconfig/scalc/ui/movecopysheet.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 30,
+      "actions": 0,
+      "donor_sha256": "0e6485b3d9d3d7d5325557c4a61a81cdba212cac4c934eb45cad8218b2b8943c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/movingaveragedialog.ui",
+      "cui": "uiconfig/scalc/ui/movingaveragedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "b268f47e39a6c3ce06be01250a57c436f8f6472a2971ec3d2efe64943c970c6c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/multipleoperationsdialog.ui",
+      "cui": "uiconfig/scalc/ui/multipleoperationsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "63f276ce4cf8d8989536323486da30c1311cc990138000a8014058279beedbc1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/namerangesdialog.ui",
+      "cui": "uiconfig/scalc/ui/namerangesdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "a3f2f47e6f8355846223bf41097d54b27b626f2c88038880bba72ca16f8eeb5b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/navigatorpanel.ui",
+      "cui": "uiconfig/scalc/ui/navigatorpanel.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "7d6164da1a5c1655368dde56ff7bf4a14a0fc0126be3f02eac03bde528f29249",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/nosolutiondialog.ui",
+      "cui": "uiconfig/scalc/ui/nosolutiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "098b4864ce39f2ac7db4abe6c1a94f13d650d53280b38fc979756dd207b49e65",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/notebookbar.ui",
+      "cui": "uiconfig/scalc/ui/notebookbar.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1209,
+      "actions": 0,
+      "donor_sha256": "2693336c8c71a662e4bbb7f456ae6c14ed689168de1c48aa9ad60ebeac7a9a7a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/notebookbar_compact.ui",
+      "cui": "uiconfig/scalc/ui/notebookbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1461,
+      "actions": 0,
+      "donor_sha256": "9ade89cc76d965b333c4d07b0d2dfdb3c8300b1ee861cff99d85f007e6f936cc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/notebookbar_groupedbar_compact.ui",
+      "cui": "uiconfig/scalc/ui/notebookbar_groupedbar_compact.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1208,
+      "actions": 0,
+      "donor_sha256": "8243edd9581dbe07ae6967f3df6fe2d671400fe75754805c6cd3da558d6046ff",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/notebookbar_groupedbar_full.ui",
+      "cui": "uiconfig/scalc/ui/notebookbar_groupedbar_full.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1124,
+      "actions": 0,
+      "donor_sha256": "20a8d8f4dfbf480cb4d8521a2df76d0e06fed673ae617c117d7c2f94b14d8913",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/notebookbar_groups.ui",
+      "cui": "uiconfig/scalc/ui/notebookbar_groups.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 175,
+      "actions": 0,
+      "donor_sha256": "09a2797f2433683636b79400064b76bb33882a1644093dd2de8deec0c4fed37b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/numberbox.ui",
+      "cui": "uiconfig/scalc/ui/numberbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "71ebc2b42cea2122639f23cf6ade42476ca4cef79f6e4c557424e6bf34788f6b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/numbertransformationentry.ui",
+      "cui": "uiconfig/scalc/ui/numbertransformationentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "5c0d32f33aa4305e32bc092f57a42c43e0e453d8aef486854389478ca2efaa6c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optcalculatepage.ui",
+      "cui": "uiconfig/scalc/ui/optcalculatepage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 51,
+      "actions": 0,
+      "donor_sha256": "b30b36749bb9c7564604498aa0698e3a542cd344fd8b10f120ce1259877a267a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optchangespage.ui",
+      "cui": "uiconfig/scalc/ui/optchangespage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "71df759d6d1222954c765de4d16ef40d001f011daca4f46f3e178331d36a98bc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optcompatibilitypage.ui",
+      "cui": "uiconfig/scalc/ui/optcompatibilitypage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "11c764dc7bae047d583daf04c08fc0092cc9154d03a24eeb6a07fb2053e729ae",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optdefaultpage.ui",
+      "cui": "uiconfig/scalc/ui/optdefaultpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "e069853a5cc798318521e023bdb3175df16dd681cca73eb970e1a4aa67210f45",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optdlg.ui",
+      "cui": "uiconfig/scalc/ui/optdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "389e9c45d51e1f32b71cc04885ed2b01e0993c8e3007f7a522e352f3eb10d314",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optformula.ui",
+      "cui": "uiconfig/scalc/ui/optformula.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 34,
+      "actions": 0,
+      "donor_sha256": "801b047a4e7435daab9623d167815788a2656b773a9c6409d933168887328489",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optimalcolwidthdialog.ui",
+      "cui": "uiconfig/scalc/ui/optimalcolwidthdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "232a747d4b8f54b931aa1ed89999d37b37acdc06fc630773a5011961fce06660",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optimalrowheightdialog.ui",
+      "cui": "uiconfig/scalc/ui/optimalrowheightdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "f025241a4c0d34204e33c1eefee30d6899b7d998878ea3cf3497165b936139c7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/optsortlists.ui",
+      "cui": "uiconfig/scalc/ui/optsortlists.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "186453c810d9a0d337347d732b41c1437edb1ff14d8dfaac5bd6f73d62abdd56",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pagelistmenu.ui",
+      "cui": "uiconfig/scalc/ui/pagelistmenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "141d2e1e711620a23d22da7a023928e403f813894c94ee73a91099ceef549aaf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pagetemplatedialog.ui",
+      "cui": "uiconfig/scalc/ui/pagetemplatedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "13433e10bab448a2339d2121d982ad2279989705fe63396119878e7779ba7d01",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/paradialog.ui",
+      "cui": "uiconfig/scalc/ui/paradialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "b5ae4e6e44fcdb181130baee87c02fe70da606f274ca6660d7509b79e54e6e89",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/paratemplatedialog.ui",
+      "cui": "uiconfig/scalc/ui/paratemplatedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "b86fa4fe52ee3c084585daba3ed9753913ac699c0ebe7fbe28bf903ef27adc66",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/passfragment.ui",
+      "cui": "uiconfig/scalc/ui/passfragment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "1f5d7a63dd185b69ef10a1de81810b694e3026d5cf6b35fdb693f6db3266fc3c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pastespecial.ui",
+      "cui": "uiconfig/scalc/ui/pastespecial.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 53,
+      "actions": 0,
+      "donor_sha256": "2a75ad8c8a4ca822ff3521273172e1b730412c84b3173a0c1b17323b1d9eb9bb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pivotcalcfielddialog.ui",
+      "cui": "uiconfig/scalc/ui/pivotcalcfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "32b93fae51353a57fe5edae8c7c2d35f86c4f5b7b66c50f6b49e58feee867ed8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pivotfielddialog.ui",
+      "cui": "uiconfig/scalc/ui/pivotfielddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "da5349159a48a48b4bf82bf253bcf1c39518ca1ecb534bba16b84a44e5c840c9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pivotfilterdialog.ui",
+      "cui": "uiconfig/scalc/ui/pivotfilterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 37,
+      "actions": 0,
+      "donor_sha256": "3ec31761cc2d850c355a53b6e5b60d81c0aba08f19757b171dba94291de8c227",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/pivottablelayoutdialog.ui",
+      "cui": "uiconfig/scalc/ui/pivottablelayoutdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 62,
+      "actions": 0,
+      "donor_sha256": "f0cf3e35b8830dc4ed5a09b276b1c7396ab565673d65510792ba755f4501283f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/posbox.ui",
+      "cui": "uiconfig/scalc/ui/posbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "5e423ce6cf5163cb370306e536022533b974e99aba1b82c3f25fd26428edbae0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/printareasdialog.ui",
+      "cui": "uiconfig/scalc/ui/printareasdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "ecd0babf8dc5dcaffd44fdd7313af2d88dd2149e1e7b0c7e0938c9276eb71469",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/printeroptions.ui",
+      "cui": "uiconfig/scalc/ui/printeroptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "8d303b677d2d0f2a60dcbbf7d3586d2bb5b199e03ae242a1554d352af40b01cb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/protectsheetdlg.ui",
+      "cui": "uiconfig/scalc/ui/protectsheetdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "8ae46f36228741b52cd8956dc62f08e96a03093b24b1c33764be1909345a367d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/queryrunstreamscriptdialog.ui",
+      "cui": "uiconfig/scalc/ui/queryrunstreamscriptdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "33ac6fc82bfe2d517ba435888cbd324a19759a7dabb7d78fcb3cf2433a22c04e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/randomnumbergenerator.ui",
+      "cui": "uiconfig/scalc/ui/randomnumbergenerator.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "868f1296fac265bdead9e8217d9b50e8d0c04509c59702e42a86aeb915054813",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/recalcquerydialog.ui",
+      "cui": "uiconfig/scalc/ui/recalcquerydialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "3b64c2c2c6b66db6d6de9a87e092c42f1d271bafb13dce2f2f3ef903ad537f5e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/regressiondialog.ui",
+      "cui": "uiconfig/scalc/ui/regressiondialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "a87a70de579c6855d558c36d64a2a9dcb123e6fd52a88c59758cda461a77407b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/replacenulltransformationentry.ui",
+      "cui": "uiconfig/scalc/ui/replacenulltransformationentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "8b70cd7fb941ed1720791e403b40649250813aac67296b56847c63bb6746b696",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/retypepassdialog.ui",
+      "cui": "uiconfig/scalc/ui/retypepassdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "a9731a2b062dc252b0d0fb76cba437eb731ef30854731fc49e5ae1758d3d1160",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/retypepassworddialog.ui",
+      "cui": "uiconfig/scalc/ui/retypepassworddialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "586be2e9a02d4625cfbb00a1178f169293a69946cfd90e21c10f43f9c8283720",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/rightfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/rightfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "51fbec47b42f1550c186d47faf45725edd256d2fa2f7e7aa416c3b2af2b43f2e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/rightheaderdialog.ui",
+      "cui": "uiconfig/scalc/ui/rightheaderdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "ca4dd6eac7a2e6587237d24931c49cbc864ba8be88cc4cd1f2a2b4c4b7e9e80b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/rowheightdialog.ui",
+      "cui": "uiconfig/scalc/ui/rowheightdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "07951abc8ef68d88dbb563123627b22537f332795a40db586fa9134f2807bdaf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/samplingdialog.ui",
+      "cui": "uiconfig/scalc/ui/samplingdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "c9d6ffce7ce0d7f8d42f89fb369a84c14316cf7de97783198d38345fb34c94e6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/scenariodialog.ui",
+      "cui": "uiconfig/scalc/ui/scenariodialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "5e05a53594113338a5d597993af6681e6f28b7c520348256b8aec347a1fcbeca",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/scenariomenu.ui",
+      "cui": "uiconfig/scalc/ui/scenariomenu.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "295f9d46ab7e83de10175583482136bc65d874ee73c43fb7a7f212343b32f4ef",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/scgeneralpage.ui",
+      "cui": "uiconfig/scalc/ui/scgeneralpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 44,
+      "actions": 0,
+      "donor_sha256": "146742be12659e931942d1dac382e415c88a8fb621bad5244716d4939ca26a7c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/searchresults.ui",
+      "cui": "uiconfig/scalc/ui/searchresults.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "265927d2ad98c0985b5749360279575c0a13b0530ba2bc77e3dc1267dc9d1162",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/selectdatasource.ui",
+      "cui": "uiconfig/scalc/ui/selectdatasource.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "a98f5863d8b1534dc2c8f4bc89087e31e54d7be8c775123ecb95f806d33d721c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/selectrange.ui",
+      "cui": "uiconfig/scalc/ui/selectrange.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "8289a776a48e1ac372d07d157f8be83ddcd71d996df1d443a502d8b957fc5b52",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/selectsheetviewdialog.ui",
+      "cui": "uiconfig/scalc/ui/selectsheetviewdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "aa3ecc8b6ef7b30efb1595b19f91bd727c19f59e435aeb91d0fabe52ffe2cb6c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/selectsource.ui",
+      "cui": "uiconfig/scalc/ui/selectsource.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "008634d269e5a596ffdfbe423c106370ff27a20538be02ca0a833f4e2f787418",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedfirstfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedfirstfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "13d29afbcb162d3c2b5fc0834192af6cb6dcd3070bf382f02c7abe39cae68ffe",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedfirstheaderdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedfirstheaderdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "1b1ff65e4d77f44ca9fe7807a140b99bd957620aadd40d115c50982998f58ce6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "d8ce58619f6b8f2ad8c8b37dd357bf2fe0c7ab417d3dea32bbab1cce7d9a6aad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedheaderdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedheaderdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "4fe988be57e268edbf42f235657d49c9ea48c1b47475ab5d1543ae021c6845d5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedleftfooterdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedleftfooterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "dc595801726749391315ef44ad105d33503a8b44751ab7e1ed1993d4d88dc8b9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedleftheaderdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedleftheaderdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "27c7277e625f8e2b9d4b52a0141eb91e6accfffff271867e3fedcd6d5ac42f29",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedocumentdlg.ui",
+      "cui": "uiconfig/scalc/ui/sharedocumentdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "4015499cb9a1e8efafd282896fa3d24452b70bc6babf9b68bfa3a95f3b0422ce",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sharedwarningdialog.ui",
+      "cui": "uiconfig/scalc/ui/sharedwarningdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "76454a40fbf3d214890935e5e03127a70bd0953b5a12c83cc9c27510d2541805",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sheetprintpage.ui",
+      "cui": "uiconfig/scalc/ui/sheetprintpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 39,
+      "actions": 0,
+      "donor_sha256": "b40972ff3c5bf74b6e8d20d718b501386526a338da408ace71e68f9ca99de7a6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sheetviewbox.ui",
+      "cui": "uiconfig/scalc/ui/sheetviewbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "9eb4ccf47a1f343c98bae41be137a501501df9f7f0d2b534531429b74d17a3a6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/showchangesdialog.ui",
+      "cui": "uiconfig/scalc/ui/showchangesdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "d038f4c82bbba5ff3d2c8e895d366a62fe43b93646702b871c89ea083186ee62",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/showdetaildialog.ui",
+      "cui": "uiconfig/scalc/ui/showdetaildialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "a1c453048d900aab648acb537f97f0cf87eaf9b4e7372089ef89bf91a658ce24",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/showsheetdialog.ui",
+      "cui": "uiconfig/scalc/ui/showsheetdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "f1447efe0ed6b0ef447f516e7997fd84ba240281b4d7d97a5c968faa41c2d932",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sidebaralignment.ui",
+      "cui": "uiconfig/scalc/ui/sidebaralignment.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "3ed49b24fdb82ee0874b43bcc23d5f8492065c17e97b2a2db40138245190c0a9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sidebarcellappearance.ui",
+      "cui": "uiconfig/scalc/ui/sidebarcellappearance.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "025bb50cbb7ea80456923ce3793b3f5553f337dd663db7e2e6e02e83f12ae1f7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sidebardatabase.ui",
+      "cui": "uiconfig/scalc/ui/sidebardatabase.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "1cd67c218988ea78be4ddc12ef43ffefa4eae404845f76496c288dfae41484de",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sidebarnumberformat.ui",
+      "cui": "uiconfig/scalc/ui/sidebarnumberformat.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "480970def4def04bda4211e739514de4081f7a5a73025afefc3dc90cd9ddac07",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/simplerefdialog.ui",
+      "cui": "uiconfig/scalc/ui/simplerefdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "fdebc60bd71e0b3a7cfb8dd09d317f91abf99242c36a331c2beba46e21e60d50",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/solverdlg.ui",
+      "cui": "uiconfig/scalc/ui/solverdlg.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 59,
+      "actions": 0,
+      "donor_sha256": "b1fdd75e4760484486e544c8eb23ef7e8c7f7c9243c2f93d1d7e23ef856aaee6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/solveroptionsdialog.ui",
+      "cui": "uiconfig/scalc/ui/solveroptionsdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "00ba32dd13197ec560e66f6e26efe568f5bcb84eaf641f32b1c73648482665c0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/solverprogressdialog.ui",
+      "cui": "uiconfig/scalc/ui/solverprogressdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "a644b910c701a8d04cfa8e5d998dfce0abdc62c5158f7e5390cd03365aea24cc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/solversuccessdialog.ui",
+      "cui": "uiconfig/scalc/ui/solversuccessdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "6020198e53248ba580615cc1572ab6be1d16f9d16017b1afaaa96a78eeb41111",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sortcriteriapage.ui",
+      "cui": "uiconfig/scalc/ui/sortcriteriapage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "94dd6a37e73d2fb3f04a1789485260beea2ba244251c2e85482200f1020c7485",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sortdialog.ui",
+      "cui": "uiconfig/scalc/ui/sortdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "91bda8f94771fbbd9689f1426f1416d59ba609f1f27fa6b487cbdd17caad58fa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sortkey.ui",
+      "cui": "uiconfig/scalc/ui/sortkey.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "8580119b7aecb0c887da0a6d61b65a20777ba7b260f51df4b81698fc28fb34eb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sortoptionspage.ui",
+      "cui": "uiconfig/scalc/ui/sortoptionspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "7d2a3ee13a22bf7a0a8bd807dc2e69c88d301482fdf9b7722bda36068fbc37a5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sorttransformationentry.ui",
+      "cui": "uiconfig/scalc/ui/sorttransformationentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "f658f22745151a3e62364ac7e1952a316e589a0a86c05aca265ce13f70830117",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sortwarning.ui",
+      "cui": "uiconfig/scalc/ui/sortwarning.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "54195db604649c1f178ac7df6d5512d406080a0165f4f5543aeea29c694a3ebc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sparklinedatarangedialog.ui",
+      "cui": "uiconfig/scalc/ui/sparklinedatarangedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "cc3627e950696a0a9ff094f1dd805b9ba1816a7d38c5aa635e5e8cbb2a5f5102",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/sparklinedialog.ui",
+      "cui": "uiconfig/scalc/ui/sparklinedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 54,
+      "actions": 0,
+      "donor_sha256": "dbb579b50751c0dc627bcd9e87dabf3a8d87747ed4f18fd95920c9e12391c1db",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/splitcolumnentry.ui",
+      "cui": "uiconfig/scalc/ui/splitcolumnentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "bba696683982576913a8e24b144f99b27d5120ff220d2bb757f04506d805bafc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/standardfilterdialog.ui",
+      "cui": "uiconfig/scalc/ui/standardfilterdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 70,
+      "actions": 0,
+      "donor_sha256": "d49d7e6ec75f221c51911e677efceba01006beea678c8bf4c06ea67519110d43",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/statisticsinfopage.ui",
+      "cui": "uiconfig/scalc/ui/statisticsinfopage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "85a6d634757d746d05d0e8ecab728bedf1cafd04e5697982f2d3777587ef98c1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/subtotaldialog.ui",
+      "cui": "uiconfig/scalc/ui/subtotaldialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "f9de69cb0ac2284dcd17c10e003865287af6a2eb8169d38e5870f05b5efa67ca",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/subtotalgrppage.ui",
+      "cui": "uiconfig/scalc/ui/subtotalgrppage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "538cdbd22fa90b8c0081702596d948fe0510943737fc14ed334cd8af25fb49a0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/subtotaloptionspage.ui",
+      "cui": "uiconfig/scalc/ui/subtotaloptionspage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "b24ef03073766d745bcee1344fe77a8fdbf8fa119b36251c6aeed946c615eca0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/swaprowsentry.ui",
+      "cui": "uiconfig/scalc/ui/swaprowsentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e4d214c55bed77a211baae7d485f2285efea938347254a96038a6f381dca3706",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/tabcolordialog.ui",
+      "cui": "uiconfig/scalc/ui/tabcolordialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "6b98daccd13a3292e4db4aae4c7ba480ba8f0676739b3b38de01bec8df6fbff1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/tablestylesbox.ui",
+      "cui": "uiconfig/scalc/ui/tablestylesbox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "5270534b7ec6dcacba809fdefbce18bb9647f7bbf19e293fa9ba9870fc7a0546",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/textimportcsv.ui",
+      "cui": "uiconfig/scalc/ui/textimportcsv.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 61,
+      "actions": 0,
+      "donor_sha256": "0cd261338e0e5b4decc8eb5eb4198bf5d736328659425ee6bbf412c4293b4fe3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/textimportoptions.ui",
+      "cui": "uiconfig/scalc/ui/textimportoptions.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "08028127dff4308531085d88756483ff07757c018a4dcb61dea124fb07ce5530",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/texttransformationentry.ui",
+      "cui": "uiconfig/scalc/ui/texttransformationentry.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "5284583cc168c4717e0eda5db18301ec9dc6d700661b84358b527a71ab30c9c1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/tpviewpage.ui",
+      "cui": "uiconfig/scalc/ui/tpviewpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 71,
+      "actions": 0,
+      "donor_sha256": "9a8804ed1c6f7c5dc48137e1ee3fbd31387601448bee74465132bdcc4e4e1b03",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/ttestdialog.ui",
+      "cui": "uiconfig/scalc/ui/ttestdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "18e5d8d4969f13b1c48866eff2f9d704a4158ddcdbc320eca4ae80878ae399c3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/ungroupdialog.ui",
+      "cui": "uiconfig/scalc/ui/ungroupdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "109d392316a2409b7c467d763b28feb5efd24367918fa5ae2acc6b75cc6f5a12",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/validationcriteriapage.ui",
+      "cui": "uiconfig/scalc/ui/validationcriteriapage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "6053baefdbea25fd1a7eec910c599e32d73909975d84fec35422279954fc9635",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/validationdialog.ui",
+      "cui": "uiconfig/scalc/ui/validationdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "952b04cc663d7ff8a79b3120e80feb67206aa26d1a3fcf0f35890473601749f4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/validationhelptabpage.ui",
+      "cui": "uiconfig/scalc/ui/validationhelptabpage.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "6de37c8825e40048d5aa71c0c098e4d24c86a43bdccd0518b6582912687659c7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/warnautocorrect.ui",
+      "cui": "uiconfig/scalc/ui/warnautocorrect.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "6066e13d1e5d75781e77272a0fbe2f73f0694a16675a0e06c8c2a9d57d75959e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/xmlsourcedialog.ui",
+      "cui": "uiconfig/scalc/ui/xmlsourcedialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "24bb1b5eedf288fc5e116f502f8c07a2372b9e61a94ba7a82887acf016f421cb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/zoombox.ui",
+      "cui": "uiconfig/scalc/ui/zoombox.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "7484ab3c2787affbc58491f634bc180d4296206b80ecb018cc1f9e8a9fd48143",
+      "refreshed": false
+    },
+    {
+      "donor_file": "uiconfig/scalc/ui/ztestdialog.ui",
+      "cui": "uiconfig/scalc/ui/ztestdialog.cui",
+      "status": "translated",
+      "dialect": "gtk",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "b8aeffb1863e9d8829f2376cd2a95eaa4e5158f29e297f5c33eaac3a292a6014",
+      "refreshed": false
+    }
+  ]
+}

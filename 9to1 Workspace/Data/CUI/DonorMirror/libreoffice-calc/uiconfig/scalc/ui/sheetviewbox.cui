@@ -1,0 +1,5 @@
+<Cui id="ui-sheetviewbox" product="9-1" version="1">
+  <Container id="sheet-view-box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+    <Input id="sheetview-combobox" Type="Select" focusable="false" role="Grow" />
+  </Container>
+</Cui>

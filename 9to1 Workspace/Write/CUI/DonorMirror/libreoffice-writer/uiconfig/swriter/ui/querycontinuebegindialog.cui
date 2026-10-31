@@ -1,0 +1,8 @@
+<Cui id="ui-querycontinuebegindialog" product="9-1" version="1">
+  <Container id="query-continue-begin-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="query-continue-begin-dialog-label" text="Continue at the beginning?" />
+    <Container id="messagedialog-vbox" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="messagedialog-action-area" Type="Horizontal Stack" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

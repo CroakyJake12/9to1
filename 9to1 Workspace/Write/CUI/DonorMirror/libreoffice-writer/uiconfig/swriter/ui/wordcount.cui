@@ -1,0 +1,34 @@
+<Cui id="ui-wordcount" product="9-1" version="1">
+  <Container id="word-count-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="word-count-dialog-label" text="Word Count" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="close" content="Close" text="Close" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="label1" text="Words" focusable="false" column="0" row="1" />
+        <Text id="label2" text="Characters including spaces" focusable="false" column="0" row="2" />
+        <Text id="label3" text="Characters excluding spaces" focusable="false" column="0" row="3" />
+        <Text id="selectwords" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="1" />
+        <Text id="selectchars" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="2" />
+        <Text id="selectcharsnospaces" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="3" />
+        <Text id="label9" text="Selection" horizontal-alignment="Right" focusable="false" column="1" row="0" />
+        <Text id="label10" text="Document" horizontal-alignment="Right" focusable="false" column="2" row="0" />
+        <Text id="docwords" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="2" row="1" />
+        <Text id="docchars" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="2" row="2" />
+        <Text id="doccharsnospaces" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="2" row="3" />
+        <Text id="cjkcharsft" text="Asian characters and Korean words" focusable="false" column="0" row="4" />
+        <Text id="selectcjkchars" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="4" />
+        <Text id="doccjkchars" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="2" row="4" />
+        <Text id="standardizedpages" text="Standardized pages" focusable="false" column="0" row="5" />
+        <Text id="selectstandardizedpages" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="5" />
+        <Text id="docstandardizedpages" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="2" row="5" />
+        <Text id="lb-comments" text="Comments" focusable="false" column="0" row="6" />
+        <Text id="doc-comments" text="0" horizontal-alignment="Right" focusable="false" role="Grow" column="2" row="6" />
+        <Text id="label-cursor" text="Words before/after cursor" focusable="false" column="0" row="7" />
+        <Text id="wordscursor" text="0/0" horizontal-alignment="Right" focusable="false" role="Grow" column="1" row="7" column-span="2" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

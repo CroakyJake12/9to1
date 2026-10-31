@@ -1,0 +1,12 @@
+<Cui id="ui-printmergedialog" product="9-1" version="1">
+  <Container id="print-merge-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="print-merge-dialog-label" text="Your document contains address database fields. Do you want to print a form letter?" />
+    <Container id="messagedialog-vbox" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="messagedialog-action-area" Type="Horizontal Stack" focusable="false">
+        <Button id="yes" content="Yes" text="Yes" />
+        <Button id="no" content="No" text="No" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

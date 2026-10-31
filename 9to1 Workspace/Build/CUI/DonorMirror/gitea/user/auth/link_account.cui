@@ -1,0 +1,24 @@
+<Cui id="auth-link-account" product="9-1" version="1">
+  <Page id="auth-link-account-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="overflow-menu" Type="Vertical Stack">
+        <Container id="div-2" Type="Vertical Stack">
+          <Button id="a" />
+          <Button id="a-2" />
+        </Container>
+      </Container>
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack">
+          <Container id="div-5" Type="Vertical Stack">
+            <Container id="div-6" Type="Vertical Stack">
+              <Container id="div-7" Type="Vertical Stack" />
+            </Container>
+          </Container>
+          <Container id="div-8" Type="Vertical Stack">
+            <Container id="div-9" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

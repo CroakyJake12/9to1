@@ -1,0 +1,37 @@
+<Cui id="dialogs-decompress-archive-dialog" product="9-1" version="1">
+  <Actions>
+    <Action name="{x:bind-view-model.select-destination-command}" command="{x:Bind ViewModel.SelectDestinationCommand}" />
+  </Actions>
+  <Page id="dialogs-decompress-archive-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="border" Type="Overlay" min-width="400" margin="0,16,0,0">
+        <Container id="stackpanel" Type="Vertical Stack">
+          <Container id="grid" Type="Grid">
+            <Container id="grid.columndefinitions" Type="Vertical Stack">
+              <Text id="columndefinition" width="400" />
+              <Text id="columndefinition-2" />
+            </Container>
+            <Container id="grid.rowdefinitions" Type="Vertical Stack">
+              <Text id="rowdefinition" />
+              <Text id="rowdefinition-2" />
+            </Container>
+            <Text id="textblock" row="0" column-span="2" text="{helpers:ResourceString Name=ExtractToPath}" />
+            <Input id="autosuggestbox" Type="Select" row="1" column="0" horizontal-alignment="Stretch" text="{Binding ViewModel.DestinationFolderPath}" />
+            <Button id="button" row="1" column="1" content="{helpers:ResourceString Name=Browse}" action="{x:bind-view-model.select-destination-command}" />
+          </Container>
+          <Container id="stackpanel-2" Type="Vertical Stack">
+            <Text id="textblock-2" horizontal-alignment="Stretch" vertical-alignment="Stretch" text="{helpers:ResourceString Name=ArchivePassword}" />
+            <Input id="passwordbox" Type="Text" horizontal-alignment="Stretch" vertical-alignment="Stretch" placeholder-text="{helpers:ResourceString Name=Password}" />
+          </Container>
+          <Container id="stackpanel-3" Type="Vertical Stack">
+            <Text id="textblock-3" horizontal-alignment="Stretch" vertical-alignment="Stretch" text="{helpers:ResourceString Name=Encoding}" />
+            <Input id="combobox" Type="Select" horizontal-alignment="Stretch" vertical-alignment="Stretch">
+              <Container id="combobox.itemtemplate" Type="Vertical Stack" />
+            </Input>
+          </Container>
+          <Input id="checkbox" Type="Checkbox" row="3" content="{helpers:ResourceString Name=DecompressArchiveDialogOpenDestinationWhenComplete/Content}" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

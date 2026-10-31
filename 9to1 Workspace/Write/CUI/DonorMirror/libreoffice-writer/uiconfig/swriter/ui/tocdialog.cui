@@ -1,0 +1,18 @@
+<Cui id="ui-tocdialog" product="9-1" version="1">
+  <Container id="toc-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="toc-dialog-label" text="Table of Contents, Index or Bibliography" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="reset" content="Reset" text="Reset" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+        <Input id="showexample" Type="Checkbox" text="Preview" role="Grow" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+        <Container id="example" Type="Overlay" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

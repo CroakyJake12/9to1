@@ -1,0 +1,18 @@
+<Cui id="ui-breakdialog" product="9-1" version="1">
+  <Container id="break-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="break-dialog-label" text="Break" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false">
+        <Text id="label1" text="Processing metafile:" focusable="false" column="0" row="0" />
+        <Text id="label2" text="Broken down metaobjects:" focusable="false" column="0" row="1" />
+        <Text id="label3" text="Inserted drawing objects:" focusable="false" column="0" row="2" />
+        <Text id="metafiles" focusable="false" column="1" row="0" />
+        <Text id="metaobjects" focusable="false" column="1" row="1" />
+        <Text id="drawingobjects" focusable="false" column="1" row="2" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

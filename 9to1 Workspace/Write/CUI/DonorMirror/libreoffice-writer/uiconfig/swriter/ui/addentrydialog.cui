@@ -1,0 +1,16 @@
+<Cui id="ui-addentrydialog" product="9-1" version="1">
+  <Container id="add-entry-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="add-entry-dialog-label" text="Add Element" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Input id="entry" Type="Text" vertical-alignment="Top" />
+        <Text id="label1" text="Element Name" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

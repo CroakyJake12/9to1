@@ -1,0 +1,17 @@
+<Cui id="workspacesbar-workspacesbar" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
+    <Container id="workspaces-scroller" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow">
+      <Container id="workspaces-listbox" Type="Vertical Stack" horizontal-alignment="Stretch" vertical-alignment="Stretch" role="Grow" />
+    </Container>
+    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="container-3" Type="Vertical Stack" cell-gap="6" horizontal-alignment="Stretch" vertical-alignment="Bottom">
+      <Container id="container-4" Type="Vertical Stack">
+        <Button id="move-selected-workspace-up-button" />
+        <Button id="move-selected-workspace-down-button" />
+      </Container>
+      <Button id="add-workspace-button" />
+      <Button id="remove-selected-workspace-button" />
+      <Button id="edit-selected-workspace-button" icon-source="edit-symbolic" />
+    </Container>
+  </Container>
+</Cui>

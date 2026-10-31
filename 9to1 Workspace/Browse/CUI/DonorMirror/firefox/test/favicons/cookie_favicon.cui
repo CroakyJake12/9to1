@@ -1,0 +1,12 @@
+<Cui id="favicons-cookie-favicon" product="9-1" version="1">
+  <Page id="favicons-cookie-favicon-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

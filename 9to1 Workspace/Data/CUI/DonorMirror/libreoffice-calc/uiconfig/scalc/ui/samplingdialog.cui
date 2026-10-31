@@ -1,0 +1,36 @@
+<Cui id="ui-samplingdialog" product="9-1" version="1">
+  <Container id="sampling-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="sampling-dialog-label" text="Sampling" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="input-range-label" text="Input range:" focusable="false" column="0" row="0" />
+          <Input id="input-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+          <Button id="input-range-button" column="2" row="0" />
+          <Text id="output-range-label" text="Results to:" focusable="false" column="0" row="1" />
+          <Input id="output-range-edit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="1" />
+          <Button id="output-range-button" column="2" row="1" />
+        </Container>
+        <Text id="label4" text="Data" focusable="false" />
+      </Container>
+      <Container id="frame2" Type="Vertical Stack" focusable="false">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="random-method-radio" Type="Radio" text="Random" checked="true" column="0" row="0" column-span="2" />
+          <Text id="label1" text="Sample size:" focusable="false" role="Grow" column="0" row="1" />
+          <Input id="sample-size-spin" Type="Number" text="1" Value="1" role="Grow" column="1" row="1" />
+          <Input id="with-replacement" Type="Checkbox" text="With replacement" column="0" row="2" column-span="2" />
+          <Input id="keep-order" Type="Checkbox" text="Keep order" column="0" row="3" column-span="2" />
+          <Input id="periodic-method-radio" Type="Radio" text="Periodic" column="0" row="4" column-span="2" />
+          <Text id="label3" text="Period:" focusable="false" role="Grow" column="0" row="5" />
+          <Input id="period-spin" Type="Number" text="1" Value="1" role="Grow" column="1" row="5" />
+        </Container>
+        <Text id="label2" text="Sampling Method" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

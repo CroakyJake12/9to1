@@ -1,0 +1,7 @@
+<Cui id="menus-menu-flyout-item-with-themed-icon" product="9-1" version="1">
+  <Page id="menus-menu-flyout-item-with-themed-icon-root">
+    <Button id="menuflyoutitem" Type="Menu Item">
+      <Container id="menuflyoutitem.style" Type="Vertical Stack" />
+    </Button>
+  </Page>
+</Cui>

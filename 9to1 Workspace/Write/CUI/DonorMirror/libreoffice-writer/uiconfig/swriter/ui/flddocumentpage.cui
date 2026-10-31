@@ -1,0 +1,41 @@
+<Cui id="ui-flddocumentpage" product="9-1" version="1">
+  <Container id="field-document-page" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+    <Container id="typeframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="container" Type="Vertical Stack" role="Grow">
+        <Container id="type" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="label1" text="Type" focusable="false" />
+    </Container>
+    <Container id="selectframe" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="container-2" Type="Vertical Stack" role="Grow">
+        <Container id="select" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="label2" text="Select" focusable="false" />
+    </Container>
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+      <Container id="formatframe" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+        <Container id="box1" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+          <Container id="container-3" Type="Vertical Stack" role="Grow">
+            <Container id="format" Type="Vertical Stack" role="Grow" />
+          </Container>
+          <Container id="container-4" Type="Vertical Stack" role="Grow">
+            <Container id="numformat" Type="Vertical Stack" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="label3" text="Format" focusable="false" />
+      </Container>
+      <Input id="fixed" Type="Checkbox" text="Fixed content" column="0" row="1" />
+      <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" column="0" row="2">
+        <Text id="levelft" text="Up to level:" focusable="false" column="0" row="0" />
+        <Input id="level" Type="Select" tooltip="Select the first prior heading for display whose outline level is less than or equal to the specified value." column="0" row="1" />
+        <Input id="offset" Type="Number" column="0" row="4" />
+        <Text id="daysft" text="Offset in days" focusable="false" column="0" row="2" />
+        <Text id="minutesft" text="Offset in minutes" focusable="false" column="0" row="3" />
+      </Container>
+      <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" column="0" row="3">
+        <Text id="valueft" text="Value" focusable="false" column="0" row="0" />
+        <Input id="value" Type="Text" column="0" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

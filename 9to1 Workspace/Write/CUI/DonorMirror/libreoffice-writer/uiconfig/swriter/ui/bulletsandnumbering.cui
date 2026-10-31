@@ -1,0 +1,16 @@
+<Cui id="ui-bulletsandnumbering" product="9-1" version="1">
+  <Container id="bullets-and-numbering-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="bullets-and-numbering-dialog-label" text="Bullets and Numbering" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="user" content="Remove" text="Remove" />
+        <Button id="reset" content="Reset" text="Reset" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+        <Input id="dummycombo" Type="Select" focusable="false" role="Grow" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

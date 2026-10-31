@@ -1,0 +1,27 @@
+<Cui id="widgets-network-locations-widget" product="9-1" version="1">
+  <Actions>
+    <Action name="no-network-locations-info-bar-button-click" command="NoNetworkLocationsInfoBarButton_Click" />
+  </Actions>
+  <Page id="widgets-network-locations-widget-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="infobar" Type="Horizontal Stack">
+          <Container id="grid-2" Type="Grid">
+            <Container id="grid.columndefinitions" Type="Vertical Stack">
+              <Text id="columndefinition" />
+              <Text id="columndefinition-2" />
+            </Container>
+            <Text id="textblock" column="0" vertical-alignment="Center" text="{helpers:ResourceString Name=NoNetworkLocationsInfo}" />
+            <Button id="button" column="1" margin="8" horizontal-alignment="Right" content="{helpers:ResourceString Name=Disable}" action="no-network-locations-info-bar-button-click" />
+          </Container>
+        </Container>
+        <Container id="itemsrepeater" Type="Vertical Stack">
+          <Container id="itemsrepeater.layout" Type="Vertical Stack">
+            <Text id="uniformgridlayout" />
+          </Container>
+          <Container id="itemsrepeater.itemtemplate" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

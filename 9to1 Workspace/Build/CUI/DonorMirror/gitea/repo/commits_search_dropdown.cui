@@ -1,0 +1,12 @@
+<Cui id="repo-commits-search-dropdown" product="9-1" version="1">
+  <Page id="repo-commits-search-dropdown-root">
+    <Container id="div" Type="Vertical Stack">
+      <Input id="input" Type="Text" />
+      <Container id="div-2" Type="Vertical Stack" />
+      <Container id="div-3" Type="Vertical Stack">
+        <Container id="div-4" Type="Vertical Stack" />
+        <Container id="div-5" Type="Vertical Stack" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

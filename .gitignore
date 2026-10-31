@@ -52,3 +52,12 @@ dist/
 *.ucml.*
 
 
+
+# Donor sources materialised locally for the Stage A UI mirrors (see eng/cui-mirror). They are pinned by
+# exact upstream revision in eng/donor-sources.json and verified by recorded digests; they are not
+# committed as loose trees. The mirrored .cui corpora under */CUI/DonorMirror/ ARE committed.
+9to1 Workspace/Write/Source/LibreOffice/
+9to1 Workspace/Connect/Source/Thunderbird/
+9to1 Workspace/Dev/Source/CodeOSS/
+9to1 Workspace/Build/Source/Gitea/
+9to1 Workspace/Boards/Source/AppFlowy/

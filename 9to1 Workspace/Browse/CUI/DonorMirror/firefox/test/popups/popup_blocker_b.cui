@@ -1,0 +1,7 @@
+<Cui id="popups-popup-blocker-b" product="9-1" version="1">
+  <Page id="popups-popup-blocker-b-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="body" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

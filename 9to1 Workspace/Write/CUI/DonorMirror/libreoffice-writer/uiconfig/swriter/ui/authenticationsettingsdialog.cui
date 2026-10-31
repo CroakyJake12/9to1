@@ -1,0 +1,42 @@
+<Cui id="ui-authenticationsettingsdialog" product="9-1" version="1">
+  <Container id="authentication-settings-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="authentication-settings-dialog-label" text="Server Authentication" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="authentication" Type="Checkbox" text="The outgoing mail server (SMTP) requires authentication" column="1" row="0" column-span="2" />
+        <Input id="separateauthentication" Type="Radio" text="The outgoing mail server (SMTP) requires separate authentication" checked="true" column="1" row="1" column-span="2" />
+        <Text id="label1" text="Outgoing mail server:" focusable="false" column="1" row="2" column-span="2" />
+        <Input id="username" Type="Text" role="Grow" column="2" row="3" />
+        <Text id="username-label" text="User name:" focusable="false" column="1" row="3" />
+        <Input id="outpassword" Type="Text" role="Grow" column="2" row="4" />
+        <Text id="outpassword-label" text="Password:" focusable="false" column="1" row="4" />
+        <Input id="smtpafterpop" Type="Radio" text="The outgoing mail server uses the same authentication as the incoming mail server" column="1" row="5" column-span="2" />
+        <Text id="label2" text="Incoming mail server:" focusable="false" column="1" row="6" column-span="2" />
+        <Input id="server" Type="Text" role="Grow" column="2" row="7" />
+        <Text id="server-label" text="Server name:" focusable="false" column="1" row="7" />
+        <Input id="port" Type="Number" horizontal-alignment="Left" column="2" row="8" />
+        <Text id="label3" text="Type:" focusable="false" column="1" row="9" row-span="2" />
+        <Input id="pop3" Type="Radio" text="POP3" checked="true" column="2" row="9" />
+        <Input id="imap" Type="Radio" text="IMAP" column="2" row="10" />
+        <Input id="inusername" Type="Text" role="Grow" column="2" row="11" />
+        <Input id="inpassword" Type="Text" role="Grow" column="2" row="12" />
+        <Text id="inusername-label" text="User name:" focusable="false" column="1" row="11" />
+        <Text id="inpassword-label" text="Password:" focusable="false" column="1" row="12" />
+        <Text id="port-label" text="Port:" focusable="false" column="1" row="8" />
+        <Image id="lockauthentication" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="0" source="res/lock.png" />
+        <Image id="lockseparaauth" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="1" source="res/lock.png" />
+        <Image id="lockusername" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="3" source="res/lock.png" />
+        <Image id="locksmtpafterpop" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="5" source="res/lock.png" />
+        <Image id="lockserver" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="7" source="res/lock.png" />
+        <Image id="lockport" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="8" source="res/lock.png" />
+        <Image id="lockpop3" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="9" source="res/lock.png" />
+        <Image id="lockinusername" horizontal-alignment="Center" vertical-alignment="Center" focusable="false" column="0" row="11" source="res/lock.png" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

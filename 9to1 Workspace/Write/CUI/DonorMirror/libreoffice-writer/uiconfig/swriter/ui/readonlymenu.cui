@@ -1,0 +1,42 @@
+<Cui id="ui-readonlymenu" product="9-1" version="1">
+  <Container id="menu" Type="Menu" focusable="false">
+    <Button id="openurl" Type="Menu Item" content="Open" text="Open" focusable="false" />
+    <Button id="opendoc" Type="Menu Item" content="Open in New Window" text="Open in New Window" focusable="false" />
+    <Button id="edit" Type="Menu Item" content="Edit" text="Edit" focusable="false" />
+    <Input id="selection" Type="Checkbox" text="Select Text" focusable="false" />
+    <Button id="reload" Type="Menu Item" content="Reload" text="Reload" focusable="false" />
+    <Button id="reloadframe" Type="Menu Item" content="Reload Frame" text="Reload Frame" focusable="false" />
+    <Input id="html" Type="Checkbox" text="HTML Source" focusable="false" />
+    <Button id="menuitem1" Type="Menu Item" focusable="false" />
+    <Button id="backward" Type="Menu Item" content="Backwards" text="Backwards" focusable="false" />
+    <Button id="forward" Type="Menu Item" content="Forward" text="Forward" focusable="false" />
+    <Button id="menuitem2" Type="Menu Item" focusable="false" />
+    <Button id="savegraphic" Type="Menu Item" content="Save Image..." text="Save Image..." focusable="false" />
+    <Button id="graphictogallery" Type="Menu Item" content="Add Image" text="Add Image" focusable="false">
+      <Container id="container" Type="Menu" focusable="false">
+        <Button id="graphicaslink" Type="Menu Item" content="As Link" text="As Link" focusable="false" />
+        <Button id="graphicascopy" Type="Menu Item" content="Copy" text="Copy" focusable="false" />
+        <Button id="menuitem3" Type="Menu Item" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="savebackground" Type="Menu Item" content="Save Background..." text="Save Background..." focusable="false" />
+    <Button id="backgroundtogallery" Type="Menu Item" focusable="false">
+      <Container id="container-2" Type="Menu" focusable="false">
+        <Button id="backaslink" Type="Menu Item" content="As Link" text="As Link" focusable="false" />
+        <Button id="backascopy" Type="Menu Item" content="Copy" text="Copy" focusable="false" />
+        <Button id="menuitem4" Type="Menu Item" focusable="false" />
+      </Container>
+    </Button>
+    <Button id="menuitem5" Type="Menu Item" focusable="false" />
+    <Button id="copylink" Type="Menu Item" content="Copy Link" text="Copy Link" focusable="false" />
+    <Button id="menuitem6" Type="Menu Item" focusable="false" />
+    <Button id="loadgraphic" Type="Menu Item" content="Load Image" text="Load Image" focusable="false" />
+    <Input id="imagesoff" Type="Checkbox" text="Image Off" focusable="false" />
+    <Button id="menuitem8" Type="Menu Item" focusable="false" />
+    <Input id="fullscreen" Type="Checkbox" text="Leave Full-Screen Mode" focusable="false" />
+    <Button id="menuitem9" Type="Menu Item" focusable="false" />
+    <Button id="copyfield" Type="Menu Item" content="Copy Field Contents..." text="Copy Field Contents..." focusable="false" />
+    <Button id="menuitem7" Type="Menu Item" focusable="false" />
+    <Button id="copy" Type="Menu Item" content="Copy" text="Copy" focusable="false" />
+  </Container>
+</Cui>

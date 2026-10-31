@@ -1,0 +1,8 @@
+<Cui id="tab-prompts-file-beforeunload-stop" product="9-1" version="1">
+  <Page id="tab-prompts-file-beforeunload-stop-root">
+    <Container id="body" Type="Vertical Stack">
+      <Text id="p" text="I will ask not to be closed." />
+      <Container id="script" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

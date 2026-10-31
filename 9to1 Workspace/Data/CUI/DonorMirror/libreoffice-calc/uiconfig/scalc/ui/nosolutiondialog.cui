@@ -1,0 +1,14 @@
+<Cui id="ui-nosolutiondialog" product="9-1" version="1">
+  <Container id="no-solution-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="no-solution-dialog-label" text="No Solution" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="label1" text="No solution was found." focusable="false" role="Grow" column="0" row="0" />
+        <Text id="error" text-wrapping="Wrap" focusable="false" role="Grow" column="0" row="1" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

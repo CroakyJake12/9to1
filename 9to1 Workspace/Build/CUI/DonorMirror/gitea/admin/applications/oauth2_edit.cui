@@ -1,0 +1,5 @@
+<Cui id="applications-oauth2-edit" product="9-1" version="1">
+  <Page id="applications-oauth2-edit-root">
+    <Container id="div" Type="Vertical Stack" />
+  </Page>
+</Cui>

@@ -1,0 +1,18 @@
+<Cui id="ui-dateformfielddialog" product="9-1" version="1">
+  <Container id="date-form-field-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="date-form-field-dialog-label" text="Date Picker Content Control" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="list-grid" Type="Grid" cell-gap="12" focusable="false">
+        <Text id="date-format-list-label" text="Date Format" focusable="false" column="0" row="0" />
+        <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="1">
+          <Container id="date-formats-treeview" Type="Vertical Stack" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,31 @@
+<Cui id="ui-pivotfielddialog" product="9-1" version="1">
+  <Container id="pivot-field-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="pivot-field-dialog-label" text="Data Field" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="options" content="Options..." text="Options..." />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="0">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="none" Type="Radio" text="None" checked="true" column="0" row="0" />
+            <Input id="auto" Type="Radio" text="Automatic" column="0" row="1" />
+            <Input id="user" Type="Radio" text="User-defined" column="0" row="2" />
+            <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="3">
+              <Container id="functions" Type="Vertical Stack" role="Grow" />
+            </Container>
+          </Container>
+          <Text id="label1" text="Subtotals" focusable="false" />
+        </Container>
+        <Input id="showall" Type="Checkbox" text="Show items without data" column="0" row="1" />
+        <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" column="0" row="2">
+          <Text id="label2" text="Name:" focusable="false" column="0" row="0" />
+          <Text id="name" focusable="false" column="1" row="0" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

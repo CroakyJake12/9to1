@@ -1,0 +1,147 @@
+<Cui id="content-sanitize-v2" product="9-1" version="1">
+  <Page id="content-sanitize-v2-root">
+    <Container id="SanitizeDialog" Type="Vertical Stack">
+      <Container id="dialog" Type="Vertical Stack">
+        <Container id="hbox" Type="Horizontal Stack">
+          <Text id="titleText" />
+        </Container>
+        <Container id="linkset" Type="Vertical Stack">
+          <Container id="link" Type="Vertical Stack" />
+          <Container id="link-2" Type="Vertical Stack" />
+          <Container id="link-3" Type="Vertical Stack" />
+          <Container id="link-4" Type="Vertical Stack" />
+          <Container id="link-5" Type="Vertical Stack" />
+          <Container id="link-6" Type="Vertical Stack" />
+        </Container>
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="chrome://global/content/preferencesBindings.js" />
+        </Container>
+        <Container id="script-2" Type="Vertical Stack">
+          <Image id="script-icon-2" source="chrome://browser/content/sanitizeDialog.js" />
+        </Container>
+        <Text id="SanitizeOnShutdownDescription" />
+        <Container id="SanitizeDurationBox" Type="Horizontal Stack" vertical-alignment="Center">
+          <Text id="sanitizeDurationLabel" />
+          <Container id="sanitizeDurationChoice" Type="Vertical Stack" role="Grow">
+            <Container id="sanitizeDurationPopup" Type="Menu">
+              <Button id="menuitem" text="1" />
+              <Button id="menuitem-2" text="2" />
+              <Button id="menuitem-3" text="3" />
+              <Button id="sanitizeSinceMidnight" text="4" />
+              <Container id="menuseparator" Type="Menu" />
+              <Button id="menuitem-4" text="0" />
+            </Container>
+          </Container>
+          <Text id="sanitizeDurationSuffixLabel" />
+        </Container>
+        <Container id="sanitizeEverythingWarningBox" Type="Vertical Stack">
+          <Container id="spacer" Type="Vertical Stack" role="Grow" />
+          <Container id="hbox-2" Type="Horizontal Stack" vertical-alignment="Center">
+            <Image id="image" />
+            <Container id="sanitizeEverythingWarningDescBox" Type="Vertical Stack" role="Grow">
+              <Text id="sanitizeEverythingWarning" />
+              <Text id="sanitizeEverythingUndoWarning" />
+            </Container>
+          </Container>
+          <Container id="spacer-2" Type="Vertical Stack" role="Grow" />
+        </Container>
+        <Container id="clearPrivateDataGroupbox" Type="Vertical Stack">
+          <Container id="hbox-3" Type="Horizontal Stack">
+            <Container id="vbox" Type="Vertical Stack">
+              <Input id="browsingHistoryAndDownloads" Type="Checkbox" />
+              <Text id="browsing-history-downloads-description" />
+            </Container>
+          </Container>
+          <Container id="hbox-4" Type="Horizontal Stack">
+            <Container id="vbox-2" Type="Vertical Stack">
+              <Input id="cookiesAndStorage" Type="Checkbox" />
+              <Text id="cookies-site-data-description" />
+            </Container>
+          </Container>
+          <Container id="hbox-5" Type="Horizontal Stack">
+            <Container id="vbox-3" Type="Vertical Stack">
+              <Input id="cache" Type="Checkbox" />
+              <Text id="cached-content-description" />
+            </Container>
+          </Container>
+          <Container id="hbox-6" Type="Horizontal Stack">
+            <Container id="vbox-4" Type="Vertical Stack">
+              <Input id="formdata" Type="Checkbox" />
+              <Text id="formdata-description" />
+            </Container>
+          </Container>
+          <Container id="hbox-7" Type="Horizontal Stack">
+            <Container id="vbox-5" Type="Vertical Stack">
+              <Input id="siteSettings" Type="Checkbox" />
+              <Text id="site-prefs-description" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="clearSiteDataGroupbox" Type="Vertical Stack">
+          <Container id="hbox-8" Type="Horizontal Stack">
+            <Container id="vbox-6" Type="Vertical Stack">
+              <Input id="browsingHistoryAndDownloads-2" Type="Checkbox" />
+              <Text id="browsing-history-downloads-description-2" />
+            </Container>
+          </Container>
+          <Container id="hbox-9" Type="Horizontal Stack">
+            <Container id="vbox-7" Type="Vertical Stack">
+              <Input id="cookiesAndStorage-2" Type="Checkbox" />
+              <Text id="cookies-site-data-description-2" />
+            </Container>
+          </Container>
+          <Container id="hbox-10" Type="Horizontal Stack">
+            <Container id="vbox-8" Type="Vertical Stack">
+              <Input id="cache-2" Type="Checkbox" />
+              <Text id="cached-content-description-2" />
+            </Container>
+          </Container>
+          <Container id="hbox-11" Type="Horizontal Stack">
+            <Container id="vbox-9" Type="Vertical Stack">
+              <Input id="formdata-2" Type="Checkbox" />
+              <Text id="formdata-description-2" />
+            </Container>
+          </Container>
+          <Container id="hbox-12" Type="Horizontal Stack">
+            <Container id="vbox-10" Type="Vertical Stack">
+              <Input id="siteSettings-2" Type="Checkbox" />
+              <Text id="site-prefs-description-2" />
+            </Container>
+          </Container>
+        </Container>
+        <Container id="clearOnShutdownGroupbox" Type="Vertical Stack">
+          <Container id="hbox-13" Type="Horizontal Stack">
+            <Container id="vbox-11" Type="Vertical Stack">
+              <Input id="browsingHistoryAndDownloads-3" Type="Checkbox" />
+              <Text id="history-and-downloads-description" />
+            </Container>
+          </Container>
+          <Container id="hbox-14" Type="Horizontal Stack">
+            <Container id="vbox-12" Type="Vertical Stack">
+              <Input id="cookiesAndStorage-3" Type="Checkbox" />
+              <Text id="cookies-site-data-description-3" />
+            </Container>
+          </Container>
+          <Container id="hbox-15" Type="Horizontal Stack">
+            <Container id="vbox-13" Type="Vertical Stack">
+              <Input id="cache-3" Type="Checkbox" />
+              <Text id="cached-content-description-3" />
+            </Container>
+          </Container>
+          <Container id="hbox-16" Type="Horizontal Stack">
+            <Container id="vbox-14" Type="Vertical Stack">
+              <Input id="formdata-3" Type="Checkbox" />
+              <Text id="formdata-description-3" />
+            </Container>
+          </Container>
+          <Container id="hbox-17" Type="Horizontal Stack">
+            <Container id="vbox-15" Type="Vertical Stack">
+              <Input id="siteSettings-3" Type="Checkbox" />
+              <Text id="site-prefs-description-3" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

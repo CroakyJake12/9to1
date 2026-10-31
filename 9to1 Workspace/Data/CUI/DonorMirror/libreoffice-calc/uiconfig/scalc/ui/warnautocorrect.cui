@@ -1,0 +1,13 @@
+<Cui id="ui-warnautocorrect" product="9-1" version="1">
+  <Container id="warn-auto-correct" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="warn-auto-correct-label" text="%PRODUCTNAME Calc found an error in the formula entered." />
+    <Container id="messagedialog-vbox" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="messagedialog-action-area" Type="Horizontal Stack" focusable="false" />
+      <Container id="grid" Type="Grid" focusable="false" role="Grow">
+        <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="0">
+          <Input id="error" Type="Text" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

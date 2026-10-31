@@ -1,0 +1,28 @@
+<Cui id="ui-sidebarslidebackground" product="9-1" version="1">
+  <Container id="slide-background-panel" Type="Grid" focusable="false">
+    <Container id="grid1" Type="Grid" cell-gap="3" horizontal-alignment="Center" focusable="false" role="Grow" column="0" row="0">
+      <Text id="label2" text="Format:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+      <Text id="label3" text="Background:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+      <Input id="orientation" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+      <Input id="fillstyle" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+      <Button id="fillattr" width="150" vertical-alignment="Center" role="Grow" column="1" row="3" />
+      <Input id="displaymasterobjects" Type="Checkbox" text="Master Objects" role="Grow" column="1" row="11" />
+      <Input id="masterslide" Type="Select" focusable="false" role="Grow" column="1" row="9" />
+      <Text id="masterlabel" text-trimming="PathSegmentEllipsis" horizontal-alignment="Right" focusable="false" column="0" row="9" />
+      <Button id="button2" content="Insert Image..." text="Insert Image..." role="Grow" column="1" row="7" />
+      <Input id="fillattr1" Type="Select" focusable="false" role="Grow" column="1" row="4" />
+      <Button id="fillattr2" width="150" vertical-alignment="Center" role="Grow" column="1" row="5" />
+      <Button id="fillattr3" width="150" vertical-alignment="Center" role="Grow" column="1" row="6" />
+      <Input id="displaymasterbackground" Type="Checkbox" text="Master Background" role="Grow" column="1" row="10" />
+      <Input id="paperformat" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+      <Text id="label4" text="Orientation:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+      <Container id="box1" Type="Vertical Stack" focusable="false" role="Grow" column="1" row="12">
+        <Button id="masterslidebutton" content="Master View" text="Master View" />
+        <Button id="closemasterslide" content="Close Master View" text="Close Master View" />
+      </Container>
+      <Input id="margin-lb" Type="Select" focusable="false" column="1" row="8" />
+      <Text id="labelmargin" text="Margin:" horizontal-alignment="Right" focusable="false" column="0" row="8" />
+      <Text id="customlabel" text="Custom" focusable="false" column="1" row="13" />
+    </Container>
+  </Container>
+</Cui>

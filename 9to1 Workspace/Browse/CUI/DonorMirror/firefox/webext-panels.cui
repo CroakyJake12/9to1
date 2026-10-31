@@ -1,0 +1,50 @@
+<Cui id="content-webext-panels" product="9-1" version="1">
+  <Page id="content-webext-panels-root">
+    <Container id="webextpanels-window" Type="Vertical Stack">
+      <Container id="script" Type="Vertical Stack">
+        <Image id="script-icon" source="chrome://global/content/contentAreaUtils.js" />
+      </Container>
+      <Container id="script-2" Type="Vertical Stack">
+        <Image id="script-icon-2" source="chrome://browser/content/browser.js" />
+      </Container>
+      <Container id="script-3" Type="Vertical Stack">
+        <Image id="script-icon-3" source="chrome://browser/content/places/browserPlacesViews.js" />
+      </Container>
+      <Container id="script-4" Type="Vertical Stack">
+        <Image id="script-icon-4" source="chrome://browser/content/browser-places.js" />
+      </Container>
+      <Container id="script-5" Type="Vertical Stack">
+        <Image id="script-icon-5" source="chrome://browser/content/webext-panels.js" />
+      </Container>
+      <Container id="script-6" Type="Vertical Stack">
+        <Image id="script-icon-6" source="chrome://global/content/globalOverlay.js" />
+      </Container>
+      <Container id="script-7" Type="Vertical Stack">
+        <Image id="script-icon-7" source="chrome://browser/content/utilityOverlay.js" />
+      </Container>
+      <Container id="script-8" Type="Vertical Stack">
+        <Image id="script-icon-8" source="chrome://global/content/editMenuOverlay.js" />
+      </Container>
+      <Container id="linkset" Type="Vertical Stack">
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+        <Container id="link-5" Type="Vertical Stack" />
+        <Container id="link-6" Type="Vertical Stack" />
+        <Container id="link-7" Type="Vertical Stack" />
+        <Container id="link-8" Type="Vertical Stack" />
+      </Container>
+      <Container id="mainCommandset" Type="Vertical Stack">
+        <Container id="command" Type="Vertical Stack" />
+        <Container id="command-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="mainPopupSet" Type="Vertical Stack">
+        <Container id="aHTMLTooltip" Type="Floating" />
+        <Container id="PopupAutoComplete" Type="Overlay" hidden="true" />
+        <Container id="contentAreaContextMenu" Type="Menu" />
+      </Container>
+      <Container id="sidebar-panel-header" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

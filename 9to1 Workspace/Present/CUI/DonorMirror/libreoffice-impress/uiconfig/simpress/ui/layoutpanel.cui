@@ -1,0 +1,7 @@
+<Cui id="ui-layoutpanel" product="9-1" version="1">
+  <Container id="layout-panel" Type="Vertical Stack" focusable="false" role="Grow">
+    <Container id="layoutpanel-scrolled-window" Type="Vertical Stack" role="Grow">
+      <Container id="layoutpanel-icons" Type="Wrap" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,9 @@
+<Cui id="file-previews-html-preview" product="9-1" version="1">
+  <Page id="file-previews-html-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="border" Type="Overlay" horizontal-alignment="Stretch" vertical-alignment="Stretch">
+        <Text id="webview2" horizontal-alignment="Stretch" vertical-alignment="Stretch" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

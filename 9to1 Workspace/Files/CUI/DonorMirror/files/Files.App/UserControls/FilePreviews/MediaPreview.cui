@@ -1,0 +1,17 @@
+<Cui id="file-previews-media-preview" product="9-1" version="1">
+  <Page id="file-previews-media-preview-root">
+    <Container id="usercontrol" Type="Vertical Stack">
+      <Container id="usercontrol.keyboardaccelerators" Type="Vertical Stack">
+        <Container id="keyboardaccelerator" Type="Vertical Stack" />
+      </Container>
+      <Container id="border" Type="Overlay">
+        <Container id="mediaplayerelement" Type="Vertical Stack" background="Transparent" foreground="Transparent">
+          <Image id="mediaplayerelement-icon" source="{Binding ViewModel.Source}" />
+          <Container id="mediaplayerelement.transportcontrols" Type="Vertical Stack">
+            <Text id="mediatransportcontrols" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

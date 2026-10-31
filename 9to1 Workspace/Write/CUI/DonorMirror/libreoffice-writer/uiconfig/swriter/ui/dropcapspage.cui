@@ -1,0 +1,33 @@
+<Cui id="ui-dropcapspage" product="9-1" version="1">
+  <Container id="drop-cap-page" Type="Grid" cell-gap="6" vertical-alignment="Top" focusable="false" role="Grow">
+    <Container id="maingrid" Type="Grid" cell-gap="12" horizontal-alignment="Left" vertical-alignment="Top" focusable="false" role="Grow" column="0" row="0">
+      <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="0">
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="check-cb-switch" Type="Checkbox" text="Display drop caps" column="0" row="0" column-span="2" />
+          <Input id="check-cb-word" Type="Checkbox" text="Whole word" column="0" row="1" column-span="2" />
+          <Text id="label-ft-dropcaps" text="Number of characters:" focusable="false" column="0" row="2" />
+          <Text id="label-txt-lines" text="Lines:" focusable="false" column="0" row="3" />
+          <Text id="label-txt-distance" text="Space to text:" focusable="false" column="0" row="4" />
+          <Input id="spin-fld-dropcaps" Type="Number" horizontal-alignment="Left" column="1" row="2" />
+          <Input id="spin-fld-lines" Type="Number" horizontal-alignment="Left" column="1" row="3" />
+          <Input id="spin-fld-distance" Type="Number" horizontal-alignment="Left" column="1" row="4" />
+        </Container>
+        <Text id="label-fl-setting" text="Settings" focusable="false" />
+      </Container>
+      <Container id="frame-fl-content" Type="Vertical Stack" focusable="false" column="0" row="1">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+          <Text id="label-txt-text" text="Text:" focusable="false" column="0" row="0" />
+          <Text id="label-txt-template" text="Character style:" focusable="false" column="0" row="1" />
+          <Input id="entry-edt-text" Type="Text" column="1" row="0" />
+          <Input id="combo-box-template" Type="Select" focusable="false" column="1" row="1" />
+        </Container>
+        <Text id="label-fl-content" text="Contents" focusable="false" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Vertical Stack" horizontal-alignment="Center" vertical-alignment="Top" column="1" row="0">
+      <Container id="container-2" Type="Vertical Stack" focusable="false">
+        <Container id="drawingarea-wn-example" Type="Overlay" horizontal-alignment="Center" vertical-alignment="Top" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

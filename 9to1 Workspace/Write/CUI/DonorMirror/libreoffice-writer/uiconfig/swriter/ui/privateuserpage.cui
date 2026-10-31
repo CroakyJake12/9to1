@@ -1,0 +1,52 @@
+<Cui id="ui-privateuserpage" product="9-1" version="1">
+  <Container id="private-user-page" Type="Vertical Stack" focusable="false" role="Grow">
+    <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+      <Text id="nameft" text="First/last name/initials:" focusable="false" column="0" row="0" />
+      <Container id="grid2" Type="Grid" cell-gap="12" focusable="false" column="1" row="0">
+        <Input id="firstname" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+        <Input id="lastname" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+        <Input id="shortname" Type="Text" vertical-alignment="Center" column="2" row="0" />
+      </Container>
+      <Text id="eastnameft" text="First/last name/initials 2:" focusable="false" column="0" row="1" />
+      <Container id="grid9" Type="Grid" cell-gap="12" focusable="false" column="1" row="1">
+        <Input id="firstname2" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+        <Input id="lastname2" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+        <Input id="shortname2" Type="Text" vertical-alignment="Center" column="2" row="0" />
+      </Container>
+      <Text id="titleft" text="Title/profession:" focusable="false" column="0" row="2" />
+      <Container id="grid5" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="1" row="2">
+        <Input id="title" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+        <Input id="job" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="streetft" text="Street:" focusable="false" column="0" row="3" />
+      <Container id="grid4" Type="Grid" focusable="false" role="Grow" column="1" row="3">
+        <Input id="street" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+      </Container>
+      <Text id="icityft" text="Zip/city:" focusable="false" column="0" row="4" />
+      <Container id="grid11" Type="Grid" cell-gap="12" focusable="false" column="1" row="4">
+        <Input id="izip" Type="Text" vertical-alignment="Center" column="0" row="0" />
+        <Input id="icity" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="countryft" text="Country/state:" focusable="false" column="0" row="5" />
+      <Container id="grid12" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="1" row="5">
+        <Input id="country" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+        <Input id="state" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="phoneft" text="Phone/mobile:" focusable="false" column="0" row="6" />
+      <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="1" row="6">
+        <Input id="phone" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+        <Input id="mobile" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+      </Container>
+      <Text id="faxft" text="Fax:" focusable="false" column="0" row="7" />
+      <Container id="grid6" Type="Grid" cell-gap="12" focusable="false" column="1" row="7">
+        <Input id="fax" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" column-span="2" />
+      </Container>
+      <Text id="homepageft" text="Homepage/email:" focusable="false" column="0" row="8" />
+      <Container id="grid7" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="1" row="8">
+        <Input id="url" Type="Text" vertical-alignment="Center" role="Grow" column="0" row="0" />
+        <Input id="email" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+      </Container>
+    </Container>
+    <Text id="label1" text="Private Data" focusable="false" />
+  </Container>
+</Cui>

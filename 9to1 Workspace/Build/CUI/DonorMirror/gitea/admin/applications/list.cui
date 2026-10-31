@@ -1,0 +1,7 @@
+<Cui id="applications-list" product="9-1" version="1">
+  <Page id="applications-list-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h4" text="{Binding Unresolved}" />
+    </Container>
+  </Page>
+</Cui>

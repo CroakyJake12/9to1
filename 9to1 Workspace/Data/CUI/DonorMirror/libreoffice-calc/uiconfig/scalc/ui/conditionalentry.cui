@@ -1,0 +1,47 @@
+<Cui id="ui-conditionalentry" product="9-1" version="1">
+  <Container id="border" Type="Vertical Stack" role="Grow">
+    <Container id="container" Type="Vertical Stack" focusable="false" role="Grow">
+      <Container id="grid" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+          <Text id="number" focusable="false" column="0" row="0" />
+          <Text id="condition" width="10" text-trimming="PathSegmentEllipsis" focusable="false" role="Grow" column="1" row="0" />
+        </Container>
+        <Container id="container-2" Type="Grid" cell-gap="12" focusable="false" column="0" row="1">
+          <Input id="type" Type="Select" focusable="false" column="0" row="0" row-span="4" />
+          <Input id="typeis" Type="Select" focusable="false" column="1" row="0" />
+          <Input id="datetype" Type="Select" focusable="false" column="1" row="1" />
+          <Input id="colorformat" Type="Select" focusable="false" column="1" row="2" />
+          <Input id="formula" Type="Text" role="Grow" column="1" row="3" column-span="2" />
+          <Container id="container-3" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="2" row="0">
+            <Input id="val1" Type="Text" role="Grow" column="0" row="0" />
+            <Input id="val2" Type="Text" role="Grow" column="1" row="0" />
+          </Container>
+          <Input id="iconsettype" Type="Select" focusable="false" column="2" row="2" />
+        </Container>
+        <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="2">
+          <Text id="styleft" text="Apply Style:" focusable="false" column="0" row="2" />
+          <Input id="style" Type="Select" focusable="false" column="1" row="2" />
+          <Text id="valueft" text="Enter a value:" width="100" focusable="false" column="0" row="3" column-span="3" />
+          <Input id="edcolscalemin" Type="Text" column="0" row="4" />
+          <Input id="edcolscalemiddle" Type="Text" column="1" row="4" />
+          <Input id="edcolscalemax" Type="Text" column="2" row="4" />
+          <Button id="lbcolmin" focusable="false" column="0" row="5" />
+          <Button id="lbcolmiddle" focusable="false" column="1" row="5" />
+          <Button id="lbcolmax" focusable="false" column="2" row="5" />
+          <Button id="options" content="More Options..." text="More Options..." column="1" row="6" />
+          <Input id="colscalemin" Type="Select" focusable="false" column="0" row="1" />
+          <Input id="colscalemiddle" Type="Select" focusable="false" column="1" row="1" />
+          <Input id="colscalemax" Type="Select" focusable="false" column="2" row="1" />
+          <Container id="iconparent" Type="Grid" focusable="false" column="0" row="7" column-span="3" />
+          <Text id="label-minimum" text="Minimum" focusable="false" column="0" row="0" />
+          <Text id="label-maximum" text="Maximum" focusable="false" column="2" row="0" />
+          <Container id="previewwin" Type="Vertical Stack" column="2" row="2">
+            <Container id="container-4" Type="Vertical Stack" focusable="false">
+              <Container id="preview" Type="Overlay" tooltip="Example" focusable="false" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

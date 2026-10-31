@@ -1,0 +1,15 @@
+<Cui id="admin-stats" product="9-1" version="1">
+  <Page id="admin-stats-root">
+    <Container id="div" Type="Vertical Stack">
+      <Text id="h4" text="{Binding Unresolved}" />
+      <Container id="div-2" Type="Vertical Stack">
+        <Container id="table" Type="Grid">
+          <Container id="tr" Type="Horizontal Stack">
+            <Container id="td" Type="Vertical Stack" width="200" />
+            <Container id="td-2" Type="Vertical Stack" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

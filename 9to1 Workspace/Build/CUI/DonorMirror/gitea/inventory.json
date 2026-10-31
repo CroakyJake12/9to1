@@ -1,0 +1,4801 @@
+{
+  "summary": {
+    "translated": 5579,
+    "dropped_nodes": 0,
+    "gap_count": 3162,
+    "gap_constructs": {
+      "property not modelled": 1190,
+      "unknown donor construct": 543,
+      "link action": 413,
+      "live variable / binding expression": 289,
+      "inline text run": 256,
+      "inline text template": 86,
+      "parse error: not well-formed (invalid token): line 1, column 0": 81,
+      "item collection (list/tree/table)": 67,
+      "parse error: junk after document element: line 3, column 1": 54,
+      "parse error: junk after document element: line 4, column 0": 13,
+      "parse error: no element found: line 1, column 0": 11,
+      "length value '\u27e6donor-value\u27e7'": 8,
+      "parse error: not well-formed (invalid token): line 2, column 0": 7,
+      "parse error: junk after document element: line 2, column 0": 6,
+      "parse error: not well-formed (invalid token): line 2, column 1": 5,
+      "parse error: junk after document element: line 3, column 0": 4,
+      "parse error: junk after document element: line 10, column 1": 4,
+      "parse error: junk after document element: line 11, column 0": 4,
+      "length value '100%'": 3,
+      "parse error: junk after document element: line 5, column 1": 3,
+      "parse error: junk after document element: line 7, column 2": 3,
+      "parse error: no element found: line 4, column 0": 3,
+      "inline vector icon": 3,
+      "parse error: no element found: line 8, column 0": 2,
+      "parse error: junk after document element: line 19, column 0": 2,
+      "parse error: junk after document element: line 8, column 0": 2,
+      "select with option items": 2,
+      "web view host": 2,
+      "parse error: junk after document element: line 10, column 0": 2,
+      "parse error: junk after document element: line 7, column 0": 2,
+      "parse error: junk after document element: line 17, column 0": 2,
+      "parse error: junk after document element: line 4, column 1": 2,
+      "parse error: not well-formed (invalid token): line 3, column 0": 2,
+      "parse error: junk after document element: line 12, column 1": 2,
+      "parse error: junk after document element: line 61, column 0": 2,
+      "parse error: junk after document element: line 31, column 0": 1,
+      "parse error: not well-formed (invalid token): line 14, column 51": 1,
+      "parse error: not well-formed (invalid token): line 53, column 36": 1,
+      "parse error: not well-formed (invalid token): line 5, column 28": 1,
+      "parse error: not well-formed (invalid token): line 24, column 16": 1,
+      "parse error: not well-formed (invalid token): line 70, column 47": 1,
+      "parse error: not well-formed (invalid token): line 83, column 47": 1,
+      "parse error: junk after document element: line 226, column 0": 1,
+      "parse error: no element found: line 2, column 0": 1,
+      "parse error: not well-formed (invalid token): line 83, column 72": 1,
+      "parse error: not well-formed (invalid token): line 29, column 30": 1,
+      "parse error: syntax error: line 1, column 0": 1,
+      "parse error: junk after document element: line 23, column 0": 1,
+      "parse error: not well-formed (invalid token): line 164, column 42": 1,
+      "VerticalAlignment=left": 1,
+      "length value '1%'": 1,
+      "VerticalAlignment=right": 1,
+      "parse error: not well-formed (invalid token): line 55, column 51": 1,
+      "parse error: not well-formed (invalid token): line 29, column 28": 1,
+      "parse error: junk after document element: line 75, column 0": 1,
+      "parse error: not well-formed (invalid token): line 139, column 69": 1,
+      "parse error: junk after document element: line 94, column 0": 1,
+      "parse error: junk after document element: line 66, column 0": 1,
+      "parse error: junk after document element: line 18, column 0": 1,
+      "parse error: not well-formed (invalid token): line 18, column 51": 1,
+      "parse error: not well-formed (invalid token): line 17, column 44": 1,
+      "parse error: not well-formed (invalid token): line 8, column 59": 1,
+      "parse error: junk after document element: line 219, column 0": 1,
+      "parse error: junk after document element: line 30, column 1": 1,
+      "parse error: not well-formed (invalid token): line 41, column 47": 1,
+      "parse error: not well-formed (invalid token): line 5, column 1": 1,
+      "parse error: junk after document element: line 30, column 0": 1,
+      "parse error: not well-formed (invalid token): line 75, column 23": 1,
+      "parse error: junk after document element: line 14, column 0": 1,
+      "length value '\u27e6donor-value\u27e7px'": 1,
+      "parse error: not well-formed (invalid token): line 12, column 101": 1,
+      "parse error: not well-formed (invalid token): line 28, column 58": 1,
+      "parse error: not well-formed (invalid token): line 3, column 1": 1,
+      "parse error: not well-formed (invalid token): line 2, column 40": 1,
+      "parse error: junk after document element: line 20, column 0": 1,
+      "parse error: not well-formed (invalid token): line 10, column 41": 1,
+      "parse error: not well-formed (invalid token): line 75, column 54": 1,
+      "parse error: not well-formed (invalid token): line 4, column 1": 1,
+      "parse error: junk after document element: line 4, column 2": 1,
+      "parse error: not well-formed (invalid token): line 4, column 2": 1,
+      "parse error: not well-formed (invalid token): line 1, column 1": 1,
+      "parse error: not well-formed (invalid token): line 27, column 81": 1,
+      "parse error: not well-formed (invalid token): line 6, column 23": 1,
+      "parse error: junk after document element: line 7, column 1": 1,
+      "parse error: junk after document element: line 146, column 0": 1,
+      "parse error: junk after document element: line 6, column 0": 1,
+      "parse error: mismatched tag: line 57, column 20": 1,
+      "parse error: junk after document element: line 54, column 0": 1,
+      "parse error: junk after document element: line 22, column 0": 1,
+      "parse error: not well-formed (invalid token): line 76, column 36": 1,
+      "parse error: junk after document element: line 142, column 0": 1,
+      "parse error: not well-formed (invalid token): line 26, column 62": 1,
+      "parse error: junk after document element: line 121, column 0": 1,
+      "parse error: not well-formed (invalid token): line 43, column 1": 1,
+      "parse error: not well-formed (invalid token): line 24, column 66": 1,
+      "parse error: not well-formed (invalid token): line 28, column 24": 1,
+      "parse error: not well-formed (invalid token): line 41, column 28": 1,
+      "parse error: not well-formed (invalid token): line 157, column 49": 1,
+      "parse error: junk after document element: line 6, column 1": 1,
+      "parse error: junk after document element: line 70, column 0": 1,
+      "parse error: junk after document element: line 14, column 2": 1,
+      "parse error: not well-formed (invalid token): line 62, column 16": 1,
+      "parse error: not well-formed (invalid token): line 53, column 54": 1,
+      "parse error: not well-formed (invalid token): line 12, column 22": 1,
+      "parse error: not well-formed (invalid token): line 79, column 105": 1,
+      "parse error: junk after document element: line 58, column 1": 1,
+      "parse error: not well-formed (invalid token): line 67, column 15": 1,
+      "parse error: junk after document element: line 16, column 0": 1,
+      "parse error: not well-formed (invalid token): line 1, column 90": 1,
+      "parse error: junk after document element: line 60, column 0": 1,
+      "parse error: not well-formed (invalid token): line 75, column 41": 1,
+      "parse error: junk after document element: line 50, column 0": 1,
+      "parse error: junk after document element: line 9, column 0": 1,
+      "parse error: not well-formed (invalid token): line 40, column 28": 1,
+      "parse error: junk after document element: line 41, column 0": 1,
+      "parse error: junk after document element: line 117, column 0": 1,
+      "parse error: junk after document element: line 12, column 0": 1
+    },
+    "pruned_stale": 0,
+    "donor": "gitea",
+    "app": "Build",
+    "source": "9to1 Workspace/Build/Source/Gitea/templates",
+    "translated_files": 289,
+    "untranslated_files": 296,
+    "unsupported_suffixes": {}
+  },
+  "files": [
+    {
+      "donor_file": "admin/actions.tmpl",
+      "cui": "admin/actions.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "15f4da34a7dc42adeb6c40c9c5ead5926ce7bebde86bd0b7bd4140a1512ce44a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/applications/list.tmpl",
+      "cui": "admin/applications/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "31cbe0d2e88f5587ee4cb0b5d6e0dec2632ba08fad3e23163f4e260761fd916e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/applications/oauth2_edit.tmpl",
+      "cui": "admin/applications/oauth2_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "d598336747827328e661f7110a3e32adfdf67ca57445997d3a8ce9496290b423",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/audit/list.tmpl",
+      "cui": "admin/audit/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "0fbc237273bfe5dc5ddbd4bbab3d5a64f3e3f6a41b595ed2f2554f8afe5265cb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/edit.tmpl",
+      "cui": "admin/auth/edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 299,
+      "actions": 0,
+      "donor_sha256": "257f8fad160c8178fba62b45bbc04cddcd54e7e1b984aaf6f32854b4cb91afdc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/list.tmpl",
+      "cui": "admin/auth/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 28,
+      "actions": 0,
+      "donor_sha256": "73369a1aaeef1c9bacad35fd6410a9613c6df3e01f9c9d12578fa4183cd566dd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/new.tmpl",
+      "cui": "admin/auth/new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 79,
+      "actions": 0,
+      "donor_sha256": "0df15c36df07a4a90c34c076cb4e4dd90d94a0be264455f82e4e9359ad62fec4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/source/ldap.tmpl",
+      "cui": "admin/auth/source/ldap.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 107,
+      "actions": 0,
+      "donor_sha256": "582e91b5a31c1e6998e7352572c0501948f2bf9eabf05c34ee3f94dc4d3148cf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/source/oauth.tmpl",
+      "cui": "admin/auth/source/oauth.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 89,
+      "actions": 0,
+      "donor_sha256": "c82bd906949e0169bd53d48c6cf1d87b096414bce6780a31bd85b803487fc125",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/source/smtp.tmpl",
+      "cui": "admin/auth/source/smtp.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 44,
+      "actions": 0,
+      "donor_sha256": "c10bcf9707de8b881641914bea9220dc7e60c21d00904b562e59ce7764f2f9ea",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/auth/source/sspi.tmpl",
+      "cui": "admin/auth/source/sspi.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "0f6a48c4d2959127736e8b3bf8b1d334f24cd046d7268e0542840fd3fcd1f157",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/badge/edit.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/badge/list.tmpl",
+      "cui": "admin/badge/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 33,
+      "actions": 0,
+      "donor_sha256": "4b27b56f2c3081c0935a466a8de575d7fe32a1fc80e49f65aeab6420279802ce",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/badge/new.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/badge/users.tmpl",
+      "cui": "admin/badge/users.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "2186ea807b95f7c8451f8c56f33a028ed84de9d530efa7729d2c7657aaf2433b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/badge/view.tmpl",
+      "cui": "admin/badge/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "20d9f3e41b3e305a35a54d4c64ff35fd64bc713e65baea791bac64efed3688f2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/config.tmpl",
+      "cui": "admin/config.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 221,
+      "actions": 0,
+      "donor_sha256": "fe13a2951b7ae925f5236ccc201d6d03a01f5acb3441ccf220e75d9988ff9af4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/config_settings/avatars.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/config_settings/config_settings.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/config_settings/instance.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/config_settings/repository.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/cron.tmpl",
+      "cui": "admin/cron.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "c734039bd8f3d62a1fb6cd6df1b251152102ab98b6dc93da3ad53eda16fed296",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/dashboard.tmpl",
+      "cui": "admin/dashboard.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 62,
+      "actions": 0,
+      "donor_sha256": "a2e5c497d42375e3ed7f6ae648f6bde86bee843bb5e6818e684d88ac3f45e2b4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/emails/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/hook_new.tmpl",
+      "cui": "admin/hook_new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "e58d87008cab26f44c29805fbea7e73195bdeb28984d311254d057ce0f7401b0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/hooks.tmpl",
+      "cui": "admin/hooks.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "54525dd555e58599d5486c92db9b486bda51ee2b2a4b3e37d34bf9ef4c95a8d5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/layout_footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/layout_head.tmpl",
+      "cui": "admin/layout_head.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "6d5e2178ba1aeee5971ba393f6c532dda5e6de6b642659c06781a1aeead7395c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/navbar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/notice.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/org/list.tmpl",
+      "cui": "admin/org/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 44,
+      "actions": 0,
+      "donor_sha256": "55be4464502005b8be6ac1b188ba3461234fe80bd4861604fb9abe869fb005d5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/packages/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/perftrace.tmpl",
+      "cui": "admin/perftrace.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "764b489fcdb1001c8d399652649b9787018b30039741e754bcb1347820f42039",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/queue.tmpl",
+      "cui": "admin/queue.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "711e71af2bd6e7d76bc6689520f9b90e29e4081d991919819d21d41cc45d76dc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/queue_manage.tmpl",
+      "cui": "admin/queue_manage.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 33,
+      "actions": 0,
+      "donor_sha256": "6407f2c8257f9f3bb0984ed9aaf4c816ce2cd0b210374c954c35d7b69bfa11b8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/repo/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/repo/unadopted.tmpl",
+      "cui": "admin/repo/unadopted.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 37,
+      "actions": 0,
+      "donor_sha256": "146609e711ab3eb1e7464276cd7d31106f59f62733df899fbfd750733524846c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/runners/edit.tmpl",
+      "cui": "admin/runners/edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c43c157ffc61de8f0a7bd79684581cd697db3754ff632e06d9cae5c9024499c5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/self_check.tmpl",
+      "cui": "admin/self_check.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "f66bb6e92abd0d7d162da452a6c5a94dff6863a098291b6e4e21d2fd3c13662a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/shared/owner.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/stacktrace-row.tmpl",
+      "cui": "admin/stacktrace-row.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "79018cdc2e66012336096a87bc939f54af30e45969164d3e0aeeb63b787e80f7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/stacktrace.tmpl",
+      "cui": "admin/stacktrace.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "358d7e2f5ec5c1eb44899ffa35ca7b1f5b78703e0aef158f66edf1ce4d5514fe",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/stats.tmpl",
+      "cui": "admin/stats.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "b386c8e0f15ac932209952b7f8ac7754ede71517ab72daa5b11b70208c926fa6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/system_status.tmpl",
+      "cui": "admin/system_status.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 63,
+      "actions": 0,
+      "donor_sha256": "618aa92ad02d12e130270505192be01bb802a41a0b3ee8ea0d7cb20781f6ece3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/trace_tabs.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/user/edit.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "admin/user/list.tmpl",
+      "cui": "admin/user/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 90,
+      "actions": 0,
+      "donor_sha256": "291aef3507de1252e3eefe7384d13e256696c000a9e6923682c5db681c13bdeb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/user/new.tmpl",
+      "cui": "admin/user/new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 53,
+      "actions": 0,
+      "donor_sha256": "0430a1ef01902ad3b4eeea905aec8ceac39730b249a9daadb85f69c317b9c712",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/user/view.tmpl",
+      "cui": "admin/user/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "2d1700d816204566175d701da0b8c4e7794433659704023cff50424bbc0e58fd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/user/view_details.tmpl",
+      "cui": "admin/user/view_details.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "88918a85fb92d3b96042a060041edb6f245c9d8d8fde9914104989d62cd39a45",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/user/view_emails.tmpl",
+      "cui": "admin/user/view_emails.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "3f21929750c4f20d33e0dad5d26d7dfe13c21a7ea6821ff36a62f13f63a4bb14",
+      "refreshed": false
+    },
+    {
+      "donor_file": "admin/user/view_orgs.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "api/packages/pypi/simple.tmpl",
+      "cui": "api/packages/pypi/simple.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "703795eb76671d15f451e1411e2abf4c2891d51b337696c7e45d4edb0ef0634f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "base/alert.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/alert_details.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/disable_form_autofill.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/footer_content.tmpl",
+      "cui": "base/footer_content.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "71484049036a0246559f49fe8d5974be9149ee3163538ce785545d33ae8d0ea9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "base/head.tmpl",
+      "cui": "base/head.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "2dc79b60c9431757f205426773440dface7c3d5ebd43eab5cc4009f505e04469",
+      "refreshed": false
+    },
+    {
+      "donor_file": "base/head_banner.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/head_impersonate_banner.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/head_navbar.tmpl",
+      "cui": "base/head_navbar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 62,
+      "actions": 0,
+      "donor_sha256": "5ee43310777e65fd89892293553d565c907688463bec3a2d4763ec2c0d24839f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "base/head_navbar_icons.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/head_opengraph.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/head_script.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/head_style.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/markup_codepreview.tmpl",
+      "cui": "base/markup_codepreview.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "0d7c51fd2a5d81699fd6b8a69dd09d9be26ea107ac3675f97bc956ada22c235d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "base/modal_actions_confirm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "base/paginate.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/body_inner_post.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/body_inner_pre.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/body_outer_post.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/body_outer_pre.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/extra_links.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/extra_links_footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/extra_tabs.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "custom/header.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/ansi-render.tmpl",
+      "cui": "devtest/ansi-render.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "0cef88d40d918f66dc27c228ace8ff7157ed505f27719fdd00376549174631a3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/avatar-stack.tmpl",
+      "cui": "devtest/avatar-stack.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "e60d8222707ab61521cb0a765a7187fc2f95804fcf0da7f8c03f9808c5cbeb45",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/badge-actions-svg.tmpl",
+      "cui": "devtest/badge-actions-svg.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "77d289cc05e0ac38af7de07444792906342bcc798a21da8b15825b991f05f1b8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/badge-commit-sign.tmpl",
+      "cui": "devtest/badge-commit-sign.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "fbfe07777708e9e55396efa0c7f8f24811693e9fef52afa4f22f8ddd6177bc7c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/devtest-footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/devtest-header.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/devtest-list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/fetch-action.tmpl",
+      "cui": "devtest/fetch-action.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 26,
+      "actions": 0,
+      "donor_sha256": "7e073844a1965ae084ce9f2a2218d1557bc42321347db186bdf139df64520e62",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/flex-list.tmpl",
+      "cui": "devtest/flex-list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 79,
+      "actions": 0,
+      "donor_sha256": "4f2c8eeb913b0990182970179bfcfaaf4329a0cc84f342e31fe4e1db24c0723b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/fomantic-dropdown.tmpl",
+      "cui": "devtest/fomantic-dropdown.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 85,
+      "actions": 0,
+      "donor_sha256": "04fa70b73bdef2a714695ffed55f3e99251e5e071fe512d5dda63723982594b8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/fomantic-modal.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/form-fields.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/gitea-ui.tmpl",
+      "cui": "devtest/gitea-ui.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 136,
+      "actions": 0,
+      "donor_sha256": "9929ccecbc83a0bf0d23632cdbfe858fdf94cfb26b8295a0320fd70f22c486dc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/global-button.tmpl",
+      "cui": "devtest/global-button.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "17a7037ea6aa304948c8cce0e68c25610367b7e0e154225b90663474675186a6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/keyboard-shortcut.tmpl",
+      "cui": "devtest/keyboard-shortcut.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "15f9656becd3f2f0563868ca55ed27416643f223c19e985a1edd692254d6c7fb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/label.tmpl",
+      "cui": "devtest/label.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "956c93187e64335320c19b2c07daaffd9323cca6a45a834be0890b43ef05e982",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/mail-preview.tmpl",
+      "cui": "devtest/mail-preview.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "26737a41db2449b3a985b32a64f0e9f7decc1ecb035804c804529091dcf4e0bd",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/markup-render.tmpl",
+      "cui": "devtest/markup-render.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 42,
+      "actions": 0,
+      "donor_sha256": "9e6e9c482bf76bea57aaed3ebb9bdc1fde0a90ec1d659a3d99482a83dc051e07",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/relative-time.tmpl",
+      "cui": "devtest/relative-time.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 85,
+      "actions": 0,
+      "donor_sha256": "119ee963225bc3f9c0f252d7be3be5f26a08178ff4a3efb1f7dae456bdf3662a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/repo-action-view.tmpl",
+      "cui": "devtest/repo-action-view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "5a4c510c45dc3402236f339fca395b0776738b070037f86a4c9ea29083370b53",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/severity-colors.tmpl",
+      "cui": "devtest/severity-colors.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 89,
+      "actions": 0,
+      "donor_sha256": "2f2b957d98d9fe8f7dbb170b4da4c6818e1f0f908c16dd37efe78e9f76f40ea0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/tmplerr-sub.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "devtest/tmplerr.tmpl",
+      "cui": "devtest/tmplerr.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "6774079a98a03b6ecdb2d2812ff4e5a277932a62b792f1d2078bade90140f06a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/toast-and-message.tmpl",
+      "cui": "devtest/toast-and-message.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "a66988cc14ae983cc8ae209d0f261a9b06c00bb0a908afc15db4854c37847744",
+      "refreshed": false
+    },
+    {
+      "donor_file": "devtest/unicode-escape.tmpl",
+      "cui": "devtest/unicode-escape.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "a57254e72377fe7cd183850bece7476a5c99f61a72743726f3a94b68879db3fe",
+      "refreshed": false
+    },
+    {
+      "donor_file": "explore/code.tmpl",
+      "cui": "explore/code.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "547011c7af10e795fb8626d3ce392744e49c66d41c60adedac978284fa6d4825",
+      "refreshed": false
+    },
+    {
+      "donor_file": "explore/navbar.tmpl",
+      "cui": "explore/navbar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "ae07a442caa83d821a648fe94b9805cb2a16ca74a5b59dc2c8085830e6c9be31",
+      "refreshed": false
+    },
+    {
+      "donor_file": "explore/repos.tmpl",
+      "cui": "explore/repos.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "2c4ca3424ba6abb773e657042402f061ee85fd7f1d89c66c13280e5a7f00674c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "explore/search.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "explore/user_list.tmpl",
+      "cui": "explore/user_list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "9c0e5e10faea24fbf5612453c7982f59d84a1fc8ff79b14dfcaf0f4ff53df6c7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "explore/users.tmpl",
+      "cui": "explore/users.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "838c90b43709c8b85807354e7aaba0027b95f53f2f1d2a716105425fe11b2ed1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "home.tmpl",
+      "cui": "home.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "a22a4dd64f5b1e9d40c00f7b33ac117afd42a228b49aa5d24cf3e15d64994029",
+      "refreshed": false
+    },
+    {
+      "donor_file": "install.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "mail/base/footer.tmpl",
+      "cui": "mail/base/footer.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "56cd9f409c154c9fea033245794dfc1eb8563f2bd22d277c70ebdf65d22d1f8c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/base/head.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "mail/org/team_invite.tmpl",
+      "cui": "mail/org/team_invite.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "5c5aa1ff3ec628de385c6c3c7a0269723f8f1265a3773d9fcea3a181ded2e4c4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/repo/actions/workflow_run.tmpl",
+      "cui": "mail/repo/actions/workflow_run.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "9992e91b87679605f2a39a3e1116d28174e1968431066cfe8a66a2e7e25e181f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/repo/collaborator.tmpl",
+      "cui": "mail/repo/collaborator.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "87c734f04bc62b15bdedababfa8ed3b5a53dafb82d6253b4f65f214b0ceabb33",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/repo/issue/assigned.tmpl",
+      "cui": "mail/repo/issue/assigned.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "3e8d9a6dac28e46f73b2b0746eada036099bcbc4014f58cdcea169c6c2f2399a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/repo/issue/default.tmpl",
+      "cui": "mail/repo/issue/default.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "ce0ef05f6b9a333965ab003c05041e3c4f2e1a94f0c8cdb492fdb9cf909947a9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/repo/release.tmpl",
+      "cui": "mail/repo/release.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "515c2b1694bee4721af65a32a11ec0892dae3c3cd86b22d42b0f23b74c6c0547",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/repo/transfer.tmpl",
+      "cui": "mail/repo/transfer.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "c8fb0109c19e0dfc09d62e660c3b9ae9a31065c99059cedf325a0eada779fded",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/user/auth/activate.tmpl",
+      "cui": "mail/user/auth/activate.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "9934d041c0a2d02c4783b59ab475b0d03916b4f631a5d3239eb9f36d12efc1c1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/user/auth/activate_email.tmpl",
+      "cui": "mail/user/auth/activate_email.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "6be8d855ff5a6d4f46816262e79382a3d55bc3f708402224a28c68e6d9201c9d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/user/auth/register_notify.tmpl",
+      "cui": "mail/user/auth/register_notify.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "5edb2f3e0304cf358a1816dcd74e8f63b0127657c64cc02093c3126e12ad0303",
+      "refreshed": false
+    },
+    {
+      "donor_file": "mail/user/auth/reset_passwd.tmpl",
+      "cui": "mail/user/auth/reset_passwd.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "5a96ba063b4d20ea0d28a6190cdad6a8dc191b30e586379e4c15cc36875ae4da",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/create.tmpl",
+      "cui": "org/create.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 29,
+      "actions": 0,
+      "donor_sha256": "f5862ae5cc1fa9fb5a4d2278f18384e75c6c403335b85ee32115ccec63fa9d23",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/follow_unfollow.tmpl",
+      "cui": "org/follow_unfollow.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "bfc2e78a6f28b7f07cd537a8f191fbfe1548c8331d5dfe80c41019df590188cb",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/header.tmpl",
+      "cui": "org/header.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "55ee9a36d6ac84a9df445e41afca41a03404261ebd690c4d5bd7db86cd9dca45",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/home.tmpl",
+      "cui": "org/home.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 42,
+      "actions": 0,
+      "donor_sha256": "65b5437d3934028c75fe7c74b033971b5e3d92e9aca0db08151e18f4fae22237",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/member/members.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/menu.tmpl",
+      "cui": "org/menu.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "d06e2ca2a5692c68a5b6e83954c6048eea7b170bd3ffd8f86b762605c40ad1f3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/projects/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/projects/new.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/projects/view.tmpl",
+      "cui": "org/projects/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "c25185eb67c4f6d2ddfb18eb9c32d1a9a94dd670ef45a5d73f881750d5e24790",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/actions.tmpl",
+      "cui": "org/settings/actions.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "89b0a359da5832d0e381a62f5ce2d003c34783e0d0f28c27198f02a34fd106fc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/actions_general.tmpl",
+      "cui": "org/settings/actions_general.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "7be0964f15166c1d2257868266434dc263a62475657496a21e3bb72842bfea44",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/applications.tmpl",
+      "cui": "org/settings/applications.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "19650dc41824c850a1f8e482fa2c7d6e23f9b922e94097f60e7ae0ef9c1b6e68",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/applications_oauth2_edit.tmpl",
+      "cui": "org/settings/applications_oauth2_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "64db8bdf556cec9c12ea34f36f80790b5d17fde9b1d94bcaef95ad14aedfbdf8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/audit_logs.tmpl",
+      "cui": "org/settings/audit_logs.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "96542dc51e831d1ffceece94184eb841e4de9706118fad2263891e66da52b2a0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/blocked_users.tmpl",
+      "cui": "org/settings/blocked_users.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "2efe7b76ef2cc53bb4bb3adec1ae77ca9c81275a096e4df99cee9e1566020f91",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/hook_new.tmpl",
+      "cui": "org/settings/hook_new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "b3c178155e096e30d387d43c683968a57c6312e6006db69d01505002238133b4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/hooks.tmpl",
+      "cui": "org/settings/hooks.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "53de494eceb4e7ad4d0406f9f1935004fb4012508eaa126e809f5f1350b275a3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/labels.tmpl",
+      "cui": "org/settings/labels.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "299508c828d6bc25089179bb54e490c61c2a142e73e62c3a356e18f1d16c8b6d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/layout_footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/settings/layout_head.tmpl",
+      "cui": "org/settings/layout_head.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "c27661e9ec619fab8fc678b66c7d95df09f898ba7641ac448ecc55711e266ecf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/navbar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/settings/options.tmpl",
+      "cui": "org/settings/options.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "34ff46811190da14f84cd645b651052ec2f815408d805dc65ae69d2e87fa22f8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/options_dangerzone.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/settings/packages.tmpl",
+      "cui": "org/settings/packages.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "ec1582559256e71e8c6d4d8cd37b56ec18893357ee7613e0b2905bf3e7b392d4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/packages_cleanup_rules_edit.tmpl",
+      "cui": "org/settings/packages_cleanup_rules_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "e30a7b9d6490193a5a76d39424178020f1bc000f09e6787f2b16e1917dd28a0f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/packages_cleanup_rules_preview.tmpl",
+      "cui": "org/settings/packages_cleanup_rules_preview.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "2b1fde51ba43c81394d2a1efd5ce99c171892801eb36696bbf1a98da55232549",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/settings/runners_edit.tmpl",
+      "cui": "org/settings/runners_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "8c858b849b6d752ec17bd0e51dda2b32465bafc7533d3adbe087beda687b49de",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/team/invite.tmpl",
+      "cui": "org/team/invite.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "fb6782d3d9271de9a3311d3483e278457aecbebb4c20fcbca7030708c6ecf789",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/team/members.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/team/navbar.tmpl",
+      "cui": "org/team/navbar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "610cd95245cb8d3c23655b5a3d3a1c7e17cbf6e92755b6a3ccb90545995f1a9a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/team/new.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/team/repositories.tmpl",
+      "cui": "org/team/repositories.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "ddc9b8ccd35342a9aa37780c3249aad0afdb34bf1900981fa442e42e04a9a329",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/team/sidebar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/team/teams.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "org/worktime/empty_placeholder.tmpl",
+      "cui": "org/worktime/empty_placeholder.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "908f676734daaf42ea9f496d41e6110063873738a95837b3ddfe8f6803236439",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/worktime/table_members.tmpl",
+      "cui": "org/worktime/table_members.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "28f720dbcfb9309f41f6fac2e55c12f36c4566206bd89950d1fa7aed5f805c05",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/worktime/table_milestones.tmpl",
+      "cui": "org/worktime/table_milestones.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "252ede14c89a58a94b3ae8f68badf6133c295478190b1c8e5eb72aaa8760eb15",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/worktime/table_repos.tmpl",
+      "cui": "org/worktime/table_repos.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "d909c65b3a5428ec7b49be10702d789856dc0f7a73eea2f89a7848c863f11577",
+      "refreshed": false
+    },
+    {
+      "donor_file": "org/worktime.tmpl",
+      "cui": "org/worktime.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "d255a60093d9432f45cf95bbe8f4ea732a3c554f442e27d051e5d5beba8c4c44",
+      "refreshed": false
+    },
+    {
+      "donor_file": "package/content/alpine.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/arch.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/cargo.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/chef.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/composer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/composer_dependencies.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/conan.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/conda.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/container.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/cran.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/debian.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/generic.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/go.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/helm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/maven.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/npm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/npm_dependencies.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/nuget.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/pub.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/pypi.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/rpm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/rubygems.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/rubygems_dependencies.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/swift.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/terraform.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/content/vagrant.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/alpine.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/arch.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/cargo.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/chef.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/composer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/conan.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/conda.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/container.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/cran.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/debian.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/generic.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/helm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/maven.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/npm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/nuget.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/pub.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/pypi.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/rpm.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/rubygems.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/swift.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/terraform.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/metadata/vagrant.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/settings.tmpl",
+      "cui": "package/settings.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 43,
+      "actions": 0,
+      "donor_sha256": "d92ed4624fd25fb218cb27f3a394b9d66ee654ab319fe5c15fabfb7139619819",
+      "refreshed": false
+    },
+    {
+      "donor_file": "package/shared/cargo.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/cleanup_rules/edit.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/cleanup_rules/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/cleanup_rules/preview.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/versionlist.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/view.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/shared/visibility_badge.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "package/view.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "post-install.tmpl",
+      "cui": "post-install.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "bc6cdd8dacffd2a31c69063bdffded77f1a9dad8b5251d35891cd8c70e503b0c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "projects/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "projects/new.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "projects/view.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/actions/artifact_preview.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/actions/job_queue.tmpl",
+      "cui": "repo/actions/job_queue.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "98d8a7d0cf615a92511e8a7c4b4078e1264081c4ae1c3b489b67bb56b544c336",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/actions/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/actions/no_workflows.tmpl",
+      "cui": "repo/actions/no_workflows.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "f9be7ebdfa98dcc555f51503bc08d7d442beed6c80aa9417e902c41922f98020",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/actions/runs_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/actions/sidebar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/actions/view.tmpl",
+      "cui": "repo/actions/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "d3a7ef806b1db254a95e290f349965192e5c817547085c8364ca3738d1925275",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/actions/view_component.tmpl",
+      "cui": "repo/actions/view_component.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "24d08d7de207be14d3bb3a3ba64011b4d27f32cd588c439fdad126b883fc82e5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/actions/workflow_dispatch.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/actions/workflow_dispatch_inputs.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/activity.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/blame.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/branch/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/branch_dropdown.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/cite/cite_buttons.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/cite/cite_modal.tmpl",
+      "cui": "repo/cite/cite_modal.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "02e50d27f48df3ac32a742a3101966eb0dd5d0d7c27d77b1a5cf823d54d7b91b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/clone_buttons.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/clone_panel.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/code/recently_pushed_new_branches.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/code/upstream_diverging_info.tmpl",
+      "cui": "repo/code/upstream_diverging_info.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "953007f5a48c006c27b1ad2e6654a33e45b3eec154ae28c5a2bfaf07df58d9bc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/code_frequency.tmpl",
+      "cui": "repo/code_frequency.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "a477c7edd6292c835214f8dd4ca3bfac0aa41985cc3cf9b1e7c83c2db5f5676e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/commit_load_branches_and_tags.tmpl",
+      "cui": "repo/commit_load_branches_and_tags.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "b200c02d4df87ac8f8f7b6043442d03aa36810fc333fc4c9cfbfed314affc794",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/commit_page.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/commit_sign_badge.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/commit_statuses.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/commits.tmpl",
+      "cui": "repo/commits.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "ee800ff4be6b116f954bbec71c1ee12903b2c8ecb7d2a86f0749750106c12cb8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/commits_list.tmpl",
+      "cui": "repo/commits_list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "6ce060ee431ec3638c38d6d361e48c77cc071369a4a4bfb97fdafe1989d5fdb3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/commits_list_small.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/commits_ref_name.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/commits_search_dropdown.tmpl",
+      "cui": "repo/commits_search_dropdown.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "1cd86f0996cfb6207f53094f5d4b15813ff011a1e519056cfd452ca9bd2a4e3f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/commits_table.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/contributors.tmpl",
+      "cui": "repo/contributors.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "f338975611bb7726977506e9591a6bc09cbb2ddbf70fa4851456af60c07f1cb6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/create.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/create_helper.tmpl",
+      "cui": "repo/create_helper.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "08aab81ea2dea87c6c11a1682e49a7ae120b388a5c81e38767b8baae9ce8283b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/blob_excerpt.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/box.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/comment_form.tmpl",
+      "cui": "repo/diff/comment_form.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "6253c720201e636400c06ba8d78eb6d240c80ba37632c5c68bcfa1af78434083",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/comment_form_datahandler.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/comments.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/compare.tmpl",
+      "cui": "repo/diff/compare.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 70,
+      "actions": 0,
+      "donor_sha256": "c4fe931660d666ae03e91fcb82b36195125f138de04c3ad8019a5b710f2b97ac",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/conversation.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/conversation_outdated.tmpl",
+      "cui": "repo/diff/conversation_outdated.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "e438aeea1ce6a3712c99fa1d1309d9697212aa1913dbc7384ce7be5052c3fbb6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/csv_diff.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/image_diff.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/new_comment.tmpl",
+      "cui": "repo/diff/new_comment.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "3c1451ff65c71518b0d3f88e85052129db1e63c23221a90357c39aee70c55959",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/new_review.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/options_dropdown.tmpl",
+      "cui": "repo/diff/options_dropdown.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "8753c433de2d82085e334f38f51ef59bdd5eb455cbee012f1fd43d607759cf4f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/section_code.tmpl",
+      "cui": "repo/diff/section_code.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "a79e27aa29ddd8ec74411e2c625cf3d93c159a42c92c7495ebafd298b6e02093",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/diff/section_split.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/section_unified.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/stats.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/diff/whitespace_dropdown.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/editor/cherry_pick.tmpl",
+      "cui": "repo/editor/cherry_pick.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "81430e05d328021ab60610f867f038c6a733ce902281d4707b251461cc366259",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/commit_form.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/editor/common_breadcrumb.tmpl",
+      "cui": "repo/editor/common_breadcrumb.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "c436dd403a5641f5abfddfaf96b30cb236774b0a549adefc56654575dcad5947",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/common_top.tmpl",
+      "cui": "repo/editor/common_top.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c1d9bf2f78e6bddf99cc4738a6ff18eb33743db078910828ae62833cb4a3cf14",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/delete.tmpl",
+      "cui": "repo/editor/delete.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "655689639fc949e12dd312dda653e1fec950081ddf0c1e4309885ab7a71b4bbe",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/diff_preview.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/editor/edit.tmpl",
+      "cui": "repo/editor/edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "59092c96af256e8bd50cad19c2947a6107aa4d6c9136089dce8bb914d60f0039",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/fork.tmpl",
+      "cui": "repo/editor/fork.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "1730c7bf9ded8676e3a491d36db3abfe0aa3d7f22cb260630a9fc05c59c6244c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/options.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/editor/patch.tmpl",
+      "cui": "repo/editor/patch.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "538d2083067931399c1418c0665938c27b9fc03ff47dbb0d0efc06e845617792",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/editor/upload.tmpl",
+      "cui": "repo/editor/upload.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "7a2e0b5b6c961c2805249809200505297f42f150495145a2d7c9bdcc8aa33da2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/empty.tmpl",
+      "cui": "repo/empty.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 30,
+      "actions": 0,
+      "donor_sha256": "fdb86f197af0a4da7e26a603ef22fdb5af6272f99aafae800ddf2b9fba13edec",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/file_info.tmpl",
+      "cui": "repo/file_info.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "1929f529f9581a91edd11b01fea8c8a89e97ed64e48ee5be3b2b2ea6bbb722d5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/forks.tmpl",
+      "cui": "repo/forks.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "cb2dd874a589358ac28d586b55ca5d82ae124af7a40c5d6334662a14cfa67a93",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/graph/commits.tmpl",
+      "cui": "repo/graph/commits.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "22d1c7b6671d4aa7c08820f77c0c7aa936f7edeefa81572cf4094a1fd14a32d9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/graph/div.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/graph/svgcontainer.tmpl",
+      "cui": "repo/graph/svgcontainer.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "f06571a9f1941350017e227d5cbd1d1278820dd9683089449f28f0985dd9f642",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/graph.tmpl",
+      "cui": "repo/graph.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "1bbd26ffe1de342b26e3b3c209e2dc6323e26d1a50c15a00516b4c9b94b1c20a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/header/fork.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/header/star.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/header/watch.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/header.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/home.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/home_sidebar_bottom.tmpl",
+      "cui": "repo/home_sidebar_bottom.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "8295af254ef810f3b2fe3c2470eac00c5ee7c869637b3cb438b6a1db163e2738",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/home_sidebar_top.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/icon.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/icons/action_status.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/icons/commit_status.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/branch_selector_field.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/card.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/choose.tmpl",
+      "cui": "repo/issue/choose.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 29,
+      "actions": 0,
+      "donor_sha256": "e947c7115e197480e8ef2bd006c0d3cc410010c6c71e8d040812b1cbdc9c9184",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/comment_tab.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/fields/checkboxes.tmpl",
+      "cui": "repo/issue/fields/checkboxes.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "671cc4af84b09b70b3bde7f38b6484ea26af3a43e9f328f4903afea61da91143",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/fields/dropdown.tmpl",
+      "cui": "repo/issue/fields/dropdown.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "58bbe9240d634ea164a973e2fd40a22c953e340ca5e22ee27531f4b447fbb8dc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/fields/header.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/fields/input.tmpl",
+      "cui": "repo/issue/fields/input.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "8a96f3163ddca41b222bb1b188f5f9cccb91e601f74417b1df6c25b95c5c2060",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/fields/markdown.tmpl",
+      "cui": "repo/issue/fields/markdown.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "5690934225e37693f853b57e65edd25a2051ab5f4b45d7b2ae31bdd569a7dfaa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/fields/textarea.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/filter_actions.tmpl",
+      "cui": "repo/issue/filter_actions.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 35,
+      "actions": 0,
+      "donor_sha256": "d5e517b5a4905250e936e15877af93aa2465af64eab7e5c4c56e0634f161c431",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/filter_item_label.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/filter_item_milestone.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/filter_item_user_assign.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/filter_item_user_fetch.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/filter_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/filters.tmpl",
+      "cui": "repo/issue/filters.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "e226a1a8bc162b3f3f525733fe904fb0c1d429032514fc2ea6a2122348aec846",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/label_precolors.tmpl",
+      "cui": "repo/issue/label_precolors.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "d3965ab502a3dd5f4eae60a2fc2dcd3d32b2f49c6f0d7fd28e0ae7e0834d3399",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/labels/label_archived.tmpl",
+      "cui": "repo/issue/labels/label_archived.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "375bb58168fbf86e8df49606f537ad936e06ddc0f61b65d21bb654c2b58c7923",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/labels/label_edit_modal.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/labels/label_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/labels/label_load_template.tmpl",
+      "cui": "repo/issue/labels/label_load_template.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "d3a38be6487044a2b5a8d5a72aecf55201c67595f297c6d224fd1e9ae05520a4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/labels.tmpl",
+      "cui": "repo/issue/labels.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "d76bd4b07bc7e3c717f3dfd773c6f853880ac4cce331dda8ff59e80bcb01fc85",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/milestone/filter_list.tmpl",
+      "cui": "repo/issue/milestone/filter_list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "6d41d8224698e03587bb1eee8f81aa16fadab467a7b9b213e4bb7b31b714e2e2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/milestone_issues.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/milestone_new.tmpl",
+      "cui": "repo/issue/milestone_new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 23,
+      "actions": 0,
+      "donor_sha256": "f36b1d7c6813c38ab57678d5376c294612d02e5ad823957153d48ac10b82b877",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/milestones.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/navbar.tmpl",
+      "cui": "repo/issue/navbar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "1d18b7b35dbf95e38e5b347aca699cb75b6257446e325445f455ef18dfa8763d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/new.tmpl",
+      "cui": "repo/issue/new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "e2276cd7553f8a972a029182ad18b8ad6c3d7d67d71d440213a913c2d4e50958",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/new_form.tmpl",
+      "cui": "repo/issue/new_form.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "c5481d5ea589bcbcaa445e3a85b31a865a93473076249705379bfe18bb73063e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/openclose.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/search.tmpl",
+      "cui": "repo/issue/search.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "a4e7985fdd1c49edf0f4197afe00cbc7279380ab9845d08d7964d79f8c7276b3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/sidebar/allow_maintainer_edit.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/assignee_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/due_date.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/issue_dependencies.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/issue_management.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/label_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/label_list_item.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/milestone_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/participant_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/project_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/reference_link.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/reviewer_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/stopwatch_timetracker.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/watch_notification.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/sidebar/wip_switch.tmpl",
+      "cui": "repo/issue/sidebar/wip_switch.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "e4b16178243d8ec77c5e660b7299116ff46963114a0b92dfc3de92fd38d67db3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view.tmpl",
+      "cui": "repo/issue/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "6905fa3d7a69194bee6e60d34e556368ce30e3481dc4083cf9ff3a8c057f4eea",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view_content/add_reaction.tmpl",
+      "cui": "repo/issue/view_content/add_reaction.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "5e2ad6c6ba05f5c56abcdad4ad811c093f931f5d6a83a48df46c4ae57872d188",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view_content/attachments.tmpl",
+      "cui": "repo/issue/view_content/attachments.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "1ac53fab783f4258d07fde8ea2ba1b570f73c839d4ef55830a0a42a44c281753",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view_content/comments.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/comments_authorlink.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/comments_delete_time.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/context_menu.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/conversation.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/pull_merge_box.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/pull_merge_instruction.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/pull_merge_status_checks.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/reactions.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/reference_issue_dialog.tmpl",
+      "cui": "repo/issue/view_content/reference_issue_dialog.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "3e8985127cbb8f4a11e854f08ff2142dc192c2474014009f6ecef8645d5102da",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view_content/show_role.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/sidebar.tmpl",
+      "cui": "repo/issue/view_content/sidebar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "0a4da5a7b31fc5a7faa12a97071d8d320e94b140a89cc9b2479a985ca778e4e7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view_content/update_branch_by_merge.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_content/watching.tmpl",
+      "cui": "repo/issue/view_content/watching.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "11ce6e340202edd63717cc72525a37add8f9eaefdd31d4c4adf8d4f73016d5e8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/issue/view_content.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/issue/view_title.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/latest_commit.tmpl",
+      "cui": "repo/latest_commit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "d9d5d51462dda753d9a509ae08ddef90896023b045b9cbe697d9d83422b731f2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/codebase.tmpl",
+      "cui": "repo/migrate/codebase.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 58,
+      "actions": 0,
+      "donor_sha256": "c637a231d40964699bc624e0329780366b6a22ee36bf0818a6d7e608321940a5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/codecommit.tmpl",
+      "cui": "repo/migrate/codecommit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 58,
+      "actions": 0,
+      "donor_sha256": "307585e117abdc0abcf57841b5ffc0e85bdb5b5b4fc27be630cab93a133f6072",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/git.tmpl",
+      "cui": "repo/migrate/git.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 41,
+      "actions": 0,
+      "donor_sha256": "c482c4c805e5537b576328e2b9f019850d1c00482009e540ff7c719912823c03",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/gitbucket.tmpl",
+      "cui": "repo/migrate/gitbucket.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 69,
+      "actions": 0,
+      "donor_sha256": "bca34db582efb2a4a6503d308e56e2bb96f5950374025abb0758d9d59ead5e61",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/gitea.tmpl",
+      "cui": "repo/migrate/gitea.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 67,
+      "actions": 0,
+      "donor_sha256": "e592b49d6f077cf0dfb8501b52cca763039a209a5fae78cc1fc118b4b2020e62",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/github.tmpl",
+      "cui": "repo/migrate/github.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 68,
+      "actions": 0,
+      "donor_sha256": "6817dd261c9192ac744e31bc150be8f03d1363670db900185c730de23f8b6d49",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/gitlab.tmpl",
+      "cui": "repo/migrate/gitlab.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 67,
+      "actions": 0,
+      "donor_sha256": "c6e635cf6115f8e4061c0c62a24b5315d9d213ccc54bdbc608f8e10962910931",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/gogs.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/migrate/helper.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/migrate/migrate.tmpl",
+      "cui": "repo/migrate/migrate.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "9cc2068841dc0aabf1b07ef5bd3cf816f090aeae193702f30e2a2b5cf88e2251",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/migrating.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/migrate/onedev.tmpl",
+      "cui": "repo/migrate/onedev.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 59,
+      "actions": 0,
+      "donor_sha256": "46ff7548edeff84c6518e99fdbd2f3c3d1b40d4d580f50d965cfcbc0e7e65dab",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/migrate/options.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/navbar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/packages.tmpl",
+      "cui": "repo/packages.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "0eae0ef0df2ab862f77324373c08361b100a1a2b67d8823849c134a44f3a0140",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/projects/list.tmpl",
+      "cui": "repo/projects/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "d7eecbaffbcba2fb54bf4a3d0228023a5b5d0ed41a3ab553d7cb40210c5c47a0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/projects/new.tmpl",
+      "cui": "repo/projects/new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "9a45a65bae9c38a7f3ddcc59701acbd83f5a21b6327ed0c7d7534406b8c687df",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/projects/view.tmpl",
+      "cui": "repo/projects/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "693ecf84de436a41f02503fb407cd26dd2a2a159cdc484b93062eda24f8b3c7c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/pulls/commits.tmpl",
+      "cui": "repo/pulls/commits.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "6883de77691e53baf47f2b2789882bd4ed5bf41e9f1899dc4ec110715f51f0b3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/pulls/files.tmpl",
+      "cui": "repo/pulls/files.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "7d67cc8b2f1c1dda49c65fad3b70fb95b12ddac4ccd770dd9d2995a6c4b89213",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/pulls/fork.tmpl",
+      "cui": "repo/pulls/fork.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 39,
+      "actions": 0,
+      "donor_sha256": "38394f0b06bcafbd49f3044668655ded9157b40d6f073204bde24b8aafeca073",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/pulls/status_items.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/pulls/tab_menu.tmpl",
+      "cui": "repo/pulls/tab_menu.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "239800e3cc4b09c0a57aef7a2ca7fc943b8f855ab64e04f006ae6d59be6ffeac",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/pulse.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/recent_commits.tmpl",
+      "cui": "repo/recent_commits.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "7f43484fdbbf97422aa68a7ad34f4c5199b8d032ac87e90dd76655c6dea474cc",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/release/label.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/release/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/release/new.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/release_tag_header.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/search.tmpl",
+      "cui": "repo/search.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "5b2cb704184148f10109cd21c001a11c17d5990bd3f4635633c0206d0752c6c5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/search_name.tmpl",
+      "cui": "repo/search_name.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "3f0baafefc3f67d5ae8bfa946abc8a97b323180da0ccff4bf0b6d3130cb1a057",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/actions.tmpl",
+      "cui": "repo/settings/actions.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "22cb2e9f39cec752665d4685dd8c5b16f0eac50d218b261e72a3b1f8f2dede30",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/actions_general.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/audit_logs.tmpl",
+      "cui": "repo/settings/audit_logs.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "16a595c0997da6f616f1b2c2a34a4c0a92f384ce3c12eee6eeee957eb7ea801c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/branches.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/collaboration.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/dangerous_operation_form.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/deploy_key_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/deploy_keys.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/githook_edit.tmpl",
+      "cui": "repo/settings/githook_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "3b914ee55f305e172a7c5e7c091b7aee2d626dbe1ea2d56bd0177718990fe303",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/githooks.tmpl",
+      "cui": "repo/settings/githooks.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "18827f3edd3b49a955d771488cc69e4b74ba6547789adcdcf5691801ab90908b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/layout_footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/layout_head.tmpl",
+      "cui": "repo/settings/layout_head.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "6feac736570ecb69e303f5e1a778470b5aca62b086ab095cca3827380f512d01",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/lfs.tmpl",
+      "cui": "repo/settings/lfs.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "47d1b9f9fe015558dc7932de99fc698a65dbb2c079ab33a79d9534fbdefdb119",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/lfs_file.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/lfs_file_find.tmpl",
+      "cui": "repo/settings/lfs_file_find.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "363487ec8089dc393667604857e9d044eac1a0c6ba0e265477eec36e991b9bd6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/lfs_locks.tmpl",
+      "cui": "repo/settings/lfs_locks.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 25,
+      "actions": 0,
+      "donor_sha256": "87b799eee2ca18f81492516d87d5a880bb7f9b9c2740de08ec5f8e42dfff3903",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/lfs_pointers.tmpl",
+      "cui": "repo/settings/lfs_pointers.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 27,
+      "actions": 0,
+      "donor_sha256": "569e01bff8ad3712700fef930fd3561add90ac3f9e568177e8d63773de5f1265",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/navbar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/options.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/protected_branch.tmpl",
+      "cui": "repo/settings/protected_branch.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 229,
+      "actions": 0,
+      "donor_sha256": "b221dc5dbe81d14eb4b7bef12bf294f96c6c0c6d4a54a7453c1cfce5636c904b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/public_access.tmpl",
+      "cui": "repo/settings/public_access.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 34,
+      "actions": 0,
+      "donor_sha256": "03a161ebbfe111489fd419d6608477256e6bd1590fb9c259b811f66f44cf302f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/push_mirror_sync_modal.tmpl",
+      "cui": "repo/settings/push_mirror_sync_modal.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "4108e23c1f4a9eabc65b98c382d1650ec71c48f28816d5b2c19ebc3f2c0a19e0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/runner_edit.tmpl",
+      "cui": "repo/settings/runner_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "b1ecb6e657af177d791f10d45c765849d9ec111dfdd1fbb61cc478625792bb29",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/secrets.tmpl",
+      "cui": "repo/settings/secrets.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "dab6dfbac2cf06fbb3239a70e09cdd2c3e752b2db23fbc9ceef728aef72dc41f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/tags.tmpl",
+      "cui": "repo/settings/tags.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 52,
+      "actions": 0,
+      "donor_sha256": "5ccb03736b0de8b9f6458bfdfbbff47917fa95330fc2305c9fd4d75c71ffaf20",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/webhook/base.tmpl",
+      "cui": "repo/settings/webhook/base.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c4647dd51c6277e5f89f526aa4061ddef622c65845c367f7214aec8906d3e11d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/webhook/base_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/dingtalk.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/discord.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/feishu.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/gitea.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/gogs.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/history.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/link_menu.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/matrix.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/msteams.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/new.tmpl",
+      "cui": "repo/settings/webhook/new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "5caee1b32edb958bd64008944a03b3a30e161428fae4e5d63d77ede86c9aebe3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/settings/webhook/packagist.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/settings.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/slack.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/telegram.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/settings/webhook/wechatwork.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/sub_menu.tmpl",
+      "cui": "repo/sub_menu.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "a6f6fa4dd71415591d64943c43bd6485328319df1e61f332037575d56ac8170c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/tag/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/tag/name.tmpl",
+      "cui": "repo/tag/name.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "ab76efb688d2471fd9c45d1cf1341205515084f8cff56ae94d38f0809c2db812",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/unicode_escape_prompt.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/upload.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/user_cards.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/view.tmpl",
+      "cui": "repo/view.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "64e259a81af223d61519b157758ba0fc0b85c550e0c4ec8a07c5784e6b2d10ba",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/view_content.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/view_file.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/view_file_tree.tmpl",
+      "cui": "repo/view_file_tree.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "bb5cb324f720ac701a369e88f5ad86660fdb2c6be298a064d48ec08fb832a16b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/view_file_tree_toggle_button.tmpl",
+      "cui": "repo/view_file_tree_toggle_button.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "35fd5de4647195c4ad0c394ae1efe81edafaf73ff23653b6f66c7df2487e430b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/view_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "repo/watch_options_modal.tmpl",
+      "cui": "repo/watch_options_modal.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "8bba0585996263b13b2b35df08f5b783d55828fe05bd380f5c25808be87fa62f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/watchers.tmpl",
+      "cui": "repo/watchers.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "06d63d24cf65daf8c067879d9e71cf4fb56a181202957febb39f5322e8f9b5ea",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/wiki/new.tmpl",
+      "cui": "repo/wiki/new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "33ee65145a9dd2ed8fa4f926888a2be5419d1138b15c76e2ac8c95e2caea55f0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/wiki/pages.tmpl",
+      "cui": "repo/wiki/pages.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "1e2f3432c56a0dcc1759e052b90d465041b8b9a35792f9f15e0fae9c0764f626",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/wiki/revision.tmpl",
+      "cui": "repo/wiki/revision.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "564f7d02faed4ac6799fc6a510abd4f57ae011874a36fce1ceada2e187147677",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/wiki/start.tmpl",
+      "cui": "repo/wiki/start.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "51e33ab6705371cf137894c49dfa7b4a7d1eee51bc7f5611c14e160eaa53be73",
+      "refreshed": false
+    },
+    {
+      "donor_file": "repo/wiki/view.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/actions/job_queue_list.tmpl",
+      "cui": "shared/actions/job_queue_list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 54,
+      "actions": 0,
+      "donor_sha256": "01980e4bd922cdc83afcb637bd11b51e4a5fac70ed2e48dde52e719409ea49d0",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/owner_general_settings.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/actions/permission_mode_select.tmpl",
+      "cui": "shared/actions/permission_mode_select.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "587dd1621cce932363946fd80f3bd26588e5b09fd5731a4e1c3dbcbc51f6acc2",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/permissions_table.tmpl",
+      "cui": "shared/actions/permissions_table.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 19,
+      "actions": 0,
+      "donor_sha256": "78d9324e7274ea001e80bf7b06930e0932d8e42e071b6fe29c6451d0f103a040",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/permissions_table_unit.tmpl",
+      "cui": "shared/actions/permissions_table_unit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "4c6416a9b3fb4c4cac6884f3191fc8d5e7071b9e78df45c8256430effb16afd7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/runner_badge_flat-square.tmpl",
+      "cui": "shared/actions/runner_badge_flat-square.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 8,
+      "actions": 0,
+      "donor_sha256": "f83ca57a04303f4ddf8cb62b60c57d6af5507c9e214747698f1518ccd46c4bd5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/runner_badge_flat.tmpl",
+      "cui": "shared/actions/runner_badge_flat.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 16,
+      "actions": 0,
+      "donor_sha256": "24d2f6756b3edfe20d7f37d83ffd774b5ba317f3fcfcf6e404a8b376a6873c96",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/runner_edit.tmpl",
+      "cui": "shared/actions/runner_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 58,
+      "actions": 0,
+      "donor_sha256": "2d5e4007131d20f5c7376992356a6137b23131db0a11321369d669449c737025",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/runner_list.tmpl",
+      "cui": "shared/actions/runner_list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 63,
+      "actions": 0,
+      "donor_sha256": "b4fb84455e0bcc2ea954b89acfd8e688a2dae26aa76c6ef96fd572ab18301a16",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/actions/scoped_workflows.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/audit/list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/avatar_upload_crop.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/combomarkdowneditor.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/fileisempty.tmpl",
+      "cui": "shared/fileisempty.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "afb14da72ed8290bfcdb89188cecb9636e4dc29caaf98eb91c6d455f4120174a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/filetoolarge.tmpl",
+      "cui": "shared/filetoolarge.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "005bb295a89c93ac891755f687912592e8135cef78b00c4a8ef0cc4b55b18661",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/issueicon.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/issuelist.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/misc/tabtitle.tmpl",
+      "cui": "shared/misc/tabtitle.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "a137f6368683b2071a265c56b33b56f255c9b61f5de56b0443100c49ffa5b78e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/repo/list.tmpl",
+      "cui": "shared/repo/list.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "abc9b15c5e88e5a42e120a6a6f1bc7f1e2db52a9f636698084844a5726e92e17",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/repo/search.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/search/button.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/search/code/results.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/search/code/search.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/search/combo.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/search/input.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/searchbottom.tmpl",
+      "cui": "shared/searchbottom.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 5,
+      "actions": 0,
+      "donor_sha256": "cb3027e2fa4d4a84fe2728bc0792e027ef3c550620c6dd7c9076a81e93c01ef4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/searchfile.tmpl",
+      "cui": "shared/searchfile.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "fd5741fb47524dedb73110a47963b7333e06aa21d3cf7450b49d6cec422572b6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/secrets/add_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/user/access_tokens.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/user/authorlink.tmpl",
+      "cui": "shared/user/authorlink.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "dde876499a004865a5afc3cc2c1a54495d0648059efd35a5ad251a5c46999ec7",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/avatarlink.tmpl",
+      "cui": "shared/user/avatarlink.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "f3b4855bf2619c753224fbfae3ef91f8a5c7719b11a63e809e0e5acbfb563407",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/block_user_dialog.tmpl",
+      "cui": "shared/user/block_user_dialog.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 18,
+      "actions": 0,
+      "donor_sha256": "0a343b95750ea0122c9c33208ac59ee66741cd97d933c8eef2e2b403d1e58b7e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/blocked_users.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/user/name.tmpl",
+      "cui": "shared/user/name.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "63fbb684b2a94df2daf1efad576c795ee8a119abcead84ab8d5ea215cc6bbccf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/namelink.tmpl",
+      "cui": "shared/user/namelink.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "3c5aa9568df727a0d9c7f71487fa647ee459521a0060fd8f533f587ae27b400c",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/org_profile_avatar.tmpl",
+      "cui": "shared/user/org_profile_avatar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 9,
+      "actions": 0,
+      "donor_sha256": "1574e7682bbaaf6a38c315871ffb9cdff98c85a815d460a62a678b4aa31c3423",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/profile_big_avatar.tmpl",
+      "cui": "shared/user/profile_big_avatar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 45,
+      "actions": 0,
+      "donor_sha256": "fe6ec3d613b432837f9705930ada631e92ad1e2c6707eccdb8fc9a1194cb5a34",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/user/user_type_label.tmpl",
+      "cui": "shared/user/user_type_label.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "b928c01b4caa600f6155c883a2cda22e2eb13b270794d53bbdedc82c6bc10f4d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "shared/variables/variable_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "shared/webhook/icon.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "status/404.tmpl",
+      "cui": "status/404.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "c91b9d9e82149835b3caa8a0ffa881fa8635dab74d7408802cc5b92066134aad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "status/500.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "status/503.tmpl",
+      "cui": "status/503.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "dd7aeaa8df391630a86736507c4d87ab9f63595c77fcf2b28a8ecf4c292da702",
+      "refreshed": false
+    },
+    {
+      "donor_file": "swagger/openapi-viewer.tmpl",
+      "cui": "swagger/openapi-viewer.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "74d63a78865412b7db2385570ffa699bb5154f97611c882983817b5406a8fc9a",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/activate.tmpl",
+      "cui": "user/auth/activate.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 21,
+      "actions": 0,
+      "donor_sha256": "2f7a36f3f6f625bbeb0d815ee865145a278e10017f5189e6f68c257bc2b70937",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/activate_prompt.tmpl",
+      "cui": "user/auth/activate_prompt.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "e6ca3e1cc0a6d2b16a06b69701f291d5669eb534d049f4c54cd0ed0cf6fc62ad",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/captcha.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/auth/change_passwd.tmpl",
+      "cui": "user/auth/change_passwd.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "c8b6e12767cf894d65eac5c5c581270af3207f516e856471f1de021e685d8a78",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/change_passwd_inner.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/auth/external_auth_methods.tmpl",
+      "cui": "user/auth/external_auth_methods.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "7cb7c10cf097710deffe84d875c56cc6cad4eed5deb0fe133ea41558e69c911e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/forgot_passwd.tmpl",
+      "cui": "user/auth/forgot_passwd.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 15,
+      "actions": 0,
+      "donor_sha256": "9c946f31ccbd7a32a986d619b7086291223930ad425feaf0f5d0d05c2aa0bad4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/grant.tmpl",
+      "cui": "user/auth/grant.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "510e8b8bd2732c574e0c022786d22a2d7e7d409a937f11f4c04dcb71bb3f8716",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/grant_error.tmpl",
+      "cui": "user/auth/grant_error.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 6,
+      "actions": 0,
+      "donor_sha256": "59eeb4bd8150b61eeb79baaa894c4340805f810d3e073e264e5c84ee83511538",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/link_account.tmpl",
+      "cui": "user/auth/link_account.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "670d6070407d5a3e778288f41052015c0138a82cc0e44c559a2262186a003953",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/prohibit_login.tmpl",
+      "cui": "user/auth/prohibit_login.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "7e4fb702099ff2e30d95a564efdfc99dcda0f8f3c926cfa1433d935a264eafe9",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/reset_passwd.tmpl",
+      "cui": "user/auth/reset_passwd.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 31,
+      "actions": 0,
+      "donor_sha256": "7f925b4f245ebfc3226e8b528f18a7e1f187fd75e7fcd23c76438ab8cf5d4c8b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/signin.tmpl",
+      "cui": "user/auth/signin.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "60d3fbadcdf48bc810191dcce3ed652af73ce92e826ec9bf287c4649e1699b36",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/signin_inner.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/auth/signin_openid.tmpl",
+      "cui": "user/auth/signin_openid.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 22,
+      "actions": 0,
+      "donor_sha256": "bfb475a902dbfe50f1244348dc7a0aa66199994be8327e82dc157535c64ae134",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/signup.tmpl",
+      "cui": "user/auth/signup.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "9f166847ff8ecde2440d1d49fdbb6f3095e94f4f5165f1d1c8fefca28159949f",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/signup_inner.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/auth/signup_openid_connect.tmpl",
+      "cui": "user/auth/signup_openid_connect.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 20,
+      "actions": 0,
+      "donor_sha256": "8b47b86a1f7b232390a096e74554699741fa082ef99cb3d728d08864cb5ac9d3",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/signup_openid_navbar.tmpl",
+      "cui": "user/auth/signup_openid_navbar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 4,
+      "actions": 0,
+      "donor_sha256": "a0f4f23f032082ab3c7ad9212f22f047a6f3b3e856848ac9a6fe88358e49e4cf",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/signup_openid_register.tmpl",
+      "cui": "user/auth/signup_openid_register.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 17,
+      "actions": 0,
+      "donor_sha256": "8d4c0a0626165462127b7fe4a6a25809883c6e6d87bc45a4a12f5adcbf24d626",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/twofa.tmpl",
+      "cui": "user/auth/twofa.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 12,
+      "actions": 0,
+      "donor_sha256": "059a5b76d6d31188ee1728495f9741efb9fbe30edf29b01f5c413c481a03f846",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/twofa_scratch.tmpl",
+      "cui": "user/auth/twofa_scratch.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "3a32681a141a02ae7a44513aa95a2c9fe98c0e1cfb5d1e92bcee77c0c804eab1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/webauthn.tmpl",
+      "cui": "user/auth/webauthn.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "7907bf99183a659c522b4d383d4927486f2a68535fa2390c2f7b147262ddecf5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/auth/webauthn_error.tmpl",
+      "cui": "user/auth/webauthn_error.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "4b478661cfb3e46735a22e522e5c2498d865b9b7e61704defd12ec465fd41703",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/code.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/dashboard/dashboard.tmpl",
+      "cui": "user/dashboard/dashboard.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "f0dc651554e3a02f472109b1654682051652e4a86d7c5ba5ae6e8284313a426b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/dashboard/feeds.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/dashboard/guide.tmpl",
+      "cui": "user/dashboard/guide.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 7,
+      "actions": 0,
+      "donor_sha256": "aab156929e7cd940c2f822c3939572182ecd948cafcc7db0e477eaa315eae165",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/dashboard/issues.tmpl",
+      "cui": "user/dashboard/issues.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "fffb2f013fd434376d9ec0f5dc3f125c16391457a8285f813f1777d8436a5650",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/dashboard/milestones.tmpl",
+      "cui": "user/dashboard/milestones.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 50,
+      "actions": 0,
+      "donor_sha256": "6fb8e20809e904318e6ce7f0e7dc159c385cd7c24cea9d3195f733df2887ec25",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/dashboard/navbar.tmpl",
+      "cui": "user/dashboard/navbar.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 38,
+      "actions": 0,
+      "donor_sha256": "712e27d9950b7918a619b8fb4d4eaf4eb54d290fc76a4be3c9db63a532531067",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/dashboard/repolist.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/heatmap.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/notification/notification.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/notification/notification_div.tmpl",
+      "cui": "user/notification/notification_div.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 24,
+      "actions": 0,
+      "donor_sha256": "f835e160ec6c7a420fa6aafdf47c22a52102f79fd9c0258b0b6abf74ae569477",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/notification/notification_subscriptions.tmpl",
+      "cui": "user/notification/notification_subscriptions.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 32,
+      "actions": 0,
+      "donor_sha256": "29f0a8e2f53c7e8a6567fffe3982ce7d3cdc10845fce3b7ce4ec2caa0eb455d5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/overview/header.tmpl",
+      "cui": "user/overview/header.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 13,
+      "actions": 0,
+      "donor_sha256": "733096805ede32174977ad4df039b52f5aa6fcc6edbd7656062f35dbbcd6dea8",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/overview/package_versions.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/overview/packages.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/profile.tmpl",
+      "cui": "user/profile.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 11,
+      "actions": 0,
+      "donor_sha256": "fa6c7665a9e849794e765e4ed5104edeea9c9769a13afbdc20d9e3622f7fee23",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/account.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/actions.tmpl",
+      "cui": "user/settings/actions.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "5aee8bae0034247d3a4607c34108ed44550c0837389204fdeb5941a3468811c5",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/actions_general.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/appearance.tmpl",
+      "cui": "user/settings/appearance.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 89,
+      "actions": 0,
+      "donor_sha256": "2801b94e9ac6e9147871ebaf4b8b9a16cf6d44e965e3f0bed2b04d911e8c3175",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/applications.tmpl",
+      "cui": "user/settings/applications.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "f85dd8f26820c17882d232fae05aa12c880b7f74996cacf718ad58d17f272f67",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/applications_oauth2.tmpl",
+      "cui": "user/settings/applications_oauth2.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "075143e14e3d8a79235b10c3582775ce4b26ba3f268e08780e6a64ec86c045aa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/applications_oauth2_edit.tmpl",
+      "cui": "user/settings/applications_oauth2_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "1f9233bc3d9270c7342544312756f7c9452397d5b97ed4d04464070f6210a5b4",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/applications_oauth2_edit_form.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/applications_oauth2_list.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/audit_logs.tmpl",
+      "cui": "user/settings/audit_logs.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 2,
+      "actions": 0,
+      "donor_sha256": "759020928b67edf55a75daa1f6b1a774a9fba48ce058c5dbab86dbb325fcd4b6",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/blocked_users.tmpl",
+      "cui": "user/settings/blocked_users.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "2e4a09ed6143ec5a8b390e56f207de28b5bc322071a0f6b8e53188d6d7066aab",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/grants_oauth2.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/hook_new.tmpl",
+      "cui": "user/settings/hook_new.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "c58da4821aa1183337fcd9e2dab0d39767ef216e0af17db8535ae76db37ca21e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/hooks.tmpl",
+      "cui": "user/settings/hooks.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "01485a684d9ddc23c6de57c151a74c16bc26c93e830e04cbb7f9dc693f0fb1fa",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/keys.tmpl",
+      "cui": "user/settings/keys.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "6691645a00d81bbaaad26cf7d7a58bf4ea7c7d40e5ec354b53008bd3e57abcff",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/keys_gpg.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/keys_principal.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/keys_ssh.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/layout_footer.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/layout_head.tmpl",
+      "cui": "user/settings/layout_head.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 3,
+      "actions": 0,
+      "donor_sha256": "381cc0d4e3cb9230b834a4b69cb20aa5b9bfb5e60610e3dc31e46965a7c898e1",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/navbar.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/notifications.tmpl",
+      "cui": "user/settings/notifications.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 34,
+      "actions": 0,
+      "donor_sha256": "b31991b0ac43528cb1d75c64f4283b9857938720821ebecc6c1b040509cb563e",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/organization.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/packages.tmpl",
+      "cui": "user/settings/packages.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 10,
+      "actions": 0,
+      "donor_sha256": "002e9e73a588350a5902c65579a0c1c0dae72fe50a84f5f925e053f172b5b074",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/packages_cleanup_rules_edit.tmpl",
+      "cui": "user/settings/packages_cleanup_rules_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "443274ea23ba9ea873d2c4cf93eb4582ed2ac427f77b4278b0c8f660ba923012",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/packages_cleanup_rules_preview.tmpl",
+      "cui": "user/settings/packages_cleanup_rules_preview.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "08ee3b2c53f640486b7868dbb9c66025733ab9103af7c80fd567b54565b00694",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/profile.tmpl",
+      "cui": "user/settings/profile.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 72,
+      "actions": 0,
+      "donor_sha256": "c232e4b8639ad79508b05f9343fc336e6079a0044581f3935b2f3a35f7eeb68d",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/repos.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/runner_edit.tmpl",
+      "cui": "user/settings/runner_edit.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "8b08c51098a6699df29aa3440b2136a862ee1d7ac6d5948ec57f8aad5f98e779",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/security/accountlinks.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/security/openid.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/security/security.tmpl",
+      "cui": "user/settings/security/security.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 1,
+      "actions": 0,
+      "donor_sha256": "bb0235b2073abaf65c6cfb5937c23b65cdcd9ad62c88fa55f56927435112de1b",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/security/twofa.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "user/settings/security/twofa_enroll.tmpl",
+      "cui": "user/settings/security/twofa_enroll.cui",
+      "status": "translated",
+      "dialect": "html",
+      "nodes": 14,
+      "actions": 0,
+      "donor_sha256": "6bb6ce577396576aa02712744a9153326e5c80de327adad20972ba285917b1ce",
+      "refreshed": false
+    },
+    {
+      "donor_file": "user/settings/security/webauthn.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    },
+    {
+      "donor_file": "webhook/new.tmpl",
+      "cui": null,
+      "status": "not translated",
+      "dialect": "html"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+<Cui id="ui-tableproperties" product="9-1" version="1">
+  <Container id="table-properties-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="table-properties-dialog-label" text="Table Properties" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="reset" content="Reset" text="Reset" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="tabcontrol" Type="Vertical Stack" role="Grow" />
+    </Container>
+  </Container>
+</Cui>

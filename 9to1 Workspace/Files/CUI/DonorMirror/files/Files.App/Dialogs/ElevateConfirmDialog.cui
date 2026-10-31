@@ -1,0 +1,8 @@
+<Cui id="dialogs-elevate-confirm-dialog" product="9-1" version="1">
+  <Page id="dialogs-elevate-confirm-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Text id="contentdialog-label" text="{helpers:ResourceString Name=ElevateConfirmDialog/Content}" />
+      <Container id="contentdialog.primarybuttonstyle" Type="Vertical Stack" />
+    </Container>
+  </Page>
+</Cui>

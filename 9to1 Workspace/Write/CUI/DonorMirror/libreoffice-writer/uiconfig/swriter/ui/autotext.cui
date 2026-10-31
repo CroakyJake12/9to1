@@ -1,0 +1,56 @@
+<Cui id="ui-autotext" product="9-1" version="1">
+  <Page id="ui-autotext-root">
+    <Container id="editmenu" Type="Menu" focusable="false">
+      <Button id="new" Type="Menu Item" content="New" text="New" focusable="false" />
+      <Button id="newtext" Type="Menu Item" content="New (text only)" text="New (text only)" focusable="false" />
+      <Button id="copy" Type="Menu Item" content="Copy" text="Copy" focusable="false" />
+      <Button id="replace" Type="Menu Item" content="Replace" text="Replace" focusable="false" />
+      <Button id="replacetext" Type="Menu Item" content="Replace (text only)" text="Replace (text only)" focusable="false" />
+      <Button id="rename" Type="Menu Item" content="Rename..." text="Rename..." focusable="false" />
+      <Button id="delete" Type="Menu Item" content="Delete" text="Delete" focusable="false" />
+      <Button id="menuitem2" Type="Menu Item" focusable="false" />
+      <Button id="edit" Type="Menu Item" content="Edit" text="Edit" focusable="false" />
+      <Button id="menuitem1" Type="Menu Item" focusable="false" />
+      <Button id="macro" Type="Menu Item" content="Macro..." text="Macro..." focusable="false" />
+      <Button id="menuitem4" Type="Menu Item" focusable="false" />
+      <Button id="import" Type="Menu Item" content="Import..." text="Import..." focusable="false" />
+    </Container>
+    <Container id="auto-text-dialog" Type="Vertical Stack" modal="True" focusable="false">
+      <Text id="auto-text-dialog-label" text="AutoText" />
+      <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+        <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+          <Button id="autotext" content="AutoText" text="AutoText" />
+          <Button id="categories" content="Categories..." text="Categories..." />
+          <Button id="path" content="Path..." text="Path..." />
+          <Button id="close" content="Close" text="Close" />
+          <Button id="ok" content="Insert" text="Insert" />
+          <Button id="help" content="Help" text="Help" />
+        </Container>
+        <Container id="grid1" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+          <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="1" column-span="2">
+            <Container id="grid4" Type="Grid" cell-gap="18" focusable="false">
+              <Input id="relfile" Type="Checkbox" text="File system" column="0" row="0" />
+              <Input id="relnet" Type="Checkbox" text="Internet" column="1" row="0" />
+            </Container>
+            <Text id="label1" text="Save Links Relative To" focusable="false" />
+          </Container>
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+            <Input id="inserttip" Type="Checkbox" text="Display remainder of name as suggestion while typing" column="0" row="0" />
+            <Container id="grid3" Type="Grid" cell-gap="12" focusable="false" column="0" row="1">
+              <Text id="nameft" text="Name:" focusable="false" column="0" row="0" />
+              <Text id="shortnameft" text="Shortcut:" focusable="false" column="2" row="0" />
+              <Input id="name" Type="Text" role="Grow" column="1" row="0" />
+              <Input id="shortname" Type="Text" horizontal-alignment="Right" column="3" row="0" />
+            </Container>
+            <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="2">
+              <Container id="category" Type="Vertical Stack" role="Grow" />
+            </Container>
+          </Container>
+          <Container id="grid5" Type="Grid" focusable="false" role="Grow" column="1" row="0">
+            <Container id="example" Type="Overlay" focusable="false" role="Grow" column="0" row="0" />
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

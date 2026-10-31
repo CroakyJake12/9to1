@@ -1,0 +1,5 @@
+<Cui id="misc-tabtitle" product="9-1" version="1">
+  <Page id="misc-tabtitle-root">
+    <Text id="span" text="{Binding Unresolved}" />
+  </Page>
+</Cui>

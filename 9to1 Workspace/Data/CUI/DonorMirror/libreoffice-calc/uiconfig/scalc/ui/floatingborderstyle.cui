@@ -1,0 +1,26 @@
+<Cui id="ui-floatingborderstyle" product="9-1" version="1">
+  <Container id="floating-border-style" Type="Menu" focusable="false">
+    <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false">
+      <Container id="container-2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Container id="border1" Type="Horizontal Stack" column="0" row="0">
+          <Button id="none" icon-source="sc/res/sidebar/CellBorderEmpty18x18.png" />
+          <Button id="outside" icon-source="sc/res/sidebar/CellBorderFourBorders18x18.png" />
+          <Button id="all" icon-source="sc/res/sidebar/CellBorderAll18x18.png" />
+          <Button id="crisscross" content="Criss-cross Border" text="Criss-cross Border" icon-source="sc/res/sidebar/CellBorderCrissCross18x18.png" />
+        </Container>
+        <Container id="border2" Type="Horizontal Stack" column="0" row="1">
+          <Button id="left" icon-source="sc/res/sidebar/CellBorderLeft18x18.png" />
+          <Button id="right" icon-source="sc/res/sidebar/CellBorderRight18x18.png" />
+          <Button id="top" icon-source="sc/res/sidebar/CellBorderTop18x18.png" />
+          <Button id="bottom" icon-source="sc/res/sidebar/CellBorderBottom18x18.png" />
+        </Container>
+        <Container id="border3" Type="Horizontal Stack" column="0" row="2">
+          <Button id="diagdown" icon-source="sc/res/sidebar/CellBorderLeftDiagonal18x18.png" />
+          <Button id="diagup" icon-source="sc/res/sidebar/CellBorderRightDiagonal18x18.png" />
+          <Button id="topbottom" icon-source="sc/res/sidebar/CellBorderTopAndBottom18x18.png" />
+          <Button id="leftright" icon-source="sc/res/sidebar/CellBorderLeftAndRight18x18.png" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

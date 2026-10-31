@@ -1,0 +1,87 @@
+<Cui id="migrate-codecommit" product="9-1" version="1">
+  <Page id="migrate-codecommit-root">
+    <Container id="div" Type="Vertical Stack" role="main">
+      <Container id="div-2" Type="Vertical Stack">
+        <Text id="h3" text="{Binding Unresolved}" />
+        <Container id="div-3" Type="Vertical Stack">
+          <Container id="form" Type="Vertical Stack">
+            <Input id="input" Type="Text" />
+            <Container id="div-4" Type="Vertical Stack">
+              <Text id="label" text="{Binding Unresolved}" />
+              <Input id="input-2" Type="Text" />
+              <Text id="span" text="[value] [value]" />
+            </Container>
+            <Container id="div-5" Type="Vertical Stack">
+              <Text id="label-2" text="{Binding Unresolved}" />
+              <Input id="input-3" Type="Text" />
+            </Container>
+            <Container id="div-6" Type="Vertical Stack">
+              <Text id="label-3" text="{Binding Unresolved}" />
+              <Input id="input-4" Type="Text" />
+            </Container>
+            <Container id="div-7" Type="Vertical Stack">
+              <Text id="label-4" text="{Binding Unresolved}" />
+              <Input id="input-5" Type="Text" />
+            </Container>
+            <Container id="div-8" Type="Vertical Stack">
+              <Text id="label-5" text="{Binding Unresolved}" />
+              <Input id="input-6" Type="Text" />
+            </Container>
+            <Container id="div-9" Type="Vertical Stack">
+              <Text id="label-6" text="{Binding Unresolved}" />
+              <Container id="div-10" Type="Vertical Stack">
+                <Input id="input-7" Type="Text" />
+                <Text id="label-7" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="migrate_items" Type="Vertical Stack">
+              <Container id="div-11" Type="Vertical Stack">
+                <Text id="label-8" text="{Binding Unresolved}" />
+                <Container id="div-12" Type="Vertical Stack">
+                  <Input id="input-8" Type="Text" />
+                  <Text id="label-9" text="{Binding Unresolved}" />
+                </Container>
+              </Container>
+            </Container>
+            <Container id="div-13" Type="Vertical Stack" />
+            <Container id="div-14" Type="Vertical Stack">
+              <Text id="label-10" text="{Binding Unresolved}" />
+              <Container id="div-15" Type="Vertical Stack">
+                <Input id="input-9" Type="Text" />
+                <Text id="span-2" text="{Binding Unresolved}" />
+                <Container id="div-16" Type="Vertical Stack">
+                  <Text id="div-label" text="{Binding Unresolved}" />
+                  <Container id="div-17" Type="Vertical Stack" />
+                  <Container id="div-18" Type="Vertical Stack">
+                    <Text id="div-label-2" text="{Binding Unresolved}" />
+                  </Container>
+                </Container>
+              </Container>
+            </Container>
+            <Container id="div-19" Type="Vertical Stack">
+              <Text id="label-11" text="{Binding Unresolved}" />
+              <Input id="input-10" Type="Text" />
+            </Container>
+            <Container id="div-20" Type="Vertical Stack">
+              <Text id="label-12" text="{Binding Unresolved}" />
+              <Container id="div-21" Type="Vertical Stack">
+                <Input id="input-11" Type="Text" />
+                <Text id="label-13" text="{Binding Unresolved}" />
+                <Input id="input-12" Type="Text" />
+                <Text id="label-14" text="{Binding Unresolved}" />
+              </Container>
+            </Container>
+            <Container id="div-22" Type="Vertical Stack">
+              <Text id="label-15" text="{Binding Unresolved}" />
+              <Input id="description" Type="Text" />
+            </Container>
+            <Container id="div-23" Type="Vertical Stack">
+              <Text id="label-16" />
+              <Button id="button" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

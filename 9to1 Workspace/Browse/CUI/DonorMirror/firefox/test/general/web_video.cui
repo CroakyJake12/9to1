@@ -1,0 +1,15 @@
+<Cui id="general-web-video" product="9-1" version="1">
+  <Page id="general-web-video-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="title" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="br" Type="Vertical Stack" />
+        <Container id="video1" Type="Vertical Stack">
+          <Image id="video1-icon" source="web_video1.webm" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

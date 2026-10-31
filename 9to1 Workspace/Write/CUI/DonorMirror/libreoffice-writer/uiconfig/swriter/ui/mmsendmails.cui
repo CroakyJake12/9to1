@@ -1,0 +1,34 @@
+<Cui id="ui-mmsendmails" product="9-1" version="1">
+  <Container id="send-mails-dialog" Type="Vertical Stack" focusable="false" role="Grow">
+    <Text id="send-mails-dialog-label" text="Sending Email messages" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="stop" content="Pause" text="Pause" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+          <Text id="label3" text="The connection to the outgoing mail server has been established" horizontal-alignment="Left" focusable="false" />
+          <Text id="label1" text="Connection Status" focusable="false" />
+        </Container>
+        <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="box2" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+            <Container id="box3" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+              <Text id="transferstatus" text="%1 of %2 emails processed" horizontal-alignment="Left" focusable="false" role="Grow" />
+              <Text id="paused" text="Sending paused" horizontal-alignment="Left" focusable="false" role="Grow" />
+            </Container>
+            <Input id="progress" Type="Progress" focusable="false" role="Grow" />
+            <Text id="errorstatus" text="Emails not sent: %1" horizontal-alignment="Left" focusable="false" role="Grow" />
+            <Container id="details" Type="Vertical Stack">
+              <Container id="container" Type="Vertical Stack" role="Grow">
+                <Container id="container-2" Type="Vertical Stack" role="Grow" />
+              </Container>
+              <Text id="label5" text="Details" focusable="false" />
+            </Container>
+          </Container>
+          <Text id="label2" text="Transfer Status" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,7 @@
+<Cui id="repo-search-name" product="9-1" version="1">
+  <Page id="repo-search-name-root">
+    <Text id="span">
+      <Text id="span-2" text="([value])" />
+    </Text>
+  </Page>
+</Cui>

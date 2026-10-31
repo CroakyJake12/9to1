@@ -1,0 +1,20 @@
+<Cui id="ui-sortcriteriapage" product="9-1" version="1">
+  <Container id="top-window" Type="Vertical Stack" focusable="false" role="Grow">
+    <Container id="sort-criteria-page" Type="Vertical Stack" role="Grow">
+      <Container id="viewport2" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="sort-key-window" Type="Vertical Stack" focusable="false" role="Grow" />
+      </Container>
+    </Container>
+    <Container id="container" Type="Horizontal Stack" focusable="false" />
+    <Container id="container-2" Type="Vertical Stack" focusable="false">
+      <Container id="container-3" Type="Grid" cell-gap="3" focusable="false">
+        <Input id="rb-top-down" Type="Radio" text="Top to bottom (sort rows)" checked="true" column="1" row="1" />
+        <Input id="rb-left-right" Type="Radio" text="Left to right (sort columns)" column="1" row="2" />
+        <Text id="lb-direction" text="Direction:" focusable="false" column="0" row="1" />
+        <Input id="cb-header" Type="Checkbox" text="Range contains..." column="1" row="0" />
+        <Text id="lb-header" text="Headers:" focusable="false" column="0" row="0" />
+      </Container>
+      <Text id="lb-options" text="Sort Options" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

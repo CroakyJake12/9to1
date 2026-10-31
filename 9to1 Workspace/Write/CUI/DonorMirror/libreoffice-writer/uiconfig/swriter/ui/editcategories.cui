@@ -1,0 +1,25 @@
+<Cui id="ui-editcategories" product="9-1" version="1">
+  <Container id="edit-categories-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="edit-categories-dialog-label" text="Edit Categories" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="new" content="New" text="New" is-enabled="false" />
+        <Button id="delete" content="Delete" text="Delete" is-enabled="false" />
+        <Button id="rename" content="Rename" text="Rename" is-enabled="false" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="label1" text="Category" focusable="false" column="0" row="0" />
+        <Text id="label2" text="Path" focusable="false" column="1" row="0" />
+        <Input id="name" Type="Text" column="0" row="1" />
+        <Input id="pathlb" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+        <Text id="label3" text="Selection list" focusable="false" column="0" row="2" column-span="2" />
+        <Container id="container" Type="Vertical Stack" role="Grow" column="0" row="3" column-span="2">
+          <Container id="group" Type="Vertical Stack" role="Grow" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

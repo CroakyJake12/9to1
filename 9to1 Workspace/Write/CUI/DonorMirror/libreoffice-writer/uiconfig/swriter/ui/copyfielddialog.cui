@@ -1,0 +1,21 @@
+<Cui id="ui-copyfielddialog" product="9-1" version="1">
+  <Container id="copy-field-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="copy-field-dialog-label" text="Copy field content" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+        <Button id="copy" content="Copy" text="Copy" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="label2" text="Content:" focusable="false" column="0" row="0" />
+          <Container id="scrolledwindow1" Type="Vertical Stack" role="Grow" column="1" row="0">
+            <Input id="value" Type="Text" role="Grow" />
+          </Container>
+        </Container>
+        <Text id="label1" text="Field content" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

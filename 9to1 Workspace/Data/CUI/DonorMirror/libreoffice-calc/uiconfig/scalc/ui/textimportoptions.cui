@@ -1,0 +1,28 @@
+<Cui id="ui-textimportoptions" product="9-1" version="1">
+  <Container id="text-import-options-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="text-import-options-dialog-label" text="Import Options" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="frame2" Type="Vertical Stack" focusable="false">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="custom" Type="Radio" text="Custom:" column="0" row="1" />
+            <Input id="automatic" Type="Radio" text="Automatic" checked="true" column="0" row="0" column-span="2" />
+            <Input id="lang" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+          </Container>
+          <Text id="label2" text="Select the Locale to Use for Import" focusable="false" />
+        </Container>
+        <Container id="frame3" Type="Vertical Stack" focusable="false">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false">
+            <Input id="convertdata" Type="Checkbox" text="Detect special numbers (such as dates)" column="0" row="0" />
+            <Input id="convertscientificnotation" Type="Checkbox" text="Detect numbers with scientific notation" column="0" row="1" />
+          </Container>
+          <Text id="label3" text="Options" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

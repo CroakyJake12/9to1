@@ -1,0 +1,12 @@
+<Cui id="ui-pbmenubutton" product="9-1" version="1">
+  <Page id="ui-pbmenubutton-root">
+    <Image id="image7" focusable="false" />
+    <Container id="menu" Type="Menu">
+      <Button id="edit" Type="Menu Item" content="Edit Page Break..." text="Edit Page Break..." />
+      <Button id="delete" Type="Menu Item" content="Delete Page Break" text="Delete Page Break" />
+    </Container>
+    <Container id="pbmenu-button" Type="Vertical Stack" focusable="false" role="Grow">
+      <Button id="menubutton" role="Grow" />
+    </Container>
+  </Page>
+</Cui>

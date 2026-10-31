@@ -1,0 +1,38 @@
+<Cui id="ui-printareasdialog" product="9-1" version="1">
+  <Container id="print-areas-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="print-areas-dialog-label" text="Edit Print Ranges" />
+    <Container id="internal-box1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="box1" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+        <Container id="printframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="lbprintarea" Type="Select" focusable="false" column="0" row="0" />
+            <Input id="edprintarea" Type="Text" role="Grow" column="1" row="0" />
+            <Button id="rbprintarea" focusable="false" column="2" row="0" />
+          </Container>
+          <Text id="label1" text="Print Range" focusable="false" />
+        </Container>
+        <Container id="rowframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid2" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="lbrepeatrow" Type="Select" focusable="false" column="0" row="0" />
+            <Input id="edrepeatrow" Type="Text" role="Grow" column="1" row="0" />
+            <Button id="rbrepeatrow" focusable="false" column="2" row="0" />
+          </Container>
+          <Text id="label2" text="Rows to Repeat" focusable="false" />
+        </Container>
+        <Container id="colframe" Type="Vertical Stack" focusable="false" role="Grow">
+          <Container id="grid3" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="lbrepeatcol" Type="Select" focusable="false" column="0" row="0" />
+            <Input id="edrepeatcol" Type="Text" role="Grow" column="1" row="0" />
+            <Button id="rbrepeatcol" focusable="false" column="2" row="0" />
+          </Container>
+          <Text id="label3" text="Columns to Repeat" focusable="false" />
+        </Container>
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,12 @@
+<Cui id="ui-pageorientationcontrol" product="9-1" version="1">
+  <Page id="ui-pageorientationcontrol-root">
+    <Image id="image-landscape" focusable="false" source="sw/res/sidebar/pageproppanel/Landscapecopy24x24.png" />
+    <Image id="image-portrait" focusable="false" source="sw/res/sidebar/pageproppanel/portraitcopy24x24.png" />
+    <Container id="page-orientation-control" Type="Menu" focusable="false">
+      <Container id="container" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow">
+        <Button id="portrait" content="Portrait" text="Portrait" />
+        <Button id="landscape" content="Landscape" text="Landscape" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,25 @@
+<Cui id="ui-goalseekdlg" product="9-1" version="1">
+  <Container id="goal-seek-dialog" Type="Vertical Stack" focusable="false">
+    <Text id="goal-seek-dialog-label" text="Goal Seek" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid1" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+          <Text id="formulatext" text="Formula cell:" focusable="false" column="0" row="0" />
+          <Input id="formulaedit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="0" />
+          <Button id="formulabutton" focusable="false" column="2" row="0" />
+          <Text id="label3" text="Target value:" focusable="false" column="0" row="1" />
+          <Input id="target" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="1" />
+          <Text id="vartext" text="Variable cell:" focusable="false" column="0" row="2" />
+          <Input id="varedit" Type="Text" vertical-alignment="Center" role="Grow" column="1" row="2" />
+          <Button id="varbutton" focusable="false" column="2" row="2" />
+        </Container>
+        <Text id="label1" text="Default Settings" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

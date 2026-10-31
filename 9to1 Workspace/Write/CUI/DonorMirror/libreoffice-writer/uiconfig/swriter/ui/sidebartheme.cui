@@ -1,0 +1,7 @@
+<Cui id="ui-sidebartheme" product="9-1" version="1">
+  <Container id="theme-panel" Type="Grid" cell-gap="6">
+    <Text id="label2" text="Colors" focusable="false" column="0" row="0" />
+    <Button id="apply" content="Apply" text="Apply" column="0" row="2" />
+    <Container id="iconview-colors" Type="Wrap" column="0" row="1" />
+  </Container>
+</Cui>

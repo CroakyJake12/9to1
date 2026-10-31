@@ -1,0 +1,9 @@
+<Cui id="auth-external-auth-methods" product="9-1" version="1">
+  <Page id="auth-external-auth-methods-root">
+    <Container id="external-login-navigator" Type="Vertical Stack">
+      <Button id="a" />
+      <Button id="a-2" />
+      <Button id="a-3" />
+    </Container>
+  </Page>
+</Cui>

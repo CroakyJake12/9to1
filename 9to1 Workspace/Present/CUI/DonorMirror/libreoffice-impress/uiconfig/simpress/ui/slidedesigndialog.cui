@@ -1,0 +1,21 @@
+<Cui id="ui-slidedesigndialog" product="9-1" version="1">
+  <Container id="slide-design-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="slide-design-dialog-label" text="Available Master Slides" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="load" content="Load..." text="Load..." />
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false" role="Grow">
+        <Container id="grid5" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="masterpage" Type="Checkbox" text="Exchange background page" column="0" row="1" />
+          <Input id="checkmasters" Type="Checkbox" text="Delete unused backgrounds" column="0" row="2" />
+          <Container id="layoutsiconview" Type="Wrap" role="Grow" column="0" row="0" />
+        </Container>
+        <Text id="label1" text="Select a Slide Design" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

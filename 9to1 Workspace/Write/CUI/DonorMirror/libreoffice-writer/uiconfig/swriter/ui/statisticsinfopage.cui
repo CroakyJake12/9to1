@@ -1,0 +1,23 @@
+<Cui id="ui-statisticsinfopage" product="9-1" version="1">
+  <Container id="statistics-info-page" Type="Grid" cell-gap="6" focusable="false">
+    <Text id="label4" text="Pages:" horizontal-alignment="Right" focusable="false" column="0" row="0" />
+    <Text id="label5" text="Tables:" horizontal-alignment="Right" focusable="false" column="0" row="1" />
+    <Text id="label6" text="Images:" horizontal-alignment="Right" focusable="false" column="0" row="2" />
+    <Text id="label31" text="OLE objects:" horizontal-alignment="Right" focusable="false" column="0" row="3" />
+    <Text id="label32" text="Paragraphs:" horizontal-alignment="Right" focusable="false" column="0" row="4" />
+    <Text id="label33" text="Words:" horizontal-alignment="Right" focusable="false" column="0" row="5" />
+    <Text id="label34" text="Characters:" horizontal-alignment="Right" focusable="false" column="0" row="6" />
+    <Text id="label35" text="Characters excluding spaces:" horizontal-alignment="Right" focusable="false" column="0" row="7" />
+    <Text id="lineft" text="Lines:" horizontal-alignment="Right" focusable="false" column="0" row="8" />
+    <Text id="nopages" horizontal-alignment="Left" focusable="false" column="1" row="0" />
+    <Text id="notables" horizontal-alignment="Left" focusable="false" column="1" row="1" />
+    <Text id="nogrfs" horizontal-alignment="Left" focusable="false" column="1" row="2" />
+    <Text id="nooles" horizontal-alignment="Left" focusable="false" column="1" row="3" />
+    <Text id="noparas" horizontal-alignment="Left" focusable="false" column="1" row="4" />
+    <Text id="nowords" horizontal-alignment="Left" focusable="false" column="1" row="5" />
+    <Text id="nochars" horizontal-alignment="Left" focusable="false" column="1" row="6" />
+    <Text id="nocharsexspaces" horizontal-alignment="Left" focusable="false" column="1" row="7" />
+    <Text id="nolines" text="..." horizontal-alignment="Left" focusable="false" column="1" row="8" />
+    <Button id="update" content="Update" text="Update" horizontal-alignment="Left" column="1" row="9" />
+  </Container>
+</Cui>

@@ -1,0 +1,47 @@
+<Cui id="ui-optformula" product="9-1" version="1">
+  <Container id="opt-formula" Type="Grid" cell-gap="12" focusable="false" role="Grow">
+    <Container id="frame1" Type="Vertical Stack" focusable="false" column="0" row="0">
+      <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+        <Container id="grid5" Type="Grid" cell-gap="12" focusable="false" role="Grow" column="0" row="0">
+          <Text id="formulasyntaxlabel" text="Formula syntax:" focusable="false" column="0" row="0" />
+          <Input id="formulasyntax" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+        </Container>
+        <Input id="englishfuncname" Type="Checkbox" text="Use English function names" column="0" row="1" />
+      </Container>
+      <Text id="label1" text="Formula Options" focusable="false" />
+    </Container>
+    <Container id="frame3" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="1">
+      <Container id="grid7" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Text id="label6" text="Function:" focusable="false" column="0" row="0" />
+        <Input id="function" Type="Text" column="1" row="0" />
+        <Text id="label7" text="Array column:" focusable="false" column="0" row="1" />
+        <Input id="arraycolumn" Type="Text" column="1" row="1" />
+        <Text id="label8" text="Array row:" focusable="false" column="0" row="2" />
+        <Input id="arrayrow" Type="Text" column="1" row="2" />
+        <Button id="reset" content="Reset Separators Settings" text="Reset Separators Settings" horizontal-alignment="Right" column="2" row="2" />
+      </Container>
+      <Text id="label3" text="Separators" focusable="false" />
+    </Container>
+    <Container id="frame2" Type="Vertical Stack" focusable="false" role="Grow" column="0" row="2">
+      <Container id="grid8" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+        <Input id="calcdefault" Type="Radio" text="Default settings" checked="true" column="0" row="0" />
+        <Container id="grid9" Type="Grid" cell-gap="12" focusable="false" column="0" row="1">
+          <Input id="calccustom" Type="Radio" text="Custom (conversion of text to numbers and more):" column="0" row="0" />
+          <Button id="details" content="Details…" text="Details…" role="Grow" column="1" row="0" />
+        </Container>
+      </Container>
+      <Text id="label2" text="Detailed Calculation Settings" focusable="false" />
+    </Container>
+    <Container id="frame4" Type="Vertical Stack" focusable="false" column="0" row="3">
+      <Container id="grid4" Type="Grid" cell-gap="6" focusable="false">
+        <Text id="label9" text="Excel 2007 and newer:" focusable="false" column="0" row="0" />
+        <Input id="ooxmlrecalc" Type="Select" focusable="false" role="Grow" column="1" row="0" />
+        <Text id="label10" text="ODF spreadsheet (not saved by %PRODUCTNAME):" focusable="false" column="0" row="1" />
+        <Input id="odfrecalc" Type="Select" focusable="false" role="Grow" column="1" row="1" />
+        <Text id="label5" text="Optimal row height:" focusable="false" column="0" row="2" />
+        <Input id="rowheightrecalc" Type="Select" focusable="false" role="Grow" column="1" row="2" />
+      </Container>
+      <Text id="label4" text="Recalculation on File Load" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

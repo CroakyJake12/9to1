@@ -1,0 +1,44 @@
+<Cui id="ui-sidebaralignment" product="9-1" version="1">
+  <Page id="ui-sidebaralignment-root">
+    <Image id="image1" focusable="false" source="svx/res/lo03.png" />
+    <Image id="image2" focusable="false" source="svx/res/lo02.png" />
+    <Image id="image3" focusable="false" source="svx/res/lo01.png" />
+    <Container id="alignment-property-panel" Type="Grid" focusable="false">
+      <Container id="grid1" Type="Grid" cell-gap="3" focusable="false" role="Grow" column="0" row="0">
+        <Container id="box3" Type="Vertical Stack" cell-gap="3" focusable="false" role="Grow" column="0" row="0" column-span="2">
+          <Container id="horizontalalignment" Type="Horizontal Stack" tooltip="Horizontal Alignment" horizontal-alignment="Left">
+            <Button id=".uno:align-left" vertical-alignment="Top" />
+            <Button id=".uno:align-horizontal-center" />
+            <Button id=".uno:align-right" />
+            <Button id=".uno:align-block" />
+          </Container>
+          <Container id="verticalalignment" Type="Horizontal Stack" tooltip="Vertical Alignment" horizontal-alignment="Right">
+            <Button id=".uno:align-top" />
+            <Button id=".uno:align-vcenter" />
+            <Button id=".uno:align-bottom" />
+          </Container>
+          <Container id="writedirection" Type="Horizontal Stack">
+            <Button id=".uno:para-left-to-right" />
+            <Button id=".uno:para-right-to-left" />
+          </Container>
+        </Container>
+        <Container id="indentbuttons" Type="Horizontal Stack" column="0" row="1">
+          <Button id=".uno:increment-indent" />
+          <Button id=".uno:decrement-indent" />
+        </Container>
+        <Text id="orientationlabel" text="Text orientation:" focusable="false" column="0" row="2" />
+        <Input id="orientationdegrees" Type="Number" tooltip="Select the angle for rotation." text-wrapping="Wrap" role="Grow" column="1" row="2" />
+        <Input id="stacked" Type="Checkbox" text="Vertically stacked" horizontal-alignment="Left" column="0" row="3" />
+        <Container id="textorientbox" Type="Vertical Stack" cell-gap="3" horizontal-alignment="Right" focusable="false" column="1" row="3">
+          <Button id="bottom" tooltip="Text Extension From Lower Cell Border" />
+          <Button id="top" tooltip="Text Extension From Upper Cell Border" />
+          <Button id="standard" tooltip="Text Extension Inside Cell" checked="true" />
+        </Container>
+        <Input id="wraptext" Type="Checkbox" text="Wrap text" tooltip="Wrap texts automatically." horizontal-alignment="Left" column="0" row="4" column-span="2" />
+        <Input id="mergecells" Type="Checkbox" text="Merge cells" tooltip="Joins the selected cells into one." horizontal-alignment="Left" column="0" row="5" column-span="2" />
+        <Input id="leftindent" Type="Number" tooltip="Indents from the left edge." role="Grow" column="1" row="1" />
+        <Text id="leftindentlabel" text="Indent:" focusable="false" column="0" row="6" column-span="2" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

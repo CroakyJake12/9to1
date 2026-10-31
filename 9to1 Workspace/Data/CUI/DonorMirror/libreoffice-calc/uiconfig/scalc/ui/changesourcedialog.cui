@@ -1,0 +1,19 @@
+<Cui id="ui-changesourcedialog" product="9-1" version="1">
+  <Container id="change-source-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="change-source-dialog-label" text="Change Source Data Range" />
+    <Container id="dialog-vbox1" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="dialog-action-area1" Type="Horizontal Stack" focusable="false">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="frame1" Type="Vertical Stack" focusable="false">
+        <Container id="grid3" Type="Grid" cell-gap="6" focusable="false">
+          <Input id="col" Type="Checkbox" text="First column as label" column="0" row="0" />
+          <Input id="row" Type="Checkbox" text="First row as label" column="0" row="1" />
+        </Container>
+        <Text id="label1" text="Labels" focusable="false" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

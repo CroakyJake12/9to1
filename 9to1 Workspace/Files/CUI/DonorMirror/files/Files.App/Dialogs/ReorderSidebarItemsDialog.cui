@@ -1,0 +1,11 @@
+<Cui id="dialogs-reorder-sidebar-items-dialog" product="9-1" version="1">
+  <Page id="dialogs-reorder-sidebar-items-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="grid" Type="Grid">
+        <Container id="listview" Type="Vertical Stack">
+          <Container id="listview.itemtemplate" Type="Vertical Stack" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

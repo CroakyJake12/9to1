@@ -1,0 +1,23 @@
+<Cui id="dialogs-git-hub-login-dialog" product="9-1" version="1">
+  <Page id="dialogs-git-hub-login-dialog-root">
+    <Container id="contentdialog" Type="Vertical Stack">
+      <Container id="contentdialog.primarybuttonstyle" Type="Vertical Stack" />
+      <Container id="grid" Type="Grid">
+        <Container id="grid.rowdefinitions" Type="Vertical Stack">
+          <Text id="rowdefinition" />
+          <Text id="rowdefinition-2" />
+        </Container>
+        <Container id="border" Type="Overlay" width="360" height="40">
+          <Text id="textblock" row="0" horizontal-alignment="Left" vertical-alignment="Center" text="{Binding ViewModel.Subtitle}" />
+        </Container>
+        <Container id="stackpanel" Type="Vertical Stack" row="1" horizontal-alignment="Stretch" vertical-alignment="Stretch">
+          <Button id="hyperlinkbutton" content="{Binding ViewModel.LoginUrl}" />
+          <Text id="textblock-2" margin="12,8" font-family="Cascadia Mono,Consolas,Segoe UI Variable" font-size="32" font-weight="Normal" text="{Binding ViewModel.UserCode}" />
+        </Container>
+        <Container id="border-2" Type="Overlay" row="1">
+          <Image id="fonticon" source="" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

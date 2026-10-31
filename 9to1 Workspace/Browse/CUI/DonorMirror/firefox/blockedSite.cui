@@ -1,0 +1,52 @@
+<Cui id="content-blocked-site" product="9-1" version="1">
+  <Page id="content-blocked-site-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+        <Container id="link" Type="Vertical Stack" />
+        <Container id="link-2" Type="Vertical Stack" />
+        <Container id="link-3" Type="Vertical Stack" />
+        <Container id="link-4" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="errorPageContainer" Type="Vertical Stack">
+          <Container id="errorTitle" Type="Vertical Stack">
+            <Text id="errorTitleText" />
+          </Container>
+          <Container id="errorLongContent" Type="Vertical Stack">
+            <Container id="errorShortDesc" Type="Vertical Stack">
+              <Text id="errorShortDescText" />
+            </Container>
+            <Container id="advisoryDesc" Type="Vertical Stack">
+              <Text id="advisoryDescText">
+                <Button id="advisory_provider" />
+              </Text>
+            </Container>
+            <Container id="buttons" Type="Vertical Stack">
+              <Button id="goBackButton" />
+              <Button id="seeDetailsButton" />
+            </Container>
+          </Container>
+          <Container id="errorDescriptionContainer" Type="Vertical Stack" hidden="true">
+            <Container id="errorLongDesc" Type="Vertical Stack">
+              <Text id="errorInnerDescription">
+                <Text id="error_desc_sitename" />
+                <Button id="error_desc_link" />
+                <Button id="report_detection" />
+                <Button id="ignore_warning_link" />
+              </Text>
+              <Text id="learn_more">
+                <Button id="learn_more_link" />
+                <Button id="firefox_support" />
+              </Text>
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="script" Type="Vertical Stack">
+        <Image id="script-icon" source="chrome://browser/content/blockedSite.js" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

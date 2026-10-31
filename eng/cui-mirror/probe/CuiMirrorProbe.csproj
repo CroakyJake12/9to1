@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CuiMirrorProbe</AssemblyName>
+    <RootNamespace>CuiMirrorProbe</RootNamespace>
+    <!-- Donor mirrors are generated: warnings from the framework's own quality bar are reported but
+         must not hide the errors that matter while the mirror corpus is still being built out. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+  </ItemGroup>
+</Project>

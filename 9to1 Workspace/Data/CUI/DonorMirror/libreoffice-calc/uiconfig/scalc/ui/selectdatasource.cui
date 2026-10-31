@@ -1,0 +1,25 @@
+<Cui id="ui-selectdatasource" product="9-1" version="1">
+  <Container id="select-data-source-dialog" Type="Vertical Stack" modal="True">
+    <Text id="select-data-source-dialog-label" text="Select Data Source" />
+    <Container id="dialog-vbox3" Type="Vertical Stack" cell-gap="12">
+      <Container id="dialog-action-area3" Type="Horizontal Stack">
+        <Button id="ok" content="OK" text="OK" />
+        <Button id="cancel" content="Cancel" text="Cancel" />
+        <Button id="help" content="Help" text="Help" />
+      </Container>
+      <Container id="selection" Type="Vertical Stack" role="Grow">
+        <Container id="grid1" Type="Grid" role="Grow">
+          <Text id="label2" text="Database:" />
+          <Text id="label4" text="Type:" />
+          <Input id="database" Type="Select" role="Grow" />
+          <Input id="type" Type="Select" role="Grow" />
+          <Text id="label3" text="Data source:" />
+          <Input id="datasource" Type="Select" role="Grow">
+            <Input id="comboboxtext-entry" Type="Text" />
+          </Input>
+        </Container>
+        <Text id="label1" text="Selection" />
+      </Container>
+    </Container>
+  </Container>
+</Cui>

@@ -1,0 +1,15 @@
+<Cui id="actions-runner-badge-flat-square" product="9-1" version="1">
+  <Page id="actions-runner-badge-flat-square-root">
+    <Image id="svg" height="20" role="img">
+      <Container id="title" Type="Vertical Stack" />
+      <Container id="g" Type="Vertical Stack">
+        <Container id="rect" Type="Vertical Stack" height="20" />
+        <Container id="rect-2" Type="Vertical Stack" height="20" />
+      </Container>
+      <Container id="g-2" Type="Vertical Stack">
+        <Container id="text" Type="Vertical Stack" />
+        <Container id="text-2" Type="Vertical Stack" />
+      </Container>
+    </Image>
+  </Page>
+</Cui>

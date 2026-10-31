@@ -1,0 +1,8 @@
+<Cui id="ui-cannotsavelabeldialog" product="9-1" version="1">
+  <Container id="cannot-save-label-dialog" Type="Vertical Stack" modal="True" focusable="false">
+    <Text id="cannot-save-label-dialog-label" text="Cannot Add Label" />
+    <Container id="messagedialog-vbox" Type="Vertical Stack" cell-gap="12" focusable="false">
+      <Container id="messagedialog-action-area" Type="Horizontal Stack" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

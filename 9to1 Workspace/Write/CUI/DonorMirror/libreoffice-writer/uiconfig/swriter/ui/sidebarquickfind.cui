@@ -1,0 +1,35 @@
+<Cui id="ui-sidebarquickfind" product="9-1" version="1">
+  <Container id="quick-find-panel" Type="Grid" focusable="false" role="Grow">
+    <Container id="box" Type="Vertical Stack" cell-gap="6" focusable="false" role="Grow" column="0" row="0">
+      <Container id="topbar" Type="Vertical Stack" focusable="false">
+        <Input id="searchterm" Type="Select" vertical-alignment="Center" focusable="false" role="Grow">
+          <Input id="input" Type="Text" />
+        </Input>
+        <Container id="searchoptionstoolbar" Type="Horizontal Stack">
+          <Button id="searchoptionsbutton" icon-source="cmd/scsymbolshapes.flower.png" tooltip="Search Options" />
+        </Container>
+        <Container id="findandreplacetoolbar" Type="Horizontal Stack">
+          <Button id="searchdialog" icon-source="cmd/scsearchdialog.png" tooltip="Search with Find and Replace" />
+        </Container>
+      </Container>
+      <Container id="topbar1" Type="Vertical Stack" cell-gap="2" focusable="false">
+        <Container id="searchoptionsbox" Type="Vertical Stack" cell-gap="12" focusable="false" role="Grow">
+          <Container id="grid4" Type="Grid" cell-gap="6" focusable="false" role="Grow">
+            <Input id="matchcase" Type="Checkbox" text="Match case" column="0" row="0" />
+            <Input id="wholewordsonly" Type="Checkbox" text="Whole words only" column="0" row="1" />
+            <Input id="comments" Type="Checkbox" text="Comments" column="0" row="2" />
+            <Input id="regularexpressions" Type="Checkbox" text="Regular expressions" column="0" row="3" />
+            <Container id="box3" Type="Vertical Stack" cell-gap="12" focusable="false" column="0" row="4">
+              <Input id="similarity" Type="Checkbox" text="Similarity" />
+              <Button id="similaritysettingsdialog" content="Similarities..." text="Similarities..." horizontal-alignment="Right" role="Grow" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+      <Container id="container" Type="Vertical Stack" role="Grow">
+        <Container id="searchfinds" Type="Vertical Stack" role="Grow" />
+      </Container>
+      <Text id="numberofsearchfinds" focusable="false" />
+    </Container>
+  </Container>
+</Cui>

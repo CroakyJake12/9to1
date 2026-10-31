@@ -1,0 +1,19 @@
+<Cui id="penssidebar-selectorpage" product="9-1" version="1">
+  <Container id="container" Type="Vertical Stack">
+    <Container id="selectorstyle-togglebox" Type="Vertical Stack">
+      <Button id="selectorstyle-polygon-toggle" icon-source="pen-selector-polygon-symbolic" />
+      <Button id="selectorstyle-rect-toggle" icon-source="pen-selector-rectangle-symbolic" />
+      <Button id="selectorstyle-single-toggle" icon-source="pen-selector-single-symbolic" />
+      <Button id="selectorstyle-intersectingpath-toggle" icon-source="pen-selector-intersectingpath-symbolic" />
+    </Container>
+    <Container id="container-2" Type="Horizontal Stack" />
+    <Container id="selection-actionbox" Type="Vertical Stack" cell-gap="6">
+      <Button id="resize-lock-aspectratio-togglebutton" icon-source="selection-resize-lock-aspectratio-symbolic" />
+      <Button id="selection-select-all-button" icon-source="selection-select-all-symbolic" />
+      <Button id="selection-deselect-all-button" icon-source="selection-deselect-all-symbolic" />
+      <Button id="selection-invert-color-button" icon-source="selection-invert-color-symbolic" />
+      <Button id="selection-duplicate-button" icon-source="selection-duplicate-symbolic" />
+      <Button id="selection-delete-button" icon-source="selection-trash-symbolic" />
+    </Container>
+  </Container>
+</Cui>

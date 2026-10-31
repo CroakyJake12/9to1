@@ -1,0 +1,12 @@
+<Cui id="ui-customanimationtexttab" product="9-1" version="1">
+  <Container id="text-animation-tab" Type="Vertical Stack" cell-gap="12" role="Grow">
+    <Container id="grid1" Type="Grid">
+      <Text id="group-text-label" text="Group text:" horizontal-alignment="Left" />
+      <Input id="auto-after-value" Type="Number" horizontal-alignment="Left" role="Grow" />
+      <Input id="auto-after" Type="Checkbox" text="Automatically after:" />
+      <Input id="group-text-list" Type="Select" />
+    </Container>
+    <Input id="animate-shape" Type="Checkbox" text="Animate attached shape" />
+    <Input id="reverse-order" Type="Checkbox" text="In reverse order" />
+  </Container>
+</Cui>

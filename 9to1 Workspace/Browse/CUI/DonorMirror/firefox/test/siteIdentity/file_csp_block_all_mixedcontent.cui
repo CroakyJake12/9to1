@@ -1,0 +1,16 @@
+<Cui id="site-identity-file-csp-block-all-mixedcontent" product="9-1" version="1">
+  <Page id="site-identity-file-csp-block-all-mixedcontent-root">
+    <Container id="html" Type="Vertical Stack">
+      <Container id="head" Type="Vertical Stack">
+        <Container id="meta" Type="Vertical Stack" />
+        <Container id="title" Type="Vertical Stack" />
+        <Container id="meta-2" Type="Vertical Stack" />
+      </Container>
+      <Container id="body" Type="Vertical Stack">
+        <Container id="script" Type="Vertical Stack">
+          <Image id="script-icon" source="http://example.com/browser/browser/base/content/test/siteIdentity/file_csp_block_all_mixedcontent.js" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>
