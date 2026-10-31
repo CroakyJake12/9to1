@@ -9,7 +9,12 @@ Nothing in this document is accepted, rendered or run. It is a queue with eviden
 | 1 | `toolbar with overflow` | 6,878 | Present/DonorMirror (3512), Write/DonorMirror (2040), Data/DonorMirror (1309) | GTK `GtkToolbar`/`GtkOverflow`, LibreOffice `ToolBar`, AppFlowy `OverflowBar`, XUL `toolbar` | A Container Type with measured overflow: items that do not fit collapse into an overflow control that re-presents them as menu items. Today mirrors must approximate a toolbar as a plain horizontal stack, which loses the donor's real behaviour. |
 | 2 | `notebook bar (ribbon) group` | 4,046 | Present/DonorMirror (2093), Write/DonorMirror (1155), Data/DonorMirror (798) | LibreOffice `NbToolBar`, `notebookbar` XML | A tabbed command bar with named groups: tab strip + group containers + group overflow. This is what Write/Present/Data need to reach LibreOffice command-bar parity. |
 | 3 | `property not modelled` | 2,910 | Build/DonorMirror (1062), Files/DonorMirror (517), Connect/DonorMirror (506) | all dialects | Mixed bag: each entry names a donor attribute CUI has no property for. These need individual review and must not be bulk-accepted; the emitter already records which element rejected which name. |
-| 4 | `optional section` | 2,263 | Present/DonorMirror (1313), Write/DonorMirror (598), Data/DonorMirror (352) | GTK `<section>` in menus/header bars, XUL `<hbox optional>` | A container whose presence is conditional on the donor model (a group that may be absent). Needs a CUI conditional-section construct distinct from `If`, because it is a layout region, not a boolean branch. |
+_Note: the numbered rows below were measured at 10:0x this morning and are kept as the original snapshot of
+the queue. For current numbers and the CUI-gap / donor-plumbing split, use **“Measured tally, refreshed”**
+below; rows 1, 4 and the separator/ribbon entries are superseded by the two constructs implemented later the
+same day (see “Progress against this queue”)._
+
+| 4 | `optional section` | 2,263 | Present/DonorMirror (1313), Write/DonorMirror (598), Data/DonorMirror (352) | GTK `<section>` in menus/header bars, XUL `<hbox optional>` | **CORRECTED after proof, same day:** all 2,263 came from one donor class, `VclOptionalBox`, which the office shows/hides by model state. CUI already expresses conditional visibility (`IsVisible` with a binding: 13 framework runtime tests, plus the authored SpacesHome/MailWorkspace surfaces), so this is a live-variable/binding need, not a missing region construct. The records were renamed, never dropped. |
 | 5 | `separator` | 1,626 | Present/DonorMirror (802), Write/DonorMirror (402), Data/DonorMirror (304) | GtkSeparator, XUL separator, Flutter Divider | A first-party separator construct (visual and, in menus, semantic). Currently mirrored as an empty container, which loses the separation and misleads layout measurement. |
 | 6 | `custom donor widget` | 1,479 | Boards/DonorMirror (1423), Canvas/DonorMirror (56) | Flutter packages, rnote custom widgets | The donor's own composite control (AppFlowy `FlowyButton`, rnote `RnSidebar`). CUI needs the equivalent construct authored; the row is the demand signal, and the mirror refuses to chase a definition that lives in another class. |
 | 7 | `unknown donor construct` | 1,003 | Build/DonorMirror (470), Connect/DonorMirror (375), Browse/DonorMirror (158) | GTK/XUL custom elements | Donor element with no CUI equivalent at all yet; each needs a decision, not an approximation. |
@@ -35,6 +40,17 @@ Nothing in this document is accepted, rendered or run. It is a queue with eviden
 | 28 | `gesture handling (tap/drag/long-press)` | 240 | Boards/DonorMirror (240) |  |  |
 | 29 | `window and dialog chrome` | 240 | Data/DonorMirror (114), Write/DonorMirror (99), Present/DonorMirror (27) |  |  |
 | 30 | `scroller with explicit bars` | 212 | Write/DonorMirror (102), Data/DonorMirror (70), Present/DonorMirror (27) |  |  |
+
+**`menu button` checked rather than guessed.** The nested idiom already works: `CuiContextMenuActionTests`
+pins a `Button` owning a `Container Type="Context Menu"` of typed items, and **6,266** mirrored items now use
+it after a separate emitter defect (a guard that excluded Buttons from receiving their registered Type) was
+fixed - those items carried **zero** type at the previous commit. The remaining **1,312** records are the
+specific thing CUI cannot author yet: a button LINKED to a menu declared elsewhere by name (the office links
+through action/popup names). Not counted as solved.
+
+**`--exclude test` was matching substrings** and silently dropping 20 genuine donor UI files
+(`footnotesendnotestabpage.ui`, `chisquaretestdialog.ui`, `ttestdialog.ui`, `ztestdialog.ui`, …). Fixed to
+path-segment matching; documents 1,764 → 1,784, all compiling.
 
 ## Measured tally, refreshed
 
