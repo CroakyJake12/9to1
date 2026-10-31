@@ -62,6 +62,9 @@ public static class CuiLayoutProperties
                     value = double.Parse(text, CultureInfo.InvariantCulture); type = typeof(double); initial = 0d;
                     if (!double.IsFinite((double)value) || (double)value is < 0 or > 64) throw new FormatException("ScrollBarThickness must be from 0 to 64 DIP.");
                     break;
+                case "GroupLabel":
+                    if (_control is not CuiContainerControl) return false;
+                    value = text; type = typeof(string); initial = string.Empty; break;
                 case "HorizontalScrolling": case "VerticalScrolling": case "HorizontalOverflowArrows": case "FollowAtEnd": case "BringIntoView":
                     if (_control is not CuiContainerControl) return false;
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
@@ -96,6 +99,10 @@ public static class CuiLayoutProperties
                     else if (_control is Grid grid) { grid.RowSpacing = (double)property.Value!; grid.ColumnSpacing = (double)property.Value!; }
                     else if (_control is StackPanel stack) stack.Spacing = (double)property.Value!;
                     else throw new InvalidOperationException("CellGap requires a grid, stack or wrap Container.");
+                    break;
+                case "GroupLabel":
+                    if (_control is CuiContainerControl labelContainer) labelContainer.SetGroupLabel(property.Value as string);
+                    else throw new InvalidOperationException("GroupLabel requires a Container.");
                     break;
                 case "CellMargin":
                     // Each item has an independent inset; authored child Margin is never overwritten.

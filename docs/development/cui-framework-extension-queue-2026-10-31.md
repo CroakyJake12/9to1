@@ -61,8 +61,19 @@ Nothing in this document is accepted, rendered or run. It is a queue with eviden
   fills from the authored property, so the marker cannot be set from outside CUI and survives re-parenting.
   Registry gained Container Types `Toolbar` and `Separator` plus the typed boolean property `OverflowHost`;
   the mirror emitter reads that registry live, so the mirrors gained the constructs in the same change.
-- Measured effect on the corpora: gap reports **33,014 → 25,113**; `toolbar with overflow` and `separator`
-  are now **zero** and **433 Toolbar** and **1,639 Separator** elements are emitted. Documents **1,758 →
+**Item implemented later the same day: `notebook bar (ribbon) group`** — `Container Type="Ribbon Group"`
+with an authored `GroupLabel` caption and the same measured collapse-to-overflow as the toolbar
+(`framework/CUI/Runtime/CuiRibbonGroupPanel.cs`, `CuiContainerControl.SetGroupLabel` which errors explicitly
+on a container type that cannot honour it, `CuiLayoutProperties` route, 4 tests in
+`CuiRibbonGroupTests`, all passing in isolation; full-suite failure counts stayed inside the flaky
+theme-refresh band 8-13 with none of my classes failing). LibreOffice's `sfxlo-NotebookbarToolBox` maps onto
+it. Measured: **4,046 Ribbon Group elements** emitted and that gap construct now **zero**. Recorded
+limitation rather than a fudge: `GroupLabel` is emitted **0** times today, because the office tool boxes
+carry no `label` property — the donor puts the caption in a sibling `GtkLabel`, so hoisting it into
+`GroupLabel` is Stage B adaptation.
+
+- Measured effect on the corpora: gap reports **33,014 → 25,113 → 21,067** across the three steps; `toolbar with overflow` and `separator`
+  are now **zero** and **433 Toolbar**, **1,639 Separator** and **4,046 Ribbon Group** elements are emitted. Documents **1,758 →
   1,764**, all compiling clean (`--strict`, 0 errors, exit 0, registry 2.0).
 - Relabelling is counted, not hidden: `menu button` rose 459 → 1,537 because LibreOffice's
   `sfxlo-PriorityHBox`/`PriorityMergedHBox`/`DropdownBox` are now named for what they are (the office's own

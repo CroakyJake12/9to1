@@ -101,7 +101,7 @@ public sealed class CuiControlRegistry
         // Toolbar and Separator are the constructs the donor command surfaces need: the Stage A mirrors
         // measured 7,401 toolbar-with-overflow and 1,626 separator constructs that CUI could only
         // approximate as plain stacks or empty containers.
-        "container" => new[] { "Grid", "Vertical Stack", "Horizontal Stack", "Absolute", "Overlay", "Overlay Float", "Wrap", "Floating", "Menu", "Context Menu", "Toolbar", "Separator" },
+        "container" => new[] { "Grid", "Vertical Stack", "Horizontal Stack", "Absolute", "Overlay", "Overlay Float", "Wrap", "Floating", "Menu", "Context Menu", "Toolbar", "Separator", "Ribbon Group" },
         "input" => new[] { "Text", "Number", "Checkbox", "Radio", "Switch", "Slider", "Select", "List", "Resize", "Progress" },
         "button" => new[] { "Action", "Menu Item" },
         _ => Array.Empty<string>()
@@ -288,7 +288,7 @@ public sealed class CuiControlRegistry
 
         return type.ToLowerInvariant() switch
         {
-            "grid" or "vertical stack" or "horizontal stack" or "absolute" or "overlay" or "overlay float" or "wrap" or "floating" or "toolbar" or "separator" => new CuiContainerControl(type),
+            "grid" or "vertical stack" or "horizontal stack" or "absolute" or "overlay" or "overlay float" or "wrap" or "floating" or "toolbar" or "separator" or "ribbon group" => new CuiContainerControl(type),
             "menu" => new CuiMenu(),
             "context menu" => CreateContextMenu(),
             _ => UnknownContainerType(type, out error),
@@ -388,7 +388,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "OverflowHost", "HorizontalScrolling", "VerticalScrolling", "HorizontalOverflowArrows", "ScrollBarThickness", "FollowAtEnd", "BringIntoView", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
+            "CornerRadius", "Orientation", "OverflowHost", "GroupLabel", "HorizontalScrolling", "VerticalScrolling", "HorizontalOverflowArrows", "ScrollBarThickness", "FollowAtEnd", "BringIntoView", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -471,7 +471,7 @@ public sealed class CuiControlRegistry
             ("MenuColumns", "integer", typeof(int), true), ("IconOnly", "boolean", typeof(bool), true),
             ("ToggleType", "symbol", typeof(MenuItemToggleType), true),
             ("Selected", "boolean", typeof(bool), true), ("ResizeEdge", "symbol", typeof(string), true),
-            ("OverflowHost", "boolean", typeof(bool), true),
+            ("OverflowHost", "boolean", typeof(bool), true), ("GroupLabel", "text", typeof(string), true),
             ("Chromeless", "boolean", typeof(bool), true),
             ("Header", "text", typeof(string), true), ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
             ("ItemsSource", "collection", typeof(System.Collections.IEnumerable), true), ("SelectedIndex", "integer", typeof(int), true),

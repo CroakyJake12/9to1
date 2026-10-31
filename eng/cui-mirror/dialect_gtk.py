@@ -176,7 +176,9 @@ ELEMENT_OF.update({
     "Ooo::ValuePositionItem": "Container", "o3tl::TemporaryObject": "Container",
 })
 CONTAINER_TYPE.update({
-    "sfxlo-NotebookbarToolBox": "Vertical Stack",
+    # LibreOffice's notebook bar is built from labelled tool boxes, which is exactly what CUI's
+    # Ribbon Group construct now models: a caption plus a command row that collapses on measured overflow.
+    "sfxlo-NotebookbarToolBox": "Ribbon Group",
     # Priority boxes drop items into an overflow menu by priority - the CUI Toolbar contract - so the
     # later update must not flatten them back into a plain horizontal stack.
     "sfxlo-PriorityMergedHBox": "Toolbar",
@@ -192,7 +194,7 @@ CONTAINER_TYPE.update({
     "AdwSpringWidget": "Horizontal Stack",
 })
 GAP_CONSTRUCT.update({
-    "sfxlo-NotebookbarToolBox": "notebook bar (ribbon) group",
+    # modelled by CUI's Ribbon Group now, so it is no longer recorded as an approximation
     # The office's own priority boxes ARE toolbars with overflow: they drop items by priority into an
     # overflow menu when the width runs out, which is exactly the CUI Toolbar contract now. The dropdown
     # box is a menu button instead, and stays recorded under that name rather than being called a toolbar.
@@ -287,6 +289,10 @@ def translate(path, source: str) -> Result:
                 ctype = "Horizontal Stack" if props.get("orientation", "vertical").lower().startswith("h") \
                     else "Vertical Stack"
             node.props["Type"] = ctype or "Vertical Stack"
+            if ctype == "Ribbon Group" and props.get("label"):
+                # The donor caption belongs to the group construct; without this the generic label rule
+                # would duplicate it as a child text node.
+                node.props["GroupLabel"] = props.pop("label")
         elif element in ("Input", "Button"):
             ctype = TYPE_OF.get(cls)
             if ctype:

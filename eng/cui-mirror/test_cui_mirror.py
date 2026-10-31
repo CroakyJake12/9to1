@@ -426,6 +426,17 @@ class NewCuiConstructMappingTests(unittest.TestCase):
             result = module.translate(path, body)
         return cui_mirror.emit(result), result
 
+    def test_libreoffice_notebookbar_toolbox_becomes_a_cui_ribbon_group_with_its_caption(self):
+        text, result = self._emit(dialect_gtk, "ui",
+            '<interface><object class="sfxlo-NotebookbarToolBox" id="sectionFontName">'
+            '<property name="label" translatable="yes">Character</property>'
+            '<child><object class="GtkComboBoxText" id="fontName"/></child>'
+            '</object></interface>')
+        self.assertIn('Type="Ribbon Group"', text)
+        self.assertIn('GroupLabel="Character"', text)
+        self.assertNotIn("notebook bar (ribbon) group", [g["construct"] for g in result.gaps])
+        assert text is not None
+
     def test_gtk_toolbar_and_separator_use_the_cui_constructs(self):
         text, result = self._emit(dialect_gtk, "ui",
             '<interface><object class="GtkToolbar" id="tb">'

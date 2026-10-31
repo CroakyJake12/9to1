@@ -1,8 +1,8 @@
 {
   "_purpose": "Ratchet for the Stage A donor-UI mirror corpora. documents/without-errors are measured by eng/cui-mirror/probe under --strict; any CUI compile error fails. A fall in `documents` means mirrors were lost and must be explained, not absorbed.",
   "_measured_on": "2026-10-31",
-  "_measured_at_source": "edea7658",
-  "_mirror_tool_version": "54a032f776e42d7a8575821752254cc8eeb430829cbe5882d918b897257f4458",
+  "_measured_at_source": "62492b40",
+  "_mirror_tool_version": "090fe48fd6d527c3f594d980cd880b78eec9437491f71b85a1e021c82bc8eb7a",
   "_probe_command": "dotnet eng/cui-mirror/probe/bin/Release/net10.0/CuiMirrorProbe.dll --strict <corpus>...",
   "documents": 1764,
   "without_errors": 1764,
@@ -21,6 +21,6 @@
   ],
   "evidence_label": "CUI compile evidence only. Nothing here is rendered, run natively, packaged or accepted.",
   "_change_reason": "2026-10-31 second pass (1050 -> 1758 documents): the owner's correction that Boards' UI donor is AppFlowy, not rnote. Added the Dart/Flutter dialect, which reads widget constructor calls because AppFlowy has no markup UI, and mirrored 824 files from AppFlowy's lib plus 55 from its design-system packages (all compiling clean). Retired Boards' rnote UI mirror: 31 of its 33 documents were byte-identical to Canvas's, 2 differed, and the two donor checkouts drift in 8 UI files - one shared drawing surface must be pinned once, and the owner's single-implementation requirement forbids keeping two revisions of it. Also fixed an emitter bug that emitted space-only donor text runs as empty CUI values (CUI030, 4 documents).",
-  "gap_reports_recorded": 25113,
-  "_gap_ratchet": "Measured before/after CUI gaining the Toolbar and Separator constructs (framework/CUI Runtime: CuiToolbarPanel with real measured collapse-to-overflow, CuiSeparatorPanel painted from CuiLineBrush, CuiOverflowHosts marker, registry TypesFor + authored OverflowHost property, loader support): gap reports fell 33,014 -> 25,113, and 'toolbar with overflow' plus 'separator' are now ZERO because they are modelled, not relabelled - 433 Toolbar elements and 1,639 Separator elements are emitted across the corpora. 'menu button' rose to 1,537 because the office priority/dropdown boxes are now named for the construct they actually are; that is a rename of an existing gap, counted honestly. The office notebook/ribbon group (4,046) and optional section (2,263) are unchanged and are the next queue items. Documents 1,758 -> 1,764 because six more donor files now yield modelled UI."
+  "gap_reports_recorded": 21067,
+  "_gap_ratchet": "Measured across three framework steps today: gap reports 33,014 -> 25,113 -> 21067 as CUI gained Toolbar (with measured collapse-to-overflow), Separator, and Ribbon Group. Now-zero constructs: 'toolbar with overflow' (6,878), 'separator' (1,626), 'notebook bar (ribbon) group' (4,046). Emission counts: 433 Toolbar, 1,639 Separator, 4,046 Ribbon Group elements. Honest limitation recorded: GroupLabel captions are currently emitted ZERO times, because the office .ui tool boxes do not carry a label property - the donor puts the caption in a sibling GtkLabel, so hoisting that into GroupLabel is a Stage B adaptation, not something to fake here. Renamed rather than removed: 'menu button' 459 -> 1,537 (the office priority/dropdown boxes named for what they are). Remaining top items: optional section 2,263, property not modelled 2,910, custom donor widget 1,479."
 }

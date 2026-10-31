@@ -166,6 +166,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             "wrap" => new WrapPanel(),
             "toolbar" => new CuiToolbarPanel(),
             "separator" => new CuiSeparatorPanel(),
+            "ribbon group" => new CuiRibbonGroupPanel(),
             "absolute" => new CuiAbsolutePanel(),
             "overlay" => new Panel(),
             "overlay float" => new CuiOverlayPanel(),
@@ -446,6 +447,15 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         public void OnError(Exception error) => throw error;
     }
 
+    /// <summary>Applies the authored GroupLabel caption. Like CellGap, declaring it where the construct
+    /// cannot honour it is an explicit error rather than a silently ignored attribute.</summary>
+    public void SetGroupLabel(string? value)
+    {
+        if (Layout is not CuiRibbonGroupPanel ribbon)
+            throw new InvalidOperationException($"GroupLabel is not meaningful for Container Type '{LayoutType}'.");
+        ribbon.Label = value;
+    }
+
     public void SetCellGap(double value)
     {
         if (!double.IsFinite(value) || value < 0) throw new ArgumentOutOfRangeException(nameof(value));
@@ -455,6 +465,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             case StackPanel stack: stack.Spacing = value; break;
             case WrapPanel wrap: wrap.ItemSpacing = value; wrap.LineSpacing = value; break;
             case CuiToolbarPanel toolbar: toolbar.Spacing = value; break;
+            case CuiRibbonGroupPanel ribbon: ribbon.Spacing = value; break;
             default: throw new InvalidOperationException($"CellGap is not meaningful for Container Type '{LayoutType}'.");
         }
     }

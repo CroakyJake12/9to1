@@ -345,10 +345,10 @@
           <Container id="phb-file" Type="Toolbar" focusable="false">
             <Container id="pmhb-file" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-file-new" Type="Grid" cell-gap="3" focusable="false">
-                <Container id="bx-file-add-direct" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-file-add-direct" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-file-add-direct" />
                 </Container>
-                <Container id="bx-file-new-doc" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
+                <Container id="bx-file-new-doc" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
                   <Button id="btn-file-new-doc" />
                 </Container>
                 <Text id="lb-file-new" text="New" focusable="false" column="0" row="2" column-span="2" />
@@ -356,45 +356,45 @@
               </Container>
               <Container id="gd-file-file" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-file-file" text="Document" focusable="false" column="0" row="2" column-span="4" />
-                <Container id="bx-file-open" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-file-open" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-file-open" />
                 </Container>
-                <Container id="bx-file-save" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
+                <Container id="bx-file-save" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
                   <Button id="btn-file-save" />
                 </Container>
-                <Container id="bx-file-export-to" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
+                <Container id="bx-file-export-to" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-file-export-to" />
                 </Container>
-                <Container id="bx-file-export-direct-to-pdf" Type="Vertical Stack" column="3" row="0">
+                <Container id="bx-file-export-direct-to-pdf" Type="Ribbon Group" column="3" row="0">
                   <Button id="btn-file-export-direct-to-pdf" />
                 </Container>
                 <Container id="container-2" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-file-send-mail" Type="Vertical Stack" column="3" row="1">
+                <Container id="bx-file-send-mail" Type="Ribbon Group" column="3" row="1">
                   <Button id="btn-file-send-mail" />
                 </Container>
               </Container>
               <Container id="gd-file-print" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-file-print" text="Print" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="bx-file-print" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-file-print" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-file-print" />
                 </Container>
-                <Container id="bx-file-print-default" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-file-print-default" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-file-print-default" />
                 </Container>
-                <Container id="bx-file-print-preview" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-file-print-preview" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-file-print-preview" />
                 </Container>
                 <Container id="container-3" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
               </Container>
               <Container id="gd-file-properties" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-file-properties" text="Properties" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="bx-file-set-document-properties" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-file-set-document-properties" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-file-set-document-properties" />
                 </Container>
-                <Container id="bx-file-signature" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-file-signature" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-file-signature" />
                 </Container>
-                <Container id="bx-file-sign-pdf" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-file-sign-pdf" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-file-sign-pdf" />
                 </Container>
                 <Container id="container-4" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
@@ -402,10 +402,10 @@
             </Container>
             <Container id="file-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b8" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
-                <Container id="section-bottom80" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom80" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-file-close-doc" />
                 </Container>
-                <Container id="section-bottom1" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom1" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-file-help-index" />
                 </Container>
               </Container>
@@ -420,47 +420,47 @@
             <Container id="pmhb-home" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-home-clipboard" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-clipboard" text="Clipboard" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="bx-home-paste" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-home-paste" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-home-paste" />
                 </Container>
-                <Container id="bx-home-cut" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-home-cut" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-home-cut" />
                 </Container>
-                <Container id="bx-home-copy" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-home-copy" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-home-copy" />
                 </Container>
                 <Container id="container-5" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
               </Container>
               <Container id="gd-home-font" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-font" text="Font" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="5" />
-                <Container id="bx-home-format-paintbrush" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0">
+                <Container id="bx-home-format-paintbrush" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0">
                   <Button id="btn-home-format-paintbrush" />
                 </Container>
-                <Container id="bx-home-reset-attributes" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="1">
+                <Container id="bx-home-reset-attributes" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="1">
                   <Button id="btn-home-reset-attributes" />
                 </Container>
-                <Container id="bx-home-char-font-name" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0" column-span="2">
+                <Container id="bx-home-char-font-name" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0" column-span="2">
                   <Button id="btn-home-char-font-name" role="Grow" />
                 </Container>
-                <Container id="bx-home-char-format" Type="Vertical Stack" vertical-alignment="Center" column="1" row="1">
+                <Container id="bx-home-char-format" Type="Ribbon Group" vertical-alignment="Center" column="1" row="1">
                   <Button id="btn-home-bold" />
                   <Button id="btn-home-italic" />
                   <Button id="btn-home-underline" />
                   <Button id="btn-home-strikeout" />
                 </Container>
-                <Container id="bx-home-font-height" Type="Vertical Stack" vertical-alignment="Center" column="3" row="0">
+                <Container id="bx-home-font-height" Type="Ribbon Group" vertical-alignment="Center" column="3" row="0">
                   <Button id="btn-home-font-height" role="Grow" />
                 </Container>
-                <Container id="bx-home-char-color" Type="Vertical Stack" vertical-alignment="Center" column="3" row="1" column-span="2">
+                <Container id="bx-home-char-color" Type="Ribbon Group" vertical-alignment="Center" column="3" row="1" column-span="2">
                   <Button id="btn-home-set-border-style" horizontal-alignment="Left" role="Grow" />
                   <Button id="btn-home-background-color" />
                   <Button id="btn-home-font-color" />
                 </Container>
-                <Container id="bx-home-script" Type="Vertical Stack" vertical-alignment="Center" column="2" row="1">
+                <Container id="bx-home-script" Type="Ribbon Group" vertical-alignment="Center" column="2" row="1">
                   <Button id="btn-home-sub-script" />
                   <Button id="btn-home-super-script" />
                 </Container>
-                <Container id="btn-home-grow-shrink" Type="Vertical Stack" vertical-alignment="Center" column="4" row="0">
+                <Container id="btn-home-grow-shrink" Type="Ribbon Group" vertical-alignment="Center" column="4" row="0">
                   <Button id="btn-home-grow" />
                   <Button id="btn-home-shrink" />
                 </Container>
@@ -468,26 +468,26 @@
               </Container>
               <Container id="gd-home-alignment" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-alignment" text="Alignment" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="bx-home-valign" Type="Vertical Stack" vertical-alignment="Center" column="0" row="0">
+                <Container id="bx-home-valign" Type="Ribbon Group" vertical-alignment="Center" column="0" row="0">
                   <Button id="btn-home-align-top" />
                   <Button id="btn-home-align-vcenter" />
                   <Button id="btn-home-align-bottom" />
                 </Container>
-                <Container id="box-home-halign" Type="Vertical Stack" vertical-alignment="Center" column="0" row="1">
+                <Container id="box-home-halign" Type="Ribbon Group" vertical-alignment="Center" column="0" row="1">
                   <Button id="btn-home-align-left" />
                   <Button id="btn-home-align-horizontal-center" />
                   <Button id="btn-home-align-right" />
                 </Container>
-                <Container id="bx-home-spacing-indentation" Type="Vertical Stack" vertical-alignment="Center" column="1" row="0" column-span="2">
+                <Container id="bx-home-spacing-indentation" Type="Ribbon Group" vertical-alignment="Center" column="1" row="0" column-span="2">
                   <Button id="btn-home-spacing" />
                   <Button id="btn-home-increment-indent" />
                   <Button id="btn-home-decrement-indent" />
                   <Button id="btn-home-para-left-to-right" />
                 </Container>
-                <Container id="bx-home-align-block" Type="Vertical Stack" vertical-alignment="Center" column="1" row="1">
+                <Container id="bx-home-align-block" Type="Ribbon Group" vertical-alignment="Center" column="1" row="1">
                   <Button id="btn-home-align-block" />
                 </Container>
-                <Container id="bx-home-wrap-rtl" Type="Vertical Stack" vertical-alignment="Center" column="2" row="1">
+                <Container id="bx-home-wrap-rtl" Type="Ribbon Group" vertical-alignment="Center" column="2" row="1">
                   <Button id="btn-home-wrap-text" />
                   <Button id="btn-home-para-right-to-left" />
                 </Container>
@@ -495,34 +495,34 @@
               </Container>
               <Container id="gd-home-number" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-number" text="Number" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="bx-home-number-format-type" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0" column-span="2">
+                <Container id="bx-home-number-format-type" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0" column-span="2">
                   <Button id="btn-home-number-format-type" role="Grow" />
                 </Container>
-                <Container id="bx-home-number-format" Type="Vertical Stack" vertical-alignment="Center" column="1" row="1">
+                <Container id="bx-home-number-format" Type="Ribbon Group" vertical-alignment="Center" column="1" row="1">
                   <Button id="btn-home-number-format-currency" />
                   <Button id="btn-home-number-format-percent" horizontal-alignment="Center" role="Grow" />
                   <Button id="btn-home-number-format-decimal" horizontal-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-home-number-decimals" Type="Vertical Stack" vertical-alignment="Center" column="2" row="1">
+                <Container id="bx-home-number-decimals" Type="Ribbon Group" vertical-alignment="Center" column="2" row="1">
                   <Button id="btn-home-number-format-inc-decimals" />
                   <Button id="btn-home-number-format-dec-decimals" />
                 </Container>
-                <Container id="bx-home-conditional-format-menu" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-home-conditional-format-menu" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-home-conditional-format-menu" />
                 </Container>
                 <Container id="container-8" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
               </Container>
               <Container id="gd-home-cells" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-home-cells" text="Cells" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="bx-home-merge-cells" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-home-merge-cells" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-home-merge-cells" />
                 </Container>
-                <Container id="btn-home-row" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="btn-home-row" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-home-insert-rows-before" />
                   <Button id="btn-home-delete-rows" />
                   <Button id="btn-home-row-operations" />
                 </Container>
-                <Container id="bx-home-column" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-home-column" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-insert-columns-before" />
                   <Button id="btn-home-delete-columns" />
                   <Button id="btn-home-column-operations" />
@@ -533,7 +533,7 @@
             <Container id="home-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="paste-box1" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="home-home-button:menu-home" content="Home" text="Home" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom10" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="section-bottom10" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="btn-home-search-dialog" />
                   <Button id="btn-home-sort-ascending1" vertical-alignment="Center" />
                   <Button id="btn-home-data-filter-auto-filter1" vertical-alignment="Center" />
@@ -546,13 +546,13 @@
             <Container id="pmhb-insert" Type="Toolbar" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="gd-insert-pivot-table" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-pivot-table" text="Pivot Table" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="bx-insert-recalc-pivot-table" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-insert-recalc-pivot-table" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-insert-recalc-pivot-table" />
                 </Container>
-                <Container id="bx-insert-delete-pivot-table" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-insert-delete-pivot-table" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-insert-delete-pivot-table" />
                 </Container>
-                <Container id="bx-insert-data-data-pilot-run" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-insert-data-data-pilot-run" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-data-data-pilot-run" />
                 </Container>
                 <Container id="container-10" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
@@ -560,70 +560,70 @@
               <Container id="gd-insert-range" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-range" text="Range" focusable="false" column="0" row="2" />
                 <Container id="container-11" Type="Separator" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-insert-add-name" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-insert-add-name" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-insert-add-name" />
                 </Container>
-                <Container id="bx-insert-define-name" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-insert-define-name" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-insert-define-name" />
                 </Container>
               </Container>
               <Container id="gd-insert-text" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-text" text="Text" focusable="false" column="0" row="2" column-span="3" />
-                <Container id="bx-insert-text-box" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-insert-text-box" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-draw-text" />
                   <Button id="btn-insert-vertical-text" />
                 </Container>
-                <Container id="bx-insert-charmap-control" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-insert-charmap-control" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-insert-charmap-control" />
                 </Container>
-                <Container id="bx-insert-hyperlink-dialog" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-insert-hyperlink-dialog" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-insert-hyperlink-dialog" />
                 </Container>
-                <Container id="bx-insert-date" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-insert-date" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-insert-insert-current-date" />
                 </Container>
-                <Container id="bx-insert-time" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-insert-time" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-insert-insert-current-time" />
                 </Container>
                 <Container id="container-12" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
               </Container>
               <Container id="gd-insert-objects" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-objects" text="Objects" focusable="false" column="0" row="2" column-span="3" />
-                <Container id="bx-insert-insert-object-chart" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-insert-insert-object-chart" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-insert-insert-object-chart" />
                 </Container>
-                <Container id="bx-insert-insert-object" Type="Vertical Stack" column="2" row="0">
+                <Container id="bx-insert-insert-object" Type="Ribbon Group" column="2" row="0">
                   <Button id="btn-insert-insert-object" />
                 </Container>
-                <Container id="bx-insert-insert-graphic" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-insert-insert-graphic" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-insert-insert-graphic" />
                 </Container>
-                <Container id="bx-insert-gallery" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-insert-gallery" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-insert-gallery" />
                 </Container>
                 <Container id="container-13" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-insert-insert-object-star-math" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="1">
+                <Container id="bx-insert-insert-object-star-math" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="1">
                   <Button id="btn-insert-insert-object-star-math" />
                 </Container>
               </Container>
               <Container id="gd-insert-shapes" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-insert-shapes" text="Shapes" focusable="false" column="0" row="2" column-span="2" />
-                <Container id="bx-shapes-top-right" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-shapes-top-right" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-insert-basic-shapes" role="Grow" />
                   <Button id="btn-insert-symbol-shapes" role="Grow" />
                   <Button id="btn-insert-arrow-shapes" role="Grow" />
                 </Container>
-                <Container id="bx-shapes-bottom-right" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-shapes-bottom-right" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-insert-star-shapes" role="Grow" />
                   <Button id="btn-insert-callout-shapes" role="Grow" />
                   <Button id="btn-insert-flow-chart-shapes" role="Grow" />
                 </Container>
-                <Container id="bx-shapes-top-left" Type="Vertical Stack" column="0" row="0">
+                <Container id="bx-shapes-top-left" Type="Ribbon Group" column="0" row="0">
                   <Button id="btn-insert-line" role="Grow" />
                   <Button id="btn-insert-connector-toolbox" />
                   <Button id="btn-insert-arrows-toolbox" />
                 </Container>
-                <Container id="bx-shapes-bottom-left" Type="Vertical Stack" column="0" row="1">
+                <Container id="bx-shapes-bottom-left" Type="Ribbon Group" column="0" row="1">
                   <Button id="btn-insert-basic-shapes-rectangle" role="Grow" />
                   <Button id="btn-insert-basic-shapes-ellipse" role="Grow" />
                   <Button id="btn-insert-draw-caption" role="Grow" />
@@ -635,7 +635,7 @@
             <Container id="insert-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b26" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="insert-insert-button:menu-insert" content="Insert" text="Insert" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom32" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom32" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-insert-data-data-pilot-run1" />
                   <Button id="btn-insert-insert-draw" vertical-alignment="Center" />
                   <Button id="btn-insert-function-box" />
@@ -649,26 +649,26 @@
               <Container id="gd-layout-page" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-page" text="Page" focusable="false" column="0" row="2" column-span="3" />
                 <Container id="container-15" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-layout-page-format-dialog" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-layout-page-format-dialog" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-layout-page-format-dialog" />
                 </Container>
-                <Container id="bx-layout-edit-header-and-footer" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
+                <Container id="bx-layout-edit-header-and-footer" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
                   <Button id="btn-layout-edit-header-and-footer" />
                 </Container>
-                <Container id="bx-layout-auto-format" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
+                <Container id="bx-layout-auto-format" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-layout-auto-format" />
                 </Container>
               </Container>
               <Container id="gd-layout-print-area" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-print-area" text="Print Area" focusable="false" column="0" row="2" column-span="2" />
                 <Container id="container-16" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-layout-define-print-area" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-layout-define-print-area" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-layout-define-print-area" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-layout-edit-print-area" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-layout-edit-print-area" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-layout-edit-print-area" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-layout-print-area" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-layout-print-area" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-layout-add-print-area" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-layout-delete-print-area" vertical-alignment="Center" role="Grow" />
                 </Container>
@@ -676,47 +676,47 @@
               <Container id="gd-layout-sheet" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-sheet" text="Sheet" focusable="false" column="0" row="2" column-span="3" />
                 <Container id="container-17" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-layout-insert" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-layout-insert" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-layout-insert" />
                 </Container>
-                <Container id="bx-layout-row-operations" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-layout-row-operations" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-layout-row-operations" horizontal-alignment="Left" role="Grow" />
                 </Container>
-                <Container id="bx-layout-column-operations" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-layout-column-operations" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-layout-column-operations" horizontal-alignment="Left" role="Grow" />
                 </Container>
-                <Container id="bx-layout-toggle-rtl" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0">
+                <Container id="bx-layout-toggle-rtl" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0">
                   <Button id="btn-layout-toggle-rtl" />
                 </Container>
-                <Container id="bx-layout-choose-design" Type="Vertical Stack" column="2" row="1">
+                <Container id="bx-layout-choose-design" Type="Ribbon Group" column="2" row="1">
                   <Button id="btn-layout-choose-design" />
                 </Container>
               </Container>
               <Container id="gd-layout-objects" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-layout-objects" text="Objects" focusable="false" column="0" row="2" column-span="4" />
                 <Container id="container-18" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-layout-bring-to-front" Type="Vertical Stack" column="2" row="0">
+                <Container id="bx-layout-bring-to-front" Type="Ribbon Group" column="2" row="0">
                   <Button id="btn-layout-bring-to-front" />
                 </Container>
-                <Container id="bx-layout-send-to-back" Type="Vertical Stack" column="2" row="1">
+                <Container id="bx-layout-send-to-back" Type="Ribbon Group" column="2" row="1">
                   <Button id="btn-layout-send-to-back" />
                 </Container>
-                <Container id="bx-layout-object-forward-one" Type="Vertical Stack" column="3" row="0">
+                <Container id="bx-layout-object-forward-one" Type="Ribbon Group" column="3" row="0">
                   <Button id="btn-layout-object-forward-one" />
                 </Container>
-                <Container id="bx-layout-object-back-one" Type="Vertical Stack" column="3" row="1">
+                <Container id="bx-layout-object-back-one" Type="Ribbon Group" column="3" row="1">
                   <Button id="btn-layout-object-back-one" />
                 </Container>
-                <Container id="bx-layout-select-object" Type="Vertical Stack" column="0" row="0">
+                <Container id="bx-layout-select-object" Type="Ribbon Group" column="0" row="0">
                   <Button id="btn-layout-select-object" />
                 </Container>
-                <Container id="bx-layout-toggle-object-rotate-mode" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-layout-toggle-object-rotate-mode" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-layout-toggle-object-rotate-mode" />
                 </Container>
-                <Container id="bx-layout-format-group" Type="Vertical Stack" column="0" row="1">
+                <Container id="bx-layout-format-group" Type="Ribbon Group" column="0" row="1">
                   <Button id="btn-layout-format-group" />
                 </Container>
-                <Container id="bx-layout-object-align" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-layout-object-align" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-layout-object-align" horizontal-alignment="Left" role="Grow" />
                 </Container>
               </Container>
@@ -724,7 +724,7 @@
             <Container id="layout-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b28" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="layout-layout-button:menu-page" content="Layout" text="Layout" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom15" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom15" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-layout-page-format-dialog1" />
                 </Container>
               </Container>
@@ -736,86 +736,86 @@
               <Container id="gd-data-sources" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-data-sources" text="Data Sources" focusable="false" column="0" row="2" column-span="4" />
                 <Container id="container-19" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-data-insert-external-data-source" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-data-insert-external-data-source" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-data-insert-external-data-source" />
                 </Container>
-                <Container id="bx-data-data-streams" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
+                <Container id="bx-data-data-streams" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0" row-span="2">
                   <Button id="btn-data-data-streams" />
                 </Container>
-                <Container id="bx-data-manage-xmlsource" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
+                <Container id="bx-data-manage-xmlsource" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-data-manage-xmlsource" />
                 </Container>
-                <Container id="bx-data-data-provider" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="3" row="0">
+                <Container id="bx-data-data-provider" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="3" row="0">
                   <Button id="btn-data-data-provider" />
                 </Container>
-                <Container id="bx-data-data-provider-refresh" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="3" row="1">
+                <Container id="bx-data-data-provider-refresh" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="3" row="1">
                   <Button id="btn-data-data-provider-refresh" />
                 </Container>
               </Container>
               <Container id="gd-data-sort" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-20" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Text id="lb-data-sort" text="Sort" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="bx-data-data-sort" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-data-data-sort" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-data-data-sort" />
                 </Container>
-                <Container id="bx-data-sort-ascending" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-data-sort-ascending" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-data-sort-ascending" />
                 </Container>
-                <Container id="bx-data-sort-descending" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-data-sort-descending" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-data-sort-descending" />
                 </Container>
-                <Container id="bx-data-shuffle" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
+                <Container id="bx-data-shuffle" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-data-shuffle" />
                 </Container>
               </Container>
               <Container id="gd-data-filter" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-21" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Text id="lb-data-filter" text="Filter" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="bx-data-data-filter-auto-filter" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0">
+                <Container id="bx-data-data-filter-auto-filter" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0">
                   <Button id="btn-data-data-filter-auto-filter" role="Grow" />
                 </Container>
-                <Container id="bx-data-data-filter-hide-auto-filter" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="1">
+                <Container id="bx-data-data-filter-hide-auto-filter" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="1">
                   <Button id="btn-data-data-filter-hide-auto-filter" role="Grow" />
                 </Container>
-                <Container id="bx-data-data-filter-standard-filter" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-data-data-filter-standard-filter" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-data-data-filter-standard-filter" role="Grow" />
                 </Container>
-                <Container id="bx-data-data-filter-special-filter" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-data-data-filter-special-filter" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-data-data-filter-special-filter" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-data-examination" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-22" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Text id="lb-data-examination" text="Examination" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="bx-data-data-consolidate" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-data-data-consolidate" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-data-data-consolidate" />
                 </Container>
-                <Container id="bx-data-validation" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-data-validation" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-data-validation" />
                 </Container>
-                <Container id="bx-data-text-to-columns" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0">
+                <Container id="bx-data-text-to-columns" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0">
                   <Button id="btn-data-text-to-columns" />
                 </Container>
-                <Container id="bx-data-handle-duplicate-records" Type="Vertical Stack" column="0" row="1">
+                <Container id="bx-data-handle-duplicate-records" Type="Ribbon Group" column="0" row="1">
                   <Button id="btn-data-handle-duplicate-records" />
                 </Container>
               </Container>
               <Container id="gd-data-subtotal" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-23" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Text id="lb-data-subtotal" text="Subtotal" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="bx-data-data-sub-totals" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-data-data-sub-totals" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-data-data-sub-totals" />
                 </Container>
-                <Container id="bx-data-group" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-data-group" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-data-group" />
                 </Container>
-                <Container id="bx-data-ungroup" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-data-ungroup" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-data-ungroup" />
                 </Container>
-                <Container id="bx-data-hide-detail" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0">
+                <Container id="bx-data-hide-detail" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0">
                   <Button id="btn-data-hide-detail" />
                 </Container>
-                <Container id="bx-data-show-detail" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="1">
+                <Container id="bx-data-show-detail" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="1">
                   <Button id="btn-data-show-detail" />
                 </Container>
               </Container>
@@ -823,7 +823,7 @@
             <Container id="data-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="view-menu3" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="data-data-button:menu-data" content="Data" text="Data" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom16" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="section-bottom16" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="btn-data-search-dialog" />
                   <Button id="btn-data-sort-ascending1" vertical-alignment="Center" />
                   <Button id="btn-data-data-filter-auto-filter1" vertical-alignment="Center" />
@@ -837,52 +837,52 @@
               <Container id="gd-functions-goal-seeker" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-24" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Text id="lb-functions-goal-seeker" text="Goal Seeker" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="bx-functionss-goal-seek-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-functionss-goal-seek-dialog" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-functions-goal-seek-dialog" />
                 </Container>
-                <Container id="bx-functions-solver-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
+                <Container id="bx-functions-solver-dialog" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0" row-span="2">
                   <Button id="btn-functions-solver-dialog" />
                 </Container>
-                <Container id="bx-functions-show-invalid" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-functions-show-invalid" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-functions-show-invalid" />
                 </Container>
-                <Container id="bx-functions-show-errors" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-functions-show-errors" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-functions-show-errors" />
                 </Container>
               </Container>
               <Container id="gd-functions-detective" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-25" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
                 <Text id="lb-functions-detective" text="Detective" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
-                <Container id="bx-functions-auditing-fill-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-functions-auditing-fill-mode" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-functions-auditing-fill-mode" />
                 </Container>
-                <Container id="bx-functions-show-precedents" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-functions-show-precedents" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-functions-show-precedents" />
                 </Container>
-                <Container id="bx-functions-show-dependents" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-functions-show-dependents" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-functions-show-dependents" />
                 </Container>
-                <Container id="bx-functions-clear-arrow-precedents" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-functions-clear-arrow-precedents" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-functions-clear-arrow-precedents" />
                 </Container>
-                <Container id="bx-functions-clear-arrow-dependents" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-functions-clear-arrow-dependents" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-functions-clear-arrow-dependents" />
                 </Container>
               </Container>
               <Container id="gd-functions-statistics" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-26" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
                 <Text id="lb-functions-statistics" text="Statistics" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
-                <Container id="bx-functions-statistics-top" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                <Container id="bx-functions-statistics-top" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
                   <Button id="btn-functions-chi-square-test-dialog" />
                   <Button id="btn-functions-ftest-dialog" />
                   <Button id="btn-functions-ttest-dialog" />
                   <Button id="btn-functions-ztest-dialog" />
                   <Button id="btn-functions-anova" />
                 </Container>
-                <Container id="bx-functions-descriptive-statistics-dialog" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-functions-descriptive-statistics-dialog" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-functions-descriptive-statistics-dialog" />
                 </Container>
-                <Container id="bx-functions-statistics-bottom" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                <Container id="bx-functions-statistics-bottom" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
                   <Button id="btn-functions-regression-dialog" />
                   <Button id="btn-functions-fourier-analysis-dialog" />
                   <Button id="btn-functions-correlation-dialog" />
@@ -897,41 +897,41 @@
               <Container id="gd-review-spelling" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-spelling" text="Spelling" focusable="false" column="0" row="2" column-span="2" />
                 <Container id="container-27" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-review-spelling" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-review-spelling" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-spell-dialog" />
                   <Button id="btn-review-thesaurus-dialog" />
                 </Container>
-                <Container id="bx-review-spell-online" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-review-spell-online" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-review-spell-online" role="Grow" />
                 </Container>
-                <Container id="bx-review-hyphenate" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-review-hyphenate" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-review-hyphenate" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-review-comments" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-comments" text="Comments" focusable="false" column="0" row="2" column-span="3" />
                 <Container id="container-28" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-review-annotation" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-review-annotation" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-insert-annotation" role="Grow" />
                   <Button id="btn-review-edit-annotation" />
                 </Container>
-                <Container id="bx-review-show-all-notes" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-review-show-all-notes" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-review-show-all-notes" />
                 </Container>
-                <Container id="bx-review-delete-all-notes" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0">
+                <Container id="bx-review-delete-all-notes" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0">
                   <Button id="btn-review-delete-all-notes" />
                 </Container>
-                <Container id="bx-review-hide-all-notes" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-review-hide-all-notes" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-review-hide-all-notes" />
                 </Container>
-                <Container id="bx-review-delete-note" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="1">
+                <Container id="bx-review-delete-note" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="1">
                   <Button id="btn-review-delete-note" />
                 </Container>
               </Container>
               <Container id="gd-review-track-changes" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-track-changes" text="Track Changes" focusable="false" column="0" row="2" />
                 <Container id="container-29" Type="Separator" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-review-trace-change" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-review-trace-change" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-trace-change-mode" />
                   <Button id="btn-review-accept-changes" />
                 </Container>
@@ -939,22 +939,22 @@
               <Container id="gd-review-document" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-review-document" text="Document" focusable="false" column="0" row="2" column-span="4" />
                 <Container id="container-30" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-review-tool-protection-document" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-review-tool-protection-document" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-review-tool-protection-document" />
                 </Container>
-                <Container id="bx-review-share-document" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-review-share-document" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-review-share-document" />
                 </Container>
-                <Container id="bx-review-protect" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-review-protect" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-review-protect" />
                 </Container>
-                <Container id="bx-review-compare-documents" Type="Vertical Stack" column="3" row="0">
+                <Container id="bx-review-compare-documents" Type="Ribbon Group" column="3" row="0">
                   <Button id="btn-review-compare-documents" />
                 </Container>
-                <Container id="bx-review-merge-documents" Type="Vertical Stack" column="3" row="1">
+                <Container id="bx-review-merge-documents" Type="Ribbon Group" column="3" row="1">
                   <Button id="btn-review-merge-documents" />
                 </Container>
-                <Container id="bx-review-redact-doc" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
+                <Container id="bx-review-redact-doc" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-review-redact-doc" />
                 </Container>
               </Container>
@@ -962,7 +962,7 @@
             <Container id="reference-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b37" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="review-review-button:menu-review" content="Review" text="Review" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom20" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom20" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-review-accept-changes1" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
@@ -974,7 +974,7 @@
               <Container id="gd-view-panes" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-panes" text="Panes" focusable="false" column="0" row="2" />
                 <Container id="container-31" Type="Separator" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-freeze-split" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-freeze-split" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-freeze-panes" />
                   <Button id="btn-view-split-window" />
                 </Container>
@@ -982,57 +982,57 @@
               <Container id="gd-view-zoom" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-zoom" text="Zoom" focusable="false" column="0" row="2" column-span="3" />
                 <Container id="container-32" Type="Separator" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-view-zoom-optimal" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-view-zoom-optimal" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-zoom-optimal" />
                 </Container>
-                <Container id="bx-view-zoom100-percent" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-view-zoom100-percent" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-view-zoom100-percent" />
                 </Container>
-                <Container id="bx-view-zoom-page" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-view-zoom-page" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-view-zoom-page" />
                 </Container>
-                <Container id="bx-view-full-screen" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
+                <Container id="bx-view-full-screen" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0" row-span="2">
                   <Button id="btn-view-full-screen" />
                 </Container>
               </Container>
               <Container id="gd-view-view" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-view" text="View" focusable="false" column="0" row="2" column-span="4" />
                 <Container id="container-33" Type="Separator" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-view-view-row-column-headers" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-view-view-row-column-headers" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-view-view-row-column-headers" />
                 </Container>
-                <Container id="bx-view-toggle-sheet-grid" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="1">
+                <Container id="bx-view-toggle-sheet-grid" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="1">
                   <Button id="btn-view-toggle-sheet-grid" />
                 </Container>
-                <Container id="bx-view-menubar" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="0">
+                <Container id="bx-view-menubar" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="0">
                   <Button id="btn-view-menubar" />
                 </Container>
-                <Container id="bx-view-input-line-visible" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="2" row="1">
+                <Container id="bx-view-input-line-visible" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="2" row="1">
                   <Button id="btn-view-input-line-visible" />
                 </Container>
-                <Container id="bx-view-view-value-highlighting" Type="Vertical Stack" column="3" row="0">
+                <Container id="bx-view-view-value-highlighting" Type="Ribbon Group" column="3" row="0">
                   <Button id="btn-view-view-value-highlighting" />
                 </Container>
-                <Container id="bx-view-toggle-formula" Type="Vertical Stack" column="3" row="1">
+                <Container id="bx-view-toggle-formula" Type="Ribbon Group" column="3" row="1">
                   <Button id="btn-view-toggle-formula" />
                 </Container>
-                <Container id="bx-view-change-theme" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-view-change-theme" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-view-change-theme" />
                 </Container>
               </Container>
               <Container id="gd-view-options" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-view-options" text="Options" focusable="false" column="0" row="2" column-span="2" />
                 <Container id="container-34" Type="Separator" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-view-view-column-row-highlighting" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-view-view-column-row-highlighting" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-view-view-column-row-highlighting" />
                 </Container>
-                <Container id="bx-view-view-hidden-col-row" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-view-view-hidden-col-row" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-view-view-hidden-col-row" />
                 </Container>
-                <Container id="bx-insert-designer-dialog" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-insert-designer-dialog" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-insert-designer-dialog" />
                 </Container>
-                <Container id="bx-view-sidebar" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0">
+                <Container id="bx-view-sidebar" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0">
                   <Button id="btn-view-sidebar" />
                 </Container>
               </Container>
@@ -1040,7 +1040,7 @@
             <Container id="view-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="view-menu2" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="view-view-button:menu-view" content="View" text="View" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom27" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom27" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-view-zoom" vertical-alignment="Center" />
                 </Container>
               </Container>
@@ -1052,38 +1052,38 @@
               <Container id="gd-image-image" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-image" text="Image" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="container-35" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-image-compress-graphic" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-image-compress-graphic" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-image-compress-graphic" />
                 </Container>
-                <Container id="bx-image-crop" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-image-crop" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-image-crop" />
                 </Container>
-                <Container id="bx-image-toggle-rotate" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                <Container id="bx-image-toggle-rotate" Type="Ribbon Group" focusable="false" column="1" row="1" column-span="2">
                   <Button id="btn-image-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-image-flip-vertical" />
                   <Button id="btn-image-flip-horizontal" />
                 </Container>
-                <Container id="bx-image-assign-macro" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-image-assign-macro" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-image-assign-macro" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-image-fill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="container-36" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-image-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-image-format-area" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-image-format-area" />
                 </Container>
-                <Container id="bx-image-fill-style" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                <Container id="bx-image-fill-style" Type="Ribbon Group" focusable="false" column="1" row="1" column-span="2">
                   <Button id="btn-image-fill-style" />
                 </Container>
-                <Container id="bx-image-format-line" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-image-format-line" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-image-format-line" />
                 </Container>
-                <Container id="bx-image-line-style-left" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-image-line-style-left" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-image-xline-style" width="100" vertical-alignment="Center" />
                   <Button id="btn-image-line-width" role="Grow" />
                 </Container>
-                <Container id="bx-image-line-style-right" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-image-line-style-right" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-image-line-end-style" role="Grow" />
                   <Button id="btn-image-xline-color" role="Grow" />
                   <Button id="btn-image-fill-shadow" />
@@ -1092,54 +1092,54 @@
               <Container id="gd-image-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
                 <Container id="container-37" Type="Separator" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-image-anchor-menu" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-image-anchor-menu" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-image-anchor-menu" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-image-align-top" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-image-align-top" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-image-object-align-left" />
                   <Button id="btn-image-align-center" />
                   <Button id="btn-image-object-align-right" />
                 </Container>
-                <Container id="bx-image-align-bottom" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-image-align-bottom" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-image-align-up" />
                   <Button id="btn-image-align-middle" />
                   <Button id="btn-image-align-down" />
                 </Container>
-                <Container id="bx-image-bring-to-front" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-image-bring-to-front" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-image-bring-to-front" />
                 </Container>
-                <Container id="bx-image-object-forward-one" Type="Vertical Stack" focusable="false" column="3" row="0">
+                <Container id="bx-image-object-forward-one" Type="Ribbon Group" focusable="false" column="3" row="0">
                   <Button id="btn-image-object-forward-one" />
                 </Container>
-                <Container id="bx-image-send-to-back" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-image-send-to-back" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-image-send-to-back" />
                 </Container>
-                <Container id="bx-image-object-back-one" Type="Vertical Stack" focusable="false" column="3" row="1">
+                <Container id="bx-image-object-back-one" Type="Ribbon Group" focusable="false" column="3" row="1">
                   <Button id="btn-image-object-back-one" />
                 </Container>
               </Container>
               <Container id="gd-image-modify" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-image-modify" text="Modify" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
                 <Container id="container-38" Type="Separator" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-image-graphic-filter-toolbox" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-image-graphic-filter-toolbox" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-image-graphic-filter-toolbox" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-image-graf-luminance" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-image-graf-luminance" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-image-graf-luminance" vertical-alignment="Center" />
                 </Container>
-                <Container id="bx-image-graf-contrast" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-image-graf-contrast" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-image-graf-contrast" vertical-alignment="Center" />
                 </Container>
-                <Container id="bx-image-graf-transparence" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-image-graf-transparence" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-image-graf-transparence" vertical-alignment="Center" />
                 </Container>
-                <Container id="bx-image-graf-gamma" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-image-graf-gamma" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-image-graf-gamma" vertical-alignment="Center" />
                 </Container>
-                <Container id="bx-image-graf-mode" Type="Vertical Stack" focusable="false" column="3" row="0">
+                <Container id="bx-image-graf-mode" Type="Ribbon Group" focusable="false" column="3" row="0">
                   <Button id="btn-image-graf-mode" />
                 </Container>
-                <Container id="bx-image-color-settings" Type="Vertical Stack" focusable="false" column="3" row="1">
+                <Container id="bx-image-color-settings" Type="Ribbon Group" focusable="false" column="3" row="1">
                   <Button id="btn-image-color-settings" />
                 </Container>
               </Container>
@@ -1147,7 +1147,7 @@
             <Container id="image-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b67" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="image-graphic-button:menu-image" content="Image" text="Image" horizontal-alignment="Right" vertical-alignment="Center" />
-                <Container id="section-bottom83" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom83" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-image-save-graphic" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-image-format-area1" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-image-format-line1" vertical-alignment="Center" role="Grow" />
@@ -1162,35 +1162,35 @@
               <Container id="gd-draw" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw" text="Drawing Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="container-39" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-draw-toggle-rotate" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-draw-toggle-rotate" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-draw-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-draw-flip-vertical" />
                   <Button id="btn-draw-flip-horizontal" />
                 </Container>
-                <Container id="bx-draw-toggle-object-bezier-mode" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-draw-toggle-object-bezier-mode" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-draw-toggle-object-bezier-mode" />
                 </Container>
-                <Container id="bx-draw-assign-macro" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-draw-assign-macro" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-draw-assign-macro" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-draw-fill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="container-40" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-draw-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-draw-format-area" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-draw-format-area" />
                 </Container>
-                <Container id="bx-draw-fill-style" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                <Container id="bx-draw-fill-style" Type="Ribbon Group" focusable="false" column="1" row="1" column-span="2">
                   <Button id="btn-draw-fill-style" />
                 </Container>
-                <Container id="bx-draw-format-line" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-draw-format-line" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-draw-format-line" />
                 </Container>
-                <Container id="bx-draw-line-style-left" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-draw-line-style-left" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-draw-xline-style" width="100" vertical-alignment="Center" />
                   <Button id="btn-draw-line-width" role="Grow" />
                 </Container>
-                <Container id="bx-draw-line-style-right" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-draw-line-style-right" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-draw-line-end-style" role="Grow" />
                   <Button id="btn-draw-xline-color" role="Grow" />
                   <Button id="btn-draw-fill-shadow" />
@@ -1199,52 +1199,52 @@
               <Container id="gd-draw-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
                 <Container id="container-41" Type="Separator" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-draw-anchor-menu" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-draw-anchor-menu" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-draw-anchor-menu" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-draw-align-top" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-draw-align-top" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-draw-object-align-left" />
                   <Button id="btn-draw-align-center" />
                   <Button id="btn-draw-object-align-right" />
                 </Container>
-                <Container id="bx-draw-align-bottom" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-draw-align-bottom" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-draw-align-up" />
                   <Button id="btn-draw-align-middle" />
                   <Button id="btn-draw-align-down" />
                 </Container>
-                <Container id="bx-draw-bring-to-front" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-draw-bring-to-front" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-draw-bring-to-front" />
                 </Container>
-                <Container id="bx-draw-object-forward-one" Type="Vertical Stack" focusable="false" column="3" row="0">
+                <Container id="bx-draw-object-forward-one" Type="Ribbon Group" focusable="false" column="3" row="0">
                   <Button id="btn-draw-object-forward-one" />
                 </Container>
-                <Container id="bx-draw-send-to-back" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-draw-send-to-back" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-draw-send-to-back" />
                 </Container>
-                <Container id="bx-draw-object-back-one" Type="Vertical Stack" focusable="false" column="3" row="1">
+                <Container id="bx-draw-object-back-one" Type="Ribbon Group" focusable="false" column="3" row="1">
                   <Button id="btn-draw-object-back-one" />
                 </Container>
               </Container>
               <Container id="gd-draw-grouping" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw-grouping" text="Grouping" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="container-42" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-draw-format-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-draw-format-group" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-draw-format-group" role="Grow" />
                 </Container>
-                <Container id="bx-draw-enter-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                <Container id="bx-draw-enter-group" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
                   <Button id="btn-draw-enter-group" role="Grow" />
                 </Container>
-                <Container id="bx-draw-leave-group" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                <Container id="bx-draw-leave-group" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
                   <Button id="btn-draw-leave-group" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-draw3-d" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-draw3-d" text="3D" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
                 <Container id="container-43" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-draw-extrusion-toggle" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-draw-extrusion-toggle" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-draw-extrusion-toggle" role="Grow" />
                 </Container>
-                <Container id="bx-draw-extrusion-options" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-draw-extrusion-options" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-draw-extrusion-depth-floater" role="Grow" />
                   <Button id="btn-draw-extrusion-direction-floater" role="Grow" />
                   <Button id="btn-draw-extrusion3-dcolor" />
@@ -1255,7 +1255,7 @@
             <Container id="draw-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b74" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="draw-draw-button:menu-draw" content="Draw" text="Draw" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom48" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom48" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-draw-format-area1" vertical-alignment="Center" />
                   <Button id="btn-draw-format-line1" vertical-alignment="Center" />
                   <Button id="btn-draw-transform-dialog" vertical-alignment="Center" />
@@ -1269,35 +1269,35 @@
               <Container id="gd-object" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-object" text="Object" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="container-44" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-object-toggle-rotate" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-object-toggle-rotate" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-object-toggle-object-rotate-mode" vertical-alignment="Center" role="Grow" />
                   <Button id="btn-object-flip-vertical" />
                   <Button id="btn-object-flip-horizontal" />
                 </Container>
-                <Container id="bx-object-assign-macro" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-object-assign-macro" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-object-assign-macro" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-object-original-size" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="1" row="0">
+                <Container id="bx-object-original-size" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="1" row="0">
                   <Button id="btn-object-original-size" />
                 </Container>
               </Container>
               <Container id="gd-object-fill-border" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-object-fill-border" text="Fill &amp; Border" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="container-45" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-object-format-area" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-object-format-area" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-object-format-area" />
                 </Container>
-                <Container id="bx-object-fill-style" Type="Vertical Stack" focusable="false" column="1" row="1" column-span="2">
+                <Container id="bx-object-fill-style" Type="Ribbon Group" focusable="false" column="1" row="1" column-span="2">
                   <Button id="btn-object-fill-style" />
                 </Container>
-                <Container id="bx-object-format-line" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-object-format-line" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-object-format-line" />
                 </Container>
-                <Container id="bx-object-line-style-left" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-object-line-style-left" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-object-xline-style" width="100" vertical-alignment="Center" />
                   <Button id="btn-object-line-width" role="Grow" />
                 </Container>
-                <Container id="bx-object-line-style-right" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-object-line-style-right" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-object-line-end-style" role="Grow" />
                   <Button id="btn-object-xline-color" role="Grow" />
                   <Button id="btn-object-fill-shadow" />
@@ -1306,29 +1306,29 @@
               <Container id="gd-object-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-object-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
                 <Container id="container-46" Type="Separator" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-object-anchor-menu" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-object-anchor-menu" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-object-anchor-menu" vertical-alignment="Center" role="Grow" />
                 </Container>
-                <Container id="bx-object-align-top" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-object-align-top" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-object-object-align-left" />
                   <Button id="btn-object-align-center" />
                   <Button id="btn-object-object-align-right" />
                 </Container>
-                <Container id="bx-object-align-bottom" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-object-align-bottom" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-object-align-up" />
                   <Button id="btn-object-align-middle" />
                   <Button id="btn-object-align-down" />
                 </Container>
-                <Container id="bx-object-bring-to-front" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-object-bring-to-front" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-object-bring-to-front" />
                 </Container>
-                <Container id="bx-object-object-forward-one" Type="Vertical Stack" focusable="false" column="3" row="0">
+                <Container id="bx-object-object-forward-one" Type="Ribbon Group" focusable="false" column="3" row="0">
                   <Button id="btn-object-object-forward-one" />
                 </Container>
-                <Container id="bx-object-send-to-back" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-object-send-to-back" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-object-send-to-back" />
                 </Container>
-                <Container id="bx-object-object-back-one" Type="Vertical Stack" focusable="false" column="3" row="1">
+                <Container id="bx-object-object-back-one" Type="Ribbon Group" focusable="false" column="3" row="1">
                   <Button id="btn-object-object-back-one" />
                 </Container>
               </Container>
@@ -1336,7 +1336,7 @@
             <Container id="object-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b78" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="object-draw-menu:menu-draw" content="Object" text="Object" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom58" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom58" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-object-format-area1" vertical-alignment="Center" />
                   <Button id="btn-object-format-line1" vertical-alignment="Center" />
                   <Button id="btn-object-transform-dialog" vertical-alignment="Center" />
@@ -1350,46 +1350,46 @@
               <Container id="gd-media" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-media" text="Media" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
                 <Container id="container-47" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-media-assign-macro" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-media-assign-macro" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-media-assign-macro" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-media-positioning" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-media-positioning" text="Positioning" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="4" />
                 <Container id="container-48" Type="Separator" horizontal-alignment="Right" focusable="false" column="4" row="0" row-span="3" />
-                <Container id="bx-media-align-top" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-media-align-top" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-media-object-align-left" />
                   <Button id="btn-media-align-center" />
                   <Button id="btn-media-object-align-right" />
                 </Container>
-                <Container id="bx-media-align-bottom" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-media-align-bottom" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-media-align-up" />
                   <Button id="btn-media-align-middle" />
                   <Button id="btn-media-align-down" />
                 </Container>
-                <Container id="bx-media-bring-to-front" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-media-bring-to-front" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-media-bring-to-front" />
                 </Container>
-                <Container id="bx-media-send-to-back" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-media-send-to-back" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-media-send-to-back" />
                 </Container>
-                <Container id="bx-media-object-forward-one" Type="Vertical Stack" focusable="false" column="3" row="0">
+                <Container id="bx-media-object-forward-one" Type="Ribbon Group" focusable="false" column="3" row="0">
                   <Button id="btn-media-object-forward-one" />
                 </Container>
-                <Container id="bx-media-object-back-one" Type="Vertical Stack" focusable="false" column="3" row="1">
+                <Container id="bx-media-object-back-one" Type="Ribbon Group" focusable="false" column="3" row="1">
                   <Button id="btn-media-object-back-one" />
                 </Container>
-                <Container id="bx-media-anchor-menu" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-media-anchor-menu" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-media-anchor-menu" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="gd-media-player" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-media-player" text="Media Player" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
                 <Container id="container-49" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-media-avmedia-tool-box" Type="Vertical Stack" width="200" focusable="false" column="0" row="0">
+                <Container id="bx-media-avmedia-tool-box" Type="Ribbon Group" width="200" focusable="false" column="0" row="0">
                   <Button id="btn-media-avmedia-tool-box" />
                 </Container>
-                <Container id="bx-media-avmedia-player" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-media-avmedia-player" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-media-avmedia-player" />
                 </Container>
               </Container>
@@ -1397,7 +1397,7 @@
             <Container id="media-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b53" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="media:menu-media" content="Media" text="Media" horizontal-alignment="Right" />
-                <Container id="section-bottom34" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom34" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-media-format-area" vertical-alignment="Center" />
                   <Button id="btn-media-format-line" vertical-alignment="Center" />
                   <Button id="btn-media-transform-dialog" vertical-alignment="Center" />
@@ -1411,24 +1411,24 @@
               <Container id="gd-print-page" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-print-page" text="Page" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="container-50" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-print-page-format-dialog" Type="Vertical Stack" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-print-page-format-dialog" Type="Ribbon Group" vertical-alignment="Center" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-print-page-format-dialog" />
                 </Container>
-                <Container id="bx-print-margins" Type="Vertical Stack" column="1" row="0">
+                <Container id="bx-print-margins" Type="Ribbon Group" column="1" row="0">
                   <Button id="btn-print-margins" />
                 </Container>
-                <Container id="bx-print-edit-header-and-footer" Type="Vertical Stack" column="1" row="1">
+                <Container id="bx-print-edit-header-and-footer" Type="Ribbon Group" column="1" row="1">
                   <Button id="btn-print-edit-header-and-footer" />
                 </Container>
               </Container>
               <Container id="gd-print-zoom" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-print-zoom" text="Zoom" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
                 <Container id="container-51" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-print-zoom" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-print-zoom" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-print-zoom-minus" />
                   <Button id="btn-print-zoom-plus" />
                 </Container>
-                <Container id="bx-print-page" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-print-page" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-print-first-page" />
                   <Button id="btn-print-previous-page" />
                   <Button id="btn-print-next-page" />
@@ -1438,25 +1438,25 @@
               <Container id="gd-print-print" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-print-print" text="Print" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="container-52" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-print-print" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-print-print" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-print-print" />
                 </Container>
-                <Container id="bx-print-grid" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                <Container id="bx-print-grid" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
                   <Button id="btn-toggle-print-grid" />
                 </Container>
-                <Container id="bx-print-col-row-header" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                <Container id="bx-print-col-row-header" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
                   <Button id="btn-toggle-print-col-row-header" />
                 </Container>
-                <Container id="bx-print-comment" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0">
+                <Container id="bx-print-comment" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="0">
                   <Button id="btn-toggle-print-comment" />
                 </Container>
-                <Container id="bx-print-zero-values" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="1">
+                <Container id="bx-print-zero-values" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="2" row="1">
                   <Button id="btn-toggle-print-zero-values" />
                 </Container>
               </Container>
               <Container id="gd-print-close" Type="Grid" cell-gap="3" focusable="false">
                 <Container id="container-53" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="3" />
-                <Container id="bx-print-close-preview" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-print-close-preview" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-print-close-preview" />
                 </Container>
                 <Text id="lb-print-close" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" />
@@ -1465,7 +1465,7 @@
             <Container id="print-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="group-b33" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="print:menu-print" content="Print" text="Print" horizontal-alignment="Right" role="Grow" />
-                <Container id="section-bottom79" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom79" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-print-full-screen" role="Grow" />
                 </Container>
               </Container>
@@ -1477,67 +1477,67 @@
               <Container id="gd-form-mode" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-form-mode" text="Mode" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="separator46" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-form-switch-control-design-mode" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-form-switch-control-design-mode" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-form-switch-control-design-mode" />
                 </Container>
-                <Container id="bx-form-use-wizards" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
+                <Container id="bx-form-use-wizards" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="0">
                   <Button id="btn-form-use-wizards" />
                 </Container>
-                <Container id="bx-form-group-box" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
+                <Container id="bx-form-group-box" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="1" row="1">
                   <Button id="btn-form-group-box" />
                 </Container>
               </Container>
               <Container id="gd-form-properties" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-form-properties" text="Properties" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="separator47" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-form-form-properties" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-form-form-properties" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-form-form-properties" />
                 </Container>
-                <Container id="bx-form-show-fm-explorer" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-form-show-fm-explorer" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-form-show-fm-explorer" />
                 </Container>
-                <Container id="bx-form-tab-dialog" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-form-tab-dialog" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-form-tab-dialog" />
                 </Container>
-                <Container id="bx-form-open-read-only" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-form-open-read-only" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-form-open-read-only" />
                 </Container>
-                <Container id="bx-form-control-properties" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-form-control-properties" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-form-control-properties" />
                 </Container>
-                <Container id="bx-form-auto-control-focus" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-form-auto-control-focus" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-form-auto-control-focus" />
                 </Container>
               </Container>
               <Container id="gd-form-controls" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-form-controls" text="Controls" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="3" />
                 <Container id="separator48" Type="Separator" horizontal-alignment="Right" focusable="false" column="3" row="0" row-span="3" />
-                <Container id="bx-form-controls1" Type="Vertical Stack" focusable="false" column="0" row="0">
+                <Container id="bx-form-controls1" Type="Ribbon Group" focusable="false" column="0" row="0">
                   <Button id="btn-form-label" />
                   <Button id="btn-form-edit" />
                   <Button id="btn-form-check-box" />
                 </Container>
-                <Container id="bx-form-controls2" Type="Vertical Stack" focusable="false" column="0" row="1">
+                <Container id="bx-form-controls2" Type="Ribbon Group" focusable="false" column="0" row="1">
                   <Button id="btn-form-radio-button" />
                   <Button id="btn-form-list-box" />
                   <Button id="btn-form-combo-box" />
                 </Container>
-                <Container id="bx-form-controls3" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-form-controls3" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-form-numeric-field" />
                   <Button id="btn-form-currency-field" />
                   <Button id="btn-form-pattern-field" />
                 </Container>
-                <Container id="bx-form-controls4" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-form-controls4" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-form-formatted-field" />
                   <Button id="btn-form-date-field" />
                   <Button id="btn-form-time-field" />
                 </Container>
-                <Container id="bx-form-controls5" Type="Vertical Stack" focusable="false" column="2" row="0">
+                <Container id="bx-form-controls5" Type="Ribbon Group" focusable="false" column="2" row="0">
                   <Button id="btn-form-pushbutton" />
                   <Button id="btn-form-imagebutton" />
                   <Button id="btn-form-image-control" />
                 </Container>
-                <Container id="bx-form-controls6" Type="Vertical Stack" focusable="false" column="2" row="1">
+                <Container id="bx-form-controls6" Type="Ribbon Group" focusable="false" column="2" row="1">
                   <Button id="btn-form-file-control" />
                   <Button id="btn-form-navigation-bar" />
                   <Button id="btn-form-grid" />
@@ -1547,7 +1547,7 @@
             <Container id="form-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="form-section" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="form-form-button:menu-form" content="Form" text="Form" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom40" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom40" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-form-form-properties1" />
                 </Container>
               </Container>
@@ -1559,7 +1559,7 @@
             <Container id="extension-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="extension-section" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="extension-extension-button:menu-addons" content="Extension" text="Extension" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom41" Type="Vertical Stack" horizontal-alignment="Right" role="Grow" />
+                <Container id="section-bottom41" Type="Ribbon Group" horizontal-alignment="Right" role="Grow" />
               </Container>
             </Container>
             <Container id="separator20" Type="Separator" horizontal-alignment="Right" focusable="false" />
@@ -1570,20 +1570,20 @@
               <Container id="gd-tools-macro" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-tools-macro" text="Macro" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="2" column-span="2" />
                 <Container id="container-54" Type="Separator" horizontal-alignment="Right" focusable="false" column="2" row="0" row-span="3" />
-                <Container id="bx-tools-run-macro" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
+                <Container id="bx-tools-run-macro" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0" row-span="2">
                   <Button id="btn-tools-run-macro" />
                 </Container>
-                <Container id="bx-tools-basic-ideappear" Type="Vertical Stack" focusable="false" column="1" row="0">
+                <Container id="bx-tools-basic-ideappear" Type="Ribbon Group" focusable="false" column="1" row="0">
                   <Button id="btn-tools-basic-ideappear" />
                 </Container>
-                <Container id="bx-tools-macro-dialog" Type="Vertical Stack" focusable="false" column="1" row="1">
+                <Container id="bx-tools-macro-dialog" Type="Ribbon Group" focusable="false" column="1" row="1">
                   <Button id="btn-tools-macro-dialog" />
                 </Container>
               </Container>
               <Container id="gd-tools-auto-correction" Type="Grid" cell-gap="3" focusable="false">
                 <Text id="lb-tools-auto-correction" text="AutoCorrection" vertical-alignment="Bottom" focusable="false" role="Grow" column="0" row="1" />
                 <Container id="container-55" Type="Separator" horizontal-alignment="Right" focusable="false" column="1" row="0" row-span="2" />
-                <Container id="bx-tools-auto-format-redline-apply" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0">
+                <Container id="bx-tools-auto-format-redline-apply" Type="Ribbon Group" vertical-alignment="Center" focusable="false" role="Grow" column="0" row="0">
                   <Button id="btn-tools-auto-correct-dlg" />
                 </Container>
               </Container>
@@ -1591,7 +1591,7 @@
             <Container id="tools-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" focusable="false" role="Grow">
               <Container id="view-menu1" Type="Vertical Stack" vertical-alignment="Center" focusable="false" role="Grow">
                 <Button id="tools-tools-button:menu-tools" content="Tools" text="Tools" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom81" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="section-bottom81" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="btn-tools-options-tree-dialog" />
                 </Container>
               </Container>

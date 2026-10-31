@@ -403,85 +403,85 @@
           <Container id="file-tab" Type="Toolbar">
             <Container id="file" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="new-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom" Type="Vertical Stack">
+                <Container id="section-bottom" Type="Ribbon Group">
                   <Button id="files-new" />
                 </Container>
               </Container>
               <Container id="new-doc-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom101" Type="Vertical Stack">
+                <Container id="section-bottom101" Type="Ribbon Group">
                   <Button id="files-new-doc" />
                 </Container>
               </Container>
               <Container id="open-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator13" Type="Separator" />
-                <Container id="section-bottom4" Type="Vertical Stack">
+                <Container id="section-bottom4" Type="Ribbon Group">
                   <Button id="files-open" />
                 </Container>
               </Container>
               <Container id="open-remote-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom102" Type="Vertical Stack">
+                <Container id="section-bottom102" Type="Ribbon Group">
                   <Button id="files-open-remote" />
                 </Container>
               </Container>
               <Container id="save-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator7" Type="Separator" />
-                <Container id="section-bottom86" Type="Vertical Stack">
+                <Container id="section-bottom86" Type="Ribbon Group">
                   <Button id="files-save" />
                 </Container>
               </Container>
               <Container id="save-as-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom103" Type="Vertical Stack">
+                <Container id="section-bottom103" Type="Ribbon Group">
                   <Button id="files-save-as" />
                 </Container>
               </Container>
               <Container id="export-to-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator125" Type="Separator" />
-                <Container id="section-bottom87" Type="Vertical Stack">
+                <Container id="section-bottom87" Type="Ribbon Group">
                   <Button id="files-export-to" />
                 </Container>
               </Container>
               <Container id="export-to-pdfsection" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom104" Type="Vertical Stack">
+                <Container id="section-bottom104" Type="Ribbon Group">
                   <Button id="files-export-direct-to-pdf" />
                   <Button id="files-export-to-pdf" hidden="true" />
                 </Container>
               </Container>
               <Container id="export-to-epubsection" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom6" Type="Vertical Stack">
+                <Container id="section-bottom6" Type="Ribbon Group">
                   <Button id="files-export-direct-to-epub" hidden="true" />
                   <Button id="files-export-to-epub" />
                 </Container>
               </Container>
               <Container id="print-preview-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator8" Type="Separator" />
-                <Container id="section-bottom2" Type="Vertical Stack">
+                <Container id="section-bottom2" Type="Ribbon Group">
                   <Button id="files-print-preview" />
                 </Container>
               </Container>
               <Container id="print-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom105" Type="Vertical Stack">
+                <Container id="section-bottom105" Type="Ribbon Group">
                   <Button id="files-print" />
                 </Container>
               </Container>
               <Container id="print-default-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom106" Type="Vertical Stack">
+                <Container id="section-bottom106" Type="Ribbon Group">
                   <Button id="files-print-default" hidden="true" />
                 </Container>
               </Container>
               <Container id="printer-setup-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="draw5" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="draw5" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="printer-setup" hidden="true" />
                 </Container>
               </Container>
               <Container id="set-document-properties-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator35" Type="Separator" />
-                <Container id="export-group3" Type="Vertical Stack">
+                <Container id="export-group3" Type="Ribbon Group">
                   <Button id="files-set-document-properties" />
                 </Container>
               </Container>
             </Container>
             <Container id="file-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom1" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom1" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="close-doc" vertical-alignment="Center" />
               </Container>
               <Button id="file-file-button:menu-file" content="File" text="File" vertical-alignment="Center" role="Grow" />
@@ -492,41 +492,41 @@
           <Container id="home-tab" Type="Toolbar" vertical-alignment="Center" role="Grow">
             <Container id="home" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="home-section-clipboard" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom3" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="section-bottom3" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="home-paste" />
                 </Container>
-                <Container id="section-bottom5" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="section-bottom5" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="home-cut" />
                   <Button id="home-copy" />
                 </Container>
               </Container>
               <Container id="home-section-style" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator36" Type="Separator" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="ext-top1" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="ext-top1" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="home-format-paintbrush" />
                   <Button id="home-reset-attributes" />
                 </Container>
               </Container>
               <Container id="home-section-font-name" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator11" Type="Separator" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="ext-top5" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="ext-top5" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="home-char-font-name" vertical-alignment="Center" />
                 </Container>
               </Container>
               <Container id="home-section-font-height" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top8" Type="Vertical Stack">
+                <Container id="ext-top8" Type="Ribbon Group">
                   <Button id="home-font-height1" />
                 </Container>
               </Container>
               <Container id="home-section-graw-shrink" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top12" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="ext-top12" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="home-grow" />
                   <Button id="home-shrink" />
                 </Container>
               </Container>
               <Container id="home-section-bold-italic" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator10" Type="Separator" />
-                <Container id="ext-top4" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="ext-top4" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="home-bold" />
                   <Button id="home-italic" />
                   <Button id="home-underline" />
@@ -535,40 +535,40 @@
               </Container>
               <Container id="home-section-sub-super-script" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator12" Type="Separator" />
-                <Container id="ext-top2" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="ext-top2" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="home-sub-script" />
                   <Button id="home-super-script" />
                 </Container>
               </Container>
               <Container id="home-section-color" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator118" Type="Separator" />
-                <Container id="ext-top3" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="ext-top3" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="home-back-color" />
                   <Button id="home-fontcolor" />
                 </Container>
               </Container>
               <Container id="home-section-font-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top6" Type="Vertical Stack">
+                <Container id="ext-top6" Type="Ribbon Group">
                   <Button id="default-font-dialog" />
                 </Container>
               </Container>
               <Container id="home-section-bullets" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator14" Type="Separator" />
-                <Container id="section-bottom91" Type="Vertical Stack">
+                <Container id="section-bottom91" Type="Ribbon Group">
                   <Button id="home-default-bullet" />
                   <Button id="home-default-numbering" />
                   <Button id="home-set-outline" />
                 </Container>
               </Container>
               <Container id="home-section-bullets1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom9" Type="Vertical Stack">
+                <Container id="section-bottom9" Type="Ribbon Group">
                   <Button id="home-increment-indent" horizontal-alignment="Center" role="Grow" />
                   <Button id="home-decrement-indent" horizontal-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="home-section-justify" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator148" Type="Separator" />
-                <Container id="section-bottom13" Type="Vertical Stack">
+                <Container id="section-bottom13" Type="Ribbon Group">
                   <Button id="home-left-para" horizontal-alignment="Center" role="Grow" />
                   <Button id="home-center-para" horizontal-alignment="Center" role="Grow" />
                   <Button id="home-right-para" horizontal-alignment="Center" role="Grow" />
@@ -576,84 +576,84 @@
                 </Container>
               </Container>
               <Container id="home-section-ltr" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom137" Type="Vertical Stack">
+                <Container id="section-bottom137" Type="Ribbon Group">
                   <Button id="default-para-left-to-right" />
                   <Button id="default-para-right-to-left" />
                 </Container>
               </Container>
               <Container id="home-section-spacing" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator15" Type="Separator" />
-                <Container id="section-bottom126" Type="Vertical Stack">
+                <Container id="section-bottom126" Type="Ribbon Group">
                   <Button id="home-paraspace-increase" />
                   <Button id="home-paraspace-decrease" />
                 </Container>
               </Container>
               <Container id="home-section-spacing1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom70" Type="Vertical Stack">
+                <Container id="section-bottom70" Type="Ribbon Group">
                   <Button id="home-line-spacing" horizontal-alignment="Right" />
                   <Button id="home-background-color" />
                 </Container>
               </Container>
               <Container id="home-section-paragraph-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom8" Type="Vertical Stack">
+                <Container id="ext-bottom8" Type="Ribbon Group">
                   <Button id="default-paragraph-dialog" />
                 </Container>
               </Container>
               <Container id="home-section-style-dropdown" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator121" Type="Separator" />
-                <Container id="section-bottom81" Type="Vertical Stack">
+                <Container id="section-bottom81" Type="Ribbon Group">
                   <Button id="home-style-apply" horizontal-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="home-section-style1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator111" Type="Separator" />
-                <Container id="section-bottom27" Type="Vertical Stack">
+                <Container id="section-bottom27" Type="Ribbon Group">
                   <Button id="home-style-update-by-example" horizontal-alignment="Center" role="Grow" />
                   <Button id="home-edit-style" horizontal-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="home-section-style2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator20" Type="Separator" />
-                <Container id="section-bottom29" Type="Vertical Stack">
+                <Container id="section-bottom29" Type="Ribbon Group">
                   <Button id="home-standard-style" />
                 </Container>
               </Container>
               <Container id="home-section-style-paragraph" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom93" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="section-bottom93" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="home-h1-style" />
                   <Button id="home-h2-style" />
                 </Container>
               </Container>
               <Container id="home-section-style-paragraph1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator112" Type="Separator" />
-                <Container id="section-bottom57" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="section-bottom57" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="home-h3-style1" />
                   <Button id="home-h4-style1" />
                 </Container>
               </Container>
               <Container id="home-section-style-paragraph2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator117" Type="Separator" />
-                <Container id="section-bottom7" Type="Vertical Stack">
+                <Container id="section-bottom7" Type="Ribbon Group">
                   <Button id="home-emphasis-char-style" />
                   <Button id="home-strong-emphasis-char-style" />
                 </Container>
               </Container>
               <Container id="home-section-insert" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator27" Type="Separator" />
-                <Container id="section-bottom30" Type="Vertical Stack">
+                <Container id="section-bottom30" Type="Ribbon Group">
                   <Button id="home-insert-table" />
                   <Button id="home-insert-graphic" vertical-alignment="Center" />
                 </Container>
               </Container>
               <Container id="home-section-insert1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom31" Type="Vertical Stack">
+                <Container id="section-bottom31" Type="Ribbon Group">
                   <Button id="home-insert-pagebreak" vertical-alignment="Center" />
                   <Button id="home-insert-symbol" vertical-alignment="Center" />
                 </Container>
               </Container>
             </Container>
             <Container id="home-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center">
-              <Container id="section-bottom10" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom10" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="home-search-dialog" vertical-alignment="Center" />
               </Container>
               <Button id="home-home-button:menu-home" content="Home" text="Home" vertical-alignment="Center" role="Grow" />
@@ -664,80 +664,80 @@
           <Container id="insert-tab" Type="Toolbar">
             <Container id="insert" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="insert-main-section" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
-                <Container id="pagebreak-section" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="pagebreak-section" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="insert-insert-pagebreak" />
                 </Container>
-                <Container id="pagebreak-section1" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="pagebreak-section1" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="insert-insert-break" />
                 </Container>
                 <Container id="separator198" Type="Separator" vertical-alignment="Center" role="Grow" />
-                <Container id="table-section" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="table-section" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="insert-insert-table" />
                 </Container>
               </Container>
               <Container id="chart-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom65" Type="Vertical Stack">
+                <Container id="section-bottom65" Type="Ribbon Group">
                   <Button id="insert-insert-object-chart" />
                 </Container>
               </Container>
               <Container id="olesection" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom127" Type="Vertical Stack">
+                <Container id="section-bottom127" Type="Ribbon Group">
                   <Button id="insert-insert-object" />
                 </Container>
               </Container>
               <Container id="insert-graphic-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator17" Type="Separator" />
-                <Container id="section-bottom14" Type="Vertical Stack">
+                <Container id="section-bottom14" Type="Ribbon Group">
                   <Button id="insert-insert-graphic" />
                 </Container>
               </Container>
               <Container id="gallery-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom150" Type="Vertical Stack">
+                <Container id="section-bottom150" Type="Ribbon Group">
                   <Button id="insert-gallery" />
                 </Container>
               </Container>
               <Container id="media-section1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom151" Type="Vertical Stack">
+                <Container id="section-bottom151" Type="Ribbon Group">
                   <Button id="insert-insert-avmedia" />
                 </Container>
               </Container>
               <Container id="hyperlink-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator18" Type="Separator" />
-                <Container id="section-bottom11" Type="Vertical Stack">
+                <Container id="section-bottom11" Type="Ribbon Group">
                   <Button id="insert-hyperlink-dialog" />
                 </Container>
               </Container>
               <Container id="bookmark-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom129" Type="Vertical Stack">
+                <Container id="section-bottom129" Type="Ribbon Group">
                   <Button id="insert-insert-bookmark" />
                 </Container>
               </Container>
               <Container id="crossreference-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom130" Type="Vertical Stack">
+                <Container id="section-bottom130" Type="Ribbon Group">
                   <Button id="insert-insert-reference-field" />
                 </Container>
               </Container>
               <Container id="field-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator19" Type="Separator" />
-                <Container id="section-bottom97" Type="Vertical Stack">
+                <Container id="section-bottom97" Type="Ribbon Group">
                   <Button id="insert-insert-field-ctrl" />
                 </Container>
               </Container>
               <Container id="draw-tex-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator28" Type="Separator" />
-                <Container id="section-bottom67" Type="Vertical Stack">
+                <Container id="section-bottom67" Type="Ribbon Group">
                   <Button id="insert-draw-text" />
                   <Button id="insert-vertical-text1" />
                 </Container>
               </Container>
               <Container id="draw-tex-section1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom172" Type="Vertical Stack">
+                <Container id="section-bottom172" Type="Ribbon Group">
                   <Button id="insert-fontwork-gallery-floater1" />
                 </Container>
               </Container>
               <Container id="draw-section1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator156" Type="Separator" />
-                <Container id="section-bottom134" Type="Vertical Stack">
+                <Container id="section-bottom134" Type="Ribbon Group">
                   <Button id="insert-line" />
                   <Button id="insert-basic-shapes.rectangle" />
                   <Button id="insert-basic-shapes.ellipse" />
@@ -745,7 +745,7 @@
               </Container>
               <Container id="draw-section2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator155" Type="Separator" />
-                <Container id="section-bottom15" Type="Vertical Stack">
+                <Container id="section-bottom15" Type="Ribbon Group">
                   <Button id="insert-line-toolbox" />
                   <Button id="insert-connector-toolbox" />
                   <Button id="insert-arrows-toolbox" />
@@ -754,7 +754,7 @@
               </Container>
               <Container id="draw-section3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator199" Type="Separator" />
-                <Container id="section-bottom72" Type="Vertical Stack">
+                <Container id="section-bottom72" Type="Ribbon Group">
                   <Button id="insert-basic-shapes" />
                   <Button id="insert-arrow-shapes" />
                   <Button id="insert-flow-chart-shapes" />
@@ -762,24 +762,24 @@
               </Container>
               <Container id="autotext-section1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator21" Type="Separator" />
-                <Container id="section-bottom131" Type="Vertical Stack">
+                <Container id="section-bottom131" Type="Ribbon Group">
                   <Button id="insert-edit-glossary" />
                 </Container>
               </Container>
               <Container id="symbol-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator120" Type="Separator" />
-                <Container id="section-bottom8" Type="Vertical Stack">
+                <Container id="section-bottom8" Type="Ribbon Group">
                   <Button id="insert-charmap-control" />
                 </Container>
               </Container>
               <Container id="formula-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom128" Type="Vertical Stack">
+                <Container id="section-bottom128" Type="Ribbon Group">
                   <Button id="insert-insert-object-star-math" />
                 </Container>
               </Container>
             </Container>
             <Container id="insert-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom12" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom12" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="insert-insert-draw" vertical-alignment="Center" />
               </Container>
               <Button id="insert-insert-button:menu-insert" content="Insert" text="Insert" vertical-alignment="Center" role="Grow" />
@@ -790,7 +790,7 @@
           <Container id="layout-tab" Type="Toolbar" vertical-alignment="Center" role="Grow">
             <Container id="layout" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="layout-section-page-layout" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom33" Type="Vertical Stack">
+                <Container id="section-bottom33" Type="Ribbon Group">
                   <Button id="layout-margin" />
                   <Button id="layout-orientation" />
                   <Button id="layout-size" />
@@ -799,83 +799,83 @@
               </Container>
               <Container id="layout-section-break" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator92" Type="Separator" />
-                <Container id="section-bottom59" Type="Vertical Stack">
+                <Container id="section-bottom59" Type="Ribbon Group">
                   <Button id="layout-insert-break" horizontal-alignment="Left" role="Grow" />
                 </Container>
               </Container>
               <Container id="layout-section-left-para-margin" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator124" Type="Separator" />
-                <Container id="left-para-margin1" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="left-para-margin1" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="layout-left-para-margin" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="layout-section-right-para-margin" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="belowspacing5" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="belowspacing5" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="layout-right-para-margin" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="layout-section-above-spacing" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="belowspacing10" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="belowspacing10" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="layout-above-spacing" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="layout-section-below-spacing" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="belowspacing15" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+                <Container id="belowspacing15" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                   <Button id="layout-below-spacing" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="layout-section-titlepage" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator33" Type="Separator" />
-                <Container id="section-bottom34" Type="Vertical Stack">
+                <Container id="section-bottom34" Type="Ribbon Group">
                   <Button id="layout-title-page-dialog" />
                 </Container>
               </Container>
               <Container id="layout-section-titlepage1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom170" Type="Vertical Stack">
+                <Container id="section-bottom170" Type="Ribbon Group">
                   <Button id="layout-watermark" />
                 </Container>
               </Container>
               <Container id="layout-section-numbers" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator34" Type="Separator" />
-                <Container id="section-bottom69" Type="Vertical Stack">
+                <Container id="section-bottom69" Type="Ribbon Group">
                   <Button id="layout-hyphenate" />
                 </Container>
               </Container>
               <Container id="layout-section-numbers1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom169" Type="Vertical Stack">
+                <Container id="section-bottom169" Type="Ribbon Group">
                   <Button id="layout-line-numbering-dialog" horizontal-alignment="Left" role="Grow" />
                 </Container>
               </Container>
               <Container id="layout-section-select-group" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator93" Type="Separator" />
-                <Container id="section-bottom66" Type="Vertical Stack">
+                <Container id="section-bottom66" Type="Ribbon Group">
                   <Button id="layout-select-object" />
                 </Container>
               </Container>
               <Container id="layout-section-select-group1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom168" Type="Vertical Stack">
+                <Container id="section-bottom168" Type="Ribbon Group">
                   <Button id="layout-format-group" />
                 </Container>
               </Container>
               <Container id="layout-section-object-align" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator23" Type="Separator" vertical-alignment="Center" />
-                <Container id="align11" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="align11" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="multi-object-object-align" />
                 </Container>
               </Container>
               <Container id="layout-section-forward" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom80" Type="Vertical Stack">
+                <Container id="section-bottom80" Type="Ribbon Group">
                   <Button id="layout-object-forward-one" />
                 </Container>
               </Container>
               <Container id="layout-section-backward" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom167" Type="Vertical Stack">
+                <Container id="section-bottom167" Type="Ribbon Group">
                   <Button id="layout-object-back-one" />
                 </Container>
               </Container>
             </Container>
             <Container id="layout-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom32" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom32" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="layout-page-dialog" vertical-alignment="Center" role="Grow" />
               </Container>
               <Button id="layout-page-button:menu-page" content="Layout" text="Layout" vertical-alignment="Center" role="Grow" />
@@ -886,56 +886,56 @@
           <Container id="references-tab" Type="Toolbar">
             <Container id="references" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="references-section-index" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom16" Type="Vertical Stack">
+                <Container id="section-bottom16" Type="Ribbon Group">
                   <Button id="references-insert-multi-index" />
                   <Button id="references-insert-indexes-entry" />
                 </Container>
               </Container>
               <Container id="references-section-index1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom152" Type="Vertical Stack">
+                <Container id="section-bottom152" Type="Ribbon Group">
                   <Button id="references-update-all-indexes" />
                 </Container>
               </Container>
               <Container id="references-section-foot-end-note" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator25" Type="Separator" />
-                <Container id="section-bottom17" Type="Vertical Stack">
+                <Container id="section-bottom17" Type="Ribbon Group">
                   <Button id="references-insert-footnote" />
                 </Container>
               </Container>
               <Container id="references-section-foot-end-note1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom171" Type="Vertical Stack">
+                <Container id="section-bottom171" Type="Ribbon Group">
                   <Button id="references-insert-endnote" />
                 </Container>
               </Container>
               <Container id="home-section-footnote-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top10" Type="Vertical Stack">
+                <Container id="ext-top10" Type="Ribbon Group">
                   <Button id="default-footnote-dialog" />
                 </Container>
               </Container>
               <Container id="references-section-caption" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator129" Type="Separator" />
-                <Container id="section-bottom82" Type="Vertical Stack">
+                <Container id="section-bottom82" Type="Ribbon Group">
                   <Button id="references-insert-reference-field" />
                 </Container>
               </Container>
               <Container id="references-section-caption1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom185" Type="Vertical Stack">
+                <Container id="section-bottom185" Type="Ribbon Group">
                   <Button id="references-insert-bookmark" />
                 </Container>
               </Container>
               <Container id="references-section-caption2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom173" Type="Vertical Stack">
+                <Container id="section-bottom173" Type="Ribbon Group">
                   <Button id="references-insert-caption-dialog" />
                 </Container>
               </Container>
               <Container id="references-section-fields" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator107" Type="Separator" />
-                <Container id="section-bottom186" Type="Vertical Stack">
+                <Container id="section-bottom186" Type="Ribbon Group">
                   <Button id="references-insert-field-ctrl" />
                 </Container>
               </Container>
               <Container id="references-section-field" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom187" Type="Vertical Stack">
+                <Container id="section-bottom187" Type="Ribbon Group">
                   <Button id="references-insert-page-number-field" />
                   <Button id="references-insert-page-count-field" />
                   <Button id="references-insert-date-field" />
@@ -944,29 +944,29 @@
               </Container>
               <Container id="references-section-bibliothek" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator96" Type="Separator" />
-                <Container id="section-bottom19" Type="Vertical Stack">
+                <Container id="section-bottom19" Type="Ribbon Group">
                   <Button id="references-insert-authorities-entry" />
                 </Container>
               </Container>
               <Container id="references-section-bibliothek1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom174" Type="Vertical Stack">
+                <Container id="section-bottom174" Type="Ribbon Group">
                   <Button id="references-bibliography-component" />
                 </Container>
               </Container>
               <Container id="references-section-database" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator99" Type="Separator" />
-                <Container id="section-bottom83" Type="Vertical Stack">
+                <Container id="section-bottom83" Type="Ribbon Group">
                   <Button id="references-view-data-source-browser" />
                 </Container>
               </Container>
               <Container id="references-section-database1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom175" Type="Vertical Stack">
+                <Container id="section-bottom175" Type="Ribbon Group">
                   <Button id="references-change-database-field" />
                 </Container>
               </Container>
             </Container>
             <Container id="references-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom18" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom18" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="references-update-all" vertical-alignment="Center" />
               </Container>
               <Button id="references-references-button:menu-references" content="References" text="References" vertical-alignment="Center" />
@@ -977,102 +977,102 @@
           <Container id="review-tab" Type="Toolbar">
             <Container id="review" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="review-section-language" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom20" Type="Vertical Stack">
+                <Container id="section-bottom20" Type="Ribbon Group">
                   <Button id="review-spelling-and-grammar-dialog2" />
                   <Button id="review-spell-online" role="Grow" />
                 </Container>
               </Container>
               <Container id="review-section-language1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom166" Type="Vertical Stack">
+                <Container id="section-bottom166" Type="Ribbon Group">
                   <Button id="review-thesaurus-dialog" />
                 </Container>
               </Container>
               <Container id="review-section-hyphenation" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="section-bottom146" Type="Vertical Stack">
+                <Container id="section-bottom146" Type="Ribbon Group">
                   <Button id="review-hyphenate" />
                 </Container>
               </Container>
               <Container id="review-section-count" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom85" Type="Vertical Stack">
+                <Container id="section-bottom85" Type="Ribbon Group">
                   <Button id="review-word-count-dialog" role="Grow" />
                 </Container>
               </Container>
               <Container id="review-section-review1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator29" Type="Separator" />
-                <Container id="section-bottom118" Type="Vertical Stack">
+                <Container id="section-bottom118" Type="Ribbon Group">
                   <Button id="review-track-changes" />
                 </Container>
               </Container>
               <Container id="review-section-review2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom24" Type="Vertical Stack">
+                <Container id="section-bottom24" Type="Ribbon Group">
                   <Button id="review-previous-tracked-change" />
                   <Button id="review-next-tracked-change" />
                 </Container>
               </Container>
               <Container id="review-section-review3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom119" Type="Vertical Stack">
+                <Container id="section-bottom119" Type="Ribbon Group">
                   <Button id="review-reject-tracked-change1" />
                   <Button id="review-accept-tracked-change1" />
                 </Container>
               </Container>
               <Container id="review-section-review4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom120" Type="Vertical Stack">
+                <Container id="section-bottom120" Type="Ribbon Group">
                   <Button id="review-reject-tracked-change-to-next" />
                   <Button id="review-accept-tracked-change-to-next" />
                   <Button id="review-accept-all-tracked-changes" />
                 </Container>
               </Container>
               <Container id="review-section-accept-tracked-changes" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom32" Type="Vertical Stack">
+                <Container id="ext-bottom32" Type="Ribbon Group">
                   <Button id="review-accept-tracked-changes1" />
                 </Container>
               </Container>
               <Container id="review-section-comment1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator97" Type="Separator" />
-                <Container id="section-bottom133" Type="Vertical Stack">
+                <Container id="section-bottom133" Type="Ribbon Group">
                   <Button id="review-insert-annotation1" />
                 </Container>
               </Container>
               <Container id="review-section-comment3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom23" Type="Vertical Stack">
+                <Container id="section-bottom23" Type="Ribbon Group">
                   <Button id="review-delete-comment3" />
                 </Container>
               </Container>
               <Container id="review-section-comment4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom135" Type="Vertical Stack">
+                <Container id="section-bottom135" Type="Ribbon Group">
                   <Button id="review-delete-all-notes" />
                 </Container>
               </Container>
               <Container id="review-section-format-notes-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top7" Type="Vertical Stack">
+                <Container id="ext-top7" Type="Ribbon Group">
                   <Button id="review-format-all-notes" />
                 </Container>
               </Container>
               <Container id="review-section-redact" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator142" Type="Separator" />
-                <Container id="section-bottom220" Type="Vertical Stack">
+                <Container id="section-bottom220" Type="Ribbon Group">
                   <Button id="review-redact-doc" />
                 </Container>
               </Container>
               <Container id="review-section-compare" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator30" Type="Separator" />
-                <Container id="section-bottom26" Type="Vertical Stack">
+                <Container id="section-bottom26" Type="Ribbon Group">
                   <Button id="review-protect-trace-change-mode" />
                 </Container>
               </Container>
               <Container id="review-section-compare1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom25" Type="Vertical Stack">
+                <Container id="section-bottom25" Type="Ribbon Group">
                   <Button id="review-compare-documents" />
                 </Container>
               </Container>
               <Container id="review-section-compare2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom22" Type="Vertical Stack">
+                <Container id="section-bottom22" Type="Ribbon Group">
                   <Button id="review-merge-documents" />
                 </Container>
               </Container>
             </Container>
             <Container id="review-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom21" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom21" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="review-accept-tracked-changes" vertical-alignment="Center" role="Grow" />
               </Container>
               <Button id="review-review-button:menu-review" content="Review" text="Review" vertical-alignment="Center" role="Grow" />
@@ -1083,80 +1083,80 @@
           <Container id="view-tab" Type="Toolbar">
             <Container id="view" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="view-section-views" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom107" Type="Vertical Stack">
+                <Container id="section-bottom107" Type="Ribbon Group">
                   <Button id="view-print-layout" />
                   <Button id="view-browse-view" />
                 </Container>
               </Container>
               <Container id="view-section-toolbar" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator31" Type="Separator" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom108" Type="Vertical Stack">
+                <Container id="section-bottom108" Type="Ribbon Group">
                   <Button id="view-control-codes" />
                 </Container>
               </Container>
               <Container id="view-section-toolbar1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom159" Type="Vertical Stack">
+                <Container id="section-bottom159" Type="Ribbon Group">
                   <Button id="view-show-whitespace" />
                 </Container>
               </Container>
               <Container id="view-section-visible" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator32" Type="Separator" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom109" Type="Vertical Stack">
+                <Container id="section-bottom109" Type="Ribbon Group">
                   <Button id="view-navigator" role="Grow" />
                 </Container>
               </Container>
               <Container id="view-section-visible1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom157" Type="Vertical Stack">
+                <Container id="section-bottom157" Type="Ribbon Group">
                   <Button id="view-ruler" role="Grow" />
                 </Container>
               </Container>
               <Container id="view-section-visible2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom158" Type="Vertical Stack">
+                <Container id="section-bottom158" Type="Ribbon Group">
                   <Button id="view-grid-visible" role="Grow" />
                 </Container>
               </Container>
               <Container id="view-section-bars" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator141" Type="Separator" />
-                <Container id="section-bottom112" Type="Vertical Stack">
+                <Container id="section-bottom112" Type="Ribbon Group">
                   <Button id="view-menubar" />
                 </Container>
               </Container>
               <Container id="view-section-bars1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom156" Type="Vertical Stack">
+                <Container id="section-bottom156" Type="Ribbon Group">
                   <Button id="view-sidebar" />
                 </Container>
               </Container>
               <Container id="view-section-zoom" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator37" Type="Separator" />
-                <Container id="section-bottom110" Type="Vertical Stack">
+                <Container id="section-bottom110" Type="Ribbon Group">
                   <Button id="view-zoom-optimal" />
                 </Container>
               </Container>
               <Container id="view-section-zoom1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom154" Type="Vertical Stack">
+                <Container id="section-bottom154" Type="Ribbon Group">
                   <Button id="view-zoom100-percent" />
                 </Container>
               </Container>
               <Container id="view-section-zoom2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom155" Type="Vertical Stack">
+                <Container id="section-bottom155" Type="Ribbon Group">
                   <Button id="view-full-screen" />
                 </Container>
               </Container>
               <Container id="view-section-new-window" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator38" Type="Separator" />
-                <Container id="section-bottom111" Type="Vertical Stack">
+                <Container id="section-bottom111" Type="Ribbon Group">
                   <Button id="view-new-window" />
                 </Container>
               </Container>
               <Container id="view-section-edit-doc" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator41" Type="Separator" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom153" Type="Vertical Stack">
+                <Container id="section-bottom153" Type="Ribbon Group">
                   <Button id="view-edit-doc" />
                 </Container>
               </Container>
             </Container>
             <Container id="view-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom28" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom28" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="view-zoom" vertical-alignment="Center" />
               </Container>
               <Button id="view-view-button:menu-view" content="View" text="View" vertical-alignment="Center" role="Grow" />
@@ -1167,18 +1167,18 @@
           <Container id="table-tab" Type="Toolbar">
             <Container id="table" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="table-layout-section" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom36" Type="Vertical Stack">
+                <Container id="section-bottom36" Type="Ribbon Group">
                   <Button id="table-insert-caption-dialog" vertical-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="table-section-optimize" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="anchor4" Type="Vertical Stack">
+                <Container id="anchor4" Type="Ribbon Group">
                   <Button id="table-optimize-table" />
                 </Container>
               </Container>
               <Container id="table-section-column" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator175" Type="Separator" />
-                <Container id="section-bottom38" Type="Vertical Stack">
+                <Container id="section-bottom38" Type="Ribbon Group">
                   <Button id="table-insert-columns-before" />
                   <Button id="table-insert-columns-after" />
                   <Button id="table-delete-columns" />
@@ -1186,7 +1186,7 @@
               </Container>
               <Container id="table-section-row" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator56" Type="Separator" />
-                <Container id="section-bottom40" Type="Vertical Stack">
+                <Container id="section-bottom40" Type="Ribbon Group">
                   <Button id="table-insert-rows-before" />
                   <Button id="table-insert-rows-after" />
                   <Button id="table-delete-rows" />
@@ -1194,20 +1194,20 @@
               </Container>
               <Container id="table-section-justify" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator122" Type="Separator" />
-                <Container id="section-bottom89" Type="Vertical Stack">
+                <Container id="section-bottom89" Type="Ribbon Group">
                   <Button id="table-left-para" horizontal-alignment="Center" role="Grow" />
                   <Button id="table-center-para" horizontal-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="table-section-justify1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom178" Type="Vertical Stack">
+                <Container id="section-bottom178" Type="Ribbon Group">
                   <Button id="table-right-para" horizontal-alignment="Center" role="Grow" />
                   <Button id="table-justify-para" horizontal-alignment="Center" role="Grow" />
                 </Container>
               </Container>
               <Container id="table-section-vjustify" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator130" Type="Separator" />
-                <Container id="section-bottom179" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom179" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="text-cell-vert-top" horizontal-alignment="Center" role="Grow" />
                   <Button id="text-cell-vert-center" />
                   <Button id="text-cell-vert-bottom" horizontal-alignment="Center" role="Grow" />
@@ -1215,71 +1215,71 @@
               </Container>
               <Container id="table-section-style" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator53" Type="Separator" />
-                <Container id="anchor5" Type="Vertical Stack">
+                <Container id="anchor5" Type="Ribbon Group">
                   <Button id="table-format-area1" />
                 </Container>
               </Container>
               <Container id="table-section-area1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator47" Type="Separator" />
-                <Container id="section-bottom79" Type="Vertical Stack">
+                <Container id="section-bottom79" Type="Ribbon Group">
                   <Button id="table-format-area2" />
                 </Container>
               </Container>
               <Container id="table-section-area2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom140" Type="Vertical Stack">
+                <Container id="section-bottom140" Type="Ribbon Group">
                   <Button id="table-background-color" />
                 </Container>
               </Container>
               <Container id="table-section-area-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object1" Type="Vertical Stack">
+                <Container id="object1" Type="Ribbon Group">
                   <Button id="table-format-area" />
                 </Container>
               </Container>
               <Container id="table-section-border1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom6" Type="Vertical Stack">
+                <Container id="ext-bottom6" Type="Ribbon Group">
                   <Button id="table-border-dialog" />
                 </Container>
               </Container>
               <Container id="table-section-border2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom7" Type="Vertical Stack">
+                <Container id="ext-bottom7" Type="Ribbon Group">
                   <Button id="table-frame-line-color" />
                   <Button id="table-line-style" />
                 </Container>
               </Container>
               <Container id="table-section-border3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom9" Type="Vertical Stack">
+                <Container id="ext-bottom9" Type="Ribbon Group">
                   <Button id="table-set-border-style" />
                 </Container>
               </Container>
               <Container id="table-section-border-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object2" Type="Vertical Stack">
+                <Container id="object2" Type="Ribbon Group">
                   <Button id="table-border-dialog-2" />
                 </Container>
               </Container>
               <Container id="table-section-merge" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator51" Type="Separator" />
-                <Container id="section-bottom41" Type="Vertical Stack">
+                <Container id="section-bottom41" Type="Ribbon Group">
                   <Button id="table-merge-cells" role="Grow" />
                 </Container>
               </Container>
               <Container id="table-section-split" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom181" Type="Vertical Stack">
+                <Container id="section-bottom181" Type="Ribbon Group">
                   <Button id="table-split-cell" />
                 </Container>
               </Container>
               <Container id="table-section-splitt1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom182" Type="Vertical Stack">
+                <Container id="section-bottom182" Type="Ribbon Group">
                   <Button id="table-split-table" />
                 </Container>
               </Container>
               <Container id="table-section-select" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator136" Type="Separator" />
-                <Container id="section-bottom42" Type="Vertical Stack">
+                <Container id="section-bottom42" Type="Ribbon Group">
                   <Button id="table-entire-cell" />
                 </Container>
               </Container>
               <Container id="table-section-select1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom35" Type="Vertical Stack">
+                <Container id="section-bottom35" Type="Ribbon Group">
                   <Button id="table-entire-column" role="Grow" />
                   <Button id="table-entire-row" role="Grow" />
                   <Button id="table-select-table" role="Grow" />
@@ -1287,36 +1287,36 @@
               </Container>
               <Container id="table-section-calc" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator59" Type="Separator" />
-                <Container id="section-bottom43" Type="Vertical Stack">
+                <Container id="section-bottom43" Type="Ribbon Group">
                   <Button id="table-insert-formula" />
                 </Container>
               </Container>
               <Container id="table-section-calc1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom136" Type="Vertical Stack">
+                <Container id="section-bottom136" Type="Ribbon Group">
                   <Button id="table-auto-sum" />
                 </Container>
               </Container>
               <Container id="table-section-calc2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom180" Type="Vertical Stack">
+                <Container id="section-bottom180" Type="Ribbon Group">
                   <Button id="table-table-sort" />
                 </Container>
               </Container>
               <Container id="table-section-format-calc" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator171" Type="Separator" />
-                <Container id="section-bottom44" Type="Vertical Stack">
+                <Container id="section-bottom44" Type="Ribbon Group">
                   <Button id="table-number-format-currency" />
                   <Button id="table-number-format-decimal" />
                 </Container>
               </Container>
               <Container id="table-section-format-calc1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom37" Type="Vertical Stack">
+                <Container id="section-bottom37" Type="Ribbon Group">
                   <Button id="table-number-format-date" />
                   <Button id="table-table-number-format-dialog" />
                 </Container>
               </Container>
             </Container>
             <Container id="table-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom76" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom76" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="table-table-dialog" vertical-alignment="Center" />
               </Container>
               <Button id="table-table-button:menu-table" content="Table" text="Table" vertical-alignment="Center" role="Grow" />
@@ -1327,57 +1327,57 @@
           <Container id="image-tab" Type="Toolbar">
             <Container id="image" Type="Toolbar" role="Grow">
               <Container id="graphic-section-label" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom46" Type="Vertical Stack">
+                <Container id="section-bottom46" Type="Ribbon Group">
                   <Button id="object-insert-caption-dialog3" />
                 </Container>
-                <Container id="section-bottom78" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom78" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="object-name-group2" />
                 </Container>
               </Container>
               <Container id="graphic-section-styles" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom47" Type="Vertical Stack">
+                <Container id="section-bottom47" Type="Ribbon Group">
                   <Button id="graphic-style-apply2" />
                 </Container>
               </Container>
               <Container id="graphic-section-anchor" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator65" Type="Separator" />
-                <Container id="anchor1" Type="Vertical Stack">
+                <Container id="anchor1" Type="Ribbon Group">
                   <Button id="graphic-anchor-menu1" />
                 </Container>
               </Container>
               <Container id="graphic-section-wrap1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap10" Type="Vertical Stack">
+                <Container id="wrap10" Type="Ribbon Group">
                   <Button id="graphic-wrap-off" />
                   <Button id="graphic-wrap-on" />
                   <Button id="graphic-wrap-ideal" />
                 </Container>
               </Container>
               <Container id="graphic-section-wrap2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap11" Type="Vertical Stack">
+                <Container id="wrap11" Type="Ribbon Group">
                   <Button id="graphic-wrap-left" />
                   <Button id="graphic-wrap-through" />
                   <Button id="graphic-wrap-right" />
                 </Container>
               </Container>
               <Container id="graphic-section-wrap-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap12" Type="Vertical Stack">
+                <Container id="wrap12" Type="Ribbon Group">
                   <Button id="graphic-text-wrap1" />
                 </Container>
               </Container>
               <Container id="graphic-section-align" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator100" Type="Separator" />
-                <Container id="align12" Type="Vertical Stack">
+                <Container id="align12" Type="Ribbon Group">
                   <Button id="graphic-object-align" />
                 </Container>
               </Container>
               <Container id="graphic-section-align1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align7" Type="Vertical Stack">
+                <Container id="align7" Type="Ribbon Group">
                   <Button id="graphic-align-center" />
                   <Button id="graphic-object-align-right" />
                 </Container>
               </Container>
               <Container id="graphic-section-align2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align8" Type="Vertical Stack">
+                <Container id="align8" Type="Ribbon Group">
                   <Button id="graphic-align-up" />
                   <Button id="graphic-align-middle" />
                   <Button id="graphic-align-down" />
@@ -1385,109 +1385,109 @@
               </Container>
               <Container id="graphic-section-arrange1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator67" Type="Separator" />
-                <Container id="section-bottom48" Type="Vertical Stack">
+                <Container id="section-bottom48" Type="Ribbon Group">
                   <Button id="graphic-bring-to-front" />
                   <Button id="graphic-object-forward-one" />
                 </Container>
               </Container>
               <Container id="graphic-section-arrange2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom49" Type="Vertical Stack">
+                <Container id="section-bottom49" Type="Ribbon Group">
                   <Button id="graphic-object-back-one" />
                   <Button id="graphic-send-to-back1" />
                 </Container>
               </Container>
               <Container id="object-section-area3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator105" Type="Separator" />
-                <Container id="section-bottom183" Type="Vertical Stack">
+                <Container id="section-bottom183" Type="Ribbon Group">
                   <Button id="dra-format-area2" />
                 </Container>
               </Container>
               <Container id="object-section-area4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom184" Type="Vertical Stack">
+                <Container id="section-bottom184" Type="Ribbon Group">
                   <Button id="draw-fill-style2" />
                 </Container>
               </Container>
               <Container id="object-section-area-dialog1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object6" Type="Vertical Stack">
+                <Container id="object6" Type="Ribbon Group">
                   <Button id="draw-format-area3" />
                 </Container>
               </Container>
               <Container id="object-section-border4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom34" Type="Vertical Stack">
+                <Container id="ext-bottom34" Type="Ribbon Group">
                   <Button id="draw-border-dialog1" />
                 </Container>
               </Container>
               <Container id="object-section-border5" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom38" Type="Vertical Stack">
+                <Container id="ext-bottom38" Type="Ribbon Group">
                   <Button id="object-frame-line-color1" />
                   <Button id="object-line-style1" />
                 </Container>
               </Container>
               <Container id="object-section-border6" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom39" Type="Vertical Stack">
+                <Container id="ext-bottom39" Type="Ribbon Group">
                   <Button id="object-set-border-style1" />
                 </Container>
               </Container>
               <Container id="object-section-border-dialog1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object7" Type="Vertical Stack">
+                <Container id="object7" Type="Ribbon Group">
                   <Button id="object-border-dialog1" />
                 </Container>
               </Container>
               <Container id="graphic-section-crop" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator68" Type="Separator" />
-                <Container id="ext-bottom3" Type="Vertical Stack">
+                <Container id="ext-bottom3" Type="Ribbon Group">
                   <Button id="graphic-crop" />
                 </Container>
               </Container>
               <Container id="graphic-section-save-replace" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom17" Type="Vertical Stack">
+                <Container id="ext-bottom17" Type="Ribbon Group">
                   <Button id="graphic-change-picture" />
                   <Button id="graphic-compress-graphic" />
                   <Button id="graphic-save-graphic" />
                 </Container>
               </Container>
               <Container id="graphic-section-graphic-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="graphic" Type="Vertical Stack">
+                <Container id="graphic" Type="Ribbon Group">
                   <Button id="graphic-graphic-dialog" />
                 </Container>
               </Container>
               <Container id="graphic-section-graphic-filter-toolbox" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator69" Type="Separator" />
-                <Container id="section-bottom50" Type="Vertical Stack">
+                <Container id="section-bottom50" Type="Ribbon Group">
                   <Button id="graphic-graphic-filter-toolbox" />
                 </Container>
               </Container>
               <Container id="graphic-section-color-settings" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom73" Type="Vertical Stack">
+                <Container id="section-bottom73" Type="Ribbon Group">
                   <Button id="graphic-color-settings" />
                 </Container>
               </Container>
               <Container id="graphic-section-graf-mode" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom4" Type="Vertical Stack">
+                <Container id="ext-bottom4" Type="Ribbon Group">
                   <Button id="graphic-graf-mode" />
                 </Container>
               </Container>
               <Container id="graphic-section-graf-transparence" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom74" Type="Vertical Stack">
+                <Container id="section-bottom74" Type="Ribbon Group">
                   <Button id="graphic-graf-transparence" />
                 </Container>
               </Container>
               <Container id="graphic-section-rotate" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator126" Type="Separator" />
-                <Container id="ext-bottom12" Type="Vertical Stack">
+                <Container id="ext-bottom12" Type="Ribbon Group">
                   <Button id="graphic-toggle-object-rotate-mode" />
                   <Button id="graphic-rotate-right" />
                 </Container>
               </Container>
               <Container id="graphic-section-flip" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom5" Type="Vertical Stack">
+                <Container id="ext-bottom5" Type="Ribbon Group">
                   <Button id="graphic-flip-vertical" />
                   <Button id="graphic-flip-horizontal" />
                 </Container>
               </Container>
             </Container>
             <Container id="image-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom45" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom45" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="image-graphic-dialog" vertical-alignment="Center" role="Grow" />
               </Container>
               <Button id="image-graphic-button:menu-image" content="Image" text="Image" vertical-alignment="Center" role="Grow" />
@@ -1498,57 +1498,57 @@
           <Container id="draw-tab" Type="Toolbar">
             <Container id="draw" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="draw-section-label" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom52" Type="Vertical Stack">
+                <Container id="section-bottom52" Type="Ribbon Group">
                   <Button id="object-insert-caption-dialog1" />
                 </Container>
-                <Container id="section-bottom60" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom60" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="object-name-group4" />
                 </Container>
               </Container>
               <Container id="draw-section-styles" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom53" Type="Vertical Stack">
+                <Container id="section-bottom53" Type="Ribbon Group">
                   <Button id="draw-style-apply3" />
                 </Container>
               </Container>
               <Container id="draw-section-anchor" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator70" Type="Separator" />
-                <Container id="anchor2" Type="Vertical Stack">
+                <Container id="anchor2" Type="Ribbon Group">
                   <Button id="object-anchor-menu2" />
                 </Container>
               </Container>
               <Container id="draw-section-wrap1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap1" Type="Vertical Stack">
+                <Container id="wrap1" Type="Ribbon Group">
                   <Button id="draw-wrap-off" />
                   <Button id="draw-wrap-on" />
                   <Button id="draw-wrap-ideal" />
                 </Container>
               </Container>
               <Container id="draw-section-wrap2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap4" Type="Vertical Stack">
+                <Container id="wrap4" Type="Ribbon Group">
                   <Button id="draw-wrap-left" />
                   <Button id="draw-wrap-through" />
                   <Button id="draw-wrap-right" />
                 </Container>
               </Container>
               <Container id="draw-section-wrap-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap13" Type="Vertical Stack">
+                <Container id="wrap13" Type="Ribbon Group">
                   <Button id="draw-text-wrap2" />
                 </Container>
               </Container>
               <Container id="draw-section-align" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator75" Type="Separator" />
-                <Container id="align15" Type="Vertical Stack">
+                <Container id="align15" Type="Ribbon Group">
                   <Button id="draw-object-align" />
                 </Container>
               </Container>
               <Container id="draw-section-align1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align1" Type="Vertical Stack">
+                <Container id="align1" Type="Ribbon Group">
                   <Button id="draw-align-center2" />
                   <Button id="draw-object-align-right2" />
                 </Container>
               </Container>
               <Container id="draw-section-align2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align4" Type="Vertical Stack">
+                <Container id="align4" Type="Ribbon Group">
                   <Button id="draw-align-up2" />
                   <Button id="draw-align-middle2" />
                   <Button id="draw-align-down2" />
@@ -1556,104 +1556,104 @@
               </Container>
               <Container id="draw-section-arrange1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator78" Type="Separator" />
-                <Container id="section-bottom54" Type="Vertical Stack">
+                <Container id="section-bottom54" Type="Ribbon Group">
                   <Button id="draw-bring-to-front2" />
                   <Button id="draw-object-forward-one2" />
                 </Container>
               </Container>
               <Container id="draw-section-arrange2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom55" Type="Vertical Stack">
+                <Container id="section-bottom55" Type="Ribbon Group">
                   <Button id="draw-object-back-one2" />
                   <Button id="draw-send-to-back2" />
                 </Container>
               </Container>
               <Container id="draw-section-area1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator79" Type="Separator" />
-                <Container id="section-bottom56" Type="Vertical Stack">
+                <Container id="section-bottom56" Type="Ribbon Group">
                   <Button id="draw-format-area" />
                 </Container>
               </Container>
               <Container id="draw-section-area2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom58" Type="Vertical Stack">
+                <Container id="section-bottom58" Type="Ribbon Group">
                   <Button id="draw-fill-style" />
                 </Container>
               </Container>
               <Container id="draw-section-area-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="draw2" Type="Vertical Stack">
+                <Container id="draw2" Type="Ribbon Group">
                   <Button id="draw-format-area2" />
                 </Container>
               </Container>
               <Container id="draw-section-line1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom18" Type="Vertical Stack">
+                <Container id="ext-bottom18" Type="Ribbon Group">
                   <Button id="draw-format-line" />
                 </Container>
               </Container>
               <Container id="draw-section-line2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom19" Type="Vertical Stack">
+                <Container id="ext-bottom19" Type="Ribbon Group">
                   <Button id="draw-xline-color" />
                 </Container>
               </Container>
               <Container id="draw-section-line3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom35" Type="Vertical Stack">
+                <Container id="ext-bottom35" Type="Ribbon Group">
                   <Button id="draw-xline-style1" />
                 </Container>
               </Container>
               <Container id="draw-section-line4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom22" Type="Vertical Stack">
+                <Container id="ext-bottom22" Type="Ribbon Group">
                   <Button id="draw-line-width1" />
                 </Container>
               </Container>
               <Container id="draw-section-line5" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom36" Type="Vertical Stack">
+                <Container id="ext-bottom36" Type="Ribbon Group">
                   <Button id="draw-line-end-style2" />
                 </Container>
               </Container>
               <Container id="draw-section-line-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="draw1" Type="Vertical Stack">
+                <Container id="draw1" Type="Ribbon Group">
                   <Button id="draw-format-line1" />
                 </Container>
               </Container>
               <Container id="draw-section-rotate" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator84" Type="Separator" />
-                <Container id="ext-bottom20" Type="Vertical Stack">
+                <Container id="ext-bottom20" Type="Ribbon Group">
                   <Button id="draw-toggle-object-rotate-mode1" />
                   <Button id="draw-toggle-object-bezier-mode" />
                 </Container>
               </Container>
               <Container id="draw-section-flip" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom21" Type="Vertical Stack">
+                <Container id="ext-bottom21" Type="Ribbon Group">
                   <Button id="draw-flip-vertical1" />
                   <Button id="draw-flip-horizontal1" />
                 </Container>
               </Container>
               <Container id="draw-section-transform-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="draw3" Type="Vertical Stack">
+                <Container id="draw3" Type="Ribbon Group">
                   <Button id="draw-transform-dialog" />
                 </Container>
               </Container>
               <Container id="draw-section-3d" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator52" Type="Separator" />
-                <Container id="ext-bottom1" Type="Vertical Stack">
+                <Container id="ext-bottom1" Type="Ribbon Group">
                   <Button id="draw-extrusion-toggle" role="Grow" />
                   <Button id="draw-extrusion-depth-floater" role="Grow" />
                   <Button id="draw-extrusion-direction-floater" role="Grow" />
                 </Container>
               </Container>
               <Container id="draw-section-3d1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom11" Type="Vertical Stack">
+                <Container id="ext-bottom11" Type="Ribbon Group">
                   <Button id="draw-extrusion3-dcolor" />
                   <Button id="draw-extrusion-surface-floater" />
                 </Container>
               </Container>
               <Container id="draw-section-fontwork" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator113" Type="Separator" />
-                <Container id="ext-bottom2" Type="Vertical Stack">
+                <Container id="ext-bottom2" Type="Ribbon Group">
                   <Button id="draw-fontwork-gallery-floater" role="Grow" />
                   <Button id="draw-fontwork-shape-type" role="Grow" />
                 </Container>
               </Container>
               <Container id="draw-section-fontwork1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom10" Type="Vertical Stack">
+                <Container id="ext-bottom10" Type="Ribbon Group">
                   <Button id="draw-fontwork-same-letter-heights" role="Grow" />
                   <Button id="draw-fontwork-alignment-floater" role="Grow" />
                   <Button id="draw-fontwork-character-spacing-floater" role="Grow" />
@@ -1661,7 +1661,7 @@
               </Container>
             </Container>
             <Container id="draw-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom51" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom51" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="draw-insert-draw" vertical-alignment="Center" />
               </Container>
               <Button id="draw-draw-button:menu-draw" content="Draw" text="Draw" vertical-alignment="Center" role="Grow" />
@@ -1672,57 +1672,57 @@
           <Container id="object-tab" Type="Toolbar">
             <Container id="object" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="object-section-label" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom113" Type="Vertical Stack">
+                <Container id="section-bottom113" Type="Ribbon Group">
                   <Button id="object-insert-caption-dialog" />
                 </Container>
-                <Container id="section-bottom94" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom94" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="object-name-group3" />
                 </Container>
               </Container>
               <Container id="object-section-styles" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom95" Type="Vertical Stack">
+                <Container id="section-bottom95" Type="Ribbon Group">
                   <Button id="object-style-apply4" />
                 </Container>
               </Container>
               <Container id="object-section-anchor" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator55" Type="Separator" />
-                <Container id="anchor3" Type="Vertical Stack">
+                <Container id="anchor3" Type="Ribbon Group">
                   <Button id="object-anchor-menu3" />
                 </Container>
               </Container>
               <Container id="object-section-wrap1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap2" Type="Vertical Stack">
+                <Container id="wrap2" Type="Ribbon Group">
                   <Button id="object-wrap-off" />
                   <Button id="object-wrap-on" />
                   <Button id="object-wrap-ideal" />
                 </Container>
               </Container>
               <Container id="object-section-wrap2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap3" Type="Vertical Stack">
+                <Container id="wrap3" Type="Ribbon Group">
                   <Button id="object-wrap-left" />
                   <Button id="object-wrap-through" />
                   <Button id="object-wrap-right" />
                 </Container>
               </Container>
               <Container id="object-section-wrap-dialog1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap14" Type="Vertical Stack">
+                <Container id="wrap14" Type="Ribbon Group">
                   <Button id="object-text-wrap" />
                 </Container>
               </Container>
               <Container id="object-section-align" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator66" Type="Separator" />
-                <Container id="align13" Type="Vertical Stack">
+                <Container id="align13" Type="Ribbon Group">
                   <Button id="object-object-align" />
                 </Container>
               </Container>
               <Container id="object-section-align3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align2" Type="Vertical Stack">
+                <Container id="align2" Type="Ribbon Group">
                   <Button id="object-align-center3" />
                   <Button id="object-object-align-right3" />
                 </Container>
               </Container>
               <Container id="object-section-align4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align3" Type="Vertical Stack">
+                <Container id="align3" Type="Ribbon Group">
                   <Button id="object-align-up3" />
                   <Button id="object-align-middle3" />
                   <Button id="object-align-down3" />
@@ -1730,71 +1730,71 @@
               </Container>
               <Container id="object-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator57" Type="Separator" />
-                <Container id="section-bottom96" Type="Vertical Stack">
+                <Container id="section-bottom96" Type="Ribbon Group">
                   <Button id="object-bring-to-front3" />
                   <Button id="object-object-forward-one3" />
                 </Container>
               </Container>
               <Container id="object-section-arrange4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom98" Type="Vertical Stack">
+                <Container id="section-bottom98" Type="Ribbon Group">
                   <Button id="object-object-back-one3" />
                   <Button id="object-send-to-back3" />
                 </Container>
               </Container>
               <Container id="object-section-area1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator72" Type="Separator" />
-                <Container id="section-bottom99" Type="Vertical Stack">
+                <Container id="section-bottom99" Type="Ribbon Group">
                   <Button id="dra-format-area1" />
                 </Container>
               </Container>
               <Container id="object-section-area2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom100" Type="Vertical Stack">
+                <Container id="section-bottom100" Type="Ribbon Group">
                   <Button id="draw-fill-style1" />
                 </Container>
               </Container>
               <Container id="object-section-area-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object4" Type="Vertical Stack">
+                <Container id="object4" Type="Ribbon Group">
                   <Button id="draw-format-area1" />
                 </Container>
               </Container>
               <Container id="object-section-border1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom25" Type="Vertical Stack">
+                <Container id="ext-bottom25" Type="Ribbon Group">
                   <Button id="draw-border-dialog" />
                 </Container>
               </Container>
               <Container id="object-section-border2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom26" Type="Vertical Stack">
+                <Container id="ext-bottom26" Type="Ribbon Group">
                   <Button id="object-frame-line-color" />
                   <Button id="object-line-style" />
                 </Container>
               </Container>
               <Container id="object-section-border3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom27" Type="Vertical Stack">
+                <Container id="ext-bottom27" Type="Ribbon Group">
                   <Button id="object-set-border-style" />
                 </Container>
               </Container>
               <Container id="object-section-border-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object3" Type="Vertical Stack">
+                <Container id="object3" Type="Ribbon Group">
                   <Button id="object-border-dialog" />
                 </Container>
               </Container>
               <Container id="object-section-chain" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator74" Type="Separator" />
-                <Container id="ext-bottom23" Type="Vertical Stack">
+                <Container id="ext-bottom23" Type="Ribbon Group">
                   <Button id="object-chain-frames" />
                 </Container>
-                <Container id="ext-bottom24" Type="Vertical Stack">
+                <Container id="ext-bottom24" Type="Ribbon Group">
                   <Button id="object-unhain-frames1" />
                 </Container>
               </Container>
               <Container id="object-section-frame-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="object5" Type="Vertical Stack">
+                <Container id="object5" Type="Ribbon Group">
                   <Button id="draw-frame-dialog" />
                 </Container>
               </Container>
             </Container>
             <Container id="object-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom61" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom61" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="object-frame-dialog" vertical-alignment="Center" role="Grow" />
               </Container>
               <Button id="object-object-button:menu-object" content="Object" text="Object" vertical-alignment="Center" role="Grow" />
@@ -1805,57 +1805,57 @@
           <Container id="media-tab" Type="Toolbar">
             <Container id="media" Type="Toolbar" role="Grow">
               <Container id="media-section-label" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom71" Type="Vertical Stack">
+                <Container id="section-bottom71" Type="Ribbon Group">
                   <Button id="object-insert-caption-dialog2" />
                 </Container>
-                <Container id="section-bottom139" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom139" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="object-name-group1" />
                 </Container>
               </Container>
               <Container id="media-section-styles" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom88" Type="Vertical Stack">
+                <Container id="section-bottom88" Type="Ribbon Group">
                   <Button id="media-style-apply" />
                 </Container>
               </Container>
               <Container id="media-section-anchor" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator81" Type="Separator" />
-                <Container id="anchor" Type="Vertical Stack">
+                <Container id="anchor" Type="Ribbon Group">
                   <Button id="object-anchor-menu" />
                 </Container>
               </Container>
               <Container id="media-section-wrap1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap9" Type="Vertical Stack">
+                <Container id="wrap9" Type="Ribbon Group">
                   <Button id="media-wrap-off" />
                   <Button id="media-wrap-on" />
                   <Button id="media-wrap-ideal" />
                 </Container>
               </Container>
               <Container id="media-section-wrap2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap8" Type="Vertical Stack">
+                <Container id="wrap8" Type="Ribbon Group">
                   <Button id="media-wrap-left" />
                   <Button id="media-wrap-through" />
                   <Button id="media-wrap-right" />
                 </Container>
               </Container>
               <Container id="media-section-wrap-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap6" Type="Vertical Stack">
+                <Container id="wrap6" Type="Ribbon Group">
                   <Button id="media-text-wrap" />
                 </Container>
               </Container>
               <Container id="media-section-align" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator58" Type="Separator" />
-                <Container id="align14" Type="Vertical Stack">
+                <Container id="align14" Type="Ribbon Group">
                   <Button id="media-object-align" />
                 </Container>
               </Container>
               <Container id="media-section-align1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align9" Type="Vertical Stack">
+                <Container id="align9" Type="Ribbon Group">
                   <Button id="media-align-center" />
                   <Button id="media-object-align-right" />
                 </Container>
               </Container>
               <Container id="media-section-align2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align10" Type="Vertical Stack">
+                <Container id="align10" Type="Ribbon Group">
                   <Button id="media-align-up" />
                   <Button id="media-align-middle" />
                   <Button id="media-align-down" />
@@ -1863,32 +1863,32 @@
               </Container>
               <Container id="media-section-arrange1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator83" Type="Separator" />
-                <Container id="section-bottom92" Type="Vertical Stack">
+                <Container id="section-bottom92" Type="Ribbon Group">
                   <Button id="media-bring-to-front" />
                   <Button id="media-object-forward-one" />
                 </Container>
               </Container>
               <Container id="media-section-arrange2" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom132" Type="Vertical Stack">
+                <Container id="section-bottom132" Type="Ribbon Group">
                   <Button id="media-object-back-one" />
                   <Button id="media-send-to-back" />
                 </Container>
               </Container>
               <Container id="media-section-avmedia-tool-box" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator108" Type="Separator" />
-                <Container id="section-bottom138" Type="Vertical Stack">
+                <Container id="section-bottom138" Type="Ribbon Group">
                   <Button id="media-avmedia-tool-box" />
                 </Container>
               </Container>
               <Container id="media-section-avmedia-player" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator123" Type="Separator" />
-                <Container id="ext-bottom16" Type="Vertical Stack">
+                <Container id="ext-bottom16" Type="Ribbon Group">
                   <Button id="media-avmedia-player" />
                 </Container>
               </Container>
             </Container>
             <Container id="media-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom64" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom64" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="media-transform-dialog" vertical-alignment="Center" />
               </Container>
               <Button id="media:menu-media" content="Media" text="Media" horizontal-alignment="Left" vertical-alignment="Center" role="Grow" />
@@ -1900,80 +1900,80 @@
             <Container id="print" Type="Toolbar" role="Grow">
               <Container id="print-section-show-single-page" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator64" Type="Separator" vertical-alignment="Center" />
-                <Container id="section-bottom62" Type="Vertical Stack">
+                <Container id="section-bottom62" Type="Ribbon Group">
                   <Button id="print-show-single-page" />
                 </Container>
               </Container>
               <Container id="print-section-show-two-pages" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom63" Type="Vertical Stack">
+                <Container id="section-bottom63" Type="Ribbon Group">
                   <Button id="print-show-two-pages" />
                 </Container>
               </Container>
               <Container id="print-section-show-bookview" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom13" Type="Vertical Stack">
+                <Container id="ext-bottom13" Type="Ribbon Group">
                   <Button id="print-show-bookview" />
                 </Container>
               </Container>
               <Container id="print-section-show-multiple-pages" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom14" Type="Vertical Stack">
+                <Container id="ext-bottom14" Type="Ribbon Group">
                   <Button id="print-show-multiple-pages1" />
                 </Container>
               </Container>
               <Container id="print-section-page-up" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator86" Type="Separator" />
-                <Container id="ext-top14" Type="Vertical Stack">
+                <Container id="ext-top14" Type="Ribbon Group">
                   <Button id="print-go-to-start-of-doc" />
                   <Button id="print-page-up" />
                 </Container>
               </Container>
               <Container id="print-section-jump-to-specific-page" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom75" Type="Vertical Stack">
+                <Container id="section-bottom75" Type="Ribbon Group">
                   <Button id="print-jump-to-specific-page" />
                 </Container>
               </Container>
               <Container id="print-section-page-down" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top15" Type="Vertical Stack">
+                <Container id="ext-top15" Type="Ribbon Group">
                   <Button id="print-page-down" />
                   <Button id="print-go-to-end-of-doc" />
                 </Container>
               </Container>
               <Container id="print-section-zoom" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator89" Type="Separator" />
-                <Container id="ext-top13" Type="Vertical Stack">
+                <Container id="ext-top13" Type="Ribbon Group">
                   <Button id="print-zoom-minus" />
                   <Button id="print-preview-zoom" />
                   <Button id="print-zoom-plus" />
                 </Container>
               </Container>
               <Container id="print-section-fullscreen" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top16" Type="Vertical Stack">
+                <Container id="ext-top16" Type="Ribbon Group">
                   <Button id="print-full-screen" />
                 </Container>
               </Container>
               <Container id="print-section-zoom-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-top9" Type="Vertical Stack">
+                <Container id="ext-top9" Type="Ribbon Group">
                   <Button id="print-zoom-dialog" />
                 </Container>
               </Container>
               <Container id="print-section-print" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator95" Type="Separator" />
-                <Container id="section-bottom77" Type="Vertical Stack">
+                <Container id="section-bottom77" Type="Ribbon Group">
                   <Button id="print-print" />
                 </Container>
               </Container>
               <Container id="print-section-close-preview" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="ext-bottom15" Type="Vertical Stack">
+                <Container id="ext-bottom15" Type="Ribbon Group">
                   <Button id="print-close-preview" />
                 </Container>
               </Container>
               <Container id="print-section-page-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom68" Type="Vertical Stack">
+                <Container id="section-bottom68" Type="Ribbon Group">
                   <Button id="print-page-dialog" />
                 </Container>
               </Container>
             </Container>
             <Container id="print-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom84" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom84" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="print-preview-full-screen" vertical-alignment="Center" role="Grow" />
               </Container>
               <Button id="print:menu-print" content="Print" text="Print" vertical-alignment="Center" role="Grow" />
@@ -1984,53 +1984,53 @@
           <Container id="form-tab" Type="Toolbar">
             <Container id="form" Type="Toolbar" role="Grow">
               <Container id="form-section-label1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom117" Type="Vertical Stack">
+                <Container id="section-bottom117" Type="Ribbon Group">
                   <Button id="form-switch-control-design-mode" />
                 </Container>
-                <Container id="section-bottom39" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom39" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-use-wizards" />
                 </Container>
               </Container>
               <Container id="form-section-anchor" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator153" Type="Separator" />
-                <Container id="anchor6" Type="Vertical Stack">
+                <Container id="anchor6" Type="Ribbon Group">
                   <Button id="object-anchor-menu1" />
                 </Container>
               </Container>
               <Container id="form-section-wrap3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator73" Type="Separator" />
-                <Container id="wrap5" Type="Vertical Stack">
+                <Container id="wrap5" Type="Ribbon Group">
                   <Button id="media-wrap-off5" />
                   <Button id="media-wrap-on5" />
                   <Button id="media-wrap-ideal5" />
                 </Container>
               </Container>
               <Container id="form-section-wrap4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap7" Type="Vertical Stack">
+                <Container id="wrap7" Type="Ribbon Group">
                   <Button id="media-wrap-left4" />
                   <Button id="media-wrap-through4" />
                   <Button id="media-wrap-right4" />
                 </Container>
               </Container>
               <Container id="form-section-wrap-dialog1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="wrap15" Type="Vertical Stack">
+                <Container id="wrap15" Type="Ribbon Group">
                   <Button id="media-text-wrap4" />
                 </Container>
               </Container>
               <Container id="form-section-align" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator82" Type="Separator" />
-                <Container id="align16" Type="Vertical Stack">
+                <Container id="align16" Type="Ribbon Group">
                   <Button id="form-object-align" />
                 </Container>
               </Container>
               <Container id="form-section-align3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align5" Type="Vertical Stack">
+                <Container id="align5" Type="Ribbon Group">
                   <Button id="media-align-center4" />
                   <Button id="media-object-align-right4" />
                 </Container>
               </Container>
               <Container id="form-section-align4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="align6" Type="Vertical Stack">
+                <Container id="align6" Type="Ribbon Group">
                   <Button id="media-align-up4" />
                   <Button id="media-align-middle4" />
                   <Button id="media-align-down4" />
@@ -2038,59 +2038,59 @@
               </Container>
               <Container id="form-section-arrange3" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator106" Type="Separator" />
-                <Container id="section-bottom90" Type="Vertical Stack">
+                <Container id="section-bottom90" Type="Ribbon Group">
                   <Button id="media-bring-to-front4" />
                   <Button id="media-object-forward-one4" />
                 </Container>
               </Container>
               <Container id="form-section-arrange4" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom114" Type="Vertical Stack">
+                <Container id="section-bottom114" Type="Ribbon Group">
                   <Button id="media-object-back-one4" />
                   <Button id="media-send-to-back4" />
                 </Container>
               </Container>
               <Container id="form-section-control-properties" Type="Horizontal Stack" vertical-alignment="Center">
                 <Container id="separator119" Type="Separator" vertical-alignment="Center" />
-                <Container id="ext-bottom30" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="ext-bottom30" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-control-properties" />
                 </Container>
               </Container>
               <Container id="form-section-properties" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="ext-bottom31" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="ext-bottom31" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-form-properties1" />
                 </Container>
               </Container>
               <Container id="form-section-show-fm-explorer" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="ext-bottom33" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="ext-bottom33" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-show-fm-explorer" />
                 </Container>
               </Container>
               <Container id="form-section-tab-dialog" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="ext-bottom37" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="ext-bottom37" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-tab-dialog" />
                 </Container>
               </Container>
               <Container id="form-section-open-read-only" Type="Horizontal Stack" vertical-alignment="Center">
                 <Container id="separator132" Type="Separator" vertical-alignment="Center" />
-                <Container id="section-bottom116" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom116" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-open-read-only" />
                 </Container>
               </Container>
               <Container id="form-section-auto-control-focus" Type="Horizontal Stack" vertical-alignment="Center">
-                <Container id="section-bottom176" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom176" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="form-auto-control-focus" />
                 </Container>
               </Container>
               <Container id="form-section-label-checkbox" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator134" Type="Separator" />
-                <Container id="section-bottom213" Type="Vertical Stack">
+                <Container id="section-bottom213" Type="Ribbon Group">
                   <Button id="tools-label1" />
                   <Button id="tools-edit1" />
                   <Button id="tools-check-box1" />
                 </Container>
               </Container>
               <Container id="form-section-label-checkbox1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom214" Type="Vertical Stack">
+                <Container id="section-bottom214" Type="Ribbon Group">
                   <Button id="tools-radio-button1" />
                   <Button id="tools-list-box1" />
                   <Button id="tools-combo-box1" />
@@ -2098,21 +2098,21 @@
               </Container>
               <Container id="form-section-buttons" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator135" Type="Separator" />
-                <Container id="section-bottom215" Type="Vertical Stack">
+                <Container id="section-bottom215" Type="Ribbon Group">
                   <Button id="tools-pushbutton1" />
                   <Button id="tools-imagebutton1" />
                 </Container>
               </Container>
               <Container id="form-section-farmatted" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator143" Type="Separator" />
-                <Container id="section-bottom216" Type="Vertical Stack">
+                <Container id="section-bottom216" Type="Ribbon Group">
                   <Button id="tools-formatted-field1" />
                   <Button id="tools-date-field1" />
                   <Button id="tools-time-field1" />
                 </Container>
               </Container>
               <Container id="form-section-farmatted1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom217" Type="Vertical Stack">
+                <Container id="section-bottom217" Type="Ribbon Group">
                   <Button id="tools-numeric-field1" />
                   <Button id="tools-currency-field1" />
                   <Button id="tools-pattern-field1" />
@@ -2120,27 +2120,27 @@
               </Container>
               <Container id="form-section-group-box" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator147" Type="Separator" />
-                <Container id="section-bottom218" Type="Vertical Stack">
+                <Container id="section-bottom218" Type="Ribbon Group">
                   <Button id="tools-group-box1" />
                 </Container>
               </Container>
               <Container id="form-section-controls" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator149" Type="Separator" />
-                <Container id="section-bottom219" Type="Vertical Stack">
+                <Container id="section-bottom219" Type="Ribbon Group">
                   <Button id="tools-image-control1" />
                   <Button id="tools-file-control1" />
                 </Container>
               </Container>
               <Container id="form-section-grid-navigation-bar" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator151" Type="Separator" />
-                <Container id="section-bottom177" Type="Vertical Stack">
+                <Container id="section-bottom177" Type="Ribbon Group">
                   <Button id="tools-grid1" />
                   <Button id="tools-navigation-bar1" />
                 </Container>
               </Container>
             </Container>
             <Container id="form-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom121" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom121" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="form-form-properties" vertical-alignment="Center" role="Grow" />
               </Container>
               <Button id="form:menu-form" content="Form" text="Form" vertical-alignment="Center" role="Grow" />
@@ -2152,7 +2152,7 @@
             <Container id="extension" Type="Toolbar" vertical-alignment="Center" role="Grow" />
             <Container id="extension-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
               <Container id="extension-section" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom122" Type="Vertical Stack" vertical-alignment="Center">
+                <Container id="section-bottom122" Type="Ribbon Group" vertical-alignment="Center">
                   <Button id="extension-menu-extension-dialog" />
                 </Container>
                 <Button id="extension-extension-button:menu-addons" content="Extension" text="Extension" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
@@ -2164,53 +2164,53 @@
           <Container id="tools-tab" Type="Toolbar">
             <Container id="tools" Type="Toolbar" vertical-alignment="Center" role="Grow">
               <Container id="tools-section-macro" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom125" Type="Vertical Stack">
+                <Container id="section-bottom125" Type="Ribbon Group">
                   <Button id="tools-run-macro" />
                   <Button id="tools-basic-ideappear" />
                 </Container>
               </Container>
               <Container id="tools-section-macro1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom160" Type="Vertical Stack">
+                <Container id="section-bottom160" Type="Ribbon Group">
                   <Button id="tools-macro-dialog" />
                 </Container>
               </Container>
               <Container id="tools-section-mail-merge" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator128" Type="Separator" />
-                <Container id="section-bottom141" Type="Vertical Stack">
+                <Container id="section-bottom141" Type="Ribbon Group">
                   <Button id="tools-mail-merge-wizard" />
                 </Container>
               </Container>
               <Container id="tools-section-envelope" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom161" Type="Vertical Stack">
+                <Container id="section-bottom161" Type="Ribbon Group">
                   <Button id="tools-insert-envelope" role="Grow" />
                 </Container>
               </Container>
               <Container id="tools-section-send-mail" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom162" Type="Vertical Stack">
+                <Container id="section-bottom162" Type="Ribbon Group">
                   <Button id="tools-send-mail" role="Grow" />
                 </Container>
               </Container>
               <Container id="tools-section-form-design-mode" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator131" Type="Separator" horizontal-alignment="Right" vertical-alignment="Center" role="Grow" />
-                <Container id="section-bottom142" Type="Vertical Stack">
+                <Container id="section-bottom142" Type="Ribbon Group">
                   <Button id="tools-switch-control-design-mode" />
                 </Container>
               </Container>
               <Container id="tools-section-form-wizard" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom143" Type="Vertical Stack">
+                <Container id="section-bottom143" Type="Ribbon Group">
                   <Button id="tools-use-wizards" />
                 </Container>
               </Container>
               <Container id="tools-section-form-label-checkbox" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator138" Type="Separator" />
-                <Container id="section-bottom144" Type="Vertical Stack">
+                <Container id="section-bottom144" Type="Ribbon Group">
                   <Button id="tools-label" />
                   <Button id="tools-edit" />
                   <Button id="tools-check-box" />
                 </Container>
               </Container>
               <Container id="tools-section-form-label-checkbox1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom163" Type="Vertical Stack">
+                <Container id="section-bottom163" Type="Ribbon Group">
                   <Button id="tools-radio-button" />
                   <Button id="tools-list-box" />
                   <Button id="tools-combo-box" />
@@ -2218,21 +2218,21 @@
               </Container>
               <Container id="tools-section-form-buttons" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator144" Type="Separator" />
-                <Container id="section-bottom145" Type="Vertical Stack">
+                <Container id="section-bottom145" Type="Ribbon Group">
                   <Button id="tools-pushbutton" />
                   <Button id="tools-imagebutton" />
                 </Container>
               </Container>
               <Container id="tools-section-form-farmatted" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator145" Type="Separator" />
-                <Container id="section-bottom147" Type="Vertical Stack">
+                <Container id="section-bottom147" Type="Ribbon Group">
                   <Button id="tools-formatted-field" />
                   <Button id="tools-date-field" />
                   <Button id="tools-time-field" />
                 </Container>
               </Container>
               <Container id="tools-section-form-farmatted1" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
-                <Container id="section-bottom164" Type="Vertical Stack">
+                <Container id="section-bottom164" Type="Ribbon Group">
                   <Button id="tools-numeric-field" />
                   <Button id="tools-currency-field" />
                   <Button id="tools-pattern-field" />
@@ -2240,41 +2240,41 @@
               </Container>
               <Container id="tools-section-form-group-box" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator146" Type="Separator" />
-                <Container id="section-bottom148" Type="Vertical Stack">
+                <Container id="section-bottom148" Type="Ribbon Group">
                   <Button id="tools-group-box" />
                 </Container>
               </Container>
               <Container id="tools-section-form-controls" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator152" Type="Separator" />
-                <Container id="section-bottom149" Type="Vertical Stack">
+                <Container id="section-bottom149" Type="Ribbon Group">
                   <Button id="tools-image-control" />
                   <Button id="tools-file-control" />
                 </Container>
               </Container>
               <Container id="tools-section-form-grid-navigation-bar" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator154" Type="Separator" />
-                <Container id="section-bottom165" Type="Vertical Stack">
+                <Container id="section-bottom165" Type="Ribbon Group">
                   <Button id="tools-grid" />
                   <Button id="tools-navigation-bar" />
                 </Container>
               </Container>
               <Container id="tools-section-form-tab-dialog" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator157" Type="Separator" />
-                <Container id="section-bottom189" Type="Vertical Stack">
+                <Container id="section-bottom189" Type="Ribbon Group">
                   <Button id="tools-show-fm-explore" />
                   <Button id="tools-tab-dialog" />
                 </Container>
               </Container>
               <Container id="tools-section-form-read-only" Type="Horizontal Stack" vertical-alignment="Center" role="Grow">
                 <Container id="separator158" Type="Separator" />
-                <Container id="section-bottom190" Type="Vertical Stack">
+                <Container id="section-bottom190" Type="Ribbon Group">
                   <Button id="tools-open-read-only" />
                   <Button id="tools-auto-control-focus" />
                 </Container>
               </Container>
             </Container>
             <Container id="tools-menu" Type="Horizontal Stack" horizontal-alignment="Right" vertical-alignment="Center" role="Grow">
-              <Container id="section-bottom124" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
+              <Container id="section-bottom124" Type="Ribbon Group" vertical-alignment="Center" role="Grow">
                 <Button id="tools-show-fm-explorer" />
               </Container>
               <Button id="tools-tools-button:menu-tools" content="Tools" text="Tools" vertical-alignment="Center" role="Grow" />

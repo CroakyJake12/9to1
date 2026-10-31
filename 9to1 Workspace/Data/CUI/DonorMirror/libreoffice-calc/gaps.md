@@ -5,11 +5,10 @@ reason to keep donor markup. Nothing here is rendered or accepted evidence.
 
 - donor UI constructs translated: 8342
 - donor nodes dropped: 988
-- gap reports: 2028
+- gap reports: 1230
 
 | CUI construct needed / rejected | occurrences | donor constructs seen |
 |---|---|---|
-| `notebook bar (ribbon) group` | 798 | sfxlo-NotebookbarToolBox |
 | `menu button` | 353 | GtkMenuToolButton, sfxlo-DropdownBox, sfxlo-PriorityHBox, sfxlo-PriorityMergedHBox, svtlo-ManagedMenuButton |
 | `optional section` | 352 | VclOptionalBox |
 | `button row` | 134 | GtkButtonBox |

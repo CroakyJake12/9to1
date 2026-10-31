@@ -90,22 +90,22 @@
             <Button id="paragraphstyleb:stylemenu" content="Style" text="Style" />
             <Container id="box6" Type="Vertical Stack" cell-gap="6" vertical-alignment="Center">
               <Container id="box14" Type="Vertical Stack" vertical-alignment="Center" role="Grow">
-                <Container id="numberformat" Type="Vertical Stack">
+                <Container id="numberformat" Type="Ribbon Group">
                   <Button id="number-format-type" role="Grow" />
                 </Container>
-                <Container id="font" Type="Vertical Stack">
+                <Container id="font" Type="Ribbon Group">
                   <Button id="fontname" role="Grow" />
                 </Container>
               </Container>
               <Container id="box7" Type="Vertical Stack" cell-gap="4" vertical-alignment="Center" role="Grow">
-                <Container id="numberformat1" Type="Vertical Stack">
+                <Container id="numberformat1" Type="Ribbon Group">
                   <Button id="currency" />
                   <Button id="percent" />
                   <Button id="numericfield" />
                   <Button id="number-format-inc-decimals" />
                   <Button id="number-format-dec-decimals" />
                 </Container>
-                <Container id="fontadjust" Type="Vertical Stack" horizontal-alignment="Right" role="Grow">
+                <Container id="fontadjust" Type="Ribbon Group" horizontal-alignment="Right" role="Grow">
                   <Button id="grow" />
                   <Button id="shrink" />
                 </Container>
@@ -124,13 +124,13 @@
               <Button id="underlineb" />
             </Container>
             <Container id="box17" Type="Vertical Stack">
-              <Container id="wrapbox" Type="Vertical Stack">
+              <Container id="wrapbox" Type="Ribbon Group">
                 <Button id="wraptextb" />
               </Container>
-              <Container id="backgroundbox" Type="Vertical Stack">
+              <Container id="backgroundbox" Type="Ribbon Group">
                 <Button id="backgroundcolor" />
               </Container>
-              <Container id="colorbox" Type="Vertical Stack">
+              <Container id="colorbox" Type="Ribbon Group">
                 <Button id="fontcolor" />
               </Container>
             </Container>
@@ -156,13 +156,13 @@
                 <Button id="conditionalb" content="Conditional" text="Conditional" />
               </Container>
               <Container id="tablegrid3" Type="Vertical Stack">
-                <Container id="tableborder1" Type="Vertical Stack">
+                <Container id="tableborder1" Type="Ribbon Group">
                   <Button id="borderstyleb" />
                 </Container>
-                <Container id="tableborder2" Type="Vertical Stack">
+                <Container id="tableborder2" Type="Ribbon Group">
                   <Button id="borderlineb" />
                 </Container>
-                <Container id="tableborder3" Type="Vertical Stack">
+                <Container id="tableborder3" Type="Ribbon Group">
                   <Button id="bordercolorb" />
                 </Container>
               </Container>
@@ -178,10 +178,10 @@
           <Container id="insertgroup" Type="Vertical Stack" cell-gap="5">
             <Container id="insertgroupbuttons" Type="Vertical Stack">
               <Container id="box15" Type="Vertical Stack">
-                <Container id="tablebox" Type="Vertical Stack">
+                <Container id="tablebox" Type="Ribbon Group">
                   <Button id="tableb" role="Grow" />
                 </Container>
-                <Container id="shapesbox" Type="Vertical Stack">
+                <Container id="shapesbox" Type="Ribbon Group">
                   <Button id="shapesb" content="Shapes" text="Shapes" role="Grow" />
                 </Container>
                 <Button id="linksb:linksmenu" content="Links" text="Links" />
