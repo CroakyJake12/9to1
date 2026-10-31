@@ -213,3 +213,31 @@ measured against this repository, not assumed.
 Sequencing I will follow: port the layout onto the working surface → wire the EXISTS/THIN rows (they are mostly one
 dispatch case each) → then close the GAPs that the board flow actually needs (tab strip, settings model, hide +
 hidden column, search) before taking grid/calendar parity, which is the pending owner decision.
+
+## Route correction after the owner's check question (31 Oct, ~21:15)
+
+Owner asked: *"wait, did you take the current boards ui and wire it up to appflowy"*. Honest answer at that moment:
+**not fully.** What `0fd48244`+`1061a0f9`+`56cc58d8` did was keep the FIRST-PARTY Boards layout as the base and paint
+AppFlowy's measurements onto it (268 sidebar, inset 8, nav row order, 40 tab strip, `+ New page` calling the
+existing `AddPage`). The AppFlowy-shaped interface itself (`AppFlowyBoardStageOne.cui`: page-tree sidebar, tab
+strip, board columns with bordered cards and `New page` footers) was still a **separate document in a separate
+preview host with a duplicated projection and its own `Donor*` commands** — the duplication the pinned
+one-implementation-per-app rule forbids.
+
+Restated route to execute next, in this order:
+1. Make the **AppFlowy-shaped presentation** the Boards presentation inside the working host (same window, same
+   `BoardsViewModel`, same `ContractSessionAdapter`), instead of a preview seam.
+2. Drive it from the working surface's own patterns, copied from live code rather than reinvented:
+   `<Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />` with
+   `case "OpenRecentPage": if (parameter is RecentPageCard …) await OpenBoardPathAsync(recentPage.Path,
+   recentPage.PageId)` (`BoardsViewModel.cs:578-581`) and cards as plain records exposing `Target`/`Id`
+   (`RecentBoardCatalog.cs:172-177`).
+3. Delete `AppFlowyBoardStageOneSurface.cs` and the `Donor*` commands once the merged surface covers them; keep the
+   stage-one document only as the layout reference until then, and keep the `Legacy Boards` pair until the merged
+   surface is on screen (retirement condition already recorded).
+4. Geometry to carry: sidebar 268, workspace row 32, search 30, new-page 30, tab row 40, tab width 200, section
+   column 256, card 226, card margin 3/4, footer directly under the cards.
+5. Traps already measured, so they are not rediscovered: grid placement attributes do **not** reach children of
+   conditional branches (wrap in one `Container` carrying `Column=`); only registered palette names exist and
+   `CuiPanelBrush` measures equal to the workspace material in the current light theme (the queued theme pass is the
+   real fix for surface separation); `Repeat` item members need `Target`-style cards.
