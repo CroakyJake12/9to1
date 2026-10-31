@@ -60,6 +60,9 @@ Measured with `eng/development/drive_window.py` (XTEST) and `capture_window.py` 
 * `ctrl+o` on the first-party Boards surface: frame identical before/after (`0b4b7c4aeece…`) — **not** a clean
   negative, because that window may not hold focus at send time.
 * Session is genuine **X11** (`/usr/lib/xorg/Xorg`, `Type=x11`, no Xwayland), so XTEST should be delivered.
+* Direct `XSetInputFocus` on the client and on the frame: the server then reports focus on the frame `0x6001ca`,
+  and `ctrl+o` still produced an identical frame. So focus alone is not the explanation either, though a key
+  chord is weak evidence because the binding may not exist in this host.
 * `--list` measured two viewable matches for the name `Boards`: WM frame `0x006001ca (-28,-24,2906,1913)` and
   client `0x0420000f (28,98,2850,1781)`. Name matching is therefore ambiguous in principle; `drive_window.py`
   now has `--window-id` (address the exact id the capture reported) and `--list`.
