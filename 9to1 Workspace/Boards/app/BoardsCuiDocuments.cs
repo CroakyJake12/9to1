@@ -20,6 +20,8 @@ public static class BoardsCuiDocuments
     public const string InsertMenuSurfaceSourceName = "InsertMenuSurfaceCui.cui";
     public const string BoardPropertiesSourceName = "BoardProperties.cui";
     public const string StartupFailureSourceName = "BoardsStartupFailure.cui";
+    /// <summary>Stage one of the owner's Boards route: AppFlowy's board screen re-rendered in CUI.</summary>
+    public const string AppFlowyStageOneSourceName = "AppFlowyBoardStageOne.cui";
     private static readonly Lazy<IReadOnlyDictionary<string, CuiDocument>> CompiledDocuments =
         new(LoadEmbeddedDocuments, LazyThreadSafetyMode.ExecutionAndPublication);
 

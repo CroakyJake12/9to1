@@ -206,6 +206,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Raised when the style editor dialog should open (host wires the Window).</summary>
     public event Action? StyleEditorRequested;
 
+    /// <summary>Requests the stage-one AppFlowy re-UI surface (owner route, 31 October 2026).</summary>
+    public event Action? StageOneSurfaceRequested;
+
     /// <summary>Host-provided file picker: kind is "board", "image" or "attach". Null in headless tests.</summary>
     public Func<string, Task<string?>>? PickFileAsync { get; set; }
 
@@ -503,6 +506,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             SetLanding(true);
             LandingRequested?.Invoke();
+            return;
+        }
+        if (command == "ShowStageOneSurface")
+        {
+            // Reading the donor-shaped view of this same board is not an edit, so it stays available in view
+            // mode; the surface itself never writes board content in stage one.
+            StageOneSurfaceRequested?.Invoke();
             return;
         }
         if (!_isEditMode && !AllowedWhileViewing(command))
@@ -996,7 +1006,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private static bool AllowedWhileViewing(string command) => command is
         "OpenRecentBoard" or "OpenRecentPage" or
         "NewBoard" or "RetryOpenCreatedBoard" or "RetryBoardCreationSettlement" or "CheckSavedBoard" or "OpenRecordedBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
-        "FileMenu" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
+        "FileMenu" or "ShowStageOneSurface" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
         "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView";
 
     private void SetEditMode(bool enabled)

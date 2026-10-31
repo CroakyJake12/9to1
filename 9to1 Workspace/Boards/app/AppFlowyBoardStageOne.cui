@@ -1,0 +1,195 @@
+<Cui id="boards-appflowy-board-stage-one" product="9-1" version="1">
+  <!-- STAGE ONE of the owner's pinned route (31 October 2026): "the intended boards surface is appflowy re-ui
+       first, then transition that re-ui into the 9to1 boards". This document re-renders AppFlowy's DESKTOP BOARD
+       screen in CUI with its structure unchanged. It is not the 9to1 Boards surface yet and claims no specification
+       conformance; stage two adapts this shape, so no AppFlowy capability has to be re-added later.
+
+       Structure and geometry read from the pinned donor (AppFlowy 0.14.11 @ 5cf3a365dec0, preserved byte-faithfully
+       at https://github.com/CroakyJake12/donor-appflowy):
+       · board/presentation/board_page.dart:67  BoardSettingBar in the database tab bar
+       · board/presentation/toolbar/board_setting_bar.dart  SizedBox height 20, Row aligned to the END, holding
+           FilterButton, then ViewDatabaseButton only when the view is a reference, then SettingButton. The card
+           size / card layout / show-icon / show-cover controls are NOT in this bar: they live in the layout-setting
+           panel the SettingButton opens. (My first draft put them in the bar and that was wrong; corrected here.)
+       · board/presentation/widgets/board_column_header.dart  header Container height 50, content chosen by the
+           group's field type: EditableColumnHeader (select fields, non-default group), CheckboxColumnHeader, or the
+           default header; GroupOptionsButton popover constrained to 168 x 300, margin 8, opening bottom-left, with
+           GroupOption rename / hide / delete items at height 26 (GridSize.popoverItemHeight).
+       · board/presentation/widgets/board_hidden_groups.dart  HiddenGroupsColumn driven by the layout setting
+           collapseHiddenGroups: collapsed = height 50 showing only the expand icon; expanded = width 274 with a
+           50-high row ("Hidden groups" medium text in hint colour + collapse/expand icon) and then the group list.
+       · widgets/card/card.dart  RowCard → _CardContent = Column[ CardCover (only when the row has a cover),
+           Padding(styleConfiguration.cardPadding) → Column of cells where index 0 is the title cell ]; hover builds
+           the card accessories (edit and more-options, each inset 3).
+       · board/presentation/board_page.dart:441 BoardColumnFooter (create-card affordance at the foot of a column)
+           and :788 BoardTrailing (the trailing column that starts a new group).
+       · grid/presentation/layout/sizes.dart  scrollBarSize 8, popoverItemHeight 26, typeOptionSeparatorHeight 4.
+       Card width/height and the hidden-groups collapsed flag are bound, not hard-coded, because in the donor they
+       come from the runtime board layout setting (BoardLayoutSettingPB). No donor control name is emitted. -->
+  <Actions>
+    <Action name="OpenDonorGroup" command="DonorOpenGroup" parameter="{Binding group.Id}" />
+    <Action name="OpenDonorCard" command="DonorOpenCard" parameter="{Binding card.Id}" />
+    <Action name="CreateCardInGroup" command="DonorCreateCard" parameter="{Binding group.Id}" />
+    <Action name="CreateCardAtTop" command="DonorCreateCardAtTop" parameter="{Binding group.Id}" />
+    <Action name="RenameGroupStart" command="DonorRenameGroup" parameter="{Binding group.Id}" />
+    <Action name="HideGroup" command="DonorHideGroup" parameter="{Binding group.Id}" />
+    <Action name="DeleteGroupConfirm" command="DonorDeleteGroup" parameter="{Binding group.Id}" />
+    <Action name="OpenHiddenGroup" command="DonorOpenHiddenGroup" parameter="{Binding hidden.Id}" />
+    <Action name="ExpandHiddenGroups" command="DonorExpandHiddenGroups" />
+    <Action name="CollapseHiddenGroups" command="DonorCollapseHiddenGroups" />
+    <Action name="OpenLayoutSettings" command="DonorOpenLayoutSettings" />
+    <Action name="OpenFilterEditor" command="DonorOpenFilterEditor" />
+    <Action name="SwitchToDatabaseView" command="DonorSwitchToGrid" />
+    <Action name="CreateGroup" command="DonorCreateGroup" />
+    <Action name="ExitStageOne" command="DonorExitStageOneSurface" />
+  </Actions>
+  <Page>
+    <Container Type="Grid" RowSizes="Auto 1fr" CellGap="6" Background="{Resource CuiWorkspaceMaterial}">
+      <!-- Donor: the database tab bar row. The settings cluster is right-aligned, 20 high. -->
+      <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" Row="0" CellGap="8" ID="DonorBoardTabBar">
+        <Container Type="Horizontal Stack" Column="0" CellGap="8" VerticalAlignment="Center">
+          <Text ID="DonorBoardTitle" Text="{Binding DonorBoardTitle}" FontSize="18" FontWeight="Bold"
+                VerticalAlignment="Center" AccessibleName="Board title" />
+          <!-- Stage-one only seam: leaves this surface and returns to the 9to1 Boards presentation, so the owner
+               can compare the two. It is not a donor control and is labelled as the seam that it is. -->
+          <Button ID="DonorExitStageOne" Content="Leave AppFlowy re-UI" Action="ExitStageOne"
+                  AccessibleName="Leave the AppFlowy re-UI surface" ToolTip="Return to the 9to1 Boards surface" />
+          <Text ID="DonorStageOneNotice" Text="{Binding DonorStageOneNotice}" FontSize="12"
+                Foreground="{Resource CuiMutedBrush}" VerticalAlignment="Center"
+                AccessibleName="What this surface still is not" />
+        </Container>
+        <Container Type="Horizontal Stack" Column="1" CellGap="2" Height="20" VerticalAlignment="Center"
+                   ID="DonorBoardSettingBar" AccessibleName="Board settings row">
+          <Button ID="DonorFilterButton" Content="Filter" Action="OpenFilterEditor" Height="20" Padding="6 0"
+                  Background="Transparent" BorderWidth="0" Interactive="{Binding DonorCanFilter}"
+                  AccessibleName="Filter this board" />
+          <If Condition="{Binding DonorIsViewReference}">
+            <Button ID="DonorViewDatabaseButton" Content="View database" Action="SwitchToDatabaseView" Height="20"
+                    Padding="6 0" Background="Transparent" BorderWidth="0" AccessibleName="Open the underlying database view" />
+          </If>
+          <Button ID="DonorSettingButton" Content="Settings" Action="OpenLayoutSettings" Height="20" Padding="6 0"
+                  Background="Transparent" BorderWidth="0" AccessibleName="Board layout settings" />
+        </Container>
+      </Container>
+
+      <!-- Donor: the board itself slides horizontally; the hidden-groups column comes first. -->
+      <Container Type="Horizontal Stack" ID="DonorBoardColumns" Row="1" CellGap="8"
+                 HorizontalScrolling="True" VerticalScrolling="False" ScrollBarThickness="8">
+        <If Condition="{Binding DonorHasHiddenGroups}">
+          <!-- CUI021 measured on compile: an <Else> must be a sibling that follows a complete <If>, not a child
+               of it. The donor's collapsed and expanded presentations are therefore expressed as two sibling
+               branches, with the inverse flag supplied by the surface's own context. -->
+          <If Condition="{Binding DonorHiddenGroupsCollapsed}">
+            <!-- Donor collapsed state: a 50-high strip carrying only the expand control. -->
+            <Container Type="Horizontal Stack" ID="DonorHiddenGroupsCollapsedStrip" Height="50" CellGap="4"
+                       VerticalAlignment="Center">
+              <Button ID="DonorHiddenGroupsExpand" Content="Hidden groups" Action="ExpandHiddenGroups" Height="26"
+                      AccessibleName="Expand hidden groups" />
+            </Container>
+          </If>
+          <If Condition="{Binding DonorHiddenGroupsExpanded}">
+              <Container Type="Vertical Stack" ID="DonorHiddenGroupsColumn" Width="274" CellGap="4">
+                <Container Type="Grid" ColumnSizes="1fr Auto" Height="50" VerticalAlignment="Center">
+                  <Text Column="0" Text="Hidden groups" FontSize="14" FontWeight="Medium"
+                        Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+                  <Button Column="1" ID="DonorHiddenGroupsCollapse" Content="Collapse" Action="CollapseHiddenGroups"
+                          Height="26" AccessibleName="Collapse hidden groups" />
+                </Container>
+                <Repeat Source="{Binding DonorHiddenGroups}" As="hidden" Key="{Binding hidden.Id}" Panel="Vertical Stack">
+                  <Container Type="Horizontal Stack" CellGap="6" Padding="8 6" CornerRadius="6"
+                             Background="{Resource CuiPanelBrush}">
+                    <Button Action="OpenHiddenGroup" Content="{Binding hidden.Title}"
+                            AccessibleName="Add this hidden group back to the board" />
+                    <Text Text="{Binding hidden.CountLabel}" Foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
+                </Repeat>
+              </Container>
+          </If>
+        </If>
+
+        <Repeat Source="{Binding DonorGroupColumns}" As="group" Key="{Binding group.Id}" Panel="Horizontal Stack">
+          <Container Type="Vertical Stack" ID="DonorGroupColumn" Width="{Binding group.Width, fallback=280}" CellGap="4">
+            <!-- Donor header: height 50, content varies with the group's field type. -->
+            <Container Type="Grid" ColumnSizes="Auto 1fr Auto Auto" Height="50" ID="DonorGroupHeader" CellGap="4"
+                       VerticalAlignment="Center">
+              <Image Column="0" Source="icon:folder" Width="16" Height="16" VerticalAlignment="Center"
+                     AccessibleName="Group" />
+              <Text Column="1" Text="{Binding group.Title}" FontSize="14" FontWeight="Medium"
+                    VerticalAlignment="Center" AccessibleName="Group title" />
+              <Text Column="2" Text="{Binding group.CountLabel}" FontSize="12"
+                    Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center"
+                    AccessibleName="Number of cards in this group" />
+              <Container Column="3" Type="Menu" ID="DonorGroupOptions" MaxWidth="168">
+                <Button Type="Menu Item" ID="DonorGroupOptionsButton" IconSource="icon:more" IconOnly="True"
+                        Width="20" Height="20" Padding="0" Background="Transparent" BorderWidth="0"
+                        AccessibleName="Group options" />
+                <Button Type="Menu Item" ID="DonorGroupRename" Content="Rename" Action="RenameGroupStart" Height="26"
+                        IsEnabled="{Binding group.CanRename}" Interactive="{Binding group.CanRename}"
+                        AccessibleName="Rename this group" />
+                <Button Type="Menu Item" ID="DonorGroupHide" Content="Hide group" Action="HideGroup" Height="26"
+                        IsEnabled="{Binding group.CanHide}" Interactive="{Binding group.CanHide}"
+                        AccessibleName="Hide this group" />
+                <Button Type="Menu Item" ID="DonorGroupDelete" Content="Delete group" Action="DeleteGroupConfirm"
+                        Height="26" IsEnabled="{Binding group.CanDelete}" Interactive="{Binding group.CanDelete}"
+                        AccessibleName="Delete this group" />
+              </Container>
+            </Container>
+
+            <!-- Donor body: the column's cards. RowCard = cover (when present) then the cell column whose
+                 first cell is the title, with the hover accessories overlay carrying edit and more-options. -->
+            <Container Type="Vertical Stack" ID="DonorCardList" CellGap="8" VerticalScrolling="True"
+                       HorizontalScrolling="False" ScrollBarThickness="8">
+              <Repeat Source="{Binding group.Cards}" As="card" Key="{Binding card.Id}" Panel="Vertical Stack">
+                <Container Type="Overlay" ID="DonorCard" Width="{Binding card.Width, fallback=256}"
+                           Background="{Resource CuiPanelBrush}" CornerRadius="6" BorderWidth="1">
+                  <Container Type="Vertical Stack" CellGap="0">
+                    <If Condition="{Binding card.HasCover}">
+                      <Image ID="DonorCardCover" Source="{Binding card.CoverSource}" Height="{Binding card.CoverHeight}"
+                             Width="{Binding card.Width, fallback=256}" AccessibleName="Card cover" />
+                    </If>
+                    <Container Type="Vertical Stack" Padding="10 8" CellGap="4">
+                      <Repeat Source="{Binding card.Cells}" As="cell" Key="{Binding cell.Id}" Panel="Vertical Stack">
+                        <Text ID="DonorCardCell" Text="{Binding cell.Text}" FontSize="13"
+                              FontWeight="{Binding cell.TitleWeight, fallback=Normal}"
+                              Foreground="{Resource CuiTextBrush}" AccessibleName="{Binding cell.AccessibleName}" />
+                      </Repeat>
+                    </Container>
+                  </Container>
+                  <Container Type="Horizontal Stack" ID="DonorCardAccessories" CellGap="2" Padding="3"
+                             HorizontalAlignment="Right" VerticalAlignment="Top" Active="{Binding card.Hovered}">
+                    <Button ID="DonorCardEdit" Width="20" Height="20" Padding="3" Background="Transparent"
+                            BorderWidth="0" Action="OpenDonorCard" AccessibleName="Edit this card">
+                      <Image Source="icon:more" Width="14" Height="14" AccessibleName="Edit this card" />
+                    </Button>
+                    <Button ID="DonorCardMoreOptions" Width="20" Height="20" Padding="3" Background="Transparent"
+                            BorderWidth="0" AccessibleName="More card options">
+                      <Image Source="icon:more" Width="14" Height="14" AccessibleName="More card options" />
+                    </Button>
+                  </Container>
+                </Container>
+              </Repeat>
+            </Container>
+
+            <!-- Donor: BoardColumnFooter. -->
+            <Container Type="Horizontal Stack" ID="DonorGroupFooter" Height="36" CellGap="4" VerticalAlignment="Center">
+              <Button ID="DonorGroupNewCardAtTop" Width="20" Height="20" Padding="0" Action="CreateCardAtTop"
+                      Background="Transparent" BorderWidth="0" ToolTip="Add card to the top of the column"
+                      AccessibleName="Add card to the top of the column">
+                <Image Source="icon:chevron-down" Width="14" Height="14" AccessibleName="Add card to the top" />
+              </Button>
+              <Button ID="DonorGroupNewCard" Content="New" Action="CreateCardInGroup" Height="26"
+                      Interactive="{Binding group.CanCreateCard}" AccessibleName="Add a card to this group" />
+            </Container>
+          </Container>
+        </Repeat>
+
+        <!-- Donor: BoardTrailing, the trailing column that creates a new group. -->
+        <Container Type="Vertical Stack" ID="DonorBoardTrailing" Width="{Binding DonorTrailingWidth, fallback=280}"
+                   CellGap="8" Active="{Binding DonorCanCreateGroup}">
+          <Button ID="DonorCreateGroup" Content="New group" Action="CreateGroup" Height="26"
+                  HorizontalAlignment="Left" AccessibleName="Create a new group" />
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

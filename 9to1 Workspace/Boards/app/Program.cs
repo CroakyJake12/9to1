@@ -197,12 +197,14 @@ internal sealed class BoardsApp : Application
         };
         viewModel.OpenBoardAsync = SwitchBoardAsync;
         viewModel.OpenBoardPathAsync = OpenBoardPathAsync;
+        viewModel.StageOneSurfaceRequested += PostStageOneSurface;
         viewModel.RebuildRequested += PostRebuild;
         viewModel.StyleEditorRequested += PostStyleEditor;
     }
 
     private void UnwireViewModel(BoardsViewModel viewModel)
     {
+        viewModel.StageOneSurfaceRequested -= PostStageOneSurface;
         viewModel.RebuildRequested -= PostRebuild;
         viewModel.StyleEditorRequested -= PostStyleEditor;
         viewModel.NewBoardRequested -= PostNewBoard;
@@ -268,6 +270,15 @@ internal sealed class BoardsApp : Application
                     _viewModel.Attach(root);
                     root.LayoutUpdated += WireDynamicSurfaceWhenReady;
                     window.Content = root;
+                    if (Environment.GetEnvironmentVariable("BOARDS_STAGE_ONE_PREVIEW") == "1")
+                    {
+                        // Comparison seam for the owner's Legacy/current pair (31 October 2026): launches straight
+                        // into the stage-one AppFlowy re-UI over the same board so both surfaces can be looked at
+                        // side by side. It reuses ShowStageOneSurfaceAsync, so it exercises the same code path the
+                        // File menu entry uses; it is not a second implementation and it is opt-in per process.
+                        Console.WriteLine("[CUI Boards] BOARDS_STAGE_ONE_PREVIEW=1: mounting the AppFlowy stage-one surface.");
+                        PostStageOneSurface();
+                    }
                     Console.WriteLine($"[CUI Boards] Root: {root.GetType().Name} — awaiting mounted CUI layout");
                 }
                 else
@@ -541,6 +552,83 @@ internal sealed class BoardsApp : Application
         var host = FindByAutomationId<StackPanel>(_root, "NavHost");
         if (host is not null)
             NavBuilder.Rebuild(host, _viewModel);
+    }
+
+    private CuiControlLoader? _stageOneLoader;
+    private Control? _stageOneRoot;
+
+    private void PostStageOneSurface()
+    {
+        if (Dispatcher.UIThread.CheckAccess()) _ = ShowStageOneSurfaceAsync();
+        else Dispatcher.UIThread.Post(() => _ = ShowStageOneSurfaceAsync());
+    }
+
+    /// <summary>
+    /// Mounts the stage-one AppFlowy re-UI over the SAME live board, so the owner can compare the donor-shaped
+    /// surface with the current 9to1 Boards presentation (owner route, 31 October 2026: "appflowy re-ui first, then
+    /// transition that re-ui into the 9to1 boards"). It reads the board and never writes it: the projection disables
+    /// the rename/hide/delete/create commands that belong to stage two, and its leave control restores the normal
+    /// Boards surface. This is a labelled comparison scaffold, not a second implementation of Boards.
+    /// </summary>
+    private async Task ShowStageOneSurfaceAsync()
+    {
+        if (_window is null || _session is null || _viewModel is null)
+            return;
+        try
+        {
+            // Read the LIVE session document, not the stored file shape: the comparison surface must show what the
+            // user is actually looking at. IRichBoardSession.Document exposes RichBoardDocument { Title, Sections }.
+            var notes = _session.Document;
+            var surface = new AppFlowyBoardStageOneSurface(notes, pageId =>
+            {
+                // The donor opens a card; the equivalent available here is selecting the page the card was
+                // projected from, on the real board.
+                if (_viewModel is null) return Task.CompletedTask;
+                return Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (!_viewModel.SelectPageById(pageId))
+                        _viewModel.Set("StatusText", "That card's page is no longer in this board.");
+                }).GetTask();
+            });
+            surface.ExitRequested += RestoreBoardsSurface;
+
+            var loader = BoardsCuiDocuments.CreateLoader();
+            loader.SetBindingContext(surface);
+            loader.SetActionDispatcher(surface);
+            var document = BoardsCuiDocuments.Load(BoardsCuiDocuments.AppFlowyStageOneSourceName);
+            var (root, diagnostics) = loader.TryLoad(document);
+            Console.WriteLine($"[CUI Boards] AppFlowy stage-one document diagnostics: {diagnostics.Count}");
+            foreach (var diagnostic in diagnostics)
+                Console.WriteLine($"[CUI Boards] stage-one diagnostic: {diagnostic}");
+            if (root is null)
+            {
+                loader.Dispose();
+                _viewModel.Set("StatusText", "The AppFlowy re-UI document did not mount; the normal Boards surface is unchanged.");
+                return;
+            }
+
+            _stageOneLoader?.Dispose();
+            _stageOneLoader = loader;
+            _stageOneRoot = root;
+            loader.WireBindings(root);
+            _window.Content = root;
+            _window.Title = "AppFlowy re-UI (stage one) — Boards";
+        }
+        catch (Exception error)
+        {
+            _viewModel.Set("StatusText", "AppFlowy re-UI could not open: " + error.Message.Split('\n')[0]);
+        }
+    }
+
+    private void RestoreBoardsSurface()
+    {
+        if (_window is null || _root is null || _viewModel is null)
+            return;
+        _window.Content = _root;
+        _stageOneLoader?.Dispose();
+        _stageOneLoader = null;
+        _stageOneRoot = null;
+        UpdateWindowTitle();
     }
 
     private async Task RebuildAllAsync()
@@ -906,6 +994,12 @@ internal sealed class BoardsApp : Application
             UnwireViewModel(oldVm);
         _session = adapter;
         _viewModel = next;
+        if (Environment.GetEnvironmentVariable("BOARDS_STAGE_ONE_PREVIEW") == "1")
+        {
+            // Same labelled comparison seam as at mount: after a real board activates, show the stage-one
+            // AppFlowy re-UI over it, so the pair is comparing the same board rather than an empty placeholder.
+            PostStageOneSurface();
+        }
         _lastRecentPageKey = null;
         RecordCurrentPage();
         WireViewModel(next);

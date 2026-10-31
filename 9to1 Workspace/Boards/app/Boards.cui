@@ -26,6 +26,10 @@
                 <Button Type="Menu Item" ID="FileMenuSave" Content="Save" Action="SaveBoard" Shortcut="Ctrl+S" IsEnabled="{Binding CanSaveBoard}" Interactive="{Binding CanSaveBoard}" AccessibleName="Save this board" ToolTip="Save this board (Ctrl+S)" />
                 <Button Type="Menu Item" ID="FileMenuSaveAs" Content="Save As…" Action="SaveAsBoard" Shortcut="Ctrl+Shift+S" IsEnabled="{Binding CanSaveAs}" Interactive="{Binding CanSaveAs}" AccessibleName="Save this board to a file you choose" ToolTip="Save this board to a file you choose (Ctrl+Shift+S)" />
                 <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
+                <!-- Owner route 31 October 2026: AppFlowy re-UI first, then transition. This entry opens the
+                     stage-one surface over the same board so both can be compared; it is a labelled scaffold with
+                     a leave control, not a second Boards implementation. -->
+                <Button Type="Menu Item" ID="FileStageOneSurface" Content="AppFlowy re-UI (stage one)" Action="ShowStageOneSurface" ToolTip="AppFlowy's board screen rendered in CUI, projected from this board. Structure unchanged; 9to1 Boards behaviour arrives in stage two." AccessibleName="Open the AppFlowy stage-one comparison surface" />
                 <Button Type="Menu Item" Content="Exit" Action="CloseWindow" />
               </Button>
             </Container>
