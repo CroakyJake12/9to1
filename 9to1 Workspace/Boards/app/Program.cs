@@ -32,6 +32,7 @@ namespace CakeOS.Apps.Boards.App;
 internal static class Program
 {
     internal static string? OpenPath;
+    internal static string? _openPathFailure;
 
     [STAThread]
     public static void Main(string[] args)
@@ -146,8 +147,23 @@ internal sealed class BoardsApp : Application
             : Array.Empty<string>();
         if (Program.OpenPath is not null)
         {
-            var id = _localDocuments.ImportAsync(Program.OpenPath).GetAwaiter().GetResult();
-            _session = _localDocuments.OpenAsync(id).GetAwaiter().GetResult();
+            // Measured crash 31 October 2026: launching Boards with a board path whose identity collides with a
+            // retained local revision aborted the process with an unhandled IOException and no window at all
+            // (repro and logs in docs/development/boards-chrome-and-input-blocker-2026-10-31.md). Identical content
+            // is now a no-op inside ImportAsync; a genuine divergence still has no resolution surface in Boards yet
+            // (recorded gap), but the app starts, shows the landing page and states the reason instead of dying.
+            try
+            {
+                var id = _localDocuments.ImportAsync(Program.OpenPath).GetAwaiter().GetResult();
+                _session = _localDocuments.OpenAsync(id).GetAwaiter().GetResult();
+                Program._openPathFailure = null;
+            }
+            catch (IOException failure)
+            {
+                Program._openPathFailure = failure.Message;
+                _session = ContractSessionAdapter.OpenSplashPlaceholderAsync(
+                    HavenBoardDocumentCodec.CreateNew("Boards")).GetAwaiter().GetResult();
+            }
         }
         else
         {
@@ -161,6 +177,13 @@ internal sealed class BoardsApp : Application
         }
         _viewModel = new BoardsViewModel(_session, databaseSource: _databaseSource);
         if (Program.OpenPath is null) _viewModel.SetNoBoardOpen();
+        if (Program._openPathFailure is not null)
+        {
+            // The board could not be opened, so the app sits on the landing page: say why there, on the same
+            // StatusText channel the legacy-recovery notice already uses.
+            _viewModel.SetLanding(true);
+            _viewModel.Set("StatusText", "That board could not be opened: " + Program._openPathFailure);
+        }
         RecordCurrentPage();
         _viewModel.SetLanding(Program.OpenPath is null);
         if (Program.OpenPath is null)

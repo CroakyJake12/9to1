@@ -229,6 +229,25 @@ public sealed class BoardsLocalDocuments : IDisposable
         using var lease = await LocalBoardWriteLease.AcquireAsync(privatePath, token).ConfigureAwait(false);
         if (File.Exists(privatePath) || File.Exists(privatePath + ".bak"))
         {
+            // Owner bug route 31 October 2026: opening a board by path aborted the whole process. When the retained
+            // local copy is byte-identical to the file being opened there is nothing to resolve, so re-importing the
+            // same board is a no-op that returns the retained identity instead of an error. Only a genuine
+            // divergence between two revisions is reported.
+            var retainedPath = File.Exists(privatePath) ? privatePath : privatePath + ".bak";
+            try
+            {
+                var retainedHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(retainedPath))).ToLowerInvariant();
+                if (string.Equals(retainedHash, observedHash, StringComparison.Ordinal))
+                {
+                    Recent.Record(privatePath);
+                    return document.DocumentId;
+                }
+            }
+            catch (IOException)
+            {
+                // An unreadable retained copy falls through to the divergence report below rather than crashing.
+            }
+
             lock (_gate)
             {
                 _destinations.Clear();

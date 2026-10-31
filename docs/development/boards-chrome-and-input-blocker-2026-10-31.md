@@ -171,3 +171,26 @@ the bug queue next to the reported-bug list; it is a crash, not a cosmetic gap.
 
 Remaining true gaps after these corrections: filter, sort, layout-settings model, hidden sections, the multi-page
 tab stack, card hover seam, popover 168 x 300 limit, drag reorder, grid/calendar.
+
+## Crash fixed and reproduced against the same command that killed it (commit follows)
+
+Two host-side changes, no CUI Actions involved:
+1. `BoardsLocalDocuments.ImportAsync` — when the retained local copy is **byte-identical** to the file being
+   opened, the import is a no-op returning the retained identity (plus `Recent.Record`) instead of throwing. A
+   genuine divergence between two revisions still reports, because Boards has no revision-resolution surface yet
+   (that stays a named gap; the old message even promised a flow that does not exist).
+2. `Program.cs` startup — the import/open is wrapped in `try/catch (IOException)`; on divergence the app starts on
+   the landing page with the reason on the existing `StatusText` channel (`_openPathFailure` on the nested `Program`
+   class, same qualifier style as `Program.OpenPath`) instead of aborting.
+
+Proof against the exact failing command from this session: the same `argv[0]` draft path that produced
+`Unhandled exception. System.IO.IOException … / core dumped` (`boards-run-k2.log`, `boards-run-k3.log`) now runs
+clean — `boards-run-k5.log` contains **no** unhandled exception, the window maps with title
+`Untitled board — Boards`, and the frame is `/tmp/opencode/k5.png` `d17b7e69c9eb…`. Side effect worth noting: this
+finally reaches the **editor** view without any synthetic click, so the ported sidebar/tab-strip geometry is now
+observable rather than blocked.
+
+Measured observation from that frame (pure-PIL pixel scan, thresholds noisy, so stated as an observation not a
+verdict): no material boundary was detected inside the nav column at y=300 — `NavPane` is authored
+`Background="Transparent" BorderWidth="0"`, so the 268-wide sidebar has no visual separation from the workspace,
+unlike AppFlowy's sidebar surface. Closing that is presentation work on this surface, not a framework gap.
