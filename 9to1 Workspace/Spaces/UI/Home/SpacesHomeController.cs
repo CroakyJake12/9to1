@@ -68,11 +68,18 @@ public sealed record SpacesHomeConversationRow(
     public override string ToString() => Title;
 }
 
+public sealed record SpacesHomeFileSource(string Path, string Name, string AccessLabel);
+
 public sealed record SpacesHomeContextReference(
     Guid ContextId,
     string Label,
     string PermissionLabel,
-    string IndexStateLabel);
+    string IndexStateLabel)
+{
+    public string OwnerLabel { get; init; } = "";
+    public string RevisionLabel { get; init; } = "";
+    public string InclusionLabel { get; init; } = "";
+}
 
 /// <summary>
 /// One declared custom sidebar element for the selected Space, projected from the extension's stable
@@ -124,6 +131,7 @@ public sealed record SpacesHomeSelection(
     bool CanEditGraph)
 {
     public bool CanEditDetails { get; init; }
+    public IReadOnlyList<SpacesHomeFileSource> FileSources { get; init; } = [];
 }
 
 public sealed record SpacesHomeMoveCandidate(Guid? Id, string Name)
@@ -154,6 +162,8 @@ public sealed record SpacesHomeViewState(
     // the mounted workspace/chat, draft or ownership.
     bool IsManaging = false)
 {
+    public IReadOnlyList<SpacesHomeItem> ArchivedSpaces { get; init; } = [];
+
     public static SpacesHomeViewState Empty { get; } = new(
         string.Empty,
         [],
@@ -185,6 +195,7 @@ public sealed class SpacesHomeController
     private int _selectedMoveParentIndex;
     private IReadOnlyList<SpacesHomeItem> _fullBuiltIns = [];
     private IReadOnlyList<SpacesHomeItem> _fullCustomSpaces = [];
+    private IReadOnlyList<SpacesHomeItem> _fullArchivedSpaces = [];
 
     public SpacesHomeController(
         SpaceRegistry registry,
@@ -236,7 +247,9 @@ public sealed class SpacesHomeController
 
         try
         {
-            var registered = await _registry.GetAllAsync(includeArchived: false, cancellationToken).ConfigureAwait(false);
+            var all = await _registry.GetAllAsync(includeArchived: true, cancellationToken).ConfigureAwait(false);
+            var registered = all.Where(space => !space.IsArchived).ToArray();
+            var archived = all.Where(space => !space.IsBuiltIn && space.IsArchived).Select(ToHomeItem).ToArray();
             if (_afterRegistryRead is not null)
                 await _afterRegistryRead(cancellationToken).ConfigureAwait(false);
             if (request != Volatile.Read(ref _requestVersion)) return;
@@ -286,12 +299,13 @@ public sealed class SpacesHomeController
                 SidebarCollapsed: State.SidebarCollapsed,
                 SpaceSwitcherOpen: State.SpaceSwitcherOpen,
                 SpaceOverflowOpen: State.SpaceOverflowOpen,
-                IsManaging: State.IsManaging), publishBase);
+                IsManaging: State.IsManaging) { ArchivedSpaces = Filter(archived, State.Query) }, publishBase);
 
             if (published)
             {
                 _fullBuiltIns = builtIns;
                 _fullCustomSpaces = custom;
+                _fullArchivedSpaces = archived;
                 _selectedId = selectedId;
                 _pendingRenameSpaceId = pendingRenameSpaceId;
                 _renameDraft = renameDraft;
@@ -317,7 +331,8 @@ public sealed class SpacesHomeController
         {
             Query = normalized,
             BuiltIns = filteredBuiltIns,
-            CustomSpaces = filteredCustom
+            CustomSpaces = filteredCustom,
+            ArchivedSpaces = Filter(_fullArchivedSpaces, normalized)
         }, baseRevision);
     }
 
@@ -620,7 +635,7 @@ public sealed class SpacesHomeController
                 ?? throw new KeyNotFoundException("Space was not found.");
             if (registered.Revision != expectedRevision)
                 throw new SpaceRevisionConflictException(spaceId, expectedRevision, registered.Revision);
-            await _model.ArchiveCustomSpaceAsync(SpaceScope.ForCustom(spaceId), cancellationToken).ConfigureAwait(false);
+            await _registry.SetArchivedAsync(spaceId, true, expectedRevision, cancellationToken).ConfigureAwait(false);
             await LoadCoreAsync(
                 new LoadIntent(SelectedId: _selectedId == spaceId ? null : _selectedId),
                 cancellationToken).ConfigureAwait(false);
@@ -628,6 +643,28 @@ public sealed class SpacesHomeController
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             PublishStatus($"Could not archive Space: {exception.Message}");
+        }
+    }
+
+    /// <summary>Restores the exact archived row the manager presented without changing
+    /// the open Space or creating a conversation. The registry owns hierarchy and revision checks.</summary>
+    public async Task RestoreSpaceAsync(SpacesHomeItem archived, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(archived);
+        if (State.IsLoading || !State.ArchivedSpaces.Any(item => ReferenceEquals(item, archived)))
+        {
+            PublishStatus("This archived Space changed. Refresh Spaces before restoring it.");
+            return;
+        }
+        try
+        {
+            await _registry.RestoreAsync(archived.Id, archived.Revision, cancellationToken).ConfigureAwait(false);
+            await LoadAsync(cancellationToken).ConfigureAwait(false);
+            PublishStatus($"Restored {archived.Name}.");
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            PublishStatus($"Could not restore Space: {exception.Message}");
         }
     }
 
@@ -720,13 +757,69 @@ public sealed class SpacesHomeController
                 ?? throw new KeyNotFoundException("Space was not found.");
             if (registered.Revision != expectedRevision)
                 throw new SpaceRevisionConflictException(spaceId, expectedRevision, registered.Revision);
-            await _registry.AddFileAsync(spaceId, path, SpaceFilePermission.ReadOnly, cancellationToken).ConfigureAwait(false);
+            await _registry.AddFileAsync(spaceId, path, SpaceFilePermission.ReadOnly, expectedRevision, cancellationToken).ConfigureAwait(false);
             await LoadAsync(cancellationToken).ConfigureAwait(false);
             PublishStatus($"Added source {System.IO.Path.GetFileName(path)}.");
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             PublishStatus($"Could not add source: {exception.Message}");
+        }
+    }
+
+    public async Task RemoveContextReferenceAsync(SpacesHomeContextReference reference, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(reference);
+        var selection = State.Selection;
+        if (State.IsLoading || selection is not { CanEdit: true } ||
+            !selection.ContextReferences.Any(item => ReferenceEquals(item, reference)))
+        {
+            PublishStatus("This source is no longer selected. Refresh the Space before removing it.");
+            return;
+        }
+        var item = _fullCustomSpaces.SingleOrDefault(item => item.Id == selection.Id);
+        if (item is null) return;
+        try
+        {
+            var current = await _registry.ReadExistingAsync(selection.Id, cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("The selected Space is unavailable.");
+            if (current.IsArchived) throw new InvalidOperationException("Restore this Space before removing sources.");
+            if (current.Revision != item.Revision)
+                throw new SpaceRevisionConflictException(current.Id, item.Revision, current.Revision);
+            await _registry.UpdateAsync(current with
+            {
+                ContextReferences = (current.ContextReferences ?? []).Where(source => source.ContextId != reference.ContextId).ToArray()
+            }, item.Revision, cancellationToken).ConfigureAwait(false);
+            await LoadAsync(cancellationToken).ConfigureAwait(false);
+            PublishStatus("Removed the source from this Space. The original item was kept.");
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            PublishStatus($"Could not remove source: {exception.Message}");
+        }
+    }
+
+    public async Task RemoveFileSourceAsync(SpacesHomeFileSource source, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        var selection = State.Selection;
+        if (State.IsLoading || selection is not { CanEdit: true } ||
+            !selection.FileSources.Any(item => ReferenceEquals(item, source)))
+        {
+            PublishStatus("This source is no longer selected. Refresh the Space before removing it.");
+            return;
+        }
+        var item = _fullCustomSpaces.SingleOrDefault(item => item.Id == selection.Id);
+        if (item is null) return;
+        try
+        {
+            await _registry.RemoveFileAsync(selection.Id, source.Path, item.Revision, cancellationToken).ConfigureAwait(false);
+            await LoadAsync(cancellationToken).ConfigureAwait(false);
+            PublishStatus($"Removed {source.Name} from this Space. The original file was kept.");
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            PublishStatus($"Could not remove source: {exception.Message}");
         }
     }
 
@@ -853,7 +946,12 @@ public sealed class SpacesHomeController
                 reference.ContextId,
                 reference.CanonicalEntityId,
                 reference.Permission.ToString(),
-                reference.IndexState.ToString()))
+                reference.IndexState.ToString())
+            {
+                OwnerLabel = "Source: " + reference.OwnerAppId,
+                RevisionLabel = string.IsNullOrWhiteSpace(reference.RevisionToken) ? "Revision not recorded" : "Revision: " + reference.RevisionToken,
+                InclusionLabel = reference.IncludedAutomatically ? "Included automatically" : "Included explicitly"
+            })
             .ToArray();
 
         var capabilities = (space.CapabilityBindings ?? [])
@@ -879,6 +977,8 @@ public sealed class SpacesHomeController
             space.IsBuiltIn && hasEditor,
             !space.IsBuiltIn && hasEditor)
         {
+            FileSources = space.Files.Select(file => new SpacesHomeFileSource(file.Path, file.DisplayName,
+                file.Permission == SpaceFilePermission.ReadWrite ? "Read and write requested · access checked when used" : "Read-only requested · access checked when used")).ToArray(),
             CanEditDetails = !space.IsBuiltIn && space.Origin == SpaceOrigin.UserCreated && !space.IsArchived &&
                 _actionHost is ISpacesActionSupport support && support.SupportsAction(SpacesActionKind.EditDetails)
         };

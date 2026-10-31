@@ -18,7 +18,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
     private static readonly IReadOnlySet<string> KnownCommands = new HashSet<string>(StringComparer.Ordinal)
     {
         "spaces.create", "spaces.open", "spaces.rename", "spaces.move", "spaces.fork",
-        "spaces.archive", "spaces.add-context", "spaces.clear-search", "spaces.select", "spaces.set-rename-draft",
+        "spaces.archive", "spaces.restore", "spaces.add-context", "spaces.remove-file-source", "spaces.remove-context-reference", "spaces.clear-search", "spaces.select", "spaces.set-rename-draft",
         "spaces.confirm-rename", "spaces.cancel-rename", "spaces.set-query",
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
@@ -115,6 +115,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,
+            "spaces.archivedSpaces" => snapshot.ArchivedSpaces,
+            "spaces.hasArchivedSpaces" => snapshot.ArchivedSpaces.Count > 0,
             "spaces.hasCustomSpaces" => snapshot.CustomSpaces.Count > 0,
             "spaces.moveParentOptions" => snapshot.MoveParentOptions,
             "spaces.pendingRenameSpaceId" => snapshot.PendingRenameSpaceId,
@@ -136,6 +138,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "selection.effectiveModelLabel" => snapshot.Selection?.EffectiveModelLabel ?? string.Empty,
             "selection.webAccessLabel" => snapshot.Selection?.WebAccessLabel ?? string.Empty,
             "selection.memoryScopeLabel" => snapshot.Selection?.MemoryScopeLabel ?? string.Empty,
+            "selection.fileSources" => snapshot.Selection?.FileSources ?? [],
+            "selection.hasSources" => snapshot.Selection is { } sourceSelection && (sourceSelection.ContextReferences.Count > 0 || sourceSelection.FileSources.Count > 0),
             "selection.contextReferences" => snapshot.Selection?.ContextReferences ?? [],
             "selection.hasContextReferences" => snapshot.Selection?.ContextReferences.Count > 0,
             "selection.capabilities" => snapshot.Selection?.Capabilities ?? [],
@@ -178,7 +182,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         {
             "spaces.rename" or "spaces.move" or "spaces.archive" => selection is { CanEdit: true },
             "spaces.fork" => selection is not null,
-            "spaces.add-context" => selection is { CanEdit: true },
+            "spaces.restore" => !snapshot.IsLoading && snapshot.ArchivedSpaces.Count > 0,
+            "spaces.add-context" or "spaces.remove-file-source" or "spaces.remove-context-reference" => !snapshot.IsLoading && selection is { CanEdit: true },
             "spaces.confirm-rename" => snapshot.PendingRenameSpaceId.HasValue,
             "spaces.edit-extensions" => selection is { CanEditExtensions: true },
             "spaces.edit-graph" => selection is { CanEditGraph: true },
@@ -203,6 +208,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         if (item is SpacesHomeItem homeItem && OwnsHomeItem(homeItem))
         {
             value = path.Equals("id", StringComparison.OrdinalIgnoreCase) ? homeItem.Id
+                : path.Equals("restoreTarget", StringComparison.OrdinalIgnoreCase) ? homeItem
+                : path.Equals("restoreLabel", StringComparison.OrdinalIgnoreCase) ? $"Restore {homeItem.Name}"
                 : path.Equals("name", StringComparison.OrdinalIgnoreCase) ? homeItem.Name
                 : path.Equals("iconSource", StringComparison.OrdinalIgnoreCase) ? IconSource(homeItem.IconKey)
                 : path.Equals("isSelected", StringComparison.OrdinalIgnoreCase) ? snapshot.Selection?.Id == homeItem.Id
@@ -249,12 +256,31 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             return value is not null;
         }
 
+        if (item is SpacesHomeFileSource source && snapshot.Selection?.FileSources.Any(current => ReferenceEquals(current, source)) == true)
+        {
+            value = path.ToLowerInvariant() switch
+            {
+                "path" => source.Path,
+                "name" => source.Name,
+                "accesslabel" => source.AccessLabel,
+                "removelabel" => $"Remove {source.Name} from this Space",
+                "removetarget" => source,
+                _ => null
+            };
+            return value is not null;
+        }
+
         if (item is SpacesHomeContextReference reference && OwnsContextReference(reference))
         {
             value = path.Equals("id", StringComparison.OrdinalIgnoreCase) ? reference.ContextId
                 : path.Equals("label", StringComparison.OrdinalIgnoreCase) ? reference.Label
                 : path.Equals("permissionLabel", StringComparison.OrdinalIgnoreCase) ? reference.PermissionLabel
                 : path.Equals("indexStateLabel", StringComparison.OrdinalIgnoreCase) ? reference.IndexStateLabel
+                : path.Equals("ownerLabel", StringComparison.OrdinalIgnoreCase) ? reference.OwnerLabel
+                : path.Equals("revisionLabel", StringComparison.OrdinalIgnoreCase) ? reference.RevisionLabel
+                : path.Equals("inclusionLabel", StringComparison.OrdinalIgnoreCase) ? reference.InclusionLabel
+                : path.Equals("removeTarget", StringComparison.OrdinalIgnoreCase) ? reference
+                : path.Equals("removeLabel", StringComparison.OrdinalIgnoreCase) ? $"Remove {reference.Label} from this Space"
                 : null;
             return value is not null;
         }
@@ -270,7 +296,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         return false;
 
         bool OwnsHomeItem(SpacesHomeItem candidate) =>
-            snapshot.BuiltIns.Contains(candidate) || snapshot.CustomSpaces.Contains(candidate);
+            snapshot.BuiltIns.Contains(candidate) || snapshot.CustomSpaces.Contains(candidate) || snapshot.ArchivedSpaces.Contains(candidate);
 
         bool OwnsContextReference(SpacesHomeContextReference candidate) =>
             snapshot.Selection?.ContextReferences.Contains(candidate) == true;

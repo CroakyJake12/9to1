@@ -406,6 +406,21 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             case "spaces.archive":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.ArchiveSpaceAsync(id, token))).ConfigureAwait(false);
                 break;
+            case "spaces.restore":
+                if (parameter is not SpacesHomeItem archived)
+                    throw new InvalidOperationException("Choose an archived Space to restore.");
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.RestoreSpaceAsync(archived, token))).ConfigureAwait(false);
+                break;
+            case "spaces.remove-context-reference":
+                if (parameter is not SpacesHomeContextReference contextReference)
+                    throw new InvalidOperationException("Choose a source to remove from this Space.");
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.RemoveContextReferenceAsync(contextReference, token))).ConfigureAwait(false);
+                break;
+            case "spaces.remove-file-source":
+                if (parameter is not SpacesHomeFileSource fileSource)
+                    throw new InvalidOperationException("Choose a source to remove from this Space.");
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.RemoveFileSourceAsync(fileSource, token))).ConfigureAwait(false);
+                break;
             case "spaces.add-context":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.AddContextAsync(id, null, token))).ConfigureAwait(false);
                 break;

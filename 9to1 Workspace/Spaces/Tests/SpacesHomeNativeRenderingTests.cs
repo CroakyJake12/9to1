@@ -358,7 +358,11 @@ public sealed class SpacesHomeNativeRenderingTests
                 var sideBounds = BoundsInWindow(sidebar);
                 var detailBounds = BoundsInWindow(details);
                 Assert.InRange(sideBounds.Height, height - 40, height);
-                Assert.InRange(detailBounds.Height, height - 40, height);
+                var header = root.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "space-app-header");
+                var headerBounds = BoundsInWindow(header);
+                Assert.Equal(headerBounds.Bottom, detailBounds.Top, precision: 1);
+                Assert.Equal(sideBounds.Bottom, detailBounds.Bottom, precision: 1);
+                Assert.Equal(sideBounds.Height - headerBounds.Height, detailBounds.Height, precision: 1);
                 Assert.True(sideBounds.Right <= detailBounds.Left);
                 Assert.True(detailBounds.Right <= width + .5 && detailBounds.Bottom <= height + .5);
                 Assert.True(sidebarScroll.Extent.Height > sidebarScroll.Viewport.Height);

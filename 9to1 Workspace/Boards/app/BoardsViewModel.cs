@@ -1572,6 +1572,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Italic = block.Italic,
             Underline = block.Underline,
             Strike = block.Strike,
+            Baseline = block.Baseline,
+            Foreground = block.Foreground,
+            FontFamily = block.FontFamily,
+            FontSize = block.FontSize,
+            Background = block.Background,
+            LineSpacing = block.LineSpacing,
+            Alignment = block.Alignment,
+            IndentLevel = block.IndentLevel,
+            SpaceBefore = block.SpaceBefore,
+            SpaceAfter = block.SpaceAfter,
             Level = block.Level,
             StyleId = block.StyleId,
             Layout = block.Layout,
@@ -1869,6 +1879,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(blockId);
             if (block is null || block.Kind != "table")
                 return false;
+            if (string.Equals(block.TableCells.GetValueOrDefault($"{row},{col}") ?? string.Empty, text, StringComparison.Ordinal))
+                return false;
             block.TableCells[$"{row},{col}"] = text;
             _selectedBlockId = block.Id;
             return true;
@@ -1881,6 +1893,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var expr = FindBlock(blockId)?.Graph?.Expressions.FirstOrDefault(e => e.Id == exprId);
             if (expr is null)
                 return false;
+            if (string.Equals(expr.Text, text, StringComparison.Ordinal)) return false;
             expr.Text = text;
             _selectedBlockId = blockId;
             return true;
@@ -1893,6 +1906,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var expr = FindBlock(blockId)?.Graph?.Expressions.FirstOrDefault(e => e.Id == exprId);
             if (expr is null)
                 return false;
+            if (string.Equals(expr.Color, text, StringComparison.Ordinal)) return false;
             expr.Color = text;
             return true;
         }
@@ -1905,8 +1919,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(controlName["iw_".Length..]);
             if (block?.Image is null)
                 return false;
-            if (double.TryParse(text, out var width) && width is >= 0 and <= 8000)
-                block.Image.Width = width;
+            if (!double.TryParse(text, out var width) || width is < 0 or > 8000 ||
+                !double.IsFinite(width) || width == block.Image.Width) return false;
+            block.Image.Width = width;
             return true;
         }
         if (controlName.StartsWith("ialt_", StringComparison.Ordinal))
@@ -1914,6 +1929,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(controlName["ialt_".Length..]);
             if (block?.Image is null)
                 return false;
+            if (string.Equals(block.Image.AltText, text, StringComparison.Ordinal)) return false;
             block.Image.AltText = text;
             return true;
         }
@@ -1923,8 +1939,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(controlName["dvth_".Length..]);
             if (block?.Divider is null)
                 return false;
-            if (double.TryParse(text, out var thickness) && thickness is > 0 and <= 64)
-                block.Divider.Thickness = thickness;
+            if (!double.TryParse(text, out var thickness) || thickness is <= 0 or > 64 ||
+                !double.IsFinite(thickness) || thickness == block.Divider.Thickness) return false;
+            block.Divider.Thickness = thickness;
             return true;
         }
         if (controlName.StartsWith("dvcl_", StringComparison.Ordinal))
@@ -1932,6 +1949,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(controlName["dvcl_".Length..]);
             if (block?.Divider is null)
                 return false;
+            if (string.Equals(block.Divider.Color, text, StringComparison.Ordinal)) return false;
             block.Divider.Color = text;
             return true;
         }
@@ -1964,10 +1982,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             return false;
         switch (field.ToLowerInvariant())
         {
-            case "xmin": graph.XMin = value; break;
-            case "xmax": graph.XMax = value; break;
-            case "ymin": graph.YMin = value; break;
-            case "ymax": graph.YMax = value; break;
+            case "xmin": if (graph.XMin == value) return false; graph.XMin = value; break;
+            case "xmax": if (graph.XMax == value) return false; graph.XMax = value; break;
+            case "ymin": if (graph.YMin == value) return false; graph.YMin = value; break;
+            case "ymax": if (graph.YMax == value) return false; graph.YMax = value; break;
             default: return false;
         }
         _selectedBlockId = blockId;
@@ -1998,6 +2016,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindChecklistBlock(controlName["done_".Length..]);
             if (block is null)
                 return false;
+            if (block.IsChecked == done) return false;
             block.IsChecked = done;
             _selectedBlockId = block.Id;
             return true;
@@ -2010,6 +2029,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var expr = FindBlock(blockId)?.Graph?.Expressions.FirstOrDefault(e => e.Id == exprId);
             if (expr is null)
                 return false;
+            if (expr.Visible == done) return false;
             expr.Visible = done;
             _selectedBlockId = blockId;
             return true;
@@ -2038,6 +2058,31 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _textRangeControl = null; _textRangeBlock = null; _textRangePage = null;
     }
 
+    internal TextBox? ToolbarTextRangeControl(Control? focused)
+    {
+        var input = _textRangeControl;
+        return ReferenceEquals(ToolbarTarget, this) &&
+            (_paneOwner is null || ReferenceEquals(_paneOwner.ToolbarTarget, this)) &&
+            !_disposed && !_textRangeDetached &&
+            input is not null && _textRangeBindings.ContainsKey(input) && !input.IsReadOnly && input.IsEffectivelyEnabled && TopLevel.GetTopLevel(input) is not null &&
+            _textRangePage == SelectedPageId && _textRangeBlock == SelectedBlockId && IsAttributeToolbarControl(focused)
+                ? input : null;
+    }
+
+    internal void RestoreToolbarTextRange(TextBox input, string pageId, string blockId, int caret, int start, int end)
+    {
+        if (_disposed || _textRangeDetached || input.IsReadOnly || !_textRangeBindings.ContainsKey(input) ||
+            SelectedPageId != pageId || SelectedBlockId != blockId ||
+            !_formattedTextBindings.TryGetValue(input, out var owner) || owner.Page != pageId || owner.Block != blockId) return;
+        Interlocked.Increment(ref _textRangeEpoch);
+        _textRangeControl = input; _textRangePage = pageId; _textRangeBlock = blockId;
+        var length = input.Text?.Length ?? 0;
+        input.CaretIndex = Math.Clamp(caret, 0, length);
+        input.SelectionStart = Math.Clamp(start, 0, length);
+        input.SelectionEnd = Math.Clamp(end, 0, length);
+        RefreshTextRangeBindings();
+    }
+
     /// <summary>Selection/focus mechanics for the existing text input. Formatting
     /// buttons, labels and commands remain authored in Boards.cui.</summary>
     public void BindTextSelection(TextBox box, string blockId)
@@ -2060,15 +2105,28 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 "IsReadOnly" or "IsEnabled" or "IsEffectivelyEnabled") Observe();
         }
         void Focused(object? sender, Avalonia.Input.FocusChangedEventArgs args) => Observe();
-        void Remove()
+        void Remove() => RemoveCore(keepDetachedRange: false);
+        void RemoveCore(bool keepDetachedRange)
         {
             box.PropertyChanged -= Changed; box.GotFocus -= Focused; box.DetachedFromVisualTree -= Detached;
             _textRangeBindings.Remove(box);
             _formattedTextBindings.Remove(box);
             CuiFormattedTextInput.SetPresentation(box, null);
-            if (ReferenceEquals(_textRangeControl, box)) { InvalidateTextRange(); RefreshTextRangeBindings(); }
+            if (ReferenceEquals(_textRangeControl, box))
+            {
+                if (keepDetachedRange)
+                    // Keep an invalid detached owner until replacement succeeds. This
+                    // blocks whole-block fallback if the retained text/range became stale.
+                    Interlocked.Increment(ref _textRangeEpoch);
+                else { InvalidateTextRange(); RefreshTextRangeBindings(); }
+            }
         }
-        void Detached(object? sender, Avalonia.VisualTreeAttachmentEventArgs args) => Remove();
+        void Detached(object? sender, Avalonia.VisualTreeAttachmentEventArgs args)
+        {
+            var top = args.RootVisual as TopLevel ?? TopLevel.GetTopLevel(args.RootVisual);
+            RemoveCore(!_disposed && !_textRangeDetached &&
+                IsAttributeToolbarControl(top?.FocusManager?.GetFocusedElement() as Control));
+        }
         box.PropertyChanged += Changed; box.GotFocus += Focused; box.DetachedFromVisualTree += Detached;
         _textRangeBindings.Add(box, Remove);
         _formattedTextBindings.Add(box, (SelectedPageId, blockId));
@@ -2088,7 +2146,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private BoardTextSelection? CurrentTextRange()
     {
         var control = _textRangeControl;
-        if (_textRangeDetached || control is null || control.IsReadOnly || !control.IsEffectivelyEnabled ||
+        if (_textRangeDetached || control is null || !_textRangeBindings.ContainsKey(control) ||
+            control.IsReadOnly || !control.IsEffectivelyEnabled ||
             TopLevel.GetTopLevel(control) is null || _textRangePage != SelectedPageId || _textRangeBlock != SelectedBlockId ||
             _session is not IBoardTextRangeSession ranges) return null;
         return ranges.CaptureTextSelection(SelectedPageId, SelectedBlockId, control.SelectionStart, control.SelectionEnd);

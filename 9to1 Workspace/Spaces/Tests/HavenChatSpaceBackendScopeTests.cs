@@ -170,6 +170,7 @@ public sealed class HavenChatSpaceBackendScopeTests
             ModelPolicy = new SpaceModelPolicy("ollama:local", [ToolCapability.Text.ToString()], "ollama")
         }, parent.Revision);
         var child = await rig.Registry.CreateAsync("Model policy child", null, parent.Id);
+        child = await rig.Registry.UpdateAsync(child with { Inheritance = new SpaceInheritancePolicy(ModelPolicy: true) }, child.Revision);
         var backend = rig.For(await rig.ContextAsync(child.Id));
         rig.InventoryRead = () => Task.FromResult(new ChatSpaceModelInventory([rig.Model], "unrelated-global-default"));
 
@@ -177,6 +178,22 @@ public sealed class HavenChatSpaceBackendScopeTests
 
         Assert.Equal(new[] { "local" }, inventory.Models.Select(model => model.Name));
         Assert.Equal("local", inventory.PreferredModelName);
+        Assert.False(inventory.PreventImplicitFallback);
+        Assert.Null(inventory.PolicyNotice);
+    }
+
+    [Fact]
+    public async Task Child_without_explicit_model_inheritance_does_not_select_parent_default()
+    {
+        var rig = await Rig.CreateAsync();
+        var parent = await rig.Registry.CreateAsync("Parent model policy");
+        await rig.Registry.UpdateAsync(parent with { ModelPolicy = new SpaceModelPolicy("ollama:local") }, parent.Revision);
+        var child = await rig.Registry.CreateAsync("Independent child", null, parent.Id);
+        Assert.False(child.Inheritance!.ModelPolicy);
+        rig.InventoryRead = () => Task.FromResult(new ChatSpaceModelInventory([rig.Model], "unrelated-global-default"));
+        var inventory = await rig.For(await rig.ContextAsync(child.Id)).GetModelInventoryAsync(default);
+        Assert.Equal(new[] { "local" }, inventory.Models.Select(model => model.Name));
+        Assert.Null(inventory.PreferredModelName);
         Assert.False(inventory.PreventImplicitFallback);
         Assert.Null(inventory.PolicyNotice);
     }

@@ -194,9 +194,11 @@ public sealed partial class BoardsViewModel
                     : "Block conversion refused: " + result.Code);
                 return false;
             }
-            _selectedBlockId = target.BlockId;
+            _selectedBlockId = result.SelectedBlockId ?? target.BlockId;
             InvalidateTextRange();
-            _pendingTextFocus = (target.PageId, target.BlockId, 0);
+            _pendingTextFocus = kind is HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading or
+                HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList or HavenRichBlockKind.Checklist
+                ? (target.PageId, _selectedBlockId, 0) : null;
             RefreshAfterEdit();
             return true;
         }

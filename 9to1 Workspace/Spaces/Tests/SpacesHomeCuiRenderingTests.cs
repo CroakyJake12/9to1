@@ -461,6 +461,106 @@ public sealed class SpacesHomeCuiRenderingTests
         }, lifetime.Token);
     }
 
+    [Fact]
+    public async Task Archived_space_restore_is_rendered_and_dispatches_the_exact_presented_row()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var registry = new SpaceRegistry(new MemorySettingsStore());
+            var saved = await registry.CreateAsync("Archived research");
+            await registry.SetArchivedAsync(saved.Id, true);
+            var controller = new SpacesHomeController(registry);
+            await controller.LoadAsync();
+            var archived = Assert.Single(controller.State.ArchivedSpaces);
+            object? dispatched = null;
+            var bindings = new SpacesHomeCuiBindings(() => controller.State, async (command, parameter, token) =>
+            {
+                Assert.Equal("spaces.restore", command);
+                dispatched = parameter;
+                await controller.RestoreSpaceAsync(Assert.IsType<SpacesHomeItem>(parameter), token);
+            });
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            Window? window = null;
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var restore = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                    button => AutomationProperties.GetName(button) == "Restore Archived research");
+                var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), control => control.Name == "spaces-sidebar");
+                Assert.DoesNotContain(rail.GetVisualDescendants().OfType<Button>(),
+                    button => AutomationProperties.GetName(button) == "Open Archived research");
+                restore.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Same(archived, dispatched);
+                Assert.False((await registry.GetAsync(saved.Id))!.IsArchived);
+                bindings.Refresh(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(),
+                    button => AutomationProperties.GetName(button) == "Restore Archived research");
+                Assert.Contains(rail.GetVisualDescendants().OfType<Button>(),
+                    button => AutomationProperties.GetName(button) == "Open Archived research");
+            }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            return true;
+        }, lifetime.Token);
+    }
+
+    [Fact]
+    public async Task Local_source_is_visible_and_its_remove_control_changes_the_canonical_reference()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var registry = new SpaceRegistry(new MemorySettingsStore());
+            var space = await registry.CreateAsync("Sources");
+            await registry.AddFileAsync(space.Id, "/tmp/visible-notes.txt");
+            var controller = new SpacesHomeController(registry);
+            await controller.SelectSpaceAsync(space.Id);
+            var row = Assert.Single(controller.State.Selection!.FileSources);
+            object? dispatched = null;
+            var bindings = new SpacesHomeCuiBindings(() => controller.State, async (command, parameter, token) =>
+            {
+                Assert.Equal("spaces.remove-file-source", command);
+                dispatched = parameter;
+                await controller.RemoveFileSourceAsync(Assert.IsType<SpacesHomeFileSource>(parameter), token);
+            });
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            Window? window = null;
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                Assert.Contains(root.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "visible-notes.txt");
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "No sources added");
+                var remove = Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                    button => AutomationProperties.GetName(button) == "Remove visible-notes.txt from this Space");
+                remove.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Same(row, dispatched);
+                Assert.Empty((await registry.GetAsync(space.Id))!.Files);
+                bindings.Refresh(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                Assert.Contains(root.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "No sources added");
+            }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            return true;
+        }, lifetime.Token);
+    }
+
     private static string ReadAuthoredSource()
     {
         var assembly = typeof(SpacesHomeCuiBindings).Assembly;

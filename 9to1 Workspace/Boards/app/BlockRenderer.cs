@@ -60,7 +60,10 @@ public static class BlockRenderer
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
-        var editorFocus = CaptureEditorFocus(host, absoluteBlocksHost);
+        vm.CaptureNestedEditorFocus();
+        using var editorFocus = CaptureEditorFocus(vm, host, absoluteBlocksHost);
+        var expandedGraphs = GraphSettings(host, absoluteBlocksHost)
+            .Where(settings => settings.IsExpanded).Select(settings => (GraphSettingsIdentity)settings.Tag!).ToHashSet();
         if (absoluteBlocksHost is not null) AbsolutePlacements.GetValue(absoluteBlocksHost, panel => new(panel)).Reset();
         host.Children.Clear();
         absoluteBlocksHost?.Children.Clear();
@@ -152,32 +155,81 @@ public static class BlockRenderer
         // page InkOverlayLayer. Previously saved canvas objects join that same spatial layer,
         // without creating a second scrollbox or injecting empty-state controls.
         vm.ApplyAuthoringState(host);
-        RestoreEditorFocus(host, absoluteBlocksHost, editorFocus);
+        foreach (var settings in GraphSettings(host, absoluteBlocksHost))
+            settings.IsExpanded = expandedGraphs.Contains((GraphSettingsIdentity)settings.Tag!);
+        RestoreEditorFocus(vm, host, absoluteBlocksHost, editorFocus);
     }
 
-    private sealed record EditorFocus(TextBox Input, string Name, int Caret, int Start, int End);
+    private sealed record GraphSettingsIdentity(string PageId, string BlockId);
 
-    private static EditorFocus? CaptureEditorFocus(StackPanel host, Panel? absoluteHost)
+    private static IEnumerable<Expander> GraphSettings(StackPanel host, Panel? absoluteHost) =>
+        host.GetVisualDescendants().OfType<Expander>()
+            .Concat(absoluteHost?.GetVisualDescendants().OfType<Expander>() ?? [])
+            .Where(settings => settings.Tag is GraphSettingsIdentity);
+
+    private sealed record EditorFocus(TextBox Input, string Name, string Text, string PageId, string BlockId,
+        int Caret, int Start, int End, Control FocusOwner, bool ToolbarOwned, Func<bool> IsCurrent,
+        Action StopWatching) : IDisposable
     {
-        var focused = TopLevel.GetTopLevel(host)?.FocusManager?.GetFocusedElement() as TextBox;
-        if (focused is null || string.IsNullOrEmpty(focused.Name) ||
-            !(host.IsVisualAncestorOf(focused) || absoluteHost?.IsVisualAncestorOf(focused) == true)) return null;
-        return new(focused, focused.Name, focused.CaretIndex, focused.SelectionStart, focused.SelectionEnd);
+        public void Dispose() => StopWatching();
     }
 
-    private static void RestoreEditorFocus(StackPanel host, Panel? absoluteHost, EditorFocus? saved)
+    private static EditorFocus? CaptureEditorFocus(BoardsViewModel vm, StackPanel host, Panel? absoluteHost)
     {
-        if (saved is null || TopLevel.GetTopLevel(host) is not { } top) return;
-        // A newly attached editor can already own the explicit Enter/insert focus request.
-        // Preserve that destination. Only replace the focus lost when this rebuild detached
-        // the previous editor; subsequent queued renders must not strand its new caret.
-        var focused = top.FocusManager?.GetFocusedElement();
-        if (focused is Control current && !ReferenceEquals(current, saved.Input) &&
-            TopLevel.GetTopLevel(current) is not null) return;
-        var replacement = host.GetVisualDescendants().OfType<TextBox>()
+        var top = TopLevel.GetTopLevel(host);
+        var focused = top?.FocusManager?.GetFocusedElement() as Control;
+        var input = focused as TextBox;
+        var toolbarOwned = false;
+        if (input is null || !(host.IsVisualAncestorOf(input) || absoluteHost?.IsVisualAncestorOf(input) == true))
+        {
+            input = vm.ToolbarTextRangeControl(focused);
+            toolbarOwned = true;
+        }
+        if (input is null || focused is null || string.IsNullOrEmpty(input.Name) ||
+            !(host.IsVisualAncestorOf(input) || absoluteHost?.IsVisualAncestorOf(input) == true)) return null;
+        var changed = false;
+        void FocusChanged(object? sender, FocusChangedEventArgs args) => changed = true;
+        top!.AddHandler(InputElement.GotFocusEvent, FocusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
+        return new(input, input.Name, input.Text ?? string.Empty, vm.SelectedPageId, vm.SelectedBlockId,
+            input.CaretIndex, input.SelectionStart, input.SelectionEnd, focused, toolbarOwned, () => !changed,
+            () => top.RemoveHandler(InputElement.GotFocusEvent, FocusChanged));
+    }
+
+    private static void RestoreEditorFocus(BoardsViewModel vm, StackPanel host, Panel? absoluteHost, EditorFocus? saved)
+    {
+        if (saved is null || !saved.IsCurrent() || TopLevel.GetTopLevel(host) is not { } top) return;
+        // Preserve newer focus intent, including Search and an explicit Enter/insert target.
+        bool StillCurrent()
+        {
+            if (!saved.IsCurrent()) return false;
+            var focused = top.FocusManager?.GetFocusedElement();
+            if (saved.ToolbarOwned)
+                return ReferenceEquals(focused, saved.FocusOwner) && TopLevel.GetTopLevel(saved.FocusOwner) is not null;
+            return focused is not Control current || ReferenceEquals(current, saved.Input) || TopLevel.GetTopLevel(current) is null;
+        }
+        TextBox? FindReplacement() => host.GetVisualDescendants().OfType<TextBox>()
             .Concat(absoluteHost?.GetVisualDescendants().OfType<TextBox>() ?? [])
             .FirstOrDefault(input => input.Name == saved.Name);
+        if (!StillCurrent()) return;
+        var replacement = FindReplacement();
+        if (replacement is null || TopLevel.GetTopLevel(replacement) is null)
+        {
+            // Restored expanders can defer their content template until layout. Finish
+            // that attachment now, before the next input event needs its focused editor.
+            host.UpdateLayout();
+            absoluteHost?.UpdateLayout();
+            if (!StillCurrent()) return;
+            replacement = FindReplacement();
+        }
         if (replacement is null || !replacement.IsEffectivelyVisible || !replacement.IsEffectivelyEnabled) return;
+        if (saved.ToolbarOwned)
+        {
+            // The toolbar keeps keyboard focus; rebind the same logical range to the
+            // replacement input so a subsequent action cannot silently format the block.
+            if (string.Equals(replacement.Text ?? string.Empty, saved.Text, StringComparison.Ordinal))
+                vm.RestoreToolbarTextRange(replacement, saved.PageId, saved.BlockId, saved.Caret, saved.Start, saved.End);
+            return;
+        }
         replacement.Focus();
         var length = replacement.Text?.Length ?? 0;
         replacement.CaretIndex = Math.Clamp(saved.Caret, 0, length);
@@ -785,7 +837,7 @@ public static class BlockRenderer
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             Padding = new Thickness(0, 6),
-            Margin = new Thickness(Math.Max(0, block.IndentLevel) * 20, 0, 0, 0),
+            Margin = new Thickness(ResolveIndentLevel(block, style) * 20, block.SpaceBefore, 0, block.SpaceAfter),
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         // The page title is authored by CUI and has a zero horizontal inset.
@@ -793,9 +845,7 @@ public static class BlockRenderer
         // CUI theme supplies a stronger default TextBox padding.
         CuiPropertyPresentation.Set(box, "Padding", new Thickness(0, 6),
             CuiPropertyLevel.Instance, "Boards document text column alignment");
-        var family = !string.IsNullOrEmpty(block.FontFamily) ? block.FontFamily : style?.FontFamily;
-        if (!string.IsNullOrEmpty(family))
-            box.FontFamily = new FontFamily(family);
+        ApplyDocumentTypography(box, block, style, isHeading);
         box.TextAlignment = ParseAlignment(block.Alignment != "inherit" ? block.Alignment : style?.Alignment ?? "inherit");
         if (block.Runs.Count > 0)
             box.Background = Brushes.Transparent;
@@ -803,13 +853,7 @@ public static class BlockRenderer
             box.Background = background;
         else if (TryBrush(style?.Background, out var styleBackground))
             box.Background = styleBackground;
-        if (TryBrush(block.Foreground, out var foreground))
-            box.Foreground = foreground;
-        else if (TryBrush(style?.Foreground, out var styleForeground))
-            box.Foreground = styleForeground;
-        else
-            box.Foreground = BoardsTheme.ContrastText(
-                !string.IsNullOrEmpty(block.Background) ? block.Background : style?.Background);
+        ApplyDocumentForeground(box, block, style);
         ThemeApplier.SetDocumentTextSurface(box, box.Background ?? Brushes.Transparent);
         ToolTip.SetTip(box, (isHeading ? "Heading" : "Paragraph") + " — select to format");
         AutomationProperties.SetName(box, (isHeading ? "Heading" : "Paragraph") + " editor");
@@ -952,6 +996,7 @@ public static class BlockRenderer
             _ => BaselineAlignment.Baseline
         };
         var runs = new List<CuiFormattedTextRun>();
+        var isList = IsListKind(block.Kind);
         if (block.Runs.Count > 0)
         {
             // Per-character highlights own their spans. Painting the old common
@@ -974,9 +1019,11 @@ public static class BlockRenderer
             // Persisted explicit run booleans override style booleans above;
             // empty/zero run font and colour values inherit the input defaults.
             runs.Add(new CuiFormattedTextRun(block.Text, input.FontWeight, input.FontStyle,
-                Underline: block.Underline || style?.Underline == true,
-                StrikeThrough: block.Strike || style?.Strike == true,
-                Baseline: Baseline(block.Baseline != "normal" ? block.Baseline : style?.Baseline ?? "normal")));
+                Underline: block.Underline || (!isList && style?.Underline == true),
+                StrikeThrough: block.Strike || (!isList && style?.Strike == true),
+                Baseline: Baseline(isList || block.Baseline != "normal" ? block.Baseline : style?.Baseline ?? "normal"),
+                Background: block.Kind is "checklist" or "bulleted" or "numbered"
+                    ? Colour(!string.IsNullOrEmpty(block.Background) ? block.Background : style?.Background) : null));
         }
         var current = CuiFormattedTextInput.GetPresentation(input);
         if (current is not null && current.Text == block.Text && current.Runs.SequenceEqual(runs)) return;
@@ -1009,6 +1056,40 @@ public static class BlockRenderer
         return naturalHeight > 0 && double.IsFinite(naturalHeight)
             ? naturalHeight * Math.Max(1, spacing) : double.NaN;
     }
+
+    private static void ApplyDocumentForeground(TextBox input, RichBoardBlock block, RichStyleView? style, bool isChecked = false)
+    {
+        // Explicit document colour survives theme projection. Inherited contrast
+        // and checked dimming resolve again from the owning surface on rebuild.
+        var foreground = isChecked ? BoardsTheme.SecondaryTextBrush
+            : TryBrush(block.Foreground, out var direct) ? direct
+            : TryBrush(style?.Foreground, out var inherited) ? inherited
+            : BoardsTheme.ContrastText(!string.IsNullOrEmpty(block.Background) ? block.Background : style?.Background);
+        CuiPropertyPresentation.Set(input, "Foreground", foreground,
+            CuiPropertyLevel.Instance, "Boards document text");
+    }
+
+    private static void ApplyDocumentTypography(TextBox input, RichBoardBlock block, RichStyleView? style, bool isHeading = false)
+    {
+        // CUI owns native property precedence. Raw TextBox local values lose to its
+        // theme projection, so document values must enter the same typed store.
+        var isList = IsListKind(block.Kind);
+        const string source = "Boards document typography";
+        CuiPropertyPresentation.Set(input, "FontSize", ResolveFontSize(block, style, isHeading ? 26 : 14),
+            CuiPropertyLevel.Instance, source);
+        var family = !string.IsNullOrEmpty(block.FontFamily) ? block.FontFamily : style?.FontFamily;
+        if (!string.IsNullOrEmpty(family))
+            CuiPropertyPresentation.Set(input, "FontFamily", new FontFamily(family), CuiPropertyLevel.Instance, source);
+        CuiPropertyPresentation.Set(input, "FontWeight",
+            block.Bold || (!isList && (style?.Bold == true || isHeading)) ? FontWeight.Bold : FontWeight.Normal,
+            CuiPropertyLevel.Instance, source);
+        CuiPropertyPresentation.Set(input, "FontStyle",
+            block.Italic || (!isList && style?.Italic == true) ? FontStyle.Italic : FontStyle.Normal,
+            CuiPropertyLevel.Instance, source);
+    }
+
+    private static int ResolveIndentLevel(RichBoardBlock block, RichStyleView? style) =>
+        Math.Max(0, block.IndentLevel >= 0 ? block.IndentLevel : style?.IndentLevel ?? 0);
 
     private static double ResolveFontSize(RichBoardBlock block, RichStyleView? style, double fallback)
     {
@@ -1050,10 +1131,12 @@ public static class BlockRenderer
 
     private static Control BuildChecklistRow(BoardsViewModel vm, RichBoardBlock item, int number = 0)
     {
+        var style = vm.StyleList.FirstOrDefault(candidate => candidate.Id == item.StyleId);
         var row = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions($"{ChecklistCheckboxColumnWidth},*,Auto"),
-            Margin = new Thickness(Math.Max(0, item.Level) * 16, 3, 0, 3),
+            Margin = new Thickness(ResolveIndentLevel(item, style) * 20 + Math.Max(0, item.Level) * 16,
+                3 + item.SpaceBefore, 0, 3 + item.SpaceAfter),
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         var suffix = NameSuffix(item.Id);
@@ -1063,7 +1146,7 @@ public static class BlockRenderer
             Name = "chk_" + suffix,
             Text = item.Text ?? string.Empty,
             IsReadOnly = !vm.IsEditMode,
-            FontSize = 14,
+            FontSize = ResolveFontSize(item, style, 14),
             TextWrapping = TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Top,
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -1076,8 +1159,12 @@ public static class BlockRenderer
         };
         CuiPropertyPresentation.Set(text, "Padding", new Thickness(0, 4),
             CuiPropertyLevel.Instance, "Boards checklist label geometry");
+        ApplyDocumentTypography(text, item, style);
+        text.TextAlignment = ParseAlignment(item.Alignment != "inherit" ? item.Alignment : style?.Alignment ?? "inherit");
+        ApplyDocumentForeground(text, item, style, item.IsChecked);
         ThemeApplier.SetDocumentTextSurface(text, Brushes.Transparent);
-        ToolTip.SetTip(text, "Checklist item text (Enter adds next, empty Backspace removes)");
+        UpdateTextPresentation(text, item, style);
+        ToolTip.SetTip(text, "List item text (Enter adds next, empty Backspace removes; formatting applies to the whole row)");
         AutomationProperties.SetName(text, "Checklist item text");
         var erase = new Button
         {
@@ -1097,7 +1184,11 @@ public static class BlockRenderer
         var viewId = item.Id;
         if (check is CheckBox checkbox)
             checkbox.IsCheckedChanged += (_, _) => vm.EditCheck("done_" + suffix, checkbox.IsChecked == true);
-        text.TextChanged += (_, _) => vm.EditText("chk_" + suffix, text.Text ?? string.Empty);
+        text.TextChanged += (_, _) =>
+        {
+            vm.EditText("chk_" + suffix, text.Text ?? string.Empty);
+            UpdateTextPresentation(text, item, style);
+        };
         text.GotFocus += (_, _) =>
         {
             vm.FocusBlock(viewId);
@@ -1322,7 +1413,7 @@ public static class BlockRenderer
                 var rr = r;
                 var cc = c;
                 var captured = block.Id;
-                box.TextChanged += (_, _) => vm.EditText($"cell_{captured}_{rr}_{cc}", box.Text ?? string.Empty);
+                BindChangedText(box, value => vm.EditText($"cell_{captured}_{rr}_{cc}", value));
                 box.GotFocus += (_, _) => vm.FocusCell(captured, rr, cc);
                 var frame = new Border
                 {
@@ -1601,6 +1692,8 @@ public static class BlockRenderer
 
         var settings = new Expander
         {
+            Name = "graph_settings_" + NameSuffix(block.Id),
+            Tag = new GraphSettingsIdentity(vm.SelectedPageId, block.Id),
             Header = "Graph settings",
             IsExpanded = false,
             Margin = new Thickness(0, 2, 0, 0),
@@ -1755,9 +1848,9 @@ public static class BlockRenderer
         AutomationProperties.SetName(erase, "Remove graph expression");
         var exprId = expr.Id;
         visible.IsCheckedChanged += (_, _) => vm.EditCheck($"gv_{blockId}_{exprId}", visible.IsChecked == true);
-        text.TextChanged += (_, _) => vm.EditText($"gx_{blockId}_{exprId}", text.Text ?? string.Empty);
+        BindChangedText(text, value => vm.EditText($"gx_{blockId}_{exprId}", value));
         text.GotFocus += (_, _) => vm.FocusBlock(blockId);
-        color.TextChanged += (_, _) => vm.EditText($"gc_{blockId}_{exprId}", color.Text ?? string.Empty);
+        BindChangedText(color, value => vm.EditText($"gc_{blockId}_{exprId}", value));
         erase.Click += async (_, _) => await vm.GraphDeleteExpressionAsync(blockId, exprId);
         row.Children.Add(visible);
         row.Children.Add(text);
@@ -1811,6 +1904,23 @@ public static class BlockRenderer
         return row;
     }
 
+    private static void BindChangedText(TextBox input, Action<string> edit)
+    {
+        // Commit synchronously before a focus-triggered render can detach this input.
+        // Native TextChanged is deferred; TextProperty notifications reflect the edit
+        // immediately. The last observed value keeps initialization inert and still
+        // allows a genuine user edit back to the original text.
+        var observed = input.Text ?? string.Empty;
+        input.PropertyChanged += (_, change) =>
+        {
+            if (change.Property != TextBox.TextProperty) return;
+            var next = input.Text ?? string.Empty;
+            if (string.Equals(next, observed, StringComparison.Ordinal)) return;
+            observed = next;
+            edit(next);
+        };
+    }
+
     private static void AddViewportField(BoardsViewModel vm, Panel parent, string blockId, string field, double value)
     {
         parent.Children.Add(new TextBlock
@@ -1823,11 +1933,11 @@ public static class BlockRenderer
         var box = new TextBox
         {
             Name = $"gvp_{field}_{blockId}",
-            Text = value.ToString("0.##"),
+            Text = value.ToString("R", CultureInfo.CurrentCulture),
             Width = 64,
         };
         AutomationProperties.SetName(box, "Graph viewport " + field);
-        box.TextChanged += (_, _) => vm.EditText($"gvp_{field}_{blockId}", box.Text ?? string.Empty);
+        BindChangedText(box, edited => vm.EditText($"gvp_{field}_{blockId}", edited));
         box.GotFocus += (_, _) => vm.FocusBlock(blockId);
         parent.Children.Add(box);
     }

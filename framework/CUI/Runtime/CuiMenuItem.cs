@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -198,9 +199,7 @@ public sealed class CuiMenuItem : MenuItem
                     if (root is null || !ReferenceEquals(focusBefore, item) || !item.IsSubMenuOpen
                         || openTransition != openedTransition || !ReferenceEquals(TopLevel.GetTopLevel(item), root)
                         || !ReferenceEquals(root.FocusManager?.GetFocusedElement(), focusBefore)) return;
-                    var first = item.Items.OfType<CuiMenuItem>().FirstOrDefault(child =>
-                        child.IsEffectivelyEnabled && child.IsEffectivelyVisible);
-                    first?.Focus();
+                    item.FocusFirstEnabledChild();
                 }
                 finally { item.PropertyChanged -= submenuChanged; }
             }, DispatcherPriority.Input);
@@ -210,6 +209,25 @@ public sealed class CuiMenuItem : MenuItem
             item.ActivateFromCui();
         }
         args.Handled = true;
+    }
+
+    // A submenu can contain authored fields inside a layout container, as in
+    // the compact Boards font controls. Keyboard opening must enter that content
+    // just as it enters an ordinary menu row; the container is not focusable.
+    internal void FocusFirstEnabledChild()
+    {
+        foreach (var child in Items.OfType<Control>())
+        {
+            if (!child.IsEffectivelyEnabled || !child.IsEffectivelyVisible) continue;
+            if (child is MenuItem)
+            {
+                if (child.Focus()) return;
+                continue;
+            }
+            foreach (var target in child.GetSelfAndVisualDescendants().OfType<Control>())
+                if (target.Focusable && target.IsEffectivelyEnabled && target.IsEffectivelyVisible && target.Focus())
+                    return;
+        }
     }
 
     /// <summary>Apply check/radio state and raise the same authored Click event used by CUI commands.</summary>

@@ -508,17 +508,20 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
     {
         ArgumentNullException.ThrowIfNull(target);
         if (_disposed) return new(false, "Disposed");
-        if (kind is not (HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading))
-            return new(false, "UnsupportedConversion");
-        var block = _view.Sections.SelectMany(section => section.Pages)
-            .FirstOrDefault(page => page.Id == target.PageId)?.Blocks.FirstOrDefault(value => value.Id == target.BlockId);
+        return GetBlockConversionCapability(target.PageId, target.BlockId, kind);
+    }
+
+    /// <summary>Reports whether a whole canonical block can change kind without losing content.
+    /// Projected parent:item identities are deliberately not whole-list conversion targets.</summary>
+    public BoardBlockConversionCapability GetBlockConversionCapability(string pageId, string blockId,
+        HavenRichBlockKind kind)
+    {
+        if (_disposed) return new(false, "Disposed");
+        if (blockId.Contains(':')) return new(false, "UnsupportedConversion");
+        var block = _real.Rich.Sections.SelectMany(section => section.Pages)
+            .FirstOrDefault(page => page.Id == pageId)?.Blocks.FirstOrDefault(value => value.Id == blockId);
         if (block is null) return new(false, "TargetNotFound");
-        if (target.BlockId.Contains(':') || block.Kind is not ("paragraph" or "heading"))
-            return new(false, "UnsupportedConversion");
-        if ((kind == HavenRichBlockKind.Paragraph && block.Kind == "paragraph") ||
-            (kind == HavenRichBlockKind.Heading && block.Kind == "heading"))
-            return new(false, "NoChange");
-        return new(true, "Ready");
+        return ConversionCapability(_real.Rich, block, kind);
     }
 
     /// <summary>Converts the exact menu target in one transaction without replacing its payload.</summary>
@@ -543,21 +546,20 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
                 if (!CurrentView() || rich.Version != version) return false;
                 var block = rich.Sections.SelectMany(section => section.Pages)
                     .FirstOrDefault(page => page.Id == target.PageId)?.Blocks.FirstOrDefault(value => value.Id == target.BlockId);
-                return block is not null && block.Kind != kind &&
-                    block.Kind is HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading;
+                return block is not null && ConversionCapability(rich, block, kind).CanApply;
             }
+            string? selected = target.BlockId;
             var applied = await _real.MutateIfAsync(Applicable, rich =>
             {
                 var block = rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == target.PageId)
                     .Blocks.Single(value => value.Id == target.BlockId);
-                // Preserve identity, coordinates, paragraph attributes, runs and retained object
-                // payloads. Blank insertion/removal would lose all of them and create two edits.
-                block.Kind = kind;
+                ConvertBlockPayload(rich, block, kind);
+                selected = IsListKind(kind) && block.Items.Count > 0 ? block.Id + ":" + block.Items[0].Id : block.Id;
                 HavenRichNotesOps.TouchNotes(rich);
             }, cancellationToken).ConfigureAwait(false);
             if (!applied) return new(false, "StaleOrReadOnly", null);
             RefreshView();
-            return new(true, "Applied", target.BlockId);
+            return new(true, "Applied", selected);
         }
         finally { _mergeGate.Release(); }
     }
@@ -1595,57 +1597,27 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
-    /// <summary>
-    /// Converts a block between paragraph/heading/list kinds, preserving text
-    /// and list items where they carry over. Position and identity are kept.
-    /// </summary>
+    /// <summary>Changes a whole block's kind in one transaction, preserving geometry and all
+    /// representable formatting. A projected list-row id is never promoted to its parent list.</summary>
     public async ValueTask<bool> ConvertBlockKindAsync(
         string pageId, string blockId, HavenRichBlockKind newKind, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        if (blockId.Contains(':')) return false;
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var converted = false;
-            await _real.MutateAsync(rich =>
-            {
-                var page = rich.Sections.SelectMany(s => s.Pages).FirstOrDefault(p => p.Id == pageId);
-                var index = page?.Blocks.FindIndex(b => b.Id == blockId) ?? -1;
-                if (page is null || index < 0)
-                    return;
-                var old = page.Blocks[index];
-                if (old.Kind == newKind)
-                    return;
-                var replacement = new HavenRichBlock
+            HavenRichBlock? Find(HavenRichNotes rich) => rich.Sections.SelectMany(section => section.Pages)
+                .FirstOrDefault(page => page.Id == pageId)?.Blocks.FirstOrDefault(block => block.Id == blockId);
+            var converted = await _real.MutateIfAsync(
+                rich => Find(rich) is { } block && ConversionCapability(rich, block, newKind).CanApply,
+                rich =>
                 {
-                    Id = old.Id,
-                    Kind = newKind,
-                    Order = old.Order,
-                    StyleId = old.StyleId,
-                };
-                if (IsListKind(old.Kind) && IsListKind(newKind))
-                {
-                    replacement.Items = old.Items;
-                    replacement.PlainText = old.PlainText;
-                }
-                else if (IsListKind(newKind))
-                {
-                    replacement.Items = [new HavenRichListItem { Text = old.PlainText }];
-                    replacement.PlainText = old.PlainText;
-                }
-                else
-                {
-                    replacement.PlainText = IsListKind(old.Kind) && old.Items.Count > 0
-                        ? string.Join("\n", old.Items.Select(i => (i.Checked ? "[x] " : "[ ] ") + i.Text))
-                        : old.PlainText;
-                    replacement.Runs = old.Runs;
-                }
-                page.Blocks[index] = replacement;
-                HavenRichNotesOps.TouchNotes(rich);
-                converted = true;
-            }, cancellationToken).ConfigureAwait(false);
-            RefreshView();
+                    ConvertBlockPayload(rich, Find(rich)!, newKind);
+                    HavenRichNotesOps.TouchNotes(rich);
+                }, cancellationToken).ConfigureAwait(false);
+            if (converted) RefreshView();
             return converted;
         }
         finally { _mergeGate.Release(); }
@@ -1653,6 +1625,115 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
 
     private static bool IsListKind(HavenRichBlockKind kind) =>
         kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList;
+
+    private static bool IsTextKind(HavenRichBlockKind kind) =>
+        kind is HavenRichBlockKind.Paragraph or HavenRichBlockKind.Heading;
+
+    private static bool SameRunFormat(HavenRichTextRun left, HavenRichTextRun right) =>
+        JsonSerializer.Serialize(BoardTextRanges.Copy(left, ""), Json) ==
+        JsonSerializer.Serialize(BoardTextRanges.Copy(right, ""), Json);
+
+    private static bool TryConversionRun(HavenRichNotes notes, HavenRichBlock block, out HavenRichTextRun run)
+    {
+        var style = notes.Styles.FirstOrDefault(value => value.Id == block.StyleId);
+        var heading = block.Kind == HavenRichBlockKind.Heading;
+        if (block.Runs.Count == 0)
+        {
+            // Text without explicit runs inherits named-style marks and the heading's
+            // implicit bold. List booleans/baseline are explicit, so retain that appearance.
+            run = new HavenRichTextRun
+            {
+                Text = block.PlainText, Bold = heading || style?.Bold == true,
+                Italic = style?.Italic == true, Underline = style?.Underline == true,
+                StrikeThrough = style?.StrikeThrough == true, Baseline = style?.Baseline ?? HavenRichBaseline.Normal
+            };
+        }
+        else
+        {
+            run = BoardTextRanges.Copy(block.Runs[0]);
+            if (string.Concat(block.Runs.Select(value => value.Text)) != block.PlainText) return false;
+            var first = run;
+            if (!block.Runs.All(value => SameRunFormat(value, first))) return false;
+        }
+        // Both surfaces inherit positive style sizes. Only a heading's no-style fallback
+        // differs (26 versus the list's 14), including explicit runs with an inherited size.
+        if (heading && run.FontSize == 0 && !(style?.FontSize > 0)) run.FontSize = 26;
+        return true;
+    }
+
+    private static HavenRichTextRun ItemRun(HavenRichListItem item) => new()
+    {
+        Text = item.Text, Bold = item.Bold, Italic = item.Italic, Underline = item.Underline,
+        StrikeThrough = item.StrikeThrough, Baseline = item.Baseline, FontFamily = item.FontFamily,
+        FontSize = item.FontSize, Foreground = item.Foreground, Background = item.Background
+    };
+
+    private static BoardBlockConversionCapability ConversionCapability(HavenRichNotes notes, HavenRichBlock block, HavenRichBlockKind kind)
+    {
+        if (!Enum.IsDefined(kind)) return new(false, "UnsupportedConversion");
+        if (block.Kind == kind) return new(false, "NoChange");
+        // These mappings retain the entire existing object, including dormant payloads.
+        if ((IsTextKind(block.Kind) && IsTextKind(kind)) || (IsListKind(block.Kind) && IsListKind(kind)))
+            return new(true, "Ready");
+        if (IsTextKind(block.Kind) && IsListKind(kind) && block.Attachment is null && TryConversionRun(notes, block, out var run))
+        {
+            // Do not overwrite dormant rows. Reusing an exactly matching retained row enables
+            // a lossless text/list round trip without replacing its stable item identity.
+            if (block.Items.Count == 0 || (block.Items.Count == 1 &&
+                block.Items[0] is { Checked: false, Level: 0 } item && item.Text == block.PlainText &&
+                SameRunFormat(ItemRun(item), run) && (item.LineSpacing == 0 || item.LineSpacing == block.LineSpacing)))
+                return new(true, "Ready");
+        }
+        if (IsListKind(block.Kind) && IsTextKind(kind) && block.Items.Count == 1 &&
+            block.Items[0] is { Checked: false, Level: 0 } single)
+        {
+            // A checked state or nesting level has no equivalent in a paragraph. Retained runs
+            // must agree with the row, otherwise reactivating them would silently restore old text.
+            if (block.Runs.Count == 0 || (string.Concat(block.Runs.Select(value => value.Text)) == single.Text &&
+                block.Runs.All(value => SameRunFormat(value, ItemRun(single)))))
+                return new(true, "Ready");
+        }
+        if (IsTextKind(block.Kind) && block.PlainText.Length == 0 &&
+            block.Runs.All(value => value.Text.Length == 0) && block.Items.Count == 0 &&
+            block.Table is null && block.Image is null && block.Graph is null && block.Divider is null &&
+            block.Database is null && block.Tabber is null && block.Attachment is null &&
+            kind is HavenRichBlockKind.Table or HavenRichBlockKind.Divider)
+            return new(true, "Ready");
+        return new(false, "UnsupportedConversion");
+    }
+
+    // The caller checks ConversionCapability under the merge gate. Mutating the existing block
+    // keeps its stable id/order, complete layout, style, paragraph overrides and dormant payloads.
+    private static void ConvertBlockPayload(HavenRichNotes notes, HavenRichBlock block, HavenRichBlockKind kind)
+    {
+        if (IsTextKind(block.Kind) && IsListKind(kind) && block.Items.Count == 0)
+        {
+            TryConversionRun(notes, block, out var run);
+            block.Items = [new HavenRichListItem
+            {
+                Text = block.PlainText, Bold = run.Bold, Italic = run.Italic, Underline = run.Underline,
+                StrikeThrough = run.StrikeThrough, Baseline = run.Baseline, FontFamily = run.FontFamily,
+                FontSize = run.FontSize, Foreground = run.Foreground, Background = run.Background
+            }];
+        }
+        else if (IsListKind(block.Kind) && IsTextKind(kind))
+        {
+            var item = block.Items[0];
+            block.PlainText = item.Text;
+            if (block.Runs.Count == 0) block.Runs = [ItemRun(item)];
+            if (item.LineSpacing > 0) block.LineSpacing = item.LineSpacing;
+        }
+        else if (kind == HavenRichBlockKind.Table)
+        {
+            block.Table = HavenRichTable.Create(3, 3);
+            foreach (var cell in block.Table.Rows.SelectMany(row => row.Cells)) cell.Text = "";
+        }
+        else if (kind == HavenRichBlockKind.Divider)
+        {
+            block.Divider = new HavenRichDivider();
+        }
+        block.Kind = kind;
+    }
 
     /// <summary>
     /// Deletes a view block: checklist item ids ("parentId:itemId") remove one

@@ -729,17 +729,27 @@ public static partial class HavenRichNotesOps
 
     public static bool SetListItemFormatting(HavenRichNotes notes, string pageId, string blockId, string itemId,
         bool? bold = null, bool? italic = null, bool? underline = null, bool? strike = null,
-        HavenRichBaseline? baseline = null, string? foreground = null)
+        HavenRichBaseline? baseline = null, string? foreground = null,
+        string? fontFamily = null, double? fontSize = null, string? background = null, double? lineSpacing = null)
     {
         var block = RequireBlock(notes, pageId, blockId);
         var item = block.Items.FirstOrDefault(i => i.Id == itemId);
         if (item is null) return false;
+        // Validate the complete proposed format before changing any field.
+        HavenRichNotesValidator.ValidateListItemFormatting(fontFamily ?? item.FontFamily,
+            fontSize ?? item.FontSize, background ?? item.Background, lineSpacing ?? item.LineSpacing);
+        if (baseline.HasValue && !Enum.IsDefined(baseline.Value))
+            throw new ArgumentOutOfRangeException(nameof(baseline));
         if (bold.HasValue) item.Bold = bold.Value;
         if (italic.HasValue) item.Italic = italic.Value;
         if (underline.HasValue) item.Underline = underline.Value;
         if (strike.HasValue) item.StrikeThrough = strike.Value;
         if (baseline.HasValue) item.Baseline = baseline.Value;
         if (foreground is not null) item.Foreground = foreground;
+        if (fontFamily is not null) item.FontFamily = fontFamily.Trim();
+        if (fontSize.HasValue) item.FontSize = fontSize.Value;
+        if (background is not null) item.Background = background;
+        if (lineSpacing.HasValue) item.LineSpacing = lineSpacing.Value;
         TouchNotes(notes);
         return true;
     }

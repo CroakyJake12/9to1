@@ -30,6 +30,26 @@ public sealed partial class BoardsViewModel
         }
     }
     public BoardsTabberBlocks Tabbers => _tabbers ??= new(this);
+    internal void CaptureNestedEditorFocus() => _tabbers?.CaptureEditorFocus();
+
+    internal Func<bool> CapturePaneFocusLifetime()
+    {
+        var epoch = Interlocked.Read(ref _insertionOperationEpoch);
+        var pageId = SelectedPageId;
+        var selectionEpoch = Interlocked.Read(ref _tableSelectionEpoch);
+        var ownerCurrent = _paneOwner?.CapturePaneFocusLifetime();
+        var retired = 0;
+        return () =>
+        {
+            if (Volatile.Read(ref retired) != 0) return false;
+            if (!_disposed && !EditorLifetimeEnded && CanEdit && IsEditMode &&
+                SelectedPageId == pageId && Interlocked.Read(ref _insertionOperationEpoch) == epoch &&
+                Interlocked.Read(ref _tableSelectionEpoch) == selectionEpoch &&
+                (ownerCurrent?.Invoke() ?? true)) return true;
+            Interlocked.Exchange(ref retired, 1);
+            return false;
+        };
+    }
     public bool CanAddTabber => CanEdit && IsEditMode && IsNativePage && CurrentPage().TabberOwnerBlockId is null && _session is ContractSessionAdapter;
     internal BoardsViewModel CreatePaneModel(string pageID)
     {

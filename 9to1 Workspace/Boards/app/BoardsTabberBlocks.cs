@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
@@ -40,6 +41,15 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             if (!_disposed && _nameRefreshes.TryGetValue(blockId, out var refresh)) refresh();
     }
 
+    internal void CaptureEditorFocus()
+    {
+        lock (_ownershipGate)
+        {
+            if (_disposed) return;
+            foreach (var editor in _editors.Values) editor.CaptureEditorFocus();
+        }
+    }
+
     // Projection publication can run under the adapter gate off UI. Revoke only here;
     // UI detachment and asynchronous drains happen separately, never blocking that gate.
     internal void ValidateOwners()
@@ -47,7 +57,11 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         lock (_ownershipGate)
         {
             foreach (var controls in _controls.Values) _ = controls.IsCurrent();
-            foreach (var editor in _editors.Values) _ = editor.Model.PaneLifetimeIsCurrent;
+            foreach (var editor in _editors.Values)
+            {
+                _ = editor.Model.PaneLifetimeIsCurrent;
+                editor.ValidateEditorFocus();
+            }
         }
     }
     internal void Reconcile()
@@ -264,6 +278,9 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         private volatile bool _disposed;
         private readonly object _disposeGate = new();
         private Task? _disposeTask;
+        private sealed record FocusContinuation(TopLevel Top, string Name, int Caret, int Start, int End,
+            Func<bool> IsCurrent);
+        private volatile FocusContinuation? _focusContinuation;
         public PaneEditor(BoardsViewModel model)
         {
             Model = model;
@@ -272,11 +289,48 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             viewport.Children.Add(_blocks); viewport.Children.Add(_absolute); viewport.Children.Add(_ink);
             Root.Children.Add(viewport);
             Root.GotFocus += OnFocused;
+            Root.AttachedToVisualTree += (_, _) => Dispatcher.UIThread.Post(RestoreEditorFocus);
             _inkOwner = new(_ink, model);
             Model.RebuildRequested += Queue;
             Model.SelectionChanged += Model.RefreshSharedToolbar;
         }
         private void OnFocused(object? sender, FocusChangedEventArgs args) => Model.ActivateToolbar();
+        public void CaptureEditorFocus()
+        {
+            if (_disposed || TopLevel.GetTopLevel(Root) is not { } top ||
+                top.FocusManager?.GetFocusedElement() is not TextBox input ||
+                !Root.IsVisualAncestorOf(input) || string.IsNullOrEmpty(input.Name)) return;
+            ClearEditorFocus();
+            _focusContinuation = new(top, input.Name, input.CaretIndex, input.SelectionStart, input.SelectionEnd,
+                Model.CapturePaneFocusLifetime());
+            // Remember focus activity, not just the final focused control. A user can
+            // focus Search and then blur it while this pane is still awaiting render.
+            top.AddHandler(InputElement.GotFocusEvent, OnNewFocus, RoutingStrategies.Bubble, handledEventsToo: true);
+        }
+        // Projection publication may run off UI. Revoke the lease here, but leave
+        // event detachment and all visual work to the UI thread.
+        public void ValidateEditorFocus() => _ = _focusContinuation?.IsCurrent();
+        private void OnNewFocus(object? sender, FocusChangedEventArgs args) => ClearEditorFocus();
+        private void ClearEditorFocus()
+        {
+            if (_focusContinuation is not { } saved) return;
+            _focusContinuation = null;
+            saved.Top.RemoveHandler(InputElement.GotFocusEvent, OnNewFocus);
+        }
+        private void RestoreEditorFocus()
+        {
+            if (_focusContinuation is not { } saved) return;
+            if (_disposed || !saved.IsCurrent()) { ClearEditorFocus(); return; }
+            if (!ReferenceEquals(TopLevel.GetTopLevel(Root), saved.Top)) return;
+            var replacement = Root.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(input => input.Name == saved.Name);
+            if (replacement is null || !replacement.IsEffectivelyVisible || !replacement.IsEffectivelyEnabled) return;
+            ClearEditorFocus();
+            if (!replacement.Focus()) return;
+            var length = replacement.Text?.Length ?? 0;
+            replacement.CaretIndex = Math.Clamp(saved.Caret, 0, length);
+            replacement.SelectionStart = Math.Clamp(saved.Start, 0, length);
+            replacement.SelectionEnd = Math.Clamp(saved.End, 0, length);
+        }
         public void Queue()
         {
             if (_disposed) return;
@@ -296,6 +350,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
                     if (_disposed) return;
                     using var themeScope = BoardsTheme.UseSurface(Root);
                     BlockRenderer.Rebuild(_blocks, Model, boxes, _absolute);
+                    RestoreEditorFocus();
                     Model.RefreshSharedToolbar();
                 });
                 await _inkOwner.RenderAsync();
@@ -314,6 +369,7 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
             var renders = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Root.IsEnabled = false;
+                ClearEditorFocus();
                 Root.GotFocus -= OnFocused;
                 Model.RebuildRequested -= Queue; Model.SelectionChanged -= Model.RefreshSharedToolbar;
                 Model.Dispose(); _inkOwner.Dispose();

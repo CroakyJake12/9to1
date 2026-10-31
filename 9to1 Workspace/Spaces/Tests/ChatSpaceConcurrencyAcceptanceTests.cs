@@ -203,7 +203,7 @@ public sealed class ChatSpaceConcurrencyAcceptanceTests
         Assert.Equal("A newer unsent draft\n\nQueued follow-up", controller.State.Composer.Draft);
         Assert.Equal("A newer unsent draft\n\nQueued follow-up", backend.Data[id].Draft?.Content);
         Assert.DoesNotContain("Accepted once", controller.State.Composer.Draft);
-        Assert.Contains("partial text remains visible here but could not be saved", controller.State.Status.Message);
+        Assert.Contains("Partial text remains visible here but could not be saved", controller.State.Status.Message);
         Assert.Equal("Interrupted · partial response", Assert.Single(controller.State.Conversation!.Messages,
             message => message.Role == MessageRole.Assistant).ProgressLabel);
         Assert.Equal(ChatSpaceStatusTone.Error, controller.State.Status.Tone);

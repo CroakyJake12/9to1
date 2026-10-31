@@ -38,7 +38,8 @@ public sealed partial class BoardsViewModel
         // An empty run override inherits the native input's background. In a uniformly
         // highlighted paragraph that is precisely the colour the user is clearing.
         var runBackground = CurrentTextRange() is not null && string.IsNullOrEmpty(background) ? "#00000000" : background;
-        TryApplyTextAttributes(run => run.Background = runBackground, block => block.Background = background);
+        TryApplyTextAttributes(run => run.Background = runBackground, block =>
+            block.Background = IsListKind(block.Kind) && string.IsNullOrEmpty(background) ? "#00000000" : background);
     }
 
     internal void ApplyBaselineAttributes(string baseline)
@@ -67,7 +68,7 @@ public sealed partial class BoardsViewModel
                 // Changing the block default tells the canonical merge to apply
                 // that single size to every run. Existing runs already carry
                 // their individually scaled sizes, so retain their default.
-                if (!explicitRuns) current.FontSize = Math.Clamp(inherited + delta, 8, 96);
+                if (!explicitRuns || IsListKind(current.Kind)) current.FontSize = Math.Clamp(inherited + delta, 8, 96);
             });
     }
 
@@ -92,6 +93,7 @@ public sealed partial class BoardsViewModel
             block.Baseline = "normal";
             block.FontFamily = block.Foreground = block.Background = string.Empty;
             block.FontSize = 0;
+            if (IsListKind(block.Kind)) block.LineSpacing = 0;
         });
     }
 
@@ -115,9 +117,26 @@ public sealed partial class BoardsViewModel
         if (!RequireEditMode() || _disposed || _textRangeDetached || _textRangeBusy) return;
         var block = SelectedBlockOrNull();
         if (block is null || !BoardTextRanges.Matches(block)) return;
+        if (IsListKind(block.Kind))
+        {
+            // List items persist row attributes, not character runs. Keep the
+            // visible edit and the canonical representation identical.
+            var root = _attachedRoot ?? _themeSurface;
+            var name = "chk_" + block.Id.Replace(':', '_');
+            var input = root is null ? null : FindControls<TextBox>(root).FirstOrDefault(item => item.Name == name);
+            var focused = input is null ? null : TopLevel.GetTopLevel(input)?.FocusManager?.GetFocusedElement() as Control;
+            if (input is not null && IsAttributeToolbarControl(focused)) input.Focus();
+            changeBlock(block);
+            block.Runs = [];
+            _session.MarkDirty();
+            PushDocumentToBindings();
+            RefreshSharedToolbar();
+            RequestRebuild();
+            return;
+        }
         var control = _textRangeControl;
         var selection = CurrentTextRange();
-        if (control is not null && (control.IsReadOnly || !control.IsEffectivelyEnabled ||
+        if (control is not null && (!_textRangeBindings.ContainsKey(control) || control.IsReadOnly || !control.IsEffectivelyEnabled ||
             TopLevel.GetTopLevel(control) is null || _textRangePage != SelectedPageId || _textRangeBlock != block.Id)) return;
         if (control is not null && control.SelectionStart != control.SelectionEnd && selection is null) return;
         if (selection is not null && (selection.Text != block.Text ||
@@ -173,12 +192,13 @@ public sealed partial class BoardsViewModel
         if (block.Runs.Count > 0) return BoardTextRanges.Copy(block.Runs);
         if (block.Text.Length == 0) return [];
         var style = StyleList.FirstOrDefault(style => style.Id == block.StyleId);
+        var list = IsListKind(block.Kind);
         return [new HavenRichTextRun
         {
-            Text = block.Text, Bold = block.Bold || style?.Bold == true,
-            Italic = block.Italic || style?.Italic == true, Underline = block.Underline || style?.Underline == true,
-            StrikeThrough = block.Strike || style?.Strike == true,
-            Baseline = (block.Baseline != "normal" ? block.Baseline : style?.Baseline) switch
+            Text = block.Text, Bold = block.Bold || (!list && style?.Bold == true),
+            Italic = block.Italic || (!list && style?.Italic == true), Underline = block.Underline || (!list && style?.Underline == true),
+            StrikeThrough = block.Strike || (!list && style?.Strike == true),
+            Baseline = (list || block.Baseline != "normal" ? block.Baseline : style?.Baseline) switch
             { "subscript" => HavenRichBaseline.Subscript, "superscript" => HavenRichBaseline.Superscript, _ => HavenRichBaseline.Normal },
             FontFamily = !string.IsNullOrEmpty(block.FontFamily) ? block.FontFamily : style?.FontFamily ?? string.Empty,
             FontSize = block.FontSize > 0 ? block.FontSize : style?.FontSize ?? 0,

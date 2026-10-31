@@ -36,6 +36,11 @@ public static class ToolbarBuilder
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
+        // The adaptive context already observes selection/formatting changes.
+        // Replacing it during an unrelated block render closes active menus and
+        // discards typed font drafts. Insert menus capture a page/document target,
+        // so only retain the root while that complete target still matches.
+        if (host.Children.Count == 1 && AdaptiveToolbar.TryReuse(host.Children[0], vm)) return;
         foreach (var child in host.Children.ToArray()) AdaptiveToolbar.Dispose(child);
         host.Children.Clear();
         host.Children.Add(AdaptiveToolbar.Build(vm));

@@ -94,7 +94,11 @@ public sealed class ChatComposerCompiledTransportTests
             "99", doc.Metadata.RuntimeAbiVersion, doc.Metadata.ComponentRegistryVersion, doc.Metadata.RequiredCapabilities);
         var badEnv = new CuiCompilationMetadata(
             "99", artifact.Metadata.RuntimeAbiVersion, artifact.Metadata.ComponentRegistryVersion, artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with { Metadata = badEnv, Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
+        var replaced = artifact with { Metadata = badEnv, Documents = artifact.Documents.Select(document => document with
+        {
+            Metadata = new CuiCompilationMetadata(badMeta.LanguageVersion, document.Metadata.RuntimeAbiVersion,
+                badMeta.ComponentRegistryVersion, document.Metadata.RequiredCapabilities)
+        }).ToArray() };
         var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
         Assert.Equal("CUIR064", error.Diagnostic.Code);
     }
@@ -125,7 +129,11 @@ public sealed class ChatComposerCompiledTransportTests
             doc.Metadata.LanguageVersion, doc.Metadata.RuntimeAbiVersion, "999.0", doc.Metadata.RequiredCapabilities);
         var badEnv = new CuiCompilationMetadata(
             artifact.Metadata.LanguageVersion, artifact.Metadata.RuntimeAbiVersion, "999.0", artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with { Metadata = badEnv, Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
+        var replaced = artifact with { Metadata = badEnv, Documents = artifact.Documents.Select(document => document with
+        {
+            Metadata = new CuiCompilationMetadata(badMeta.LanguageVersion, document.Metadata.RuntimeAbiVersion,
+                badMeta.ComponentRegistryVersion, document.Metadata.RequiredCapabilities)
+        }).ToArray() };
         var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
         Assert.Equal("CUIR066", error.Diagnostic.Code);
     }
@@ -240,16 +248,15 @@ public sealed class ChatComposerCompiledTransportTests
     }
 
     [Fact]
-    public void Composer_authored_controls_declare_44px_hit_targets_and_image_glyphs()
+    public void Composer_authored_controls_preserve_44px_tools_and_approved_56px_action_shelf()
     {
-        // The authored composer standardises every icon tool and the primary action on one
-        // consistent 44x44 hit target (the accessible target), with the actual glyph delivered as
-        // a genuine packaged-SVG image child so icon extent and hit target stay distinct.
+        // UI-RPT-001 explicitly preserves 44px tools and the approved 56px primary action
+        // with a 14px rear extension. The glyph remains separate from the hit target.
         var artifact = ReadEmbeddedArtifact();
         var doc = ComposerDocument(artifact);
         var semantics = doc.Semantics;
 
-        string[] ids = ["add-button", "format-button", "emoji-button", "settings-button", "send-button"];
+        string[] ids = ["add-button", "format-button", "emoji-button", "settings-button"];
         foreach (var id in ids)
         {
             var button = FindComponent(semantics, id);
@@ -268,7 +275,13 @@ public sealed class ChatComposerCompiledTransportTests
         var settings = FindComponent(semantics, "settings-button")!;
         Assert.True(HasImageChild(settings, "composer-settings.svg"), "settings must render the packaged composer-settings.svg gear");
         var send = FindComponent(semantics, "send-button")!;
-        Assert.True(HasImageChild(send, "send.svg"), "primary action must render the packaged send.svg arrow");
+        Assert.Equal("56", Literal(send, "Width"));
+        Assert.Equal("56", Literal(send, "Height"));
+        var shelf = FindComponent(semantics, "conversation-actions")!;
+        Assert.Equal("70", Literal(shelf, "Width"));
+        Assert.Equal("14", Literal(FindComponent(semantics, "action-shelf-next")!, "TranslateX"));
+        var glyph = Assert.Single(send.Children, child => child.Type == "Image");
+        Assert.Equal("Shelf.FrontIcon", glyph.Properties["Source"].BindingPath);
 
         // Secondary icon tools share the quiet chromeless/transparent treatment as the emoji trigger.
         Assert.Equal("Transparent", Literal(add, "background"));
@@ -312,24 +325,24 @@ public sealed class ChatComposerCompiledTransportTests
     [Fact]
     public void Composer_primary_send_action_is_authored_with_truthful_accessibility_bindings()
     {
-        // The primary action stays the real composer.send, gated by the real CanSend availability and
-        // labelled from the REAL current operation (normal Send / edit Update) via read-only
-        // presentation bindings, never a fake arrow-only label.
+        // The approved contextual shelf dispatches its real current action, with visibility and
+        // accessibility bound to that action rather than permanently labelling every state Send.
         var artifact = ReadEmbeddedArtifact();
         var doc = ComposerDocument(artifact);
         var semantics = doc.Semantics;
 
         var send = FindComponent(semantics, "send-button")!;
-        Assert.Equal("composer.send", send.Actions["action"]!.Name);
-        Assert.True(send.Properties.TryGetValue("Interactive", out var interactive)
-            && interactive.Kind == CuiV2ValueKind.Binding
-            && interactive.BindingPath == "Composer.CanSend");
+        Assert.Equal("shelf.activate", send.Actions["action"]!.Name);
+        Assert.Equal("shelf.activate", semantics.Actions["shelf.activate"].Command);
+        Assert.True(send.Properties.TryGetValue("IsVisible", out var visible)
+            && visible.Kind == CuiV2ValueKind.Binding
+            && visible.BindingPath == "Shelf.HasFront");
         Assert.True(send.Properties.TryGetValue("accessible-name", out var name)
             && name.Kind == CuiV2ValueKind.Binding
-            && name.BindingPath == "Composer.SendAccessibleName");
+            && name.BindingPath == "Shelf.FrontAnnouncement");
         Assert.True(send.Properties.TryGetValue("tooltip", out var tip)
             && tip.Kind == CuiV2ValueKind.Binding
-            && tip.BindingPath == "Composer.SendTooltip");
+            && tip.BindingPath == "Shelf.FrontTooltip");
     }
 
     private static CuiV2Component? FindComponent(CuiV2Semantics semantics, string id)

@@ -7,6 +7,23 @@ namespace CakeOS.Apps.Boards.App;
 
 public sealed partial class BoardsViewModel
 {
+    // One selection contract drives both the authored controls and their command
+    // guards. List text currently has whole-row attributes, not text runs.
+    internal readonly record struct ToolbarCapabilities(bool Editable, bool Text, bool ListRow,
+        bool Typography, bool ParagraphStyle, bool ParagraphLayout, bool ListConversion, bool Properties);
+
+    internal ToolbarCapabilities AdaptiveCapabilities()
+    {
+        var block = FindBlock(SelectedBlockId);
+        var editable = CanEdit && IsEditMode;
+        var row = block?.Kind is "bulleted" or "numbered" or "checklist";
+        var paragraph = block?.Kind is "paragraph" or "heading";
+        var text = !IsDrawMode && (row || paragraph);
+        return new(editable, text, row, editable && text, editable && text && paragraph,
+            editable && text && paragraph, editable && text && paragraph,
+            editable && !IsDrawMode && (text || block?.Kind is "table" or "image" or "divider"));
+    }
+
     internal void SetAdaptiveProperties(bool visible) =>
         Set("AdaptivePropertiesVisible", visible);
 
@@ -104,13 +121,48 @@ public sealed partial class BoardsViewModel
         return Avalonia.Media.FontFamily.Default.Name;
     }
 
+    internal (string Text, int Anchor, int Caret)? AdaptiveSelectionCoordinates()
+    {
+        var input = _textRangeControl;
+        var block = FindBlock(SelectedBlockId);
+        if (_disposed || EditorLifetimeEnded || _textRangeDetached || input is null || block is null ||
+            input.IsReadOnly || !input.IsEffectivelyEnabled || TopLevel.GetTopLevel(input) is null ||
+            _textRangePage != SelectedPageId || _textRangeBlock != SelectedBlockId ||
+            !string.Equals(input.Text ?? string.Empty, block.Text, StringComparison.Ordinal)) return null;
+        return (block.Text, input.SelectionStart, input.SelectionEnd);
+    }
+
     internal void SetAdaptiveSpacing(double spacing)
     {
-        if (!RequireEditMode() || !double.IsFinite(spacing) || spacing is < 0 or > 10) return;
+        if (!AdaptiveCapabilities().Typography || !double.IsFinite(spacing) || spacing is < 0 or > 10) return;
         var block = FindBlock(SelectedBlockId);
         if (block is null || Math.Abs(block.LineSpacing - spacing) < 0.001) return;
+        RestoreAdaptiveEditorFocus(block);
         block.LineSpacing = spacing;
         CommitViewEdit();
+    }
+
+    internal void SetAdaptiveParagraphSpace(bool before, double space)
+    {
+        if (!AdaptiveCapabilities().ParagraphLayout || !double.IsFinite(space) || space is < 0 or > 1000) return;
+        var block = FindBlock(SelectedBlockId);
+        if (block is null || Math.Abs((before ? block.SpaceBefore : block.SpaceAfter) - space) < 0.001) return;
+        RestoreAdaptiveEditorFocus(block);
+        if (before) block.SpaceBefore = space; else block.SpaceAfter = space;
+        CommitViewEdit();
+    }
+
+    private void RestoreAdaptiveEditorFocus(RichBoardBlock block)
+    {
+        var root = _attachedRoot ?? _themeSurface;
+        if (root is null) return;
+        var name = IsListKind(block.Kind) ? "chk_" + block.Id.Replace(':', '_') : "t_" + block.Id;
+        var editor = FindControls<TextBox>(root).FirstOrDefault(input => input.Name == name);
+        if (editor is null) return;
+        var focused = TopLevel.GetTopLevel(editor)?.FocusManager?.GetFocusedElement() as Control;
+        // Explicit focus in another editor or outside the toolbar belongs to
+        // that control. Only a formatting command hands focus back to its text.
+        if (IsAttributeToolbarControl(focused)) editor.Focus();
     }
 
     internal void ChangeAdaptiveCase(string mode)
@@ -119,9 +171,10 @@ public sealed partial class BoardsViewModel
         var block = FindBlock(SelectedBlockId);
         if (block is null || block.Kind is not ("paragraph" or "heading" or "bulleted" or "numbered" or "checklist")) return;
         var selection = CurrentTextRange();
-        if (_textRangeControl is not null && selection is null) return;
+        if (_textRangeControl is not null && selection is null && !AdaptiveCapabilities().ListRow) return;
         var start = selection is null || selection.Anchor == selection.Caret ? 0 : Math.Min(selection.Anchor, selection.Caret);
         var end = selection is null || selection.Anchor == selection.Caret ? block.Text.Length : Math.Max(selection.Anchor, selection.Caret);
+        RestoreAdaptiveEditorFocus(block);
         string Convert(string text) => mode == "upper" ? text.ToUpperInvariant() : text.ToLowerInvariant();
         if (block.Runs.Count == 0)
             block.Text = block.Text[..start] + Convert(block.Text[start..end]) + block.Text[end..];

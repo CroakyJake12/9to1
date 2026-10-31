@@ -7,7 +7,7 @@
     <Container ID="AdaptiveToolbar" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" HorizontalAlignment="Stretch">
       <Container ID="AdaptivePill" Type="Toolbar" Column="0" CellGap="2" Padding="7 4" CornerRadius="15" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Interactive="{Binding CanEditToolbar}">
         <Container ID="AdaptiveFontSection" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" Active="{Binding TextMode}" Tooltip="{Binding TypographyGroupHint}">
-          <Input ID="AdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding StyleControlHint}" />
+          <Input ID="AdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseParagraphStyle}" Tooltip="{Binding StyleControlHint}" />
           <Input ID="AdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="{Binding FontControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
           <Container Type="Menu" ID="AdaptiveFontSection_Menu" Tooltip="{Binding FontControlHint}">
             <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="AdaptiveFontSection_Menu_Choose_font_family" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}">
@@ -81,10 +81,10 @@
         <Container ID="AdaptiveParagraphSection" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" Active="{Binding TextMode}">
           <Container Type="Menu" ID="AdaptiveParagraphSection_Menu" Tooltip="{Binding AlignmentControlHint}">
             <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="Alignment" IconSource="{Binding AlignIcon}" IconOnly="True" IconSize="18" Width="32" Tooltip="{Binding AlignmentControlHint}" ID="AdaptiveParagraphSection_Menu_Alignment" IsEnabled="{Binding CanUseParagraphAlignment}">
-              <Button Content="Left" Action="AlignLeft" Type="Menu Item" AccessibleName="Left" ID="AdaptiveParagraphSection_Menu_Alignment_AlignLeft" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
-              <Button Content="Center" Action="AlignCenter" Type="Menu Item" AccessibleName="Center" ID="AdaptiveParagraphSection_Menu_Alignment_AlignCenter" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
-              <Button Content="Right" Action="AlignRight" Type="Menu Item" AccessibleName="Right" ID="AdaptiveParagraphSection_Menu_Alignment_AlignRight" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
-              <Button Content="Justify" Action="AlignJustify" Type="Menu Item" AccessibleName="Justify" ID="AdaptiveParagraphSection_Menu_Alignment_AlignJustify" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Left" Action="AlignLeft" Selected="{Binding AlignLeftSelected}" Type="Menu Item" AccessibleName="Left" ID="AdaptiveParagraphSection_Menu_Alignment_AlignLeft" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Center" Action="AlignCenter" Selected="{Binding AlignCenterSelected}" Type="Menu Item" AccessibleName="Center" ID="AdaptiveParagraphSection_Menu_Alignment_AlignCenter" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Right" Action="AlignRight" Selected="{Binding AlignRightSelected}" Type="Menu Item" AccessibleName="Right" ID="AdaptiveParagraphSection_Menu_Alignment_AlignRight" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Justify" Action="AlignJustify" Selected="{Binding AlignJustifySelected}" Type="Menu Item" AccessibleName="Justify" ID="AdaptiveParagraphSection_Menu_Alignment_AlignJustify" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
             </Button>
           </Container>
           <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_2" Tooltip="{Binding ListControlHint}">
@@ -97,10 +97,27 @@
           </Container>
           <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_3" Tooltip="{Binding SpacingControlHint}">
             <Button Type="Menu Item" Content="{Binding CompactSpacing}" Height="32" Padding="2 0" AccessibleName="Line spacing" Width="48" Tooltip="{Binding SpacingControlHint}" ID="AdaptiveParagraphSection_Menu_3_Line_spacing" IsEnabled="{Binding CanUseTypography}">
-              <Button Content="1" Action="Spacing1" Type="Menu Item" AccessibleName="1" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
-              <Button Content="1.25" Action="Spacing1.25" Type="Menu Item" AccessibleName="1.25" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_25" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
-              <Button Content="1.5" Action="Spacing1.5" Type="Menu Item" AccessibleName="1.5" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_5" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
-              <Button Content="2" Action="Spacing2" Type="Menu Item" AccessibleName="2" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="{Binding SpaceBeforeLabel}" Type="Menu Item" AccessibleName="Paragraph spacing before" ID="AdaptiveSpaceBefore" IsEnabled="{Binding CanUseParagraphSpacing}" Tooltip="{Binding ParagraphSpacingHint}">
+                <Button Content="0 px" Action="SpaceBefore0" Type="Menu Item" AccessibleName="0 pixels before paragraph" ID="AdaptiveSpaceBefore0" Selected="{Binding SpaceBefore0Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="4 px" Action="SpaceBefore4" Type="Menu Item" AccessibleName="4 pixels before paragraph" ID="AdaptiveSpaceBefore4" Selected="{Binding SpaceBefore4Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="8 px" Action="SpaceBefore8" Type="Menu Item" AccessibleName="8 pixels before paragraph" ID="AdaptiveSpaceBefore8" Selected="{Binding SpaceBefore8Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="12 px" Action="SpaceBefore12" Type="Menu Item" AccessibleName="12 pixels before paragraph" ID="AdaptiveSpaceBefore12" Selected="{Binding SpaceBefore12Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="16 px" Action="SpaceBefore16" Type="Menu Item" AccessibleName="16 pixels before paragraph" ID="AdaptiveSpaceBefore16" Selected="{Binding SpaceBefore16Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="24 px" Action="SpaceBefore24" Type="Menu Item" AccessibleName="24 pixels before paragraph" ID="AdaptiveSpaceBefore24" Selected="{Binding SpaceBefore24Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+              </Button>
+              <Button Content="{Binding SpaceAfterLabel}" Type="Menu Item" AccessibleName="Paragraph spacing after" ID="AdaptiveSpaceAfter" IsEnabled="{Binding CanUseParagraphSpacing}" Tooltip="{Binding ParagraphSpacingHint}">
+                <Button Content="0 px" Action="SpaceAfter0" Type="Menu Item" AccessibleName="0 pixels after paragraph" ID="AdaptiveSpaceAfter0" Selected="{Binding SpaceAfter0Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="4 px" Action="SpaceAfter4" Type="Menu Item" AccessibleName="4 pixels after paragraph" ID="AdaptiveSpaceAfter4" Selected="{Binding SpaceAfter4Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="8 px" Action="SpaceAfter8" Type="Menu Item" AccessibleName="8 pixels after paragraph" ID="AdaptiveSpaceAfter8" Selected="{Binding SpaceAfter8Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="12 px" Action="SpaceAfter12" Type="Menu Item" AccessibleName="12 pixels after paragraph" ID="AdaptiveSpaceAfter12" Selected="{Binding SpaceAfter12Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="16 px" Action="SpaceAfter16" Type="Menu Item" AccessibleName="16 pixels after paragraph" ID="AdaptiveSpaceAfter16" Selected="{Binding SpaceAfter16Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="24 px" Action="SpaceAfter24" Type="Menu Item" AccessibleName="24 pixels after paragraph" ID="AdaptiveSpaceAfter24" Selected="{Binding SpaceAfter24Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+              </Button>
+              <Button Content="Inherited" Action="Spacing0" Type="Menu Item" AccessibleName="Inherited line spacing" ID="AdaptiveSpacingInherited" Selected="{Binding SpacingAutoSelected}" IsEnabled="{Binding CanUseTypography}" />
+              <Button Content="1" Action="Spacing1" Selected="{Binding Spacing1Selected}" Type="Menu Item" AccessibleName="1" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="1.25" Action="Spacing1.25" Selected="{Binding Spacing125Selected}" Type="Menu Item" AccessibleName="1.25" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_25" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="1.5" Action="Spacing1.5" Selected="{Binding Spacing15Selected}" Type="Menu Item" AccessibleName="1.5" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing1_5" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="2" Action="Spacing2" Selected="{Binding Spacing2Selected}" Type="Menu Item" AccessibleName="2" ID="AdaptiveParagraphSection_Menu_3_Line_spacing_Spacing2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
             </Button>
           </Container>
           <Container Type="Menu" ID="AdaptiveParagraphSection_Menu_4">
@@ -188,19 +205,19 @@
           <Text Text="{Binding ObjectLabel}" VerticalAlignment="Center" Margin="8 0" ID="AdaptiveObjectSection_Binding_ObjectLabel" />
         </Container>
         <Container Type="Menu" ID="AdaptivePill_Menu">
-          <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="Properties" ID="AdaptiveProperties" IconSource="icon:settings" IconOnly="True" IconSize="18" Width="32" Tooltip="Properties">
+          <Button Type="Menu Item" Content="" Height="32" Padding="0" AccessibleName="Properties" ID="AdaptiveProperties" IconSource="icon:settings" IconOnly="True" IconSize="18" Width="32" Tooltip="Properties" IsEnabled="{Binding CanUseProperties}" Selected="{Binding PropertiesSelected}">
             <Button Content="More properties" Action="Properties" Type="Menu Item" AccessibleName="More properties" Interactive="{Binding CanUseProperties}" ID="AdaptiveProperties_Properties" />
-            <Button Content="Subscript" Action="ToggleSub" Type="Menu Item" AccessibleName="Subscript" ID="AdaptiveProperties_ToggleSub" />
-            <Button Content="Superscript" Action="ToggleSup" Type="Menu Item" AccessibleName="Superscript" ID="AdaptiveProperties_ToggleSup" />
-            <Button Content="Clear formatting" Action="ClearFormat" Type="Menu Item" AccessibleName="Clear formatting" ID="AdaptiveProperties_ClearFormat" />
+            <Button Content="Subscript" Action="ToggleSub" Type="Menu Item" AccessibleName="Subscript" ID="AdaptiveProperties_ToggleSub" IsEnabled="{Binding CanUseTypography}" />
+            <Button Content="Superscript" Action="ToggleSup" Type="Menu Item" AccessibleName="Superscript" ID="AdaptiveProperties_ToggleSup" IsEnabled="{Binding CanUseTypography}" />
+            <Button Content="Clear formatting" Action="ClearFormat" Type="Menu Item" AccessibleName="Clear formatting" ID="AdaptiveProperties_ClearFormat" IsEnabled="{Binding CanUseTypography}" />
             <Button Content="Manage styles…" Action="ManageStyles" Type="Menu Item" AccessibleName="Manage styles…" ID="AdaptiveProperties_ManageStyles" />
           </Button>
         </Container>
         <Container Type="Menu" OverflowHost="True" ID="AdaptivePill_Menu_2">
           <Button Type="Menu Item" Content="…" Height="32" Padding="0" AccessibleName="More formatting tools" ID="OverflowAdaptiveOverflow" Width="32">
-            <Button Type="Menu Item" Content="Font and style" ID="OverflowAdaptiveOverflow_Font_and_style">
+            <Button Active="{Binding TextMode}" Type="Menu Item" Content="Font and style" ID="OverflowAdaptiveOverflow_Font_and_style">
               <Container Type="Vertical Stack" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack" Tooltip="{Binding TypographyGroupHint}">
-                <Input ID="OverflowAdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding StyleControlHint}" />
+                <Input ID="OverflowAdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseParagraphStyle}" Tooltip="{Binding StyleControlHint}" />
                 <Input ID="OverflowAdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="{Binding FontControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
                 <Container Type="Menu" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu" Tooltip="{Binding FontControlHint}">
                   <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Menu_Choose_font_family" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}">
@@ -225,31 +242,48 @@
                 <Container Type="Separator" Width="1" Height="22" Margin="5 0" Background="{Resource CuiLineBrush}" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack_Separator" />
               </Container>
             </Button>
-            <Button Type="Menu Item" Content="Text" ID="OverflowAdaptiveOverflow_Text">
-              <Button Content="Bold" Action="ToggleBold" Type="Menu Item" AccessibleName="Bold" ID="OverflowRangeBold" />
-              <Button Content="Italic" Action="ToggleItalic" Type="Menu Item" AccessibleName="Italic" ID="OverflowRangeItalic" />
-              <Button Content="Underline" Action="ToggleUnderline" Type="Menu Item" AccessibleName="Underline" ID="OverflowRangeUnderline" />
-              <Button Content="Strikethrough" Action="ToggleStrike" Type="Menu Item" AccessibleName="Strikethrough" ID="OverflowRangeStrike" />
+            <Button Active="{Binding TextMode}" Type="Menu Item" Content="Text" ID="OverflowAdaptiveOverflow_Text">
+              <Button Content="Bold" Action="ToggleBold" Type="Menu Item" AccessibleName="Bold" ID="OverflowRangeBold" Selected="{Binding RangeBoldSelected}" Interactive="{Binding CanFormatTextRange}" />
+              <Button Content="Italic" Action="ToggleItalic" Type="Menu Item" AccessibleName="Italic" ID="OverflowRangeItalic" Selected="{Binding RangeItalicSelected}" Interactive="{Binding CanFormatTextRange}" />
+              <Button Content="Underline" Action="ToggleUnderline" Type="Menu Item" AccessibleName="Underline" ID="OverflowRangeUnderline" Selected="{Binding RangeUnderlineSelected}" Interactive="{Binding CanFormatTextRange}" />
+              <Button Content="Strikethrough" Action="ToggleStrike" Type="Menu Item" AccessibleName="Strikethrough" ID="OverflowRangeStrike" Selected="{Binding RangeStrikeSelected}" Interactive="{Binding CanFormatTextRange}" />
               <Button Content="Text properties" Action="Properties" Type="Menu Item" AccessibleName="Text properties" Interactive="{Binding CanUseProperties}" ID="OverflowAdaptiveOverflow_Text_Properties" />
-              <Button Content="Align left" Action="AlignLeft" Type="Menu Item" AccessibleName="Align left" ID="OverflowAdaptiveOverflow_Text_AlignLeft" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
-              <Button Content="Align center" Action="AlignCenter" Type="Menu Item" AccessibleName="Align center" ID="OverflowAdaptiveOverflow_Text_AlignCenter" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
-              <Button Content="Align right" Action="AlignRight" Type="Menu Item" AccessibleName="Align right" ID="OverflowAdaptiveOverflow_Text_AlignRight" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
-              <Button Content="Align justify" Action="AlignJustify" Type="Menu Item" AccessibleName="Align justify" ID="OverflowAdaptiveOverflow_Text_AlignJustify" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align left" Action="AlignLeft" Selected="{Binding AlignLeftSelected}" Type="Menu Item" AccessibleName="Align left" ID="OverflowAdaptiveOverflow_Text_AlignLeft" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align center" Action="AlignCenter" Selected="{Binding AlignCenterSelected}" Type="Menu Item" AccessibleName="Align center" ID="OverflowAdaptiveOverflow_Text_AlignCenter" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align right" Action="AlignRight" Selected="{Binding AlignRightSelected}" Type="Menu Item" AccessibleName="Align right" ID="OverflowAdaptiveOverflow_Text_AlignRight" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
+              <Button Content="Align justify" Action="AlignJustify" Selected="{Binding AlignJustifySelected}" Type="Menu Item" AccessibleName="Align justify" ID="OverflowAdaptiveOverflow_Text_AlignJustify" IsEnabled="{Binding CanUseParagraphAlignment}" Tooltip="{Binding AlignmentControlHint}" />
               <Button Content="Bulleted list" Action="ListBullets" Type="Menu Item" AccessibleName="Bulleted list" ID="OverflowAdaptiveOverflow_Text_ListBullets" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
               <Button Content="Numbered list" Action="ListNumbered" Type="Menu Item" AccessibleName="Numbered list" ID="OverflowAdaptiveOverflow_Text_ListNumbered" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
               <Button Content="Checklist" Action="ListChecklist" Type="Menu Item" AccessibleName="Checklist" ID="OverflowAdaptiveOverflow_Text_ListChecklist" IsEnabled="{Binding CanChangeListKind}" Tooltip="{Binding ListControlHint}" />
               <Button Content="Increase indent" Action="IndentInc" Type="Menu Item" AccessibleName="Increase indent" ID="OverflowAdaptiveOverflow_Text_IndentInc" />
               <Button Content="Decrease indent" Action="IndentDec" Type="Menu Item" AccessibleName="Decrease indent" ID="OverflowAdaptiveOverflow_Text_IndentDec" />
-              <Button Content="Line spacing 1.5" Action="Spacing1.5" Type="Menu Item" AccessibleName="Line spacing 1.5" ID="OverflowAdaptiveOverflow_Text_Spacing1_5" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
-              <Button Content="Subscript" Action="ToggleSub" Type="Menu Item" AccessibleName="Subscript" ID="OverflowAdaptiveOverflow_Text_ToggleSub" />
-              <Button Content="Superscript" Action="ToggleSup" Type="Menu Item" AccessibleName="Superscript" ID="OverflowAdaptiveOverflow_Text_ToggleSup" />
-              <Button Content="Clear formatting" Action="ClearFormat" Type="Menu Item" AccessibleName="Clear formatting" ID="OverflowAdaptiveOverflow_Text_ClearFormat" />
+              <Button Content="Line spacing 1.5" Action="Spacing1.5" Selected="{Binding Spacing15Selected}" Type="Menu Item" AccessibleName="Line spacing 1.5" ID="OverflowAdaptiveOverflow_Text_Spacing1_5" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="Subscript" Action="ToggleSub" Type="Menu Item" AccessibleName="Subscript" ID="OverflowAdaptiveOverflow_Text_ToggleSub" IsEnabled="{Binding CanUseTypography}" />
+              <Button Content="Superscript" Action="ToggleSup" Type="Menu Item" AccessibleName="Superscript" ID="OverflowAdaptiveOverflow_Text_ToggleSup" IsEnabled="{Binding CanUseTypography}" />
+              <Button Content="Clear formatting" Action="ClearFormat" Type="Menu Item" AccessibleName="Clear formatting" ID="OverflowAdaptiveOverflow_Text_ClearFormat" IsEnabled="{Binding CanUseTypography}" />
               <Button Content="Manage styles…" Action="ManageStyles" Type="Menu Item" AccessibleName="Manage styles…" ID="OverflowAdaptiveOverflow_Text_ManageStyles" />
-              <Button Content="Line spacing 1" Action="Spacing1" Type="Menu Item" AccessibleName="Line spacing 1" ID="OverflowAdaptiveOverflow_Text_Spacing1" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
-              <Button Content="Line spacing 1.25" Action="Spacing1.25" Type="Menu Item" AccessibleName="Line spacing 1.25" ID="OverflowAdaptiveOverflow_Text_Spacing1_25" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
-              <Button Content="Line spacing 2" Action="Spacing2" Type="Menu Item" AccessibleName="Line spacing 2" ID="OverflowAdaptiveOverflow_Text_Spacing2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="{Binding SpaceBeforeLabel}" Type="Menu Item" AccessibleName="Paragraph spacing before" ID="OverflowAdaptiveSpaceBefore" IsEnabled="{Binding CanUseParagraphSpacing}" Tooltip="{Binding ParagraphSpacingHint}">
+                <Button Content="0 px" Action="SpaceBefore0" Type="Menu Item" AccessibleName="0 pixels before paragraph" ID="OverflowAdaptiveSpaceBefore0" Selected="{Binding SpaceBefore0Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="4 px" Action="SpaceBefore4" Type="Menu Item" AccessibleName="4 pixels before paragraph" ID="OverflowAdaptiveSpaceBefore4" Selected="{Binding SpaceBefore4Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="8 px" Action="SpaceBefore8" Type="Menu Item" AccessibleName="8 pixels before paragraph" ID="OverflowAdaptiveSpaceBefore8" Selected="{Binding SpaceBefore8Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="12 px" Action="SpaceBefore12" Type="Menu Item" AccessibleName="12 pixels before paragraph" ID="OverflowAdaptiveSpaceBefore12" Selected="{Binding SpaceBefore12Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="16 px" Action="SpaceBefore16" Type="Menu Item" AccessibleName="16 pixels before paragraph" ID="OverflowAdaptiveSpaceBefore16" Selected="{Binding SpaceBefore16Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="24 px" Action="SpaceBefore24" Type="Menu Item" AccessibleName="24 pixels before paragraph" ID="OverflowAdaptiveSpaceBefore24" Selected="{Binding SpaceBefore24Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+              </Button>
+              <Button Content="{Binding SpaceAfterLabel}" Type="Menu Item" AccessibleName="Paragraph spacing after" ID="OverflowAdaptiveSpaceAfter" IsEnabled="{Binding CanUseParagraphSpacing}" Tooltip="{Binding ParagraphSpacingHint}">
+                <Button Content="0 px" Action="SpaceAfter0" Type="Menu Item" AccessibleName="0 pixels after paragraph" ID="OverflowAdaptiveSpaceAfter0" Selected="{Binding SpaceAfter0Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="4 px" Action="SpaceAfter4" Type="Menu Item" AccessibleName="4 pixels after paragraph" ID="OverflowAdaptiveSpaceAfter4" Selected="{Binding SpaceAfter4Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="8 px" Action="SpaceAfter8" Type="Menu Item" AccessibleName="8 pixels after paragraph" ID="OverflowAdaptiveSpaceAfter8" Selected="{Binding SpaceAfter8Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="12 px" Action="SpaceAfter12" Type="Menu Item" AccessibleName="12 pixels after paragraph" ID="OverflowAdaptiveSpaceAfter12" Selected="{Binding SpaceAfter12Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="16 px" Action="SpaceAfter16" Type="Menu Item" AccessibleName="16 pixels after paragraph" ID="OverflowAdaptiveSpaceAfter16" Selected="{Binding SpaceAfter16Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+                <Button Content="24 px" Action="SpaceAfter24" Type="Menu Item" AccessibleName="24 pixels after paragraph" ID="OverflowAdaptiveSpaceAfter24" Selected="{Binding SpaceAfter24Selected}" IsEnabled="{Binding CanUseParagraphSpacing}" />
+              </Button>
+              <Button Content="Inherited line spacing" Action="Spacing0" Type="Menu Item" AccessibleName="Inherited line spacing" ID="OverflowAdaptiveSpacingInherited" Selected="{Binding SpacingAutoSelected}" IsEnabled="{Binding CanUseTypography}" />
+              <Button Content="Line spacing 1" Action="Spacing1" Selected="{Binding Spacing1Selected}" Type="Menu Item" AccessibleName="Line spacing 1" ID="OverflowAdaptiveOverflow_Text_Spacing1" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="Line spacing 1.25" Action="Spacing1.25" Selected="{Binding Spacing125Selected}" Type="Menu Item" AccessibleName="Line spacing 1.25" ID="OverflowAdaptiveOverflow_Text_Spacing1_25" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
+              <Button Content="Line spacing 2" Action="Spacing2" Selected="{Binding Spacing2Selected}" Type="Menu Item" AccessibleName="Line spacing 2" ID="OverflowAdaptiveOverflow_Text_Spacing2" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding SpacingControlHint}" />
             </Button>
-            <Button Type="Menu Item" Content="Colours" ID="OverflowAdaptiveOverflow_Colours">
+            <Button Active="{Binding TextMode}" Type="Menu Item" Content="Colours" ID="OverflowAdaptiveOverflow_Colours">
               <Button Content="Black" Action="TextColor#FF111111" Type="Menu Item" AccessibleName="Black" ID="OverflowAdaptiveOverflow_Colours_TextColor_FF111111" />
               <Button Content="Dark grey" Action="TextColor#FF5F6368" Type="Menu Item" AccessibleName="Dark grey" ID="OverflowAdaptiveOverflow_Colours_TextColor_FF5F6368" />
               <Button Content="Grey" Action="TextColor#FF9AA0A6" Type="Menu Item" AccessibleName="Grey" ID="OverflowAdaptiveOverflow_Colours_TextColor_FF9AA0A6" />

@@ -106,23 +106,50 @@ public sealed partial class CuiControlLoader : IDisposable
     private int _currentLayer;
     private string? _currentRepeatIdentity;
     private PropertyChangedEventHandler? _bindingChangedHandler;
-    private bool _listeningForGlobalPalette;
+    private GlobalThemeSubscription? _globalThemeSubscription;
+    private Dispatcher? _themeDispatcher;
+
+    // A static publisher must not keep a retired document (or its entire native
+    // control tree) alive. A global palette belongs to the application that
+    // created the document, not a later application/dispatcher in the same host.
+    private sealed class GlobalThemeSubscription : IDisposable
+    {
+        private readonly WeakReference<CuiControlLoader> _loader;
+        private readonly WeakReference<Application>? _application;
+
+        public GlobalThemeSubscription(CuiControlLoader loader)
+        {
+            _loader = new(loader);
+            if (Application.Current is { } application) _application = new(application);
+            CuiThemeResourceApplier.PaletteChanged += Changed;
+        }
+
+        private void Changed(object? sender, EventArgs args)
+        {
+            Application? application = null;
+            if (!_loader.TryGetTarget(out var loader) || loader._disposed ||
+                (_application is not null && !_application.TryGetTarget(out application)))
+            {
+                Dispose();
+                return;
+            }
+            if (!ReferenceEquals(application, Application.Current)) return;
+            loader.ThemePreferenceChanged(sender, args);
+        }
+
+        public void Dispose() => CuiThemeResourceApplier.PaletteChanged -= Changed;
+    }
 
     public void SetThemePreferenceContext(CuiThemePreferenceContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (ReferenceEquals(context, _themePreference)) return;
         if (_themePreference is not null) _themePreference.Changed -= ThemePreferenceChanged;
-        if (_listeningForGlobalPalette)
-        {
-            CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged;
-            _listeningForGlobalPalette = false;
-        }
+        _globalThemeSubscription?.Dispose();
+        _globalThemeSubscription = null;
         _themePreference = context; context.Changed += ThemePreferenceChanged;
         ThemePreferenceChanged(this, EventArgs.Empty);
     }
-
-    private void GlobalPaletteChanged(object? sender, EventArgs args) => ThemePreferenceChanged(sender, args);
 
     private CuiThemeResolution ResolveTheme(string name)
     {
@@ -133,6 +160,7 @@ public sealed partial class CuiControlLoader : IDisposable
 
     private void ThemePreferenceChanged(object? sender, EventArgs args)
     {
+        if (_disposed || _themeDispatcher is null) return;
         void RefreshTheme()
         {
             if (_disposed) return;
@@ -173,7 +201,7 @@ public sealed partial class CuiControlLoader : IDisposable
         // Preserve failure custody with the preference context even when the
         // settings owner publishes from an I/O thread. Fire-and-forget posting
         // would mark the observer successful before any control was refreshed.
-        if (Dispatcher.UIThread.CheckAccess()) RefreshTheme(); else Dispatcher.UIThread.Invoke(RefreshTheme);
+        if (_themeDispatcher.CheckAccess()) RefreshTheme(); else _themeDispatcher.Invoke(RefreshTheme);
     }
 
     private bool ApplyResolvedTheme(Control control, CuiThemeResolution resolution)
@@ -486,11 +514,8 @@ public sealed partial class CuiControlLoader : IDisposable
             Attempt(_lifetime.Cancel);
             ActionFailed = null;
             if (_themePreference is not null) Attempt(() => _themePreference.Changed -= ThemePreferenceChanged);
-            if (_listeningForGlobalPalette)
-            {
-                Attempt(() => CuiThemeResourceApplier.PaletteChanged -= GlobalPaletteChanged);
-                _listeningForGlobalPalette = false;
-            }
+            if (_globalThemeSubscription is { } globalSubscription) Attempt(globalSubscription.Dispose);
+            _globalThemeSubscription = null;
             if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
                 Attempt(() => observable.PropertyChanged -= _bindingChangedHandler);
             _bindingChangedHandler = null;
@@ -4497,14 +4522,14 @@ public sealed partial class CuiControlLoader : IDisposable
     /// </summary>
     private void ApplyThemeToControlIfContainer(Control control)
     {
+        _themeDispatcher ??= control.Dispatcher;
         var name = _themeNames.Count > 0 ? _themeNames.Peek() : "user_preference";
         _controlThemeNames[control] = name;
         ApplyResolvedTheme(control, ResolveTheme(name));
-        if (_themePreference is null && !_listeningForGlobalPalette)
-        {
-            CuiThemeResourceApplier.PaletteChanged += GlobalPaletteChanged;
-            _listeningForGlobalPalette = true;
-        }
+        // Without an Application this is an offline document projection, not
+        // an active global-theme observer. Its dispatcher may never run a loop.
+        if (_themePreference is null && Application.Current is not null)
+            _globalThemeSubscription ??= new GlobalThemeSubscription(this);
     }
 
     /// <summary>

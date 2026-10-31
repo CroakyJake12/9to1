@@ -477,8 +477,10 @@ public sealed class BoardsBlockActionsTests
             await DrainMenuAsync(fixture);
             TestUiThread.Run(() =>
             {
-                foreach (var name in new[] { "Text", "Checklist", "Bulleted", "Numbered", "Table", "Image", "Divider" })
+                foreach (var name in new[] { "Text", "Image" })
                     Assert.False(MenuRow(fixture, "BlockTurnInto" + name).IsEnabled);
+                foreach (var name in new[] { "Checklist", "Bulleted", "Numbered", "Table", "Divider" })
+                    Assert.True(MenuRow(fixture, "BlockTurnInto" + name).IsEnabled);
                 var heading = MenuRow(fixture, "BlockTurnIntoHeading");
                 Assert.True(heading.IsEffectivelyVisible);
                 Assert.True(heading.IsEnabled);

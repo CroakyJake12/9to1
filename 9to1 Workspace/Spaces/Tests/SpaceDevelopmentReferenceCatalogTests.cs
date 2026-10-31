@@ -227,7 +227,8 @@ public sealed partial class SpaceDevelopmentWorkspaceTests
         Assert.Contains("dev.references.open-space", actions);
         Assert.DoesNotContain("dev.references.create-task", actions); Assert.DoesNotContain("dev.references.resume", actions);
         var page = Assert.Single(components, component => component.Name == "dev-saved-projects-page");
-        Assert.True(page.TryGetLiteralAttribute("font-family", out var font)); Assert.Equal("Montserrat", font);
+        // A per-page font would override the shared CUI theme and user preference.
+        Assert.False(page.TryGetLiteralAttribute("font-family", out _));
     }
 
     private static bool CatalogContains<T>(Exception error) where T : Exception => error is T ||

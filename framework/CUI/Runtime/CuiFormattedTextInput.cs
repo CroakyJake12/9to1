@@ -93,6 +93,7 @@ public sealed class CuiFormattedTextInput : AvaloniaObject
 public sealed class CuiFormattedTextPresenter : TextPresenter
 {
     private bool _refreshCaret;
+    private TextDecorationCollection? _preeditUnderline;
     public static readonly StyledProperty<CuiFormattedText?> PresentationProperty =
         AvaloniaProperty.Register<CuiFormattedTextPresenter, CuiFormattedText?>(nameof(Presentation));
 
@@ -132,6 +133,24 @@ public sealed class CuiFormattedTextPresenter : TextPresenter
         var original = Text ?? string.Empty;
         var preedit = PreeditText ?? string.Empty;
         var caret = Math.Clamp(CaretIndex, 0, original.Length);
+        if (preedit.Length > 0 && textStyleOverrides is not null)
+        {
+            // The native presenter supplies a process-wide mutable underline.
+            // Its decorations belong to the first dispatcher that used them;
+            // plain/password inputs must instead draw this presenter's own copy.
+            var underline = _preeditUnderline ??=
+                new TextDecorationCollection { new TextDecoration { Location = TextDecorationLocation.Underline } };
+            textStyleOverrides = textStyleOverrides.Select(span =>
+            {
+                var properties = span.Value;
+                return ReferenceEquals(properties.TextDecorations, TextDecorations.Underline)
+                    ? new ValueSpan<TextRunProperties>(span.Start, span.Length, new GenericTextRunProperties(
+                        properties.Typeface, properties.FontRenderingEmSize, underline,
+                        properties.ForegroundBrush, properties.BackgroundBrush, properties.BaselineAlignment,
+                        properties.CultureInfo, properties.FontFeatures))
+                    : span;
+            }).ToArray();
+        }
         // Password rendering is always the stock path, even when revealed. Never
         // substitute a logical rich snapshot for the presenter's masked text.
         if (presentation is null || PasswordChar != default ||

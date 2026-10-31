@@ -7,6 +7,7 @@ public sealed partial class SpaceRegistry
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
     private const int CurrentVersion = 4;
+    private static StringComparison LocalPathComparison => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -161,8 +162,14 @@ public sealed partial class SpaceRegistry
     }
 
     public Task<SpaceDefinition> SetArchivedAsync(Guid id, bool archived, CancellationToken cancellationToken = default) =>
+        SetArchivedAsync(id, archived, expectedRevision: null, cancellationToken);
+
+    public Task<SpaceDefinition> SetArchivedAsync(Guid id, bool archived, long? expectedRevision,
+        CancellationToken cancellationToken = default) =>
         MutateSpaceAsync(id, (space, spaces) =>
         {
+            if (expectedRevision is { } revision && space.Revision != revision)
+                throw new SpaceRevisionConflictException(id, revision, space.Revision);
             if (space.IsBuiltIn && archived) throw new InvalidOperationException("Built-in Spaces cannot be archived.");
             if (archived && spaces.Any(candidate => candidate.ParentSpaceId == id && !candidate.IsArchived))
                 throw new InvalidOperationException("Move or archive child Spaces before archiving their parent.");
@@ -173,6 +180,10 @@ public sealed partial class SpaceRegistry
 
     public Task<SpaceDefinition> RestoreAsync(Guid id, CancellationToken cancellationToken = default) =>
         SetArchivedAsync(id, false, cancellationToken);
+
+    public Task<SpaceDefinition> RestoreAsync(Guid id, long? expectedRevision,
+        CancellationToken cancellationToken = default) =>
+        SetArchivedAsync(id, false, expectedRevision, cancellationToken);
 
     public Task<SpaceDefinition> UpdateAsync(
         SpaceDefinition updated,
@@ -521,28 +532,45 @@ public sealed partial class SpaceRegistry
         Guid id,
         string path,
         SpaceFilePermission permission = SpaceFilePermission.ReadOnly,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        AddFileAsync(id, path, permission, expectedRevision: null, cancellationToken);
+
+    public Task<SpaceDefinition> AddFileAsync(Guid id, string path, SpaceFilePermission permission,
+        long? expectedRevision, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("A file path is required.", nameof(path));
         var fullPath = Path.GetFullPath(path);
         return MutateSpaceAsync(id, (space, _) =>
         {
+            if (expectedRevision is { } revision && space.Revision != revision)
+                throw new SpaceRevisionConflictException(id, revision, space.Revision);
+            if (space.IsArchived) throw new InvalidOperationException("Restore this Space before adding sources.");
             var files = space.Files
-                .Where(file => !file.Path.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
+                .Where(file => !file.Path.Equals(fullPath, LocalPathComparison))
                 .Append(new SpaceFileReference(fullPath, Path.GetFileName(fullPath), permission, _clock()))
                 .ToArray();
             return space with { Files = files, UpdatedAt = _clock() };
         }, cancellationToken);
     }
 
-    public Task<SpaceDefinition> RemoveFileAsync(Guid id, string path, CancellationToken cancellationToken = default)
+    public Task<SpaceDefinition> RemoveFileAsync(Guid id, string path, CancellationToken cancellationToken = default) =>
+        RemoveFileAsync(id, path, expectedRevision: null, cancellationToken);
+
+    public Task<SpaceDefinition> RemoveFileAsync(Guid id, string path, long? expectedRevision,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("A file path is required.", nameof(path));
         var fullPath = Path.GetFullPath(path);
-        return MutateSpaceAsync(id, (space, _) => space with
+        return MutateSpaceAsync(id, (space, _) =>
         {
-            Files = space.Files.Where(file => !file.Path.Equals(fullPath, StringComparison.OrdinalIgnoreCase)).ToArray(),
-            UpdatedAt = _clock()
+            if (expectedRevision is { } revision && space.Revision != revision)
+                throw new SpaceRevisionConflictException(id, revision, space.Revision);
+            if (space.IsArchived) throw new InvalidOperationException("Restore this Space before removing sources.");
+            return space with
+            {
+                Files = space.Files.Where(file => !file.Path.Equals(fullPath, LocalPathComparison)).ToArray(),
+                UpdatedAt = _clock()
+            };
         }, cancellationToken);
     }
 
@@ -936,7 +964,7 @@ public sealed partial class SpaceRegistry
             }
         }
         foreach (var space in spaces.Where(item => item.ParentSpaceId.HasValue))
-            ValidateParent(spaces, space.Id, space.ParentSpaceId);
+            ValidateParent(spaces, space.Id, space.ParentSpaceId, space.IsArchived);
     }
 
     private static void ValidateDefinition(SpaceDefinition space, IReadOnlyList<SpaceDefinition> peers)
@@ -1005,15 +1033,15 @@ public sealed partial class SpaceRegistry
         if (space.LayoutDocument is { } layout) ValidateLayout(layout);
         if (space.DraftConfiguration is { } draft)
             ValidateConfiguration(space with { DraftConfiguration = null }, draft, peers);
-        if (space.ParentSpaceId is { } parent) ValidateParent(peers.Append(space).ToArray(), space.Id, parent);
+        if (space.ParentSpaceId is { } parent) ValidateParent(peers.Append(space).ToArray(), space.Id, parent, space.IsArchived);
     }
 
-    private static void ValidateParent(IReadOnlyList<SpaceDefinition> spaces, Guid spaceId, Guid? parentSpaceId)
+    private static void ValidateParent(IReadOnlyList<SpaceDefinition> spaces, Guid spaceId, Guid? parentSpaceId, bool childIsArchived = false)
     {
         if (parentSpaceId is null) return;
         if (parentSpaceId == spaceId) throw new InvalidOperationException("A Space cannot be its own parent.");
         var parent = FindRequired(spaces, parentSpaceId.Value);
-        if (parent.IsArchived) throw new InvalidOperationException("An archived Space cannot be a parent.");
+        if (parent.IsArchived && !childIsArchived) throw new InvalidOperationException("An archived Space cannot be a parent of an active Space.");
         var current = parent;
         var visited = new HashSet<Guid> { spaceId };
         while (true)

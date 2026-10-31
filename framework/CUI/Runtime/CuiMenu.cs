@@ -92,8 +92,7 @@ public sealed class CuiMenu : Menu
                 if (generation != _spaceOpenGeneration || root is null || !item.IsSubMenuOpen
                     || openTransition != openedTransition || !ReferenceEquals(TopLevel.GetTopLevel(item), root)
                     || !ReferenceEquals(root.FocusManager?.GetFocusedElement(), focusBefore)) return;
-                item.Items.OfType<CuiMenuItem>().FirstOrDefault(child =>
-                    child.IsEffectivelyEnabled && child.IsEffectivelyVisible)?.Focus();
+                item.FocusFirstEnabledChild();
             }
             finally { item.PropertyChanged -= submenuChanged; }
         }, DispatcherPriority.Input);

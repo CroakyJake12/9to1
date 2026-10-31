@@ -146,8 +146,19 @@ public sealed class VisualCaptureTests
             // document editor, then use the direct or collapsed authored style field.
             var paragraph = root.GetVisualDescendants().OfType<TextBox>()
                 .First(input => input.Name?.StartsWith("t_", StringComparison.Ordinal) == true);
-            paragraph.Focus(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var paragraphAcceptedFocus = paragraph.Focus(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            string SelectionDescription()
+            {
+                var target = viewModel.ToolbarTarget;
+                return $"editor={paragraph.Name}, accepted={paragraphAcceptedFocus}, focused={paragraph.IsFocused}, " +
+                    $"editorAttached={TopLevel.GetTopLevel(paragraph) is not null}, " +
+                    $"ownerSelection={viewModel.SelectedBlockId}/{viewModel.FindBlock(viewModel.SelectedBlockId)?.Kind}, " +
+                    $"targetSelection={target.SelectedBlockId}/{target.FindBlock(target.SelectedBlockId)?.Kind}, " +
+                    $"drawing={target.IsDrawMode}, capabilities={target.AdaptiveCapabilities()}";
+            }
+            var selectionBeforeMenu = SelectionDescription();
             var styleMenu = BoardsCuiControlFinder.FindByAutomationId<ComboBox>(root, "AdaptiveStyle");
+            var directStyleState = $"enabled={styleMenu?.IsEnabled}, visible={styleMenu?.IsEffectivelyVisible}, attached={styleMenu is not null && TopLevel.GetTopLevel(styleMenu) is not null}";
             if (styleMenu is null || !styleMenu.IsEffectivelyVisible)
             {
                 styleMenu = BoardsCuiControlFinder.FindByAutomationId<ComboBox>(root, "OverflowAdaptiveStyle");
@@ -163,7 +174,8 @@ public sealed class VisualCaptureTests
             Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
             foreach (var name in new[] { "Heading 4", "Heading 5", "Heading 6" })
                 Assert.Contains(name, styleMenu.Items.Cast<object>().OfType<string>());
-            var focusDescription = $"id={Avalonia.Automation.AutomationProperties.GetAutomationId(styleMenu)}, focusable={styleMenu.Focusable}, enabled={styleMenu.IsEnabled}/{styleMenu.IsEffectivelyEnabled}, visible={styleMenu.IsVisible}/{styleMenu.IsEffectivelyVisible}, attached={TopLevel.GetTopLevel(styleMenu) is not null}, mode={viewModel.IsEditMode}, canEdit={viewModel.CanEdit}";
+            var focusDescription = $"id={Avalonia.Automation.AutomationProperties.GetAutomationId(styleMenu)}, focusable={styleMenu.Focusable}, enabled={styleMenu.IsEnabled}/{styleMenu.IsEffectivelyEnabled}, visible={styleMenu.IsVisible}/{styleMenu.IsEffectivelyVisible}, attached={TopLevel.GetTopLevel(styleMenu) is not null}, mode={viewModel.IsEditMode}, canEdit={viewModel.CanEdit}; " +
+                $"direct={directStyleState}; before=[{selectionBeforeMenu}]; after=[{SelectionDescription()}]";
             Assert.True(styleMenu.Focusable, "The style field must allow keyboard focus: " + focusDescription);
             Assert.True(styleMenu.IsEffectivelyEnabled, "The style field must be enabled: " + focusDescription);
             var acceptedFocus = styleMenu.Focus();

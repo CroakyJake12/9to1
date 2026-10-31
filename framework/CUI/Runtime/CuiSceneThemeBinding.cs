@@ -61,7 +61,14 @@ internal sealed class CuiSceneThemeBinding : IDisposable
                 Resources.MergedDictionaries[0] = snapshot;
                 var admitted = !_disposed && _canPublish?.Invoke() != false;
                 if (admitted) _updated?.Invoke(Resources);
-                if (admitted && !_disposed && _canPublish?.Invoke() != false && _scene.ThemePreference is null)
+                if (!admitted || _disposed || _canPublish?.Invoke() == false)
+                {
+                    // Resource notifications and the scene callback can revoke
+                    // ownership synchronously. Keep this revision retryable on
+                    // readmission without rolling back a newer reentrant update.
+                    if (ReferenceEquals(_appliedPreference, resolution)) _appliedPreference = previous;
+                }
+                else if (_scene.ThemePreference is null)
                     MarkGlobalPaletteApplied(globalVersion);
             }
             catch

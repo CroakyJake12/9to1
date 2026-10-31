@@ -31,6 +31,7 @@
     <Action name="RenameRow" command="spaces.rename" parameter="{Binding space.id}" />
     <Action name="MoveRow" command="spaces.move" parameter="{Binding space.id}" />
     <Action name="ForkRow" command="spaces.fork" parameter="{Binding space.id}" />
+    <Action name="RestoreArchived" command="spaces.restore" parameter="{Binding archived.restoreTarget}" />
     <Action name="ArchiveRow" command="spaces.archive" parameter="{Binding space.id}" />
     <Action name="ConfirmRename" command="spaces.confirm-rename" parameter="{Binding spaces.pendingRenameSpaceId}" />
     <Action name="RenameSelected" command="spaces.rename" parameter="{Binding selection.id}" />
@@ -48,6 +49,8 @@
     <Action name="ToggleSwitcher" command="spaces.toggle-space-switcher" />
     <Action name="ToggleOverflow" command="spaces.toggle-space-overflow" />
     <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
+    <Action name="RemoveContextReference" command="spaces.remove-context-reference" parameter="{Binding reference.removeTarget}" />
+    <Action name="RemoveFileSource" command="spaces.remove-file-source" parameter="{Binding fileSource.removeTarget}" />
     <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
     <Action name="OpenSidebarTask" command="spaces.tasks.open" parameter="{Binding task.openIntent}" />
     <Action name="ReviewSidebarTask" command="spaces.tasks.review" parameter="{Binding task.openIntent}" />
@@ -284,6 +287,18 @@
             <If Condition="!{Binding spaces.hasCustomSpaces}">
               <Text id="custom-spaces-empty-text" text="Create a Space to keep related conversations and work together" foreground="{Resource CuiTextSoftBrush}" />
             </If>
+            <If Condition="{Binding spaces.hasArchivedSpaces}">
+              <Container id="archived-spaces" Type="Vertical Stack" CellGap="8" accessible-name="Archived Spaces">
+                <Text text="Archived Spaces" font-size="18" font-weight="SemiBold" />
+                <Text text="Restore a Space to return it to navigation. Its conversations and settings are kept." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                <Repeat Source="{Binding spaces.archivedSpaces}" As="archived" Key="{Binding archived.id}">
+                  <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+                    <Text text="{Binding archived.name}" text-wrapping="Wrap" VerticalAlignment="Center" />
+                    <Button Column="1" action="RestoreArchived" content="Restore" accessible-name="{Binding archived.restoreLabel}" />
+                  </Container>
+                </Repeat>
+              </Container>
+            </If>
             <Text id="spaces-status" text="{Binding status.message}" role="status" accessible-name="Spaces status" />
             <If Condition="{Binding selection.isRenaming}">
               <Container id="rename-controls" Type="Vertical Stack" CellGap="8">
@@ -326,14 +341,26 @@
             <Container id="space-context" accessible-name="Space context and policy" background="{Resource CuiPanelBrush}" corner-radius="12" padding="16" Type="Vertical Stack" CellGap="8">
               <Text id="space-context-heading" text="Context" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
+              <Repeat id="space-local-sources" Source="{Binding selection.fileSources}" As="fileSource" Key="{Binding fileSource.path}">
+                <Container Type="Vertical Stack" CellGap="4" accessible-name="{Binding fileSource.name}">
+                  <Text text="{Binding fileSource.name}" font-weight="SemiBold" />
+                  <Text text="{Binding fileSource.path}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding fileSource.accessLabel}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                  <Button action="RemoveFileSource" content="Remove source" accessible-name="{Binding fileSource.removeLabel}" Interactive="{Binding selection.canEdit}" HorizontalAlignment="Left" />
+                </Container>
+              </Repeat>
               <Repeat id="space-context-items" Source="{Binding selection.contextReferences}" As="reference" Key="{Binding reference.id}">
                 <Container id="space-context-item" role="listitem" accessible-name="{Binding reference.label}" Type="Vertical Stack">
                   <Text id="space-context-item-label" text="{Binding reference.label}" />
                   <Text id="space-context-item-permission" text="{Binding reference.permissionLabel}" foreground="{Resource CuiTextSoftBrush}" />
                   <Text id="space-context-item-index-state" text="{Binding reference.indexStateLabel}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding reference.ownerLabel}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding reference.revisionLabel}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding reference.inclusionLabel}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Button action="RemoveContextReference" content="Remove source" accessible-name="{Binding reference.removeLabel}" Interactive="{Binding selection.canEdit}" HorizontalAlignment="Left" />
                 </Container>
               </Repeat>
-              <If Condition="!{Binding selection.hasContextReferences}">
+              <If Condition="!{Binding selection.hasSources}">
                 <Text id="space-context-empty-text" text="No sources added" foreground="{Resource CuiTextSoftBrush}" />
               </If>
 

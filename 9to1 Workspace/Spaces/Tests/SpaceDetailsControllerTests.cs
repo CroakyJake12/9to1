@@ -51,8 +51,21 @@ public sealed class SpaceDetailsControllerTests
         Assert.Equal("New purpose", saved.Description);
         Assert.Equal("book", saved.IconKey);
         Assert.Equal("Use my sources.\nKeep original evidence.", saved.Instructions);
+        Assert.Equal(original.ActiveConfigurationRevision + 1, saved.ActiveConfigurationRevision);
+        Assert.Equal(saved.ActiveConfigurationRevision, saved.DraftBaseActiveRevision);
+        Assert.Equal(original.DraftConfigurationRevision, saved.DraftConfigurationRevision);
+        var originalHistory = Assert.IsAssignableFrom<IReadOnlyList<SpaceConfigurationRevision>>(original.ConfigurationHistory);
+        var savedHistory = Assert.IsAssignableFrom<IReadOnlyList<SpaceConfigurationRevision>>(saved.ConfigurationHistory);
+        Assert.Equal(JsonSerializer.Serialize(originalHistory),
+            JsonSerializer.Serialize(savedHistory.Take(originalHistory.Count).ToArray()));
+        Assert.Equal(originalHistory.Count + 1, savedHistory.Count);
+        var latest = savedHistory.Last();
+        Assert.Equal(saved.ActiveConfigurationRevision, latest.Revision);
+        Assert.Equal(JsonSerializer.Serialize(SpaceConfigurationDocument.From(saved)), JsonSerializer.Serialize(latest.Configuration));
         var unexposed = saved with { Name = original.Name, Description = original.Description, IconKey = original.IconKey,
-            Instructions = original.Instructions, Revision = original.Revision, UpdatedAt = original.UpdatedAt };
+            Instructions = original.Instructions, Revision = original.Revision, UpdatedAt = original.UpdatedAt,
+            ActiveConfigurationRevision = original.ActiveConfigurationRevision, DraftBaseActiveRevision = original.DraftBaseActiveRevision,
+            ConfigurationHistory = original.ConfigurationHistory };
         Assert.Equal(JsonSerializer.Serialize(original), JsonSerializer.Serialize(unexposed));
         Assert.Equal(ids, (await reopened.GetAllAsync(cancellationToken: token)).Select(space => space.Id).Order());
         Assert.Equal("keep", (await files.OpenStore().GetAsync<Marker>("unrelated.fixture", token))!.Value);

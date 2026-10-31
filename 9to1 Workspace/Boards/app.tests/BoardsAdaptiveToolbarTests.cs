@@ -208,7 +208,7 @@ public sealed class BoardsAdaptiveToolbarTests
     }
 
     [Fact]
-    public async Task Mounted_list_row_keeps_supported_formatting_and_refuses_unstored_properties()
+    public async Task Mounted_list_row_keeps_supported_formatting_and_refuses_unstored_paragraph_properties()
     {
         var directory = Path.Combine(Path.GetTempPath(), "boards-list-toolbar-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -236,16 +236,19 @@ public sealed class BoardsAdaptiveToolbarTests
                     window.Show(); window.UpdateLayout();
                     var row = vm.PageBlocks.Single(block => block.Kind == "bulleted");
                     vm.FocusBlock(row.Id); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
-                    foreach (var controlId in new[] { "AdaptiveStyle", "AdaptiveFont", "AdaptiveSize", "AdaptiveHighlight" })
+                    foreach (var controlId in new[] { "AdaptiveFont", "AdaptiveSize", "AdaptiveHighlight" })
                     {
                         var control = BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, controlId)!;
                         Assert.NotNull(control); Assert.True(control.IsEffectivelyVisible);
-                        Assert.False(control.IsEffectivelyEnabled);
-                        Assert.Contains("individual list", ToolTip.GetTip(control)?.ToString());
+                        Assert.True(control.IsEffectivelyEnabled);
+                        Assert.Contains("entire list item", ToolTip.GetTip(control)?.ToString());
                     }
+                    var styleControl = BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, "AdaptiveStyle")!;
+                    Assert.False(styleControl.IsEffectivelyEnabled);
+                    Assert.Contains("individual list", ToolTip.GetTip(styleControl)?.ToString());
                     var fontGroup = BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, "AdaptiveFontSection")!;
                     Assert.True(fontGroup.IsEffectivelyEnabled);
-                    Assert.Contains("Font, style and size unavailable", ToolTip.GetTip(fontGroup)?.ToString());
+                    Assert.Contains("entire list item", ToolTip.GetTip(fontGroup)?.ToString());
                     var caseMenu = presentation.Content.GetLogicalDescendants().OfType<MenuItem>().First(item =>
                         Avalonia.Automation.AutomationProperties.GetName(item) == "Text case");
                     Assert.True(caseMenu.IsEffectivelyEnabled);
@@ -254,16 +257,16 @@ public sealed class BoardsAdaptiveToolbarTests
                     Assert.True(BoardsCuiControlFinder.FindByAutomationId<MenuItem>(presentation.Content, "AdaptiveTextColor")!.IsEffectivelyEnabled);
                     using var context = new AdaptiveToolbar.Context(vm);
                     var before = vm.Session.Snapshot;
-                    Assert.False(context.TrySetValue("FontDraft", "Georgia"));
-                    Assert.False(context.TrySetValue("SizeDraft", "24"));
+                    Assert.True(context.TrySetValue("FontDraft", "Georgia"));
+                    Assert.True(context.TrySetValue("SizeDraft", "24"));
                     Assert.False(context.TrySetValue("StyleIndex", 0));
-                    foreach (var command in new[] { "FontGeorgia", "Size24", "Highlight#FFFFFF00", "Spacing2", "AlignRight", "ListNumbered" })
+                    foreach (var command in new[] { "AlignRight", "ListNumbered" })
                     {
                         var refused = context.DispatchAsync(command, null).AsTask(); BoardsTabberInsertionTests.Await(refused);
                         Assert.Equal(before, vm.Session.Snapshot);
                         Assert.Contains("individual list", vm.Get("StatusText")?.ToString());
                     }
-                    foreach (var command in new[] { "ToggleBold", "TextColor#FFD32F2F", "ToggleSub", "CaseUpper", "IndentInc" })
+                    foreach (var command in new[] { "ApplyFont", "ApplySize", "Highlight#FFFFFF00", "Spacing2", "ToggleBold", "TextColor#FFD32F2F", "ToggleSub", "CaseUpper", "IndentInc" })
                     {
                         var applied = context.DispatchAsync(command, null).AsTask(); BoardsTabberInsertionTests.Await(applied);
                     }
@@ -271,6 +274,8 @@ public sealed class BoardsAdaptiveToolbarTests
                     Assert.True(updated.Bold); Assert.Equal("#FFD32F2F", updated.Foreground);
                     Assert.Equal("subscript", updated.Baseline); Assert.Equal("DURABLE LIST ROW", updated.Text);
                     Assert.Equal(1, updated.Level);
+                    Assert.Equal("Georgia", updated.FontFamily); Assert.Equal(24, updated.FontSize);
+                    Assert.Equal("#FFFFFF00", updated.Background); Assert.Equal(2, updated.LineSpacing);
                 });
                 BoardsTabberInsertionTests.OnUi(() => presentation.SaveAsync().AsTask());
             }
@@ -284,6 +289,8 @@ public sealed class BoardsAdaptiveToolbarTests
             Assert.True(saved.Bold); Assert.Equal("#FFD32F2F", saved.Foreground);
             Assert.Equal("subscript", saved.Baseline); Assert.Equal("DURABLE LIST ROW", saved.Text);
             Assert.Equal(1, saved.Level);
+            Assert.Equal("Georgia", saved.FontFamily); Assert.Equal(24, saved.FontSize);
+            Assert.Equal("#FFFFFF00", saved.Background); Assert.Equal(2, saved.LineSpacing);
         }
         finally { Directory.Delete(directory, true); }
     }

@@ -41,7 +41,9 @@ internal static class BrowserCanonicalIcons
             throw new ArgumentException("A catalog icon requires a bounded symbolic key.", nameof(source));
         if (!target.Resources.TryGetResource("CuiTextBrush", null, out var resource) || resource is not IBrush brush)
             throw new InvalidOperationException("The icon's scoped CUI text brush is unavailable.");
-        var sourceGeometry = HavenIconCatalog.Resolve(key);
+        // The shared browser/Spaces host uses the canonical management glyph. Desktop may
+        // supply its packaged Spaces rail SVG first through additionalSource.
+        var sourceGeometry = HavenIconCatalog.Resolve(key == "manage-spaces" ? "settings" : key);
         var geometry = new StreamGeometry();
         using (var writer = geometry.Open())
         {

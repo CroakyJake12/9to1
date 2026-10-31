@@ -103,7 +103,16 @@ internal static class Projector
                             Underline = item.Underline,
                             Strike = item.StrikeThrough,
                             Baseline = item.Baseline.ToString().ToLowerInvariant(),
-                            Foreground = item.Foreground
+                            Foreground = item.Foreground,
+                            FontFamily = item.FontFamily,
+                            FontSize = item.FontSize,
+                            Background = item.Background,
+                            LineSpacing = item.LineSpacing > 0 ? item.LineSpacing : block.LineSpacing,
+                            Alignment = block.Alignment.ToString().ToLowerInvariant(),
+                            IndentLevel = block.IndentLevel,
+                            // Parent paragraph spacing belongs outside the whole list.
+                            SpaceBefore = ReferenceEquals(item, block.Items[0]) ? block.SpaceBefore : 0,
+                            SpaceAfter = ReferenceEquals(item, block.Items[^1]) ? block.SpaceAfter : 0
                         });
                     break;
                 case HavenRichBlockKind.Tabber when block.Tabber is not null:
@@ -616,29 +625,34 @@ internal static class MergeDeltas
                 HavenRichNotesOps.SetListItemFormatting(rich, page.Id, parent!.Id, itemId,
                     bold: viewBlock.Bold, italic: viewBlock.Italic, underline: viewBlock.Underline,
                     strike: viewBlock.Strike, baseline: ParseBaseline(viewBlock.Baseline),
-                    foreground: viewBlock.Foreground);
+                    foreground: viewBlock.Foreground, fontFamily: viewBlock.FontFamily,
+                    fontSize: viewBlock.FontSize, background: viewBlock.Background,
+                    lineSpacing: baselineBlock is null || viewBlock.LineSpacing != baselineBlock.LineSpacing
+                        ? viewBlock.LineSpacing : null);
             return;
         }
-        MergeNewItem(rich, page, NewViewBlock(itemId, viewBlock), parent?.Kind, afterItemId, parentId);
+        MergeNewItem(rich, page, NewViewBlock($"{parentId}:{itemId}", viewBlock), parent?.Kind, afterItemId, parentId);
     }
 
     private static bool ItemFormatChanged(RichBoardBlock current, RichBoardBlock baseline) =>
-        current.Bold != baseline.Bold || current.Italic != baseline.Italic ||
-        current.Underline != baseline.Underline || current.Strike != baseline.Strike ||
-        current.Baseline != baseline.Baseline || current.Foreground != baseline.Foreground;
+        FormatChanged(current, baseline) || current.LineSpacing != baseline.LineSpacing;
 
     private static void MergeNewItem(
         HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock, HavenRichBlockKind? preferredKind,
         string? afterItemId = null, string? preferredParentId = null)
     {
+        var kind = preferredKind ?? ListKind(viewBlock.Kind);
+        var styleId = string.IsNullOrEmpty(viewBlock.StyleId) ? "normal" : viewBlock.StyleId;
         var target = (preferredParentId is null
                 ? null
                 : page.Blocks.FirstOrDefault(b => b.Id == preferredParentId &&
                     b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList))
-            ?? page.Blocks.FirstOrDefault(b =>
-                b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList);
-        target ??= HavenRichNotesOps.ImportBlock(
-            page, preferredKind ?? HavenRichBlockKind.Checklist, NewBlockId(page));
+            ?? page.Blocks.FirstOrDefault(b => b.Kind == kind && b.StyleId == styleId);
+        if (target is null)
+        {
+            target = HavenRichNotesOps.ImportBlock(page, kind, NewBlockId(page));
+            CopyListBlockFormatting(target, viewBlock);
+        }
         var itemId = TrySplitItemId(viewBlock.Id, out _, out var item) ? item : NewItemId(target);
         if (target.Items.Any(i => i.Id == itemId))
             return;
@@ -653,6 +667,16 @@ internal static class MergeDeltas
         }
         else
             added = HavenRichNotesOps.ImportListItem(target, itemId, viewBlock.Text, viewBlock.IsChecked);
+        CopyListItemFormatting(added, viewBlock);
+        // Projection shows effective parent spacing. An Enter-created sibling inherits
+        // the source row's raw override instead of freezing that effective value.
+        var source = afterItemId is null ? null : target.Items.FirstOrDefault(row => row.Id == afterItemId);
+        if (source is not null && viewBlock.LineSpacing == (source.LineSpacing > 0 ? source.LineSpacing : target.LineSpacing))
+            added.LineSpacing = source.LineSpacing;
+    }
+
+    private static void CopyListItemFormatting(HavenRichListItem added, RichBoardBlock viewBlock)
+    {
         added.Level = Math.Clamp(viewBlock.Level, 0, 8);
         added.Bold = viewBlock.Bold;
         added.Italic = viewBlock.Italic;
@@ -660,6 +684,10 @@ internal static class MergeDeltas
         added.StrikeThrough = viewBlock.Strike;
         added.Baseline = ParseBaseline(viewBlock.Baseline);
         added.Foreground = viewBlock.Foreground;
+        added.FontFamily = viewBlock.FontFamily;
+        added.FontSize = viewBlock.FontSize;
+        added.Background = viewBlock.Background;
+        added.LineSpacing = viewBlock.LineSpacing;
     }
 
     private static void MergeTableStructure(
@@ -809,10 +837,12 @@ internal static class MergeDeltas
             {
                 if (!checklistByParent.TryGetValue(parentId, out var parent))
                 {
-                    parent = HavenRichNotesOps.ImportBlock(page, HavenRichBlockKind.Checklist, parentId);
+                    parent = HavenRichNotesOps.ImportBlock(page, ListKind(viewBlock.Kind), parentId);
+                    CopyListBlockFormatting(parent, viewBlock);
                     checklistByParent[parentId] = parent;
                 }
-                HavenRichNotesOps.ImportListItem(parent, itemId, viewBlock.Text, viewBlock.IsChecked);
+                CopyListItemFormatting(HavenRichNotesOps.ImportListItem(parent, itemId, viewBlock.Text, viewBlock.IsChecked), viewBlock);
+                parent.SpaceAfter = viewBlock.SpaceAfter;
                 continue;
             }
             ImportViewBlockInner(page, viewBlock, checklistByParent);
@@ -848,6 +878,22 @@ internal static class MergeDeltas
         block.Width = viewBlock.Width;
         block.Height = viewBlock.Height;
         block.ZOrder = viewBlock.ZOrder;
+    }
+
+    private static HavenRichBlockKind ListKind(string kind) => kind switch
+    {
+        "bulleted" => HavenRichBlockKind.BulletList,
+        "numbered" => HavenRichBlockKind.NumberedList,
+        _ => HavenRichBlockKind.Checklist
+    };
+
+    private static void CopyListBlockFormatting(HavenRichBlock parent, RichBoardBlock row)
+    {
+        parent.StyleId = string.IsNullOrEmpty(row.StyleId) ? "normal" : row.StyleId;
+        parent.Alignment = ParseAlignment(row.Alignment);
+        parent.IndentLevel = row.IndentLevel;
+        parent.SpaceBefore = row.SpaceBefore;
+        parent.SpaceAfter = row.SpaceAfter;
     }
 
     private static void ImportViewBlockInner(
@@ -912,14 +958,15 @@ internal static class MergeDeltas
                     "numbered" => HavenRichBlockKind.NumberedList,
                     _ => HavenRichBlockKind.Checklist,
                 };
-                var parent = page.Blocks.FirstOrDefault(b =>
-                    b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList);
+                var parent = page.Blocks.LastOrDefault(b => b.Kind == kind && b.StyleId == viewBlock.StyleId);
                 if (parent is null)
                 {
                     parent = HavenRichNotesOps.ImportBlock(page, kind, NewBlockId(page));
+                    CopyListBlockFormatting(parent, viewBlock);
                     checklistByParent[parent.Id] = parent;
                 }
-                HavenRichNotesOps.ImportListItem(parent, NewItemId(parent), viewBlock.Text, viewBlock.IsChecked);
+                CopyListItemFormatting(HavenRichNotesOps.ImportListItem(parent, NewItemId(parent), viewBlock.Text, viewBlock.IsChecked), viewBlock);
+                parent.SpaceAfter = viewBlock.SpaceAfter;
                 break;
             }
             case "table":

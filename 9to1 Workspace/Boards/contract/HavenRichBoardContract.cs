@@ -221,6 +221,16 @@ public sealed class HavenRichListItem
     public bool StrikeThrough { get; set; }
     public HavenRichBaseline Baseline { get; set; } = HavenRichBaseline.Normal;
     public string Foreground { get; set; } = string.Empty;
+    // Additive schema-5 fields: older documents inherit; older writers discard these
+    // overrides when resaving. They describe the whole row, not character ranges.
+    /// <summary>Font family override; empty inherits the list block style.</summary>
+    public string FontFamily { get; set; } = string.Empty;
+    /// <summary>Font size override; 0 inherits the list block style.</summary>
+    public double FontSize { get; set; }
+    /// <summary>Highlight override (#RRGGBB or #AARRGGBB); empty inherits.</summary>
+    public string Background { get; set; } = string.Empty;
+    /// <summary>Line spacing multiplier; 0 inherits the list block and its style.</summary>
+    public double LineSpacing { get; set; }
 }
 
 public sealed class HavenRichTable
@@ -481,6 +491,9 @@ public static class HavenRichNotesValidator
             if (block.Table.ColumnWidths.Any(w => w is < 0 or > 5000) || block.Table.RowHeights.Any(h => h is < 0 or > 5000))
                 throw new InvalidOperationException("Table track sizes are outside the supported range.");
         }
+        if (block.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList)
+            foreach (var item in block.Items)
+                ValidateListItemFormatting(item.FontFamily, item.FontSize, item.Background, item.LineSpacing);
         if (block.Kind == HavenRichBlockKind.Image)
         {
             if (block.Image is null)
@@ -499,6 +512,19 @@ public static class HavenRichNotesValidator
             throw new InvalidOperationException("Block line spacing is outside the supported range.");
         if (block.SpaceBefore is < 0 or > 1000 || block.SpaceAfter is < 0 or > 1000)
             throw new InvalidOperationException("Block paragraph spacing is outside the supported range.");
+    }
+
+    public static void ValidateListItemFormatting(string? family, double size, string? background, double spacing)
+    {
+        if (family is null || family.Length > 256 || family.Any(char.IsControl))
+            throw new InvalidOperationException("List font family must contain at most 256 printable characters.");
+        if (!double.IsFinite(size) || size is < 0 or > 256)
+            throw new InvalidOperationException("List font size is outside the supported range.");
+        if (!double.IsFinite(spacing) || spacing is < 0 or > 10)
+            throw new InvalidOperationException("List line spacing is outside the supported range.");
+        if (background is null || (background.Length != 0 &&
+            (background.Length is not (7 or 9) || background[0] != '#' || !background.AsSpan(1).ToArray().All(Uri.IsHexDigit))))
+            throw new InvalidOperationException("List highlight must be empty or a #RRGGBB or #AARRGGBB colour.");
     }
 
     private static void ValidateTableMerges(HavenRichTable table)
