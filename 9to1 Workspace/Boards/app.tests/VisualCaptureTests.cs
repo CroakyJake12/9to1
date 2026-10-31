@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
@@ -138,17 +139,37 @@ public sealed class VisualCaptureTests
         }
         SaveCapture(shotPath);
 
+        ComboBox? capturedStyleMenu = null;
         if (openStyleMenu)
         {
-            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>
-                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
+            // This is an adaptive toolbar: reveal its text context by focusing a real
+            // document editor, then use the direct or collapsed authored style field.
+            var paragraph = root.GetVisualDescendants().OfType<TextBox>()
+                .First(input => input.Name?.StartsWith("t_", StringComparison.Ordinal) == true);
+            paragraph.Focus(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var styleMenu = BoardsCuiControlFinder.FindByAutomationId<ComboBox>(root, "AdaptiveStyle");
+            if (styleMenu is null || !styleMenu.IsEffectivelyVisible)
+            {
+                styleMenu = BoardsCuiControlFinder.FindByAutomationId<ComboBox>(root, "OverflowAdaptiveStyle");
+                Assert.NotNull(styleMenu);
+                foreach (var menu in styleMenu.GetLogicalAncestors().OfType<MenuItem>().Reverse())
+                {
+                    menu.IsSubMenuOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                }
+            }
             Assert.NotNull(styleMenu);
+            Assert.True(styleMenu.IsEffectivelyVisible, "The actual direct or overflow style field must be visible.");
+            capturedStyleMenu = styleMenu;
             Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
-            foreach (var name in new[] { "Header 4", "Header 5", "Header 6" })
-                Assert.Contains(styleMenu.Items.Cast<ComboBoxItem>(), item =>
-                    item.Content is TextBlock preview && preview.Text == name);
-            styleMenu.Focus();
-            Assert.True(styleMenu.IsFocused, "The style menu must be keyboard-focusable.");
+            foreach (var name in new[] { "Heading 4", "Heading 5", "Heading 6" })
+                Assert.Contains(name, styleMenu.Items.Cast<object>().OfType<string>());
+            var focusDescription = $"id={Avalonia.Automation.AutomationProperties.GetAutomationId(styleMenu)}, focusable={styleMenu.Focusable}, enabled={styleMenu.IsEnabled}/{styleMenu.IsEffectivelyEnabled}, visible={styleMenu.IsVisible}/{styleMenu.IsEffectivelyVisible}, attached={TopLevel.GetTopLevel(styleMenu) is not null}, mode={viewModel.IsEditMode}, canEdit={viewModel.CanEdit}";
+            Assert.True(styleMenu.Focusable, "The style field must allow keyboard focus: " + focusDescription);
+            Assert.True(styleMenu.IsEffectivelyEnabled, "The style field must be enabled: " + focusDescription);
+            var acceptedFocus = styleMenu.Focus();
+            var actualFocus = window.FocusManager?.GetFocusedElement() as Control;
+            Assert.True(acceptedFocus && styleMenu.IsFocused, "The style menu must be keyboard-focusable: " + focusDescription +
+                $", accepted={acceptedFocus}, actual={actualFocus?.GetType().Name}/{(actualFocus is null ? null : Avalonia.Automation.AutomationProperties.GetAutomationId(actualFocus))}");
             window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
             Dispatcher.UIThread.RunJobs();
             Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
@@ -252,10 +273,9 @@ public sealed class VisualCaptureTests
         {
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape");
             Dispatcher.UIThread.RunJobs();
-            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().Single(combo =>
-                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
-            Assert.False(styleMenu.IsDropDownOpen, "Escape should close the style menu.");
-            Assert.True(styleMenu.IsFocused, "Closing the menu should restore focus to the style control.");
+            Assert.NotNull(capturedStyleMenu);
+            Assert.False(capturedStyleMenu.IsDropDownOpen, "Escape should close the style menu.");
+            Assert.True(capturedStyleMenu.IsFocused, "Closing the menu should restore focus to the style control.");
         }
         return shotPath;
     }

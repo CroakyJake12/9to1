@@ -225,7 +225,8 @@ public sealed class BoardsLandingRegressionTests
                 {
                     var found = boardWindow.GetVisualDescendants().OfType<Control>().ToList();
                     var nav = found.SingleOrDefault(control => control.Name == "NavPane");
-                    var title = found.SingleOrDefault(control => control.Name == "BoardTitleBox");
+                    var title = found.OfType<MenuItem>().SingleOrDefault(control => control.Name == "BoardSwitcher");
+                    Assert.Equal(board.ViewModel.Get("BoardMenuTitle"), title?.Header);
                     return (NavFound: nav is not null, NavVisible: nav?.IsEffectivelyVisible ?? false,
                         TitleFound: title is not null, TitleVisible: title?.IsEffectivelyVisible ?? false,
                         BoardTitle: board.ViewModel.Get("BoardTitle") as string);
@@ -247,6 +248,7 @@ public sealed class BoardsLandingRegressionTests
                     var found = fixture.Window.GetVisualDescendants().OfType<Control>().ToList();
                     var landing = found.SingleOrDefault(control => control.Name == "LandingHost");
                     var titleBox = found.SingleOrDefault(control => control.Name == "BoardTitleBox");
+                    Assert.Equal("Boards ▾", found.OfType<MenuItem>().Single(control => control.Name == "BoardSwitcher").Header);
                     var nav = found.SingleOrDefault(control => control.Name == "NavPane");
                     return (LandingVisible: landing?.IsEffectivelyVisible ?? false,
                         TitleBoxOnScreen: titleBox?.IsEffectivelyVisible ?? false,

@@ -241,6 +241,7 @@ public sealed class RichStyleView
     public string Baseline { get; set; } = "normal";
     public string FontFamily { get; set; } = string.Empty;
     public double FontSize { get; set; }
+    public double LineSpacing { get; set; }
     public string Foreground { get; set; } = string.Empty;
     public string Background { get; set; } = string.Empty;
     public string Alignment { get; set; } = "inherit";

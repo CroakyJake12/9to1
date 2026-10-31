@@ -277,7 +277,7 @@ internal static class BlockGripCui
         private void PublishExpansion()
         {
             _values["MoveMenuDescription"] = _moveExpanded ? "Move block submenu expanded" : "Move block submenu collapsed";
-            _values["DesignMenuDescription"] = _designExpanded ? "Design submenu expanded" : "Design submenu collapsed";
+            _values["DesignMenuDescription"] = _designExpanded ? "Block Type submenu expanded" : "Block Type submenu collapsed";
             foreach (var name in new[] { "IsExpanded", "IsMoveExpanded", "IsDesignExpanded", "MoveMenuDescription", "DesignMenuDescription" })
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
@@ -311,6 +311,8 @@ internal static class BlockGripCui
             var canManage = viewModel.IsEditMode && target is not null;
             _target = target;
             _values["CanManage"] = canManage;
+            var canTurnInto = canManage && IsBlankTextTarget();
+            _values["CanTurnInto"] = canTurnInto;
             _values["CanMoveUp"] = canManage && target!.ViewIndex > 0;
             _values["CanMoveDown"] = canManage && target!.ViewIndex < target.ViewCount - 1;
             foreach (var conversion in ConversionKinds)
@@ -318,18 +320,19 @@ internal static class BlockGripCui
                 var support = target is not null && viewModel.Session is ContractSessionAdapter conversionAdapter
                     ? conversionAdapter.GetBlockConversionCapability(target, conversion.Kind)
                     : new BoardBlockConversionCapability(false, "ReadOnly");
-                _values["CanConvert" + conversion.Name] = canManage && support.CanApply;
+                _values["CanConvert" + conversion.Name] = canTurnInto && support.CanApply;
                 _values["Convert" + conversion.Name + "Description"] = !viewModel.IsEditMode
                     ? "Switch to Edit mode to change this block."
+                    : !canTurnInto ? "Block Type is available for blank text blocks. Use + to replace this block."
                     : support.Code == "NoChange" ? "This block already uses this type."
                     : support.CanApply ? "Convert this block while keeping its content."
                     : "This conversion cannot preserve this block's content.";
             }
             _values["GripAccessibleName"] = "Open block actions for " + (eligible ? blocks[index].Kind : "block");
             // The submenu rows carry their own expansion state so a screen reader can tell the owner
-            // whether Move Block or Design is open, rather than hearing the same label twice.
+            // whether Move Block or Block Type is open, rather than hearing the same label twice.
             _values["MoveMenuDescription"] = _moveExpanded ? "Move block submenu expanded" : "Move block submenu collapsed";
-            _values["DesignMenuDescription"] = _designExpanded ? "Design submenu expanded" : "Design submenu collapsed";
+            _values["DesignMenuDescription"] = _designExpanded ? "Block Type submenu expanded" : "Block Type submenu collapsed";
             if (target is not null)
             {
                 _values["MoveUpRequest"] = new BoardBlockActionRequest(target, BoardBlockAction.MoveUp);
@@ -348,6 +351,13 @@ internal static class BlockGripCui
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        private bool IsBlankTextTarget()
+        {
+            var block = _viewModel.PageBlocks.FirstOrDefault(block => block.Id == _blockId);
+            return block is not null && (block.Kind is "paragraph" or "heading") &&
+                string.IsNullOrWhiteSpace(block.Text) && BoardTextRanges.Matches(block);
+        }
+
         public bool TryGetValue(string path, out object? value)
         {
             var key = path[(path.LastIndexOf('.') + 1)..];
@@ -360,7 +370,7 @@ internal static class BlockGripCui
                     value = _moveExpanded;
                     return true;
                 case "IsDesignExpanded":
-                    value = _designExpanded;
+                    value = _designExpanded && IsBlankTextTarget();
                     return true;
             }
             return _values.TryGetValue(key, out value);
@@ -390,16 +400,30 @@ internal static class BlockGripCui
             if (command == "ToggleMoveMenu" || command == "ToggleDesignMenu")
             {
                 var move = command == "ToggleMoveMenu";
+                if (!move && !IsBlankTextTarget())
+                {
+                    _designExpanded = false;
+                    _values["CanTurnInto"] = false;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("CanTurnInto"));
+                    PublishExpansion();
+                    return;
+                }
                 if (move) _moveExpanded = !_moveExpanded; else _designExpanded = !_designExpanded;
                 if (move) _designExpanded = false; else _moveExpanded = false;
                 PublishExpansion();
                 return;
             }
-            // Design converts the original issued target. Never refresh its ticket here or route
+            // Block Type converts the original issued target. Never refresh its ticket here or route
             // through insertion/replacement: both would discard the open menu's content contract.
             if (command.StartsWith("TurnInto:", StringComparison.OrdinalIgnoreCase))
             {
                 if (_target is null) return;
+                if (!IsBlankTextTarget())
+                {
+                    _viewModel.Set("StatusText", "Block conversion refused: choose a blank text block. Use + to replace this block.");
+                    Close();
+                    return;
+                }
                 var token = command["TurnInto:".Length..].Trim();
                 var conversion = ConversionKinds.FirstOrDefault(value => value.Token.Equals(token, StringComparison.OrdinalIgnoreCase));
                 if (conversion.Token is null) return;

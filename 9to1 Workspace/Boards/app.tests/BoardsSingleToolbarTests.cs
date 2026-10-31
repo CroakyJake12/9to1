@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -40,6 +41,7 @@ public sealed class BoardsSingleToolbarTests
             BoardsTabberInsertionTests.OnUi(() => opening);
             var presentation = await opening;
             Window? window = null;
+            double[]? childSizesBefore = null;
             try
             {
                 TestUiThread.Run(() =>
@@ -55,9 +57,9 @@ public sealed class BoardsSingleToolbarTests
                     Assert.Equal(childId, vm.ToolbarTarget.SelectedPageId);
                     Assert.Equal(parentId, vm.SelectedPageId);
                     Assert.True(vm.Get("CanFormatTextRange") is true, "The selected pane range must enable the top formatting controls.");
-                    Assert.Single(window.GetVisualDescendants().OfType<ComboBox>(), combo => AutomationProperties.GetName(combo) == "Font size");
+                    Assert.Single(window.GetVisualDescendants().OfType<TextBox>(), input => AutomationProperties.GetName(input) == "Font size");
                     var before = adapter.Snapshot;
-                    Click(window, BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, "RangeBold")!);
+                    ClickFormatting(window, presentation.Content, "RangeBold");
                     BoardsTabberLifetimeTests.Settle(window, () => Block(childId).Runs.Any(run => run.Bold) && child.IsFocused);
                     Assert.Equal(Enumerable.Range(0, "Child paragraph".Length).Select(i => i is >= 2 and < 7),
                         Block(childId).Runs.SelectMany(run => Enumerable.Repeat(run.Bold, run.Text.Length)));
@@ -70,14 +72,20 @@ public sealed class BoardsSingleToolbarTests
                     var redo = adapter.RedoAsync().AsTask(); BoardsTabberInsertionTests.Await(redo);
                     Assert.True(redo.Result); Assert.Equal(formatted, adapter.Snapshot);
                     BoardsTabberLifetimeTests.Settle(window, () => window.GetVisualDescendants().OfType<TextBox>().Any(box => box.Text == "Child paragraph"));
-                    Editor("Child paragraph").Focus(); Dispatcher.UIThread.RunJobs();
-                    var size = window.GetVisualDescendants().OfType<ComboBox>().Single(combo => AutomationProperties.GetName(combo) == "Font size");
-                    size.SelectedItem = "24";
-                    BoardsTabberLifetimeTests.Settle(window, () => Block(childId).FontSize == 24);
+                    var sizeTarget = Editor("Child paragraph"); sizeTarget.Focus();
+                    sizeTarget.SelectionStart = backwards ? 7 : 2; sizeTarget.SelectionEnd = backwards ? 2 : 7;
+                    childSizesBefore = Block(childId).Runs.SelectMany(run => Enumerable.Repeat(run.FontSize, run.Text.Length)).ToArray();
+                    Dispatcher.UIThread.RunJobs();
+                    var size = BoardsCuiControlFinder.FindByAutomationId<TextBox>(presentation.Content, "AdaptiveSize")!;
+                    size.Focus(); size.Text = "24";
+                    window.KeyPress(Key.Enter, Avalonia.Input.RawInputModifiers.None, PhysicalKey.Enter, "Enter");
+                    BoardsTabberLifetimeTests.Settle(window, () => Block(childId).Runs.Any(run => run.FontSize == 24));
+                    Assert.Equal(childSizesBefore.Select((value, index) => index is >= 2 and < 7 ? 24d : value),
+                        Block(childId).Runs.SelectMany(run => Enumerable.Repeat(run.FontSize, run.Text.Length)));
                     Assert.NotEqual(24, Block(parentId).FontSize);
                     var parent = Editor("Parent paragraph"); parent.Focus(); parent.SelectAll(); Dispatcher.UIThread.RunJobs();
                     Assert.Same(vm, vm.ToolbarTarget);
-                    Click(window, BoardsCuiControlFinder.FindByAutomationId<Control>(presentation.Content, "RangeItalic")!);
+                    ClickFormatting(window, presentation.Content, "RangeItalic");
                     BoardsTabberLifetimeTests.Settle(window, () => Block(parentId).Runs.Any(run => run.Italic));
                     Assert.All(Block(parentId).Runs, run => Assert.True(run.Italic));
                     Assert.DoesNotContain(Block(childId).Runs, run => run.Italic);
@@ -97,7 +105,10 @@ public sealed class BoardsSingleToolbarTests
             }
             await using var reopened = await documents.OpenAsync(id);
             var childSaved = reopened.Document.Sections[0].Pages.Single(page => page.Id == childId).Blocks[0];
-            Assert.Equal(24, childSaved.FontSize); Assert.Contains(childSaved.Runs, run => run.Bold);
+            Assert.NotNull(childSizesBefore);
+            Assert.Equal(childSizesBefore.Select((value, index) => index is >= 2 and < 7 ? 24d : value),
+                childSaved.Runs.SelectMany(run => Enumerable.Repeat(run.FontSize, run.Text.Length)));
+            Assert.Contains(childSaved.Runs, run => run.Bold);
             Assert.All(reopened.Document.Sections[0].Pages.Single(page => page.Id == parentId).Blocks[0].Runs, run => Assert.True(run.Italic));
         }
         finally { Directory.Delete(root, true); }
@@ -130,6 +141,29 @@ public sealed class BoardsSingleToolbarTests
                 TestUiThread.Run(pane.Dispose); await pane.DisposeDatabasesAsync();
             }
         }, BoardsTabberInsertionTests.SeedTabbers);
+
+    private static void ClickFormatting(Window window, Control root, string id)
+    {
+        var direct = BoardsCuiControlFinder.FindByAutomationId<Control>(root, id)!;
+        window.UpdateLayout();
+        if (direct.IsEffectivelyVisible && direct.Bounds.Width > 0)
+        {
+            Click(window, direct);
+            return;
+        }
+        // At narrower widths the same authored command lives in the real overflow
+        // menu. Exercise that route instead of clicking the collapsed layout cell.
+        var overflowCommand = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(root, "Overflow" + id)!;
+        Assert.NotNull(overflowCommand);
+        foreach (var menu in overflowCommand.GetLogicalAncestors().OfType<MenuItem>().Reverse().ToArray())
+        {
+            if (!menu.IsSubMenuOpen) Click(window, menu);
+            BoardsTabberLifetimeTests.Settle(window, () => menu.IsSubMenuOpen);
+        }
+        Assert.True(overflowCommand.IsEffectivelyVisible);
+        Assert.True(overflowCommand.IsEffectivelyEnabled);
+        Click(window, overflowCommand);
+    }
 
     private static void Click(Window window, Control control)
     {

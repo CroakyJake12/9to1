@@ -1,5 +1,6 @@
 <Cui>
   <Actions>
+    <Action name="FinishBoardRename" command="FinishBoardRename" parameter="{Binding Event}" />
     <Action name="OpenRecentBoard" command="OpenRecentBoard" parameter="{Binding board.Target}" />
     <Action name="OpenRecentPage" command="OpenRecentPage" parameter="{Binding page.Target}" />
     <Action name="ApplySectionIconChoice" command="ApplySectionIconChoice" parameter="{Binding icon.Key}" />
@@ -10,57 +11,45 @@
   </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="268 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
-      <!-- Top document bar: file actions, title, save state, global actions -->
-      <Container padding="12 2" Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Active="{Binding IsStandalonePresentation}" Background="Transparent" BorderWidth="0">
-        <Container Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto" CellGap="2">
-          <Container Type="Horizontal Stack" ID="TopBarLeft" Column="0" Row="0" CellGap="8" VerticalAlignment="Center">
-            <Image ID="BoardsAppIcon" Source="ownerbrand:boards" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" AccessibleName="Boards" />
-            <Container Type="Menu" ID="FileMenu">
-              <Button Type="Menu Item" ID="FileMenuButton" Content="File" Interactive="{Binding CanEdit}" AccessibleName="Board file menu">
-                <!-- Owner report 31 October: "the option was tucked away under file", "I was looking under
-                     the board dropdown", "where the name is". File keeps these entries, and the board-name
-                     menu now repeats them so saving is reachable where the user actually looks. The shortcut
-                     is stated on the item itself because UX27-BOARD-005 requires "File → Save As and its
-                     shortcut" to be a real, findable command. -->
-                <Button Type="Menu Item" Content="Open…" Action="OpenBoard" Shortcut="Ctrl+O" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open a board file" ToolTip="Open a .9to1board file (Ctrl+O)" />
-                <Button Type="Menu Item" ID="FileMenuSave" Content="Save" Action="SaveBoard" Shortcut="Ctrl+S" IsEnabled="{Binding CanSaveBoard}" Interactive="{Binding CanSaveBoard}" AccessibleName="Save this board" ToolTip="Save this board (Ctrl+S)" />
-                <Button Type="Menu Item" ID="FileMenuSaveAs" Content="Save As…" Action="SaveAsBoard" Shortcut="Ctrl+Shift+S" IsEnabled="{Binding CanSaveAs}" Interactive="{Binding CanSaveAs}" AccessibleName="Save this board to a file you choose" ToolTip="Save this board to a file you choose (Ctrl+Shift+S)" />
-                <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
-                <!-- Owner route 31 October 2026: AppFlowy re-UI first, then transition. This entry opens the
-                     stage-one surface over the same board so both can be compared; it is a labelled scaffold with
-                     a leave control, not a second Boards implementation. -->
-                <Button Type="Menu Item" ID="FileStageOneSurface" Content="AppFlowy re-UI (stage one)" Action="ShowStageOneSurface" ToolTip="AppFlowy's board screen rendered in CUI, projected from this board. Structure unchanged; 9to1 Boards behaviour arrives in stage two." AccessibleName="Open the AppFlowy stage-one comparison surface" />
-                <Button Type="Menu Item" Content="Exit" Action="CloseWindow" />
-              </Button>
+      <!-- One document identity menu on both standalone and embedded Boards. -->
+      <Container Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Padding="12 6" Background="Transparent" BorderWidth="0">
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+          <Container Type="Grid" ID="TopBarLeft" Column="0" ColumnSizes="Auto 1fr Auto Auto" CellGap="6" MaxWidth="580" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Image ID="BoardsAppIcon" Column="0" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Boards" />
+            <Container Type="Vertical Stack" Column="1" CellGap="1">
+              <Container Type="Menu" ID="BoardSwitcherMenu" HorizontalAlignment="Left">
+                <Button Type="Menu Item" ID="BoardSwitcher" Content="{Binding BoardMenuTitle, fallback=Boards ▾}" Padding="8 4" MaxWidth="340" FontWeight="SemiBold" IsEnabled="{Binding CanOpenBoardMenu}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board actions" Tooltip="{Binding BoardTitle}">
+            <Button Type="Menu Item" ID="BoardSwitcherSave" Content="Save" Action="SaveBoard" Shortcut="Ctrl+S" IsEnabled="{Binding CanSaveBoard}" Interactive="{Binding CanSaveBoard}" AccessibleName="Save this board" ToolTip="Save this board (Ctrl+S)" />
+            <Button Type="Menu Item" ID="BoardSwitcherSaveAs" Content="Save As…" Action="SaveAsBoard" Shortcut="Ctrl+Shift+S" IsEnabled="{Binding CanSaveAs}" Interactive="{Binding CanSaveAs}" AccessibleName="Save this board to a file you choose" ToolTip="Save this board to a file you choose (Ctrl+Shift+S)" />
+            <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" IsEnabled="{Binding CanCreateBoard}" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherOpen" Content="Open Board…" Action="OpenBoard" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherAll" Content="All Boards…" Action="ShowLanding" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
+              <Button Type="Menu Item" ID="BoardSwitcherRetryOpen" Active="{Binding CanRetryHomeBoardOpen}" Content="Retry opening created Board" Action="RetryOpenCreatedBoard" IsEnabled="{Binding CanRetryHomeBoardOpen}" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created Board" />
+              <Button Type="Menu Item" ID="BoardSwitcherRetrySave" Active="{Binding CanRetryBoardCreationSettlement}" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" IsEnabled="{Binding CanRetryBoardCreationSettlement}" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the Board save" />
+              <Button Type="Menu Item" ID="BoardSwitcherCheck" Active="{Binding CanCheckSavedBoard}" Content="Check saved Board" Action="CheckSavedBoard" IsEnabled="{Binding CanCheckSavedBoard}" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
+              <Button Type="Menu Item" ID="BoardSwitcherRecorded" Active="{Binding CanOpenRecordedBoard}" Content="Open saved Board" Action="OpenRecordedBoard" IsEnabled="{Binding CanOpenRecordedBoard}" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
+
+                  <Button Type="Menu Item" ID="RenameBoardMenuItem" Content="Rename…" Action="RenameBoard" Interactive="{Binding CanRenameBoard}" AccessibleName="Rename board" />
+                  <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
+                  <Button Type="Menu Item" ID="FileStageOneSurface" Content="AppFlowy re-UI (stage one)" Action="ShowStageOneSurface" Active="{Binding IsStandalonePresentation}" />
+                  <Button Type="Menu Item" Content="Exit" Action="CloseWindow" Active="{Binding IsStandalonePresentation}" />
+                </Button>
+              </Container>
+              <Text ID="SaveState" Text="{Binding SaveStateText}" FontSize="11" Margin="8 0 0 0" TextTrimming="CharacterEllipsis" MaxWidth="340" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Save state" Active="{Binding ShowEditor}" />
             </Container>
-            <Button Type="Menu Item" ID="UndoButton" IconSource="icon:undo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Undo" Interactive="{Binding IsEditMode}" AccessibleName="Undo" Tooltip="Undo" />
-            <Button Type="Menu Item" ID="RedoButton" IconSource="icon:redo" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding IsEditMode}" AccessibleName="Redo" Tooltip="Redo" />
+            <Button ID="UndoButton" Column="2" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Undo" Interactive="{Binding CanUndo}" AccessibleName="Undo" Tooltip="Undo (Ctrl+Z)" ><Image Source="icon:undo" Width="18" Height="18" AccessibleName="Undo" /></Button>
+            <Button ID="RedoButton" Column="3" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding CanRedo}" AccessibleName="Redo" Tooltip="Redo (Ctrl+Y)" ><Image Source="icon:redo" Width="18" Height="18" AccessibleName="Redo" /></Button>
           </Container>
-          <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" Row="0" CellGap="6" VerticalAlignment="Center">
-            <Container Type="Horizontal Stack" ID="EditViewToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10">
-              <Text ID="EditViewModeLabel" Text="{Binding ModeLabel, fallback=Editing}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-              <Input ID="EditViewToggle" Type="Switch" Padding="0" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanToggleEditMode}" AccessibleName="{Binding ModeToggleAccessibleName}" />
-            </Container>
-            <Container Type="Horizontal Stack" ID="TabViewToggleGroup" CellGap="6" VerticalAlignment="Center"
-                       Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10"
-                       AccessibleName="Tab view option">
-              <Text ID="TabViewModeLabel" Text="Tab view" FontSize="12" FontWeight="SemiBold"
-                    VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-              <Input ID="TabViewToggle" Type="Switch" Padding="0" Checked="{Binding TabViewEnabled, mode=TwoWay}"
-                     AccessibleName="Show or hide the page tab strip" />
-            </Container>
-            <Container Type="Horizontal Stack" ID="LayoutModeToggleGroup" CellGap="6" VerticalAlignment="Center" Background="{Resource CuiPanel2Brush}" Padding="8 0" CornerRadius="10" AccessibleName="Page layout mode">
-              <Text ID="LayoutModeLabel" Text="{Binding LayoutModeLabel}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-              <Input ID="LayoutModeToggle" Type="Switch" Padding="0" Checked="{Binding IsFreeLayout, mode=TwoWay}" Interactive="{Binding CanChangeLayoutMode}" AccessibleName="{Binding LayoutModeAccessibleName}" />
-            </Container>
-            <Container Type="Menu" ID="MoreMenu">
-              <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" AccessibleName="More board actions" Tooltip="More">
-                <Button Type="Menu Item" Content="Styles…" Action="ManageStyles" />
-                <Button Type="Menu Item" Content="Toggle light or dark appearance" Action="ToggleTheme" />
-                <Button Type="Menu Item" ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
-                <Button Type="Menu Item" ID="MoreBoardProperties" Content="Board properties…" Action="BoardProperties" />
-              </Button>
-            </Container>
+          <Container Type="Menu" ID="MoreMenu" Column="1" VerticalAlignment="Center">
+            <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" Padding="0" AccessibleName="More board actions" Tooltip="Board options">
+              <Button Type="Menu Item" Content="{Binding ModeToggleAccessibleName}" Action="ToggleEditView" Interactive="{Binding CanToggleEditMode}" />
+              <Button Type="Menu Item" Content="{Binding LayoutModeAccessibleName}" Action="ToggleLayoutMode" Interactive="{Binding CanChangeLayoutMode}" />
+              <Button Type="Menu Item" Content="{Binding TabViewMenuLabel}" Action="ToggleTabView" />
+              <Button Type="Menu Item" Content="Styles…" Action="ManageStyles" />
+              <Button Type="Menu Item" Content="Toggle light or dark appearance" Action="ToggleTheme" />
+              <Button Type="Menu Item" ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
+              <Button Type="Menu Item" ID="MoreBoardProperties" Content="Board properties…" Action="BoardProperties" />
+            </Button>
           </Container>
         </Container>
       </Container>
@@ -71,32 +60,10 @@
       <Container padding="8 8" Type="Overlay" ID="NavPane" Row="1" Column="0"
                    Background="{Resource CuiPanel2Brush}" BorderThickness="0 0 1 0" BorderBrush="{Resource CuiLineBrush}" Active="{Binding ShowEditor}">
         <Container Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" CellGap="6">
-          <Container Type="Grid" ID="BoardSwitcherHeader" ColumnSizes="24 1fr Auto" Row="0" CellGap="8" VerticalAlignment="Center">
-            <Image ID="BoardSwitcherIcon" Source="ownerbrand:boards" Width="24" Height="24" VerticalAlignment="Center" AccessibleName="Current Board" />
-            <!-- The owner's 29 October report: the board title was cut mid-word ("A-Level Computer Sc")
-                 and the save line sat hard against it. The title box had a fixed 160 cap inside a 1fr
-                 column, so it could never use the width the nav actually gives it. -->
-            <Container Type="Vertical Stack" ID="BoardIdentity" Column="1" CellGap="3" VerticalAlignment="Center">
-              <Input id="BoardTitleBox" accessible-name="Board title" font-size="15" font-weight="Bold" vertical-alignment="Center" horizontal-alignment="Stretch" padding="0" background="Transparent" foreground="{Resource CuiTextBrush}" borderwidth="0" cornerradius="0" Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, fallback=Untitled board}" WriteBack="False" />
-              <Text ID="SaveState" Text="{Binding SaveStateText, fallback=Saved}" FontSize="11" VerticalAlignment="Center" AccessibleName="Save state" Foreground="{Resource CuiTextSoftBrush}" />
-            </Container>
-            <Container Type="Menu" ID="BoardSwitcherMenu" Column="2">
-            <Button Type="Menu Item" ID="BoardSwitcher" IconSource="icon:chevron-down" Width="32" Height="32" Padding="0" Background="Transparent" BorderWidth="0" CornerRadius="6" IsEnabled="{Binding CanOpenBoardMenu}" Interactive="{Binding CanOpenBoardMenu}" AccessibleName="Current Board actions" HorizontalAlignment="Center">
-              <!-- UX27-BOARD-004/005 and the owner's 31 October report: the board-name menu is where the user
-                 expects save commands to be. Drafts are already durable, so the menu states that plainly and
-                 offers the explicit file route without hiding it behind the File menu. -->
-            <Button Type="Menu Item" ID="BoardSwitcherSave" Content="Save" Action="SaveBoard" Shortcut="Ctrl+S" IsEnabled="{Binding CanSaveBoard}" Interactive="{Binding CanSaveBoard}" AccessibleName="Save this board" ToolTip="Save this board (Ctrl+S)" />
-            <Button Type="Menu Item" ID="BoardSwitcherSaveAs" Content="Save As…" Action="SaveAsBoard" Shortcut="Ctrl+Shift+S" IsEnabled="{Binding CanSaveAs}" Interactive="{Binding CanSaveAs}" AccessibleName="Save this board to a file you choose" ToolTip="Save this board to a file you choose (Ctrl+Shift+S)" />
-            <Button Type="Menu Item" ID="BoardSwitcherDraftState" Content="{Binding SaveStateText, fallback=Saved}" Interactive="False" AccessibleName="Board draft save state" />
-            <Button Type="Menu Item" ID="BoardSwitcherCreate" Content="New Board…" Action="NewBoard" IsEnabled="{Binding CanCreateBoard}" Interactive="{Binding CanCreateBoard}" AccessibleName="Create a separate Board" />
-              <Button Type="Menu Item" ID="BoardSwitcherOpen" Content="Open Board…" Action="OpenBoard" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Open an existing Board" />
-              <Button Type="Menu Item" ID="BoardSwitcherAll" Content="All Boards…" Action="ShowLanding" IsEnabled="{Binding CanSwitchBoard}" Interactive="{Binding CanSwitchBoard}" AccessibleName="Browse and switch Boards" />
-              <Button Type="Menu Item" ID="BoardSwitcherRetryOpen" Content="Retry opening created Board" Action="RetryOpenCreatedBoard" IsEnabled="{Binding CanRetryHomeBoardOpen}" Interactive="{Binding CanRetryHomeBoardOpen}" AccessibleName="Retry opening the same created Board" />
-              <Button Type="Menu Item" ID="BoardSwitcherRetrySave" Content="Retry finishing Board save" Action="RetryBoardCreationSettlement" IsEnabled="{Binding CanRetryBoardCreationSettlement}" Interactive="{Binding CanRetryBoardCreationSettlement}" AccessibleName="Retry finishing the Board save" />
-              <Button Type="Menu Item" ID="BoardSwitcherCheck" Content="Check saved Board" Action="CheckSavedBoard" IsEnabled="{Binding CanCheckSavedBoard}" Interactive="{Binding CanCheckSavedBoard}" AccessibleName="Check the exact Board save result" />
-              <Button Type="Menu Item" ID="BoardSwitcherRecorded" Content="Open saved Board" Action="OpenRecordedBoard" IsEnabled="{Binding CanOpenRecordedBoard}" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
-            </Button>
-            </Container>
+          <Container Type="Vertical Stack" ID="BoardSwitcherHeader" Row="0" CellGap="6" Active="{Binding BoardRenameVisible}">
+            <Text Text="Rename board" FontWeight="SemiBold" />
+            <Input Type="Text" ID="BoardTitleBox" Value="{Binding BoardTitle, mode=TwoWay}" SubmitAction="FinishBoardRename" AccessibleName="Board title" />
+            <Button Content="Done" Action="FinishBoardRename" AccessibleName="Finish renaming board" />
           </Container>
           <Input id="NavSearchBox" Row="1" Height="38" MinHeight="38" accessible-name="Search this Board" placeholdertext="Search this Board" margin="0 0 4 0" padding="12 9" cornerradius="18" background="{Resource CuiPanel2Brush}" foreground="{Resource CuiTextBrush}" borderwidth="0" Type="Text" ID="NavSearchBox" />
           <Button ID="NavNewPageButton" Row="2" Content="+ New page" Action="AddPage" Height="30" Padding="6 0"
@@ -149,25 +116,23 @@
           <Button Column="3" ID="TabNewPageButton" Content="+" Action="AddPage" Width="34" Height="34" FontSize="16"
                   AccessibleName="New page" ToolTip="Add a page" IsEnabled="{Binding CanEdit}" />
         </Container>
-        <Container Type="Grid" Row="1" ColumnSizes="Auto Auto 1fr" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Padding="8 4" Margin="16 4 14 4" CornerRadius="14">
-          <Container Type="Horizontal Stack" Column="0" CellGap="2" Padding="0" VerticalAlignment="Center" AccessibleName="Text formatting">
-            <Button ID="RangeBold" Selected="{Binding RangeBoldSelected}" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" Tooltip="Bold">
-              <Image Source="icon:bold" Width="18" Height="18" AccessibleName="Bold" />
-            </Button>
-            <Button ID="RangeItalic" Selected="{Binding RangeItalicSelected}" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" Tooltip="Italic">
-              <Image Source="icon:italic" Width="18" Height="18" AccessibleName="Italic" />
-            </Button>
-            <Button ID="RangeUnderline" Selected="{Binding RangeUnderlineSelected}" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" Tooltip="Underline">
-              <Image Source="icon:underline" Width="18" Height="18" AccessibleName="Underline" />
-            </Button>
-            <Button ID="RangeStrike" Selected="{Binding RangeStrikeSelected}" Width="32" MinWidth="32" Height="32" MinHeight="32" Padding="0" FontSize="14" Foreground="{Resource CuiTextBrush}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="0" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" Tooltip="Strikethrough">
-              <Image Source="icon:strikethrough" Width="18" Height="18" AccessibleName="Strikethrough" />
-            </Button>
-          </Container>
-          <Container Type="Overlay" Column="1" Width="1" Height="20" VerticalAlignment="Center" Margin="6 0" Background="{Resource CuiLineBrush}" />
-          <Container Type="Horizontal Stack" CellGap="4" ID="ToolbarHost" Column="2" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
+        <Container Type="Grid" Row="1" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Margin="16 4 14 4" Background="Transparent">
+          <Container Type="Overlay" ID="ToolbarHost" HorizontalAlignment="Stretch" />
         </Container>
-        <Container Type="Vertical Stack" ID="ContextHost" Row="2" Active="{Binding ContextVisible}" Padding="12 6" Background="Transparent">
+        <Container Type="Vertical Stack" ID="ContextHost" Row="2" Active="{Binding AdaptivePropertiesVisible}" MaxHeight="220" VerticalScrolling="True" Padding="12 6" Background="Transparent">
+          <Container Type="Grid" ColumnSizes="1fr Auto" Margin="0 0 0 6">
+            <Text Text="Properties" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Button Column="1" Content="Close" Action="CloseAdaptiveProperties" AccessibleName="Close properties" />
+          </Container>
+          <If Condition="{Binding ContextIsText}">
+            <Container Type="Wrap" CellGap="6">
+              <Text Text="{Binding ContextTextStyle}" VerticalAlignment="Center" />
+              <Button Content="Subscript" Action="ToggleSub" AccessibleName="Toggle subscript" />
+              <Button Content="Superscript" Action="ToggleSup" AccessibleName="Toggle superscript" />
+              <Button Content="Clear formatting" Action="ClearFormat" />
+              <Button Content="Manage styles…" Action="ManageStyles" />
+            </Container>
+          </If>
           <If Condition="{Binding ContextIsTable}">
             <Container Type="Wrap" CellGap="4">
               <Text Text="Table" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0 0 4 0" />

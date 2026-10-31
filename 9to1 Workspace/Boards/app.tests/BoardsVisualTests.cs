@@ -8,6 +8,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
@@ -108,17 +109,10 @@ public sealed class BoardsVisualTests
 
             var authoredTextCommands = Ui(() =>
             {
-                using var loader = BoardsCuiDocuments.CreateLoader();
-                loader.SetBindingContext(vm);
-                loader.SetActionDispatcher(vm);
-                var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
-                Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
-                var authoredRoot = Assert.IsAssignableFrom<Control>(root);
-                loader.WireBindings(authoredRoot);
-                vm.Attach(authoredRoot);
+                var authoredRoot = AdaptiveToolbar.Build(vm);
                 var ids = new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" };
                 var foundIds = ids.Where(id => BoardsCuiControlFinder.FindByAutomationId<Button>(authoredRoot, id) is not null).ToArray();
-                vm.Detach();
+                AdaptiveToolbar.Dispose(authoredRoot);
                 return foundIds;
             });
             Assert.Equal(new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" }, authoredTextCommands);
@@ -147,14 +141,13 @@ public sealed class BoardsVisualTests
                 return Flatten(host)
                     .OfType<ComboBox>()
                     .SelectMany(combo => combo.ItemsSource?.Cast<object>() ?? [])
-                    .OfType<ComboBoxItem>()
-                    .Select(item => item.Content is TextBlock text ? text.Text ?? string.Empty : string.Empty)
+                    .OfType<string>()
                     .Where(text => !string.IsNullOrEmpty(text))
                     .ToList();
             });
             foreach (var expected in new[]
             {
-                "Paragraph", "Title", "Subtitle", "Header 1", "Header 2", "Header 3", "Header 4", "Header 5", "Header 6",
+                "Paragraph", "Title", "Subtitle", "Heading 1", "Heading 2", "Heading 3", "Heading 4", "Heading 5", "Heading 6",
                 "Quote", "Code", "Key Case",
             })
                 Assert.Contains(expected, names);
@@ -479,35 +472,50 @@ public sealed class BoardsVisualTests
         {
             Ui(() =>
             {
-                var host = new StackPanel();
-                ToolbarBuilder.Rebuild(host, vm);
-                foreach (var name in new[] { "Text colour", "Highlight colour", "Draw" })
+                var root = AdaptiveToolbar.Build(vm);
+                var window = new Window { Width = 1500, Height = 220, Content = root };
+                window.Show(); window.UpdateLayout();
+                try
                 {
-                    var button = Assert.Single(Flatten(host).OfType<Button>(), candidate =>
-                        Avalonia.Automation.AutomationProperties.GetName(candidate) == name);
-                    var image = Assert.Single(Flatten(button).OfType<Image>());
-                    Assert.IsType<DrawingImage>(image.Source);
-                    Assert.Equal(18d, image.Width);
+                    foreach (var id in new[] { "AdaptiveTextColor", "AdaptiveHighlight" })
+                    {
+                        var menu = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(root, id)!;
+                        Assert.IsType<DrawingImage>(menu.Icon);
+                        Assert.Equal(18d, Assert.IsType<CuiMenuItem>(menu).IconSize);
+                    }
+                    var drawing = BoardsCuiControlFinder.FindByAutomationId<Button>(root, "AdaptiveDrawing")!;
+                    var drawingImage = Assert.Single(Flatten(drawing).OfType<Image>());
+                    Assert.IsType<DrawingImage>(drawingImage.Source);
+                    Assert.Equal(18d, drawingImage.Width);
+                    Assert.DoesNotContain("H", VisibleTexts(root));
                 }
-                Assert.DoesNotContain("H", VisibleTexts(host));
+                finally { window.Close(); AdaptiveToolbar.Dispose(root); }
             });
             await vm.ActivateDrawingAsync();
             Ui(() =>
             {
-                var host = new StackPanel();
-                ToolbarBuilder.Rebuild(host, vm);
-                foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
+                var root = AdaptiveToolbar.Build(vm);
+                var window = new Window { Width = 1500, Height = 220, Content = root };
+                window.Show(); window.UpdateLayout();
+                try
                 {
-                    var button = Assert.Single(Flatten(host).OfType<Avalonia.Controls.Primitives.ToggleButton>(),
-                        candidate => Avalonia.Automation.AutomationProperties.GetName(candidate) == tool + " drawing tool");
-                    var image = Assert.IsType<Image>(button.Content);
-                    var drawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(image.Source).Drawing);
-                    Assert.NotNull(drawing.Brush);
-                    Assert.Equal(18d, image.Width);
-                    Assert.True(button.MinWidth >= 32d);
-                    button.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-                    Assert.Equal(tool, vm.InkTool);
+                    var menu = root.GetVisualDescendants().OfType<MenuItem>().First(item =>
+                        Avalonia.Automation.AutomationProperties.GetName(item) == "Drawing tool");
+                    menu.IsSubMenuOpen = true; window.UpdateLayout();
+                    foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
+                    {
+                        menu.IsSubMenuOpen = true; window.UpdateLayout();
+                        var item = menu.GetLogicalDescendants().OfType<MenuItem>().Single(candidate =>
+                            Avalonia.Automation.AutomationProperties.GetName(candidate) == tool + " drawing tool");
+                        var geometry = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(item.Icon).Drawing);
+                        Assert.NotNull(geometry.Brush);
+                        Assert.Equal(18d, Assert.IsType<CuiMenuItem>(item).IconSize);
+                        item.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+                        BoardsTabberLifetimeTests.Settle(window, () => vm.InkTool == tool);
+                        Assert.Equal(tool, vm.InkTool);
+                    }
                 }
+                finally { window.Close(); AdaptiveToolbar.Dispose(root); }
             });
         }
         finally
@@ -536,7 +544,7 @@ public sealed class BoardsVisualTests
             Assert.True(vm.IsDrawMode);
             foreach (var expected in new[]
             {
-                "Draw", "Pen drawing tool", "Highlighter drawing tool", "Eraser drawing tool",
+                "Drawing", "Pen drawing tool", "Highlighter drawing tool", "Eraser drawing tool",
                 "Select drawing tool", "Black ink", "Stroke width 2", "Undo drawing",
                 "Redo drawing", "Zoom drawing out", "Zoom drawing in", "Reset drawing view",
             })

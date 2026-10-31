@@ -60,6 +60,7 @@ public static class BlockRenderer
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
+        var editorFocus = CaptureEditorFocus(host, absoluteBlocksHost);
         if (absoluteBlocksHost is not null) AbsolutePlacements.GetValue(absoluteBlocksHost, panel => new(panel)).Reset();
         host.Children.Clear();
         absoluteBlocksHost?.Children.Clear();
@@ -151,6 +152,37 @@ public static class BlockRenderer
         // page InkOverlayLayer. Previously saved canvas objects join that same spatial layer,
         // without creating a second scrollbox or injecting empty-state controls.
         vm.ApplyAuthoringState(host);
+        RestoreEditorFocus(host, absoluteBlocksHost, editorFocus);
+    }
+
+    private sealed record EditorFocus(TextBox Input, string Name, int Caret, int Start, int End);
+
+    private static EditorFocus? CaptureEditorFocus(StackPanel host, Panel? absoluteHost)
+    {
+        var focused = TopLevel.GetTopLevel(host)?.FocusManager?.GetFocusedElement() as TextBox;
+        if (focused is null || string.IsNullOrEmpty(focused.Name) ||
+            !(host.IsVisualAncestorOf(focused) || absoluteHost?.IsVisualAncestorOf(focused) == true)) return null;
+        return new(focused, focused.Name, focused.CaretIndex, focused.SelectionStart, focused.SelectionEnd);
+    }
+
+    private static void RestoreEditorFocus(StackPanel host, Panel? absoluteHost, EditorFocus? saved)
+    {
+        if (saved is null || TopLevel.GetTopLevel(host) is not { } top) return;
+        // A newly attached editor can already own the explicit Enter/insert focus request.
+        // Preserve that destination. Only replace the focus lost when this rebuild detached
+        // the previous editor; subsequent queued renders must not strand its new caret.
+        var focused = top.FocusManager?.GetFocusedElement();
+        if (focused is Control current && !ReferenceEquals(current, saved.Input) &&
+            TopLevel.GetTopLevel(current) is not null) return;
+        var replacement = host.GetVisualDescendants().OfType<TextBox>()
+            .Concat(absoluteHost?.GetVisualDescendants().OfType<TextBox>() ?? [])
+            .FirstOrDefault(input => input.Name == saved.Name);
+        if (replacement is null || !replacement.IsEffectivelyVisible || !replacement.IsEffectivelyEnabled) return;
+        replacement.Focus();
+        var length = replacement.Text?.Length ?? 0;
+        replacement.CaretIndex = Math.Clamp(saved.Caret, 0, length);
+        replacement.SelectionStart = Math.Clamp(saved.Start, 0, length);
+        replacement.SelectionEnd = Math.Clamp(saved.End, 0, length);
     }
 
     private static void RenderCanvasObject(Panel layer, BoardsViewModel vm, CanvasBoxView box)
@@ -765,7 +797,9 @@ public static class BlockRenderer
         if (!string.IsNullOrEmpty(family))
             box.FontFamily = new FontFamily(family);
         box.TextAlignment = ParseAlignment(block.Alignment != "inherit" ? block.Alignment : style?.Alignment ?? "inherit");
-        if (TryBrush(block.Background, out var background))
+        if (block.Runs.Count > 0)
+            box.Background = Brushes.Transparent;
+        else if (TryBrush(block.Background, out var background))
             box.Background = background;
         else if (TryBrush(style?.Background, out var styleBackground))
             box.Background = styleBackground;
@@ -907,6 +941,10 @@ public static class BlockRenderer
             CuiFormattedTextInput.SetPresentation(input, null);
             return;
         }
+        // Line spacing is a paragraph multiplier over natural font metrics. Compute
+        // it before the unchanged-run fast path: spacing and font edits need to
+        // update native caret/hit-test geometry even when the text is unchanged.
+        input.LineHeight = ResolveTextLineHeight(input, block, style);
         static Color? Colour(string? value) => Color.TryParse(value, out var colour) ? colour : null;
         static BaselineAlignment Baseline(string value) => value switch
         {
@@ -916,11 +954,19 @@ public static class BlockRenderer
         var runs = new List<CuiFormattedTextRun>();
         if (block.Runs.Count > 0)
         {
+            // Per-character highlights own their spans. Painting the old common
+            // block highlight underneath would make an explicitly cleared span
+            // remain coloured, including immediately after a range edit.
+            CuiPropertyPresentation.Set(input, "Background", Brushes.Transparent,
+                CuiPropertyLevel.Instance, "Boards explicit text-run backgrounds");
+            ThemeApplier.SetDocumentTextSurface(input, Brushes.Transparent);
             foreach (var run in block.Runs.Where(run => run.Text.Length > 0))
                 runs.Add(new CuiFormattedTextRun(run.Text,
                     run.Bold ? FontWeight.Bold : FontWeight.Normal, run.Italic ? FontStyle.Italic : FontStyle.Normal,
                     run.FontFamily, run.FontSize, run.Underline, run.StrikeThrough,
-                    Baseline(run.Baseline.ToString().ToLowerInvariant()), Colour(run.Foreground), Colour(run.Background)));
+                    Baseline(run.Baseline.ToString().ToLowerInvariant()), Colour(run.Foreground),
+                    Colour(!string.IsNullOrEmpty(run.Background) ? run.Background :
+                        !string.IsNullOrEmpty(block.Background) ? block.Background : style?.Background)));
         }
         else if (block.Text.Length > 0)
         {
@@ -935,6 +981,33 @@ public static class BlockRenderer
         var current = CuiFormattedTextInput.GetPresentation(input);
         if (current is not null && current.Text == block.Text && current.Runs.SequenceEqual(runs)) return;
         CuiFormattedTextInput.SetPresentation(input, new CuiFormattedText(block.Text, runs));
+    }
+
+    private static double ResolveTextLineHeight(TextBox input, RichBoardBlock block, RichStyleView? style)
+    {
+        var spacing = double.IsFinite(block.LineSpacing) && block.LineSpacing > 0 ? block.LineSpacing :
+            style is { LineSpacing: > 0 } && double.IsFinite(style.LineSpacing) ? style.LineSpacing : 1;
+        // The native LineHeight is an absolute clamp. A 1x choice must retain
+        // ascenders, descenders and the font's natural leading, not clamp to em size.
+        var ascent = 0d; var descent = 0d; var gap = 0d;
+        void Include(FontFamily family, FontStyle fontStyle, FontWeight weight, double size)
+        {
+            if (!FontManager.Current.TryGetGlyphTypeface(new Typeface(family, fontStyle, weight), out var face)) return;
+            var metrics = face.Metrics;
+            if (metrics.DesignEmHeight == 0) return;
+            var scale = size / metrics.DesignEmHeight;
+            ascent = Math.Max(ascent, -metrics.Ascent * scale);
+            descent = Math.Max(descent, metrics.Descent * scale);
+            gap = Math.Max(gap, metrics.LineGap * scale);
+        }
+        Include(input.FontFamily, input.FontStyle, input.FontWeight, input.FontSize);
+        foreach (var run in block.Runs.Where(run => run.Text.Length > 0))
+            Include(string.IsNullOrEmpty(run.FontFamily) ? input.FontFamily : new FontFamily(run.FontFamily),
+                run.Italic ? FontStyle.Italic : FontStyle.Normal, run.Bold ? FontWeight.Bold : FontWeight.Normal,
+                run.FontSize > 0 ? run.FontSize : input.FontSize);
+        var naturalHeight = ascent + descent + gap;
+        return naturalHeight > 0 && double.IsFinite(naturalHeight)
+            ? naturalHeight * Math.Max(1, spacing) : double.NaN;
     }
 
     private static double ResolveFontSize(RichBoardBlock block, RichStyleView? style, double fallback)

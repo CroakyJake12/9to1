@@ -230,6 +230,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
                     Baseline = s.Baseline.ToString().ToLowerInvariant(),
                     FontFamily = s.FontFamily,
                     FontSize = s.FontSize,
+                    LineSpacing = s.LineSpacing,
                     Foreground = s.Foreground,
                     Background = s.Background,
                     Alignment = s.Alignment.ToString().ToLowerInvariant()

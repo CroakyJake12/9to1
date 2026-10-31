@@ -130,7 +130,7 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
 
     public IReadOnlyList<RichStyleView> Styles { get; } =
     [
-        new() { Id = "normal", Name = "Paragraph", IsBuiltIn = true, BlockKind = "paragraph", FontSize = 14 },
+        new() { Id = "normal", Name = "Paragraph", IsBuiltIn = true, BlockKind = "paragraph", FontSize = 14, LineSpacing = 1.25 },
         new() { Id = "title", Name = "Title", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 32 },
         new() { Id = "subtitle", Name = "Subtitle", IsBuiltIn = true, BlockKind = "heading", FontSize = 20, Foreground = "#FF6B7280" },
         new() { Id = "heading-1", Name = "Header 1", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 26 },

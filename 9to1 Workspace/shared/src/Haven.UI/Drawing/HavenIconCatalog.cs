@@ -123,6 +123,8 @@ public static class HavenIconCatalog
             RoundedBox(4, 12, 16, 2.6, 1.3), RoundedBox(7, 16, 10, 2.6, 1.3)),
         "align-right" => Geometry(RoundedBox(4, 4, 16, 2.6, 1.3), RoundedBox(10, 8, 10, 2.6, 1.3),
             RoundedBox(4, 12, 16, 2.6, 1.3), RoundedBox(10, 16, 10, 2.6, 1.3)),
+        "align-justify" => Geometry(RoundedBox(4, 4, 16, 2.6, 1.3), RoundedBox(4, 8, 16, 2.6, 1.3),
+            RoundedBox(4, 12, 16, 2.6, 1.3), RoundedBox(4, 16, 16, 2.6, 1.3)),
         "bulleted-list" => Geometry(Circle(5.5, 5.5, 1.3), Circle(5.5, 12, 1.3), Circle(5.5, 18.5, 1.3),
             RoundedBox(9, 4.2, 11, 2.6, 1.3), RoundedBox(9, 10.7, 11, 2.6, 1.3), RoundedBox(9, 17.2, 11, 2.6, 1.3)),
         "numbered-list" => Geometry(Line((4, 5), (5.5, 4), (5.5, 7)), Line((4.5, 10), (6, 10), (6, 11), (4.5, 12.3), (6, 12.3)),

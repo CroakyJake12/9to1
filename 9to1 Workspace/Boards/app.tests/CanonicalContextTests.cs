@@ -20,6 +20,7 @@ public sealed class CanonicalContextTests
         var document = session.Document;
         var table = document.Sections[0].Pages[0].Blocks.First(block => block.Kind == "table");
         vm.FocusBlock(table.Id);
+        vm.SetAdaptiveProperties(true);
         TestUiThread.Run(() =>
         {
             using var loader = BoardsCuiDocuments.CreateLoader();

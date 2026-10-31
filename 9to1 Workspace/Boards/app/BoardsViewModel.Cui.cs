@@ -80,6 +80,8 @@ public sealed partial class BoardsViewModel
         Set("ContextDividerStyleIndex", IndexOf(ContextDividerOptions, block?.Divider?.LineStyle));
         // Publish branch selection after its data, so a newly created Input has
         // the current selection on its first binding pass.
+        Set("ContextIsText", block?.Kind is "paragraph" or "heading" or "checklist" or "bulleted" or "numbered");
+        Set("ContextTextStyle", StyleName(block?.StyleId ?? string.Empty) ?? "Paragraph");
         Set("ContextIsTable", block?.Kind == "table");
         Set("ContextIsImage", block?.Kind == "image");
         Set("ContextIsDivider", block?.Kind == "divider");
@@ -245,6 +247,8 @@ public sealed partial class BoardsViewModel
     {
         if (_disposed || EditorLifetimeEnded) return false;
         var key = path[(path.LastIndexOf('.') + 1)..];
+        if (key.StartsWith("Context", StringComparison.Ordinal) && !ReferenceEquals(ToolbarTarget, this))
+            return ToolbarTarget.TrySetValue(path, value);
         if (key == "TabViewEnabled" && value is bool tabView)
         {
             // Owner 31 October 2026: the tab strip is an option, default off; switching it only changes the
@@ -281,6 +285,12 @@ public sealed partial class BoardsViewModel
             return true;
         }
         if (!_isEditMode || !CanEdit) return false;
+        if (key == "BoardTitle" && value is string title)
+        {
+            if (!HasOpenBoard || _syncing) return false;
+            EditText("BoardTitleBox", title);
+            return true;
+        }
         if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
         var block = FindBlock(SelectedBlockId);
         if (block is null) return false;

@@ -460,7 +460,7 @@ public sealed class BoardsBlockActionsTests
     }
 
     [Fact]
-    public async Task Authored_design_converts_existing_text_and_disables_lossy_destinations()
+    public async Task Authored_block_type_converts_a_blank_block_and_disables_unsupported_destinations()
     {
         await WithMenuAsync(async fixture =>
         {
@@ -468,7 +468,10 @@ public sealed class BoardsBlockActionsTests
             await OpenMenuAsync(fixture);
             TestUiThread.Run(() =>
             {
-                Assert.True(MenuRow(fixture, "BlockDesignMenuToggle").Focus());
+                var type = MenuRow(fixture, "BlockDesignMenuToggle");
+                Assert.Equal("Block Type", type.Header);
+                Assert.True(type.IsEffectivelyVisible);
+                Assert.True(type.Focus());
                 SendKey(fixture, PhysicalKey.Enter);
             });
             await DrainMenuAsync(fixture);
@@ -486,8 +489,7 @@ public sealed class BoardsBlockActionsTests
             Assert.Equal(3, Blocks(fixture.Adapter).Count);
             var changed = Blocks(fixture.Adapter).Single(block => block.Id == "block-b");
             Assert.Equal("heading", changed.Kind);
-            Assert.Equal("AlphaBeta", changed.Text);
-            Assert.Equal("Georgia", changed.Runs[1].FontFamily);
+            Assert.Equal(string.Empty, changed.Text);
             TestUiThread.Run(() =>
             {
                 Assert.False(fixture.Host.Popup.IsOpen);
@@ -497,19 +499,42 @@ public sealed class BoardsBlockActionsTests
             Assert.True(await fixture.Adapter.UndoAsync());
             Assert.Equal(before, fixture.Adapter.Snapshot);
             Assert.False(fixture.Adapter.CanUndo);
-        }, liveRebuild: true);
+        }, liveRebuild: true, blank: true);
     }
 
     [Fact]
-    public async Task Design_does_not_refresh_its_ticket_after_the_open_block_changes()
+    public async Task Nonblank_block_hides_block_type_and_refuses_direct_turn_into()
+    {
+        await WithMenuAsync(async fixture =>
+        {
+            var before = fixture.Adapter.Snapshot;
+            await OpenMenuAsync(fixture);
+            TestUiThread.Run(() => Assert.False(MenuRow(fixture, "BlockDesignMenuToggle").IsEffectivelyVisible));
+            var context = new BlockGripCui.BlockGripContext(fixture.ViewModel, "block-b");
+            await DispatchContextAsync(context, "ToggleActions");
+            Assert.True(context.TryGetValue("CanTurnInto", out var visible)); Assert.Equal(false, visible);
+            await DispatchContextAsync(context, "ToggleDesignMenu");
+            await DispatchContextAsync(context, "TurnInto:heading");
+            Assert.Equal(before, fixture.Adapter.Snapshot);
+            Assert.False(fixture.Adapter.CanUndo);
+            Assert.Equal("paragraph", Blocks(fixture.Adapter)[1].Kind);
+            Assert.Equal("AlphaBeta", Blocks(fixture.Adapter)[1].Text);
+        });
+    }
+
+    [Fact]
+    public async Task Block_type_refuses_typing_after_open_without_renewing_its_ticket()
     {
         await WithMenuAsync(async fixture =>
         {
             var context = new BlockGripCui.BlockGripContext(fixture.ViewModel, "block-b");
             await DispatchContextAsync(context, "ToggleActions");
+            Assert.True(context.TryGetValue("DuplicateRequest", out var originalTicket));
             TestUiThread.Run(() => fixture.ViewModel.EditText("t_block-b", "Newer text to preserve"));
             var before = fixture.Adapter.Snapshot;
             await DispatchContextAsync(context, "ToggleDesignMenu");
+            Assert.True(context.TryGetValue("DuplicateRequest", out var retainedTicket));
+            Assert.Same(originalTicket, retainedTicket);
             await DispatchContextAsync(context, "TurnInto:heading");
             Assert.Equal(before, fixture.Adapter.Snapshot);
             Assert.Equal("paragraph", Blocks(fixture.Adapter)[1].Kind);
@@ -517,7 +542,7 @@ public sealed class BoardsBlockActionsTests
             Assert.False(context.IsExpanded);
             Assert.True(fixture.ViewModel.TryGetValue("StatusText", out var status));
             Assert.Contains("Block conversion refused", status?.ToString() ?? string.Empty);
-        });
+        }, blank: true);
     }
 
     [Theory]
@@ -552,7 +577,7 @@ public sealed class BoardsBlockActionsTests
         BoardsViewModel ViewModel, ContractSessionAdapter Adapter);
 
     private static async Task WithMenuAsync(Func<MenuFixture, Task> check, bool liveRebuild = false,
-        HavenRichBlockKind kind = HavenRichBlockKind.Paragraph)
+        HavenRichBlockKind kind = HavenRichBlockKind.Paragraph, bool blank = false)
     {
         var root = Path.Combine(Path.GetTempPath(), "boards-menu-lifetime-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -560,7 +585,7 @@ public sealed class BoardsBlockActionsTests
         {
             using var store = new JsonFileHavenBoardStore(root);
             var path = Path.Combine(root, "menu.9to1board");
-            await SeedAsync(store, path, kind: kind);
+            await SeedAsync(store, path, kind: kind, blank: blank);
             await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
             var fixture = TestUiThread.Run(() =>
             {
@@ -887,7 +912,7 @@ public sealed class BoardsBlockActionsTests
     private static bool Flag(BoardsViewModel model, string name) => model.TryGetValue(name, out var value) && value is true;
     private static List<RichBoardBlock> Blocks(ContractSessionAdapter adapter) => adapter.Document.Sections.Single().Pages.Single().Blocks;
     private static async Task SeedAsync(JsonFileHavenBoardStore store, string path, bool freePlacement = false,
-        HavenRichBlockKind kind = HavenRichBlockKind.Paragraph)
+        HavenRichBlockKind kind = HavenRichBlockKind.Paragraph, bool blank = false)
     {
         await using var owner = await RichBoardSession.CreateNewAsync(store, "Same block owner");
         await owner.MutateAsync(rich =>
@@ -897,6 +922,7 @@ public sealed class BoardsBlockActionsTests
             page.Blocks.Add(new() { Id = "block-a", PlainText = "first", Order = 0 });
             page.Blocks.Add(new() { Id = "block-b", PlainText = "AlphaBeta", Order = 1, Runs =
                 [new() { Text = "Alpha" }, new() { Text = "Beta", Bold = true, Baseline = HavenRichBaseline.Superscript, FontFamily = "Georgia" }] });
+            if (blank) { page.Blocks[1].PlainText = string.Empty; page.Blocks[1].Runs.Clear(); }
             if (kind != HavenRichBlockKind.Paragraph)
             {
                 page.Blocks[1].Kind = kind;

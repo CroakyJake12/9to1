@@ -21,7 +21,7 @@ public static class BoardsCuiIconResolver
     private static readonly HashSet<string> FilledSilhouetteKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         "more", "grip", "section", "folder", "chat", "study",
-        "target", "bookmark", "shield", "play", "align-left", "align-center", "align-right", "bulleted-list",
+        "target", "bookmark", "shield", "play", "align-left", "align-center", "align-right", "align-justify", "bulleted-list",
     };
     private static readonly Dictionary<string, Bitmap> BoardsBrandBitmaps = new(StringComparer.Ordinal);
     private static readonly object BoardsBrandBitmapGate = new();
@@ -198,7 +198,7 @@ public static class BoardsCuiIconResolver
             "file" or "notes" or "section" or "paperclip" or "image" or "folder" or "highlighter" => "CuiAccentTertiaryBrush",
             "lock" or "unlock" => "HavenAttentionBrush",
             "table" or "chart" or "bulleted-list" or "numbered-list" or "align-left" or
-                "align-center" or "align-right" or "indent-increase" or "indent-decrease" or
+                "align-center" or "align-right" or "align-justify" or "indent-increase" or "indent-decrease" or
                 "search" or "info" or "chevron-left" or "chevron-right" or "select" => "CuiInformationBrush",
             "more" or "ellipsis" or "grip" or "chevron-down" or "chevron-up" => "CuiTextSoftBrush",
             "delete" or "trash" or "remove" => "BoardsDangerIconBrush",
@@ -300,7 +300,7 @@ public static class BoardsCuiIconResolver
         "delete" or "trash" or "remove" => Color.Parse(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FFFF918A" : "#FFB3261E"),
         "file" or "notes" or "section" or "paperclip" or "image" or "folder" => palette.AccentStrong,
         "table" or "chart" or "bulleted-list" or "numbered-list" or "align-left" or "align-center" or
-            "align-right" or "indent-increase" or "indent-decrease" or "search" or "info" => palette.AccentSecondary,
+            "align-right" or "align-justify" or "indent-increase" or "indent-decrease" or "search" or "info" => palette.AccentSecondary,
         "more" or "ellipsis" or "grip" or "chevron-down" or "chevron-up" => palette.TextSoft,
         "lock" or "unlock" => palette.Attention,
         _ => palette.Accent,

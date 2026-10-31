@@ -9,6 +9,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.LogicalTree;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -157,6 +158,7 @@ public sealed class BoardsEditorTests
             var control = Assert.IsAssignableFrom<Control>(root);
             loader.WireBindings(control);
             vm.Attach(control);
+            ToolbarBuilder.Rebuild(BoardsCuiControlFinder.FindByAutomationId<Panel>(control, "ToolbarHost")!, vm);
             foreach (var id in new[] { "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike" })
             {
                 var button = Assert.IsType<Button>(BoardsCuiControlFinder.FindByAutomationId<Button>(control, id));
@@ -166,7 +168,7 @@ public sealed class BoardsEditorTests
                 Assert.Equal(18d, image.Height);
                 Assert.Equal(32d, button.MinWidth);
             }
-            var boardIcon = BoardsCuiControlFinder.FindByAutomationId<Image>(control, "BoardSwitcherIcon");
+            var boardIcon = BoardsCuiControlFinder.FindByAutomationId<Image>(control, "BoardsAppIcon");
             Assert.NotNull(boardIcon);
             Assert.IsType<Avalonia.Media.Imaging.Bitmap>(boardIcon!.Source);
             vm.Detach();
@@ -205,55 +207,46 @@ public sealed class BoardsEditorTests
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync(null);
         var vm = new BoardsViewModel(session);
-        // Measured 28 October: the toolbar binds a font command to the block that is selected
-        // when the toolbar is built, and the default fixture document already carries a selected
-        // text block ("block-para"), which is NOT document Blocks[0] ("block-heading"). The
-        // dropdown was therefore writing a real font to the selected block while this assertion
-        // looked at a different one. The requirement is unchanged: a dropdown choice sets the
-        // font of the block the user is working on, and it must undo. The precondition (which
-        // block that is) is now stated explicitly instead of being assumed.
         var target = session.Document.Sections[0].Pages[0].Blocks[0];
-        TestUiThread.Run(() => vm.FocusBlock(target.Id));
-        var controls = TestUiThread.Run(() =>
-        {
-            var host = new StackPanel();
-            ToolbarBuilder.Rebuild(host, vm);
-            return Flatten(host).OfType<ComboBox>().ToDictionary(
-                combo => Avalonia.Automation.AutomationProperties.GetName(combo) ?? string.Empty,
-                StringComparer.Ordinal);
-        });
-        var font = controls["Font family"];
-        var size = controls["Font size"];
-        // Avalonia owns these controls on the UI thread, so their state must be read there;
-        // reading it from the test thread is a harness mistake, not product behaviour. The
-        // typed-value, dropdown-choice and undo requirements below are unchanged.
+        Window? window = null;
+        Control? root = null;
         TestUiThread.Run(() =>
         {
-            Assert.True(font.IsEditable);
-            Assert.True(size.IsEditable);
+            vm.FocusBlock(target.Id);
+            root = AdaptiveToolbar.Build(vm);
+            window = new Window { Width = 1500, Height = 220, Content = root };
+            window.Show(); window.UpdateLayout();
+            var font = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "AdaptiveFont")!;
+            var size = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "AdaptiveSize")!;
+            Assert.False(font.IsReadOnly); Assert.False(size.IsReadOnly);
+            // The family dropdown remains a real menu choice. The size now has direct
+            // minus/plus and typed entry, matching the owner's compact control request.
+            var familyMenu = root.GetVisualDescendants().OfType<MenuItem>().First(item =>
+                Avalonia.Automation.AutomationProperties.GetName(item) == "Choose font family");
+            familyMenu.IsSubMenuOpen = true; window.UpdateLayout();
+            var georgia = familyMenu.GetLogicalDescendants().OfType<MenuItem>().First(item =>
+                Avalonia.Automation.AutomationProperties.GetName(item) == "Georgia");
+            georgia.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+            BoardsTabberLifetimeTests.Settle(window, () => target.FontFamily == "Georgia");
+            void Submit(TextBox input, string text)
+            {
+                input.Focus(); input.Text = text;
+                window.KeyPress(Key.Enter, Avalonia.Input.RawInputModifiers.None, PhysicalKey.Enter, "Enter");
+                Dispatcher.UIThread.RunJobs();
+            }
+            Submit(font, "Cascadia Mono");
+            BoardsTabberLifetimeTests.Settle(window, () => target.FontFamily == "Cascadia Mono");
+            Submit(size, "20");
+            BoardsTabberLifetimeTests.Settle(window, () => target.FontSize == 20);
+            Submit(size, "18.5");
+            BoardsTabberLifetimeTests.Settle(window, () => target.FontSize == 18.5);
         });
-
-        TestUiThread.Run(() => font.SelectedItem = "Georgia");
-        Assert.Equal("Georgia", session.Document.Sections[0].Pages[0].Blocks[0].FontFamily);
-        TestUiThread.Run(() =>
-        {
-            font.Text = "Cascadia Mono";
-            font.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
-        });
-        Assert.Equal("Cascadia Mono", session.Document.Sections[0].Pages[0].Blocks[0].FontFamily);
-
-        TestUiThread.Run(() => size.SelectedItem = "20");
-        Assert.Equal(20, session.Document.Sections[0].Pages[0].Blocks[0].FontSize);
-        TestUiThread.Run(() =>
-        {
-            size.Text = "18.5";
-            size.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
-        });
-        Assert.Equal(18.5, session.Document.Sections[0].Pages[0].Blocks[0].FontSize);
+        Assert.Equal("Cascadia Mono", target.FontFamily);
+        Assert.Equal(18.5, target.FontSize);
 
         Assert.True(await session.UndoAsync());
         Assert.Equal(20, session.Document.Sections[0].Pages[0].Blocks[0].FontSize);
-        TestUiThread.Run(vm.Dispose);
+        TestUiThread.Run(() => { window?.Close(); if (root is not null) AdaptiveToolbar.Dispose(root); vm.Dispose(); });
     }
 
     [Fact]
@@ -304,36 +297,37 @@ public sealed class BoardsEditorTests
     }
 
     [Fact]
-    public async Task Authored_edit_view_switch_tracks_the_mode_and_writes_through_the_view_model()
+    public async Task Authored_edit_view_menu_tracks_the_mode_and_routes_the_real_action()
     {
         await using var session = new InMemoryRichBoardSession();
         await session.OpenAsync(null);
         var viewModel = new BoardsViewModel(session);
-
         TestUiThread.Run(() =>
         {
             using var loader = BoardsCuiDocuments.CreateLoader();
-            loader.SetBindingContext(viewModel);
-            loader.SetActionDispatcher(viewModel);
+            loader.SetBindingContext(viewModel); loader.SetActionDispatcher(viewModel);
             var (root, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
             Assert.DoesNotContain(diagnostics, item => item.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             var control = Assert.IsAssignableFrom<Control>(root);
-            loader.WireBindings(control);
-            viewModel.Attach(control);
-
-            var mode = Assert.IsType<ToggleSwitch>(BoardsCuiControlFinder.FindByAutomationId<ToggleSwitch>(control, "EditViewToggle"));
-            Assert.True(mode.IsChecked);
-            Assert.True(mode.IsEnabled);
-
-            Assert.True(viewModel.TrySetValue("IsEditMode", false));
-            Assert.False(mode.IsChecked);
-            Assert.Equal("Viewing", viewModel.Get("ModeLabel"));
-
-            mode.IsChecked = true;
-            Assert.True(viewModel.IsEditMode);
-            Assert.Equal("Editing", viewModel.Get("ModeLabel"));
-
-            viewModel.Dispose();
+            loader.WireBindings(control); viewModel.Attach(control);
+            var window = new Window { Content = control, Width = 1200, Height = 800 }; window.Show(); window.UpdateLayout();
+            try
+            {
+                var mode = control.GetLogicalDescendants().OfType<MenuItem>().Single(item =>
+                    item.Header?.ToString() == "Switch to Viewing mode");
+                Assert.True(mode.IsEffectivelyEnabled);
+                Assert.True(viewModel.TrySetValue("IsEditMode", false));
+                Assert.Equal("Switch to Editing mode", mode.Header);
+                Assert.Equal("Viewing", viewModel.Get("ModeLabel"));
+                var more = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(control, "OverflowButton")!;
+                more.IsSubMenuOpen = true; window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                Assert.True(mode.IsEffectivelyVisible);
+                mode.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+                BoardsTabberLifetimeTests.Settle(window, () => viewModel.IsEditMode);
+                Assert.Equal("Editing", viewModel.Get("ModeLabel"));
+                Assert.Equal("Switch to Viewing mode", mode.Header);
+            }
+            finally { window.Close(); viewModel.Dispose(); }
         });
     }
 
@@ -558,19 +552,26 @@ public sealed class BoardsEditorTests
             .ToArray();
         Assert.True(errors.Length == 0, $"Boards.cui parse errors: {string.Join("; ", errors)}");
 
+        var toolbarDocument = parser.ParseFile(Path.Combine(Path.GetDirectoryName(path)!, "BoardsAdaptiveToolbar.cui"));
+        Assert.DoesNotContain(parser.Diagnostics.Diagnostics,
+            diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
+        var allComponents = document.Components.Concat(toolbarDocument.Components)
+            .SelectMany(component => component.DescendantsAndSelf()).ToArray();
         var expected = new[]
         {
-            "TopBarLeft", "TopBarRight", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "BoardIdentity", "SaveState", "NavSearchBox", "NavHost",
-            "BoardSwitcherHeader", "BoardSwitcherIcon", "BoardSwitcher", "ToolbarHost", "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike", "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "LayoutModeLabel", "LayoutModeToggle", "OverflowButton", "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors", "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton", "AddNewButton",
+            "TopBarLeft", "BoardsAppIcon", "UndoButton", "RedoButton", "BoardTitleBox", "SaveState", "NavSearchBox", "NavHost",
+            "BoardSwitcher", "ToolbarHost", "AdaptivePill", "AdaptiveFixedActions", "AdaptiveStyle", "RangeBold", "RangeItalic", "RangeUnderline", "RangeStrike",
+            "ContextHost", "EditorScroll", "PageCard", "PageBlocksSurface", "BlocksHost", "AbsoluteBlocksHost", "OverflowButton",
+            "SectionIconPickerBackdrop", "SectionIconPickerPanel", "SectionIconPickerSearch", "SectionIconChoices", "SectionIconColors",
+            "SuggestSectionIconButton", "GeneratedSectionIconOptions", "GeneratedSectionIconPreviewImage", "ApplyGeneratedSectionIconButton", "AddNewButton"
         };
-        var components = document.Components
-            .SelectMany(c => c.DescendantsAndSelf())
-            .Where(c => expected.Contains(c.Name, StringComparer.Ordinal))
-            .ToArray();
+        var components = allComponents.Where(component => expected.Contains(component.Name, StringComparer.Ordinal)).ToArray();
         Assert.Equal(expected.Length, components.Length);
         var toolbarHost = components.Single(component => component.Name == "ToolbarHost");
         Assert.True(toolbarHost.Properties.TryGetValue("Type", out var toolbarType)
-            && toolbarType is CuiLiteralValue { Value: "Horizontal Stack" });
+            && toolbarType is CuiLiteralValue { Value: "Overlay" });
+        Assert.True(toolbarHost.Properties.TryGetValue("HorizontalAlignment", out var alignment)
+            && alignment is CuiLiteralValue { Value: "Stretch" });
         foreach (var (name, binding) in new[]
                  {
                      ("RangeBold", "RangeBoldSelected"), ("RangeItalic", "RangeItalicSelected"),
@@ -579,19 +580,16 @@ public sealed class BoardsEditorTests
         {
             var formatButton = components.Single(component => component.Name == name);
             Assert.True(formatButton.Properties.TryGetValue("Selected", out var selected)
-            && selected is CuiBindingValue { Path: var bindingPath } && bindingPath == binding);
+                && selected is CuiBindingValue { Path: var bindingPath } && bindingPath == binding);
         }
-        Assert.True(toolbarHost.Properties.TryGetValue("HorizontalScrolling", out var horizontalScrolling)
-            && horizontalScrolling is CuiLiteralValue horizontalLiteral
-            && bool.TryParse(horizontalLiteral.Value, out var horizontalEnabled) && horizontalEnabled);
-        Assert.True(toolbarHost.Properties.TryGetValue("HorizontalOverflowArrows", out var arrows)
-            && arrows is CuiLiteralValue { Value: "True" });
-        Assert.True(toolbarHost.Properties.TryGetValue("VerticalScrolling", out var verticalScrolling)
-            && verticalScrolling is CuiLiteralValue verticalLiteral
-            && bool.TryParse(verticalLiteral.Value, out var verticalEnabled) && !verticalEnabled);
+        var adaptivePill = components.Single(component => component.Name == "AdaptivePill");
+        Assert.True(adaptivePill.Properties.TryGetValue("Type", out var adaptiveType)
+            && adaptiveType is CuiLiteralValue { Value: "Toolbar" });
+        Assert.Contains(adaptivePill.DescendantsAndSelf(), component =>
+            component.Properties.TryGetValue("OverflowHost", out var overflowValue) && overflowValue is CuiLiteralValue { Value: "True" });
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
-        Assert.True(boardSwitcher.Properties.TryGetValue("IconSource", out var boardIcon)
-            && boardIcon is CuiLiteralValue { Value: "icon:chevron-down" });
+        Assert.True(boardSwitcher.Properties.TryGetValue("Content", out var boardName)
+            && boardName is CuiBindingValue { Path: "BoardMenuTitle" });
         Assert.True(boardSwitcher.Properties.TryGetValue("IsEnabled", out var boardMenuEnabled)
             && boardMenuEnabled is CuiBindingValue { Path: "CanOpenBoardMenu" });
         var boardTitle = components.Single(component => component.Name == "BoardTitleBox");
@@ -599,11 +597,10 @@ public sealed class BoardsEditorTests
             && boardTitleValue is CuiBindingValue { Path: "BoardTitle" });
         var topBarLeft = components.Single(component => component.Name == "TopBarLeft");
         var topBarLeftNames = topBarLeft.DescendantsAndSelf().Select(component => component.Name).ToArray();
-        Assert.True(Array.IndexOf(topBarLeftNames, "BoardsAppIcon") < Array.IndexOf(topBarLeftNames, "FileMenu")
-            && Array.IndexOf(topBarLeftNames, "FileMenu") < Array.IndexOf(topBarLeftNames, "UndoButton"));
-        var boardIdentity = components.Single(component => component.Name == "BoardIdentity");
-        var boardIdentityNames = boardIdentity.DescendantsAndSelf().Select(component => component.Name).ToArray();
-        Assert.True(Array.IndexOf(boardIdentityNames, "BoardTitleBox") < Array.IndexOf(boardIdentityNames, "SaveState"));
+        Assert.True(Array.IndexOf(topBarLeftNames, "BoardsAppIcon") < Array.IndexOf(topBarLeftNames, "BoardSwitcher")
+            && Array.IndexOf(topBarLeftNames, "BoardSwitcher") < Array.IndexOf(topBarLeftNames, "UndoButton")
+            && Array.IndexOf(topBarLeftNames, "UndoButton") < Array.IndexOf(topBarLeftNames, "RedoButton"));
+        Assert.Contains(topBarLeft.DescendantsAndSelf(), component => component.Name == "SaveState");
         var addAction = components.Single(component => component.Name == "AddNewButton");
         Assert.True(addAction.Properties.TryGetValue("Content", out var addContent)
             && addContent is CuiLiteralValue { Value: "+ Add" });
@@ -611,14 +608,11 @@ public sealed class BoardsEditorTests
             && addForeground is CuiResourceValue { Key: "CuiAccentInkBrush" });
         Assert.True(addAction.Properties.TryGetValue("FontSize", out var addFontSize)
             && addFontSize is CuiLiteralValue { Value: "14" });
-        var layoutToggle = components.Single(component => component.Name == "LayoutModeToggle");
-        Assert.True(layoutToggle.Properties.TryGetValue("Checked", out var layoutChecked)
-            && layoutChecked is CuiBindingValue { Path: "IsFreeLayout", Mode: CuiBindingMode.TwoWay });
-        Assert.True(layoutToggle.Properties.TryGetValue("Interactive", out var layoutInteractive)
+        var layoutCommand = allComponents.Single(component => component.TryGetLiteralAttribute("action", out var action) && action == "ToggleLayoutMode");
+        Assert.True(layoutCommand.Properties.TryGetValue("Interactive", out var layoutInteractive)
             && layoutInteractive is CuiBindingValue { Path: "CanChangeLayoutMode" });
-        var layoutLabel = components.Single(component => component.Name == "LayoutModeLabel");
-        Assert.True(layoutLabel.Properties.TryGetValue("Text", out var layoutLabelValue)
-            && layoutLabelValue is CuiBindingValue { Path: "LayoutModeLabel" });
+        Assert.True(layoutCommand.Properties.TryGetValue("Content", out var layoutLabelValue)
+            && layoutLabelValue is CuiBindingValue { Path: "LayoutModeAccessibleName" });
         var iconSearch = components.Single(component => component.Name == "SectionIconPickerSearch");
         Assert.True(iconSearch.Properties.TryGetValue("Value", out var searchValue)
             && searchValue is CuiBindingValue { Path: "SectionIconPickerSearch" });
@@ -656,8 +650,11 @@ public sealed class BoardsEditorTests
         foreach (var iconButtonName in new[] { "UndoButton", "RedoButton", "OverflowButton" })
         {
             var iconButton = components.Single(component => component.Name == iconButtonName);
-            Assert.True(iconButton.Properties.TryGetValue("IconSize", out var iconSize)
-                && iconSize is CuiLiteralValue { Value: "18" });
+            if (iconButtonName == "OverflowButton")
+                Assert.True(iconButton.Properties.TryGetValue("IconSize", out var iconSize) && iconSize is CuiLiteralValue { Value: "18" });
+            else
+                Assert.Contains(iconButton.Children, child => child.Type == "Image" &&
+                    child.Properties.TryGetValue("Width", out var glyphSize) && glyphSize is CuiLiteralValue { Value: "18" });
             Assert.True(iconButton.Properties.TryGetValue("Width", out var hitTargetWidth)
                 && hitTargetWidth is CuiLiteralValue { Value: "32" });
             Assert.True(iconButton.Properties.TryGetValue("Height", out var hitTargetHeight)
@@ -677,23 +674,24 @@ public sealed class BoardsEditorTests
 
         var found = await OnUiThreadAsync(() =>
         {
-            var loader = new CakeOS.Cui.Runtime.CuiControlLoader();
-            var root = Assert.IsAssignableFrom<Control>(loader.LoadMarkup(
-                """
-                <Cui>
-                  <Container Type="Vertical Stack">
-                    <Input Type="Text" ID="BoardTitleBox" Value="Title" />
-                    <Container Type="Vertical Stack" ID="NavHost" />
-                    <Container Type="Horizontal Stack" ID="ToolbarHost" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False" />
-                    <Container Type="Vertical Stack" ID="ContextHost" />
-                    <Container Type="Grid" ID="PageBlocksSurface" RowSizes="Auto">
-                      <Container Type="Vertical Stack" ID="BlocksHost" Row="0" />
-                      <Container Type="Absolute" ID="AbsoluteBlocksHost" Row="0" />
-                    </Container>
-                  </Container>
-                </Cui>
-                """,
-                "boards-host-lookup.cui").Root);
+            var session = new InMemoryRichBoardSession();
+            try
+            {
+            session.OpenAsync("memory://authored-host-lookup").GetAwaiter().GetResult();
+            using var model = new BoardsViewModel(session);
+            using var loader = BoardsCuiDocuments.CreateLoader();
+            loader.SetBindingContext(model); loader.SetActionDispatcher(model);
+            var (loaded, diagnostics) = loader.TryLoad(BoardsCuiDocuments.Load(BoardsCuiDocuments.MainSourceName));
+            Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
+            var root = Assert.IsAssignableFrom<Control>(loaded);
+            loader.WireBindings(root); model.Attach(root);
+            var toolbar = BoardsCuiControlFinder.FindByAutomationId<Panel>(root, "ToolbarHost")!;
+            ToolbarBuilder.Rebuild(toolbar, model);
+            Assert.NotNull(BoardsCuiControlFinder.FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "AdaptivePill"));
+            // The real rename input is intentionally created only when its command opens it.
+            model.DispatchAsync("RenameBoard", null).GetAwaiter().GetResult();
+            model.SetAdaptiveProperties(true);
+            Dispatcher.UIThread.RunJobs();
             var pageBlocksSurface = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "PageBlocksSurface");
             var flowBlocks = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost");
             var absoluteBlocks = FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "AbsoluteBlocksHost");
@@ -715,10 +713,12 @@ public sealed class BoardsEditorTests
             return pageBlocksSurface is { LayoutType: "Grid" }
                 && flowBlocks is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "NavHost") is { LayoutType: "Vertical Stack" }
-                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Horizontal Stack", Layout: StackPanel }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Overlay", Layout: Panel }
                 && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ContextHost") is { LayoutType: "Vertical Stack" }
                 && absoluteBlocks is { LayoutType: "Absolute", Layout: Panel }
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
+            }
+            finally { session.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
         });
         Assert.True(found);
     }

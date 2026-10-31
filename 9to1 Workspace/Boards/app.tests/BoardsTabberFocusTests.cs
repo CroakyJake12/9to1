@@ -179,7 +179,7 @@ public sealed class BoardsTabberFocusTests
                     {
                         "neighbor" => window.GetVisualDescendants().OfType<Button>().Single(button => ToolbarBuilder.HasInsertMenu(button) &&
                             button.GetVisualAncestors().OfType<Border>().Any(border => border.Tag is BlockReorderRow row && row.BlockId == anchor)),
-                        "toolbar" => BoardsCuiControlFinder.FindByAutomationId<StackPanel>(presentation.Content, "ToolbarHost")!
+                        "toolbar" => BoardsCuiControlFinder.FindByAutomationId<Panel>(presentation.Content, "ToolbarHost")!
                             .GetVisualDescendants().OfType<Button>().Single(button => ToolbarBuilder.InsertMenuFor(button) is { AnchorBlockId: null }),
                         _ => childRoot.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Paragraph editor")
                     };

@@ -104,6 +104,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set(nameof(IsStandalonePresentation), true);
         Set(nameof(IsEmbeddedPresentation), false);
         Set("ShowEditor", true);
+        Set("BoardRenameVisible", false);
+        Set("AdaptivePropertiesVisible", false);
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
         Set("TabViewEnabled", _tabViewEnabled);
@@ -137,6 +139,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             else Dispatcher.UIThread.Post(ValidateInsertionPreview);
             Set("StatusText", status);
             Set("SaveStateText", MapSaveState(status));
+            RefreshHistoryAvailability();
         }
         _session.StatusChanged += StatusChanged;
         _removeStatusHandler = () => _session.StatusChanged -= StatusChanged;
@@ -353,16 +356,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _session is not IBoardSessionCapabilities { CanEdit: false };
     public bool CanToggleEditMode => CanEdit;
     public bool CanSwitchBoard => CanEdit && _session is not IBoardSessionCapabilities { CanSwitchBoard: false };
-    public bool CanOpenBoardMenu => CanSwitchBoard || CanCreateBoard ||
+    public bool CanOpenBoardMenu => HasOpenBoard || CanSwitchBoard || CanCreateBoard ||
         _homeBoardCreationHost is { } host &&
         (host.CanRetryOpenCreatedBoard || host.CanRetryCreationSettlement ||
          host.CanInspectUnknownCreation || host.CanOpenRecordedBoard);
-    public bool CanSaveAs => CanEdit && _session is not IBoardSessionCapabilities { CanSaveAs: false };
+    public bool CanSaveAs => CanEdit && HasOpenBoard && _session is not IBoardSessionCapabilities { CanSaveAs: false };
 
     /// <summary>Whether the board the user is looking at can be saved right now. On the Boards splash there is
     /// no current board, so the save commands must not present as available (owner report 31 October 2026:
     /// they were only reachable at all from the File menu once a board was open).</summary>
     public bool CanSaveBoard => CanEdit && HasOpenBoard;
+    public bool CanRenameBoard => CanEdit && HasOpenBoard && IsEditMode;
     public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null &&
         !_homeCreationOperationInProgress && !_homeBoardCreationHost.HasUnresolvedCreation;
     public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode && _pendingEmbeddedPageLink is null;
@@ -397,7 +401,19 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     /// <summary>Marks this surface as a splash with no board open. Only the landing presentation
     /// calls it; showing or hiding the splash over a real board never changes it.</summary>
-    public void SetNoBoardOpen() => HasOpenBoard = false;
+    public void SetNoBoardOpen()
+    {
+        HasOpenBoard = false;
+        Set("BoardRenameVisible", false);
+        Set("AdaptivePropertiesVisible", false);
+        Set("BoardMenuTitle", "Boards ▾");
+        Set("CanRenameBoard", false);
+        Set("CanOpenBoardMenu", CanOpenBoardMenu);
+        Set("CanSaveAs", false);
+        Set("CanSaveBoard", false);
+        Set("CanUndo", false);
+        Set("CanRedo", false);
+    }
     public IReadOnlyList<RecentBoardCard> RecentBoardCards => _recentBoardCards;
     public IReadOnlyList<RecentPageCard> RecentPageCards => _recentPageCards;
     public double InkZoom { get; set; } = 1;
@@ -410,6 +426,8 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         _properties[property] = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        if (property == "BoardTitle") Set("BoardMenuTitle", HasOpenBoard ? $"{value} ▾" : "Boards ▾");
+        if (property == "TabViewEnabled") Set("TabViewMenuLabel", value is true ? "Hide page tabs" : "Show page tabs");
     }
 
     public object? Get(string property) =>
@@ -462,7 +480,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         using var themeScope = BoardsTheme.UseSurface(_attachedRoot ?? _themeSurface, _embeddedArtifactHost?.ThemeContext);
         if (_disposed || EditorLifetimeEnded) return;
         if (_paneOwner is not null && !CanEdit) return;
-        if (command is "ToggleBold" or "ToggleItalic" or "ToggleUnderline" or "ToggleStrike" &&
+        if (await DispatchHeaderAsync(command, cancellationToken)) return;
+        if ((command.StartsWith("Context", StringComparison.Ordinal) ||
+             command is "ToggleBold" or "ToggleItalic" or "ToggleUnderline" or "ToggleStrike" or
+                 "ToggleSub" or "ToggleSup" or "ClearFormat" or "FontBigger" or "FontSmaller" or
+                 "AlignLeft" or "AlignCenter" or "AlignRight" or "AlignJustify" or "IndentInc" or "IndentDec") &&
             ToolbarTarget is var toolbarTarget && !ReferenceEquals(toolbarTarget, this))
         {
             await toolbarTarget.DispatchAsync(command, parameter, cancellationToken);
@@ -1005,6 +1027,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("CanSwitchBoard", CanSwitchBoard);
         Set("CanCreateBoard", CanCreateBoard);
         Set("CanSaveBoard", CanSaveBoard);
+        Set("CanRenameBoard", CanRenameBoard);
         Set("CanSaveAs", CanSaveAs);
         Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
         Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);
@@ -2117,7 +2140,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var control = _textRangeControl!;
         var focused = TopLevel.GetTopLevel(control)?.FocusManager?.GetFocusedElement() as Control;
         var focusId = focused is null ? null : Avalonia.Automation.AutomationProperties.GetAutomationId(focused);
-        var restoreFocus = control.IsKeyboardFocusWithin || focusId is "RangeBold" or "RangeItalic" or "RangeUnderline" or "RangeStrike";
+        var restoreFocus = control.IsKeyboardFocusWithin || focusId is "RangeBold" or "RangeItalic" or "RangeUnderline" or "RangeStrike" or "OverflowRangeBold" or "OverflowRangeItalic" or "OverflowRangeUnderline" or "OverflowRangeStrike";
         // Return toolbar focus before its busy binding disables the pressed button.
         // Otherwise the framework clears that disabled focus and the later guarded
         // restoration cannot distinguish it from an unrelated user focus change.
@@ -4111,38 +4134,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         return string.IsNullOrWhiteSpace(name) ? "attachment" : name;
     }
 
-    private void ToggleBaseline(string baseline)
-    {
-        var block = SelectedBlock();
-        block.Baseline = block.Baseline == baseline ? "normal" : baseline;
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
-    }
+    private void ToggleBaseline(string baseline) => ApplyBaselineAttributes(baseline);
 
-    private void ClearSelectedFormat()
-    {
-        var block = SelectedBlock();
-        block.Bold = block.Italic = block.Underline = block.Strike = false;
-        block.Baseline = "normal";
-        block.FontFamily = string.Empty;
-        block.FontSize = 0;
-        block.Foreground = string.Empty;
-        block.Background = string.Empty;
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
-    }
+    private void ClearSelectedFormat() => ClearTextAttributes();
 
-    private void ScaleSelectedFont(double delta)
-    {
-        var block = SelectedBlock();
-        var current = block.FontSize > 0 ? block.FontSize : 14;
-        block.FontSize = Math.Clamp(current + delta, 8, 96);
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
-    }
+    private void ScaleSelectedFont(double delta) => ScaleFontAttributes(delta);
 
     public void SetSelectedAlignment(string alignment)
     {
@@ -4156,12 +4152,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void SetSelectedColors(string foreground, string background)
     {
         if (!RequireEditMode()) return;
-        var block = SelectedBlock();
-        block.Foreground = foreground ?? string.Empty;
-        block.Background = background ?? string.Empty;
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
+        ApplyColorAttributes(foreground ?? string.Empty, background ?? string.Empty);
     }
 
     public void SetSelectedFontFamily(string family)
@@ -4169,24 +4160,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (!RequireEditMode()) return;
         var normalized = (family ?? string.Empty).Trim();
         if (normalized.Length > 100 || normalized.Any(char.IsControl)) return;
-        var block = SelectedBlock();
-        if (string.Equals(block.FontFamily, normalized, StringComparison.Ordinal)) return;
-        block.FontFamily = normalized;
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
+        ApplyFontFamilyAttributes(normalized);
     }
 
     public void SetSelectedFontSize(double size)
     {
         if (!RequireEditMode() || !double.IsFinite(size)) return;
-        var normalized = Math.Clamp(size, 8, 96);
-        var block = SelectedBlock();
-        if (Math.Abs(block.FontSize - normalized) < 0.001) return;
-        block.FontSize = normalized;
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
+        ApplyFontSizeAttributes(Math.Clamp(size, 8, 96));
     }
 
     public string SelectedBlockKind => SelectedBlockOrNull()?.Kind ?? "paragraph";
@@ -4430,8 +4410,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("BoldState", selected?.Bold == true ? "On" : "Off");
             Set("ItalicState", selected?.Italic == true ? "On" : "Off");
             Set("UnderlineState", selected?.Underline == true ? "On" : "Off");
-            Set("CanUndo", _session.CanUndo);
-            Set("CanRedo", _session.CanRedo);
+            RefreshHistoryAvailability();
             RefreshCuiContext();
         }
         finally

@@ -461,7 +461,7 @@ public sealed class BoardsWritablePresentation : IAsyncDisposable
         if (_disposed) return;
         if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(RefreshToolbar); return; }
         using var themeScope = BoardsTheme.UseSurface(Content, _themeContext);
-        if (BoardsCuiControlFinder.FindByAutomationId<StackPanel>(Content, "ToolbarHost") is { } toolbar)
+        if (BoardsCuiControlFinder.FindByAutomationId<Panel>(Content, "ToolbarHost") is { } toolbar)
             ToolbarBuilder.Rebuild(toolbar, ViewModel);
     }
 
