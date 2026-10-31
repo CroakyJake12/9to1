@@ -37,7 +37,7 @@ def find(dpy: Display, wanted: str):
                 klass = " ".join(str(part) for part in (window.get_wm_class() or ()))
             except (Xerror.XError, ValueError):
                 klass = ""
-            if "CakeOS" in klass or "dotnet" in klass.lower():
+            if any(marker in klass for marker in ("CakeOS", "Haven")) or "dotnet" in klass.lower():
                 return window, f"{name} [{klass}]"
         try:
             stack.extend(window.query_tree().children)
