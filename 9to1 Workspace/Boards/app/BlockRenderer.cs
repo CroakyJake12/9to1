@@ -494,6 +494,23 @@ public static class BlockRenderer
         shell.Children.Add(outline);
         shell.Children.Add(BlockInsertionPreviewCui.Build(vm, selectId,
             absolutePositioned ? placementBlock : null, BlockGutterTargetSize * 2));
+        // Owner 31 October 2026: "it should be blank, only showing a ghost accent-themed caret where the user's
+        // pointer is unless it's a container block like table, then the purple outline". The caret is a pointer
+        // affordance only: it is not hit-testable, never visible at rest, and it disappears the moment the pointer
+        // leaves or the block is a container (which uses the accent outline above instead).
+        var ghostCaret = new Border
+        {
+            Name = "BlockGhostCaret",
+            Width = 2,
+            Height = 18,
+            CornerRadius = new CornerRadius(1),
+            IsHitTestVisible = false,
+            Focusable = false,
+            IsVisible = false,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        shell.Children.Add(ghostCaret);
         var border = new Border
         {
             Child = shell,
@@ -513,7 +530,10 @@ public static class BlockRenderer
             // standalone palette, which is compiled Light, and that fallback is what flipped a dragged
             // block to a light surface inside Home's dark window (owner report 29 October).
             var accent = AccentColorOf(border);
-            if (gripHover && accent is { } hoverColour)
+            // Owner correction 31 October 2026: only container blocks (table, database, tabber, image, list, board
+            // surfaces) take the accent outline on hover. A leaf/text block must hover blank, with just the ghost
+            // caret below, so the outline is now gated on `container` instead of every kind.
+            if (gripHover && container && accent is { } hoverColour)
             {
                 outline.BorderThickness = new Thickness(1.5);
                 outline.BorderBrush = new SolidColorBrush(hoverColour) { Opacity = 0.55 };
@@ -550,8 +570,35 @@ public static class BlockRenderer
             gripControl.PointerEntered += (_, _) => { gripHover = true; UpdateBlockOutline(); };
             gripControl.PointerExited += (_, _) => { gripHover = false; UpdateBlockOutline(); };
         }
-        border.PointerEntered += (_, _) => { hovering = true; UpdateGutterEmphasis(); };
-        border.PointerExited += (_, _) => { hovering = false; UpdateGutterEmphasis(); };
+        // The shared CUI template paints a hover wash on every TextBox/Button (CuiControlTemplates.cs:99), which is
+        // what re-introduced the hover band over document text. The authored vocabulary is HoverTint, and the host
+        // states its requirement for these block controls: leaf kinds paint nothing, containers ask for the accent
+        // outline. Both are the framework policy, not a Boards-private brush override.
+        foreach (var descendant in shell.GetSelfAndVisualDescendants().OfType<Control>())
+        {
+            if (descendant is TextBox || descendant is Button)
+                CuiHoverTintPolicy.Set(descendant, container ? CuiHoverTintPolicy.OutlineMode : CuiHoverTintPolicy.NoneMode);
+        }
+        border.PointerEntered += (_, e) =>
+        {
+            hovering = true;
+            UpdateGutterEmphasis();
+            if (!container)
+            {
+                var accentColour = AccentColorOf(border);
+                ghostCaret.Background = accentColour is { } caretColour
+                    ? new SolidColorBrush(caretColour) { Opacity = 0.45 }
+                    : null;
+                ghostCaret.Margin = new Thickness(Math.Max(0, e.GetPosition(shell).X), 0, 0, 0);
+                ghostCaret.IsVisible = ghostCaret.Background is not null;
+            }
+        };
+        border.PointerMoved += (_, e) =>
+        {
+            if (container || !hovering) return;
+            ghostCaret.Margin = new Thickness(Math.Max(0, e.GetPosition(shell).X), 0, 0, 0);
+        };
+        border.PointerExited += (_, _) => { hovering = false; ghostCaret.IsVisible = false; UpdateGutterEmphasis(); };
         border.AddHandler(InputElement.GotFocusEvent, (_, _) => { focused = true; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
         border.AddHandler(InputElement.LostFocusEvent, (_, _) => { focused = false; UpdateGutterEmphasis(); }, RoutingStrategies.Bubble);
         if (gripControl is not null)
