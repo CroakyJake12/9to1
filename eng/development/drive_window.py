@@ -23,6 +23,60 @@ from Xlib import Xatom
 from Xlib.protocol import event as xevent
 
 
+def find_by_id(dpy: Display, window_id: str):
+    """Address one window by its exact X id.
+
+    Measured reason this exists: name matching returns the FIRST viewable window in depth-first order whose
+    WM_NAME contains the substring. The Boards host has more than one such window, and capture_window.py and
+    drive_window.py then disagree about which one is being looked at - clicks were reported as sent
+    (window 0x420000f) while the capture read a different one (0x480000f), so the frame never changed and I
+    nearly concluded the app ignored input. Addressing the exact id that the capture reported removes the
+    ambiguity and makes the input receipt verifiable against the frame it is supposed to change.
+    """
+    wanted = int(window_id, 16)
+    stack = [dpy.screen().root]
+    while stack:
+        window = stack.pop()
+        if window.id == wanted:
+            try:
+                name = window.get_wm_name() or "".strip()
+            except Exception:
+                name = ""
+            return window, f"{name or '(no name)'} [id {window_id}]"
+        try:
+            stack.extend(window.query_tree().children)
+        except Xerror.XError:
+            continue
+    return None, None
+
+
+def list_viewable(dpy: Display, wanted: str):
+    """Print every viewable window whose name matches, with id and geometry, so the operator can choose."""
+    found = []
+    stack = [dpy.screen().root]
+    while stack:
+        window = stack.pop()
+        try:
+            name = window.get_wm_name() or ""
+            attributes = window.get_attributes()
+        except (Xerror.XError, ValueError):
+            name, attributes = "", None
+        if name and wanted.lower() in str(name).lower() and attributes and attributes.map_state == X.IsViewable:
+            try:
+                g = window.get_geometry()
+                geom = (g.x, g.y, g.width, g.height)
+            except Xerror.XError:
+                geom = None
+            found.append((f"0x{window.id:08x}", str(name), geom))
+        try:
+            stack.extend(window.query_tree().children)
+        except Xerror.XError:
+            continue
+    for entry in found:
+        print("MATCH", entry[0], entry[2], entry[1])
+    return found
+
+
 def find(dpy: Display, wanted: str, exclude: str | None = None):
     stack = [dpy.screen().root]
     while stack:
@@ -130,7 +184,9 @@ def wm_close(dpy: Display, window) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--window", required=True, help="substring of the WM_NAME to match")
+    ap.add_argument("--window", help="substring of the WM_NAME to match")
+    ap.add_argument("--window-id", help="exact X window id, e.g. 0x480000f; the id that capture_window reported")
+    ap.add_argument("--list", action="store_true", help="list every viewable window matching --window and exit")
     ap.add_argument("--exclude", default=None, help="skip windows whose title contains this substring")
     ap.add_argument("--click", action="append", default=[], help="x,y in window pixels")
     ap.add_argument("--key", action="append", default=[], help='e.g. "ctrl+n"')
@@ -140,7 +196,17 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     dpy = Display(None)
-    window, title = find(dpy, args.window, args.exclude)
+    if not args.window and not args.window_id:
+        raise SystemExit("REFUSED: pass --window or --window-id")
+    if args.list:
+        if not args.window:
+            raise SystemExit("REFUSED: --list needs --window")
+        found = list_viewable(dpy, args.window)
+        raise SystemExit(0 if found else 3)
+    if args.window_id:
+        window, title = find_by_id(dpy, args.window_id)
+    else:
+        window, title = find(dpy, args.window, args.exclude)
     if window is None:
         print(f"NOT SENT: no mapped window matching {args.window!r}", file=sys.stderr)
         return 2
