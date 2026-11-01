@@ -1406,6 +1406,87 @@ internal static class MergeDeltas
         InkStrokeCount = source.InkStrokeCount
     };
 
+    /// <summary>
+    /// Undo grouping for authoring text. Returns a group key when this merge changes exactly one text surface
+    /// (a block's text, or a board/section/page title) by a single typed or deleted character and nothing else;
+    /// null for every other merge, so structure, formatting, placement, styles and ink each keep their own
+    /// undo step exactly as before.
+    ///
+    /// This exists because the editor merges per keystroke (ContractSessionAdapter.MarkDirty → MergeAsync),
+    /// which stacked one history entry per character: measured on the running app on 1 November 2026, Ctrl+Z
+    /// stepped "SPLITMEZZTOP" back one letter per press instead of undoing the edit the user made.
+    /// </summary>
+    public static string? SingleCharacterTextGroup(RichBoardDocument submitted, RichBoardDocument baseline)
+    {
+        var walk = new TextGroupWalker();
+        walk.Visit(System.Text.Json.Nodes.JsonNode.Parse(WorkerJson(baseline)),
+            System.Text.Json.Nodes.JsonNode.Parse(WorkerJson(submitted)), "document");
+        if (!walk.Qualified || walk.Scope is null || walk.Before is null || walk.After is null) return null;
+        return OneCharacterApart(walk.Before, walk.After) ? "text-edit:" + walk.Scope : null;
+    }
+
+    /// <summary>True when the two strings differ by exactly one inserted or deleted character.</summary>
+    private static bool OneCharacterApart(string before, string after)
+    {
+        var (shorter, longer) = before.Length <= after.Length ? (before, after) : (after, before);
+        if (longer.Length - shorter.Length != 1) return false;
+        var index = 0;
+        while (index < shorter.Length && shorter[index] == longer[index]) index++;
+        return shorter[(index)..] == longer[(index + 1)..];
+    }
+
+    private sealed class TextGroupWalker
+    {
+        internal bool Qualified = true;
+        internal string? Scope;
+        internal string? Before, After;
+        private int _textDiffs;
+
+        internal void Visit(System.Text.Json.Nodes.JsonNode? before,
+            System.Text.Json.Nodes.JsonNode? after, string scope)
+        {
+            if (!Qualified) return;
+            if (before is System.Text.Json.Nodes.JsonObject left &&
+                after is System.Text.Json.Nodes.JsonObject right)
+            {
+                var owner = right.TryGetPropertyValue("id", out var idNode) &&
+                    idNode is not null && idNode.GetValueKind() == System.Text.Json.JsonValueKind.String
+                        ? idNode.GetValue<string>() : scope;
+                foreach (var pair in left)
+                {
+                    var present = right.ContainsKey(pair.Key);
+                    var other = present ? right[pair.Key] : null;
+                    if ((pair.Key == "text" || pair.Key == "title") &&
+                        pair.Value is not null && present && other is not null &&
+                        pair.Value.GetValueKind() == System.Text.Json.JsonValueKind.String &&
+                        other.GetValueKind() == System.Text.Json.JsonValueKind.String)
+                    {
+                        var a = pair.Value!.GetValue<string>();
+                        var b = other!.GetValue<string>();
+                        if (a == b) continue;
+                        if (++_textDiffs > 1) { Qualified = false; return; }
+                        Scope = owner; Before = a; After = b;
+                        continue;
+                    }
+                    if (!present && pair.Value is not null) { Qualified = false; return; }
+                    Visit(pair.Value, other, owner);
+                }
+                foreach (var pair in right)
+                    if (!left.ContainsKey(pair.Key)) { Qualified = false; return; }   // a property appeared
+                return;
+            }
+            if (before is System.Text.Json.Nodes.JsonArray beforeArray &&
+                after is System.Text.Json.Nodes.JsonArray afterArray)
+            {
+                if (beforeArray.Count != afterArray.Count) { Qualified = false; return; }
+                for (var index = 0; index < beforeArray.Count; index++)
+                    Visit(beforeArray[index], afterArray[index], scope);
+                return;
+            }
+            if (!System.Text.Json.Nodes.JsonNode.DeepEquals(before, after)) Qualified = false;
+        }
+    }
+
     private static string WorkerJson(RichBoardDocument document) =>
         System.Text.Json.JsonSerializer.Serialize(document, new System.Text.Json.JsonSerializerOptions(
             System.Text.Json.JsonSerializerDefaults.Web));

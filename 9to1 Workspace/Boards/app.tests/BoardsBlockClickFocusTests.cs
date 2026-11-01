@@ -259,6 +259,38 @@ public sealed class BoardsBlockClickFocusTests
         Assert.False(fixture.Session.CanRedo, "the filter's Ctrl+Z must not have taken a board undo step");
     });
 
+    /// <summary>
+    /// BF-19 granularity, measured natively: Ctrl+Z stepped the physical file back one character per press
+    /// (receipts N04/N05, frames 154-155: "SPLITMEZZTOP" -> "SPLITMEZZTO" -> "SPLITMEZZT" -> "SPLITMEZZ",
+    /// richNotes.version 140 -> 138 -> 136 -> 134), because every keystroke is its own canonical merge and
+    /// therefore its own history entry. One press must undo the edit the user made.
+    /// </summary>
+    [Fact]
+    public Task CtrlZUndoesTheTypedRunRatherThanOneCharacterOfIt() => OnSurfaceAsync((fixture, window) =>
+    {
+        var adapter = Assert.IsType<ContractSessionAdapter>(fixture.Session);
+        adapter.HistoryCoalescingWindow = TimeSpan.FromSeconds(30);   // no timer-sensitive assertion
+        var blockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string Text() => fixture.Session.Document.Sections[0].Pages[0].Blocks.Single(b => b.Id == blockId).Text;
+
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        foreach (var character in "HELLO") window.KeyTextInput(character.ToString());
+        fixture.Settle();
+        Assert.Equal("HELLO", Text());
+
+        window.KeyPress(Key.Z, RawInputModifiers.Control, PhysicalKey.None, null);
+        fixture.Settle();
+
+        var live = fixture.ParagraphEditors[0].Text;
+        Assert.True(Text() == string.Empty,
+            $"one Ctrl+Z left {Quote(Text())} of the typed run in place (live editor {Quote(live)}); " +
+            "the run must undo as one boundary");
+        Assert.Equal(string.Empty, live);
+        window.KeyPress(Key.Y, RawInputModifiers.Control, PhysicalKey.None, null);
+        fixture.Settle();
+        Assert.Equal("HELLO", Text());
+    });
+
     private static string Quote(string? text) => text is null ? "(null)" : "\"" + text.Replace("\n", "\\n") + "\"";
 
     private static Point CenterInWindow(Control control, Window window) =>

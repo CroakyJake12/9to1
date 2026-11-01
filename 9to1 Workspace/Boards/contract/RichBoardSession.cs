@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -26,6 +27,19 @@ public sealed class RichBoardSession : IAsyncDisposable
     private readonly TimeSpan _autosaveDelay = TimeSpan.FromMilliseconds(750);
     private readonly Stack<string> _undo = new();
     private readonly Stack<string> _redo = new();
+    private string? _lastHistoryGroup;
+    private long _lastHistoryGroupStamp;
+
+    /// <summary>
+    /// How long consecutive mutations carrying the same <c>historyGroup</c> stay one undo step. The Boards
+    /// editor types one canonical merge per keystroke (ContractSessionAdapter.MarkDirty merges immediately),
+    /// so without grouping a typed word costs one history entry per character and Ctrl+Z removes a single
+    /// letter - measured on the running app on 1 November 2026, where Ctrl+Z stepped "SPLITMEZZTOP" back as
+    /// "SPLITMEZZTO", "SPLITMEZZT", "SPLITMEZZ"…, one press per character, with richNotes.version moving
+    /// 140 → 138 → 136 → 134. Set to <see cref="TimeSpan.Zero"/> to disable grouping (every mutation is
+    /// then its own step, which is what the pre-existing history tests assume).
+    /// </summary>
+    public TimeSpan HistoryCoalescingWindow { get; set; } = TimeSpan.FromMilliseconds(1500);
     private long _lastSavedRichVersion = -1;
     private bool _disposed;
     private string? _recoveryPath;
@@ -156,7 +170,14 @@ public sealed class RichBoardSession : IAsyncDisposable
     }
 
     /// <summary>Applies a validated mutation and schedules autosave. Throws on invalid edits.</summary>
-    public async Task MutateAsync(Action<HavenRichNotes> mutation, CancellationToken cancellationToken = default)
+    /// <param name="historyGroup">
+    /// When set, consecutive mutations carrying the same group stay **one** undo step while they fall inside
+    /// <see cref="HistoryCoalescingWindow"/>: the first mutation of the group records the boundary, the later
+    /// ones extend it instead of stacking another snapshot. Null (the default) always takes its own step, so
+    /// every structural, insertion, formatting and move operation keeps its previous history semantics.
+    /// </param>
+    public async Task MutateAsync(Action<HavenRichNotes> mutation, CancellationToken cancellationToken = default,
+        string? historyGroup = null)
     {
         ArgumentNullException.ThrowIfNull(mutation);
         ThrowIfDisposed();
@@ -180,7 +201,7 @@ public sealed class RichBoardSession : IAsyncDisposable
                 ApplyRich(before, validate: false);
                 throw;
             }
-            PushHistory(before);
+            PushHistory(before, historyGroup);
             HasUnsavedChanges = true;
             UpdateStatus("Editing…", hasUnsavedChanges: true);
             if (_externalSave is null) _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
@@ -271,6 +292,9 @@ public sealed class RichBoardSession : IAsyncDisposable
                 _redo.Push(SerializeRich());
                 while (_redo.Count > MaxHistoryEntries) TrimStack(_redo);
             }
+            // An undo boundary is a step boundary: the next keystroke must open its own group, otherwise a
+            // grouped edit would extend the entry that was just restored and the user would lose a step.
+            _lastHistoryGroup = null;
             RestoreRich(previous);
             HasUnsavedChanges = true;
             UpdateStatus("Undone — editing…", hasUnsavedChanges: true);
@@ -300,6 +324,7 @@ public sealed class RichBoardSession : IAsyncDisposable
             {
                 _undo.Push(SerializeRich());
                 while (_undo.Count > MaxHistoryEntries) TrimStack(_undo);
+                _lastHistoryGroup = null;
             }
             RestoreRich(next);
             HasUnsavedChanges = true;
@@ -318,12 +343,33 @@ public sealed class RichBoardSession : IAsyncDisposable
         PushHistory(SerializeRich());
     }
 
-    private void PushHistory(string previousHead)
+    private void PushHistory(string previousHead) => PushHistory(previousHead, null);
+
+    /// <summary>
+    /// Records an undo boundary, honouring the edit group. Two mutations carrying the same non-null group
+    /// inside <see cref="HistoryCoalescingWindow"/> produce ONE boundary: the earlier snapshot is kept, so a
+    /// single undo reverts the whole run of keystrokes instead of one character.
+    /// </summary>
+    private void PushHistory(string previousHead, string? historyGroup)
     {
+        var now = Stopwatch.GetTimestamp();
+        var windowTicks = Math.Max(0, (long)(HistoryCoalescingWindow.Ticks * (Stopwatch.Frequency / 1_000_000_000.0)));
         lock (_undo)
         {
-            _undo.Push(previousHead);
-            while (_undo.Count > MaxHistoryEntries) TrimStack(_undo);
+            if (historyGroup is not null && _undo.Count > 0 && _lastHistoryGroup == historyGroup &&
+                now - _lastHistoryGroupStamp <= windowTicks)
+            {
+                // Same edit group inside the window: this keystroke belongs to the boundary already on the
+                // stack. Pushing another snapshot here is what made one Ctrl+Z remove exactly one character.
+                _lastHistoryGroupStamp = now;
+            }
+            else
+            {
+                _undo.Push(previousHead);
+                while (_undo.Count > MaxHistoryEntries) TrimStack(_undo);
+                _lastHistoryGroup = historyGroup;
+                _lastHistoryGroupStamp = now;
+            }
         }
         lock (_redo) _redo.Clear();
     }

@@ -791,6 +791,16 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
     public ValueTask OpenAsync(string? path, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("Adapter sessions are opened via ContractSessionAdapter.OpenAsync.");
 
+    /// <summary>
+    /// Host-tunable typing undo grouping window, forwarded to the canonical session (see
+    /// RichBoardSession.HistoryCoalescingWindow). Zero restores one history entry per merge.
+    /// </summary>
+    public TimeSpan HistoryCoalescingWindow
+    {
+        get => _real.HistoryCoalescingWindow;
+        set => _real.HistoryCoalescingWindow = value;
+    }
+
     public void MarkDirty()
     {
         ThrowIfDisposed();
@@ -1103,8 +1113,11 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
             JsonSerializer.Serialize(_view, Json), Json) ?? new RichBoardDocument();
         if (!MergeDeltas.HasChanges(submitted, baseline))
             return;
-        await _real.MutateAsync(rich => MergeDeltas.Apply(rich, submitted, baseline), cancellationToken)
-            .ConfigureAwait(false);
+        // Per keystroke this merge is one character in one text surface, which is an edit the user makes as
+        // one continuous action; the session groups those into a single undo step. Anything else (structure,
+        // formatting, placement, styles, ink) gets no group and keeps its own step.
+        await _real.MutateAsync(rich => MergeDeltas.Apply(rich, submitted, baseline), cancellationToken,
+            MergeDeltas.SingleCharacterTextGroup(submitted, baseline)).ConfigureAwait(false);
     }
 
     private string ProjectedViewJson()
