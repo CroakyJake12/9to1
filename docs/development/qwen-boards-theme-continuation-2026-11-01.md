@@ -349,6 +349,24 @@ NOT_RUN: this unit produces six of the twelve codes, not the contract as a whole
 
 
 
+### Evidence level of Milestones 8 and 9, and the on-disk native binary
+
+Both of those units are **test evidence only**: no on-screen capture and no native run was made for the
+single-undo-owner fix or for the structured failure identities, and neither was ever rendered. Stating it
+plainly because the earlier milestones mix native and headless evidence:
+
+- Milestone 8 (undo ownership): the *defect* was observed on screen and in the physical file (receipt `L05`,
+  title going `BF07OK` → `BF07` under Ctrl+Z). The *repair* is proven by the headless suite only.
+- Milestone 9 (failure identities): entirely headless. No native path was exercised, and the app-facing half
+  is proven only by a `StatusText` assertion.
+
+The standalone binary still on disk
+(`9to1 Workspace/Boards/app/bin/Release/net10.0/CakeOS.Apps.Boards.App.dll`,
+SHA-256 `2068bd0f4785706b56ef98515a60d91854e58a333288485bd225c1b99df30c05`, built 15:53 from `a2f820bf`)
+**predates both fixes**. Anyone re-running native evidence must rebuild from `e49c138a` or later first; the
+independent reviewer recorded the same hash in their report, which is why it is quoted here. Nothing in
+Milestones 8 or 9 has been seen running.
+
 ### Native run identity for Milestones 4, 5, 6, 7 and 8
 
 Native identity for these frames: standalone `CakeOS.Apps.Boards.App.dll` at
