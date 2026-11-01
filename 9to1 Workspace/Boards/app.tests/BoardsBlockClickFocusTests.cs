@@ -109,6 +109,158 @@ public sealed class BoardsBlockClickFocusTests
             Assert.True(fixture.Session.CanUndo, "a page-title edit must be recorded in the canonical history");
         });
 
+    /// <summary>
+    /// BF-19's text half, measured natively first: in instance run20 (receipts M11-M36, frames 137-150,
+    /// physical file /tmp/opencode/qwen-native-20261101/home7/Documents/9to1/Boards/Untitled board.9to1board)
+    /// text typed into a block reached the physical file ("AAASOFT1\nSOFT2M9TAIL", block-47b0537df78b), and
+    /// then **four Ctrl+Z presses and six toolbar Undo clicks changed nothing at all** - the live page still
+    /// showed every block and the file stayed at richNotes.version 130 with the same four blocks, while the
+    /// undo control stayed enabled and redo stayed disabled. The cases below separate where that breaks.
+    /// </summary>
+    [Fact]
+    public Task UndoThroughTheAppCommandRevertsTypedBlockText() => OnSurfaceAsync((fixture, window) =>
+    {
+        var pageId = fixture.Session.Document.Sections[0].Pages[0].Id;
+        var blockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string Text() => fixture.Session.Document.Sections[0].Pages[0].Blocks.Single(b => b.Id == blockId).Text;
+
+        var editor = fixture.ParagraphEditors[0];
+        var before = Text();
+        Click(window, CenterInWindow(editor, window));
+        window.KeyTextInput("Q");
+        fixture.Settle();
+
+        var typed = Text();
+        Assert.Equal(before + "Q", typed);      // the typing half is already proven by case 2
+        Assert.True(fixture.Session.CanUndo, "typing into a block must be recorded in the canonical history");
+
+        Pump(fixture.ViewModel.DispatchAsync("Undo", null).AsTask(),
+            "the Undo command the toolbar button and Ctrl+Z both dispatch");
+        fixture.Settle();
+
+        var afterUndo = Text();
+        var live = fixture.ParagraphEditors.Length > 0 ? fixture.ParagraphEditors[0].Text : "(no editor)";
+        Assert.True(afterUndo == before,
+            $"Undo left the canonical text unchanged. block {blockId}: before={Quote(before)} " +
+            $"afterTyping={Quote(typed)} afterUndo={Quote(afterUndo)}; CanUndo={fixture.Session.CanUndo} " +
+            $"CanRedo={fixture.Session.CanRedo}; live editor text={Quote(live)}; page {pageId}");
+        Assert.Equal(before, live);             // the user must see the reverted content, not just the file
+    });
+
+    [Fact]
+    public Task TheCanonicalHistoryRevertsTextTypedThroughTheEditor() => OnSurfaceAsync((fixture, window) =>
+    {
+        // The same edit as the case above, with the session's own history called directly instead of the
+        // app's Undo command: if this half works while the case above fails, the loss is in the application
+        // layer (command routing, or the live editor writing the undone text straight back into the view).
+        var blockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string Text() => fixture.Session.Document.Sections[0].Pages[0].Blocks.Single(b => b.Id == blockId).Text;
+
+        var editor = fixture.ParagraphEditors[0];
+        var before = Text();
+        Click(window, CenterInWindow(editor, window));
+        window.KeyTextInput("Q");
+        fixture.Settle();
+
+        var typed = Text();
+        Assert.Equal(before + "Q", typed);
+
+        Pump(fixture.Session.UndoAsync().AsTask(), "the canonical history undo");
+        fixture.Settle();
+
+        var afterUndo = Text();
+        var live = fixture.ParagraphEditors.Length > 0 ? fixture.ParagraphEditors[0].Text : "(no editor)";
+        Assert.True(afterUndo == before,
+            $"the session's own undo left the canonical text unchanged. block {blockId}: before={Quote(before)} " +
+            $"afterTyping={Quote(typed)} afterUndo={Quote(afterUndo)}; live editor text={Quote(live)}");
+    });
+
+    /// <summary>
+    /// Drives a session or view-model task to completion while pumping the UI thread: the test thread *is*
+    /// the UI thread here and both the block renderer and the interaction owner resume on it, exactly like
+    /// the app host, so awaiting without pumping deadlocks and blocking starves the continuation.
+    /// </summary>
+    private static void Pump(Task task, string what)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(20);
+        while (!task.IsCompleted && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(task.IsCompletedSuccessfully, $"{what} did not finish: {task.Exception?.GetBaseException().Message}");
+    }
+
+    /// <summary>
+    /// BF-19 keyboard half. Measured natively (instance run20, receipts M15/M32/M33): four Ctrl+Z presses
+    /// inside a focused block changed nothing - not the page, not the physical file (it stayed at
+    /// richNotes.version 130 with the same four blocks) - while the canonical history itself is proven
+    /// working by the case below. The text control consumes Ctrl+Z for its own undo stack, which the
+    /// single-undo-owner rule had just emptied, so the key reached neither a character undo nor the board
+    /// history: the keyboard simply could not undo while authoring.
+    /// </summary>
+    [Fact]
+    public Task CtrlZInsideAFocusedBlockDrivesTheCanonicalHistory() => OnSurfaceAsync((fixture, window) =>
+    {
+        var blockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string Text() => fixture.Session.Document.Sections[0].Pages[0].Blocks.Single(b => b.Id == blockId).Text;
+
+        var editor = fixture.ParagraphEditors[0];
+        var before = Text();
+        Click(window, CenterInWindow(editor, window));
+        window.KeyTextInput("Q");
+        fixture.Settle();
+
+        Assert.Equal(before + "Q", Text());
+        Assert.True(fixture.ParagraphEditors[0].IsFocused, "the block editor holds focus while typing");
+
+        window.KeyPress(Key.Z, RawInputModifiers.Control, PhysicalKey.None, null);
+        fixture.Settle();
+
+        var afterKey = Text();
+        var live = fixture.ParagraphEditors[0].Text;
+        Assert.True(afterKey == before,
+            $"Ctrl+Z in the focused block reached no undo at all. block {blockId}: before={Quote(before)} " +
+            $"afterTyping={Quote(before + "Q")} afterCtrlZ={Quote(afterKey)}; CanUndo={fixture.Session.CanUndo} " +
+            $"CanRedo={fixture.Session.CanRedo}; live editor={Quote(live)}");
+        Assert.Equal(before, live);
+        Assert.True(fixture.Session.CanRedo, "an edit undone with Ctrl+Z must be redoable");
+    });
+
+    /// <summary>
+    /// The deliberate exception to the single-undo-owner rule (see BoardsTextUndoOwner): the sidebar filter
+    /// and the insert-menu search hold a query, not board content, so their Ctrl+Z must stay local and must
+    /// not consume a board revision. Pinned here because the tunneling handler claims Ctrl+Z for every other
+    /// text surface, and a silently widened exception would turn a query undo into a document undo.
+    /// </summary>
+    [Fact]
+    public Task CtrlZInTheSidebarFilterLeavesTheBoardHistoryAlone() => OnSurfaceAsync((fixture, window) =>
+    {
+        var blockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string Text() => fixture.Session.Document.Sections[0].Pages[0].Blocks.Single(b => b.Id == blockId).Text;
+
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("Q");
+        fixture.Settle();
+        Assert.Equal("Q", Text());
+
+        var filter = Assert.IsType<TextBox>(
+            BoardsCuiControlFinder.FindByAutomationId<Control>(fixture.Surface, "NavSearchBox"));
+        Assert.Equal(10, filter.UndoLimit);      // the local stack the rule deliberately keeps
+        Assert.True(filter.Focus(), "the sidebar filter is focusable");
+        window.KeyTextInput("query");
+        fixture.Settle();
+
+        window.KeyPress(Key.Z, RawInputModifiers.Control, PhysicalKey.None, null);
+        fixture.Settle();
+
+        Assert.Equal("Q", Text());
+        Assert.False(fixture.Session.CanRedo, "the filter's Ctrl+Z must not have taken a board undo step");
+    });
+
+    private static string Quote(string? text) => text is null ? "(null)" : "\"" + text.Replace("\n", "\\n") + "\"";
+
     private static Point CenterInWindow(Control control, Window window) =>
         control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
 
@@ -257,18 +409,11 @@ public sealed class BoardsBlockClickFocusTests
             // it (BoardsPresentationInteractions uses ConfigureAwait(true)), exactly like the app host.
             Pump(Ink.RenderAsync(), "the ink layer render");
             Pump(BlockRenderer.RebuildAsync(blocks!, ViewModel), "the block host rebuild");
-        }
-
-        private static void Pump(Task task, string what)
-        {
-            var deadline = DateTime.UtcNow.AddSeconds(20);
-            while (!task.IsCompleted && DateTime.UtcNow < deadline)
-            {
-                Dispatcher.UIThread.RunJobs();
-                Thread.Sleep(1);
-            }
-            Dispatcher.UIThread.RunJobs();
-            Assert.True(task.IsCompletedSuccessfully, $"{what} did not finish: {task.Exception?.GetBaseException().Message}");
+            // The running host also keeps the page rebuilt after every edit (Program.cs:436 wires
+            // RebuildRequested to a posted rebuild). A mount that never wires it would keep stale editors
+            // on screen after an undo and make an application-layer fault look like a product fault.
+            ViewModel.RebuildRequested += () => Dispatcher.UIThread.Post(
+                () => _ = BlockRenderer.RebuildAsync(blocks!, ViewModel), DispatcherPriority.Normal);
         }
 
         internal void Settle()

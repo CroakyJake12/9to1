@@ -339,6 +339,7 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
     private readonly Func<string, Task> _dispatch;
     private readonly TextBox? _titleBox, _pageTitleBox, _searchBox;
     private readonly EventHandler<KeyEventArgs> _rootKeyDown;
+    private readonly EventHandler<KeyEventArgs> _rootUndoRedo;
     private readonly EventHandler<TextChangedEventArgs>? _titleChanged, _pageTitleChanged, _searchChanged;
     private Window? _window;
     private EventHandler<KeyEventArgs>? _windowKeyDown;
@@ -396,6 +397,14 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         }
         _rootKeyDown = (_, e) => HandleKey(e);
         _root.AddHandler(InputElement.KeyDownEvent, _rootKeyDown, Avalonia.Interactivity.RoutingStrategies.Bubble);
+        // Undo and Redo have to be claimed before the focused text control sees them. A TextBox handles
+        // Ctrl+Z/Ctrl+Y itself for its own character-level stack, so a bubbling root handler never runs:
+        // measured headless and natively on 1 November, Ctrl+Z inside a focused block did nothing at all
+        // (CanUndo was true, the file stayed at richNotes.version 130, redo stayed disabled) because the
+        // control swallowed the key and the single-undo-owner rule had already emptied its private stack.
+        // Claiming them on the tunneling route hands the shortcut to the canonical history instead.
+        _rootUndoRedo = (_, e) => HandleCanonicalUndoRedo(e);
+        _root.AddHandler(InputElement.KeyDownEvent, _rootUndoRedo, Avalonia.Interactivity.RoutingStrategies.Tunnel);
     }
 
     public void AttachWindow(Window window)
@@ -407,6 +416,27 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         _window.KeyDown += _windowKeyDown;
     }
 
+    /// <summary>
+    /// Claims Ctrl+Z / Ctrl+Y for the canonical board history before the focused text control can consume
+    /// them (see the registration site). The two query fields - the sidebar filter and the insert-menu
+    /// search - are excluded on purpose: they hold a query rather than board content, so their own character
+    /// undo stays local and must not be reinterpreted as a board undo.
+    /// </summary>
+    private void HandleCanonicalUndoRedo(KeyEventArgs e)
+    {
+        if (_disposed || !e.KeyModifiers.HasFlag(KeyModifiers.Control)) return;
+        if (e.Key is not (Key.Z or Key.Y)) return;
+        if (e.Source is TextBox field &&
+            ((field.Name ?? string.Empty) == "NavSearchBox" ||
+             AutomationProperties.GetName(field) == "Search insert menu"))
+            return;
+        e.Handled = true;
+        var action = DispatchKeyAsync(e.Key == Key.Z ? "Undo" : "Redo");
+        _actions.TryAdd(action, 0);
+        _ = action.ContinueWith(completed => { _actions.TryRemove(completed, out _); },
+            CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+    }
+
     private void HandleKey(KeyEventArgs e)
     {
         if (_disposed) return;
@@ -415,6 +445,9 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
             Key.B when e.KeyModifiers.HasFlag(KeyModifiers.Control) => "ToggleBold",
             Key.I when e.KeyModifiers.HasFlag(KeyModifiers.Control) => "ToggleItalic",
             Key.U when e.KeyModifiers.HasFlag(KeyModifiers.Control) => "ToggleUnderline",
+            // Kept for the case where focus is outside the CUI surface (a chrome button, the window itself),
+            // where HandleCanonicalUndoRedo never runs. While focus is inside the surface the tunneling
+            // handler claims the key first, so this does not double-dispatch.
             Key.Z when e.KeyModifiers.HasFlag(KeyModifiers.Control) => "Undo",
             Key.Y when e.KeyModifiers.HasFlag(KeyModifiers.Control) => "Redo",
             Key.S when e.KeyModifiers.HasFlag(KeyModifiers.Control) => "SaveBoard",
@@ -453,6 +486,8 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
         if (_disposed) return;
         _disposed = true;
         _root.RemoveHandler(InputElement.KeyDownEvent, _rootKeyDown);
+        // Paired with the constructor registration; this fork's RemoveHandler takes no route argument.
+        _root.RemoveHandler(InputElement.KeyDownEvent, _rootUndoRedo);
         if (_titleBox is not null && _titleChanged is not null) _titleBox.TextChanged -= _titleChanged;
         if (_pageTitleBox is not null && _pageTitleChanged is not null) _pageTitleBox.TextChanged -= _pageTitleChanged;
         if (_searchBox is not null && _searchChanged is not null) _searchBox.TextChanged -= _searchChanged;
