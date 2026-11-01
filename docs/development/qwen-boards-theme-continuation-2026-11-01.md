@@ -141,7 +141,9 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
    BF-05, BF-06, BF-08, BF-09, BF-11, BF-12, BF-14 (block reorder/undo/redo in text mode — rows 43–44 —
    plus ink transforms), the history half of BF-19, and the canonical Data-embed half of BF-15 (row 45).
    Still NOT RUN or open on this build: BF-01 (the Haven host route is unverifiable here — see the
-   `Haven.Desktop.Tests` limitation), BF-04, BF-07, BF-10, BF-13 (tables remain NOT RUN natively: the
+   `Haven.Desktop.Tests` limitation), BF-04, BF-07 (headless click-to-block and typed-text-into-block
+   coverage now exists from row 52; the native re-probe was invalidated by the contaminated fixture),
+   BF-10, BF-13 (tables remain NOT RUN natively: the
    database half of structured content is exercised, the table half is not), BF-15's Chat / Scoped Chat
    page types, BF-16, BF-17 (menu navigation and the undo/redo keys are exercised; the deep keyboard walk
    is inconclusive — row 48), BF-18 (only the authored-content half: ink colours and view transforms
@@ -152,11 +154,13 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
 
-**Position at this checkpoint:** branch `main`, HEAD `bac7398d`, `origin/main` = `bac7398d` (pushed;
-history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`
-→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d`), only inherited
-`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged. Suite counts measured on
-this PC: contract **127/127**, app **593/593**.
+**Position at this checkpoint:** branch `main`, HEAD `3dbf512c`, `origin/main` = `3dbf512c` (pushed; history
+this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`
+→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d` → `a2f820bf` → `3dbf512c`), only inherited
+`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged, plus one **other session's**
+untracked document (`docs/development/boards-usability-review-2026-11-01.md`, hashed in the Milestone 8
+reviewer note) left for its author to commit. Suite counts measured on this PC: contract **127/127**,
+app **596/596**.
 
 ## 6. Evidence log (append)
 
@@ -302,9 +306,30 @@ disabled Write/Canvas rows remain open); BF-13 and BF-17's deeper keyboard behav
 BF-04, BF-07, BF-10, BF-16, BF-18 (chrome half) and BF-20 are unchanged. The gate as a whole still has not
 passed, so the theme pass stays gated.
 
+### Milestone 8 — a second undo system, and a retraction of my own click claim (1 Nov 2026, commit `3dbf512c`)
+
+| # | Requirement / rule | Action | Measured result |
+|---|---|---|---|
+| 50 | "the canonical board history is the only undo owner" (the rule BlockRenderer already implements) | **defect measured on the running app**: with the page-title input focused, `Ctrl+Z` removed typed characters instead of a board revision — the stored title went `Start here BF07OK` → `Start here BF07` over two presses with no canonical revision between them. Headless the cause is one number: `PageTitleBox.UndoLimit == 10` (Avalonia's default), i.e. a private character-level history beside the canonical snapshot stack | receipts `L05`; new test `ThePageTitleInputIsNotASecondUndoSystemBesideTheCanonicalBoardHistory` fails against the previous source (`Expected: 0, Actual: 10`, `/tmp/opencode/qwen-1101-undolimit-pre.log`) and passes after (`…undolimit-test2.log`) |
+| 51 | same | fixed at the shared owner `BoardsTextUndoOwner` and applied to every document text surface: the mount walk in `Attach` (which had to switch to a logical-descendant walk — see row 53), the board-name editor when a rename opens, the tree rename box, the tab-pane caption and the two style-editor inputs. The two query fields (sidebar filter, insert-menu search) keep their own undo on purpose, because they hold a query rather than board content | app suite **596/596** (`/tmp/opencode/qwen-1101-appsuite10.log`, guard OK). No contract source changed, so the contract suite is unaffected |
+| 52 | my own earlier claim, **retracted** | the run19 probes (receipts `L08`–`L11`) looked like "clicks inside the page do nothing and focus stays in the page title". They are not usable evidence: mounting the real composition headlessly (BlocksHost filled by `BlockRenderer`, ink layer owned by `BoardInkInteractionController`, landing dismissed) shows a click on paragraph text **does** focus that block, and text typed afterwards reaches the block while the title is unchanged. Worse, during that same instance the fixture gained **Page 3 and Page 4 plus an ink stroke** that no step in my receipt sequence accounts for, so nothing measured in run19 can be attributed | new `BoardsBlockClickFocusTests` cases 1–2 pass on the pre-fix source too (`…undolimit-pre.log`), i.e. they are coverage rather than a fix; run19 is recorded as unattributed synthetic input. **BF-07 stays NOT RUN natively** and must be re-probed with a fresh disposable profile and per-step window-id verification |
+| 53 | implementation gap found while fixing row 51 | `BoardsViewModel.FindControls<T>` only descends **Panel** children, so any control inside a border/decorator container (the CUI-authored title inputs among them) is invisible to the walker that wires `TextChanged`/`GotFocus` and to any rule applied through it. That is why the undo rule never reached the titles, and why `BoardsTextAndKeyboardOwner` already needed a logical-descendant fallback to find the page title at all | observed in this checkout at `a2f820bf`; worked around for the undo rule by walking `GetLogicalDescendants()` in `Attach`. The wider consequence (other rules silently skipping those surfaces) is **not** fixed here and is carried below |
+| 54 | headless fixture honesty | a mounted Boards CUI surface still carries the landing overlay until a board is opened, so a click test that does not dismiss it measures the landing: the topmost visual at the block's own point was `LandingHost`'s `ScrollContentPresenter` and focus was `null` | fixed in the fixture with an explicit `SetLanding(false)` and a comment; the failure message now prints the visual chain under the click point, which is what exposed this |
+
+An **independent reviewer session** added `docs/development/boards-usability-review-2026-11-01.md`
+(SHA-256 `be340b32c273a85a2276a948eed80cd7c05632f2f4a4fd26878459517737fd1f`, written 16:56 against
+`a2f820bf`). It is a limited exploratory/screenshot review, **not** acceptance, and its six prioritised
+findings (unsaved-edit loss on abrupt stop, undiscoverable tree reorganisation, ink colour not visible at
+the point of selection, disabled Write/Canvas page-type actions with no explanation, two identically labelled
+`+ Add` controls, and the drawing-mode grip ambiguity of row 41) are consistent with this log. It is left
+uncommitted here because its author owns it. That report also recorded being **BLOCKED** from a fresh
+interactive test by my still-running instance (PID 3958725, window `0x03e0000f`): I closed it through
+`_NET_CLOSE_WINDOW` at 17:02:38 and the launcher recorded `exit=0` (`run19.exit`), so that particular blocker
+is cleared, while its coordinator/candidate-admission blocker is not mine to resolve.
 
 
-### Native run identity for Milestones 4, 5, 6 and 7
+
+### Native run identity for Milestones 4, 5, 6, 7 and 8
 
 Native identity for these frames: standalone `CakeOS.Apps.Boards.App.dll` at
 `9to1 Workspace/Boards/app/bin/Release/net10.0/`, launcher
@@ -314,10 +339,18 @@ X11 `:1`, client 2850×1781 device px (1440×900 logical at scale 1.979), sandbo
 `HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`. Instances `run7`–`run14` and `run16` were
 closed through `_NET_CLOSE_WINDOW` and all recorded `exit=0`; `run15` is the crash record and exited `134`
 by itself (nothing was killed by the harness); `run17`/`run18` ended in one `exit=0` after two close
-requests (row 49). No test instance is left running on the owner's desktop, and nothing was written into
-the owner's real `Documents/9to1/Boards` — every fixture file lives under the sandbox, including the test
-artefacts left in the disposable profile (`Untitled board` fixture: 2 pages, ink strokes and the typed
-marker texts `DIRTYCLOSE7`, `LATEEDIT42`, `CRASHDRAFT7`, `WXYZ`).
+requests (row 49); `run19` was closed at 17:02:38 and recorded `exit=0` (`run19.exit`), which also clears the
+"instance still running" blocker recorded by the independent reviewer. No test instance is left running on
+the owner's desktop, and nothing was written into the owner's real `Documents/9to1/Boards` — every fixture
+file lives under the sandbox.
+
+**The `profile6` / `home6` fixture is contaminated and must not be used as evidence by the next session.**
+Its `Untitled board` now holds four pages (`Start here` renamed by unattributed typing to
+`Stqzart here BF07k`, `Page 2`, `Page 3`, `Page 4`), ink strokes of unknown attribution on two of them, and
+the marker texts `DIRTYCLOSE7CRASHDRAFT7WXYZ`, `LATEEDIT42`. Rows 50–52 were measured before that
+contamination mattered for the undo finding (the title text itself is the witness), but nothing else in that
+profile should be treated as a known-good state. Start the next native probe from a **new** sandbox profile
+directory with the window id re-read before and after every step.
 
 Also corrected in §1 above: the v3.2 **atlas** is present (`newAtlas.html` matches the owner-attached
 `/tmp/codex-file-preview-2hRdoO/9to1_Interface_Atlas_v3.2.html` by SHA-256 `80a4ecc6…1a131`) and
@@ -345,7 +378,11 @@ no current-colour readout; tree drag-to-nest absent; keystroke-level draft journ
 loss measured in row 28); whether Drawing mode should still allow block-grip drags (the ink overlay takes
 the pointer there, row 41 — grip reordering itself in text mode is now verified, rows 43–44); the
 unresolved input observations in row 48 (insert-menu typing and the deep keyboard walk) and the
-close/window-id observation in row 49; and the embedded-Haven side of every shared-surface change,
-unverifiable on this PC (rows above).
+close/window-id observation in row 49; BF-07 native typing/block-boundary behaviour, which is still
+**NOT RUN natively** (the headless coverage added in row 52 proves click-to-block focus works in the
+composed surface, but the native re-probe was invalidated by the contaminated fixture, row 52); the
+`FindControls<T>` Panel-only traversal gap of row 53, whose wider consequence (any rule applied through
+that walker silently skipping controls inside border/decorator containers) is unfixed; and the
+embedded-Haven side of every shared-surface change, unverifiable on this PC (rows above).
 `eng/spec-coverage/assessments/Boards.json` is still a code/test reading pass and has **not** been
 regenerated for these fixes yet — it stays at takeover states until the whole gate is exercised end to end.
