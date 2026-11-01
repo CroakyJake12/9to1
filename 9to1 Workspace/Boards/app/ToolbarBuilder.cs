@@ -97,10 +97,16 @@ public static class ToolbarBuilder
             var current = Array.FindIndex(choices, item => item.IsKeyboardFocusWithin);
             if (args.Key == Key.Enter && (current >= 0 || search.IsKeyboardFocusWithin))
             {
-                var choice = choices[Math.Max(0, current)];
+                var choice = choices[current < 0 ? 0 : current];
+                // The row that is about to act must be the row that looks chosen, otherwise Enter from the
+                // search field applies an item the user cannot see.
+                if (current < 0) choice.Focus();
                 choice.RaiseEvent(new RoutedEventArgs(choice is MenuItem ? MenuItem.ClickEvent : Button.ClickEvent));
                 args.Handled = true; return;
             }
+            // Home and End belong to the search field while the caret is in it: they are text-editing
+            // keys there, not menu navigation.
+            if ((args.Key == Key.Home || args.Key == Key.End) && search.IsKeyboardFocusWithin) return;
             var next = args.Key switch { Key.Down => Math.Min(current + 1, choices.Length - 1),
                 Key.Up => current < 0 ? choices.Length - 1 : Math.Max(0, current - 1),
                 Key.Home => 0, Key.End => choices.Length - 1, _ => -1 };
@@ -149,6 +155,18 @@ public static class ToolbarBuilder
         }
         context.Refill = () => Fill(search.Text ?? string.Empty);
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
+        // A closed menu must not keep a chosen-looking row. Closing the popup does not necessarily
+        // raise LostFocus on the row inside it, so the state is reconciled here as well: measured on
+        // 1 November, Escape left the row that had been arrow-navigated painted as if it were still
+        // selected.
+        popup.Closed += (_, _) =>
+        {
+            foreach (var row in list.GetVisualDescendants().OfType<Button>())
+            {
+                SetQuietToolbarControl(row, selected: false, "Boards insertion menu item state");
+                CuiPropertyPresentation.SetSelected(row, false);
+            }
+        };
         Fill(string.Empty);
         popup.Child = context.CreateSurface(panel);
         button.Click += (_, _) =>
@@ -193,7 +211,29 @@ public static class ToolbarBuilder
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8, 6),
             };
+            // The shared CUI button alignment resource is centred and is written at Theme level, so the
+            // assignment above loses to it. Measured 1 November on the running app, every insert row sat
+            // centred under its left-aligned group heading while the app's own destination menu rows sat
+            // left: the same list, two alignments. This row is a menu row, so it is pinned left through
+            // CUI's own property precedence instead of leaving the centred default in place.
+            CuiPropertyPresentation.Set(item, "HorizontalContentAlignment", HorizontalAlignment.Left,
+                CuiPropertyLevel.Instance, "Boards insertion menu row alignment");
             SetQuietToolbarControl(item, selected: false, "Boards insertion menu item");
+            // Keyboard and pointer position must be visible. Measured 1 November on the running app: five
+            // Down presses moved focus out of the search field and an item did activate, yet no row ever
+            // showed a state, so a keyboard-only user could not see where they were. The cue is the same
+            // selection treatment the toolbar already uses for a selected control, plus CUI's own
+            // selection state, reconciled whenever the row gains or loses hover or keyboard focus.
+            void ReconcileRowState()
+            {
+                var chosen = item.IsKeyboardFocusWithin || item.IsPointerOver;
+                SetQuietToolbarControl(item, selected: chosen, "Boards insertion menu item state");
+                CuiPropertyPresentation.SetSelected(item, chosen);
+            }
+            item.PointerEntered += (_, _) => ReconcileRowState();
+            item.PointerExited += (_, _) => ReconcileRowState();
+            item.GotFocus += (_, _) => ReconcileRowState();
+            item.LostFocus += (_, _) => ReconcileRowState();
             CuiPropertyPresentation.Attach(item);
             Avalonia.Automation.AutomationProperties.SetName(item, "Insert " + label);
             if (context.AnchorBlockId is not null &&
