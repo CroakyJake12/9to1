@@ -23,7 +23,8 @@ public sealed class RichBoardDocument
 /// <summary>A section (group of pages) in the rich-notes document.</summary>
 public sealed class RichBoardSection
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    // Canonical Board identity, matching the contract model (HavenRichBoardContract.cs:31 "sec-" + 12).
+    public string Id { get; set; } = "sec-" + Guid.NewGuid().ToString("N")[..12];
     public string Title { get; set; } = "Untitled section";
     public string IconKey { get; set; } = HavenRichSectionIcons.Default;
     public string? IconColor { get; set; }
@@ -35,7 +36,8 @@ public sealed class RichBoardSection
 public sealed class RichBoardPage
 {
     public string? TabberOwnerBlockId { get; set; }
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    // Canonical Board identity, matching the contract model (HavenRichBoardContract.cs:72 "page-" + 12).
+    public string Id { get; set; } = "page-" + Guid.NewGuid().ToString("N")[..12];
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Untitled page";
     public string PageType { get; set; } = HavenRichPageTypes.Native;
@@ -54,7 +56,16 @@ public sealed class RichBoardPage
 /// <summary>One editable block: heading, paragraph, checklist item, table, ink, image, graph, divider.</summary>
 public sealed class RichBoardBlock
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    /// <summary>
+    /// Canonical Board block identity, the same shape the contract model uses
+    /// (HavenRichBoardContract.cs:174 "block-" + 12 hex digits). The bare 32-hex default made every app
+    /// -created block that did not set an Id explicitly - checklist rows, tab panes, freeform boxes,
+    /// conversion-created blocks and database links - diverge in identity shape from inserted paragraphs,
+    /// which is the divergence the carried-forward Boards review item names. Nothing in Boards parses a
+    /// block id as a Guid, and retained documents keep whatever id string they already have, so the
+    /// prefix is safe for existing boards.
+    /// </summary>
+    public string Id { get; set; } = "block-" + Guid.NewGuid().ToString("N")[..12];
     public string Kind { get; set; } = "paragraph";
     public string Layout { get; set; } = HavenRichBlockLayouts.Flow;
     public double X { get; set; }
