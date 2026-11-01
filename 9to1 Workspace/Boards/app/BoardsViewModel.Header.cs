@@ -53,6 +53,14 @@ public sealed partial class BoardsViewModel
             case "ToggleTabView":
                 TrySetValue("TabViewEnabled", !TabViewEnabled);
                 return true;
+            case "SetEditModeOn" or "SetEditModeOff":
+                // The persistent Edit/View switch in the top-right chrome. Clicking the mode that is
+                // already active must do nothing: an editor whose own label flips the page state when
+                // the user is only trying to confirm which mode they are in is a data risk in View mode.
+                var wantEdit = command == "SetEditModeOn";
+                if (CanToggleEditMode && wantEdit != IsEditMode)
+                    SetEditMode(wantEdit);
+                return true;
             case "ToggleLayoutMode":
                 if (CanChangeLayoutMode)
                     await SetLayoutModeAsync(IsFreeLayout ? HavenRichPageLayoutModes.Locked : HavenRichPageLayoutModes.Unlocked, cancellationToken);

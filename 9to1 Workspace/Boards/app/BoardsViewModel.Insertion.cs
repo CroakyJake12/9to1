@@ -170,6 +170,22 @@ public sealed partial class BoardsViewModel
     public Task ReplaceBlockWithKindAsync(string kindTag, string? blockId, bool focusEditor = true) =>
         InsertKindRelativeToAsync(kindTag, blockId, "replace", focusEditor);
 
+    /// <summary>A canonical, page-unique block id in the same shape the contract layer uses
+    /// ("block-" plus 12 hex characters). Insertions made through the app projection used to keep the
+    /// projection's own bare-Guid identity, so one document ended up with two id shapes.</summary>
+    private static void AssignCanonicalBlockId(RichBoardBlock block, RichBoardPage page)
+    {
+        ArgumentNullException.ThrowIfNull(block);
+        ArgumentNullException.ThrowIfNull(page);
+        string candidate;
+        do
+        {
+            candidate = "block-" + Guid.NewGuid().ToString("N")[..12];
+        }
+        while (page.Blocks.Any(existing => string.Equals(existing.Id, candidate, StringComparison.Ordinal)));
+        block.Id = candidate;
+    }
+
     private static RichBoardBlock CreateInsertionBlock(string kindTag, string? initialText, RichStyleView? insertionStyle)
     {
         RichBoardBlock block;
@@ -186,7 +202,11 @@ public sealed partial class BoardsViewModel
         {
             block = kindTag switch
             {
-                "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? "New paragraph" },
+                // An inserted text block is a real empty block the user types into, not a block that
+                // arrives pre-filled with placeholder words the owner then has to delete. Measured on
+                // 1 November 2026: inserting into an empty page put the words "New block"/"New paragraph"
+                // into the document. Focused insertion (the slash/+ path) already promises typing.
+                "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? string.Empty },
                 "attachment" => new RichBoardBlock { Kind = "paragraph", Text = string.Empty },
                 // The canonical insertion action creates the owned pane pages in its one edit.
                 "tabber" => new RichBoardBlock { Kind = "tabber" },
@@ -225,7 +245,7 @@ public sealed partial class BoardsViewModel
                         XMin = -10, XMax = 10, YMin = -10, YMax = 10,
                     },
                 },
-                _ => new RichBoardBlock { Kind = "paragraph", Text = "New block" },
+                _ => new RichBoardBlock { Kind = "paragraph", Text = initialText ?? string.Empty },
             };
         }
         return block;

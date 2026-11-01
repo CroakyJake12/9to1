@@ -108,6 +108,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("AdaptivePropertiesVisible", false);
         if (!CanEdit) _isEditMode = false;
         Set("IsEditMode", _isEditMode);
+        // The persistent Edit/View switch in the page chrome binds these, so they must be correct on
+        // the very first mount and not only after the first mode change.
+        Set("IsEditingMode", _isEditMode);
+        Set("IsViewingMode", !_isEditMode);
         Set("TabViewEnabled", _tabViewEnabled);
         Set("ShowTabBar", _tabViewEnabled);
         Set("CanToggleEditMode", CanToggleEditMode);
@@ -634,10 +638,13 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 RequestRebuild();
                 break;
             case "AddBlock":
-                CurrentPage().Blocks.Add(new RichBoardBlock { Kind = "paragraph", Text = "New block" });
-                PushDocumentToBindings();
-                _session.MarkDirty();
-                RequestRebuild();
+                // The empty-page "+ Add your first block" affordance. It used to append a block whose
+                // literal text was "New block" straight onto the projected page: the placeholder words
+                // became real document content, the block never entered the canonical insertion/history
+                // path, and it carried a different id shape from every other block. Measured on 1 November
+                // 2026 in the running app on a fresh profile. It now inserts one real empty paragraph and
+                // focuses it, which is what the hint ("Start typing…") promises.
+                await InsertKindAsync("paragraph", initialText: string.Empty, focusEditor: true);
                 break;
             case "AddSection":
                 if (_session is ContractSessionAdapter sectionAdapter)
@@ -3175,6 +3182,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         var page = CurrentPage();
         var block = CreateInsertionBlock(kindTag, initialText, insertionStyle);
+        // Inserted blocks must carry the same canonical id shape as contract-level insertions.
+        // Measured on 1 November 2026 in a saved file: the toolbar/+ catalogue path persisted a bare
+        // 32-character Guid while every contract-level insertion used "block-"+12 hex, so the same
+        // kind of block appeared with two identity shapes in one document.
+        AssignCanonicalBlockId(block, page);
         var insertionAnchor = insertAfterBlockId ?? _selectedBlockId;
         var selectedIndex = page.Blocks.FindIndex(item => item.Id == insertionAnchor);
         if (insertAfterBlockId is not null && selectedIndex < 0)

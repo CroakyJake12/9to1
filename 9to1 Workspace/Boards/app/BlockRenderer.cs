@@ -828,6 +828,12 @@ public static class BlockRenderer
         {
             Name = "t_" + block.Id,
             Text = block.Text ?? string.Empty,
+            // Measured on 1 November 2026 in the running app: the text control kept its own
+            // character-level undo stack, so Ctrl+Z inside a focused block removed typed characters
+            // while the block's run marks stayed, i.e. two undo systems fought over one document.
+            // The canonical board history is the only undo owner here (RichBoardSession snapshot
+            // stack), which is what the unified selection/undo contract requires.
+            UndoLimit = 0,
             FontSize = ResolveFontSize(block, style, isHeading ? 26 : 14),
             FontWeight = block.Bold || (style?.Bold == true) || isHeading ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = block.Italic || (style?.Italic == true) ? FontStyle.Italic : FontStyle.Normal,
@@ -1145,6 +1151,9 @@ public static class BlockRenderer
         {
             Name = "chk_" + suffix,
             Text = item.Text ?? string.Empty,
+            // Same canonical-undo ownership as the paragraph editor: the list row's text is board
+            // content, so the control must not keep a private character undo stack beside it.
+            UndoLimit = 0,
             IsReadOnly = !vm.IsEditMode,
             FontSize = ResolveFontSize(item, style, 14),
             TextWrapping = TextWrapping.Wrap,
@@ -1366,6 +1375,8 @@ public static class BlockRenderer
                 {
                     Name = $"cell_{block.Id}_{r}_{c}",
                     Text = cellText ?? string.Empty,
+                    // Table cell text is canonical board content: one undo owner, the session history.
+                    UndoLimit = 0,
                     FontSize = 14,
                     AcceptsReturn = true,
                     TextWrapping = TextWrapping.Wrap,

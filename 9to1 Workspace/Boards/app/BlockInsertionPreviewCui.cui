@@ -1,6 +1,11 @@
 <Cui>
   <Page>
-    <Container Type="Overlay" ID="BlockInsertionPreview" Interactive="False" Background="Transparent">
+    <!-- The indicator layer deliberately has no fill. Measured on 1 November 2026 in the running app:
+         a transparent fill made this overlay, which sits above the block row, a pointer target, so a
+         click in the empty part of a paragraph never reached the text editor and the owner could not
+         start typing in a blank block. An unfilled panel is not hit-testable, and the edges it draws
+         below keep their own fills. -->
+    <Container Type="Overlay" ID="BlockInsertionPreview" Interactive="False">
       <Container Type="Overlay" ID="InsertionAboveEdge" Active="{Binding Above}" Height="3"
                  VerticalAlignment="Top" Background="{Resource CuiAccentBrush}" />
       <Container Type="Overlay" ID="InsertionBelowEdge" Active="{Binding Below}" Height="3"

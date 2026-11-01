@@ -31,7 +31,11 @@
 
                   <Button Type="Menu Item" ID="RenameBoardMenuItem" Content="Rename…" Action="RenameBoard" Interactive="{Binding CanRenameBoard}" AccessibleName="Rename board" />
                   <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
-                  <Button Type="Menu Item" ID="FileStageOneSurface" Content="AppFlowy re-UI (stage one)" Action="ShowStageOneSurface" Active="{Binding IsStandalonePresentation}" />
+                  <!-- The AppFlowy stage-one comparison surface stays available to the developer through
+                       the opt-in BOARDS_STAGE_ONE_PREVIEW=1 process seam. It is deliberately not offered
+                       in the owner-facing file menu: the current direction is to finish the 9to1 CUI
+                       Boards presentation, and a labelled donor-shaped alternate inside the production
+                       menu invites the two surfaces to be mistaken for each other. -->
                   <Button Type="Menu Item" Content="Exit" Action="CloseWindow" Active="{Binding IsStandalonePresentation}" />
                 </Button>
               </Container>
@@ -40,16 +44,39 @@
             <Button ID="UndoButton" Column="2" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Undo" Interactive="{Binding CanUndo}" AccessibleName="Undo" Tooltip="Undo (Ctrl+Z)" ><Image Source="icon:undo" Width="18" Height="18" AccessibleName="Undo" /></Button>
             <Button ID="RedoButton" Column="3" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding CanRedo}" AccessibleName="Redo" Tooltip="Redo (Ctrl+Y)" ><Image Source="icon:redo" Width="18" Height="18" AccessibleName="Redo" /></Button>
           </Container>
-          <Container Type="Menu" ID="MoreMenu" Column="1" VerticalAlignment="Center">
+          <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" CellGap="8" VerticalAlignment="Center">
+            <!-- Persistent Edit/View switch in the page chrome (V3-BOARDS-LAY-01, V3-BOARDS-ACC-02 and
+                 the retained MUST requirement that every Board page surface expose it in the top-right
+                 chrome). It was reachable only inside the "…" overflow, which the on-screen review on
+                 1 November 2026 showed the owner could not see at all. Edit/View, Locked and the layout
+                 mode stay three independent controls; none of them is a read-only master switch. -->
+            <Container Type="Horizontal Stack" ID="EditViewToggle" CellGap="2" Padding="4 3"
+                       CornerRadius="14" Background="{Resource CuiPanel2Brush}"
+                       AccessibleName="Page edit or view mode" Active="{Binding ShowEditor}">
+              <Button ID="EditModeButton" Content="Edit" Action="SetEditModeOn" Selected="{Binding IsEditingMode}"
+                      Interactive="{Binding CanToggleEditMode}" Height="28" Padding="10 0" CornerRadius="11"
+                      AccessibleName="Editing mode" ToolTip="Edit this page" />
+              <Button ID="ViewModeButton" Content="View" Action="SetEditModeOff" Selected="{Binding IsViewingMode}"
+                      Interactive="{Binding CanToggleEditMode}" Height="28" Padding="10 0" CornerRadius="11"
+                      AccessibleName="Viewing mode" ToolTip="View this page without changing it" />
+            </Container>
+            <Button ID="LayoutModeButton" Content="{Binding LayoutModeLabel}" Action="ToggleLayoutMode"
+                    Interactive="{Binding CanChangeLayoutMode}" Height="28" Padding="10 0" CornerRadius="11"
+                    Background="{Resource CuiPanel2Brush}" AccessibleName="{Binding LayoutModeAccessibleName}"
+                    Active="{Binding ShowEditor}"
+                    ToolTip="Constrains block placement only. Page ink and text editing stay available." />
+            <Container Type="Menu" ID="MoreMenu" VerticalAlignment="Center">
             <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" Padding="0" AccessibleName="More board actions" Tooltip="Board options">
-              <Button Type="Menu Item" Content="{Binding ModeToggleAccessibleName}" Action="ToggleEditView" Interactive="{Binding CanToggleEditMode}" />
-              <Button Type="Menu Item" Content="{Binding LayoutModeAccessibleName}" Action="ToggleLayoutMode" Interactive="{Binding CanChangeLayoutMode}" />
+              <!-- The page-mode and layout-mode commands are no longer listed inside the overflow: they
+                   are persistent controls in the top-right chrome, where the specification requires them
+                   to be visible instead of hidden behind the overflow button. -->
               <Button Type="Menu Item" Content="{Binding TabViewMenuLabel}" Action="ToggleTabView" />
               <Button Type="Menu Item" Content="Styles…" Action="ManageStyles" />
               <Button Type="Menu Item" Content="Toggle light or dark appearance" Action="ToggleTheme" />
               <Button Type="Menu Item" ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
               <Button Type="Menu Item" ID="MoreBoardProperties" Content="Board properties…" Action="BoardProperties" />
             </Button>
+            </Container>
           </Container>
         </Container>
       </Container>

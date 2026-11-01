@@ -313,19 +313,36 @@ public sealed class BoardsEditorTests
             var window = new Window { Content = control, Width = 1200, Height = 800 }; window.Show(); window.UpdateLayout();
             try
             {
-                var mode = control.GetLogicalDescendants().OfType<MenuItem>().Single(item =>
-                    item.Header?.ToString() == "Switch to Viewing mode");
-                Assert.True(mode.IsEffectivelyEnabled);
-                Assert.True(viewModel.TrySetValue("IsEditMode", false));
-                Assert.Equal("Switch to Editing mode", mode.Header);
+                // Persistent Edit/View switch in the page chrome (V3-BOARDS-LAY-01 / V3-BOARDS-ACC-02
+                // and the retained MUST requirement that every Board page surface expose the switch in
+                // the top-right chrome). It used to be one row inside the "…" overflow, which the
+                // on-screen review on 1 November 2026 showed the owner could not see at all.
+                var view = BoardsCuiControlFinder.FindByAutomationId<Button>(control, "ViewModeButton")!;
+                var edit = BoardsCuiControlFinder.FindByAutomationId<Button>(control, "EditModeButton")!;
+                Assert.True(view.IsEffectivelyEnabled);
+                Assert.True(edit.IsEffectivelyEnabled);
+                // The control's selected state binds to these two booleans (asserted structurally in
+                // Boards_cui_exposes_dynamic_host_and_menus), so this is what the user sees.
+                Assert.Equal(true, viewModel.Get("IsEditingMode"));
+                Assert.Equal(false, viewModel.Get("IsViewingMode"));
+
+                view.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                BoardsTabberLifetimeTests.Settle(window, () => !viewModel.IsEditMode);
                 Assert.Equal("Viewing", viewModel.Get("ModeLabel"));
-                var more = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(control, "OverflowButton")!;
-                more.IsSubMenuOpen = true; window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
-                Assert.True(mode.IsEffectivelyVisible);
-                mode.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+                Assert.Equal(true, viewModel.Get("IsViewingMode"));
+                Assert.Equal(false, viewModel.Get("IsEditingMode"));
+                Assert.True(view.IsEffectivelyVisible);
+
+                // Selecting the mode that is already active changes nothing.
+                view.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                BoardsTabberLifetimeTests.Settle(window, () => !viewModel.IsEditMode);
+                Assert.Equal("Viewing", viewModel.Get("ModeLabel"));
+
+                edit.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
                 BoardsTabberLifetimeTests.Settle(window, () => viewModel.IsEditMode);
                 Assert.Equal("Editing", viewModel.Get("ModeLabel"));
-                Assert.Equal("Switch to Viewing mode", mode.Header);
+                Assert.Equal(true, viewModel.Get("IsEditingMode"));
+                Assert.Equal("Switch to Viewing mode", viewModel.Get("ModeToggleAccessibleName"));
             }
             finally { window.Close(); viewModel.Dispose(); }
         });
@@ -611,8 +628,31 @@ public sealed class BoardsEditorTests
         var layoutCommand = allComponents.Single(component => component.TryGetLiteralAttribute("action", out var action) && action == "ToggleLayoutMode");
         Assert.True(layoutCommand.Properties.TryGetValue("Interactive", out var layoutInteractive)
             && layoutInteractive is CuiBindingValue { Path: "CanChangeLayoutMode" });
+        // The layout control is now persistent page chrome with a short label, and the full meaning
+        // lives in its accessible name. V3-BOARDS-LAY-01 keeps Edit/View, Locked and the layout mode as
+        // separate visible controls rather than one overflow row each.
+        Assert.Equal("LayoutModeButton", layoutCommand.Name);
         Assert.True(layoutCommand.Properties.TryGetValue("Content", out var layoutLabelValue)
-            && layoutLabelValue is CuiBindingValue { Path: "LayoutModeAccessibleName" });
+            && layoutLabelValue is CuiBindingValue { Path: "LayoutModeLabel" });
+        Assert.True(layoutCommand.Properties.TryGetValue("AccessibleName", out var layoutAccessibleName)
+            && layoutAccessibleName is CuiBindingValue { Path: "LayoutModeAccessibleName" });
+        // Authored attributes are not proof of presentation. The 1 November native review caught a
+        // control that existed in the compiled document and never appeared on screen, so the mounted
+        // surface check below (Authored_edit_view_switch_is_visible_page_chrome) measures the actual
+        // bounds and visibility of these controls; this case keeps the authored binding contract.
+        var editMode = allComponents.Single(component => component.Name == "EditModeButton");
+        var viewMode = allComponents.Single(component => component.Name == "ViewModeButton");
+        Assert.True(editMode.TryGetLiteralAttribute("action", out var editAction)
+            && editAction == "SetEditModeOn");
+        Assert.True(editMode.Properties.TryGetValue("Selected", out var editSelected)
+            && editSelected is CuiBindingValue { Path: "IsEditingMode" });
+        Assert.True(viewMode.TryGetLiteralAttribute("action", out var viewAction)
+            && viewAction == "SetEditModeOff");
+        Assert.True(viewMode.Properties.TryGetValue("Selected", out var viewSelected)
+            && viewSelected is CuiBindingValue { Path: "IsViewingMode" });
+        // Neither mode is reachable only from the overflow any more.
+        Assert.DoesNotContain(allComponents, component => component.TryGetLiteralAttribute("action", out var named)
+            && named == "ToggleEditView");
         var iconSearch = components.Single(component => component.Name == "SectionIconPickerSearch");
         Assert.True(iconSearch.Properties.TryGetValue("Value", out var searchValue)
             && searchValue is CuiBindingValue { Path: "SectionIconPickerSearch" });
