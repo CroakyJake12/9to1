@@ -120,6 +120,34 @@ public sealed class BoardsHistoryGranularityTests
     }
 
     [Fact]
+    public async Task RealisticKeystrokeSpacingStillGroupsAsOneStep()
+    {
+        // The unit of the window is what this pins. The first implementation converted
+        // HistoryCoalescingWindow.Ticks into stopwatch units with the wrong factor, which on this host made a
+        // 1500 ms window behave as about 15 ms: measured on the running app on 1 November 2026 (instance
+        // run25, diagnostic receipts Q21, /tmp/opencode/qwen-native-20261101/merges.log), typing "ZZZ" pushed
+        // three boundaries that all carried the same group key, so the grouping rule was right and the clock
+        // comparison was wrong. Keystrokes are milliseconds apart, so the window has to be real time.
+        var root = NewDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            await using var session = await RichBoardSession.CreateNewAsync(store, "Granularity");
+            foreach (var letter in new[] { "A", "B", "C" })
+            {
+                await session.MutateAsync(rich => rich.Sections[0].Pages[0].Blocks[0].PlainText += letter,
+                    CancellationToken.None, TypingGroup);
+                await Task.Delay(60);      // a human keystroke interval, well inside the 1500 ms default
+            }
+
+            Assert.Equal("ABC", Text(session));
+            Assert.True(await session.UndoAsync());
+            Assert.Equal(string.Empty, Text(session));
+        }
+        finally { DeleteDirectory(root); }
+    }
+
+    [Fact]
     public async Task ARefusedMutationStillTakesNoHistoryStep()
     {
         // Grouping must not turn a refusal into an invisible boundary: the rejected attempt leaves the head

@@ -353,7 +353,14 @@ public sealed class RichBoardSession : IAsyncDisposable
     private void PushHistory(string previousHead, string? historyGroup)
     {
         var now = Stopwatch.GetTimestamp();
-        var windowTicks = Math.Max(0, (long)(HistoryCoalescingWindow.Ticks * (Stopwatch.Frequency / 1_000_000_000.0)));
+        // Convert the window into the same monotonic unit the timestamp uses. Multiplying TimeSpan.Ticks by
+        // the wrong factor was the real reason the running app never grouped: on this Linux host
+        // Stopwatch.Frequency is 1e9 (nanoseconds), so a 1500 ms window (15,000,000 TimeSpan ticks) came out
+        // as 15 milliseconds of real time - shorter than the gap between two keystrokes, so every keystroke
+        // still took its own history entry (measured on the running app on 1 November 2026: typing "ZZZ"
+        // produced three same-group boundaries, receipts Q21/Q22, while the headless cases passed only
+        // because they widen the window far enough to cover the unit error).
+        var windowTicks = Math.Max(0L, (long)(HistoryCoalescingWindow.TotalSeconds * Stopwatch.Frequency));
         lock (_undo)
         {
             if (historyGroup is not null && _undo.Count > 0 && _lastHistoryGroup == historyGroup &&
