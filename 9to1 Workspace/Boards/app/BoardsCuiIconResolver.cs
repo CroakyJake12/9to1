@@ -192,7 +192,11 @@ public static class BoardsCuiIconResolver
 
         var role = normalized switch
         {
-            "plus" or "add" or "save" or "check" or "insert" => "CuiSuccessBrush",
+            // "add"/"plus"/"insert" are creation actions, not confirmations, so they take the app accent;
+            // the old green success fill put a green block "+" inside a purple-accent app, which the
+            // carried-forward Boards review item names explicitly. "save"/"check" stay success-green.
+            "plus" or "add" or "insert" => "CuiAccentBrush",
+            "save" or "check" => "CuiSuccessBrush",
             "pen" or "edit" or "bold" or "italic" or "underline" or "strikethrough" or "text-color" or
                 "undo" or "redo" or "subscript" or "superscript" => "CuiAccentSecondaryBrush",
             "file" or "notes" or "section" or "paperclip" or "image" or "folder" or "highlighter" => "CuiAccentTertiaryBrush",
@@ -296,7 +300,8 @@ public static class BoardsCuiIconResolver
 
     private static Color PaletteColor(string key, CuiPalette palette) => key switch
     {
-        "plus" or "add" or "save" or "check" or "insert" => Color.Parse(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF70D5A0" : "#FF238A5A"),
+        "plus" or "add" or "insert" => palette.Accent,
+        "save" or "check" => Color.Parse(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF70D5A0" : "#FF238A5A"),
         "delete" or "trash" or "remove" => Color.Parse(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FFFF918A" : "#FFB3261E"),
         "file" or "notes" or "section" or "paperclip" or "image" or "folder" => palette.AccentStrong,
         "table" or "chart" or "bulleted-list" or "numbered-list" or "align-left" or "align-center" or

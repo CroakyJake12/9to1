@@ -603,6 +603,53 @@
         "9to1 Workspace/Boards/app.tests/BoardsUndoOwnershipAndModeChromeTests.cs",
         "docs/development/qwen-boards-theme-continuation-2026-11-01.md"
       ]
+    },
+    {
+      "id": "OPEN-2026-11-01-BOARDS-FOOTER-AVATAR",
+      "at": "2026-11-01T14:30:00Z",
+      "status": "held; awaiting an owner decision about the identity surface, not implemented rather than faked",
+      "title": "Boards sidebar footer: what the avatar control is, and who owns it",
+      "owner_words": [
+        "Board icon/name/file menu and Undo/Redo stay above the tree; Add and avatar stay in the fixed footer (v3.1 boards-add implementation rule 2)",
+        "the corrected v3.2 atlas renders the footer as an Add button beside an avatar button",
+        "Embedded app headers expose search only; standalone apps retain model, search, notifications and profile (20 October shared-controls correction)",
+        "Do not copy illustrative model, account, warning or greeting state (20 October professional framing correction)"
+      ],
+      "measured_basis": "the standalone Boards app has no account or profile surface at all. The only identity it resolves is the local Home actor from HomeLocalProfileIdentity, which yields AuthenticatedResourceActor(ActorId, ProfileId, AccountId, OrganisationId, AuthenticationRevision) - two GUIDs and a revision string, with no display name, initials, avatar asset or sign-in state anywhere in that record (Boards/app/Program.cs lines 133-140; Home/Source/Home/Core/HomeLocalProfileIdentity.cs; shared/src/Haven.Application/Authorization/ResourceAuthorization.cs). No Boards.cui element mentions profile or notifications, so a footer avatar would be a control with nothing behind it, which is exactly the illustrative account state the owner forbids. In an embedded Haven surface the profile control is already Home-owned in the browser topbar, so a second avatar in the Boards sidebar would also duplicate a shared control.",
+      "interim_decision": "the rest of the footer rule is in place (the Add control stays in the fixed footer with its page/section destinations, verified natively); the avatar half is left unbuilt and recorded here instead of being relabelled complete.",
+      "ask": "Confirm (1) what the standalone Boards footer avatar should represent - the local Home profile, a signed-in account, or nothing until an account exists; (2) what it must open and what label or initial is honest when only a GUID exists; and (3) whether it is suppressed in embedded Boards because Home already owns the profile control.",
+      "affected_acceptance_rows": [
+        "UX27-BOARD-001-047 topology (fixed footer pair)",
+        "V3-BOARDS-LAY-01",
+        "BF-04 shell and control ownership"
+      ],
+      "evidence": [
+        "9to1 Workspace/Boards/app/Boards.cui (sidebar footer row)",
+        "9to1 Workspace/Boards/app/Program.cs",
+        "9to1 Workspace/Home/Source/Home/Core/HomeLocalProfileIdentity.cs",
+        "/tmp/opencode/qwen-native-20261101/90-landing-grid-annotated.png (the running footer shows Add alone)"
+      ]
+    },
+    {
+      "id": "OPEN-2026-11-01-BOARDS-READABLE-COLUMN-CENTRING",
+      "at": "2026-11-01T14:30:00Z",
+      "status": "cap implemented and measured; the centred half of the reference is held for an answer",
+      "title": "Boards 760-unit readable column: the cap is enforced, but CUI cannot express stretch-to-max-then-centre",
+      "owner_words": [
+        "This mock-up defines a 760-unit readable content column, typography and exact spacing (v3.1 boards-add implementation rule 4)",
+        "the atlas CSS renders it as .board-content{max-width:760px;margin:0 auto}"
+      ],
+      "measured_basis": "MaxWidth=760 is applied on DocumentContentLayer and measured at two window widths (1200 and 900 logical): at 1200 the flow column measures 760 and never exceeds it, at 900 it still fits inside the surface. The reference also centres the column; setting HorizontalAlignment=Center to reproduce that made the layer shrink-wrap to its content instead, measured 147 units wide on an empty page, which would move flow text away from the click target the rest of the editor assumes. That centring was reverted rather than shipped. Avalonia has no stretch-to-the-available-width-clamped-by-a-maximum-then-centre-the-leftovers alignment, and no first-party CUI construct in this repository expresses it.",
+      "interim_decision": "760-unit cap with stretching fill, left-anchored inside the page surface; the absolute/free-placement layer stays uncapped because positioned blocks keep their own page coordinates.",
+      "ask": "Confirm whether a left-anchored 760 column is acceptable, or whether the centred reference placement is required - in which case CUI needs a real capability (bounded centring layout or a measured-margin binding), which is a framework gap to author rather than something to fake with a fixed margin.",
+      "affected_acceptance_rows": [
+        "UX27-BOARD-001-047 topology (readable column)",
+        "V3-CUI-LAY conformance for content geometry"
+      ],
+      "evidence": [
+        "9to1 Workspace/Boards/app/Boards.cui (DocumentContentLayer)",
+        "9to1 Workspace/Boards/app.tests/BoardsTopologyTests.cs (cap measured at 1200 and 900 logical widths)"
+      ]
     }
   ]
 }

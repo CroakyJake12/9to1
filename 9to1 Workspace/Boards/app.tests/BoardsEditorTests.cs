@@ -116,9 +116,13 @@ public sealed class BoardsEditorTests
             target.Resources["CuiWorkspaceMaterial"] = target.Resources["CuiPanel2Brush"];
             target.Resources["CuiShellMaterial"] = target.Resources["CuiPanel2Brush"];
             target.Resources["CuiSuccessBrush"] = new SolidColorBrush(Color.Parse("#FF238A5A"));
+            // Creation actions take the app accent, not the success fill: the carried-forward Boards item
+            // was a green block "+" inside a purple-accent app. Confirmations (save/check) stay success.
+            target.Resources["CuiAccentBrush"] = new SolidColorBrush(Color.Parse("#FF8F56E1"));
             target.Resources["CuiInformationBrush"] = new SolidColorBrush(Color.Parse("#FF596FCA"));
             target.Resources["CuiHighContrast"] = false;
             var insert = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("plus", target));
+            var save = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("save", target));
             var table = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("table", target));
             var delete = Assert.IsType<SolidColorBrush>(BoardsCuiIconResolver.SemanticBrush("delete", target));
             target.IsEnabled = false;
@@ -126,16 +130,21 @@ public sealed class BoardsEditorTests
             target.IsEnabled = true;
             target.Resources["CuiHighContrast"] = true;
             var highContrast = BoardsCuiIconResolver.SemanticBrush("delete", target);
-            return (insert: insert.Color, table: table.Color, delete: delete.Color, disabled, highContrast);
+            return (insert: insert.Color, save: save.Color, table: table.Color, delete: delete.Color, disabled, highContrast);
         });
 
         Assert.NotEqual(brushes.insert, brushes.table);
         Assert.NotEqual(brushes.insert, brushes.delete);
         Assert.NotEqual(brushes.table, brushes.delete);
-        Assert.Equal(Color.Parse("#FF238A5A"), brushes.insert);
+        Assert.NotEqual(Color.Parse("#FF238A5A"), brushes.insert);
+        Assert.Equal(Color.Parse("#FF238A5A"), brushes.save);
         Assert.Equal(Color.Parse("#FF596FCA"), brushes.table);
         var iconBackground = Color.Parse("#FF181521");
+        // The plus must stay in the accent family (purple-dominant on this palette) and keep its contrast.
+        Assert.True(brushes.insert.B > brushes.insert.G,
+            $"the + glyph left the accent family for a green one: {brushes.insert}");
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.insert, iconBackground) >= 3d);
+        Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.save, iconBackground) >= 3d);
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.table, iconBackground) >= 3d);
         Assert.True(CakeOS.Cui.Themes.CuiContrast.Ratio(brushes.delete, iconBackground) >= 3d);
         Assert.Same(Brushes.Gray, brushes.disabled);

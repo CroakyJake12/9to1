@@ -107,7 +107,10 @@ public sealed class NavBuilderTests
             var rows = nav.Children.OfType<Border>().Skip(1).ToArray();
             Assert.Equal(3, rows.Length);
             Assert.Equal(new[] { 16d, 32d, 48d }, rows.Select(row => row.Margin.Left));
-            Assert.All(rows, row => Assert.Equal(34d, Assert.IsType<Grid>(row.Child).Height));
+            // The Boards reference fixes the tree at 32-unit rows with 16-unit nesting ("Sidebar is 256
+            // logical units by default, with 32-unit rows and 16-unit nesting"), so the pitch expectation
+            // moves with the specification; the depth ladder and the collapse coverage stay as they were.
+            Assert.All(rows, row => Assert.Equal(32d, Assert.IsType<Grid>(row.Child).Height));
             var rootDisclosure = Assert.IsType<Button>(Assert.IsType<Grid>(rows[0].Child).Children.OfType<Button>().First());
             rootDisclosure.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             NavBuilder.Rebuild(nav, vm);

@@ -135,7 +135,9 @@ public static class NavBuilder
         var row = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("24,20,*,Auto"),
-            Height = 38,
+            // Same 32-unit row rule as the page rows: the section row is part of the nested-page tree, so
+            // the tree has one row pitch rather than two.
+            Height = 32,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         var chevron = new Button
@@ -272,7 +274,10 @@ public static class NavBuilder
         var row = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("3,24,20,*,Auto"),
-            Height = 34,
+            // The Boards reference fixes the nested-page tree at 32-unit rows with 16-unit nesting
+            // ("Sidebar is 256 logical units by default, with 32-unit rows and 16-unit nesting"), and the
+            // disclosure/selection controls are sized to sit inside that row without growing it.
+            Height = 32,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         var disclosure = new Button

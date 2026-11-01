@@ -395,10 +395,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public bool CanChangeLayoutMode => IsNativePage && _isEditMode && CanEdit && _session is ContractSessionAdapter;
     public bool IsVerticalLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Locked, StringComparison.Ordinal);
     public bool IsFreeLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Unlocked, StringComparison.Ordinal);
-    public string LayoutModeLabel => IsVerticalLayout ? "Vertical Stacking" : "Free Placement";
+    // The reference chrome pairs this control with `Snap on` and names the state, not the arrangement:
+    // "Locked layout" / "Free placement". The old wording ("Vertical Stacking") was both longer than the
+    // pill and a description of the layout rather than of the mode, and the owner's carried-forward item
+    // was exactly that the label is too long. The accessible name keeps the meaning explicit, because
+    // V3-BOARDS-FEA-03 requires this dimension not to read like the View/Edit switch.
+    public string LayoutModeLabel => IsVerticalLayout ? "Locked layout" : "Free placement";
     public string LayoutModeAccessibleName => IsVerticalLayout
-        ? "Switch from Vertical Stacking to Free Placement"
-        : "Switch from Free Placement to Vertical Stacking";
+        ? "Locked layout: blocks stay in reading order. Switch to free placement"
+        : "Free placement: blocks can be positioned anywhere. Switch to locked layout";
     public string SelectedPageType => CurrentPage().PageType;
     public Haven.Application.BoardEmbeddedArtifactReference? SelectedEmbeddedArtifact => CurrentPage().EmbeddedArtifact;
     public bool ShowNativeAuthoring => _isEditMode &&

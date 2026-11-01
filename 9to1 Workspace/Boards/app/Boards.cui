@@ -10,7 +10,7 @@
     <Action name="CloseSectionIconPicker" command="CloseSectionIconPicker" />
   </Actions>
   <Page>
-    <Container Type="Grid" ColumnSizes="268 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
+    <Container Type="Grid" ColumnSizes="256 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
       <!-- One document identity menu on both standalone and embedded Boards. -->
       <Container Type="Overlay" ID="TopBar" Row="0" Column="0" ColumnSpan="2" Padding="12 6" Background="Transparent" BorderWidth="0">
         <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
@@ -258,7 +258,18 @@
         <Container horizontalalignment="Stretch" cornerradius="22" padding="20 12" margin="16 6 14 12" Type="Overlay" ID="PageCard" Row="3" Background="{Resource CuiSurfaceMaterial}" BorderWidth="0">
           <Container verticalalignment="Stretch" horizontalalignment="Stretch" Type="Overlay" ID="EditorScroll" VerticalScrolling="True" HorizontalScrolling="False" ScrollBarThickness="6" Background="Transparent">
             <Container Type="Grid" ID="PageSurface">
-              <Container margin="76 10" Type="Vertical Stack" ID="DocumentContentLayer">
+              <!-- The 760-unit readable column the Boards reference defines ("This mock-up defines a
+                   760-unit readable content column, typography and exact spacing"). The cap is applied
+                   with MaxWidth while the column still stretches, so a short line of text cannot shrink
+                   the clickable column: measured while writing this, centring the layer made it
+                   shrink-wrap to its content at 147 units wide, which is a worse defect than the
+                   mis-placement it was trying to fix. The atlas CSS also centres that column
+                   (.board-content{max-width:760px;margin:0 auto}); Avalonia has no
+                   stretch-to-max-then-centre alignment, so the centred half of the reference is recorded
+                   as an open layout item rather than faked with a fixed margin. The absolute /
+                   free-placement layer beside this one is deliberately not capped, because positioned
+                   blocks keep their own page coordinates. -->
+              <Container margin="76 10" MaxWidth="760" HorizontalAlignment="Stretch" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
                 <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
