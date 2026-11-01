@@ -146,10 +146,10 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
 
-**Position at this checkpoint:** branch `main`, HEAD `7450816e`, `origin/main` = `7450816e` (pushed;
-history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e`), only inherited
-`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged. Suite counts measured on
-this PC: contract **127/127**, app **584/584**.
+**Position at this checkpoint:** branch `main`, HEAD `a9b93148`, `origin/main` = `a9b93148` (pushed;
+history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`),
+only inherited `eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged. Suite counts
+measured on this PC: contract **127/127**, app **589/589**.
 
 ## 6. Evidence log (append)
 
@@ -239,15 +239,63 @@ checked against the **physical `.9to1board` file** with the private reader `boar
 | 29 | BF-06 tree moves and undo | drag on a sidebar page row (210,504)→(210,412) changed **nothing** — the tree has no drag-to-nest; the real affordance is the row's right-click `ContextMenu` (`Rename`, `Duplicate`, `Move up`, `Move down`, `Delete`, `Add subpage`, `Nest under previous page`). Using it: `Nest under previous page` set `parentPageId='page-546fcf10b6ba'` and the tree showed the caret + indent + guide; `Ctrl+Z` restored the exact pre-move `contenthash` and `Ctrl+Y` re-applied it | frames `98-page-context-menu-popup-3e00023.png`, `99-after-nest-crop.png`, `100-after-undo-nest-crop.png`; file `contenthash 440445ae…` (flat) ↔ `17ad19bf…` (nested), back to flat as the final state |
 | 30 | BF-12 popover/focus lifecycle | insert menu: opened with the caret in search, Home/End now stay there, Down lands on a *visible* row, Return applies that row, Escape closes and returns focus to the opening button (asserted in the new tests and seen natively). CUI menus/popups on this desktop are separate override-redirect windows, and the harness's per-batch focus restore light-dismisses them, so open-and-pick must be one batch — that is why the earlier `Down`-only probes were harness artefacts and are recorded as such rather than as app behaviour | receipts `G12`–`G18`, `G22`–`G23`, `G26`–`G28`, `G45`–`G46` |
 
-Still open after this pass, unchanged and not relabelled complete: the `AI` pill is inert (greyed) and
-the AI Read-only/Write dimension does not exist; footer `Add` + **avatar** pair; the 760-unit readable
-column; sidebar 256 vs the current 268; the block-row `+` coloured green against a purple accent; the
-long "Vertical Stacking" label; Chat / Scoped Chat page types (10 MUST rows) and the Write/Canvas rows
-in footer `Add` that are all disabled without explanation; `9to1.Boards.*` typed actions and structured
-failure identities; shared Productivity Engine + Rnote ink engine consumption; large-board
+### Milestone 5 — reference topology numbers, mode labels and the accent-correct `+` (1 Nov 2026, fifth commit `a9b93148`)
+
+| # | Requirement / carried item | Action | Measured result |
+|---|---|---|---|
+| 31 | "Sidebar is 256 logical units by default, with 32-unit rows and 16-unit nesting" (v3.1 boards-add rule 2; atlas `.board-sidebar{width:256px}`) | `ColumnSizes="268 1fr"` → `256 1fr`; page rows 34 → 32 and section rows 38 → 32, indent ladder unchanged at 16 | on the rebuilt X11 app the sidebar divider is at device x 505–506 = **255.2 logical** at scale 1.979 (frame `102-topology-editor2.png`), where the inherited build put the same edge at x 529 = 268 logical; headless: `TreeRowsShareOne32UnitPitchAndNestingIndentsByExactly16Units` |
+| 32 | "This mock-up defines a 760-unit readable content column" | `MaxWidth="760"` with stretch on `DocumentContentLayer`; the absolute/free-placement layer deliberately stays uncapped | measured at window widths 1200 and 900 logical: the column fills 760 and never exceeds it, and still fits the narrower surface. Centring it (atlas `margin:0 auto`) was tried and **reverted**: measured 147 units shrink-wrapped on an empty page, which would move flow text off the click target. Filed as `OPEN-2026-11-01-BOARDS-READABLE-COLUMN-CENTRING` because Avalonia has no stretch-to-max-then-centre alignment |
+| 33 | accent rule vs "green block `+` inside a purple accent" | `plus`/`add`/`insert` resolve through the app accent; `save`/`check` keep the success fill (both in the role switch and in the hard-coded fallback palette) | before/after pixel counts at the same glyph: **104 green-dominant pixels** in the older build (frames `62-landing-again`, `80-add-selected`, `83-ink-drawn`, bbox x 708–733 y 380–405) versus **6 stray anti-aliasing pixels** now. The test states the rule against whatever the app accent currently is, so a green-accent theme is not mis-reported |
+| 34 | chrome labels (carried item: "long `Vertical Stacking` label") | `LayoutModeLabel` → `Locked layout` / `Free placement`; accessible names state what the mode constrains so it cannot read as View/Edit (V3-BOARDS-FEA-03) | on screen the mode row reads `Edit | View`, `Locked layout`, `Snap off`, `…` (frame `102-crop-chrome.png`); asserted in `TheLayoutControlNamesItsModeTheWayTheReferenceChromeDoes` |
+| 35 | suite state after the shared-surface changes | 5 new `BoardsTopologyTests`; two retained expectations updated to the new specification (34 → 32 pitch; `plus` semantic colour), all previous coverage preserved | Boards app suite **589/589** (`/tmp/opencode/qwen-1101-appsuite7.log`, guard `OK`). Authored ink unaffected: 508 dark px in the black-stroke band and 396 orange-dominant px in the orange band on the rebuilt app, no cross-contamination |
+
+Two items are **held as decisions, not implemented**, with the reason in `docs/specification/open-decisions.json`:
+`OPEN-2026-11-01-BOARDS-FOOTER-AVATAR` (the fixed-footer avatar pair — standalone Boards has no profile or
+account surface at all: the only identity it resolves is `AuthenticatedResourceActor(ActorId, ProfileId,
+AccountId, OrganisationId, AuthenticationRevision)`, two GUIDs and a revision string, and the owner forbids
+copying illustrative account state; in embedded Haven the profile control is already Home-owned), and
+`OPEN-2026-11-01-BOARDS-READABLE-COLUMN-CENTRING` (above).
+
+Host limitation recorded, not skipped silently: `Haven.Desktop.Tests`, which covers the **embedded Haven**
+Boards surface, targets `net10.0-windows10.0.19041.0` and cannot be built or run on this Linux PC
+(`error NETSDK1100`; a cross-target build additionally needs a Windows-TFM restore, `NETSDK1005`, which is
+not available here — attempted and stopped, `/tmp/opencode/qwen-1101-havendesktop-boards.log`,
+`/tmp/opencode/qwen-1101-havendesktop-build.log`). The shared-surface effect on the Haven host therefore
+stays **unverified on this machine**; the standalone app is the only Boards host exercised here.
+
+### Milestone 5b — pack/atlas correction and the running-app identity for rows 22–35
+
+Native identity for the Milestone 4/5 frames: standalone `CakeOS.Apps.Boards.App.dll` at
+`9to1 Workspace/Boards/app/bin/Release/net10.0/`, launcher
+`/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/dotnet-sdk-10.0.301/dotnet`,
+X11 `:1`, client 2850×1781 device px (1440×900 logical at scale 1.979), sandboxed
+`HOME=/tmp/opencode/qwen-native-20261101/home6` (+ `XDG_*` inside it) and
+`HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`; every instance was closed through
+`_NET_CLOSE_WINDOW` and exited `exit=0` (`run7/12/13/14.exit`); no test instance is left running and
+nothing was written into the owner's real `Documents/9to1/Boards`.
+
+Also corrected in §1 above: the v3.2 **atlas** is present (`newAtlas.html` matches the owner-attached
+`/tmp/codex-file-preview-2hRdoO/9to1_Interface_Atlas_v3.2.html` by SHA-256 `80a4ecc6…1a131`) and
+`ThemeRefs/` is unpacked with 27 PNGs in the 10 folders; only the **markdown** half of the v3.2 pack is
+missing, so the theme-pass *instructions* remain provisional while the imagery and the DOCX theme rows
+(`V31-THEMES-001–003`, which carry the per-folder cues including the Professional/Glow component sheets)
+are usable.
+
+**Closed by Milestone 5, with the measurement that closes them:** sidebar width (was 268, now 255.2 logical
+measured on screen), the 32-unit tree pitch, the 760-unit readable-column **cap** (measured at two window
+widths), the green block `+` (104 green px → 6), and the long "Vertical Stacking" label (now `Locked
+layout` / `Free placement`, read off the running app).
+
+Still open after this pass, unchanged and explicitly not relabelled complete: the `AI` pill is inert
+(greyed) and the AI Read-only/Write dimension does not exist; footer `Add` + **avatar** pair (held as
+`OPEN-2026-11-01-BOARDS-FOOTER-AVATAR`); the *centred* half of the 760-column reference (held as
+`OPEN-2026-11-01-BOARDS-READABLE-COLUMN-CENTRING`); Chat / Scoped Chat page types (10 MUST rows) and the
+Write/Canvas rows in footer `Add` that are all disabled without explanation; `9to1.Boards.*` typed actions
+and structured failure identities; shared Productivity Engine + Rnote ink engine consumption; large-board
 virtualisation and the performance harness; list/table placeholder words (`"New item"`, `"New table"`);
-the block-id shape divergence that remains for conversion-created blocks; ink palette with no swatches
-and no current-colour readout; tree drag-to-nest absent; keystroke-level draft journaling absent
-(the sub-`1 s` loss measured in row 28).
+the block-id shape divergence that remains for conversion-created blocks; ink palette with no swatches and
+no current-colour readout; tree drag-to-nest absent; keystroke-level draft journaling absent (the sub-1 s
+loss measured in row 28); and the embedded-Haven side of every shared-surface change, unverifiable on this
+PC (rows above).
 `eng/spec-coverage/assessments/Boards.json` is still a code/test reading pass and has **not** been
 regenerated for these fixes yet — it stays at takeover states until the whole gate is exercised end to end.
