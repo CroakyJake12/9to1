@@ -41,6 +41,9 @@ public sealed class RichBoardPage
     public string PageType { get; set; } = HavenRichPageTypes.Native;
     public Haven.Application.BoardEmbeddedArtifactReference? EmbeddedArtifact { get; set; }
     public bool IsCanvasLocked { get; set; }
+    /// <summary>The page's independent Snap aid (see the contract page property of the same name):
+    /// where a spatial manipulation commits, never whether it is allowed.</summary>
+    public bool SnapToGrid { get; set; }
     public string LayoutMode { get; set; } = HavenRichPageLayoutModes.Locked;
     public List<RichBoardBlock> Blocks { get; set; } = [];
     public double InkPanX { get; set; }

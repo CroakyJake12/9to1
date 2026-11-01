@@ -118,6 +118,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("CanChangeLayoutMode", CanChangeLayoutMode);
         Set("LayoutModeLabel", LayoutModeLabel);
         Set("LayoutModeAccessibleName", LayoutModeAccessibleName);
+        RefreshSnapState();
         Set("ModeLabel", _isEditMode ? "Editing" : "Viewing");
         Set("ModeToggleAccessibleName", _isEditMode ? "Switch to Viewing mode" : "Switch to Editing mode");
         Set("RecentBoardsLoaded", false);
@@ -381,6 +382,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         ? $"Link created {pending.ApplicationName} to original section…"
         : "Link created page to original section…";
     public bool IsCanvasLocked => CurrentPage().IsCanvasLocked;
+    /// <summary>The page's independent Snap aid: where a spatial manipulation commits.</summary>
+    public bool IsSnapEnabled => CurrentPage().SnapToGrid;
+    public string SnapLabel => IsSnapEnabled ? "Snap on" : "Snap off";
+    public string SnapAccessibleName => IsSnapEnabled
+        ? "Snap is on; spatial edits commit on the placement grid. Select to turn snap off"
+        : "Snap is off; spatial edits stop wherever the pointer leaves them. Select to turn snap on";
+    /// <summary>Snap is persisted page state, so changing it is an edit: View mode must not be able to
+    /// mutate the document. It stays independent of the layout mode and of the canvas lock.</summary>
+    public bool CanChangeSnap => IsNativePage && CanEdit && IsEditMode && _session is ContractSessionAdapter;
     public bool IsNativePage => string.Equals(CurrentPage().PageType, HavenRichPageTypes.Native, StringComparison.Ordinal);
     public bool CanChangeLayoutMode => IsNativePage && _isEditMode && CanEdit && _session is ContractSessionAdapter;
     public bool IsVerticalLayout => string.Equals(CurrentPage().LayoutMode, HavenRichPageLayoutModes.Locked, StringComparison.Ordinal);
@@ -1072,6 +1082,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsEditingMode", enabled);
         Set("IsViewingMode", !enabled);
         Set("CanChangeLayoutMode", CanChangeLayoutMode);
+        RefreshSnapState();
         RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
         Set("ModeLabel", enabled ? "Editing" : "Viewing");
@@ -4493,6 +4504,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             RefreshPageBreadcrumb();
             Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock freeform objects" : "Lock freeform objects");
             Set("CanvasLockStatus", page.IsCanvasLocked ? "Freeform objects are locked; drawing remains available." : "Freeform objects can be moved.");
+            RefreshSnapState();
             Set("CanvasLockAccessibleName", page.IsCanvasLocked
                 ? "Unlock freeform object positions; drawing remains available"
                 : "Lock freeform object positions; drawing remains available");

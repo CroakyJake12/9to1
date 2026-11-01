@@ -1412,6 +1412,23 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
+    /// <summary>Turns the page's Snap aid on or off. It decides where a spatial manipulation commits,
+    /// not whether manipulation is allowed, so it stays independent of Edit/View and of the layout lock.</summary>
+    public async ValueTask SetSnapAsync(string pageId, bool enabled,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetSnapToGrid(rich, pageId, enabled), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public async ValueTask SetLayoutModeAsync(string pageId, string layoutMode,
         CancellationToken cancellationToken = default)
     {

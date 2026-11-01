@@ -187,6 +187,9 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
                     EditWidth = edit?.Bounds.Width ?? -1,
                     ViewWidth = view?.Bounds.Width ?? -1,
                     LayoutWidth = layout?.Bounds.Width ?? -1,
+                    SnapFound = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton") is not null,
+                    SnapVisible = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton")?.IsEffectivelyVisible == true,
+                    SnapWidth = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton")?.Bounds.Width ?? -1,
                     StartedEditing = startedEditing,
                     StartedViewing = startedViewing,
                     StillEditing = stillEditing,
@@ -215,6 +218,9 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
             Assert.True(observations.Measured,
                 $"the mode controls measured too small: Edit={observations.EditWidth} View={observations.ViewWidth} Layout={observations.LayoutWidth}");
             Assert.True(observations.Heights);
+            Assert.True(observations.SnapFound, "the mounted chrome must expose the Snap control");
+            Assert.True(observations.SnapVisible, "the Snap control is not effectively visible");
+            Assert.True(observations.SnapWidth > 40, $"the Snap control measured {observations.SnapWidth} wide");
             Assert.True(observations.EditTop >= 0 && observations.EditTop < 120,
                 $"the mode switch sits at y={observations.EditTop}, outside the identity band");
             Assert.True(observations.OverflowTop >= 0 && observations.OverflowTop < 120,
@@ -281,6 +287,40 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
             Assert.Equal("hello", observed.Text);
         }
         finally { CloseMountedBlocks(fixture); }
+    }
+
+    [Fact]
+    public async Task Snap_is_a_persisted_page_state_that_View_mode_cannot_change()
+    {
+        var root = NewDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "snap.9to1board");
+            await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            using var vm = new BoardsViewModel(adapter);
+            var pageId = adapter.Document.Sections[0].Pages[0].Id;
+            Assert.False(adapter.Document.Sections[0].Pages[0].SnapToGrid);
+
+            // View mode must not be able to mutate the stored page state.
+            await vm.DispatchAsync("SetEditModeOff", null);
+            await vm.DispatchAsync("ToggleSnap", null);
+            Assert.False(adapter.Document.Sections[0].Pages[0].SnapToGrid);
+            await vm.DispatchAsync("SetEditModeOn", null);
+
+            var layoutLabelBefore = vm.Get("LayoutModeLabel");
+            await vm.DispatchAsync("ToggleSnap", null);
+            Assert.True(adapter.Document.Sections[0].Pages[0].SnapToGrid);
+            Assert.Equal("Snap on", vm.Get("SnapLabel"));
+            // Independent of the other two dimensions: neither the layout mode nor Edit/View moved.
+            Assert.Equal(layoutLabelBefore, vm.Get("LayoutModeLabel"));
+            Assert.Equal(true, vm.Get("IsEditingMode"));
+            await adapter.SaveAsync();
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            Assert.True(reopened.Document.Sections[0].Pages[0].SnapToGrid);
+        }
+        finally { DeleteDirectory(root); }
     }
 
     private static (string Root, ContractSessionAdapter Adapter, BoardsViewModel ViewModel, Window Window)

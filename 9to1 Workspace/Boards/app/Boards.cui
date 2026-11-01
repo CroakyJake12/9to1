@@ -65,6 +65,13 @@
                     Background="{Resource CuiPanel2Brush}" AccessibleName="{Binding LayoutModeAccessibleName}"
                     Active="{Binding ShowEditor}"
                     ToolTip="Constrains block placement only. Page ink and text editing stay available." />
+            <!-- Snap is the third independent control in the reference identity/mode row: it decides
+                 where a spatial edit commits, not whether editing or placement is allowed. -->
+            <Button ID="SnapButton" Content="{Binding SnapLabel}" Action="ToggleSnap"
+                    Interactive="{Binding CanChangeSnap}" Selected="{Binding IsSnapEnabled}" Height="28"
+                    Padding="10 0" CornerRadius="11" Background="{Resource CuiPanel2Brush}"
+                    AccessibleName="{Binding SnapAccessibleName}" Active="{Binding ShowEditor}"
+                    ToolTip="Snap: spatial edits commit on the placement grid. Independent of Edit/View and of the layout lock." />
             <Container Type="Menu" ID="MoreMenu" VerticalAlignment="Center">
             <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" Padding="0" AccessibleName="More board actions" Tooltip="Board options">
               <!-- The page-mode and layout-mode commands are no longer listed inside the overflow: they

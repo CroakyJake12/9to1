@@ -35,6 +35,7 @@ internal static class Projector
         PageType = page.PageType,
         EmbeddedArtifact = page.EmbeddedArtifact,
         IsCanvasLocked = page.IsCanvasLocked,
+        SnapToGrid = page.SnapToGrid,
         LayoutMode = page.LayoutMode,
         InkPanX = page.InkView?.PanX ?? 0,
         InkPanY = page.InkView?.PanY ?? 0,
@@ -419,6 +420,9 @@ internal static class MergeDeltas
             if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
                 viewPage.LayoutMode != baselinePage.LayoutMode)
                 HavenRichNotesOps.SetPageLayoutMode(rich, contractPage.Id, viewPage.LayoutMode);
+            if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
+                viewPage.SnapToGrid != baselinePage.SnapToGrid)
+                HavenRichNotesOps.SetSnapToGrid(rich, contractPage.Id, viewPage.SnapToGrid);
             if (baselinePages.TryGetValue(viewPage.Id, out baselinePage) &&
                 (viewPage.PageType != baselinePage.PageType || !Equals(viewPage.EmbeddedArtifact, baselinePage.EmbeddedArtifact)))
                 HavenRichNotesOps.SetEmbeddedArtifact(rich, contractPage.Id,
@@ -825,6 +829,7 @@ internal static class MergeDeltas
         page.ParentPageId = viewPage.ParentPageId;
         page.TabberOwnerBlockId = viewPage.TabberOwnerBlockId;
         page.IsCanvasLocked = viewPage.IsCanvasLocked;
+        page.SnapToGrid = viewPage.SnapToGrid;
         page.LayoutMode = viewPage.LayoutMode;
         page.PageType = viewPage.PageType;
         page.EmbeddedArtifact = viewPage.EmbeddedArtifact;

@@ -79,6 +79,21 @@ public sealed class HavenRichPage
     public int Order { get; set; }
     public bool IsCanvasLocked { get; set; }
     /// <summary>
+    /// Independent manipulation aid for this page: when on, spatial edits commit on the shared
+    /// placement grid; when off the same edit may stop at a free position. It is not a read-only
+    /// switch and not the flow/free-placement choice - V3-BOARDS-FEA-03 requires Edit/View, Locked
+    /// and Snap to stay three separate dimensions.
+    ///
+    /// It defaults to off, and that is a deliberate, recorded decision rather than an oversight: the
+    /// supplied v3.1 text and atlas show a "Snap on" control but never define the snap targets,
+    /// the grid step, or whether the aid starts engaged, and the retained technical chapter that
+    /// would (technical/boards-04.md) was not supplied. Turning it on by default silently changes the
+    /// committed geometry of every existing board (measured: two retained free-form contract tests
+    /// asserting exact coordinates moved). The exact semantics are queued for an owner answer in
+    /// docs/specification/open-decisions.json; the control and the persisted state are real either way.
+    /// </summary>
+    public bool SnapToGrid { get; set; }
+    /// <summary>
     /// Flow placement policy for native blocks. Legacy documents omit this
     /// property and therefore retain the safe vertical-flow default.
     /// </summary>
@@ -731,6 +746,12 @@ public static partial class HavenRichNotesOps
             throw new InvalidOperationException("Free placement applies only to Native Board pages.");
         if (page.LayoutMode != HavenRichPageLayoutModes.Unlocked)
             throw new InvalidOperationException("Free placement is available only in Unlocked layout mode.");
+        // The page's independent Snap aid applies to explicit block placement too: it decides where a
+        // manipulation commits, never whether the manipulation is permitted.
+        x = SnapPlacementValue(page, x);
+        y = SnapPlacementValue(page, y);
+        width = SnapPlacementValue(page, width);
+        height = SnapPlacementValue(page, height);
         ValidateBlockPlacement(x, y, width, height, zOrder);
         var block = RequireBlock(notes, pageId, blockId);
         if (block.Layout == HavenRichBlockLayouts.Absolute &&

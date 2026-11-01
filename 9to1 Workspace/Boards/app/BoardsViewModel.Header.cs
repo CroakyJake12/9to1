@@ -6,6 +6,14 @@ namespace CakeOS.Apps.Boards.App;
 
 public sealed partial class BoardsViewModel
 {
+    private void RefreshSnapState()
+    {
+        Set("IsSnapEnabled", IsSnapEnabled);
+        Set("SnapLabel", SnapLabel);
+        Set("SnapAccessibleName", SnapAccessibleName);
+        Set("CanChangeSnap", CanChangeSnap);
+    }
+
     private void RefreshHistoryAvailability()
     {
         Set("CanRenameBoard", CanRenameBoard);
@@ -64,6 +72,16 @@ public sealed partial class BoardsViewModel
             case "ToggleLayoutMode":
                 if (CanChangeLayoutMode)
                     await SetLayoutModeAsync(IsFreeLayout ? HavenRichPageLayoutModes.Locked : HavenRichPageLayoutModes.Unlocked, cancellationToken);
+                return true;
+            case "ToggleSnap":
+                // The third independent dimension in the reference: it changes where a spatial edit
+                // commits. Turning it is a document change, so it needs the edit permission, but it is
+                // not gated on the layout mode or on View mode's own lock.
+                if (_session is ContractSessionAdapter snapAdapter && CanChangeSnap)
+                {
+                    await snapAdapter.SetSnapAsync(SelectedPageId, !IsSnapEnabled, cancellationToken);
+                    RefreshSnapState();
+                }
                 return true;
             default:
                 return false;

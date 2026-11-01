@@ -1342,6 +1342,32 @@ public static partial class HavenRichNotesOps
 
     // ----- Canvas objects -----
 
+    /// <summary>
+    /// The shared placement grid a snapped spatial edit commits to, in page units. It matches the
+    /// existing canonical convention: the Notes canvas ops snap on a grid
+    /// (NotesCanvasOperations.Move/Resize) and the Boards keyboard nudge already steps by 8.
+    /// </summary>
+    public const double PlacementGridUnits = 8;
+
+    /// <summary>Applies the page's own Snap state to one coordinate or size value.</summary>
+    public static double SnapPlacementValue(HavenRichPage page, double value) =>
+        page.SnapToGrid && double.IsFinite(value)
+            ? Math.Round(value / PlacementGridUnits) * PlacementGridUnits
+            : value;
+
+    /// <summary>
+    /// Turns the page's Snap aid on or off. It changes how manipulation commits, never whether
+    /// manipulation is allowed: View mode and the layout lock keep their own owners.
+    /// </summary>
+    public static bool SetSnapToGrid(HavenRichNotes notes, string pageId, bool enabled)
+    {
+        var page = RequirePage(notes, pageId);
+        if (page.SnapToGrid == enabled) return false;
+        page.SnapToGrid = enabled;
+        TouchNotes(notes);
+        return true;
+    }
+
     public static bool MoveCanvasObject(HavenRichNotes notes, string pageId, string objectId, double x, double y)
     {
         var page = RequirePage(notes, pageId);
@@ -1349,8 +1375,8 @@ public static partial class HavenRichNotesOps
         if (box is null) return false;
         if (!double.IsFinite(x) || !double.IsFinite(y))
             throw new ArgumentException("Canvas coordinates must be finite.");
-        box.X = Math.Max(0, x);
-        box.Y = Math.Max(0, y);
+        box.X = Math.Max(0, SnapPlacementValue(page, x));
+        box.Y = Math.Max(0, SnapPlacementValue(page, y));
         page.CanvasWidth = Math.Max(page.CanvasWidth, box.X + box.Width + 40);
         page.CanvasHeight = Math.Max(page.CanvasHeight, box.Y + box.Height + 40);
         TouchNotes(notes);
@@ -1362,8 +1388,8 @@ public static partial class HavenRichNotesOps
         var page = RequirePage(notes, pageId);
         var box = page.Canvas.FirstOrDefault(o => o.Id == objectId);
         if (box is null) return false;
-        box.Width = Math.Clamp(width, 24, 5000);
-        box.Height = Math.Clamp(height, 24, 5000);
+        box.Width = Math.Clamp(SnapPlacementValue(page, width), 24, 5000);
+        box.Height = Math.Clamp(SnapPlacementValue(page, height), 24, 5000);
         page.CanvasWidth = Math.Max(page.CanvasWidth, box.X + box.Width + 40);
         page.CanvasHeight = Math.Max(page.CanvasHeight, box.Y + box.Height + 40);
         TouchNotes(notes);

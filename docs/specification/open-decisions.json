@@ -141,7 +141,7 @@
           "Moving existing saved artefacts between locations."
         ],
         "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
-        "state": "answered \u2014 implementation in progress"
+        "state": "answered — implementation in progress"
       },
       "note_29_october": "The setup gate the owner ordered removed is no longer required in order to save: the 9to1 workspace is created on demand and boards land in it. Files' own setup page still exists as the deliberate-choice path; removing that gate is queued with the three-root navigation work."
     },
@@ -241,7 +241,7 @@
     {
       "id": "OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION",
       "at": "2026-10-30T00:47:00Z",
-      "status": "open \u2014 only the incompatible conversion mappings are held",
+      "status": "open — only the incompatible conversion mappings are held",
       "title": "Content and identity contract for the remaining Design conversions",
       "requirements": [
         "UX27-BOARD-027",
@@ -261,7 +261,7 @@
     {
       "id": "OPEN-2026-10-30-ENGINE-DONOR-FORK",
       "at": "2026-10-30T10:05:00Z",
-      "status": "answered by owner 30 October 2026 \u2014 embed unmodified engines, fork modified ones",
+      "status": "answered by owner 30 October 2026 — embed unmodified engines, fork modified ones",
       "title": "Browse must be built ON vendored engine donor sources, not against external binaries",
       "verbatim_owner_request": "Owner, 30 October 2026: 'I specifically told her to fork chromium and gecko and put the source directly inside of 9to1, and she said she did... The whole idea is that we take donor sources, put their source code into 9to1's repository, and then build upon those sources to save loads of time rebuilding from scratch.'",
       "requirement": "The durable principle already exists in AGENTS.md - donor engines may keep their implementation languages behind reviewed typed infrastructure boundaries, and donor licences and notices are preserved. What is missing is the requirement that the vendored source is actually FORKED and BUILT UPON. Today it is decoration.",
@@ -286,7 +286,7 @@
         "Rnote (Canvas)": "FORK (controlled fork exists; our one commit on astra/lossless-canvas-serialization-20261003 + Canvas/rnote-poc/patches)",
         "DuckDB": "EMBED (MIT, unmodified, tag v1.5.5)",
         "Chromium": "EMBED pinned official artefact + digest; the /usr/bin/chromium system lookup must go or be labelled dev-only (Browse currently has no engine on this PC)",
-        "AppFlowy Board": "NOT CONSUMED \u2014 currently first-party; elect MPL-2.0 only if donor code is linked"
+        "AppFlowy Board": "NOT CONSUMED — currently first-party; elect MPL-2.0 only if donor code is linked"
       },
       "corrections": "Chrome for Testing has no Linux ARM64 build (measured from the research pack); Gecko candidate builds publish linux-aarch64 with SHA-256/512 + signatures. DevTools on Gecko uses RDP/BiDi, not CDP (CDP removed Firefox 141)."
     },
@@ -445,7 +445,7 @@
       "at": "2026-10-31T13:17:46Z",
       "status": "owner answer needed; the count is measured, the choice is not mine to make",
       "title": "865 MUST requirements (22% of the specification's MUSTs) sit in apps your Shipmas scoping does not name",
-      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848\u2026, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
+      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848…, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
       "why_it_matters": "The plan and every per-app percentage depend on this. The specification calls several of these mandatory - 'Dulche, nodes and agentic runtime' carries 414 MUSTs and the Spaces/Build/Boards workflows depend on it; the TF family (116 MUSTs) is called one mandatory shipping product at spec L947 while its own name is an OPEN decision at spec L1037; packaging (63) and Admin (61) sit under frameworks and the Business/Accounts surface. I have counted them, kept them in the register so nothing disappears, and marked them UNRESOLVED instead of choosing.",
       "question_for_owner": "For each of these buckets, in or out for the Shipmas delivery: Dulche runtime (414), TF (116, spec names no product), other independent apps such as Terminal/Maps/Launcher/Shelf (97), Voice & Vision is named but its requirements are split across sections, packaging/lifecycle (63), Admin (61), shared settings/models (39), Study Space (33), Forms (42). A one-line answer per bucket is enough; I will not infer it.",
       "what_would_make_it_false": "If a later owner instruction names these apps one way or the other, that answer supersedes this record; the register rows themselves do not change, only their scope class, which is derived from a recorded mapping table rather than embedded in the parse."
@@ -497,7 +497,7 @@
       "measured_facts": [
         "Two Boards entry points exist in source: the new CUI app (9to1 Workspace/Boards/app, now with per-OS targets so it runs on this Linux PC: commit 94fc2a3a) and the legacy host (9to1 Workspace/Boards/Host/HavenOS.Boards.Host.csproj, which defers all app resources and services to the Home process).",
         "The frozen installed package cannot serve as the legacy comparison on this PC: launching /usr/bin/haven (haven 0.1.0+test20261026.git59d66496) on 31 October renders a 'Shutdown not complete' page repeating '/usr/lib/haven/libcakes/canvas_motore_poc.so: cannot open shared object file: No such file or directory' many times. Its own diagnostic text states the shutdown did not complete and the native app initialisation did not finish.",
-        "The new CUI Boards landing was also measured broken before it was fixed: Recent stayed at 'Loading saved boards\u2026' forever so a draft could not be reopened, the splash title claimed 'Untitled board - Boards' while no board was open, and after a board was actually activated the splash stayed on screen with no editor surface (framework cause in commit 78122e51)."
+        "The new CUI Boards landing was also measured broken before it was fixed: Recent stayed at 'Loading saved boards…' forever so a draft could not be reopened, the splash title claimed 'Untitled board - Boards' while no board was open, and after a board was actually activated the splash stayed on screen with no editor surface (framework cause in commit 78122e51)."
       ],
       "proposed_retirement_condition": "For each pair: the legacy entry is removed when the current implementation demonstrably covers every behaviour the legacy surface had that the specification also requires, verified by the owner driving both, and the shared-implementation rule is then satisfied with one implementation per app. Until then the pair is a labelled testing scaffold and no app may be called consolidated.",
       "state": "open - implementation running on this PC as a pair; no legacy surface is currently launchable on this machine",
@@ -576,6 +576,33 @@
       "integration_point": "IRichBoardSession (9to1 Workspace/Boards/app/IRichBoardSession.cs) already isolates the board data source; ContractSessionAdapter is the JSON-file implementation. The engine route adds one session implementation over the sidecar selected in existing composition, so the CUI documents/actions/bindings are untouched - which is what 'keep cui frontend' requires.",
       "work_continuing_now": "Layout fixes on the current CUI surface need no engine and no heavy build, so they proceed while the licence/schema decisions are pending: sidebar/content separation with measured palette pairs, tab-strip backing and selected state, donor section/column/card geometry. Theme appearance defects remain queued behind the re-UI per the owner's earlier instruction.",
       "evidence": "docs/development/boards-appflowy-rust-engine-2026-10-31.md (all measurements), docs/development/boards-appflowy-reui-plan-2026-10-31.md (route correction)"
+    },
+    {
+      "id": "OPEN-2026-11-01-BOARDS-SNAP-SEMANTICS",
+      "at": "2026-11-01T13:30:00Z",
+      "status": "implemented with a conservative default; owner answer needed to finalise semantics",
+      "title": "Boards Snap: exact snap targets, grid step and whether the aid starts engaged",
+      "owner_words": [
+        "Edit/View, Locked and Snap stay independent (V3-BOARDS-LAY-01)",
+        "Snap changes manipulation behaviour. Do not collapse all three into one read-only toggle (V3-BOARDS-FEA-03)",
+        "Verify Edit/View, Locked and Snap independently (V3-BOARDS-ACC-02)",
+        "the supplied atlas mode row shows buttons labelled 'Locked layout' and 'Snap on'"
+      ],
+      "measured_basis": "the v3.1 text and the corrected v3.2 atlas show a Snap control but never define its snap targets (page margins? other blocks? a fixed grid?) or its step, and the retained chapter that would (technical/boards-04.md) was not supplied. The only canonical precedent in this repository is NotesCanvasOperations.Move/Resize, which snaps x/y/width/height to a caller-supplied gridSize; Boards' own canvas keyboard nudge already steps by 8.",
+      "interim_decision": "HavenRichPage.SnapToGrid (persisted per page, additive to schema 5, legacy documents load it off). When on, HavenRichNotesOps.MoveCanvasObject / ResizeCanvasObject / PlaceBlock commit to an 8-unit grid; when off the same operations keep the free coordinates. The control is a persistent chrome button, independent of Edit/View and of the layout lock, and View mode cannot change it.",
+      "why_default_off": "turning snapping on by default silently rewrites committed geometry of existing free-form content: measured, two retained contract tests that assert exact coordinates (72,128,420,208 etc.) would have moved. Existing expectations were not edited to accommodate an invented default.",
+      "ask": "Confirm (1) whether Snap should default to on for new pages, (2) the snap target set - grid only, or also page margins, other block edges and ink bounds, and (3) the grid step. Answers change only the default and the target set; the persisted state, the control and the independence matrix are already in place.",
+      "affected_acceptance_rows": [
+        "V3-BOARDS-ACC-02",
+        "UX27-BOARD placement rows for Locked/Unlocked manipulation"
+      ],
+      "evidence": [
+        "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+        "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs",
+        "9to1 Workspace/Boards/tests/HavenRichBoardSnapTests.cs",
+        "9to1 Workspace/Boards/app.tests/BoardsUndoOwnershipAndModeChromeTests.cs",
+        "docs/development/qwen-boards-theme-continuation-2026-11-01.md"
+      ]
     }
   ]
 }
