@@ -1117,7 +1117,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         // one continuous action; the session groups those into a single undo step. Anything else (structure,
         // formatting, placement, styles, ink) gets no group and keeps its own step.
         await _real.MutateAsync(rich => MergeDeltas.Apply(rich, submitted, baseline), cancellationToken,
-            MergeDeltas.SingleCharacterTextGroup(submitted, baseline)).ConfigureAwait(false);
+            MergeDeltas.SingleTextSurfaceGroup(submitted, baseline)).ConfigureAwait(false);
     }
 
     private string ProjectedViewJson()

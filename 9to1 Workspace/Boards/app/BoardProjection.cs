@@ -1407,39 +1407,31 @@ internal static class MergeDeltas
     };
 
     /// <summary>
-    /// Undo grouping for authoring text. Returns a group key when this merge changes exactly one text surface
-    /// (a block's text, or a board/section/page title) by a single typed or deleted character and nothing else;
-    /// null for every other merge, so structure, formatting, placement, styles and ink each keep their own
-    /// undo step exactly as before.
+    /// Undo grouping for authoring text. Returns a group key when this merge changes **one** text surface (a
+    /// block's text, or a board/section/page title) and nothing else; null for every other merge, so structure,
+    /// formatting, placement, styles and ink each keep their own undo step exactly as before.
     ///
-    /// This exists because the editor merges per keystroke (ContractSessionAdapter.MarkDirty → MergeAsync),
-    /// which stacked one history entry per character: measured on the running app on 1 November 2026, Ctrl+Z
-    /// stepped "SPLITMEZZTOP" back one letter per press instead of undoing the edit the user made.
+    /// The size of the change deliberately does not matter. The baseline a merge is diffed against is the last
+    /// saved draft rather than the previous keystroke, so while the user keeps typing each merge carries the
+    /// whole run since that baseline ("G", "GR", "GRAN"…). Requiring a one-character difference, which the
+    /// first version of this rule did, let only the first keystroke group and left every later one as its own
+    /// boundary - measured on the running app on 1 November 2026, where Ctrl+Z still stepped "GRAN" back one
+    /// letter per press (receipts P02-P03: richNotes.version 1 -> 9 for four characters, 7 after one undo).
+    /// What identifies the edit as one action is that the same single surface keeps changing, so that is the
+    /// rule, and the session's window decides when the run ends.
     /// </summary>
-    public static string? SingleCharacterTextGroup(RichBoardDocument submitted, RichBoardDocument baseline)
+    public static string? SingleTextSurfaceGroup(RichBoardDocument submitted, RichBoardDocument baseline)
     {
         var walk = new TextGroupWalker();
         walk.Visit(System.Text.Json.Nodes.JsonNode.Parse(WorkerJson(baseline)),
             System.Text.Json.Nodes.JsonNode.Parse(WorkerJson(submitted)), "document");
-        if (!walk.Qualified || walk.Scope is null || walk.Before is null || walk.After is null) return null;
-        return OneCharacterApart(walk.Before, walk.After) ? "text-edit:" + walk.Scope : null;
-    }
-
-    /// <summary>True when the two strings differ by exactly one inserted or deleted character.</summary>
-    private static bool OneCharacterApart(string before, string after)
-    {
-        var (shorter, longer) = before.Length <= after.Length ? (before, after) : (after, before);
-        if (longer.Length - shorter.Length != 1) return false;
-        var index = 0;
-        while (index < shorter.Length && shorter[index] == longer[index]) index++;
-        return shorter[(index)..] == longer[(index + 1)..];
+        return walk.Qualified && walk.Scope is not null ? "text-edit:" + walk.Scope : null;
     }
 
     private sealed class TextGroupWalker
     {
         internal bool Qualified = true;
         internal string? Scope;
-        internal string? Before, After;
         private int _textDiffs;
 
         internal void Visit(System.Text.Json.Nodes.JsonNode? before,
@@ -1461,11 +1453,10 @@ internal static class MergeDeltas
                         pair.Value.GetValueKind() == System.Text.Json.JsonValueKind.String &&
                         other.GetValueKind() == System.Text.Json.JsonValueKind.String)
                     {
-                        var a = pair.Value!.GetValue<string>();
-                        var b = other!.GetValue<string>();
-                        if (a == b) continue;
-                        if (++_textDiffs > 1) { Qualified = false; return; }
-                        Scope = owner; Before = a; After = b;
+                        if (string.Equals(pair.Value!.GetValue<string>(), other!.GetValue<string>(),
+                            StringComparison.Ordinal)) continue;
+                        if (++_textDiffs > 1) { Qualified = false; return; }   // two surfaces at once: no group
+                        Scope = owner;
                         continue;
                     }
                     if (!present && pair.Value is not null) { Qualified = false; return; }
