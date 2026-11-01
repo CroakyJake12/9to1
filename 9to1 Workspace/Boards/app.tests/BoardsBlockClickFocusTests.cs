@@ -18,6 +18,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -324,56 +325,140 @@ public sealed class BoardsBlockClickFocusTests
     });
 
     /// <summary>
-    /// BF-13 investigation. Natively (run26, receipts S06/S07, frames 178-179) choosing an insert-menu
-    /// destination did not lead to the block-type list: clicking "Replace Current Block" closed the menu with
-    /// nothing inserted, and pressing Down then Return left the menu showing the same "ADD WHERE" rows with no
-    /// visible selection and nothing inserted. This case asks the same question headlessly against the mounted
-    /// composition: after the destination row is chosen, does the menu stay open and offer the filtered type?
+    /// BF-13 / BF-05: the slash route all the way to a real table, including the destination step.
+    ///
+    /// How this case earned its current shape, recorded because the earlier versions were wrong in ways that
+    /// looked like product defects:
+    ///   * typing "/table" in one go never reaches the trigger at all - the inline rule fires only when the
+    ///     block's whole text is exactly "/" - so the menu was never open and the "missing rows" were real
+    ///     only in the test;
+    ///   * a structure dump of the mounted window showed the destination rows exist and are actionable:
+    ///     CuiMenuItem#InsertAbove["Add Block Above"], InsertBelow, InsertReplace, each visible,
+    ///     hit-test-visible, focusable and enabled;
+    ///   * natively the same route misbehaved (run26, receipts S06/S07, frames 178-179): clicking the measured
+    ///     "Replace Current Block" row closed the menu and inserted nothing, and Down then Return left the menu
+    ///     unchanged with no visible selection. This case is the discriminator: pass, and the native readings
+    ///     are probe errors to re-test with per-keystroke frames; fail at a named step, and that step is real.
     /// </summary>
-    // Skipped rather than left red or quietly deleted: this records an *unresolved* native observation and
-    // the headless attempt to pin it. Natively (run26, receipts S06/S07, frames 178-179) choosing an insert
-    // destination either closed the menu with nothing inserted (click on "Replace Current Block") or did
-    // nothing at all (Down then Return, menu unchanged). Headlessly the same route is inconclusive: after the
-    // search is filtered to "table" the destination rows are not present in the mounted window tree, so the
-    // case cannot reach the step it means to test. The next attempt should drive the destination surface
-    // through its own CUI actions rather than by hunting visuals, and must re-check the native click
-    // coordinates against the popup bounds before calling it a defect.
-    [Fact(Skip = "BF-13 open question: native insert-destination step does not reach the type list; headless fixture cannot yet drive that CUI step")]
-    public Task ChoosingAnInsertDestinationKeepsTheMenuOpenAndOffersTheFilteredType() => OnSurfaceAsync((fixture, window) =>
+    [Fact]
+    public Task TheSlashRouteReachesARealTableThroughTheDestinationStep() => OnSurfaceAsync((fixture, window) =>
     {
+        var anchorBlockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string AnchorText() => fixture.Session.Document.Sections[0].Pages[0].Blocks
+            .Single(block => block.Id == anchorBlockId).Text ?? string.Empty;
+
         Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
-        window.KeyTextInput("/table");
+        window.KeyTextInput("/");
+        fixture.Settle();
+        Assert.Equal(string.Empty, AnchorText());   // the trigger character must never become content
+
+        Assert.True(InsertSearch(window).IsKeyboardFocusWithin,
+            "the insert menu must own the keyboard once it is open, or its search can never be typed into");
+
+        window.KeyTextInput("table");
         fixture.Settle();
 
-        // The destination step is a CUI-authored surface, so its rows are not Buttons: search every visual
-        // that paints the row's label and click the nearest focusable ancestor of that text.
-        var shown = window.GetVisualDescendants().OfType<TextBlock>()
-            .Select(text => text.Text ?? string.Empty)
-            .Where(text => text.Length > 0).Distinct().ToList();
-        var label = window.GetVisualDescendants().OfType<TextBlock>().FirstOrDefault(candidate =>
-            (candidate.Text ?? string.Empty).IndexOf("Add Block Above", StringComparison.Ordinal) >= 0);
-        Assert.NotNull(label ?? throw new Xunit.Sdk.XunitException(
-            "no insert destination rows after filtering by \"table\". Texts visible in the mounted surface: " +
-            string.Join(" | ", shown)));
-        Avalonia.Visual target = label!;
-        while (target is not InputElement { Focusable: true } && target.GetVisualParent() is { } parent)
-            target = parent;
-        Assert.True(target is InputElement { Focusable: true },
-            $"no focusable ancestor was found for the destination row (stopped at {Describe(target)})");
-        var point = CenterInWindow(target, window);
-        Click(window, point);
+        var destination = InsertRow(window, "Add Block Above");
+        Click(window, CenterInWindow(destination, window));
+        fixture.Settle();
 
-        var open = window.GetVisualDescendants().OfType<TextBox>()
-            .SingleOrDefault(candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
-        Assert.True(open is not null && open.IsVisible,
-            $"choosing the insert destination closed the menu (clicked {point}); nothing was inserted and no " +
-            $"block type was offered. Visuals under {point} (topmost first): {Chain(window, point)}");
+        Assert.True(InsertSearch(window).IsEffectivelyVisible,
+            "choosing the insert destination closed the menu instead of offering the filtered block types - " +
+            "the same dead end measured natively in run26 (frame 178)");
 
-        var offered = window.GetVisualDescendants().OfType<TextBlock>()
-            .Where(text => (text.Text ?? string.Empty).IndexOf("Table", StringComparison.Ordinal) >= 0)
-            .ToList();
-        Assert.NotEmpty(offered);   // the filtered type list must be reachable from the destination step
+        // The rows are named "Insert <label>" by ToolbarBuilder.AddGroup, not by their bare label - the
+        // first version of this case looked for "Table" and concluded, wrongly, that the product offered
+        // nothing. The row is there: Button#Insert Table.
+        var tableRow = InsertRow(window, "Insert Table");
+        Click(window, CenterInWindow(tableRow, window));
+        fixture.Settle();
+
+        PumpUntil(() => fixture.Session.Document.Sections[0].Pages[0].Blocks
+            .Any(block => string.Equals(block.Kind, "table", StringComparison.Ordinal)),
+            "the chosen Table row never produced a table block in the canonical document");
+
+        var blocks = fixture.Session.Document.Sections[0].Pages[0].Blocks;
+        var table = blocks.Single(block => string.Equals(block.Kind, "table", StringComparison.Ordinal));
+        Assert.True(table.TableRows >= 1 && table.TableCols >= 1,
+            $"a table block with no grid is not a table ({table.TableRows}x{table.TableCols})");
+        // The chosen destination was "Add Block Above", so the table must come first.
+        Assert.NotEqual(anchorBlockId, blocks[0].Id);
     });
+
+    /// <summary>
+    /// BF-13 second half: a table is only real if its cells can be edited. The route is the same slash →
+    /// destination → Insert Table path as the case above, then the first cell editor is clicked and typed into,
+    /// and the value is read back out of the canonical document rather than off the screen.
+    /// </summary>
+    [Fact]
+    public Task ATypedTableCellReachesTheCanonicalTable() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+        window.KeyTextInput("table");
+        fixture.Settle();
+        Click(window, CenterInWindow(InsertRow(window, "Add Block Below"), window));
+        fixture.Settle();
+        Click(window, CenterInWindow(InsertRow(window, "Insert Table"), window));
+        fixture.Settle();
+        PumpUntil(() => fixture.Session.Document.Sections[0].Pages[0].Blocks
+            .Any(block => string.Equals(block.Kind, "table", StringComparison.Ordinal)),
+            "the Table row never produced a table block");
+
+        var tableId = fixture.Session.Document.Sections[0].Pages[0].Blocks
+            .Single(block => string.Equals(block.Kind, "table", StringComparison.Ordinal)).Id;
+        var cell = window.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(candidate =>
+            (candidate.Name ?? string.Empty).StartsWith("cell_" + tableId + "_", StringComparison.Ordinal) ||
+            (candidate.Name ?? string.Empty).StartsWith("cell_", StringComparison.Ordinal));
+        Assert.NotNull(cell);
+
+        Click(window, CenterInWindow(cell!, window));
+        window.KeyTextInput("CE11");
+        fixture.Settle();
+
+        PumpUntil(() => string.Equals(
+            fixture.Session.Document.Sections[0].Pages[0].Blocks
+                .Single(block => block.Id == tableId).TableCells.GetValueOrDefault("0,0"),
+            "CE11", StringComparison.Ordinal),
+            "typing into the cell never reached the canonical table cells");
+        var cells = fixture.Session.Document.Sections[0].Pages[0].Blocks
+            .Single(block => block.Id == tableId).TableCells;
+        Assert.Equal("CE11", cells["0,0"]);
+        // A fresh 2x2 table has every cell present (empty strings), so the meaningful check is that the
+        // neighbour is still empty - typing in one cell must not write into the next one.
+        Assert.Equal(string.Empty, cells.GetValueOrDefault("0,1"));
+    });
+
+    private static TextBox InsertSearch(Window window) => window.GetVisualDescendants().OfType<TextBox>().Single(
+        candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
+
+    private static Control InsertRow(Window window, string accessibleName)
+    {
+        var row = window.GetVisualDescendants().OfType<Control>().FirstOrDefault(candidate =>
+            AutomationProperties.GetName(candidate) == accessibleName);
+        Assert.True(row is not null,
+            $"no insert row named '{accessibleName}'. Actionable controls in the surface right now: " +
+            string.Join(" | ", window.GetVisualDescendants().OfType<Control>()
+                .Where(candidate => (AutomationProperties.GetName(candidate) ?? string.Empty).Length > 0)
+                .Select(candidate => candidate.GetType().Name + "#" +
+                    (AutomationProperties.GetName(candidate) ?? ""))
+                .Distinct()));
+        Assert.True(row!.IsEffectivelyVisible && row.IsHitTestVisible && row.IsEnabled,
+            $"insert row '{accessibleName}' is drawn but not actionable");
+        return row;
+    }
+
+    private static void PumpUntil(Func<bool> condition, string what)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(8);
+        while (!condition() && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(5);
+        }
+        Assert.True(condition(), what);
+    }
 
     private static string Quote(string? text) => text is null ? "(null)" : "\"" + text.Replace("\n", "\\n") + "\"";
 
