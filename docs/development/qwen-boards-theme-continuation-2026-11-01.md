@@ -46,6 +46,15 @@ Named by `START_QWEN.md` / the amendment but **not supplied** anywhere on this m
   `modules/boards.complete.md`) are not in the repository and were never supplied. Recorded as source gaps;
   no clauses reconstructed.
 
+**Correction recorded 1 Nov afternoon** (verified by hash, not by memory): the v3.2 *atlas* is on this
+machine — `newAtlas.html` and the owner-attached `/tmp/codex-file-preview-2hRdoO/9to1_Interface_Atlas_v3.2.html`
+have the identical SHA-256 `80a4ecc6…1a131`, so they are the same file under two names. `ThemeRefs.zip`
+is also unpacked at `/home/jacob/Downloads/ThemeRefs/` with exactly 27 PNGs in the 10 folders
+(Bubble 4, Playful 4, Synthwave 4, Professional 3, Industrial 3, Frost 2, Glow 2, Retro 2, Western 2,
+Snug 1). What remains absent is the **markdown** half of the `9to1_Theme_Correction_v3.2` pack
+(`OWNER_DECISIONS_v3.1.md`, `THEME_REFERENCE_INDEX.md`, `MANIFEST.json`, `BOARDS_ACCEPTANCE.md`), so the
+theme-pass *instructions* stay provisional while the atlas and reference images themselves are usable.
+
 ## 2. Baseline integration (safe pull, done first)
 
 Observed before any edit: branch `main`, upstream `origin/main` = `https://github.com/CroakyJake12/9to1.git`,
@@ -113,24 +122,34 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
 
 ## 5. Plan (in order, no theme work before the Boards gate)
 
-1. Verify the inherited baseline compiles and passes the real Boards suite on this PC. *(running: log
-   `/tmp/opencode/qwen-1101-boards-baseline.log`)*
+1. Verify the inherited baseline compiles and passes the real Boards suite on this PC. *(done: 565/565
+   re-measured here, `/tmp/opencode/qwen-1101-boards-baseline.log`)*
 2. Drive the actual mounted route (`Boards/app/Boards.cui`, standalone `Program.cs`) natively and
    re-test each `START_QWEN.md` §3 / `V31-BOARDS-001–007` decision as an observed behaviour, with
-   screenshots and input receipts. Fix only defects reproduced on this build.
+   screenshots and input receipts. Fix only defects reproduced on this build. *(done for the identity row,
+   adaptive/fixed pills, Style/Font grouping, contextual Properties, Add destinations, and the menu
+   defects found this way — five in Milestone 1, the Add-menu selection/alignment pair in Milestone 4)*
 3. Continue the remaining Boards specification in dependency order: list-item range formatting,
    font-size choices, universal contextual Properties, heading fallback readout, truthful drawing-history
    labels, Escape-cancel tab names, stale AddTabber/Enter guards, nested toolbar-held range continuation,
    grapheme-boundary selection, then the ledger's NOT-IMPLEMENTED clusters that are local-first
    (save-status truth, canonical error identities, block/ink undo boundaries, mode matrix Edit/View ×
-   Locked × Snap).
+   Locked × Snap). *(mode matrix done in Milestone 3; the rest still open)*
 4. Execute the acceptance gates `BF-01`–`BF-20` against this build with disposable fixtures, including
    save → close → reopen in a **fresh process**; record exact commands, build identity, dirty state,
-   screenshots, and keep FAIL/BLOCKED/NOT RUN visible.
+   screenshots, and keep FAIL/BLOCKED/NOT RUN visible. *(BF-05, BF-06, BF-08, BF-09, BF-11 and BF-12 are
+   exercised with evidence in Milestone 4; BF-01–BF-04, BF-07, BF-10 and BF-13–BF-20 are NOT RUN on this
+   build — the gate as a whole has therefore **not** passed, and the theme pass must not start until that
+   is closed or the owner narrows the gate)*
 5. Only after that gate: shared CUI theme-design pass using the corrected v3.2 atlas + `ThemeRefs/`,
    honouring `V31-THEMES-001–003`, `V3-CUI-LAY/FEA/ENT/PER/ACC`, and the unresolved mappings
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
+
+**Position at this checkpoint:** branch `main`, HEAD `7450816e`, `origin/main` = `7450816e` (pushed;
+history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e`), only inherited
+`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged. Suite counts measured on
+this PC: contract **127/127**, app **584/584**.
 
 ## 6. Evidence log (append)
 
@@ -180,13 +199,55 @@ Snap state at all, so it was implemented rather than faked:
 | 18 | V3-BOARDS-FEA-03 independence | `Snap` is gated on the edit permission, not on the layout mode | app suite **571/571** (`/tmp/opencode/qwen-1101-apps-full7.log`): `Snap_is_a_persisted_page_state_that_View_mode_cannot_change` shows View mode cannot flip it, Edit mode can, the layout label and Edit/View state are unchanged by toggling it, and a **reopened session** still reports it on; `SnapButton` is asserted present, effectively visible and measured on the mounted surface |
 | 19 | — | **deliberate conservative default, recorded rather than hidden**: Snap ships **off** | the supplied v3.1 text and the corrected v3.2 atlas show a `Snap on` control but never define the snap targets, the step, or whether it starts engaged, and `technical/boards-04.md` (the chapter that would) was not supplied. Turning it on by default silently rewrites committed geometry of existing free-form content — measured: two retained contract tests asserting exact coordinates (`72,128,420,208`) moved when the default was on, and they were **not** edited to accommodate an invented default. The question (default, target set, grid step) is filed as `OPEN-2026-11-01-BOARDS-SNAP-SEMANTICS` in `docs/specification/open-decisions.json`; only that acceptance/semantics decision is held, the state, control and independence matrix are implemented |
 
-Open in-scope items carried forward (not relabelled complete): footer `Add` + **avatar** pair, the 760-unit readable column,
-mode (visible `Locked layout` / `Snap on` pair in the reference; no Boards-side snap state exists today —
-only the Notes canvas `gridSize` precedent), footer `Add` + **avatar** pair, the 760-unit readable column,
-sidebar 256 vs the current 268, block-row `+` coloured green against a purple accent, long
-"Vertical Stacking" label, Chat / Scoped Chat page types (10 MUST rows), `9to1.Boards.*` typed actions and
-structured failure identities, shared Productivity Engine + Rnote ink engine consumption, large-board
-virtualisation and the performance harness, list/table placeholder words (`"New item"`, `"New table"`),
-and the block-id shape divergence that remains for conversion-created blocks.
-`eng/spec-coverage/assessments/Boards.json` is a code/test reading pass and has **not** been regenerated
-for these fixes yet — it stays at takeover states until the Boards gate is exercised end to end.
+### Milestone 3 — the mode matrix, measured against canonical state (1 Nov 2026, third commit `d7bf967b`)
+
+`V3-BOARDS-FEA-03` forbids collapsing Edit/View, Locked and Snap into one read-only toggle and
+`V3-BOARDS-ACC-02` requires them verified independently. Until this unit the only mode coverage was two
+disconnected checks (a canvas-lock case and a layout-mode case) that never combined the dimensions.
+
+| # | Requirement ID(s) | Action | Result / evidence |
+|---|---|---|---|
+| 20 | V3-BOARDS-FEA-03, V3-BOARDS-ACC-02, BF-09 | new `BoardsModeMatrixTests` (8 cases) exercising Edit/View × Locked/Unlocked × Snap on/off through the real session and view model, comparing every refused or applied operation with `ContractSessionAdapter.Snapshot` (the canonical document), which is what "verify both agree; never test a disconnected checkbox alone" means | app suite **579/579** (`/tmp/opencode/qwen-1101-appsuite.log`, guard `OK`, 76 s, min available 2 585 MiB). View mode refuses structural, text, spatial, canvas, ink and mode-change requests for **all four** layout × snap pairs and the document is byte-identical afterwards, while navigation, selection and the theme switch still work; Locked layout refuses absolute block placement (the block keeps `Flow`) while page ink is still accepted on that page (boards-ink rule 2); the canvas-object lock is a different dimension (a box moves while the layout is locked, is held once the canvas is locked, and the refusal names the reason); Snap changes only where a move commits (free `137,245` vs a multiple of the 8-unit grid) and never the other two dimensions, and both directions of that independence hold after a save plus a fresh open; an authored orange stroke keeps its colour/width/points across a theme switch, a save and a reopen, and the theme switch writes no document revision (boards-ink rule 5) |
+| 21 | — | API guesses corrected against the real signatures rather than by editing the contract | `CommitInkStrokeAsync` requires pressure triples on the 5-argument overload; `PlacementGridUnits` is owned by `HavenRichNotesOps`, not `HavenRichBoardV3`; the view model refuses silently in View mode (`StatusText` names the reason) instead of throwing, so the tests assert canonical state rather than an exception that does not exist. Two compile units (`qwen-1101-mode-matrix-build.log` errors → `build2.log` 0 errors) |
+
+Evidence level for this milestone: unit/integration only. No native render or capture in that commit.
+
+### Milestone 4 — the acceptance pass on the running app, and the Add-menu repair (1 Nov 2026, fourth commit `7450816e`)
+
+Native identity for every row below: standalone `CakeOS.Apps.Boards.App.dll` built Release from
+`9to1 Workspace/Boards/app/bin/Release/net10.0/` at HEAD `7450816e`-pre (`d7bf967b` for the first
+runs, rebuilt after the menu fix), launcher
+`/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/dotnet-sdk-10.0.301/dotnet`,
+display X11 `:1`, window 2850×1781 device px = **1440×900 logical at scale 1.979** (Xft.dpi 190),
+sandboxed `HOME=/tmp/opencode/qwen-native-20261101/home6` with `XDG_*` inside it and
+`HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`, so nothing was written into the owner's
+real `Documents/9to1/Boards`. Dirty tree at the time: only the inherited
+`eng/spec-coverage/coverage-summary.json` (left unstaged on purpose). Receipts:
+`/tmp/opencode/qwen-native-20261101/step-receipts.jsonl` steps `G01`–`G49`; every behaviour claim was
+checked against the **physical `.9to1board` file** with the private reader `board_inspect.py`
+(contenthash = volatile fields removed) and, where relevant, against an on-screen frame.
+
+| # | Gate recipe | Observed / action | Evidence |
+|---|---|---|---|
+| 22 | BF-05 toolbar `Add` = current-page content | clicked the toolbar `+ Add` pill at (2410,178); the popover is an in-surface panel (no separate X window) listing search + DATABASE/CONTAINERS/TEXT/CONTENT groups, i.e. block types only | frames `64-toolbar-add-menu.png`, `74-add-search-filtered.png` (typing `Tab` filters to New database, Tab View, Tabber, Table); the search filter genuinely works |
+| 23 | BF-05 non-mutating cancellation, both dismissals | `Escape`, then re-open + **outside click** at (900,1100) | `contenthash` stayed `7c74eee4…` for both; frame `66-after-outside-click.png` shows the popover gone with the focus ring returned to `+ Add` |
+| 24 | BF-05 footer `Add` = pages/sections, distinct destination | sidebar footer `+ Add` at (175,1725) opens a **separate override-redirect window** (864×707 at root (0,1038)) whose rows are page/section actions: `New page in this section`, `New section`, plus Write/Canvas attach/create rows and `Link created page to original section…` (the last five disabled) | frame `67-footer-add-menu-popup-3e0001f.png`; Escape cancelled with `contenthash` unchanged; choosing `New page in this section` created `page-151f56eab92a` "Page 2" (a **page**, not page content) and the identity state then read `Saved 13:42:18` |
+| 25 | **defect found and fixed** — the Add menu had no visible selection and mis-aligned rows | five `Down` presses moved keyboard focus (the search field lost its outline) and `Return` then really inserted a paragraph into the file, yet **no row ever showed a state**; every row also sat centred under its left-aligned group heading while the app's own destination menu left-aligns. Fixed by driving the toolbar's existing selected treatment + CUI's own selection state from pointer/focus events, clearing it on popup close (Avalonia does not always raise `LostFocus` inside a dismissing popup), pinning the row alignment left through CUI Instance precedence, focusing the row `Return` is about to apply, and leaving Home/End to the search caret | before: `70-crop-insert-popover.png` (nothing highlighted). after: `80-add-selected-crop.png` ("Tab View" visibly chosen, rows left-aligned). New tests `BoardsInsertMenuRowStateTests` (5) fail against the previous source and pass against this one (`qwen-1101-insertmenu-pre.log` 5 failed → `…test4.log` 5 passed); app suite **584/584** (`qwen-1101-appsuite2.log`, guard `OK`, min available 2 650 MiB); native Escape frame `81-add-escaped-crop.png` shows the surface empty |
+| 26 | BF-08 ink drawn with a real pointer, then persisted | clicked `Drawing` (2645,178): the adaptive pill swapped to the contextual ink set (`Pen ▾`, `2.5 px ▾`, `Ink colour ▾`, `View ▾`, width dash, ink-settings) while the fixed `+ Add / Drawing / AI` pill stayed put; XTEST button-drag (760,620)→(1500,900) wrote a stroke on the **same native page** as the text (`inkStrokes=1`, 6+ points, width 2.5, `tool=0`); the ink colour palette opened as a separate window (469×1107 at root (770,257)) and a second drag stored `color=#FFE8710A` (orange) beside the first `#FF111111` | frames `82-drawing-toolbar-crop.png`, `84-ink-colour-menu-popup-3e0001b.png`, `94`/`90-landing-grid-annotated.png` (both strokes on screen, black and orange); file `ink` arrays quoted in the receipts; **observed gap**: the palette lists colour *names* with no swatch and the trigger keeps saying `Ink colour ▾` after a choice, so the authored colour is not visible where it is set |
+| 27 | BF-08 / BF-11 persistence in a **fresh process** | `_NET_CLOSE_WINDOW` → the app ran its own lifecycle and the launcher recorded `exit=0` (`run7.exit`, `run12.exit`, `run13.exit`); relaunched (run8/run13), the landing listed `Untitled board — 2 pages · 1 sections — 11/1/2026 2:03 PM`, and reopening showed both ink strokes, both page texts (`DIRTYCLOSE7`, `LATEEDIT42`) and the tree | frames `77-fresh-landing-crop.png`, `90-landing-grid-annotated.png`; `contenthash` values `9ebe16eb…` → `6fc9ae7a…` → `25168fce…` recorded before/after each mutation |
+| 28 | BF-11 close arms | clean close ×3 (exit 0, `.9to1board` + `.9to1board.bak` rotation, no orphan process); **close immediately after an edit** (`LATEEDIT42` typed, closed with no pause) is durable; autosave is continuous (several revisions per minute: `version=47`, `69`, `77`) so a "dirty" close is rarely a real state | measured limitation, recorded not hidden: `kill -9` 150 ms after typing `WXYZ` lost exactly that tail — the file and the profile draft copy were both still at `version=69`, and after relaunch the Recent tile preview shows `DIRTYCLOSE7CRASHDRAFT7` with **no recovery offer** for the lost tail. The control case (same keys, normal close) persisted `WXYZ` within ~2 s, so the difference is the abrupt stop, not the input. Recovery drafts do exist on disk (`profile6/Boards/profiles/<hash>/drafts/<id>.9to1board` + `.bak` + `.write-lock`) and a `destinations.json`/`recent.json` sit beside them, but they mirror the last autosave, not the live buffer |
+| 29 | BF-06 tree moves and undo | drag on a sidebar page row (210,504)→(210,412) changed **nothing** — the tree has no drag-to-nest; the real affordance is the row's right-click `ContextMenu` (`Rename`, `Duplicate`, `Move up`, `Move down`, `Delete`, `Add subpage`, `Nest under previous page`). Using it: `Nest under previous page` set `parentPageId='page-546fcf10b6ba'` and the tree showed the caret + indent + guide; `Ctrl+Z` restored the exact pre-move `contenthash` and `Ctrl+Y` re-applied it | frames `98-page-context-menu-popup-3e00023.png`, `99-after-nest-crop.png`, `100-after-undo-nest-crop.png`; file `contenthash 440445ae…` (flat) ↔ `17ad19bf…` (nested), back to flat as the final state |
+| 30 | BF-12 popover/focus lifecycle | insert menu: opened with the caret in search, Home/End now stay there, Down lands on a *visible* row, Return applies that row, Escape closes and returns focus to the opening button (asserted in the new tests and seen natively). CUI menus/popups on this desktop are separate override-redirect windows, and the harness's per-batch focus restore light-dismisses them, so open-and-pick must be one batch — that is why the earlier `Down`-only probes were harness artefacts and are recorded as such rather than as app behaviour | receipts `G12`–`G18`, `G22`–`G23`, `G26`–`G28`, `G45`–`G46` |
+
+Still open after this pass, unchanged and not relabelled complete: the `AI` pill is inert (greyed) and
+the AI Read-only/Write dimension does not exist; footer `Add` + **avatar** pair; the 760-unit readable
+column; sidebar 256 vs the current 268; the block-row `+` coloured green against a purple accent; the
+long "Vertical Stacking" label; Chat / Scoped Chat page types (10 MUST rows) and the Write/Canvas rows
+in footer `Add` that are all disabled without explanation; `9to1.Boards.*` typed actions and structured
+failure identities; shared Productivity Engine + Rnote ink engine consumption; large-board
+virtualisation and the performance harness; list/table placeholder words (`"New item"`, `"New table"`);
+the block-id shape divergence that remains for conversion-created blocks; ink palette with no swatches
+and no current-colour readout; tree drag-to-nest absent; keystroke-level draft journaling absent
+(the sub-`1 s` loss measured in row 28).
+`eng/spec-coverage/assessments/Boards.json` is still a code/test reading pass and has **not** been
+regenerated for these fixes yet — it stays at takeover states until the whole gate is exercised end to end.
