@@ -260,6 +260,38 @@ public sealed class BoardsBlockClickFocusTests
     });
 
     /// <summary>
+    /// BF-05 / BF-13, measured natively: in instance run26 (receipts S03-S04, frames 175-176) typing "/" in an
+    /// empty block opened the searchable insertion menu and removed the trigger character, but the next
+    /// characters the user typed went into the **block** instead of the menu's search field - the frame shows
+    /// the block reading "TABLE" with the menu gone. The placeholder promises "Use / to select the block type",
+    /// so the keyboard route into the menu is part of the requirement, and typing that escapes into the
+    /// document also makes an "open and cancel" gesture mutate the board.
+    /// </summary>
+    [Fact]
+    public Task TypingSlashInABlockHandsTheKeyboardToTheInsertMenuSearch() => OnSurfaceAsync((fixture, window) =>
+    {
+        var blockId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+        string Text() => fixture.Session.Document.Sections[0].Pages[0].Blocks.Single(b => b.Id == blockId).Text;
+
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+        Assert.Equal(string.Empty, Text());     // the trigger character must never become content
+
+        var search = window.GetVisualDescendants().OfType<TextBox>()
+            .SingleOrDefault(candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
+        Assert.NotNull(search);
+        Assert.True(search!.IsKeyboardFocusWithin,
+            $"the insert menu opened but kept no keyboard focus, so the next characters fall into the " +
+            $"document. Focus was on {Describe(Focused(window))}");
+
+        window.KeyTextInput("para");
+        fixture.Settle();
+        Assert.Equal("para", search.Text);
+        Assert.Equal(string.Empty, Text());     // searching is not typing into the board
+    });
+
+    /// <summary>
     /// BF-19 granularity, measured natively: Ctrl+Z stepped the physical file back one character per press
     /// (receipts N04/N05, frames 154-155: "SPLITMEZZTOP" -> "SPLITMEZZTO" -> "SPLITMEZZT" -> "SPLITMEZZ",
     /// richNotes.version 140 -> 138 -> 136 -> 134), because every keystroke is its own canonical merge and
@@ -291,10 +323,62 @@ public sealed class BoardsBlockClickFocusTests
         Assert.Equal("HELLO", Text());
     });
 
+    /// <summary>
+    /// BF-13 investigation. Natively (run26, receipts S06/S07, frames 178-179) choosing an insert-menu
+    /// destination did not lead to the block-type list: clicking "Replace Current Block" closed the menu with
+    /// nothing inserted, and pressing Down then Return left the menu showing the same "ADD WHERE" rows with no
+    /// visible selection and nothing inserted. This case asks the same question headlessly against the mounted
+    /// composition: after the destination row is chosen, does the menu stay open and offer the filtered type?
+    /// </summary>
+    // Skipped rather than left red or quietly deleted: this records an *unresolved* native observation and
+    // the headless attempt to pin it. Natively (run26, receipts S06/S07, frames 178-179) choosing an insert
+    // destination either closed the menu with nothing inserted (click on "Replace Current Block") or did
+    // nothing at all (Down then Return, menu unchanged). Headlessly the same route is inconclusive: after the
+    // search is filtered to "table" the destination rows are not present in the mounted window tree, so the
+    // case cannot reach the step it means to test. The next attempt should drive the destination surface
+    // through its own CUI actions rather than by hunting visuals, and must re-check the native click
+    // coordinates against the popup bounds before calling it a defect.
+    [Fact(Skip = "BF-13 open question: native insert-destination step does not reach the type list; headless fixture cannot yet drive that CUI step")]
+    public Task ChoosingAnInsertDestinationKeepsTheMenuOpenAndOffersTheFilteredType() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/table");
+        fixture.Settle();
+
+        // The destination step is a CUI-authored surface, so its rows are not Buttons: search every visual
+        // that paints the row's label and click the nearest focusable ancestor of that text.
+        var shown = window.GetVisualDescendants().OfType<TextBlock>()
+            .Select(text => text.Text ?? string.Empty)
+            .Where(text => text.Length > 0).Distinct().ToList();
+        var label = window.GetVisualDescendants().OfType<TextBlock>().FirstOrDefault(candidate =>
+            (candidate.Text ?? string.Empty).IndexOf("Add Block Above", StringComparison.Ordinal) >= 0);
+        Assert.NotNull(label ?? throw new Xunit.Sdk.XunitException(
+            "no insert destination rows after filtering by \"table\". Texts visible in the mounted surface: " +
+            string.Join(" | ", shown)));
+        Avalonia.Visual target = label!;
+        while (target is not InputElement { Focusable: true } && target.GetVisualParent() is { } parent)
+            target = parent;
+        Assert.True(target is InputElement { Focusable: true },
+            $"no focusable ancestor was found for the destination row (stopped at {Describe(target)})");
+        var point = CenterInWindow(target, window);
+        Click(window, point);
+
+        var open = window.GetVisualDescendants().OfType<TextBox>()
+            .SingleOrDefault(candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
+        Assert.True(open is not null && open.IsVisible,
+            $"choosing the insert destination closed the menu (clicked {point}); nothing was inserted and no " +
+            $"block type was offered. Visuals under {point} (topmost first): {Chain(window, point)}");
+
+        var offered = window.GetVisualDescendants().OfType<TextBlock>()
+            .Where(text => (text.Text ?? string.Empty).IndexOf("Table", StringComparison.Ordinal) >= 0)
+            .ToList();
+        Assert.NotEmpty(offered);   // the filtered type list must be reachable from the destination step
+    });
+
     private static string Quote(string? text) => text is null ? "(null)" : "\"" + text.Replace("\n", "\\n") + "\"";
 
-    private static Point CenterInWindow(Control control, Window window) =>
-        control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
+    private static Point CenterInWindow(Avalonia.Visual visual, Window window) =>
+        visual.TranslatePoint(new Point(visual.Bounds.Width / 2, visual.Bounds.Height / 2), window)!.Value;
 
     private static void Click(Window window, Point point)
     {
