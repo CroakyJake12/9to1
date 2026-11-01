@@ -154,13 +154,13 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
 
-**Position at this checkpoint:** branch `main`, HEAD `3dbf512c`, `origin/main` = `3dbf512c` (pushed; history
+**Position at this checkpoint:** branch `main`, HEAD `e49c138a`, `origin/main` = `e49c138a` (pushed; history
 this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`
-→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d` → `a2f820bf` → `3dbf512c`), only inherited
-`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged, plus one **other session's**
-untracked document (`docs/development/boards-usability-review-2026-11-01.md`, hashed in the Milestone 8
-reviewer note) left for its author to commit. Suite counts measured on this PC: contract **127/127**,
-app **596/596**.
+→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d` → `a2f820bf` → `3dbf512c` → `24f07d80` → `e49c138a`),
+only inherited `eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged, plus one
+**other session's** untracked document (`docs/development/boards-usability-review-2026-11-01.md`, hashed in
+the Milestone 8 reviewer note) left for its author to commit. Suite counts measured on this PC:
+contract **134/134**, app **599/599**.
 
 ## 6. Evidence log (append)
 
@@ -327,13 +327,32 @@ interactive test by my still-running instance (PID 3958725, window `0x03e0000f`)
 `_NET_CLOSE_WINDOW` at 17:02:38 and the launcher recorded `exit=0` (`run19.exit`), so that particular blocker
 is cleared, while its coordinator/candidate-admission blocker is not mine to resolve.
 
+### Milestone 9 — the canonical structured failure identities, part 1 (1 Nov 2026, commit `e49c138a`)
+
+Authority: the canonical v2 register's Boards **"Failure behaviour"** clause — "Boards MUST return
+structured failures for BoardNotFound, PageNotFound, BlockNotFound, UnsupportedPageType,
+UnsupportedBlockType, InvalidLayoutTransition, RevisionConflict, PermissionDenied, SourceIngestionFailed,
+ScopedChatExternalAccessDenied, DependencyUnavailable and SharedEngineIncompatible, plus the global error
+contract" (`docs/specification/9to1-development-specification-v2.md:9679`, repeated verbatim in the owner's
+27 October expanded package at line 7219 and in the retained baseline export) — together with the global
+actions clause "Errors identify recoverability and the affected operation without leaking forbidden source
+details" (line 1007). The historical register row for that clause
+(`docs/handoff-20261014/registers/source-clauses.json`, `M-06395-06395`) is still `NOT_RUN`, and it stays
+NOT_RUN: this unit produces six of the twelve codes, not the contract as a whole.
+
+| # | Requirement | Action | Measured result |
+|---|---|---|---|
+| 55 | the twelve canonical codes | vocabulary in one place (`contract/BoardsFailures.cs`: `BoardsFailureCode` + `BoardsFailureException` carrying code, canonical operation name, stable target id, retryability and retained state; derives from `InvalidOperationException` so existing callers keep working). Converted the sites whose meaning is unambiguous: the page/block/section lookups, the parent-page lookups, `MoveBlock`, `MoveSection`, the three Native-page layout/placement guards, the locked-placement refusal (`InvalidLayoutTransition`, retryable, naming free placement as the retry) and the unsupported block kind in validation | codes the contract now actually produces: `PageNotFound`, `BlockNotFound`, `MissingSourceSection` (global equivalent), `UnsupportedPageType`, `UnsupportedBlockType`, `InvalidLayoutTransition`. Before this the same conditions were 16 bare `KeyNotFoundException` throws plus prose `InvalidOperationException` (179 of those in the contract layer) |
+| 56 | the app must not drop the identity | the layout, placement and vertical-flow catch sites render through `FailureStatusText` as `activity: <plain reason> (Code, retryable)` — the user reads a sentence first, the code is present and assertable | app case asserts `BlockNotFound` appears in `StatusText` for a missing block and that the canonical document is byte-identical afterwards |
+| 57 | regression coverage preserved, not weakened | two retained expectations were **updated to the structured identity** rather than deleted: the locked-placement case (`HavenRichBoardPlacementTests`) now asserts code + operation + target + retryability + the word "Unlocked" + assignability to `InvalidOperationException`; the cross-section parent-page case (`HavenRichBoardV3Tests`) now asserts `PageNotFound` with the parent id as the target. Both are strictly stronger than the bare-type assertion they replaced | contract suite **134/134** (`/tmp/opencode/qwen-1101-failcodes-contract5.log`, was 127/127, seven new cases); app suite **599/599** (`/tmp/opencode/qwen-1101-failcodes-final-app.log`, was 596/596, three new cases). Control: with the contract conversion reverted and the new cases kept, **all seven** identity cases fail (`/tmp/opencode/qwen-1101-failcodes-pre.log`) |
+| 58 | **not claimed done** | seven codes still have no producer, each belonging at a layer this unit did not touch: `BoardNotFound` and `RevisionConflict` at the store / write-lease boundary; `PermissionDenied` at the two read-only guards (`RichBoardSession.cs:163/386`, converting them would rewrite three existing exact-type `SaveAsync` expectations, so it is deliberately its own unit); `SourceIngestionFailed` at attachment ingestion; `ScopedChatExternalAccessDenied` at the unbuilt Scoped Chat page type; `DependencyUnavailable` at the Data/Files embed; `SharedEngineIncompatible` at the unbuilt shared-engine handshake. The shared lookup helpers also still name themselves (`Boards.Page.Require`) rather than the public operation that asked — stated in the new test comments instead of glossed over | remaining work listed, gate and register states unchanged |
+
 
 
 ### Native run identity for Milestones 4, 5, 6, 7 and 8
 
 Native identity for these frames: standalone `CakeOS.Apps.Boards.App.dll` at
-`9to1 Workspace/Boards/app/bin/Release/net10.0/`, launcher
-`/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/dotnet-sdk-10.0.301/dotnet`,
+`9to1 Workspace/Boards/app/bin/Release/net10.0/`, launcher`/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/dotnet-sdk-10.0.301/dotnet`,
 X11 `:1`, client 2850×1781 device px (1440×900 logical at scale 1.979), sandboxed
 `HOME=/tmp/opencode/qwen-native-20261101/home6` (+ `XDG_*` inside it) and
 `HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`. Instances `run7`–`run14` and `run16` were
@@ -370,8 +389,12 @@ Still open after this pass, unchanged and explicitly not relabelled complete: th
 (greyed) and the AI Read-only/Write dimension does not exist; footer `Add` + **avatar** pair (held as
 `OPEN-2026-11-01-BOARDS-FOOTER-AVATAR`); the *centred* half of the 760-column reference (held as
 `OPEN-2026-11-01-BOARDS-READABLE-COLUMN-CENTRING`); Chat / Scoped Chat page types (10 MUST rows) and the
-Write/Canvas rows in footer `Add` that are all disabled without explanation; `9to1.Boards.*` typed actions
-and structured failure identities; shared Productivity Engine + Rnote ink engine consumption; large-board
+Write/Canvas rows in footer `Add` that are all disabled without explanation; the remaining seven canonical
+failure codes with no producer yet (row 58) and the untouched `9to1.Boards.*` typed action catalogue, which
+is the API-parity half of the same specification section ("Every action must declare its name,
+arguments/schema, result schema, required target-app permissions, risk level, whether it is reversible,
+whether it can produce external side effects, and the objects/scopes it affects"); shared Productivity Engine
++ Rnote ink engine consumption; large-board
 virtualisation and the performance harness; list/table placeholder words (`"New item"`, `"New table"`);
 the ink palette with no swatches and
 no current-colour readout; tree drag-to-nest absent; keystroke-level draft journaling absent (the sub-1 s
