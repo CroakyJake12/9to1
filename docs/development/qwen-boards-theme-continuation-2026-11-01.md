@@ -138,22 +138,25 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
 4. Execute the acceptance gates `BF-01`–`BF-20` against this build with disposable fixtures, including
    save → close → reopen in a **fresh process**; record exact commands, build identity, dirty state,
    screenshots, and keep FAIL/BLOCKED/NOT RUN visible. *(exercised with evidence so far: BF-02, BF-03,
-   BF-05, BF-06, BF-08, BF-09, BF-11, BF-12, and the ink half of BF-14 plus the history half of BF-19.
+   BF-05, BF-06, BF-08, BF-09, BF-11, BF-12, BF-14 (block reorder/undo/redo in text mode — rows 43–44 —
+   plus ink transforms), the history half of BF-19, and the canonical Data-embed half of BF-15 (row 45).
    Still NOT RUN or open on this build: BF-01 (the Haven host route is unverifiable here — see the
-   `Haven.Desktop.Tests` limitation), BF-04, BF-07, BF-10, BF-13, the block-manipulation half of BF-14
-   (row 41 records why it could not be concluded), BF-15, BF-16, BF-17, BF-18 (only the authored-content
-   half: ink colours and view transforms preserved), the search half of BF-19 and BF-20. The gate as a
-   whole has therefore **not** passed, and the theme pass must not start until that is closed or the
-   owner narrows the gate.)*
+   `Haven.Desktop.Tests` limitation), BF-04, BF-07, BF-10, BF-13 (tables remain NOT RUN natively: the
+   database half of structured content is exercised, the table half is not), BF-15's Chat / Scoped Chat
+   page types, BF-16, BF-17 (menu navigation and the undo/redo keys are exercised; the deep keyboard walk
+   is inconclusive — row 48), BF-18 (only the authored-content half: ink colours and view transforms
+   preserved across save/reopen), the search half of BF-19 and BF-20. The gate as a whole has therefore
+   **not** passed, and the theme pass must not start until that is closed or the owner narrows the gate.)*
 5. Only after that gate: shared CUI theme-design pass using the corrected v3.2 atlas + `ThemeRefs/`,
    honouring `V31-THEMES-001–003`, `V3-CUI-LAY/FEA/ENT/PER/ACC`, and the unresolved mappings
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
 
-**Position at this checkpoint:** branch `main`, HEAD `c30ef24a`, `origin/main` = `c30ef24a` (pushed;
+**Position at this checkpoint:** branch `main`, HEAD `bac7398d`, `origin/main` = `bac7398d` (pushed;
 history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`
-→ `3a35032e` → `c30ef24a`), only inherited `eng/spec-coverage/coverage-summary.json` dirty and deliberately
-left unstaged. Suite counts measured on this PC: contract **127/127**, app **591/591**.
+→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d`), only inherited
+`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged. Suite counts measured on
+this PC: contract **127/127**, app **593/593**.
 
 ## 6. Evidence log (append)
 
@@ -281,20 +284,40 @@ stays **unverified on this machine**; the standalone app is the only Boards host
 
 
 
-### Native run identity for Milestones 4, 5 and 6
+### Milestone 7 — block manipulation, a canonical Data embed, and the identity-shape divergence (1 Nov 2026, commits `bac7398d` and this ledger update)
+
+| # | Gate recipe / rule | Action | Measured result |
+|---|---|---|---|
+| 43 | BF-14 selection and manipulation | grip-drag on the second block of "Page 2" (device (833,488) → (833,352)) in text mode | the physical file changed order: before `[(block-b366537a9347, order 0, "LATEEDIT42"), (block-5510cc923890, order 1, "")]` → after `[(block-5510cc923890, order 0, ""), (block-b366537a9347, order 1, "LATEEDIT42")]` (receipt `J02`) |
+| 44 | BF-19 history for that manipulation | `Ctrl+Z`, then `Ctrl+Y`, then `Ctrl+Z` again | undo returned the exact previous order, redo re-applied it, and a second undo restored the original (receipts `J03`–`J05`, ids and `order` values printed from the file each time). Final fixture state is the original order |
+| 45 | BF-15 canonical embed / Data dependency | the Add menu's first row (keyboard-confirmed highlighted in `117`/`119`) created a **database block** carrying a real Data reference `{storeID, workbookID, tableID, viewID}`; it rendered `Table / Board / Timeline` view switching, `Add record`, `Filter`, `Sort +`, field editing, its own `Undo`/`Redo`, and the honest empty state "No records match this view. Filters do not delete records."; the adaptive toolbar and the contextual **Properties** panel switched to `Database ⚙` for the selected block (V31-BOARDS-003/004 behaviour, seen rather than assumed) | frame `116-add-table-selected.png`; the block was removed again by `Ctrl+Z`, leaving `blocks: [(0, block-b366537a…), (0, block-5510cc92…)]` (receipt `J07`) |
+| 46 | carried item: block-id shape divergence | **observed on the running app**: the inserted database block was written with id `8086b2b0cc664806bcdbe1c313bdc15b` while its neighbours were `block-b366537a9347` / `block-5510cc923890` — two identity shapes in one document. Root cause: the app-side view entities defaulted to a bare 32-hex Guid while the contract model has always used `sec-`/`page-`/`block-`/`item-`/`cell-`/`canvas-`/`att-` + 12 hex digits, and 23 construction sites rely on that default. Fixed at the source (`RichBoardSection`/`RichBoardPage`/`RichBoardBlock` defaults now match the contract); nothing in Boards parses these ids as GUIDs and retained documents keep their existing strings | commit `bac7398d`; new `BoardsIdentityShapeTests` (2) assert both sides of the boundary and a real fallback-path insertion; whole app suite **593/593** (`/tmp/opencode/qwen-1101-identity-appsuite.log`) |
+| 47 | BF-12 / keyboard access, re-checked on the running app | a single `Down` in the Add menu now shows the chosen row | frames `117-search-able-highlight.png` and `119-table-row-highlighted.png`: "New database" carries the selection fill; this is the Milestone 4 fix working on the live build |
+| 48 | input observations **not concluded** | (i) in the run18 instance, typing into the insert-menu search field did not register in two attempts (the field kept its placeholder and the list stayed unfiltered, receipts `K02`/`K03`), although the identical interaction was captured working on an earlier instance of the same build family (frame `74-add-search-filtered.png`, receipt `G16`); (ii) a twelve-step `Down` walk ended with the popover closed and nothing applied (`119` → `120`, file unchanged). Neither is recorded as a product defect: this run's synthetic key delivery to that window is the prime suspect and the same paths pass under the headless app suite. BF-13 (tables) and the deep keyboard walk therefore stay **NOT RUN / unverified** natively | receipts `K01`–`K03`, `step-receipts.jsonl` |
+| 49 | close behaviour, cause not established | in this run one `_NET_CLOSE_WINDOW` removed a Boards window while the process survived with a *different* window id; a second close request terminated it with `exit=0` (`run18.exit`). Earlier instances (`run7`–`run16`) each exited on the first close request. Recorded as an observation to re-test; not claimed as a defect, and no process or window was left on the owner's desktop | receipts at 15:35:59 and 15:36:40, `run18.exit` |
+
+Gate state after Milestone 7: **BF-14 block manipulation and BF-19 block/page/ink history are now exercised with
+file-level evidence**; BF-15 has its canonical Data-embed half exercised (Chat / Scoped Chat page types and the
+disabled Write/Canvas rows remain open); BF-13 and BF-17's deeper keyboard behaviour remain NOT RUN; BF-01,
+BF-04, BF-07, BF-10, BF-16, BF-18 (chrome half) and BF-20 are unchanged. The gate as a whole still has not
+passed, so the theme pass stays gated.
+
+
+
+### Native run identity for Milestones 4, 5, 6 and 7
 
 Native identity for these frames: standalone `CakeOS.Apps.Boards.App.dll` at
 `9to1 Workspace/Boards/app/bin/Release/net10.0/`, launcher
 `/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/dotnet-sdk-10.0.301/dotnet`,
 X11 `:1`, client 2850×1781 device px (1440×900 logical at scale 1.979), sandboxed
 `HOME=/tmp/opencode/qwen-native-20261101/home6` (+ `XDG_*` inside it) and
-`HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`. Instances: `run7`–`run14` and `run16`
-were closed through `_NET_CLOSE_WINDOW` and all recorded `exit=0`; `run15` is the crash record and
-exited `134` by itself (nothing was killed by the harness). No test instance is left running on the
-owner's desktop, and nothing was written into the owner's real `Documents/9to1/Boards` — every fixture
-file lives under the sandbox, including the test artefacts left in the disposable profile
-(`Untitled board` fixture: 2 pages, ink strokes and the typed marker texts `DIRTYCLOSE7`, `LATEEDIT42`,
-`CRASHDRAFT7`, `WXYZ`).
+`HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`. Instances `run7`–`run14` and `run16` were
+closed through `_NET_CLOSE_WINDOW` and all recorded `exit=0`; `run15` is the crash record and exited `134`
+by itself (nothing was killed by the harness); `run17`/`run18` ended in one `exit=0` after two close
+requests (row 49). No test instance is left running on the owner's desktop, and nothing was written into
+the owner's real `Documents/9to1/Boards` — every fixture file lives under the sandbox, including the test
+artefacts left in the disposable profile (`Untitled board` fixture: 2 pages, ink strokes and the typed
+marker texts `DIRTYCLOSE7`, `LATEEDIT42`, `CRASHDRAFT7`, `WXYZ`).
 
 Also corrected in §1 above: the v3.2 **atlas** is present (`newAtlas.html` matches the owner-attached
 `/tmp/codex-file-preview-2hRdoO/9to1_Interface_Atlas_v3.2.html` by SHA-256 `80a4ecc6…1a131`) and
@@ -306,7 +329,9 @@ are usable.
 **Closed by Milestone 5, with the measurement that closes them:** sidebar width (was 268, now 255.2 logical
 measured on screen), the 32-unit tree pitch, the 760-unit readable-column **cap** (measured at two window
 widths), the green block `+` (104 green px → 6), and the long "Vertical Stacking" label (now `Locked
-layout` / `Free placement`, read off the running app).
+layout` / `Free placement`, read off the running app). **Closed by Milestone 7:** the block-id shape
+divergence (row 46: the app-side defaults now match the contract prefixes, with the divergence measured on
+the running app first).
 
 Still open after this pass, unchanged and explicitly not relabelled complete: the `AI` pill is inert
 (greyed) and the AI Read-only/Write dimension does not exist; footer `Add` + **avatar** pair (held as
@@ -315,10 +340,12 @@ Still open after this pass, unchanged and explicitly not relabelled complete: th
 Write/Canvas rows in footer `Add` that are all disabled without explanation; `9to1.Boards.*` typed actions
 and structured failure identities; shared Productivity Engine + Rnote ink engine consumption; large-board
 virtualisation and the performance harness; list/table placeholder words (`"New item"`, `"New table"`);
-the block-id shape divergence that remains for conversion-created blocks; ink palette with no swatches and
+the ink palette with no swatches and
 no current-colour readout; tree drag-to-nest absent; keystroke-level draft journaling absent (the sub-1 s
-loss measured in row 28); block-grip reordering in text mode unverified, and whether Drawing mode should
-still allow grip drags is a specification question (row 41); and the embedded-Haven side of every
-shared-surface change, unverifiable on this PC (rows above).
+loss measured in row 28); whether Drawing mode should still allow block-grip drags (the ink overlay takes
+the pointer there, row 41 — grip reordering itself in text mode is now verified, rows 43–44); the
+unresolved input observations in row 48 (insert-menu typing and the deep keyboard walk) and the
+close/window-id observation in row 49; and the embedded-Haven side of every shared-surface change,
+unverifiable on this PC (rows above).
 `eng/spec-coverage/assessments/Boards.json` is still a code/test reading pass and has **not** been
 regenerated for these fixes yet — it stays at takeover states until the whole gate is exercised end to end.
