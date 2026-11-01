@@ -61,12 +61,17 @@ public static class BoardInkOverlayRenderer
         if (required > overlay.Bounds.Height + 1)
         {
             overlay.Height = required;
-            overlay.MinWidth = contentWidth > 0 ? contentWidth : double.NaN;
+            // Avalonia rejects NaN for MinWidth (it validates a finite non-negative value), so "no
+            // width floor" is 0, exactly the convention BlockRenderer already uses for the absolute
+            // block host. Writing NaN here aborts the process: measured on the running app on 1 Nov,
+            // pressing the pointer to draw raised System.ArgumentException "NaN is not a valid value
+            // for 'MinWidth'" from this line's family and the app exited with SIGABRT (exit 134).
+            overlay.MinWidth = contentWidth > 0 ? contentWidth : 0d;
         }
         else if (overlay.Height > 0 && required < overlay.Bounds.Height - 24)
         {
-            overlay.Height = double.NaN;
-            overlay.MinWidth = double.NaN;
+            overlay.Height = double.NaN;   // auto is valid for Height; it is not for MinWidth.
+            overlay.MinWidth = 0d;
         }
     }
 
