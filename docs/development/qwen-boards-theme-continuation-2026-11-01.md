@@ -154,13 +154,15 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
 
-**Position at this checkpoint:** branch `main`, HEAD `e49c138a`, `origin/main` = `e49c138a` (pushed; history
+**Position at this checkpoint:** branch `main`, HEAD `ec351be1`, `origin/main` = `ec351be1` (pushed; history
 this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`
-→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d` → `a2f820bf` → `3dbf512c` → `24f07d80` → `e49c138a`),
-only inherited `eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged, plus one
-**other session's** untracked document (`docs/development/boards-usability-review-2026-11-01.md`, hashed in
-the Milestone 8 reviewer note) left for its author to commit. Suite counts measured on this PC:
-contract **134/134**, app **599/599**.
+→ `3a35032e` → `c30ef24a` → `532e25ba` → `bac7398d` → `a2f820bf` → `3dbf512c` → `24f07d80` → `e49c138a`
+→ `566145dd` → `222610f6` → `f1fe3588` → `ba6a7bd4` → `ceec047c` → `ec351be1`), only inherited
+`eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged, plus one **other session's**
+untracked document (`docs/development/boards-usability-review-2026-11-01.md`, hashed in the Milestone 8
+reviewer note) left for its author to commit. Suite counts measured on this PC: contract **140/140**, app
+**606/606**. The standalone binary on disk is `09bcf761b4044d66fc1a8345e0f1dc3b01145e20e0d107de3f459bdc5b59e114`
+built 19:54 from `ec351be1`, which is the candidate every run26 frame below was taken from.
 
 ## 6. Evidence log (append)
 
@@ -349,6 +351,33 @@ NOT_RUN: this unit produces six of the twelve codes, not the contract as a whole
 
 
 
+### Milestone 10 — the keyboard could not undo, and one undo was one character (1 Nov 2026, commits `f1fe3588`, `ba6a7bd4`, `ceec047c`, `ec351be1`)
+
+Native identity for this milestone (standalone `CakeOS.Apps.Boards.App.dll`, launcher SDK 10.0.301, sandbox under
+`/tmp/opencode/qwen-native-20261101/`, every instance closed through `_NET_CLOSE_WINDOW`):
+
+| instance | binary SHA-256 (first 12) | built from | sandboxes | frames / receipts |
+|---|---|---|---|---|
+| run20 | `9037a16ad76b` | `222610f6` | `home7`/`profile7` | 127-140, receipts M01-M19 |
+| run21 | `e018c42fe4a2` | `f1fe3588` | `home7`/`profile7` (reopen) | 151-159, receipts N01-N10 |
+| run22 | `a7bc409ba650` | `ba6a7bd4` | `home8`/`profile8` | 160-162, receipts P01-P03 |
+| run23 | `67eea0ab5d03` | `ceec047c` | `home9`/`profile9` | 163-165, receipts Q01-Q03 |
+| run24 | `abb8686b650c` | `ceec047c` + temporary diagnostics | `home9`/`profile9` | 166-167, receipts Q10-Q11, `merges-run24.log` |
+| run25 | `abb8686b650c` | as run24 | `home9`/`profile9` | 168, receipt Q21, `merges.log` |
+| run26 | `09bcf761b404` | `ec351be1` | `home10`/`profile10` (fresh) | 169-172, receipts R01-R04 |
+
+| # | Requirement / rule | Action | Measured result |
+|---|---|---|---|
+| 59 | BF-02 create and save without Files, an account or a Boards folder | re-proved on the rebuilt binaries in four **fresh** sandboxes | each produced `Untitled board.9to1board` in the sandbox's own `Documents/9to1/Boards` with canonical ids (`sec-00645271d89a`/`page-b7126a99449b`/`block-47b0537df78b`, `sec-5901e73be7c4`…, `sec-28ee646b5bbd`…, `sec-…` in home10 with `page-959c72c95057`/`block-136b62500d6b`) and `version=1`; frames 132, 160, 163, 169 — the identity fix from `bac7398d` is now verified on screen, not just in tests |
+| 60 | BF-11 close and reopen without loss (clean-close half) | run20 closed gracefully (`exit=0`), then run21 was a **different process** on the same sandbox and opened the board from the landing's Recent boards card | the reopened page showed exactly the four blocks and their texts (`AAASOFT1\nSELREP`, `REPLACED\nXX`, `SPLITME`, `BF07SECOND`) and the physical file's `contenthash df50673e542103137b003a27ad829193e51b5954b230209221edec9d3d584781` was identical before and after opening; frame 152. Dirty-close, refused close and save-failure recovery paths are still NOT RUN |
+| 61 | my own harness, evidence honesty | `step.py --type` was a **single-value** option, so a step asking for two texts silently sent only the last one | this - not the product - produced the "BF07FIRST vanished" observation recorded earlier: the receipt for M07 lists only `Return` and `BF07SECOND`, so the nine characters were never sent. `--type` is now repeatable and records each text run in order. The M07 result is withdrawn |
+| 62 | coordinate discipline (third coordinate error of the day) | measure control geometry from PNG pixels before claiming what a click did | measured glyph boxes in frame 155: Undo x 376-405 y 47-74 (centre 391,59), Redo x 452-481 y 47-74 (centre 465,58). My earlier run20 clicks at (461,68)/(477,72) and run21's first at (466,60) were on **Redo** with an empty redo stack, so the earlier "toolbar Undo did nothing" is withdrawn; at (391,59) the button works (receipts N09, N10). Landing cards measured: title row y 724-750 x 632-892, clicked (762,737) opened the board |
+| 63 | "the canonical board history is the only undo owner" - the keyboard half | **defect, native then headless**: Ctrl+Z inside a focused block reached *nothing*. The text control consumes Ctrl+Z/Ctrl+Y for its own stack, which `3dbf512c` had just emptied (`UndoLimit = 0`), and the shared owner only mapped the shortcut on the bubbling route the control had already stopped. Native run20: four Ctrl+Z presses changed neither the page (frames 141, 149) nor the file (still `richNotes.version 130`, same four blocks) while CanUndo was true. Headless control: `CtrlZInsideAFocusedBlockDrivesTheCanonicalHistory` fails on the pre-fix source with `CanUndo=True CanRedo=False; live editor="Q"` (`/tmp/opencode/qwen-1101-undo-keyboard-pre.log`) | fixed in `f1fe3588`: `BoardsTextAndKeyboardOwner` claims Ctrl+Z/Ctrl+Y on the **tunneling** route of the CUI surface and dispatches the canonical Undo/Redo; the bubbling mapping stays for focus outside the surface; the sidebar filter and insert-menu search are excluded on purpose (they hold a query, not content) and pinned by `CtrlZInTheSidebarFilterLeavesTheBoardHistoryAlone`. Native run21 then showed the keys working (receipts N04-N06) |
+| 64 | BF-19 history: one undo boundary must be one **edit**, not one character | **defect, measured natively** in three successive runs: after the keyboard fix, Ctrl+Z stepped the file back one character per press - run21 receipts N04/N05, frames 154-155 (`SPLITMEZZTOP` → `SPLITMEZZTO` → `SPLITMEZZT` → `SPLITMEZZ`, `richNotes.version` 140 → 138 → 136 → 134), and the toolbar button at its measured glyph did the same per click (N09/N10). Root cause chain, corrected twice before it was right: (a) `ba6a7bd4` grouped only merges that differed by one character - re-tested natively in run22 (frame 161-162, version 1 → 9 for `GRAN`, one undo → `GRA`); (b) `ceec047c` keyed the group on the changed *surface* instead of the size - re-tested natively in run23, still one letter per press; (c) instrumented runs 24-25 (temporary merge/history dumps, `merges-run24.log`, `merges.log`) showed both rules were already behaving correctly - each merge changed one surface by one character and three consecutive pushes all carried `group=text-edit:block-df471a94dd00` - so the failure was the **clock**: `HistoryCoalescingWindow.Ticks * (Stopwatch.Frequency / 1e9)` mixed TimeSpan ticks (100 ns) with a nanosecond counter, turning 1500 ms into about 15 ms, shorter than the gap between keystrokes | `ec351be1` converts the window to the timestamp's unit (`TotalSeconds * Stopwatch.Frequency`). New case `RealisticKeystrokeSpacingStillGroupsAsOneStep` types 60 ms apart; control: with the previous factor restored and nothing else changed it fails while the other five pass (`/tmp/opencode/qwen-1101-units-pre.log` vs `…-units-post.log`) - the in-process cases could never see this because they are faster than the mis-scaled window. **Native proof, run26** (fresh `home10`/`profile10`, binary `09bcf761…`): typing `GRAN` took the file 1 → 9, **one** Ctrl+Z took it 9 → **1** with the block empty on screen and in the file (receipts R02, R03; frame 171 shows the empty paragraph with its placeholder), and one Ctrl+Y brought the whole run back (R04, version 9) |
+| 65 | suites after this milestone | both Boards suites re-measured on this PC with SDK 10.0.301 under the low-memory guard | contract **140/140** (`/tmp/opencode/qwen-1101-units-contract-full.log`, was 127 at the start of the day); app **606/606** (`/tmp/opencode/qwen-1101-appsuite15.log`, was 591). New files this milestone: `app.tests/BoardsBlockClickFocusTests.cs` (extended), `app.tests/BoardsTypingMergeGroupingTests.cs`, `tests/BoardsHistoryGranularityTests.cs` |
+| 66 | BF-07 typing and block boundaries - now partly native | driven on the running app with per-step file checks (receipts M11-M30, frames 137-147): clicking paragraph text focuses that block and typed text lands in it; `End` appends; `Return` splits into a new canonical block id (`block-5a48d466df9f` appeared between the two); `Shift+Return` keeps **one** block id and writes a real `\n` inside it (`AAASOFT1\nSOFT2M9TAIL`); a click-selected range replaces exactly (`M9NEXT` → `REPLACED`, and only the second line of a two-line block: `REPLACED\nTWO` → `REPLACED\nXX`); a click in the grip/`+` column or in the row padding selects no block (M22) - that is where several of my earlier "nothing happens" readings came from; a click left of the text places the caret mid-run (`AAAM9TAIL` + typing gave `AAASOFT1M9TAIL`) | still NOT RUN for BF-07: IME composition, applying formatting marks to a selection, Backspace/Delete merge semantics, Unicode input, and undo-after-split preserving ids and selection. BF-07 is therefore **partially** exercised, not closed |
+| 67 | gate state | the native gate rows gained evidence, none gained acceptance | BF-02, BF-11 (clean-close half), BF-19 (history granularity and the keyboard route) and BF-07 (typing/boundaries half) are now exercised on the running app; BF-01, BF-04, BF-10, BF-13 (tables), BF-16, BF-17's deep keyboard walk, BF-18's chrome half, BF-19's search row and BF-20 remain NOT RUN. The gate as a whole has still not passed, so the shared theme pass stays gated |
+
 ### Evidence level of Milestones 8 and 9, and the on-disk native binary
 
 Both of those units are **test evidence only**: no on-screen capture and no native run was made for the
@@ -358,7 +387,12 @@ plainly because the earlier milestones mix native and headless evidence:
 - Milestone 8 (undo ownership): the *defect* was observed on screen and in the physical file (receipt `L05`,
   title going `BF07OK` → `BF07` under Ctrl+Z). The *repair* is proven by the headless suite only.
 - Milestone 9 (failure identities): entirely headless. No native path was exercised, and the app-facing half
-  is proven only by a `StatusText` assertion.
+  is proven only by a `StatusText` assertion. Still true after Milestone 10.
+- Milestone 10 (keyboard undo route and undo granularity): **native evidence exists** - the defects were
+  measured on the running app (run20/run21/run22/run23) and the final state was proved on the running app in
+  run26 (receipts R02-R04, frames 170-172, one Ctrl+Z taking `richNotes.version` 9 → 1 and the block empty on
+  screen). The structured failure identities of Milestone 9 and the `FindControls<T>` traversal gap of row 53
+  have **no** native evidence.
 
 The standalone binary still on disk
 (`9to1 Workspace/Boards/app/bin/Release/net10.0/CakeOS.Apps.Boards.App.dll`,
@@ -380,6 +414,10 @@ requests (row 49); `run19` was closed at 17:02:38 and recorded `exit=0` (`run19.
 "instance still running" blocker recorded by the independent reviewer. No test instance is left running on
 the owner's desktop, and nothing was written into the owner's real `Documents/9to1/Boards` — every fixture
 file lives under the sandbox.
+
+`home7`/`profile7`, `home8`/`profile8`, `home9`/`profile9` and `home10`/`profile10` are this session's
+scratch sandboxes: they contain the probe markers (`GRAN`, `ZZTOP`, `SELREP`, `SPLITME`, `BF07SECOND`,
+`REPLACED`, `M9NEXT`) named in Milestone 10, and are the fixtures for those receipts only.
 
 **The `profile6` / `home6` fixture is contaminated and must not be used as evidence by the next session.**
 Its `Untitled board` now holds four pages (`Start here` renamed by unattributed typing to
