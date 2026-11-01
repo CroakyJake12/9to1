@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CakeOS.Cui;
@@ -1397,6 +1398,21 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         _attachedRoot = root;
         _textRangeDetached = false;
         ApplyAuthoringState(root);
+        // Single undo owner for every document text surface on this mount (see BoardsTextUndoOwner). The
+        // two query fields are the deliberate exception - the sidebar filter and the insert-menu search
+        // hold a query, not board content, so their local undo stays.
+        //
+        // This walk is deliberately separate from the wiring loop below: FindControls only descends Panel
+        // children, and the CUI-authored title inputs sit inside border/decorator containers, so measured
+        // on 1 November the title boxes were invisible to that walker and kept Avalonia's private
+        // character-level undo stack (UndoLimit 10) while the board history ignored them.
+        foreach (var surface in root.GetLogicalDescendants().OfType<TextBox>())
+        {
+            if ((surface.Name ?? string.Empty) == "NavSearchBox" ||
+                Avalonia.Automation.AutomationProperties.GetName(surface) == "Search insert menu")
+                continue;
+            BoardsTextUndoOwner.SingleUndoOwner(surface);
+        }
         foreach (var textBox in FindControls<TextBox>(root))
         {
             var name = textBox.Name ?? string.Empty;

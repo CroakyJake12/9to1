@@ -355,6 +355,13 @@ public sealed class BoardsTextAndKeyboardOwner : IDisposable
             root.GetLogicalDescendants().OfType<TextBox>()
                 .FirstOrDefault(box => AutomationProperties.GetName(box) == "Page title");
         _searchBox = BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "NavSearchBox");
+        // Both title inputs edit document content, so they take the same rule as the block editors: the
+        // canonical session history is the only undo owner. Measured on the running app on 1 November,
+        // Ctrl+Z with the page title focused removed typed characters ("Start here BF07OK" became
+        // "Start here BF07") without any canonical board revision, i.e. a second invisible undo system.
+        // The navigation search box is a query field, not content, so it keeps its own undo.
+        if (_titleBox is not null) BoardsTextUndoOwner.SingleUndoOwner(_titleBox);
+        if (_pageTitleBox is not null) BoardsTextUndoOwner.SingleUndoOwner(_pageTitleBox);
         if (_titleBox is not null)
         {
             _titleChanged = (_, _) =>

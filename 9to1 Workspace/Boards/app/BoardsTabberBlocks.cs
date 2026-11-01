@@ -96,7 +96,9 @@ public sealed class BoardsTabberBlocks(BoardsViewModel owner) : IAsyncDisposable
         var selectedID = !owner.IsEditMode && _viewSelection.TryGetValue(block.Id, out var viewID)
             && tabber.Panes.Any(pane => pane.Id == viewID) ? viewID : tabber.SelectedPaneId;
         var selected = tabber.Panes.Single(pane => pane.Id == selectedID);
-        var name = new TextBox { Text = selected.Title, Width = 180, IsReadOnly = !owner.IsEditMode };
+        // A tab caption is board content, so the canonical history owns its undo (BoardsTextUndoOwner).
+        var name = BoardsTextUndoOwner.SingleUndoOwner(
+            new TextBox { Text = selected.Title, Width = 180, IsReadOnly = !owner.IsEditMode });
         InputElement? pointerTarget = null;
         long pointerGesture = 0;
         Action? pendingCaption = null;

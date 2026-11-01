@@ -448,12 +448,12 @@ public static class NavBuilder
             ? vm.Session.Document.Sections.FirstOrDefault(s => s.Id == sectionId)?.Title ?? string.Empty
             : vm.Session.Document.Sections.FirstOrDefault(s => s.Id == sectionId)?.Pages
                 .FirstOrDefault(p => p.Id == pageId)?.Title ?? string.Empty;
-        var box = new TextBox
+        var box = BoardsTextUndoOwner.SingleUndoOwner(new TextBox
         {
             Text = current,
             FontSize = 13,
             Margin = new Thickness(24, 2, 4, 2),
-        };
+        });
         Avalonia.Automation.AutomationProperties.SetName(box, "Rename to");
         host.Children.Add(box);
         RenameActive = true;

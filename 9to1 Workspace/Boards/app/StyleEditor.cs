@@ -125,7 +125,7 @@ public static class StyleEditor
 
         var picker = new ComboBox { Margin = new Thickness(0, 0, 0, 8) };
         AutomationProperties.SetName(picker, "Style to edit");
-        var nameBox = new TextBox { Margin = new Thickness(0, 0, 0, 8) };
+        var nameBox = BoardsTextUndoOwner.SingleUndoOwner(new TextBox { Margin = new Thickness(0, 0, 0, 8) });
         AutomationProperties.SetName(nameBox, "Style name");
         ToolTip.SetTip(nameBox, "Style name (1–128 characters)");
         root.Children.Add(picker);
@@ -303,7 +303,7 @@ public static class StyleEditor
     private static TextBox NewLabeledText(Panel parent, string label, string value)
     {
         parent.Children.Add(new TextBlock { Text = label, FontSize = 12, Margin = new Thickness(0, 4, 0, 2) });
-        var box = new TextBox { Text = value, Margin = new Thickness(0, 0, 0, 4) };
+        var box = BoardsTextUndoOwner.SingleUndoOwner(new TextBox { Text = value, Margin = new Thickness(0, 0, 0, 4) });
         AutomationProperties.SetName(box, label);
         parent.Children.Add(box);
         return box;

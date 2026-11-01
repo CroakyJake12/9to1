@@ -47,6 +47,10 @@ public sealed partial class BoardsViewModel
                     if (_disposed || Get("BoardRenameVisible") is not true || _attachedRoot is null) return;
                     if (BoardsCuiControlFinder.FindByAutomationId<TextBox>(_attachedRoot, "BoardTitleBox") is { } title)
                     {
+                        // This is the first moment the board-name editor is live, and the CUI loader may
+                        // materialise it after Attach walked the tree, so the single-undo-owner rule is
+                        // applied here too (see BoardsTextUndoOwner).
+                        BoardsTextUndoOwner.SingleUndoOwner(title);
                         title.Focus();
                         title.SelectAll();
                     }
