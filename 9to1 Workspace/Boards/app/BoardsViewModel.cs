@@ -4072,7 +4072,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (Exception ex)
         {
-            Set("StatusText", "Page layout could not be changed: " + FirstLine(ex.Message));
+            Set("StatusText", FailureStatusText("Page layout could not be changed", ex));
         }
     }
 
@@ -4105,7 +4105,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (Exception ex)
         {
-            Set("StatusText", "Block placement could not be saved: " + FirstLine(ex.Message));
+            Set("StatusText", FailureStatusText("Block placement could not be saved", ex));
         }
     }
 
@@ -4136,7 +4136,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         }
         catch (Exception ex)
         {
-            Set("StatusText", "Block could not be returned to vertical flow: " + FirstLine(ex.Message));
+            Set("StatusText", FailureStatusText("Block could not be returned to vertical flow", ex));
         }
     }
 
@@ -4259,6 +4259,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
 
     private static string FirstLine(string message) =>
         message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? message;
+
+    /// <summary>
+    /// Status text for a refused operation. The canonical Boards failure contract says an error must identify
+    /// the affected operation and its recoverability, so when the contract supplied a structured identity the
+    /// status line names the code and whether a retry can help; the plain sentence still comes first because
+    /// that is what the user reads.
+    /// </summary>
+    private static string FailureStatusText(string activity, Exception ex) => ex is BoardsFailureException failure
+        ? $"{activity}: {FirstLine(failure.Message)} ({failure.Code}" +
+          (failure.Retryable ? ", retryable" : string.Empty) + ")"
+        : activity + ": " + FirstLine(ex.Message);
 
     private static string SanitizeFileName(string name)
     {

@@ -470,7 +470,9 @@ public static class HavenRichNotesValidator
 
     private static void ValidateBlock(HavenRichBlock block)
     {
-        if (!Enum.IsDefined(block.Kind)) throw new InvalidDataException("Unsupported Board block kind.");
+        if (!Enum.IsDefined(block.Kind))
+            throw new BoardsFailureException(BoardsFailureCode.UnsupportedBlockType, "Boards.Block.Validate", block.Id,
+                "Unsupported Board block kind.");
         if (block.Kind == HavenRichBlockKind.Database)
         {
             if (block.Database is null) throw new InvalidDataException("A database block has no Data reference.");
@@ -648,7 +650,8 @@ public static partial class HavenRichNotesOps
             EmbeddedArtifact = detachedReference
         });
         if (parentPageId is not null && !section.Pages.Any(page => page.Id == parentPageId))
-            throw new KeyNotFoundException("Parent page was not found in the selected section.");
+            throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.Create", parentPageId,
+                "Parent page was not found in the selected section.");
 
         var page = new HavenRichPage
         {
@@ -685,7 +688,8 @@ public static partial class HavenRichNotesOps
     {
         var section = RequireSection(notes, sectionId);
         _ = section.Pages.FirstOrDefault(page => page.Id == parentPageId)
-            ?? throw new KeyNotFoundException("Parent page was not found in the selected section.");
+            ?? throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.SetParent", parentPageId,
+                "Parent page was not found in the selected section.");
         var page = AddPageWithoutTouch(section, title);
         page.ParentPageId = parentPageId;
         Touch(notes);
@@ -697,12 +701,14 @@ public static partial class HavenRichNotesOps
     {
         ArgumentNullException.ThrowIfNull(notes);
         var section = notes.Sections.FirstOrDefault(candidate => candidate.Pages.Any(page => page.Id == pageId))
-            ?? throw new KeyNotFoundException("Rich board page was not found.");
+            ?? throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.Require", pageId,
+                "Rich board page was not found.");
         var page = section.Pages.Single(item => item.Id == pageId);
         if (parentPageId is not null)
         {
             _ = section.Pages.FirstOrDefault(item => item.Id == parentPageId)
-                ?? throw new KeyNotFoundException("Parent page was not found in the selected section.");
+                ?? throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.SetParent", parentPageId,
+                "Parent page was not found in the selected section.");
             for (var ancestor = parentPageId; ancestor is not null; )
             {
                 if (ancestor == pageId)
@@ -728,7 +734,8 @@ public static partial class HavenRichNotesOps
     {
         var page = RequirePage(notes, pageId);
         if (page.PageType != HavenRichPageTypes.Native)
-            throw new InvalidOperationException("Layout mode applies only to Native Board pages.");
+            throw new BoardsFailureException(BoardsFailureCode.UnsupportedPageType, "Boards.SetLayoutMode", page.Id,
+                "Layout mode applies only to Native Board pages.", retainedState: "the page keeps its current layout mode");
         if (!HavenRichPageLayoutModes.IsSupported(layoutMode))
             throw new ArgumentOutOfRangeException(nameof(layoutMode), layoutMode, "Unsupported page layout mode.");
         if (page.LayoutMode == layoutMode) return;
@@ -743,9 +750,12 @@ public static partial class HavenRichNotesOps
     {
         var page = RequirePage(notes, pageId);
         if (page.PageType != HavenRichPageTypes.Native)
-            throw new InvalidOperationException("Free placement applies only to Native Board pages.");
+            throw new BoardsFailureException(BoardsFailureCode.UnsupportedPageType, "Boards.Block.SetLayout", page.Id,
+                "Free placement applies only to Native Board pages.", retainedState: "the block keeps its current placement");
         if (page.LayoutMode != HavenRichPageLayoutModes.Unlocked)
-            throw new InvalidOperationException("Free placement is available only in Unlocked layout mode.");
+            throw new BoardsFailureException(BoardsFailureCode.InvalidLayoutTransition, "Boards.Block.SetLayout", blockId,
+                "Free placement is available only in Unlocked layout mode.", retryable: true,
+                retainedState: "the block keeps its current placement; switch the page to free placement to position it");
         // The page's independent Snap aid applies to explicit block placement too: it decides where a
         // manipulation commits, never whether the manipulation is permitted.
         x = SnapPlacementValue(page, x);
@@ -771,7 +781,8 @@ public static partial class HavenRichNotesOps
     {
         var page = RequirePage(notes, pageId);
         if (page.PageType != HavenRichPageTypes.Native)
-            throw new InvalidOperationException("Block placement applies only to Native Board pages.");
+            throw new BoardsFailureException(BoardsFailureCode.UnsupportedPageType, "Boards.Block.SetLayout", page.Id,
+                "Block placement applies only to Native Board pages.");
         var block = RequireBlock(notes, pageId, blockId);
         if (block.Layout == HavenRichBlockLayouts.Flow) return;
         block.Layout = HavenRichBlockLayouts.Flow;
@@ -909,7 +920,8 @@ public static partial class HavenRichNotesOps
     public static HavenRichPage DuplicatePage(HavenRichNotes notes, string pageId)
     {
         var section = notes.Sections.FirstOrDefault(s => s.Pages.Any(p => p.Id == pageId))
-            ?? throw new KeyNotFoundException("Rich board page was not found.");
+            ?? throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.Require", pageId,
+                "Rich board page was not found.");
         var source = section.Pages.Single(p => p.Id == pageId);
         if (source.TabberOwnerBlockId is not null || source.Blocks.Any(block => block.Tabber is not null))
             throw new InvalidOperationException("Duplicate the Tabber block to copy its owned panes.");
@@ -1008,7 +1020,9 @@ public static partial class HavenRichNotesOps
     {
         ArgumentNullException.ThrowIfNull(notes);
         var index = notes.Sections.FindIndex(s => s.Id == sectionId);
-        if (index < 0) throw new KeyNotFoundException("Rich board section was not found.");
+        if (index < 0)
+            throw new BoardsFailureException(BoardsFailureCode.MissingSourceSection, "Boards.MoveSection", sectionId,
+                "Rich board section was not found.");
         var section = notes.Sections[index];
         notes.Sections.RemoveAt(index);
         notes.Sections.Insert(Math.Clamp(targetIndex, 0, notes.Sections.Count), section);
@@ -1019,7 +1033,8 @@ public static partial class HavenRichNotesOps
     {
         ArgumentNullException.ThrowIfNull(notes);
         var source = notes.Sections.FirstOrDefault(s => s.Pages.Any(p => p.Id == pageId))
-            ?? throw new KeyNotFoundException("Rich board page was not found.");
+            ?? throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.Require", pageId,
+                "Rich board page was not found.");
         var target = RequireSection(notes, targetSectionId);
         var page = source.Pages.Single(p => p.Id == pageId);
         // UX27-BOARD-001/002 and the tree contract: a page travels with its whole nested
@@ -1094,7 +1109,9 @@ public static partial class HavenRichNotesOps
     {
         var page = RequirePage(notes, pageId);
         var index = page.Blocks.FindIndex(b => b.Id == blockId);
-        if (index < 0) throw new KeyNotFoundException("Rich board block was not found.");
+        if (index < 0)
+            throw new BoardsFailureException(BoardsFailureCode.BlockNotFound, "Boards.Block.Move", blockId,
+                "Rich board block was not found.");
         var block = page.Blocks[index];
         page.Blocks.RemoveAt(index);
         page.Blocks.Insert(Math.Clamp(targetIndex, 0, page.Blocks.Count), block);
@@ -1477,20 +1494,23 @@ public static partial class HavenRichNotesOps
     {
         ArgumentNullException.ThrowIfNull(notes);
         return notes.Sections.FirstOrDefault(s => s.Id == sectionId)
-            ?? throw new KeyNotFoundException("Rich board section was not found.");
+            ?? throw new BoardsFailureException(BoardsFailureCode.MissingSourceSection, "Boards.Section.Require", sectionId,
+                "Rich board section was not found.");
     }
 
     private static HavenRichPage RequirePage(HavenRichNotes notes, string pageId)
     {
         ArgumentNullException.ThrowIfNull(notes);
         return notes.Sections.SelectMany(s => s.Pages).FirstOrDefault(p => p.Id == pageId)
-            ?? throw new KeyNotFoundException("Rich board page was not found.");
+            ?? throw new BoardsFailureException(BoardsFailureCode.PageNotFound, "Boards.Page.Require", pageId,
+                "Rich board page was not found.");
     }
 
     private static HavenRichBlock RequireBlock(HavenRichNotes notes, string pageId, string blockId)
     {
         var block = RequirePage(notes, pageId).Blocks.FirstOrDefault(b => b.Id == blockId);
-        return block ?? throw new KeyNotFoundException("Rich board block was not found.");
+        return block ?? throw new BoardsFailureException(BoardsFailureCode.BlockNotFound, "Boards.Block.Require", blockId,
+            "Rich board block was not found.");
     }
 
     private static void NormalizePages(HavenRichSection section)

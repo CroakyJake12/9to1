@@ -80,8 +80,18 @@ public sealed class HavenRichBoardPlacementTests
         var page = Assert.Single(Assert.Single(notes.Sections).Pages);
         var block = Assert.Single(page.Blocks);
 
-        Assert.Throws<InvalidOperationException>(() =>
+        // The locked-layout refusal is a canonical structured failure, not an untyped one: the identity of
+        // what was refused, on which object, and whether it can be retried is what automation and the app
+        // status line have to be able to rely on.
+        var refused = Assert.Throws<BoardsFailureException>(() =>
             HavenRichNotesOps.PlaceBlock(notes, page.Id, block.Id, 12, 24, 300, 160, 1));
+        Assert.Equal(BoardsFailureCode.InvalidLayoutTransition, refused.Code);
+        Assert.Equal("Boards.Block.SetLayout", refused.Operation);
+        Assert.Equal(block.Id, refused.TargetId);
+        Assert.True(refused.Retryable, "switching the page to free placement must be offered as the retry");
+        Assert.Contains("Unlocked", refused.Message, StringComparison.Ordinal);
+        // Existing callers catch this as an operation failure, and the structured type must not break them.
+        Assert.IsAssignableFrom<InvalidOperationException>(refused);
         HavenRichNotesOps.SetPageLayoutMode(notes, page.Id, HavenRichPageLayoutModes.Unlocked);
         HavenRichNotesOps.SetCanvasLocked(notes, page.Id, locked: true);
         HavenRichNotesOps.PlaceBlock(notes, page.Id, block.Id, 12, 24, 300, 160, 1);

@@ -32,8 +32,13 @@ public sealed class HavenRichBoardV3Tests
                     Assert.Throws<InvalidOperationException>(() =>
                         HavenRichNotesOps.SetPageParent(rich, rootPageId, grandchildPageId));
                     var otherSection = HavenRichNotesOps.AddSection(rich, "Other section");
-                    Assert.Throws<KeyNotFoundException>(() =>
+                    // A parent page outside the section is a structured PageNotFound, not a bare
+                    // KeyNotFoundException: the caller has to be able to tell "wrong id" from "wrong section"
+                    // without matching on a sentence.
+                    var parentRefused = Assert.Throws<BoardsFailureException>(() =>
                         HavenRichNotesOps.SetPageParent(rich, rootPageId, otherSection.Pages[0].Id));
+                    Assert.Equal(BoardsFailureCode.PageNotFound, parentRefused.Code);
+                    Assert.Equal(otherSection.Pages[0].Id, parentRefused.TargetId);
                 });
                 await session.SaveAsync();
             }
