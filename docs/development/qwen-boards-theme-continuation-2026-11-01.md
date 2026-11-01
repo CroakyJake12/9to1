@@ -137,19 +137,23 @@ prepared-but-unapplied drafts outside Git (`/workspace/scratch/astra-list-runs-a
    Locked × Snap). *(mode matrix done in Milestone 3; the rest still open)*
 4. Execute the acceptance gates `BF-01`–`BF-20` against this build with disposable fixtures, including
    save → close → reopen in a **fresh process**; record exact commands, build identity, dirty state,
-   screenshots, and keep FAIL/BLOCKED/NOT RUN visible. *(BF-05, BF-06, BF-08, BF-09, BF-11 and BF-12 are
-   exercised with evidence in Milestone 4; BF-01–BF-04, BF-07, BF-10 and BF-13–BF-20 are NOT RUN on this
-   build — the gate as a whole has therefore **not** passed, and the theme pass must not start until that
-   is closed or the owner narrows the gate)*
+   screenshots, and keep FAIL/BLOCKED/NOT RUN visible. *(exercised with evidence so far: BF-02, BF-03,
+   BF-05, BF-06, BF-08, BF-09, BF-11, BF-12, and the ink half of BF-14 plus the history half of BF-19.
+   Still NOT RUN or open on this build: BF-01 (the Haven host route is unverifiable here — see the
+   `Haven.Desktop.Tests` limitation), BF-04, BF-07, BF-10, BF-13, the block-manipulation half of BF-14
+   (row 41 records why it could not be concluded), BF-15, BF-16, BF-17, BF-18 (only the authored-content
+   half: ink colours and view transforms preserved), the search half of BF-19 and BF-20. The gate as a
+   whole has therefore **not** passed, and the theme pass must not start until that is closed or the
+   owner narrows the gate.)*
 5. Only after that gate: shared CUI theme-design pass using the corrected v3.2 atlas + `ThemeRefs/`,
    honouring `V31-THEMES-001–003`, `V3-CUI-LAY/FEA/ENT/PER/ACC`, and the unresolved mappings
    (Frost≠renamed Frosted Glass, Industrial≠Metallic, Synthwave/Snug not built-ins).
 6. Commit coherent verified units and push to `origin/main` at safe milestones (no force-push).
 
-**Position at this checkpoint:** branch `main`, HEAD `a9b93148`, `origin/main` = `a9b93148` (pushed;
-history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`),
-only inherited `eng/spec-coverage/coverage-summary.json` dirty and deliberately left unstaged. Suite counts
-measured on this PC: contract **127/127**, app **589/589**.
+**Position at this checkpoint:** branch `main`, HEAD `c30ef24a`, `origin/main` = `c30ef24a` (pushed;
+history this run `f7b86225` → `64f0e394` → `50dfb42d` → `d7bf967b` → `7450816e` → `67a0bf55` → `a9b93148`
+→ `3a35032e` → `c30ef24a`), only inherited `eng/spec-coverage/coverage-summary.json` dirty and deliberately
+left unstaged. Suite counts measured on this PC: contract **127/127**, app **591/591**.
 
 ## 6. Evidence log (append)
 
@@ -263,16 +267,34 @@ not available here — attempted and stopped, `/tmp/opencode/qwen-1101-havendesk
 `/tmp/opencode/qwen-1101-havendesktop-build.log`). The shared-surface effect on the Haven host therefore
 stays **unverified on this machine**; the standalone app is the only Boards host exercised here.
 
-### Milestone 5b — pack/atlas correction and the running-app identity for rows 22–35
+### Milestone 6 — a real crash found by the acceptance pass, then ink history and transforms (1 Nov 2026, commit `c30ef24a`)
 
-Native identity for the Milestone 4/5 frames: standalone `CakeOS.Apps.Boards.App.dll` at
+| # | Gate recipe / rule | What happened | Evidence |
+|---|---|---|---|
+| 36 | BF-08 / boards-ink rule 4 | **the running app crashed** on the first pointer press after entering Drawing mode: the launcher recorded `exit=134` (SIGABRT) and `run15.log` carries `System.ArgumentException: NaN is not a valid value for 'MinWidth'` raised from `BoardInkOverlayRenderer.ApplyOverlayExtent` (line 69) through `BoardInkInteractionController.RenderLiveStroke` (line 202) from `OnPointerPressed` (line 140). The code used `double.NaN` as its "no constraint" marker; Avalonia accepts NaN for Height but rejects it for MinWidth | crash preserved in `/tmp/opencode/qwen-native-20261101/run15.log` and `run15.exit` (`exit=134`); fixed to the `0` convention `BlockRenderer` already uses |
+| 37 | same | two new `BoardsInkOverlayExtentTests` cases reproduce the identical exception against the previous source and pass against the fix (grow-with-unmeasured-sibling, and shrink-back-below-grown-height, which is the branch the crash hit) | measured control: `…inkfix-pre2.log` 2 failed with `NaN is not a valid value for 'MinWidth'` → `…inkfix-test3.log` 2 passed; whole app suite **591/591** (`qwen-1101-appsuite8.log`) |
+| 38 | BF-08 persistence after the fix | at the **same coordinates that crashed**, the rebuilt app survives and the stroke lands in the physical file ("Start here" `inkStrokes` 2 → 3) | receipt `H07`, frame `107-stroke-after-crashfix.png`, process still alive afterwards; instance later closed with `exit=0` (`run16.exit`) |
+| 39 | boards-ink rule 4 (one-stroke undo) + BF-19 history | one-stroke undo `3 → 2` with the two surviving strokes byte-identical, redo back to `3`; undo is page-scoped — an accidental stroke on "Page 2" was removed there while the three strokes on "Start here" were untouched | receipts `H08`/`H09`/`H12` with the `ink` arrays printed from the file before and after each key |
+| 40 | BF-14 ink transforms; drawing history labels | the drawing menu states its actions honestly (`Zoom in`, `Zoom out`, `Reset view`, `Undo drawing`, `Redo drawing`); the view transform is canonical and persisted per page (`inkView.zoom 1 → 1.25` on the current page, strokes visibly scaled on screen, `Reset view` back to `1` on both pages) | frame `111-ink-view-menu-popup-3e0001f.png`, frame `113-start-here-zoomed.png`, receipts `H14`–`H17` with the `inkView` objects read back from the file |
+| 41 | BF-14 block manipulation — **observed, not concluded** | while Drawing is active the ink overlay takes the pointer, so a grip-drag attempt **drew ink instead of reordering** (receipt `H11`: a stroke appeared on "Page 2", block order unchanged; removed again in `H12`). Whether Drawing should keep grip drags available is a specification question, and block-grip reordering in text mode is therefore still **unverified** in this pass | receipts `H10`–`H12`, frame `110-after-block-drag.png` |
+| 42 | accent rule (row 33) re-checked visually | on these frames the block-row `+` renders purple in the running app (previously green), and the chrome reads `Locked layout` / `Snap off` with `Edit | View` | frames `109-page2-blocks.png`, `112-after-zoom-in.png`, `102-crop-chrome.png` |
+
+
+
+### Native run identity for Milestones 4, 5 and 6
+
+Native identity for these frames: standalone `CakeOS.Apps.Boards.App.dll` at
 `9to1 Workspace/Boards/app/bin/Release/net10.0/`, launcher
 `/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/dotnet-sdk-10.0.301/dotnet`,
 X11 `:1`, client 2850×1781 device px (1440×900 logical at scale 1.979), sandboxed
 `HOME=/tmp/opencode/qwen-native-20261101/home6` (+ `XDG_*` inside it) and
-`HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`; every instance was closed through
-`_NET_CLOSE_WINDOW` and exited `exit=0` (`run7/12/13/14.exit`); no test instance is left running and
-nothing was written into the owner's real `Documents/9to1/Boards`.
+`HAVEN_DATA_DIR=/tmp/opencode/qwen-native-20261101/profile6`. Instances: `run7`–`run14` and `run16`
+were closed through `_NET_CLOSE_WINDOW` and all recorded `exit=0`; `run15` is the crash record and
+exited `134` by itself (nothing was killed by the harness). No test instance is left running on the
+owner's desktop, and nothing was written into the owner's real `Documents/9to1/Boards` — every fixture
+file lives under the sandbox, including the test artefacts left in the disposable profile
+(`Untitled board` fixture: 2 pages, ink strokes and the typed marker texts `DIRTYCLOSE7`, `LATEEDIT42`,
+`CRASHDRAFT7`, `WXYZ`).
 
 Also corrected in §1 above: the v3.2 **atlas** is present (`newAtlas.html` matches the owner-attached
 `/tmp/codex-file-preview-2hRdoO/9to1_Interface_Atlas_v3.2.html` by SHA-256 `80a4ecc6…1a131`) and
@@ -295,7 +317,8 @@ and structured failure identities; shared Productivity Engine + Rnote ink engine
 virtualisation and the performance harness; list/table placeholder words (`"New item"`, `"New table"`);
 the block-id shape divergence that remains for conversion-created blocks; ink palette with no swatches and
 no current-colour readout; tree drag-to-nest absent; keystroke-level draft journaling absent (the sub-1 s
-loss measured in row 28); and the embedded-Haven side of every shared-surface change, unverifiable on this
-PC (rows above).
+loss measured in row 28); block-grip reordering in text mode unverified, and whether Drawing mode should
+still allow grip drags is a specification question (row 41); and the embedded-Haven side of every
+shared-surface change, unverifiable on this PC (rows above).
 `eng/spec-coverage/assessments/Boards.json` is still a code/test reading pass and has **not** been
 regenerated for these fixes yet — it stays at takeover states until the whole gate is exercised end to end.
