@@ -382,15 +382,20 @@
           </Button>
         </Container>
       </Container>
-      <Container ID="AdaptiveFixedActions" Type="Horizontal Stack" Column="1" CellGap="4" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="4" CornerRadius="15">
-        <Button ID="AdaptiveAdd" Content="+ Add" AccessibleName="Insert" Tooltip="Insert a block" Height="36" Padding="10 0" CornerRadius="12" Interactive="{Binding CanEditToolbar}" />
-        <Button ID="AdaptiveDrawing" Action="ToggleDrawing" Selected="{Binding DrawingMode}" AccessibleName="Drawing" Height="36" Padding="10 0" CornerRadius="12" Interactive="{Binding CanEditToolbar}">
+      <!-- Measured on the running app (1 Nov frame 201): the formatting controls inside AdaptivePill are
+           Height 32 with CellGap 2, while these three actions were Height 36 with CornerRadius 12 and
+           CellGap 4, so one toolbar row carried two different control scales and uneven gaps (8 logical
+           then 6). Same row, same optical size and rhythm; "+ Add" and "Drawing" stay distinct by their
+           label and icon, not by being taller. -->
+      <Container ID="AdaptiveFixedActions" Type="Horizontal Stack" Column="1" CellGap="2" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="4" CornerRadius="15">
+        <Button ID="AdaptiveAdd" Content="+ Add" AccessibleName="Insert" Tooltip="Insert a block" Height="32" Padding="10 0" CornerRadius="8" Interactive="{Binding CanEditToolbar}" />
+        <Button ID="AdaptiveDrawing" Action="ToggleDrawing" Selected="{Binding DrawingMode}" AccessibleName="Drawing" Height="32" Padding="10 0" CornerRadius="8" Interactive="{Binding CanEditToolbar}">
           <Container Type="Horizontal Stack" CellGap="5" VerticalAlignment="Center" ID="AdaptiveDrawing_Horizontal_Stack">
             <Image Source="icon:pen" Width="18" Height="18" ID="AdaptiveDrawing_Horizontal_Stack_Image" />
             <Text Text="Drawing" VerticalAlignment="Center" ID="AdaptiveDrawing_Horizontal_Stack_Drawing" />
           </Container>
         </Button>
-        <Button ID="AdaptiveAI" AccessibleName="AI unavailable" Tooltip="AI is not connected to this Boards editor" Interactive="False" Height="36" Padding="10 0" CornerRadius="12">
+        <Button ID="AdaptiveAI" AccessibleName="AI unavailable" Tooltip="AI is not connected to this Boards editor" Interactive="False" Height="32" Padding="10 0" CornerRadius="8">
           <Container ID="AdaptiveAIContent" Type="Horizontal Stack" CellGap="4" VerticalAlignment="Center">
             <Image ID="AdaptiveAIIcon" Source="icon:sparkles" Width="16" Height="16" />
             <Text ID="AdaptiveAILabel" Text="AI" VerticalAlignment="Center" />

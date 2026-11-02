@@ -295,10 +295,14 @@
              the board status, and Save As remains the explicit way to write elsewhere. -->
         <Text ID="BoardStorageNotice" Text="{Binding BoardStorageNotice}" TextWrapping="Wrap"
               FontSize="12" Foreground="{Resource CuiMutedBrush}" AccessibleName="Where boards are kept" />
+        <!-- Measured on the running app (frame 200): the two action pills and the search field sat in one
+             row at three different heights, so the row read as three unrelated controls rather than one
+             action group. One authored height here; the field keeps its own surface treatment because a
+             text field is not a button. -->
         <Container Type="Wrap" CellGap="8">
-          <Button ID="LandingCreateBoard" Content="Create a board" Action="NewBoard" Interactive="{Binding CanEdit}" AccessibleName="Create a new board" />
-          <Button ID="LandingOpenBoard" Content="Open a board…" Action="OpenBoard" Interactive="{Binding CanEdit}" AccessibleName="Open an existing board" />
-          <Input ID="LandingSearchBox" Type="Text" PlaceholderText="Search boards and recent pages" AccessibleName="Search boards and recent pages" Width="300" Value="{Binding LandingSearchQuery}" WriteBack="True" />
+          <Button ID="LandingCreateBoard" Content="Create a board" Action="NewBoard" Interactive="{Binding CanEdit}" AccessibleName="Create a new board" Height="36" VerticalAlignment="Center" />
+          <Button ID="LandingOpenBoard" Content="Open a board…" Action="OpenBoard" Interactive="{Binding CanEdit}" AccessibleName="Open an existing board" Height="36" VerticalAlignment="Center" />
+          <Input ID="LandingSearchBox" Type="Text" PlaceholderText="Search boards and recent pages" AccessibleName="Search boards and recent pages" Width="300" Height="36" MinHeight="36" VerticalContentAlignment="Center" Value="{Binding LandingSearchQuery}" WriteBack="True" />
         </Container>
         <Text Text="{Binding RecentBoardStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Recent boards status" />
         <Text Text="Recent boards" FontSize="20" FontWeight="SemiBold" Margin="0 14 0 0" />
