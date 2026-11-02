@@ -674,6 +674,30 @@
         "Boards insert menu keyboard flow"
       ],
       "recommendation": "Amend the pinned expectation (first option). It matches the native reality, the CUI single-implementation rule and BF-05's own recipe; the trigger-only focus exists so a headless assertion can name a control, not because a person asked for it."
+    },
+    {
+      "id": "OPEN-2026-11-02-BOARDS-INSERT-SEARCH-AND-DESTINATIONS",
+      "at": "2026-11-02T20:40:00Z",
+      "status": "owner question raised; measured natively, nothing changed",
+      "title": "Boards insert menu: what should the search field do while the destination stage is showing, and what does a person see when nothing matches?",
+      "owner_words": [
+        "Insert menus MUST cover applicable registered/donor-parity blocks rather than a shortened hard-coded demonstration list, and MUST support good search/category discovery, outside-click/Escape dismissal, keyboard focus and valid screen-edge placement (canonical v2, inline block controls and direct manipulation)"
+      ],
+      "measured_basis": "Native, clean build (Embedding 298503c9\u2026, run69, private home43/profile43, window 0x01a0000f, receipts BP01-BP05, frames 349-350): with the destination stage open, typing 'qqzzxx' into 'Search blocks and styles\u2026' left exactly the same three destination rows and no indication of any search effect; after clicking a destination row to reach the grouped type list, the search field reverted to its placeholder and further typing (Ctrl+A then 'zzqqxx') produced no characters and no filtering. In code, ToolbarBuilder has no empty-state string at all (grep for 'No match'/'no results' returns nothing) and Fill() clears the item list, returns early while a destination stage is owed, and otherwise only adds groups that match, so a non-matching query yields a blank panel with no explanation.",
+      "options": [
+        "Search filters only block types: keep the destination rows visible while a query is typed, and show a separate filtered type list below them",
+        "Search replaces the destination step: a query hides the destination rows and shows matching types, with the destination chosen later or defaulted",
+        "Annotate the destination rows as not searchable, and add a 'no matching blocks' row so an empty result set explains itself",
+        "Defer the presentation decision until the insert-menu state machine defects (ledger rows 113, 114, 117) are repaired, then decide with the working surface in front of the owner"
+      ],
+      "conflicts": [
+        "the destination stage is a required owner decision (boards must ask where a block goes), but the search field is specified as part of the same menu, and the two currently ignore each other"
+      ],
+      "affected_products": [
+        "Boards insert menu",
+        "any app reusing the CUI insert surface pattern"
+      ],
+      "recommendation": "Third option for the empty-result feedback (it is unambiguous and does not change the destination flow), and hold the destination-versus-search question until the state machine is fixed, then review live with the owner. The keyboard-focus findings (rows 114, 117) must be repaired first: adding an empty state into a list that is being cleared under it would create a second defect."
     }
   ]
 }
