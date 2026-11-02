@@ -4,6 +4,7 @@
 // ViewModel routes edits without hardcoding. Contract block/item ids never
 // contain '_', so names split on the LAST '_' (see BoardsViewModel).
 
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Avalonia;
@@ -215,11 +216,24 @@ public static class BlockRenderer
             Line($"row[{child.GetType().Name}] {DescribeControl("grip", grip, reference)} | " +
                 $"{DescribeControl("insert", insert, reference)}");
         }
-        foreach (var popup in reference.GetVisualDescendants().OfType<Popup>()
-                 .Where(popup => popup.IsOpen).Take(4))
+        // The window's own subtree does not contain an open overlay popup's child (measured: zero open
+        // popups found through window.GetVisualDescendants() while the insert menu was demonstrably on
+        // screen), so the search starts at the root of the window's visual layer instead, which reaches the
+        // overlay layers where an overlay-hosted popup lives.
+        Avalonia.Visual root = reference;
+        while (root.GetVisualParent() is { } parent) root = parent;
+        var open = new List<Popup>();
+        foreach (var scope in new[] { reference, root })
+        {
+            open.AddRange(scope.GetSelfAndVisualDescendants().OfType<Popup>().Where(popup => popup.IsOpen));
+            if (open.Count > 0) break;
+        }
+        Line($"open popups seen from {((object)reference == (object)root ? "root (no window)" : "window then root")}: {open.Count}");
+        foreach (var popup in open.Take(4))
         {
             var target = popup.PlacementTarget;
             Line($"open popup: child={(popup.Child is { } child ? $"{child.Bounds.Width:0.##}x{child.Bounds.Height:0.##} @{At(child, reference)}" : "(null)")} " +
+                $"childRoot={(popup.Child?.GetSelfAndVisualAncestors().LastOrDefault()?.GetType().Name ?? "(none)")} " +
                 $"placement={popup.Placement} {DescribeControl("target", target, reference)}");
         }
     }
