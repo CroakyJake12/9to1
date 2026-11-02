@@ -158,7 +158,80 @@ public static class BlockRenderer
         foreach (var settings in GraphSettings(host, absoluteBlocksHost))
             settings.IsExpanded = expandedGraphs.Contains((GraphSettingsIdentity)settings.Tag!);
         RestoreEditorFocus(vm, host, absoluteBlocksHost, editorFocus);
+        if (Environment.GetEnvironmentVariable("BOARDS_DIAG") == "1")
+        {
+            EmitGeometryDiagnostics(host);
+            // A rebuild prints bounds as they stand before this new subtree has been measured, which is how
+            // the first run reported controls as 0x0. The Loaded-priority second pass reads the same
+            // controls after layout, which is the geometry a person actually clicks on.
+            Dispatcher.UIThread.Post(() => EmitGeometryDiagnostics(host, "after-layout"), DispatcherPriority.Loaded);
+        }
     }
+
+    /// <summary>
+    /// Opt-in on-screen geometry instrument: set BOARDS_DIAG=1 in the app's environment and the running
+    /// build prints, after every page rebuild, the authored bounds of each block's gutter controls and of
+    /// any open popup, in logical CUI units, plus the window's render scaling.
+    ///
+    /// Why this exists: native frame measurements and the app's own authored geometry could not be tied
+    /// together reliably. A device-pixel scan of the running window put the insert "+" glyph about 32 device
+    /// pixels (=16 logical) away from where the control bounds say it should be, and the same scan put the
+    /// six-dot grip glyph 12 device pixels wide where the authored SVG is 14 units. Both readings depend on
+    /// an assumed scale, and two independent scale estimates (window 2 850x1 781 device against a 1 440x900
+    /// logical design, and the insert panel's authored 300-unit width measured as 594 device pixels) agree at
+    /// 1.979 while the icon readings then contradict it. Until the numbers come from the application itself,
+    /// neither the grip hit-target question nor the native/headless insert-menu keyboard difference (ledger
+    /// rows 98 and 103) can be resolved by pixel inspection. This is a diagnostic, not product behaviour: it
+    /// writes to the console only when explicitly requested and changes nothing else.
+    /// </summary>
+    private static void EmitGeometryDiagnostics(StackPanel host, string phase = "on-rebuild")
+    {
+        // Window and StackPanel are both ambiguous between Avalonia.Controls and the CUI-authored layer in
+        // this compilation unit (BlockRenderer is compiled into the Embedding project, where the CUI names
+        // are in scope), so the ancestry walk and the window test are written with explicit types instead of
+        // OfType<Window>() - measured: that form failed with CS0019 "Operator '??' cannot be applied to
+        // operands of type 'Window' and 'StackPanel'".
+        Avalonia.Visual? ancestor = host;
+        Avalonia.Controls.Window? window = null;
+        while (ancestor is not null)
+        {
+            if (ancestor is Avalonia.Controls.Window candidate) { window = candidate; break; }
+            ancestor = ancestor.GetVisualParent();
+        }
+        Avalonia.Visual reference = window ?? (Avalonia.Visual)host;
+        void Line(string text) => Console.WriteLine("[BOARDS-DIAG] " + text);
+        static string At(Avalonia.Visual v, Avalonia.Visual reference) =>
+            v.TranslatePoint(default, reference) is { } p ? $"({p.X:0.##},{p.Y:0.##})" : "no-transform";
+        Line($"{phase}: window={(window is null ? "none" : $"{window.Bounds.Width}x{window.Bounds.Height} client")} " +
+            $"scaling={(window?.RenderScaling ?? double.NaN)} host={host.Bounds.Width:0.##}x{host.Bounds.Height:0.##} " +
+            $"host@{At(host, reference)} reference={reference.GetType().Name}");
+        foreach (var child in host.Children.Take(3))
+        {
+            var buttons = child.GetVisualDescendants().OfType<Button>().ToArray();
+            var grip = buttons.FirstOrDefault(b => b.Name == "BlockGripToggle");
+            var insert = buttons.FirstOrDefault(b => b.Name != "BlockGripToggle" &&
+                (AutomationProperties.GetName(b) ?? string.Empty) == "Insert");
+            if (grip is null && insert is null) continue;
+            Line($"row[{child.GetType().Name}] {DescribeControl("grip", grip, reference)} | " +
+                $"{DescribeControl("insert", insert, reference)}");
+        }
+        foreach (var popup in reference.GetVisualDescendants().OfType<Popup>()
+                 .Where(popup => popup.IsOpen).Take(4))
+        {
+            var target = popup.PlacementTarget;
+            Line($"open popup: child={(popup.Child is { } child ? $"{child.Bounds.Width:0.##}x{child.Bounds.Height:0.##} @{At(child, reference)}" : "(null)")} " +
+                $"placement={popup.Placement} {DescribeControl("target", target, reference)}");
+        }
+    }
+
+    private static string DescribeControl(string role, Control? control, Avalonia.Visual reference) =>
+        control is null
+            ? $"{role}: (absent)"
+            : $"{role}: {control.Bounds.Width:0.##}x{control.Bounds.Height:0.##} @ " +
+              (control.TranslatePoint(default, reference) is { } p ? $"({p.X:0.##},{p.Y:0.##})" : "no-transform") +
+              ", icon=" + (control.GetVisualDescendants().OfType<Image>().FirstOrDefault() is { } image &&
+                  image.TranslatePoint(default, reference) is { } q
+                      ? $"({q.X:0.##},{q.Y:0.##}) {image.Bounds.Width:0.##}x{image.Bounds.Height:0.##}" : "(none)");
 
     private sealed record GraphSettingsIdentity(string PageId, string BlockId);
 
