@@ -650,6 +650,60 @@ public sealed class BoardsBlockClickFocusTests
             colour is not null && !ReferenceEquals(colour, Avalonia.Media.Brushes.Transparent);
     }
 
+    /// <summary>
+    /// The row the insert menu highlights must be the row its Enter applies.
+    ///
+    /// Why this exists, and why it is written as an assertion rather than a workaround: on the running build
+    /// the newly visible cue and the applied action disagree. run68 (`home42`/`profile42`, window
+    /// `0x01a0000f`, receipts BO02-BO04, frames 346-348): open the menu, press Down once, and the accent
+    /// outline sits on "Add Block Above" (band y 566-639 with the label at 596-615); pressing Enter then
+    /// closed the surface and left the physical file at richNotes.version 1 with the same single empty
+    /// paragraph - nothing was inserted above or below. A different run of the same two keys replaced the
+    /// block instead (run67, `home41`/`profile41`: the paragraph became a Tabber carrying its own page
+    /// "Tab 1", file version 1 -> 3), which is the destination "Replace Current Block". So the same key pair
+    /// produced no action in one run and the third choice in another, while the screen showed the first
+    /// choice. A person cannot be asked to guess which row a visible highlight stands for.
+    ///
+    /// This case is the durable, honest form of that finding: it asserts the one property the specification
+    /// requires (BF-17: Escape/Close/scrim restore correct focus; the named control does the named thing) and
+    /// it will fail somewhere until the two keyboard routes in the surface are reconciled. Measured on
+    /// 2 November 2026 as NOT PASSING headlessly - see the ledger row that cites this case.
+    /// </summary>
+    [Fact]
+    public Task PressingDownOnceThenEnterAppliesTheRowTheMenuIsShowingAsChosen() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+
+        var before = fixture.Session.Document.Sections[0].Pages[0].Blocks.Count;
+        var anchorId = fixture.Session.Document.Sections[0].Pages[0].Blocks[0].Id;
+
+        window.KeyPress(Key.Down, Avalonia.Input.RawInputModifiers.None, PhysicalKey.ArrowDown, "Down");
+        fixture.Settle();
+
+        var rows = new[] { "Add Block Above", "Add Block Below", "Replace Current Block" }
+            .Select(name => InsertRow(window, name))
+            .ToArray();
+        var shown = rows.Single(row => LooksChosenForProbe(row) && row.IsKeyboardFocusWithin);
+        var shownName = AutomationProperties.GetName(shown);
+        Assert.Equal("Add Block Above", shownName);
+
+        window.KeyPress(Key.Enter, Avalonia.Input.RawInputModifiers.None, PhysicalKey.Enter, "Enter");
+        fixture.Settle();
+
+        var after = fixture.Session.Document.Sections[0].Pages[0].Blocks;
+        Assert.True(after.Count == before + 1,
+            $"Enter on the shown destination row \"{shownName}\" did not add a block: blocks went " +
+            $"{before} -> {after.Count}; the surface showed {shownName} chosen");
+        Assert.True(after[0].Id != anchorId,
+            $"Enter applied the shown row \"{shownName}\" but the new block is not in front of the anchor: " +
+            $"first block is still {anchorId}");
+        Assert.True(after[1].Id == anchorId,
+            $"Add Block Above did not put the anchor second: order is " +
+            $"{string.Join(",", after.Select(block => block.Id))}");
+    });
+
     private static TextBox InsertSearch(Window window) => window.GetVisualDescendants().OfType<TextBox>().Single(
         candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
 
