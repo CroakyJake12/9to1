@@ -58,8 +58,11 @@ public static class ToolbarBuilder
     internal static void AttachInsertMenu(Button button, BoardsViewModel vm,
         string? insertAfterBlockId = null, string? previewBlockId = null)
     {
-        var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom,
-            IsLightDismissEnabled = true, ShouldUseOverlayLayer = true };
+        // Overlay hosting with the framework light dismiss replaced by Boards-owned outside-press closing.
+        // Measured on this platform: with light dismiss on, presses aimed at a drawn menu row never reached
+        // the row and the insertion route could not be completed at all (see BoardsPopupHosting).
+        var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
+        BoardsPopupHosting.ConfigureOverlayPopup(popup);
         // A manually owned Popup needs the trigger's logical theme ancestry.
         button.AttachedToVisualTree += (_, _) => ((ISetLogicalParent)popup).SetParent(button);
         ((ISetLogicalParent)popup).SetParent(button);

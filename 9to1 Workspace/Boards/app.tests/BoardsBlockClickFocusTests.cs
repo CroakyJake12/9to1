@@ -430,6 +430,35 @@ public sealed class BoardsBlockClickFocusTests
         Assert.Equal(string.Empty, cells.GetValueOrDefault("0,1"));
     });
 
+    /// <summary>
+    /// Outside-click closing for the floating insertion surface. Boards owns this behaviour now: measured on
+    /// the running Linux build (ledger rows 86-91), the framework's light-dismiss overlay stops a drawn
+    /// popup row from receiving a pointer press at all, so the overlay is switched off for the Boards
+    /// popups and the closing rule is implemented against the bounds of the surface that is actually drawn.
+    /// This case is what keeps that rule honest: without it, switching the overlay off would silently make
+    /// the menu impossible to dismiss.
+    /// </summary>
+    [Fact]
+    public Task TheInsertMenuClosesWhenAPressLandsOutsideItsSurface() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+
+        var search = InsertSearch(window);
+        Assert.True(search.IsEffectivelyVisible, "the insertion surface must be open before it can be dismissed");
+
+        var pageTitle = window.GetVisualDescendants().OfType<TextBox>().Single(candidate =>
+            AutomationProperties.GetName(candidate) == "Page title");
+        Click(window, CenterInWindow(pageTitle, window));
+        fixture.Settle();
+
+        var stillThere = window.GetVisualDescendants().OfType<TextBox>()
+            .SingleOrDefault(candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
+        Assert.True(stillThere is not { IsEffectivelyVisible: true },
+            "a press outside the insertion surface left it open: Boards-owned outside-click closing is not working");
+    });
+
     private static TextBox InsertSearch(Window window) => window.GetVisualDescendants().OfType<TextBox>().Single(
         candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
 

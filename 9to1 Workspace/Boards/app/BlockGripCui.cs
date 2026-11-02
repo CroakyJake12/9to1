@@ -87,10 +87,11 @@ internal static class BlockGripCui
         {
             PlacementTarget = trigger,
             Placement = PlacementMode.Bottom,
-            IsLightDismissEnabled = true,
-            ShouldUseOverlayLayer = true,
             Child = menu,
         };
+        // Same measured reason as the insertion menu: the framework light-dismiss overlay stops the drawn
+        // menu from receiving a pointer press on this platform, so closing is owned by Boards.
+        BoardsPopupHosting.ConfigureOverlayPopup(popup);
         var host = new BlockActionsHost(popup, menu,
             () => Task.WhenAll(loader.WhenActionsIdleAsync(), menuLoader.WhenActionsIdleAsync()));
         popup.Opened += (_, _) => host.OpenedCount++;
