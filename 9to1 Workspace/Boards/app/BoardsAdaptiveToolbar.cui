@@ -7,7 +7,10 @@
     <Container ID="AdaptiveToolbar" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" HorizontalAlignment="Stretch">
       <Container ID="AdaptivePill" Type="Toolbar" Column="0" CellGap="2" Padding="7 4" CornerRadius="15" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" Interactive="{Binding CanEditToolbar}">
         <Container ID="AdaptiveFontSection" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" Active="{Binding TextMode}" Tooltip="{Binding TypographyGroupHint}">
-          <Input ID="AdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseParagraphStyle}" Tooltip="{Binding StyleControlHint}" />
+          <!-- Measured on the running app (2 Nov frame 225, zoom of the style control): the selected
+               label "Paragraph" was drawn cut off at the control edge, so the toolbar opened with a
+               visibly broken word. The name has to fit the longest style label plus the drop marker. -->
+          <Input ID="AdaptiveStyle" Type="Select" Width="150" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseParagraphStyle}" Tooltip="{Binding StyleControlHint}" />
           <Input ID="AdaptiveFont" Type="Text" Width="98" Height="32" Value="{Binding FontDraft, mode=TwoWay}" SubmitAction="ApplyFont" AccessibleName="Font family" Tooltip="{Binding FontControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
           <Container Type="Menu" ID="AdaptiveFontSection_Menu" Tooltip="{Binding FontControlHint}">
             <Button Type="Menu Item" Content="⌄" Height="32" Padding="0" AccessibleName="Choose font family" Width="24" ID="AdaptiveFontSection_Menu_Choose_font_family" IsEnabled="{Binding CanUseTypography}" Tooltip="{Binding FontControlHint}">
@@ -20,7 +23,13 @@
             </Button>
           </Container>
           <Button Content="−" Action="FontSmaller" AccessibleName="Decrease font size" Width="26" Height="32" Padding="0" ID="AdaptiveFontSection_FontSmaller" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="{Binding FontControlHint}" IsEnabled="{Binding CanUseTypography}" />
-          <Input ID="AdaptiveSize" Type="Text" Width="43" Height="32" Value="{Binding SizeDraft, mode=TwoWay}" SubmitAction="ApplySize" AccessibleName="Font size" Tooltip="{Binding SizeControlHint}" Padding="6 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
+          <!-- Same frame: the size field read "-  14   px  +" with the number stranded on the left of a
+               wide field, so the unit looked attached to nothing. Taken back to 34 with 2 of side padding:
+               "14" now sits next to the unit and a three-digit size still fits. Centring the digits is NOT
+               expressible in CUI today - the compiler refuses HorizontalContentAlignment on an Input with
+               CUIC013 (measured 2 Nov 2026, build log /tmp/opencode/qwen-1102-emb4.log) - and that is a CUI
+               capability gap to close in the framework, not something to work around in code-behind. -->
+          <Input ID="AdaptiveSize" Type="Text" Width="34" Height="32" Value="{Binding SizeDraft, mode=TwoWay}" SubmitAction="ApplySize" AccessibleName="Font size" Tooltip="{Binding SizeControlHint}" Padding="2 0" MinHeight="32" MaxHeight="32" VerticalContentAlignment="Center" VerticalAlignment="Center" FontSize="13" IsEnabled="{Binding CanUseTypography}" />
           <Text Text="px" VerticalAlignment="Center" FontSize="11" ID="AdaptiveFontSection_px" />
           <Button Content="+" Action="FontBigger" AccessibleName="Increase font size" Width="26" Height="32" Padding="0" ID="AdaptiveFontSection_FontBigger" MinWidth="26" MinHeight="32" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" FontSize="17" Tooltip="{Binding FontControlHint}" IsEnabled="{Binding CanUseTypography}" />
           <Container Type="Menu" ID="AdaptiveFontSection_Menu_2">
