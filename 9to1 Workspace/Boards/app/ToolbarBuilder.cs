@@ -67,6 +67,33 @@ public static class ToolbarBuilder
         button.AttachedToVisualTree += (_, _) => ((ISetLogicalParent)popup).SetParent(button);
         ((ISetLogicalParent)popup).SetParent(button);
         CuiPopupPresentation.RequestTransparency(popup);
+        if (Environment.GetEnvironmentVariable("BOARDS_DIAG") == "1")
+        {
+            // Same opt-in instrument as BlockRenderer's: an overlay-hosted popup cannot be found by walking
+            // the window's visual tree (measured: "open popups seen from window then root: 0" while the menu
+            // was demonstrably on screen), and pixel aiming at a menu row from a screenshot has repeatedly
+            // produced clicks that landed on the wrong element. So the popup reports its own geometry: the
+            // trigger's bounds and position in window coordinates, then the panel's position and size after
+            // layout, in the application's logical units. Diagnostic only, console only, behind BOARDS_DIAG.
+            popup.Opened += (_, _) =>
+            {
+                void Report()
+                {
+                    var reference = (Avalonia.Visual?)button.GetSelfAndVisualAncestors().OfType<Avalonia.Controls.Window>().FirstOrDefault() ?? button;
+                    Avalonia.Visual rootRef = reference;
+                    while (rootRef.GetVisualParent() is { } parent) rootRef = parent;
+                    var panelRoot = popup.Child?.GetSelfAndVisualAncestors().LastOrDefault();
+                    Console.WriteLine($"[BOARDS-DIAG] insert popup: trigger {button.Bounds.Width:0.##}x{button.Bounds.Height:0.##} @" +
+                        (button.TranslatePoint(default, reference) is { } tp ? $"({tp.X:0.##},{tp.Y:0.##})" : "no-transform") +
+                        $" | panel {(popup.Child is null ? "(null)" : $"{popup.Child.Bounds.Width:0.##}x{popup.Child.Bounds.Height:0.##}")} @" +
+                        (popup.Child is not null && panelRoot is not null && popup.Child.TranslatePoint(default, rootRef) is { } cp
+                            ? $"({cp.X:0.##},{cp.Y:0.##}) relative to {panelRoot.GetType().Name}" : "no-transform") +
+                        $" placement={popup.Placement} lightDismiss={popup.IsLightDismissEnabled}");
+                }
+                Report();
+                Avalonia.Threading.Dispatcher.UIThread.Post(Report, Avalonia.Threading.DispatcherPriority.Loaded);
+            };
+        }
         var panel = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), MinWidth = 300, MaxWidth = 420,
             Height = 384, MaxHeight = 384 };
         var search = new TextBox { PlaceholderText = "Search blocks and styles…", Height = 36, MinHeight = 36,
@@ -237,6 +264,15 @@ public static class ToolbarBuilder
             item.PointerExited += (_, _) => ReconcileRowState();
             item.GotFocus += (_, _) => ReconcileRowState();
             item.LostFocus += (_, _) => ReconcileRowState();
+            // The type rows and the destination rows are different control kinds, and until now they showed
+            // the same interaction differently: a hovered type row got a soft wash, while a keyboard-selected
+            // type row got only CUI's accent BorderColor against a theme-declared zero border width, i.e. no
+            // cue at all. Measured on the running build (2 November, run65 receipt BL04, frame 338): after
+            // Down in the type stage the row's drawn state was unchanged from the previous frame, while the
+            // destination stage now shows an accent outline (run62 frames 321-323). Same surface, two
+            // languages. The accent outline from the destination stage is applied here too, so focus and
+            // hover are recognisable in both stages; the wash stays for the pointer.
+            InsertMenuContext.AttachRowCues(item);
             CuiPropertyPresentation.Attach(item);
             Avalonia.Automation.AutomationProperties.SetName(item, "Insert " + label);
             if (context.AnchorBlockId is not null &&

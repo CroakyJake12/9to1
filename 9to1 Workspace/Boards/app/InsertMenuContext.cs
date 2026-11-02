@@ -132,54 +132,71 @@ internal sealed class InsertMenuContext(BoardsViewModel vm, Popup popup, TextBox
         CuiPropertyPresentation.TryGetExisting(row, out var store) && store is not null &&
         store.Resolve("Height").Value is double height && height > 0 ? height : FallbackMenuRowHeight;
 
+    /// <summary>Applies the chosen cue to one row. ToolbarBuilder builds the type rows itself, so it calls
+    /// this per row; GetVisualDescendants() excludes the element it is called on, which is why the rows are
+    /// passed directly rather than by walking a subtree (measured: a walk from the row itself attached
+    /// nothing, and the new headless case failed on exactly that).</summary>
+    internal static void AttachRowCues(Control row) => ApplyRowCue(row);
+
     private static void AttachDestinationRowCues(Control root)
     {
-        foreach (var row in root.GetVisualDescendants().OfType<MenuItem>())
+        // Both stages need the cue and they are built from different control kinds - the authored
+        // destination rows load as CuiMenuItem, the type list is built as Button - so the walk covers
+        // Control and filters to the actionable ones rather than to one class.
+        foreach (var row in root.GetVisualDescendants().OfType<Control>()
+                 .Where(candidate => candidate is MenuItem or Button && candidate.Name != "InsertSearchField"))
+            ApplyRowCue(row);
+    }
+
+    private static void ApplyRowCue(Control row)
+    {
+        void Reconcile()
         {
-            void Reconcile()
-            {
-                // Width is owned here for both routes because the menu-row theme's zero width suppresses
-                // whatever colour is current. The colour stays the framework's while the row has keyboard
-                // focus (CUI writes CuiFocusBrush at overlay priority, which outranks this instance value);
-                // the pointer route gets no colour from CUI at all, so the accent comes from the active
-                // theme's own CuiAccentBrush resource rather than a Boards-private brush - the same
-                // resource-resolving approach BlockRenderer.AccentColorOf uses, so an embedded dark surface
-                // gets the dark palette's accent.
-                var focusHeld = row.IsKeyboardFocusWithin;
-                var chosen = focusHeld || row.IsPointerOver;
-                CuiPropertyPresentation.Set(row, "BorderWidth",
-                    chosen ? new Avalonia.Thickness(1.5) : new Avalonia.Thickness(0),
-                    CuiPropertyLevel.Instance, "Boards insert destination chosen cue");
-                // A focused row has to grow, not just gain a border. Measured on the running build
-                // (2 November, run61 receipts BF02-BF05, frames 316-319, cue build App a9dc4a3f / Embedding
-                // 10bb6491): holding the authored 34-unit height while adding a 1.5-unit border and the same
-                // padding removed the row's label from the screen entirely - every label band below the
-                // highlighted row went blank, one more per Down press. Compensating the padding alone made it
-                // worse (frame 317: the highlighted row was an empty rounded box with its label pushed into
-                // the next row's space). The cue is therefore completed by giving the focused row 3 extra
-                // units of height - 1.5 per edge - which the menu's fixed 384-unit panel absorbs.
-                CuiPropertyPresentation.Set(row, "Height",
-                    chosen ? 37d : AuthoredRowHeight(row),
-                    CuiPropertyLevel.Instance, "Boards insert destination chosen cue size");
-                CuiPropertyPresentation.Set(row, "MinHeight",
-                    chosen ? 37d : AuthoredRowHeight(row),
-                    CuiPropertyLevel.Instance, "Boards insert destination chosen cue size");
-                if (focusHeld)
-                    CuiPropertyPresentation.Remove(row, "BorderColor", CuiPropertyLevel.Instance,
-                        "Boards insert destination chosen cue");
-                else if (row.IsPointerOver)
-                    CuiPropertyPresentation.Set(row, "BorderColor",
-                        row.TryFindResource("CuiAccentBrush", out var accent) ? accent : Avalonia.Media.Brushes.Transparent,
-                        CuiPropertyLevel.Instance, "Boards insert destination chosen cue");
-                else
-                    CuiPropertyPresentation.Set(row, "BorderColor", Avalonia.Media.Brushes.Transparent,
-                        CuiPropertyLevel.Instance, "Boards insert destination chosen cue");
-            }
-            row.GotFocus += (_, _) => Reconcile();
-            row.LostFocus += (_, _) => Reconcile();
-            row.PointerEntered += (_, _) => Reconcile();
-            row.PointerExited += (_, _) => Reconcile();
+            // Width is owned here for both routes because the menu-row theme's zero width suppresses
+            // whatever colour is current. The colour stays the framework's while the row has keyboard
+            // focus (CUI writes CuiFocusBrush at overlay priority, which outranks this instance value);
+            // the pointer route gets no colour from CUI at all, so the accent comes from the active
+            // theme's own CuiAccentBrush resource rather than a Boards-private brush - the same
+            // resource-resolving approach BlockRenderer.AccentColorOf uses, so an embedded dark surface
+            // gets the dark palette's accent.
+            var focusHeld = row.IsKeyboardFocusWithin;
+            var chosen = focusHeld || row.IsPointerOver;
+            // order 100: the type rows' own reconciliation (ToolbarBuilder.ReconcileRowState via
+            // SetQuietToolbarControl) also writes BorderWidth at instance priority, and the store's
+            // precedence tuple is (level, order, sequence) - a higher order wins, so the cue is not
+            // decided by whichever handler ran last. The framework's Overlay-level focus colour still
+            // outranks this instance value, which is what keeps the keyboard route CUI-owned.
+            CuiPropertyPresentation.Set(row, "BorderWidth",
+                chosen ? new Avalonia.Thickness(1.5) : new Avalonia.Thickness(0),
+                CuiPropertyLevel.Instance, "Boards insert chosen cue", 100);
+            // A focused row has to grow, not just gain a border. Measured on the running build (2 November,
+            // run61 receipts BF02-BF05, frames 316-319): holding the authored 34-unit height while adding a
+            // 1.5-unit border removed the row's label from the screen entirely - every label band at or
+            // below the highlighted row went blank, one more per Down press. Compensating with padding alone
+            // was worse (frame 317: the highlighted row became an empty rounded box with its label pushed
+            // into the next row's space). The cue therefore grows the row by 3 units - 1.5 per edge - which
+            // the menu's fixed-height panel absorbs.
+            CuiPropertyPresentation.Set(row, "Height",
+                chosen ? 37d : AuthoredRowHeight(row),
+                CuiPropertyLevel.Instance, "Boards insert chosen cue size", 100);
+            CuiPropertyPresentation.Set(row, "MinHeight",
+                chosen ? 37d : AuthoredRowHeight(row),
+                CuiPropertyLevel.Instance, "Boards insert chosen cue size", 100);
+            if (focusHeld)
+                CuiPropertyPresentation.Remove(row, "BorderColor", CuiPropertyLevel.Instance,
+                    "Boards insert chosen cue");
+            else if (row.IsPointerOver)
+                CuiPropertyPresentation.Set(row, "BorderColor",
+                    row.TryFindResource("CuiAccentBrush", out var accent) ? accent : Avalonia.Media.Brushes.Transparent,
+                    CuiPropertyLevel.Instance, "Boards insert chosen cue", 100);
+            else
+                CuiPropertyPresentation.Set(row, "BorderColor", Avalonia.Media.Brushes.Transparent,
+                    CuiPropertyLevel.Instance, "Boards insert chosen cue", 100);
         }
+        row.GotFocus += (_, _) => Reconcile();
+        row.LostFocus += (_, _) => Reconcile();
+        row.PointerEntered += (_, _) => Reconcile();
+        row.PointerExited += (_, _) => Reconcile();
     }
 
     internal void Commit(string kind, long opening, long contentVersion, BlockInsertionPreviewOwner? owner, string? placement)

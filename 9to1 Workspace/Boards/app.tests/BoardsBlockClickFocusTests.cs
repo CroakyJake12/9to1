@@ -606,6 +606,50 @@ public sealed class BoardsBlockClickFocusTests
         Assert.True(LooksChosen(target), "the keyboard-held row lost its chosen look when an unrelated pointer moved");
     });
 
+    /// <summary>
+    /// A keyboard-selected row in the block-type stage must show the same chosen cue as a row in the
+    /// destination stage.
+    ///
+    /// Why: the insert surface is one menu but its two stages are built from different control kinds - the
+    /// destination rows load from CUI as CuiMenuItem, the type rows are constructed in code as Buttons - and
+    /// measured on the running build they answered the same interaction differently. A hovered type row was
+    /// painted with a soft wash, while a type row moved onto by the keyboard kept CUI's accent BorderColor
+    /// against a theme-declared zero border width, i.e. no visible cue at all (2 November 2026, run65 receipt
+    /// BL04, frame 338: after Down in the filtered type stage the row's drawn state was unchanged from the
+    /// previous frame). The destination stage already drew an accent outline (run62, frames 321-323). Two
+    /// stages of one menu should not speak different languages to the same person.
+    /// </summary>
+    [Fact]
+    public Task AKeyboardSelectedTypeRowShowsTheSameChosenCueAsADestinationRow() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+        // Choose a destination first, which replaces the destination stage with the type list.
+        var below = InsertRow(window, "Add Block Below");
+        Click(window, CenterInWindow(below, window));
+        fixture.Settle();
+
+        var paragraph = InsertRow(window, "Insert Paragraph");
+        Assert.False(LooksChosenForProbe(paragraph), "the type row looks chosen before anything selects it");
+
+        Assert.True(paragraph.Focus(), "the type row must be keyboard focusable");
+        fixture.Settle();
+        Assert.True(LooksChosenForProbe(paragraph),
+            "the keyboard-selected type row shows no chosen cue, while a keyboard-selected destination row " +
+            "does (run62 frames 321-323): the insert menu's two stages disagree about how to show the same " +
+            "state, so a keyboard user cannot tell which item Enter will apply");
+    });
+
+    private static bool LooksChosenForProbe(Control row)
+    {
+        if (!CuiPropertyPresentation.TryGetExisting(row, out var store) || store is null) return false;
+        var width = store.Resolve("BorderWidth").Value as Avalonia.Thickness?;
+        var colour = store.Resolve("BorderColor").Value as Avalonia.Media.IBrush;
+        return width is { } w && (w.Left > 0 || w.Top > 0 || w.Right > 0 || w.Bottom > 0) &&
+            colour is not null && !ReferenceEquals(colour, Avalonia.Media.Brushes.Transparent);
+    }
+
     private static TextBox InsertSearch(Window window) => window.GetVisualDescendants().OfType<TextBox>().Single(
         candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
 
