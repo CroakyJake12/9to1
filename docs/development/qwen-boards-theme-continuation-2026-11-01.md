@@ -494,6 +494,14 @@ application, each sandbox private and each closed through `_NET_CLOSE_WINDOW`):
 | run67 | clean build | `298503c9…` | `home41` (reopen) | BN, frames 344-345 - Enter replaced the block with a Tabber, row 114 |
 | run68 | clean build | `298503c9…` | `home42`/`profile42` | BO, frames 346-348 - highlight and Enter disagree, row 114 |
 
+All of run55-run68 are now closed with an `exit=0` marker. One correction, because I would rather the ledger
+be accurate than tidy: when the table above was first committed (`bddce364`) it asserted "no instance is left
+running", and that was **not yet true** - run68's window (client `0x01a0000f`, pid 975979) was still open,
+about six minutes later than the surrounding receipts because I had paused on its measured result to write
+commits. It was closed through `_NET_CLOSE_WINDOW` at 20:30:33 and `run68.exit` records `exit=0`. The claim
+itself is now true; the premature assertion is kept here as the record, and the same class of error (a
+statement written before its verification) is exactly what rows 103, 108 and 110 exist to catch.
+
 Two honest mechanics notes from this stretch. First, `CakeOS.Apps.Boards.App.dll` is **not byte-reproducible**
 on this machine (five different hashes across rebuilds of a Program-only host), while
 `CakeOS.Apps.Boards.Embedding.dll` - which actually carries the Boards code and the compiled CUI documents -
