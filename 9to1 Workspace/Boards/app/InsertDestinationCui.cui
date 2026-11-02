@@ -1,4 +1,25 @@
 <Cui>
+  <!-- No Selected attribute is authored on these rows: an attempt on 2 November 2026 bound
+       Selected="{Binding <Placement>Chosen}" and it was removed again, because reading the running
+       projection back showed the binding never reached the element at all (Selected stayed
+       "False@BuiltIn/CUI built-in default" while the rows are CuiMenuItem, not Button). What does exist is
+       CUI's own interaction state, which on keyboard focus writes BorderColor="CuiFocusBrush" - the accent
+       purple - but the menu-row theme declares BorderWidth 0, so that colour has nothing to paint. The
+       visible chosen cue is therefore owned by the destination stage's C# host (InsertMenuContext), which
+       reconciles hover and keyboard focus into a border width, the same precedence pattern the toolbar rows
+       already use.
+
+
+       Why: measured on the running build on 2 November 2026 (run59, `home34`/`profile34`, receipts
+       BD02-BD04, frames 311 and 308-309 from the previous run), pressing Down in this stage did move the
+       keyboard - the page-side insertion preview changed (the accent bar by the plus and at the top of the
+       card) - but no row in the menu showed any state at all. The row background sampled identical values
+       before and after the key press, and in the same build the C#-built type rows DO show a chosen state,
+       because ToolbarBuilder reconciles hover and keyboard focus into CuiPropertyPresentation.SetSelected
+       for those rows. A keyboard user in this stage therefore cannot see which destination Enter will
+       apply, while the destination stage is the one choice that changes where a block lands. The named
+       invariant, now guarded by a headless case: exactly the row that answers the keyboard (or the pointer)
+       is the row that looks chosen. -->
   <Actions>
     <Action Name="ChooseAbove" Command="ChooseDestination" Parameter="{Binding AboveChoose}" />
     <Action Name="ChooseBelow" Command="ChooseDestination" Parameter="{Binding BelowChoose}" />

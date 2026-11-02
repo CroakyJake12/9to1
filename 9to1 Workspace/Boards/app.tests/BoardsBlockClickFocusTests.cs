@@ -501,8 +501,115 @@ public sealed class BoardsBlockClickFocusTests
             "Enter on the highlighted destination row did not advance the surface to the block-type stage");
     });
 
+    /// <summary>
+    /// BF-12's keyboard lifecycle in the destination stage: the row that answers the keyboard (or the
+    /// pointer) must be the row that looks chosen.
+    ///
+    /// Measured on the running build first (2 November 2026, run58/run59, `home33`/`profile33` and
+    /// `home34`/`profile34`, receipts BC02-BC04 and BD01-BD02, frames 307-309 and 311). Pressing Down in
+    /// this stage moved the keyboard - the page-side insertion preview changed, visible as the accent bar
+    /// beside the plus and along the top of the card - but no row in the menu showed any state: the row
+    /// backgrounds sampled byte-identical values before and after the key press at device y 602, 674 and
+    /// 746. In the same build the C#-built type rows do show a chosen state, because ToolbarBuilder
+    /// reconciles hover and keyboard focus into CuiPropertyPresentation.SetSelected for them. A keyboard
+    /// user therefore could not see which destination Enter would apply, and the destination stage is the
+    /// one choice that decides where a block lands.
+    /// </summary>
+    [Fact]
+    public Task TheDestinationRowThatAnswersTheKeyboardOrPointerIsTheRowThatLooksChosen() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+
+        var rows = new[] { "Add Block Above", "Add Block Below", "Replace Current Block" }
+            .Select(name => InsertRow(window, name))
+            .OfType<Control>()
+            .ToArray();
+        Assert.Equal(3, rows.Length);
+
+        static CuiEffectivePropertyStore StoreOf(Control row)
+        {
+            Assert.True(CuiPropertyPresentation.TryGetExisting(row, out var store) && store is not null,
+                $"destination row \"{AutomationProperties.GetName(row)}\" has no CUI property projection, so no " +
+                "chosen state can be resolved for it");
+            return store!;
+        }
+        // The chosen cue for a destination row is CUI's own accent BorderColor (written by the framework's
+        // interaction state while the row holds focus) plus the border width the destination stage supplies
+        // on top of it, because the menu-row theme declares BorderWidth 0 and would otherwise paint
+        // nothing. Both halves are required: colour without width is invisible (the defect measured natively
+        // on 2 November), and width without colour would invent a Boards-private indicator.
+        static bool LooksChosen(Control row)
+        {
+            var store = StoreOf(row);
+            var width = store.Resolve("BorderWidth").Value as Avalonia.Thickness?;
+            var colour = store.Resolve("BorderColor").Value as Avalonia.Media.IBrush;
+            return width is { } w && (w.Left > 0 || w.Top > 0 || w.Right > 0 || w.Bottom > 0) &&
+                colour is not null && !ReferenceEquals(colour, Avalonia.Media.Brushes.Transparent);
+        }
+        static double RowHeight(Control row) =>
+            (StoreOf(row).Resolve("Height").Value as double?) ?? double.NaN;
+        static double RowBottomInWindow(Control row, Window window) =>
+            row.TranslatePoint(new Point(0, row.Bounds.Height), window) is { } p ? p.Y : double.NaN;
+        static string CueState(Control row)
+        {
+            var store = StoreOf(row);
+            return "borderWidth=" + store.Resolve("BorderWidth").Value + " [" + store.Resolve("BorderWidth").Level +
+                "/'" + store.Resolve("BorderWidth").Source + "'] borderColor=" + store.Resolve("BorderColor").Value +
+                " [" + store.Resolve("BorderColor").Level + "/'" + store.Resolve("BorderColor").Source + "']";
+        }
+        string Inventory() => string.Join(" | ", rows.Select(row =>
+            $"{AutomationProperties.GetName(row)}: chosen={LooksChosen(row)} {CueState(row)} " +
+            $"focused={row.IsKeyboardFocusWithin} pointerOver={row.IsPointerOver}"));
+
+        Assert.All(rows, row => Assert.False(LooksChosen(row),
+            $"destination row \"{AutomationProperties.GetName(row)}\" claims to be chosen before any pointer or " +
+            "keyboard has selected it"));
+
+        var target = rows.Single(row => AutomationProperties.GetName(row) == "Add Block Below");
+        Assert.True(target.Focus(), "the destination row must be keyboard focusable");
+        fixture.Settle();
+        // The chosen cue must not walk over the label it is highlighting: the row keeps its authored
+        // 34-unit height, so without compensating the content padding the border crosses the top of the
+        // row's own text (measured on the running build, run60 receipt BE04, frame 315).
+        var restHeight = RowHeight(rows[0]);
+        Assert.True(LooksChosen(target),
+            "the keyboard-selected destination row does not look chosen: this is the exact native gap measured on " +
+            "2 November (run59 frames 311 and 307-309) - Down moved the insertion preview on the page while every " +
+            "row in the menu stayed blank, so a keyboard user cannot see which destination Enter will apply. " +
+            "State right now: " + Inventory());
+        Assert.False(LooksChosen(rows.Single(row => AutomationProperties.GetName(row) == "Add Block Above")),
+            "another destination row took on a chosen look while the keyboard was elsewhere");
+        Assert.True(RowHeight(target) >= restHeight + 1.0,
+            $"the chosen cue did not grow the row, so the border is drawn across the row's own label: height " +
+            $"went {restHeight} -> {RowHeight(target)} while the border is 1.5 units wide (measured natively on " +
+            "2 November: run60 frame 315 shows the accent outline crossing the letters, run61 frames 316-319 " +
+            "show a padding-based compensation deleting the labels of every row at or below the highlight)");
+        Assert.True(RowBottomInWindow(target, window) > restHeight,
+            "the grown row must still be positioned where its label is drawn; the highlight landed on empty space");
+
+        // And the pointer route: hovering a row must choose it, and un-hovering must clear it without
+        // disturbing a row that the keyboard still holds.
+        var other = rows.Single(row => AutomationProperties.GetName(row) == "Add Block Above");
+        window.MouseMove(CenterInWindow(other, window));
+        fixture.Settle();
+        Assert.True(LooksChosen(other),
+            "the hovered destination row does not look chosen. Pointer state reached the row: " +
+            $"{other.IsPointerOver}; {CueState(other)}; press point {CenterInWindow(other, window)}; " +
+            $"window pointer state {window.IsPointerOver}");
+        Assert.True(LooksChosen(target), "hovering a different row cleared the row the keyboard still holds");
+
+        window.MouseMove(CenterInWindow(fixture.PageTitleBox, window));
+        fixture.Settle();
+        Assert.False(LooksChosen(other), "the un-hovered destination row still looks chosen");
+        Assert.True(LooksChosen(target), "the keyboard-held row lost its chosen look when an unrelated pointer moved");
+    });
+
     private static TextBox InsertSearch(Window window) => window.GetVisualDescendants().OfType<TextBox>().Single(
         candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
+
+    internal static Control? InsertRowForProbe(Window window, string accessibleName) => InsertRow(window, accessibleName);
 
     private static Control InsertRow(Window window, string accessibleName)
     {
