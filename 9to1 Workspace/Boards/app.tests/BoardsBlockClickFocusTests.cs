@@ -459,6 +459,48 @@ public sealed class BoardsBlockClickFocusTests
             "a press outside the insertion surface left it open: Boards-owned outside-click closing is not working");
     });
 
+    /// <summary>
+    /// BF-17's keyboard row, measured through the destination stage.
+    ///
+    /// Why this exists: on the running build, pressing Down with the destination stage open changed the
+    /// surrounding scroll area and left no row visibly chosen (run52, receipts AQ01-AQ02, frame 282). The
+    /// insert surface builds its navigation list from rows that are focusable, and the CUI loader sets
+    /// Focusable from the authored Interactive attribute, so three destination rows that never author it
+    /// cannot be reached from the keyboard at all - the route was pointer-only. This case is the durable
+    /// guard for that: it fails if the rows stop being focusable, if Down stops landing on one of them, or
+    /// if Enter no longer applies the row that looks chosen.
+    /// </summary>
+    [Fact]
+    public Task TheDestinationRowsAreKeyboardReachableAndEnterChoosesTheHighlightedOne() => OnSurfaceAsync((fixture, window) =>
+    {
+        Click(window, CenterInWindow(fixture.ParagraphEditors[0], window));
+        window.KeyTextInput("/");
+        fixture.Settle();
+
+        var rows = new[] { "Add Block Above", "Add Block Below", "Replace Current Block" }
+            .Select(name => InsertRow(window, name))
+            .OfType<MenuItem>()
+            .ToArray();
+        Assert.Equal(3, rows.Length);
+        Assert.All(rows, row => Assert.True(row.Focusable,
+            $"destination row \"{AutomationProperties.GetName(row)}\" is not focusable, so the menu's own " +
+            "keyboard navigation cannot reach it and the insertion route is pointer-only"));
+
+        window.KeyPress(Key.Down, Avalonia.Input.RawInputModifiers.None, PhysicalKey.ArrowDown, "Down");
+        fixture.Settle();
+        var landed = rows.SingleOrDefault(row => row.IsKeyboardFocusWithin);
+        Assert.True(landed is not null,
+            "Down did not move the keyboard onto any destination row: " +
+            string.Join(", ", rows.Select(row => $"{AutomationProperties.GetName(row)} focusable={row.Focusable} focused={row.IsKeyboardFocusWithin}")));
+
+        window.KeyPress(Key.Enter, Avalonia.Input.RawInputModifiers.None, PhysicalKey.Enter, "Enter");
+        fixture.Settle();
+        var advanced = window.GetVisualDescendants().OfType<TextBlock>()
+            .Any(text => (text.Text ?? string.Empty).EndsWith("THIS BLOCK", StringComparison.Ordinal));
+        Assert.True(advanced,
+            "Enter on the highlighted destination row did not advance the surface to the block-type stage");
+    });
+
     private static TextBox InsertSearch(Window window) => window.GetVisualDescendants().OfType<TextBox>().Single(
         candidate => AutomationProperties.GetName(candidate) == "Search insert menu");
 
