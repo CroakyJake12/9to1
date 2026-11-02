@@ -464,6 +464,50 @@ SHA-256 `2068bd0f4785706b56ef98515a60d91854e58a333288485bd225c1b99df30c05`, buil
 independent reviewer recorded the same hash in their report, which is why it is quoted here. Nothing in
 Milestones 8 or 9 has been seen running.
 
+### Milestone 11 — the usability/design pass on the running app (2 Nov 2026, commits `3726d3e9`, `459baec2`, `cf0c1972`, `290a9dd0`, `e700bbaa`, `f21359d5`, `cd77c767`, `60c6a9db`)
+
+The owner's request for this stretch was: interact with the Boards interface, find what is janky, clunky or
+bad-looking, and fix it. This was an **interactive** pass on the standalone app on this PC - real pointer and
+keyboard input, the physical `.9to1board` read back after each step, one screenshot frame per key press where
+the claim is about appearance. It is not independent acceptance, and every defect fixed here is reported with
+the frame that proves both the defect and the repair.
+
+Native identity for this stretch (all instances launched from
+`9to1 Workspace/Boards/app/bin/Release/net10.0/CakeOS.Apps.Boards.App.dll` with the pinned SDK launcher,
+X11 `:1`, client window `0x01a0000f` at 2850x1781 device px, `RenderScaling` 1.9791666 as reported by the
+application, each sandbox private and each closed through `_NET_CLOSE_WINDOW`):
+
+| run | App.dll | Embedding.dll | sandbox | receipts / frames |
+|---|---|---|---|---|
+| run55 | `793e395d…` | `579c74fe…` | `home31`/`profile31` | AT-series, frames 290-292 |
+| run56 | `793e395d…` | `579c74fe…` | `home31` (reopen) | AU/AV/AW, frames 293-296 |
+| run57 | `594049e0…` | `a87e334c…` (no instrument yet) | `home32`/`profile32` | BB/BC, frames 301-305; the instrument was not in the compiled path yet - see the note below |
+| run58 | `594049e0…` | `836bf77e…` (instrument, on-rebuild pass) | `home33`/`profile33` | BC, frames 306-309 |
+| run59 | `594049e0…` | `e4937339…` (instrument + after-layout pass) | `home34`/`profile34` | BD, frames 310-311 |
+| run60 | `a9dc4a3f…` | `10bb6491…` (cue, height growth) | `home36`/`profile36` | BE, frames 312-315 |
+| run61 | `a9dc4a3f…` | `10bb6491…` padding variant | `home36` (reopen) | BF, frames 316-319 - the broken padding cue, row 108 |
+| run62 | `a9dc4a3f…` | `29800c35…` | `home37`/`profile37` | BG-BI, frames 320-333 - cue proven by mouse-free keyboard arrowing |
+| run63 | `a9dc4a3f…` | `3bb4ff11…` | `home38`/`profile38` | BJ, frames 334-337 - type-list emptied by one click, row 113 |
+| run64 | `a9dc4a3f…` | `f0231342…` | `home39`/`profile39` | BK, no frames (popup geometry only) |
+| run65 | `a9dc4a3f…` | `f0231342…` | `home40`/`profile40` | BL, frame 338 - the popup self-report worked, row 112 |
+| run66 | `f0231342…`→`298503c9…` | as built | `home41`/`profile41` | BM, frames 339-342 |
+| run67 | clean build | `298503c9…` | `home41` (reopen) | BN, frames 344-345 - Enter replaced the block with a Tabber, row 114 |
+| run68 | clean build | `298503c9…` | `home42`/`profile42` | BO, frames 346-348 - highlight and Enter disagree, row 114 |
+
+Two honest mechanics notes from this stretch. First, `CakeOS.Apps.Boards.App.dll` is **not byte-reproducible**
+on this machine (five different hashes across rebuilds of a Program-only host), while
+`CakeOS.Apps.Boards.Embedding.dll` - which actually carries the Boards code and the compiled CUI documents -
+reproduces identically between a normal full build and a `--no-dependencies` build (`29800c35…`, `f0231342…`,
+`298503c9…` for three different source states). An App.dll hash therefore marks a build event, not a source
+state; a changed Embedding hash with an unchanged App hash is normal here. Second, the test project keeps its
+own copy of `Embedding.dll`: rebuilding only the product project leaves the test host running the previous
+binary, which produced one false A/B "pass" before it was caught (row 110).
+
+`home31`-`home42` and their profiles are this session's scratch fixtures: they contain the probe text
+(AAA/BBB, X, Q, table and Tabber insertions) described in rows 100-115 and are **not** clean evidence for any
+later session. Nothing was written into the owner's real `Documents/9to1/Boards`. No instance is left
+running.
+
 ### Native run identity for Milestones 4, 5, 6, 7 and 8
 
 Native identity for these frames: standalone `CakeOS.Apps.Boards.App.dll` at
