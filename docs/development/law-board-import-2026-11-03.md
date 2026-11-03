@@ -25,7 +25,8 @@ The board was not hand-written JSON. A private harness
 `HavenRichNotesValidator`, serialises with the store's settings and then reads the finished
 file back through `HavenBoardDocumentCodec` before it is accepted — so the file the app opens
 is the file the validator admits. The harness is deliberately outside the repository: it is
-import tooling, not application behaviour.
+import tooling, not application behaviour (`gen/Program.cs` and `gen/LawBoardGen.csproj` in that
+same preserved folder).
 
 ## Structure: the owner's tree, not mine
 
@@ -105,15 +106,20 @@ Embedding the images is open work, listed in the board's own Outstanding Work pa
 
 ## How to reproduce
 
-Everything is scripted; nothing about the board was typed by hand into the app.
+Everything is scripted; nothing about the board was typed by hand into the app. The tooling is
+kept at `~/Documents/9to1/law-import-2026-11-03/` (outside Git, with the per-cell audit files and
+the generated recipe, so the fill decisions can be re-checked and the board can be rebuilt).
+`fill8.py`, `notes5.py`, `cases.py`, `layout.py`, `blocks.py`, `tree.py` and `build_board.py` are
+the current path; `fill.py` … `fill7.py`, `notes.py`/`notes4.py` and the `patch_*.py` files are
+the earlier iterations, kept as the record of the corrections listed above rather than as steps.
 
 ```
 # 1. corpus and knowledge filling
-python3 -B /tmp/opencode/law/corpus.py                      # 36,685 snippets from 275 documents
-python3 -B /tmp/opencode/law/fill8.py                       # 13 packs -> parsed_wp/*.json + *.audit.json
+python3 -B ~/Documents/9to1/law-import-2026-11-03/corpus.py     # 36,685 snippets from 275 documents
+python3 -B ~/Documents/9to1/law-import-2026-11-03/fill8.py      # 13 packs -> parsed_wp/*.json + *.audit.json
 
 # 2. recipe (sections, nested pages, blocks) and Board generation
-python3 -B /tmp/opencode/law/build_board.py                 # out/law_recipe.json, out/tally.json
+python3 -B ~/Documents/9to1/law-import-2026-11-03/build_board.py  # out/law_recipe.json, out/tally.json
 python3 -B "$SDK" exec gen/bin/Release/net10.0/LawBoardGen.dll build out/law_recipe.json out/Law.9to1board
 python3 -B "$SDK" exec gen/bin/Release/net10.0/LawBoardGen.dll check out/Law.9to1board
 cp out/Law.9to1board "/home/jacob/Documents/9to1/Boards/Law.9to1board"
