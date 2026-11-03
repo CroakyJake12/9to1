@@ -12,10 +12,11 @@ the decisions behind it and what is still open. The testing evidence is separate
 | | |
 | --- | --- |
 | Board file | `/home/jacob/Documents/9to1/Boards/Law.9to1board` |
-| Size / identity | 19,696,822 bytes, SHA-256 `602784bab563a5373a53d93bf86d343ae08560d37d39984c18580cf4ab86deed` |
-| Document id / schema | `7385c54b-81ee-4c12-9181-998b03571103`, `.9to1board` schema 5, board version 1 |
-| Shape | 6 sections, 445 pages, 7,427 blocks, 522 tables (1,527 rows), 432 lists, 2,530,066 characters |
-| Largest single page | 13,463 characters (`Criminal Law · 27/28`) |
+| Size / identity | 18,602,329 bytes, SHA-256 `07678b69d3a8f43eedf6371c6835ef9045f5f06ff0e2c617473ff98505f001bd` |
+| Document id / schema | `5176b1d8-bef8-4e47-ba98-e219c14ad566`, `.9to1board` schema 5, board version 1 |
+| Shape | 6 sections, **149 pages**, 6,796 blocks, 510 tables (1,515 rows), 435 lists, 2,469,394 characters |
+| Largest single page | 45,411 characters in 117 blocks (`Civil Courts, Alternative · 1/3`) |
+| Criminal Law packs | 4 on one page (Actus Reus, Burglary, Mens Rea, Robbery), 7 on two, Duress and Self-Defence on three |
 | Source archive | `Law (Old)-20261103T193832Z-1-001.zip`, 1,379,560,661 bytes, SHA-256 `f2f1444892e7567bcb08a8c24eba3caee6f7f96bba03b001a53177e3999170e6` |
 | Documents read | 275, indexed into 36,685 snippets with section and slide attribution |
 
@@ -48,11 +49,30 @@ page title to roughly twenty characters, so `Actus Reus - Workpack (2025) (part 
 rows apart, was exactly what got cut off. On screen the tree now reads
 `Actus Reus · 1/7 … 7/7`.
 
-Page budget: 70 blocks and 9,000 characters per page, with long tables split across page parts
-and their header row repeated. Both limits come from measurements rather than taste — Boards
-renders a page's blocks without virtualisation (a recorded NOT-IMPLEMENTED row in the Boards
-coverage ledger), and the first build put the whole Source Library index into one list block,
-which made a single page carry 52,741 characters that no splitter could break.
+### Page budget: corrected after being challenged
+
+The first delivered board used 70 blocks and 9,000 characters per page. That was **my** choice,
+and it split your documents into pieces no reader expected: the Actus Reus workpack came out as
+7 parts, and the Criminal Law summary sheet as **29**. My justification was page-open latency,
+and my own experiment had already undermined it — halving the budget (40 blocks, 5,500
+characters) changed the settle time not at all while doubling the page count from 424 to 717.
+
+You asked on 3 November why there were seven Actus Reus parts, and whether things could be one
+document or two or three if they are massive. That is now how it works, and the size was
+measured rather than asserted: the consolidated build puts each Criminal Law pack on one page
+unless it genuinely does not fit, and no document exceeds four parts. The budget is
+`172 blocks / 45,000 characters per page, at most 4 pages per document`, overridable through
+`BOARDS_PAGE_MAX_BLOCKS`, `BOARDS_PAGE_MAX_CHARS` and `BOARDS_PAGE_MAX_PAGES` in `layout.py` so
+the number can be re-measured instead of re-argued. Page count went **445 → 149** while carrying
+the same content (2,469,394 characters, 510 tables, the same 1,040 blank answer paragraphs), and
+the file got *smaller*, 19.7 MB → 18.6 MB, because fewer tables and lists had to be cut apart.
+
+The open question, stated rather than hidden: on a 41,000-character page the mouse wheel moved
+the content at one pointer position and did nothing at another, and on an 80,000-character test
+page the wheel did nothing while dragging the scrollbar thumb worked. Page open cost itself was
+fine — about 2 s for the 41,000-character Actus Reus page, the same range as the small pages.
+So the fragmentation was never buying anything; scrolling large pages is an application problem
+to fix, not a reason to cut your documents into 29 pieces.
 
 ## How the workpacks were completed, and what was refused
 

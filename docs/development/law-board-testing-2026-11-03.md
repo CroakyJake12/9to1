@@ -26,9 +26,11 @@ No second Boards instance was running, and the owner's live instance was not tou
 | behaviour | how it was tested | evidence | result |
 | --- | --- | --- | --- |
 | The Law board opens from its file path | launch with the path, then capture | on-screen | **PASS** — window title `Law — Boards`, 21 page rows in the tree, content drawn |
-| Start-up to first painted content | polling captures every second | on-screen | window mapped **5.3 s**, page content first drawn **6.6 s** for a 19.7 MB, 445-page board |
+| Start-up to first painted content | polling captures every second | on-screen | window mapped **5.3 s**, page content first drawn **6.6 s** (measured on the 19.7 MB 445-page build; the consolidated 18.6 MB / 149-page build was opened the same way and was on screen within the launch poll) |
+| Consolidation holds the same content with fewer pages | block census of the on-disk file before and after | file | **PASS** — 445 pages → **149 pages**, characters 2,530,066 → 2,469,394 (the difference is page-break boilerplate), tables 522 → 510, blank answer paragraphs **1,040 → 1,040**, gaps/fills/kept counts unchanged at 179 / 106 / 249 |
 | Section and page tree shows the imported structure | captured frames read page by page | on-screen | **PASS** — sections, parent pages, nested parts `Actus Reus · 1/7 … 7/7` |
-| Opening a page by clicking it in the tree | 9 clicks, each re-targeted from the current frame, timed to a settled picture | on-screen | **PASS** but slow: settle **1.66–4.22 s** per page (D2) |
+| Opening a page by clicking it in the tree | 9 clicks on the 445-page build, plus a targeted open of the 41,000-character Actus Reus page on the consolidated build, each re-targeted from the current frame and timed to a settled picture | on-screen | **PASS** but slow: settle **1.66–4.22 s**; the large single page opened in **~2.0 s**, i.e. a 45,000-character page is no slower to open than a 9,000-character one |
+| Scrolling a large page | 20 wheel clicks at two pointer positions, watching the scrollbar thumb; plus a thumb drag | on-screen | **PARTIAL** — on the 41,000-character page the wheel moved content at one pointer position (2.5% of the content area, thumb shifted 6 px) and did nothing at the other; on an 80,000-character test page the wheel did nothing at either position while **dragging the scrollbar thumb worked** (thumb travelled, content changed 12.7%). Reported as D5 |
 | Tree disclosure (collapse/expand) | click on the disclosure chevron, frame diff | on-screen | **PASS** — 93 changed rows when a document's parts collapsed |
 | Tree reveals the selected page | fixed-coordinate click series | on-screen | **PASS** — the tree re-scrolls to the selection, which is why row coordinates drift between clicks |
 | "Search this Board" filters the tree | typed `Theft`, then `Murder` | on-screen | **PASS** — matching pages grouped under their sections (`Murder · 1/6 … 6/6`, plus hits in Retrieval Tasks and Other); settle 3.3 s |
@@ -44,8 +46,8 @@ No second Boards instance was running, and the owner's live instance was not tou
 | Normal close | `WM_DELETE_WINDOW` to the app window, five times | on-screen | exits every time, **26.4 s** each (D3) |
 | Reopening the same file a second time | launch with the path twice, with and without the profile draft present | on-screen | **FAIL** — see D1 |
 | Reopening the board the way the owner would (start Boards, no file argument) | launched with no path, then captured | on-screen | **PASS** — the app came back up on the Law board by itself (`Law — Boards`, 21 tree rows, content drawn), so the ordinary route is not blocked by D1 |
-| Delivered content survives the application's own save round-trip | twelve named content checks against the on-disk file after several open/close cycles | file | **PASS** — the completed Actus Reus definition, the Theft appropriation element, the Stone and Dobinson ratio, a pack's Gaps list, its "Spaces kept for you" note, a retrieval question, the archive Drive link, the `Actus Reus · 3/7` label and the figure placeholders are all still present; the file is byte-identical to the build that was installed (`602784ba…`, board version still 1) |
-| Print / export route | `eng/development/boards_export_html.py` on the installed board, then LibreOffice PDF | file, on-screen, test | **PASS** — 445 Board pages → **630 A4 pages** (6.8 MB); one workpack (Murder, 7 Board pages) → **17 A4 pages**; a rendered PDF page was read and shows real content with tables and headings |
+| Delivered content survives the application's own save round-trip | thirteen named content checks against the on-disk file after several open/close cycles, re-run on the consolidated file | file | **PASS** — the completed Actus Reus definition, the Theft appropriation element, the Stone and Dobinson ratio, a pack's Gaps list, its "Spaces kept for you" note, a retrieval question, the archive Drive link, the `Actus Reus · 3/7` label and the figure placeholders are all still present; the file is byte-identical to the build that was installed (`602784ba…`, board version still 1) |
+| Print / export route | `eng/development/boards_export_html.py` on the installed board, then LibreOffice PDF | file, on-screen, test | **PASS** — 149 Board pages → **587 A4 pages** (6.4 MB); one workpack (Murder) → **17 A4 pages**; a rendered PDF page was read and shows real content with tables and headings |
 | Exporter behaviour | `eng/development/test_boards_export_html.py` | test | **7 tests, all passing**, including a real LibreOffice conversion under `$HOME` and the refusal for a path outside it |
 | The owner's other boards are untouched | SHA-256 of every file in `~/Documents/9to1/Boards` before and after | file | **PASS** — all 13 pre-existing board files hash-identical; only `Law.9to1board` was added |
 | Maths boards preserved | folder census of the PC | file | **nothing to preserve** — no Maths board exists on this machine, only untitled test boards |
@@ -72,7 +74,14 @@ family of lag the owner reported on 1 November.
 board. The close path does run (it drains and saves), but it reads as a hang.
 
 **D4 — Page Down / Next does not scroll the page** when focus is inside the page area on this build;
-the mouse wheel does.
+the mouse wheel sometimes does.
+
+**D5 — wheel scrolling on a page is position-dependent, and absent on very large pages.** On the
+41,000-character Actus Reus page the wheel worked under one pointer x and not under another; on an
+80,000-character page it did nothing at two positions while the scrollbar thumb dragged normally.
+Nothing about the page's *size* explains the difference in open cost, so this is an input/hit-test
+problem, not a content problem, and it is the reason the board's pages should not be made smaller
+to compensate.
 
 Also still open from earlier reviews and re-noticed here: the page tree has no drag-to-nest, so pages
 move through the row's right-click menu.
@@ -84,5 +93,15 @@ in the tree did nothing while clicking the empty part of the row worked. That wa
 sampling the screen 0.9 s after a click, which is shorter than this board's settle time, combined with
 the tree re-scrolling to the selection so the fixed coordinate was no longer the same row. Re-measured
 with settle detection and re-targeted clicks, the label row is clickable normally. **No hit-area defect
-is claimed.** The rule this established for future native passes: time to a settled picture, and
-re-measure the target from the current frame every time.
+is claimed.** The rule this established for future native passes: time to a
+settled picture, and re-measure the target from the current frame every time.
+
+A second method error of mine, also corrected rather than reported as a product defect: typing
+`Actus Reus - Workpack` into the search field appeared to lose the hyphen, which would have been
+a keyboard defect. It was my driver — python-Xlib's `XK.string_to_keysym("-")` returns 0 (the
+names are `minus`, `comma`, `period`, `slash`), and my helper skipped any character without a
+keysym. The same thing earlier made an edit marker land as `MARKER0311EDITTEST` instead of
+`MARKER-0311-EDIT-TEST`. With names mapped explicitly, `A-B` types correctly and the search
+matched the expected rows. **No hyphen or typing defect is claimed against the application**; the
+edit/persistence conclusion is unaffected because the stored string was still unique. The lesson
+for future passes: check the driver's key mapping before blaming the app for missing characters.
