@@ -201,6 +201,103 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         return ValueTask.CompletedTask;
     }
 
+    public ValueTask SetSectionIconEmojiAsync(string sectionId, string emoji, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var section = RequireSection(sectionId);
+        if (!HavenRichSectionIcons.IsPlausibleEmojiSequence(emoji))
+            throw new ArgumentException("An emoji icon requires a single Unicode emoji sequence.", nameof(emoji));
+        var normalizedColor = NormalizedIconColor(iconColor);
+        if (section.IconKey == HavenRichSectionIcons.Emoji && section.IconEmoji == emoji &&
+            section.IconColor == normalizedColor)
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        NoteRecentEmoji(emoji);
+        section.IconKey = HavenRichSectionIcons.Emoji;
+        section.IconEmoji = emoji;
+        section.IconColor = normalizedColor;
+        section.GeneratedIcon = null;
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask SetPageIconAsync(string pageId, string iconKey, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var page = RequirePage(pageId);
+        if (!HavenRichSectionIcons.IsSupported(iconKey))
+            throw new ArgumentException("Page icon key is not supported.", nameof(iconKey));
+        var normalizedColor = NormalizedIconColor(iconColor);
+        if (page.IconKey == iconKey && page.IconColor == normalizedColor && page.IconEmoji is null)
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        page.IconKey = iconKey;
+        page.IconColor = normalizedColor;
+        page.IconEmoji = null;
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask SetPageIconEmojiAsync(string pageId, string emoji, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var page = RequirePage(pageId);
+        if (!HavenRichSectionIcons.IsPlausibleEmojiSequence(emoji))
+            throw new ArgumentException("An emoji icon requires a single Unicode emoji sequence.", nameof(emoji));
+        var normalizedColor = NormalizedIconColor(iconColor);
+        if (page.IconKey == HavenRichSectionIcons.Emoji && page.IconEmoji == emoji &&
+            page.IconColor == normalizedColor)
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        NoteRecentEmoji(emoji);
+        page.IconKey = HavenRichSectionIcons.Emoji;
+        page.IconEmoji = emoji;
+        page.IconColor = normalizedColor;
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var page = RequirePage(pageId);
+        if (page.IconKey == HavenRichSectionIcons.PageDefault && page.IconColor is null && page.IconEmoji is null)
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        page.IconKey = HavenRichSectionIcons.PageDefault;
+        page.IconColor = null;
+        page.IconEmoji = null;
+        return ValueTask.CompletedTask;
+    }
+
+    private void NoteRecentEmoji(string emoji)
+    {
+        Document.RecentIconEmoji.RemoveAll(remembered => string.Equals(remembered, emoji, StringComparison.Ordinal));
+        Document.RecentIconEmoji.Insert(0, emoji);
+        if (Document.RecentIconEmoji.Count > HavenRichNotes.RecentIconEmojiLimit)
+            Document.RecentIconEmoji.RemoveRange(HavenRichNotes.RecentIconEmojiLimit,
+                Document.RecentIconEmoji.Count - HavenRichNotes.RecentIconEmojiLimit);
+    }
+
+    private RichBoardSection RequireSection(string sectionId) =>
+        Document.Sections.FirstOrDefault(candidate => candidate.Id == sectionId)
+        ?? throw new KeyNotFoundException("Section was not found.");
+
+    private RichBoardPage RequirePage(string pageId) =>
+        Document.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == pageId)
+        ?? throw new KeyNotFoundException("Page was not found.");
+
+    private static string? NormalizedIconColor(string? iconColor)
+    {
+        if (!HavenRichSectionIcons.IsSupportedColor(iconColor))
+            throw new ArgumentException("Icon color must be null or a six-digit #RRGGBB value.", nameof(iconColor));
+        return iconColor?.ToUpperInvariant();
+    }
+
     public ValueTask SetSectionGeneratedIconAsync(string sectionId,
         HavenRichSectionGeneratedIcon generatedIcon, string? iconColor,
         CancellationToken cancellationToken = default)

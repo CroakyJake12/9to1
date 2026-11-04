@@ -17,6 +17,14 @@ internal interface IBoardSessionLifetime
 public sealed class RichBoardDocument
 {
     public string Title { get; set; } = "Untitled board";
+    /// <summary>Board identity icon (canonical v2 line 9421 <c>Icon?</c>), projected for the landing card
+    /// and the board switcher. The contract remains the owner: a view-model copy never writes it back.</summary>
+    public string? IconKey { get; set; }
+    public string? IconColor { get; set; }
+    public string? IconEmoji { get; set; }
+    /// <summary>Emoji used as an icon in this board, most recent first, projected from the contract so the
+    /// picker's Recent section is the same data on screen and on disk.</summary>
+    public List<string> RecentIconEmoji { get; set; } = [];
     public List<RichBoardSection> Sections { get; set; } = [];
 }
 
@@ -302,6 +310,13 @@ public interface IRichBoardSession : IAsyncDisposable
         CancellationToken cancellationToken = default);
     ValueTask SetSectionGeneratedIconAsync(string sectionId, HavenRichSectionGeneratedIcon generatedIcon,
         string? iconColor, CancellationToken cancellationToken = default);
+    ValueTask SetSectionIconEmojiAsync(string sectionId, string emoji, string? iconColor,
+        CancellationToken cancellationToken = default);
+    ValueTask SetPageIconAsync(string pageId, string iconKey, string? iconColor,
+        CancellationToken cancellationToken = default);
+    ValueTask SetPageIconEmojiAsync(string pageId, string emoji, string? iconColor,
+        CancellationToken cancellationToken = default);
+    ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Optional session capability contract for immutable embedded document views.</summary>

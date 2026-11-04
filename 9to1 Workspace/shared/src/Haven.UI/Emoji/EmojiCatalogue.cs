@@ -93,6 +93,18 @@ public static class EmojiCatalogue
         return ByCodePoints.Value.TryGetValue(key, out var variant) ? variant.Text : entry.Text;
     }
 
+    /// <summary>
+    /// True when this row is a skin-tone spelling of another row rather than its own emoji. The picker
+    /// shows one row per emoji and applies the chosen tone to it, exactly as the reference control does,
+    /// so the grid never offers two spellings of the same hand.
+    /// </summary>
+    public static bool IsSkinToneVariant(EmojiEntry entry)
+    {
+        var codePoints = entry.CodePoints.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return codePoints.Length >= 2 && IsSkinToneModifier(codePoints[^1]) &&
+               ByCodePoints.Value.ContainsKey(string.Join(' ', codePoints[..^1]));
+    }
+
     /// <summary>Modifier-bearing catalogue rows derived from one base sequence, in modifier order.</summary>
     public static IReadOnlyList<EmojiEntry> VariantsOf(EmojiEntry entry) =>
         _variants.Value.TryGetValue(entry.CodePoints, out var list) ? list : Array.Empty<EmojiEntry>();

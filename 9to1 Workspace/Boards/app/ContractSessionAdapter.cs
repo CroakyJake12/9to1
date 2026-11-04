@@ -1518,6 +1518,69 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
+    /// <summary>Chooses a Unicode emoji as a section's identity icon.</summary>
+    public async ValueTask SetSectionIconEmojiAsync(string sectionId, string emoji, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetSectionIconEmoji(rich, sectionId, emoji, iconColor), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Chooses one of the closed Boards silhouettes for a page.</summary>
+    public async ValueTask SetPageIconAsync(string pageId, string iconKey, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetPageIcon(rich, pageId, iconKey, iconColor), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Chooses a Unicode emoji as a page's identity icon.</summary>
+    public async ValueTask SetPageIconEmojiAsync(string pageId, string emoji, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetPageIconEmoji(rich, pageId, emoji, iconColor), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Remove in the picker: the page returns to the default page mark and stays the same page.</summary>
+    public async ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich => HavenRichNotesOps.ClearPageIcon(rich, pageId),
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public async ValueTask SetSectionGeneratedIconAsync(string sectionId,
         HavenRichSectionGeneratedIcon generatedIcon, string? iconColor,
         CancellationToken cancellationToken = default)

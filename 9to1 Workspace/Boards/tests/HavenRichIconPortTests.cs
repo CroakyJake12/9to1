@@ -184,6 +184,35 @@ public sealed class HavenRichIconPortTests
     }
 
     [Fact]
+    public void Recent_icons_are_board_data_most_recent_first_and_bounded()
+    {
+        var notes = HavenRichNotes.Create("Recents");
+        var sectionId = notes.Sections[0].Id;
+        var pageId = notes.Sections[0].Pages[0].Id;
+
+        HavenRichNotesOps.SetPageIconEmoji(notes, pageId, "📚", null);
+        HavenRichNotesOps.SetSectionIconEmoji(notes, sectionId, "⚖️", null);
+        HavenRichNotesOps.SetPageIconEmoji(notes, pageId, "📚", "#22AA55");      // same pick, new colour
+        Assert.Equal(new[] { "📚", "⚖️" }, notes.RecentIconEmoji);          // newest first, no duplicate
+
+        for (var index = 0; index < 20; index++)
+            HavenRichNotesOps.SetPageIconEmoji(notes, pageId, char.ConvertFromUtf32(0x1F600 + index), null);
+        Assert.Equal(HavenRichNotes.RecentIconEmojiLimit, notes.RecentIconEmoji.Count);
+        Assert.Equal(notes.RecentIconEmoji.Distinct().Count(), notes.RecentIconEmoji.Count);
+        HavenRichNotesValidator.Validate(notes);
+
+        // A silhouette choice records nothing, and removing an icon does not forget the sequence.
+        HavenRichNotesOps.SetPageIcon(notes, pageId, "study", null);
+        HavenRichNotesOps.ClearPageIcon(notes, pageId);
+        Assert.NotEmpty(notes.RecentIconEmoji);
+        HavenRichNotesValidator.Validate(notes);
+
+        var tampered = HavenRichNotes.Create("Bad recents");
+        tampered.RecentIconEmoji.Add("not an emoji");
+        Assert.Throws<InvalidOperationException>(() => HavenRichNotesValidator.Validate(tampered));
+    }
+
+    [Fact]
     public void An_icon_slot_never_holds_text_or_a_mismatched_form()
     {
         var notes = HavenRichNotes.Create("Guard");

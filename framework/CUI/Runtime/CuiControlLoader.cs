@@ -1880,7 +1880,13 @@ public sealed partial class CuiControlLoader : IDisposable
             if (!TryResolveRepeatKey(definition.Key, itemScope, out var key) || key is null)
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR051", CuiDiagnosticSeverity.Error,
-                    "Every Repeat item must resolve to a non-null stable key.", definition.Key.Span));
+                    // The bare message made this failure a hunt rather than a fix: an author had to discover
+                    // which Repeat out of the whole document could not key its items.
+                    $"Every Repeat item must resolve to a non-null stable key. Repeat " +
+                    $"'{state.Component.Name ?? "(unnamed)"}' binds source '{definition.Source}' to item " +
+                    $"'{definition.ItemName}' and key '{definition.Key}', which resolved to null for one " +
+                    $"item of type '{item?.GetType().Name ?? "null"}'.",
+                    definition.Key.Span));
             if (!seenKeys.Add(key))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR052", CuiDiagnosticSeverity.Error,

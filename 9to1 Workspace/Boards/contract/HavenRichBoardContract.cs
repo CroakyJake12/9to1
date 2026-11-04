@@ -25,6 +25,13 @@ public sealed class HavenRichNotes
     public string? IconColor { get; set; }
     /// <summary>Unicode emoji stored when <see cref="IconKey"/> is "emoji"; the only form of this field.</summary>
     public string? IconEmoji { get; set; }
+    /// <summary>
+    /// Emoji this board has used as an icon, most recent first, bounded at twelve. The reference picker's
+    /// Recent category is real data rather than a per-session list, so it lives on the board and survives
+    /// close and reopen; it is written only by the icon operations, never by the renderer.
+    /// </summary>
+    public List<string> RecentIconEmoji { get; set; } = [];
+    public const int RecentIconEmojiLimit = 12;
 
     public static HavenRichNotes Create(string? title = null)
     {
@@ -473,6 +480,11 @@ public static class HavenRichNotesValidator
             throw new InvalidOperationException($"Board icon key '{notes.IconKey}' is not supported.");
         if (!HavenRichSectionIcons.IsSupportedColor(notes.IconColor))
             throw new InvalidOperationException("Board icon color must be null or a six-digit #RRGGBB value.");
+        if (notes.RecentIconEmoji.Count > HavenRichNotes.RecentIconEmojiLimit)
+            throw new InvalidOperationException("A board remembers at most twelve recent icons.");
+        if (notes.RecentIconEmoji.Any(sequence => !HavenRichSectionIcons.IsPlausibleEmojiSequence(sequence)) ||
+            notes.RecentIconEmoji.Distinct(StringComparer.Ordinal).Count() != notes.RecentIconEmoji.Count)
+            throw new InvalidOperationException("Board recent icons must be distinct emoji sequences.");
         ValidateIconEmoji("Board", notes.IconKey ?? HavenRichSectionIcons.Default, notes.IconEmoji);
         HavenRichStyles.ValidateStyles(notes);
         var allPageIds = new HashSet<string>(StringComparer.Ordinal);
@@ -1053,6 +1065,15 @@ public static partial class HavenRichNotesOps
             iconKey, iconEmoji, iconColor, clearGeometry: null);
     }
 
+    private static void RecordRecentIcon(HavenRichNotes notes, string emoji)
+    {
+        notes.RecentIconEmoji.RemoveAll(remembered => string.Equals(remembered, emoji, StringComparison.Ordinal));
+        notes.RecentIconEmoji.Insert(0, emoji);
+        if (notes.RecentIconEmoji.Count > HavenRichNotes.RecentIconEmojiLimit)
+            notes.RecentIconEmoji.RemoveRange(HavenRichNotes.RecentIconEmojiLimit,
+                notes.RecentIconEmoji.Count - HavenRichNotes.RecentIconEmojiLimit);
+    }
+
     /// <summary>
     /// One rule for every icon slot write, so a board, section or page cannot disagree about what a valid
     /// icon is. The getters and setters are passed because the three owners keep their own fields; an
@@ -1082,6 +1103,7 @@ public static partial class HavenRichNotesOps
         setColor(normalizedColor);
         setEmoji(normalizedEmoji);
         clearGeometry?.Invoke();
+        if (normalizedEmoji is not null) RecordRecentIcon(notes, normalizedEmoji);
         Touch(notes);
     }
 

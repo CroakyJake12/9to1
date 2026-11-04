@@ -202,6 +202,8 @@ public static class NavBuilder
             ToolTip.SetTip(image, "Section icon");
             sectionIcon = image;
         }
+        sectionIcon = ActivatableIcon(sectionIcon, "Choose section icon",
+            () => vm.OpenSectionIconPicker(section.Id), vm.CanEdit && vm.IsEditMode);
         Grid.SetColumn(sectionIcon, 1);
         row.Children.Add(sectionIcon);
         var title = new Button
@@ -350,6 +352,8 @@ public static class NavBuilder
             Avalonia.Automation.AutomationProperties.SetName(pageIconImage, "Page icon");
         }
         ToolTip.SetTip(pageIcon, page.Title);
+        pageIcon = ActivatableIcon(pageIcon, "Choose page icon",
+            () => vm.OpenPageIconPicker(section.Id, page.Id), vm.CanEdit && vm.IsEditMode);
         Grid.SetColumn(pageIcon, 2);
         row.Children.Add(pageIcon);
         var button = new Button
@@ -400,6 +404,7 @@ public static class NavBuilder
                 _pendingRename = (false, section.Id, page.Id);
                 vm.RequestNavRebuild();
             });
+            AddMenuItem(menu, "Icon and color…", () => vm.OpenPageIconPicker(section.Id, page.Id));
             AddMenuItem(menu, "Duplicate", async () => await vm.DuplicatePageAsync(section.Id, page.Id));
             AddMenuItem(menu, "Move up", async () => await vm.MovePageAsync(section.Id, page.Id, -1));
             AddMenuItem(menu, "Move down", async () => await vm.MovePageAsync(section.Id, page.Id, 1));
@@ -514,6 +519,32 @@ public static class NavBuilder
             }
         };
         box.LostFocus += async (_, _) => await CommitAsync(save: true);
+    }
+
+    /// <summary>
+    /// Makes an icon in a tree row activatable in Edit mode without changing what the row looks like: the
+    /// icon keeps its own size and slot, and only in Edit mode does it become the picker entry point. In
+    /// View mode the same element stays a display-only mark, as the specification requires.
+    /// </summary>
+    private static Control ActivatableIcon(Control icon, string accessibleName, Action tapped, bool editable)
+    {
+        if (!editable) return icon;
+        var button = new Button
+        {
+            Content = icon,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(0),
+            Width = 20,
+            Height = 20,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        CuiPropertyPresentation.Set(button, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Instance, "Boards row icon entry point");
+        Avalonia.Automation.AutomationProperties.SetName(button, accessibleName);
+        button.Click += (_, _) => tapped();
+        return button;
     }
 
     private static void AddMenuItem(ContextMenu menu, string header, Action tapped)

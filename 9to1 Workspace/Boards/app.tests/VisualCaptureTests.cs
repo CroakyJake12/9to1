@@ -30,7 +30,7 @@ public sealed class VisualCaptureTests
     }
 
     private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false,
-        bool openStyleMenu = false, bool openSectionIconPicker = false)
+        bool openStyleMenu = false, bool openSectionIconPicker = false, string iconPickerTab = "icon")
     {
         var priorMode = TestUiThread.Run(() => BoardsTheme.Mode);
         var priorCuiTheme = TestUiThread.Run(() => CuiSurfacePaletteCatalog.ActiveTheme);
@@ -53,7 +53,7 @@ public sealed class VisualCaptureTests
             PumpUi(TestUiThread.Run(() => presentation.WaitUntilReadyAsync()), "surface readiness");
             PumpUi(TestUiThread.Run(() => presentation.DrainRenderingAsync()), "render drain");
             return TestUiThread.Run(() => CaptureReadyOnUiThread(presentation, mountedWindow, width, height,
-                shotName, openStyleMenu, openSectionIconPicker));
+                shotName, openStyleMenu, openSectionIconPicker, iconPickerTab));
         }
         finally
         {
@@ -96,7 +96,8 @@ public sealed class VisualCaptureTests
     }
 
     private static string CaptureReadyOnUiThread(BoardsWritablePresentation presentation, Window window,
-        int width, int height, string shotName, bool openStyleMenu, bool openSectionIconPicker)
+        int width, int height, string shotName, bool openStyleMenu, bool openSectionIconPicker,
+        string iconPickerTab)
     {
         var viewModel = presentation.ViewModel;
         var root = presentation.Content;
@@ -122,6 +123,10 @@ public sealed class VisualCaptureTests
             Assert.NotNull(openPicker);
             openPicker.Invoke(viewModel, [viewModel.SelectedSectionId]);
             Dispatcher.UIThread.RunJobs();
+            // The shared picker opens on the emoji tab, like the reference popover. This fixture needs the
+            // tab it is checking, so it selects it through the real command rather than reaching into state.
+            viewModel.DispatchAsync("SelectIconPickerTab", iconPickerTab).GetAwaiter().GetResult();
+            Dispatcher.UIThread.RunJobs();
 
             var picker = BoardsCuiControlFinder.FindByAutomationId<CuiContainerControl>(root, "SectionIconPickerPanel")
                 ?? throw new InvalidOperationException("Missing authored section icon picker panel. Runtime tree:\n" +
@@ -133,11 +138,31 @@ public sealed class VisualCaptureTests
                 .Select(button => Avalonia.Automation.AutomationProperties.GetName(button))
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .ToArray();
-            Assert.Contains("Use Boards section icon", iconChoices);
-            Assert.Contains("Use Folder section icon", iconChoices);
-            Assert.Contains("Use Violet for this section icon", iconChoices);
+            // The frame is written before the checks so a failure keeps the picture as evidence.
+            SaveCapture(shotPath);
+            if (iconPickerTab == "emoji")
+            {
+                // The emoji tab is the ported part of this surface: category headings from the Unicode
+                // groups, real sequences whose accessible names come from their CLDR names so a screen
+                // reader never has to spell a code point, the skin-tone control and Remove.
+                // The runtime tree dump names controls, not their text, so the grid is checked by what it
+                // offers: a real run of Unicode emoji whose accessible names are the CLDR names.
+                var catalogueNames = new HashSet<string>(Haven.UI.Emoji.EmojiCatalogue.Entries
+                    .Select(entry => entry.Name), StringComparer.Ordinal);
+                var emojiChoices = iconChoices.Where(name => name is not null && catalogueNames.Contains(name)).ToArray();
+                Assert.True(emojiChoices.Length >= 30,
+                    $"the emoji grid should render a bounded category run, saw {emojiChoices.Length}");
+                Assert.Contains("grinning face", iconChoices);
+                Assert.Contains("No skin tone", iconChoices);
+                Assert.Contains("Remove this icon", iconChoices);
+            }
+            else
+            {
+                Assert.Contains("Use Boards section icon", iconChoices);
+                Assert.Contains("Use Folder section icon", iconChoices);
+                Assert.Contains("Use Violet for this section icon", iconChoices);
+            }
         }
-        SaveCapture(shotPath);
 
         ComboBox? capturedStyleMenu = null;
         if (openStyleMenu)
@@ -399,7 +424,23 @@ public sealed class VisualCaptureTests
     {
         var dir = await FixtureDirAsync();
         var shot = Capture(Path.Combine(dir, "A-Level Maths.9to1board"), 1440, 900,
-            "section-icon-picker-1440x900.png", dark: true, openSectionIconPicker: true);
+            "section-icon-picker-1440x900.png", dark: true, openSectionIconPicker: true, iconPickerTab: "icon");
+        Assert.True(File.Exists(shot));
+        Assert.True(new FileInfo(shot).Length > 4096);
+    }
+
+    /// <summary>
+    /// The emoji tab of the same picker, captured because it is new surface rather than a variation of the
+    /// silhouette grid: category headings, a bounded number of real Unicode sequences per category, the
+    /// skin-tone control and Remove.
+    /// </summary>
+    [Fact]
+    public async Task Capture_emoji_icon_tab_1440x900()
+    {
+        var dir = await FixtureDirAsync();
+        var shot = Capture(Path.Combine(dir, "A-Level Maths.9to1board"), 1440, 900,
+            "section-icon-picker-emoji-tab-1440x900.png", dark: true, openSectionIconPicker: true,
+            iconPickerTab: "emoji");
         Assert.True(File.Exists(shot));
         Assert.True(new FileInfo(shot).Length > 4096);
     }

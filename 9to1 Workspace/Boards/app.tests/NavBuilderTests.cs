@@ -144,7 +144,11 @@ public sealed class NavBuilderTests
             NavBuilder.Rebuild(nav, vm);
             var header = Assert.IsType<Border>(nav.Children[0]);
             var row = Assert.IsType<Grid>(header.Child);
-            var icon = Assert.IsType<Image>(row.Children[1]);
+            // In Edit mode the section's icon slot is also the picker entry point, so the drawn icon now
+            // sits inside a Button. The icon itself is unchanged, and its new entry point is asserted too.
+            var entryPoint = Assert.Single(TestControlTree.Of<Button>(row), button =>
+                Avalonia.Automation.AutomationProperties.GetName(button) == "Choose section icon");
+            var icon = Assert.Single(TestControlTree.Of<Image>(entryPoint));
             Assert.Equal("Section icon", Avalonia.Automation.AutomationProperties.GetName(icon));
             var title = Assert.IsType<Button>(row.Children[2]);
             var menu = Assert.IsType<ContextMenu>(title.ContextMenu);
@@ -180,7 +184,9 @@ public sealed class NavBuilderTests
             NavBuilder.Rebuild(nav, vm);
             var pageRow = Assert.IsType<Border>(nav.Children.OfType<Border>().Skip(1).Single());
             var grid = Assert.IsType<Grid>(pageRow.Child);
-            var icon = Assert.Single(grid.Children.OfType<Image>());
+            // The default page mark is unchanged; in Edit mode it is wrapped in the picker entry point, so
+            // the search goes through the control tree rather than assuming it is a direct row child.
+            var icon = Assert.Single(TestControlTree.Of<Image>(grid));
             Assert.Equal("Page icon", Avalonia.Automation.AutomationProperties.GetName(icon));
             var drawing = Assert.IsType<GeometryDrawing>(Assert.IsType<DrawingImage>(icon.Source).Drawing);
             Assert.NotNull(drawing.Brush);

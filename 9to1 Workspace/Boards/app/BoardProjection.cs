@@ -15,6 +15,10 @@ internal static class Projector
         ArgumentNullException.ThrowIfNull(rich);
         ArgumentNullException.ThrowIfNull(view);
         view.Title = rich.Title;
+        view.IconKey = rich.IconKey;
+        view.IconColor = rich.IconColor;
+        view.IconEmoji = rich.IconEmoji;
+        view.RecentIconEmoji = rich.RecentIconEmoji.ToList();
         view.Sections = rich.Sections.Select(s => new RichBoardSection
         {
             Id = s.Id,

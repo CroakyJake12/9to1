@@ -29,6 +29,22 @@ public sealed record BoardsSectionIconChoiceView(string Key, string Label, IImag
 public sealed record BoardsSectionIconColorChoiceView(string Name, string Hex, IBrush Preview, bool IsSelected);
 public sealed record BoardsGeneratedSectionIconPreviewView(string Index, IImage Preview, string ModelLabel);
 
+/// <summary>One emoji as the shared icon picker draws it.</summary>
+public sealed record BoardsIconEmojiChoiceView(string Character, string Name, bool IsSelected);
+
+/// <summary>A named run of emoji with a heading, plus the optional skin-tone control for that heading.</summary>
+public sealed record BoardsIconEmojiSectionView(string Heading, IReadOnlyList<BoardsIconEmojiChoiceView> Items);
+
+/// <summary>
+/// One skin-tone option. <c>Value</c> is the modifier to apply and is empty for "none"; <c>Key</c> is a
+/// stable non-empty identity for the CUI Repeat, which refuses an item that cannot be keyed - that is why
+/// the value itself is not used as the key.
+/// </summary>
+public sealed record BoardsIconSkinToneChoiceView(string Key, string Value, string Label, string Glyph, bool IsSelected);
+
+/// <summary>One tab in the shared icon picker.</summary>
+public sealed record BoardsIconTabView(string Key, string Label, bool IsSelected, bool IsEnabled);
+
 public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiRepeatItemBindingContext, INotifyPropertyChanged, IDisposable
 {
@@ -37,9 +53,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private readonly IBoardsHomeBoardCreationHost? _homeBoardCreationHost;
     private readonly IBoardsSectionIconGenerationHost? _sectionIconGenerationHost;
     private string? _sectionIconPickerSectionId;
+    private string? _iconPickerPageId;
+    private string _iconPickerTab = "emoji";
+    private string _iconSkinTone = string.Empty;
     private string _sectionIconSearchText = string.Empty;
     private IReadOnlyList<BoardsSectionIconChoiceView> _sectionIconPickerChoices = [];
     private IReadOnlyList<BoardsSectionIconColorChoiceView> _sectionIconPickerColors = [];
+    private IReadOnlyList<BoardsIconEmojiSectionView> _iconPickerEmojiSections = [];
+    private IReadOnlyList<BoardsIconSkinToneChoiceView> _iconPickerSkinTones = [];
+    private IReadOnlyList<BoardsIconTabView> _iconPickerTabs = [];
     private IReadOnlyList<HavenRichSectionGeneratedIcon> _generatedSectionIconPreviews = [];
     private bool _sectionIconSuggestionInProgress;
     private readonly object _sectionIconSuggestionGate = new();
@@ -136,6 +158,14 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsSectionIconSuggestionInProgress", false);
         Set("HasGeneratedSectionIconPreview", false);
         Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
+        Set("IconPickerTargetKind", string.Empty);
+        Set("IconPickerTabs", Array.Empty<BoardsIconTabView>());
+        Set("EmojiIconSections", Array.Empty<BoardsIconEmojiSectionView>());
+        Set("HasEmojiIconResults", false);
+        Set("EmojiIconNoMatchesMessage", string.Empty);
+        Set("IconSkinToneChoices", Array.Empty<BoardsIconSkinToneChoiceView>());
+        Set("SelectedIconSkinTone", string.Empty);
+        Set("CanRemoveIcon", false);
         Set("SectionIconSuggestionModel", string.Empty);
         RefreshEmbeddedPageLinkState();
         RefreshHomeBoardCreationAvailability();
@@ -322,6 +352,51 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 "Preview" => sectionColor.Preview,
                 "IsSelected" => sectionColor.IsSelected,
                 "AccessibleName" => $"Use {sectionColor.Name} for this section icon",
+                _ => null,
+            };
+            return value is not null;
+        }
+        if (item is BoardsIconTabView tab &&
+            _iconPickerTabs.Any(actual => ReferenceEquals(actual, tab)))
+        {
+            value = path switch
+            {
+                "Key" => tab.Key, "Label" => tab.Label, "IsSelected" => tab.IsSelected,
+                "IsEnabled" => tab.IsEnabled,
+                _ => null,
+            };
+            return value is not null;
+        }
+        if (item is BoardsIconSkinToneChoiceView tone &&
+            _iconPickerSkinTones.Any(actual => ReferenceEquals(actual, tone)))
+        {
+            value = path switch
+            {
+                "Key" => tone.Key, "Value" => tone.Value, "Label" => tone.Label, "Glyph" => tone.Glyph,
+                "IsSelected" => tone.IsSelected,
+                _ => null,
+            };
+            return value is not null;
+        }
+        if (item is BoardsIconEmojiSectionView emojiSection &&
+            _iconPickerEmojiSections.Any(actual => ReferenceEquals(actual, emojiSection)))
+        {
+            value = path switch
+            {
+                "Heading" => emojiSection.Heading, "Items" => emojiSection.Items,
+                _ => null,
+            };
+            // `Items` is an empty-facing value the binding must still be able to read, so the membership
+            // answer cannot rely on non-null alone for that path.
+            return path is "Heading" or "Items";
+        }
+        if (item is BoardsIconEmojiChoiceView emojiChoice && path is not null &&
+            _iconPickerEmojiSections.Any(section => section.Items.Any(actual => ReferenceEquals(actual, emojiChoice))))
+        {
+            value = path switch
+            {
+                "Character" => emojiChoice.Character, "Name" => emojiChoice.Name,
+                "IsSelected" => emojiChoice.IsSelected,
                 _ => null,
             };
             return value is not null;
@@ -589,15 +664,26 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 if (iconSection is not null)
                     await SetSectionIconAsync(iconSectionId, iconKey, iconSection.IconColor, cancellationToken);
                 break;
-            case "ApplySectionIconColor" when parameter is string iconColor && _sectionIconPickerSectionId is { } colorSectionId:
-                var colorSection = _session.Document.Sections.FirstOrDefault(item => item.Id == colorSectionId);
-                if (colorSection is not null)
-                    await SetSectionIconColorAsync(colorSection, iconColor, cancellationToken);
+            case "SelectIconPickerTab" when parameter is string iconTab:
+                SelectIconPickerTab(iconTab);
                 break;
-            case "UseThemeSectionIconColor" when _sectionIconPickerSectionId is { } themeSectionId:
-                var themeSection = _session.Document.Sections.FirstOrDefault(item => item.Id == themeSectionId);
-                if (themeSection is not null)
-                    await SetSectionIconColorAsync(themeSection, null, cancellationToken);
+            case "ApplyEmojiIconChoice" when parameter is string emojiCharacter:
+                await ApplyEmojiIconChoiceAsync(emojiCharacter, isRandom: false, cancellationToken);
+                break;
+            case "PickRandomEmojiIcon":
+                await ApplyRandomEmojiIconAsync(cancellationToken);
+                break;
+            case "ApplyIconSkinTone" when parameter is string skinToneValue:
+                ApplyIconSkinTone(skinToneValue);
+                break;
+            case "RemoveIconPickerIcon":
+                await RemovePickerIconAsync(cancellationToken);
+                break;
+            case "ApplySectionIconColor" when parameter is string iconColor:
+                await ApplyIconColorAsync(iconColor, cancellationToken);
+                break;
+            case "UseThemeSectionIconColor":
+                await ApplyIconColorAsync(null, cancellationToken);
                 break;
             case "NewBoard":
                 if (CreateBoardAsync is not null) await CreateBoardAsync(cancellationToken);
@@ -2609,6 +2695,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var section = _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId);
         if (section is null) return;
         CancelSectionIconSuggestion();
+        _iconPickerPageId = null;
         _sectionIconPickerSectionId = section.Id;
         _generatedSectionIconPreviews = [];
         _sectionIconSearchText = string.Empty;
@@ -2624,12 +2711,18 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public void CloseSectionIconPicker()
     {
         CancelSectionIconSuggestion();
+        _iconPickerPageId = null;
         _sectionIconPickerSectionId = null;
         _generatedSectionIconPreviews = [];
         Set("HasGeneratedSectionIconPreview", false);
         Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
         Set("CanSuggestSectionIcon", false);
         Set("IsSectionIconPickerOpen", false);
+        Set("IconPickerTargetKind", string.Empty);
+        Set("EmojiIconSections", Array.Empty<BoardsIconEmojiSectionView>());
+        Set("HasEmojiIconResults", false);
+        Set("EmojiIconNoMatchesMessage", string.Empty);
+        Set("CanRemoveIcon", false);
     }
 
     private void RefreshSectionIconPickerChoices()
@@ -2663,6 +2756,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 new SolidColorBrush(Color.Parse(choice.Hex)),
                 string.Equals(section.IconColor, choice.Hex, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
+        RefreshIconPickerSharedState();
         Set("SectionIconPickerChoices", _sectionIconPickerChoices);
         Set("SectionIconPickerColors", _sectionIconPickerColors);
         Set("HasSectionIconPickerChoices", _sectionIconPickerChoices.Count > 0);
