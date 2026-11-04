@@ -153,6 +153,53 @@ fully-qualified variants are offered.
 - Accessible names come from the CLDR name ("Scales"), so the tree does not read "Page icon" for every
   row and a screen reader does not spell a codepoint.
 
+## Results, with the evidence level named for each claim
+
+| Behaviour | Evidence level | Result |
+| --- | --- | --- |
+| Board, section and page icon fields; validation; identity preserved | test (`HavenRichIconPortTests`, 18 cases) | **PASS** |
+| A board saved before the fields existed still opens with today's defaults | test - every icon property stripped from a real saved document, then reopened | **PASS** |
+| Recent icons are board data: most recent first, bounded, validated | test | **PASS** |
+| Emoji catalogue: group order, name/group search, exact membership, skin-tone resolution | test (`EmojiCatalogueTests`, 5 cases in `Haven.UI.Tests`) | **PASS** |
+| Picker flow: open from a page, tabs, category bounds, search miss reports itself, skin tone changes what is offered and stored, shuffle keeps the popover open, remove restores the default mark, view mode withholds the entry point, prose refused | test (`IconPickerPortTests`, 9 cases) | **PASS** |
+| The authored grid, driven by a click on the rendered CUI control rather than by dispatching the command | test (`IconPickerSurfaceClickTests`) | **PASS** |
+| The popover as painted by the CUI runtime | headless render (`/tmp/opencode/boards-shots/section-icon-picker-emoji-tab-1440x900.png`) | **PASS** - tabs, colour emoji, skin tones, Remove visible |
+| Choosing an emoji in the running application, committed by the application, still present after relaunch | **on-screen native capture** (`/tmp/opencode/boards-emoji/native/frames/v01`-`v04`) | **PASS** - page "Criminal Law" carries the chosen sequence with `recentIconEmoji` alongside; the tree row shows it on screen after reopen; the deliverable board is byte-identical before and after (`07678b69d3a8f43e…`) |
+
+Suites at the time of writing: Boards app tests 625 passed / 1 failed, that single failure being the
+deliberately-committed insert-menu keyboard case from ledger row 114 (`cd77c767`), i.e. the unchanged
+baseline; Boards contract tests 158/158; `Haven.UI.Tests` 175 passed / 1 failed where the failure
+(`Button_hover_tint_uses_its_effective_background_and_skips_transparent_buttons`) was checked by removing my
+Haven.UI additions and re-running it - it fails without them, so it is pre-existing and not this work.
+
+Two false reports this pass produced, corrected rather than left in:
+
+1. The first native attempt looked like an unresponsive black window and I recorded it as an application
+   failure. It was the machine: 4,111 of 4,111 MiB of swap used with ~2.3 GiB free, the application log
+   stopping mid start-up with no exception, and the owner seeing a translucent pane. Relaunched with memory
+   freed, the window painted in 0.7-3.5 s. `icon_native2.py` now samples MemAvailable, swap free and the
+   application's RSS at every step so the two conditions cannot be confused again.
+2. Reading the `.9to1board` immediately after a click showed no icon, which read as the click failing. It was
+   the probe: unsaved edits live in the profile draft, and the file is written on the application's save
+   route, so the check has to follow a commit.
+
+And one gap in my own test coverage, now closed: the picker tests dispatched `ApplyEmojiIconChoice` straight
+to the view model, so they never exercised the authored action binding. The rendered-surface test does, and
+that is the difference between "the command works" and "the thing the owner clicks works".
+
+## Still open on this surface
+
+- The page header icon (the reference shows the icon beside the H1) is not wired yet: the contract field,
+  the tree row and the picker all exist, the header does not.
+- Landing-card and board-switcher icons likewise read the new board-level fields nowhere yet.
+- `Suggest` remains section-only, because the model suggestion flow is driven from a section name; the tab is
+  disabled rather than hidden inert for a page target.
+- Upload (image icon) and cover images remain deferred with the reason recorded above, not dropped.
+- Independent acceptance remains paused by owner instruction; none of the above is acceptance.
+- Environment note for the next native pass: this PC had its 4 GiB swap completely consumed while the resident
+  model host is running. A large board launch can be starved into an unpainted window, which looks identical
+  to a rendering defect unless memory is sampled alongside it.
+
 ## Implementation units, each compiled before the next
 
 1. Move the emoji catalogue and query engine to `Haven.Infrastructure`; forward in
