@@ -15,6 +15,16 @@ public sealed class HavenRichNotes
     public long Version { get; set; } = 1;
     public List<HavenRichSection> Sections { get; set; } = [new HavenRichSection()];
     public List<HavenRichStyle> Styles { get; set; } = HavenRichStyles.BuiltIns();
+    /// <summary>
+    /// Board identity icon shown on landing cards and the board switcher. Canonical v2 line 9421 requires
+    /// <c>Board MUST contain at least BoardID, Name, Icon?</c>; it follows the same icon vocabulary as
+    /// sections and pages so one picker and one renderer serve all three. Absent means "use the default
+    /// Boards mark", which is what every board on disk today does.
+    /// </summary>
+    public string? IconKey { get; set; }
+    public string? IconColor { get; set; }
+    /// <summary>Unicode emoji stored when <see cref="IconKey"/> is "emoji"; the only form of this field.</summary>
+    public string? IconEmoji { get; set; }
 
     public static HavenRichNotes Create(string? title = null)
     {
@@ -30,26 +40,83 @@ public sealed class HavenRichSection
 {
     public string Id { get; set; } = "sec-" + Guid.NewGuid().ToString("N")[..12];
     public string Title { get; set; } = "Section 1";
-    /// <summary>Closed-silhouette icon key shown for this section in navigation.</summary>
+    /// <summary>Closed-silhouette icon key shown for this section in navigation, or "emoji".</summary>
     public string IconKey { get; set; } = HavenRichSectionIcons.Default;
     /// <summary>Optional explicit section icon color; null follows the active theme.</summary>
     public string? IconColor { get; set; }
+    /// <summary>
+    /// Unicode emoji kept when <see cref="IconKey"/> is "emoji" — the same shape of rule as
+    /// <see cref="GeneratedIcon"/>, which is only valid when the key is "generated". The board stores the
+    /// sequence itself, so the icon survives without any catalogue on disk.
+    /// </summary>
+    public string? IconEmoji { get; set; }
     /// <summary>Owner-generated bounded geometry; present only when IconKey is "generated".</summary>
     public HavenRichSectionGeneratedIcon? GeneratedIcon { get; set; }
     public List<HavenRichPage> Pages { get; set; } = [new HavenRichPage()];
 }
 
-/// <summary>Finite catalog of section icon silhouettes supported by the Boards renderer.</summary>
+/// <summary>Finite catalog of icon silhouettes supported by the Boards renderer.</summary>
 public static class HavenRichSectionIcons
 {
     public const string Default = "boards";
     public const string Generated = "generated";
+    /// <summary>The icon slot carries a Unicode emoji in <c>IconEmoji</c> instead of a silhouette.</summary>
+    public const string Emoji = "emoji";
+    /// <summary>
+    /// What a page drew before the page icon field existed. It stays the default so opening a board saved
+    /// by an older build changes nothing on screen.
+    /// </summary>
+    public const string PageDefault = "file";
     private static readonly HashSet<string> SupportedKeys = new(StringComparer.Ordinal)
     {
         "boards", "section", "folder", "file", "chat", "study", "calendar", "target", "bookmark", "shield", "play"
     };
 
     public static bool IsSupported(string? key) => key is not null && SupportedKeys.Contains(key);
+
+    /// <summary>Every key the renderer can draw, including the two non-silhouette forms.</summary>
+    public static bool IsKnownKey(string? key) =>
+        key is not null && (SupportedKeys.Contains(key) || key == Generated || key == Emoji);
+
+    /// <summary>
+    /// Structural check that a value could be one emoji sequence rather than arbitrary text. This is the
+    /// safety net inside the document model only: the app that offers the choice validates against the
+    /// Unicode catalogue it ships, which is a stronger statement than this range test. It exists so a
+    /// hand-edited or corrupt file cannot put a sentence in an icon slot. The grammar mirrors what the
+    /// catalogue can actually contain: one base, a ZWJ-joined sequence (families, couples), a pair of
+    /// regional indicators (a flag), a keycap, or a tag-built subdivision flag.
+    /// </summary>
+    public static bool IsPlausibleEmojiSequence(string? value)
+    {
+        if (string.IsNullOrEmpty(value) || value!.EnumerateRunes().Count() is < 1 or > 16) return false;
+        var runes = value.EnumerateRunes().Select(rune => rune.Value).ToArray();
+        var bases = runes.Where(IsEmojiBase).ToList();
+        if (runes.Any(rune => !IsEmojiBase(rune) && !IsEmojiCombiner(rune) && !IsKeycapDigit(rune))) return false;
+        if (runes.Contains(0x20E3)) return runes.Any(IsKeycapDigit);          // "#⃣", "1⃣" …
+        if (bases.Count == 0) return false;
+        if (bases.Count == 1) return true;
+        if (bases.Count == 2 && bases.All(rune => rune is >= 0x1F1E6 and <= 0x1F1FF) &&
+            runes[0] == bases[0] && runes[1] == bases[1])
+            return true;                                                     // regional-indicator flag
+        return bases.Count >= 2 && runes.Contains(0x200D) &&
+               bases.All(rune => rune is not (>= 0x1F1E6 and <= 0x1F1FF));    // ZWJ sequence, no half flags
+    }
+
+    private static bool IsEmojiBase(int value) =>
+        value is >= 0x1F000 and <= 0x1FAFF and not (>= 0x1F3FB and <= 0x1F3FF) or   // skin-tone modifiers are combiners, not bases; regional indicators (a flag's halves) are inside this range
+            >= 0x2600 and <= 0x27BF or
+            >= 0x2B00 and <= 0x2BFF or
+            >= 0x2190 and <= 0x21FF or
+            >= 0x2300 and <= 0x23FF or
+            >= 0x25A0 and <= 0x25FF;
+
+    private static bool IsKeycapDigit(int value) =>
+        value is >= 0x0030 and <= 0x0039 or 0x0023 or 0x002A;
+
+    private static bool IsEmojiCombiner(int value) =>
+        value is 0xFE0F or 0xFE0E or 0x200D or 0x20E3 or
+            >= 0x1F3FB and <= 0x1F3FF or      // skin-tone modifiers
+            >= 0xE0020 and <= 0xE007F;        // subdivision flag tag characters
 
     public static bool IsSupportedColor(string? color)
     {
@@ -72,6 +139,18 @@ public sealed class HavenRichPage
     public string Id { get; set; } = "page-" + Guid.NewGuid().ToString("N")[..12];
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Page 1";
+    /// <summary>
+    /// Identity icon for this page, drawn in the tree row and the page header. Canonical v2 line 9423 lists
+    /// <c>Icon?</c> among the required BoardPage fields; the vocabulary is the shared Boards icon set, so a
+    /// page can carry a silhouette, an emoji, or the default page mark. The default is the glyph every page
+    /// already drew before this field existed, so existing boards render unchanged. Identity is unaffected:
+    /// <see cref="Id"/> never changes when the icon does (canonical line 9417).
+    /// </summary>
+    public string IconKey { get; set; } = HavenRichSectionIcons.PageDefault;
+    /// <summary>Optional explicit page icon color; null follows the active theme.</summary>
+    public string? IconColor { get; set; }
+    /// <summary>Unicode emoji kept when <see cref="IconKey"/> is "emoji".</summary>
+    public string? IconEmoji { get; set; }
     /// <summary>Page presentation owner. Native is the default for existing board documents.</summary>
     public string PageType { get; set; } = HavenRichPageTypes.Native;
     /// <summary>Stable, revision-pinned owner identity for an app-backed page.</summary>
@@ -361,6 +440,26 @@ public static class HavenRichNotesValidator
 {
     public const double InkCoordinateLimit = 100_000;
 
+    /// <summary>
+    /// Shared rule for every Boards icon slot (board, section and page): an emoji may only be stored when
+    /// the key is "emoji", must be one plausible emoji sequence in that case, and must be absent otherwise.
+    /// Membership in the Unicode catalogue the application ships is enforced where the choice is offered,
+    /// because the contract layer cannot see that dataset; this is the document-level safety net that keeps
+    /// arbitrary text out of an icon slot.
+    /// </summary>
+    private static void ValidateIconEmoji(string owner, string iconKey, string? iconEmoji)
+    {
+        if (iconKey == HavenRichSectionIcons.Emoji)
+        {
+            if (!HavenRichSectionIcons.IsPlausibleEmojiSequence(iconEmoji))
+                throw new InvalidOperationException(
+                    $"{owner} icon key 'emoji' requires a single Unicode emoji sequence.");
+            return;
+        }
+        if (iconEmoji is not null)
+            throw new InvalidOperationException($"{owner} emoji is only valid when the icon key is 'emoji'.");
+    }
+
     public static void Validate(HavenRichNotes notes)
     {
         ArgumentNullException.ThrowIfNull(notes);
@@ -369,6 +468,12 @@ public static class HavenRichNotesValidator
             throw new InvalidOperationException("Rich board title must be non-empty.");
         if (notes.Sections.Count == 0)
             throw new InvalidOperationException("Rich board must contain at least one section.");
+        if (notes.IconKey is not null && !HavenRichSectionIcons.IsSupported(notes.IconKey) &&
+            notes.IconKey != HavenRichSectionIcons.Emoji)
+            throw new InvalidOperationException($"Board icon key '{notes.IconKey}' is not supported.");
+        if (!HavenRichSectionIcons.IsSupportedColor(notes.IconColor))
+            throw new InvalidOperationException("Board icon color must be null or a six-digit #RRGGBB value.");
+        ValidateIconEmoji("Board", notes.IconKey ?? HavenRichSectionIcons.Default, notes.IconEmoji);
         HavenRichStyles.ValidateStyles(notes);
         var allPageIds = new HashSet<string>(StringComparer.Ordinal);
         var allGraphIds = new HashSet<string>(StringComparer.Ordinal);
@@ -380,13 +485,15 @@ public static class HavenRichNotesValidator
                 HavenRichSectionIconGeometry.Validate(section.GeneratedIcon);
             else
             {
-                if (!HavenRichSectionIcons.IsSupported(section.IconKey))
+                if (!HavenRichSectionIcons.IsSupported(section.IconKey) &&
+                    section.IconKey != HavenRichSectionIcons.Emoji)
                     throw new InvalidOperationException($"Section icon key '{section.IconKey}' is not supported.");
                 if (section.GeneratedIcon is not null)
                     throw new InvalidOperationException("Generated geometry is only valid when the section icon key is 'generated'.");
             }
             if (!HavenRichSectionIcons.IsSupportedColor(section.IconColor))
                 throw new InvalidOperationException("Section icon color must be null or a six-digit #RRGGBB value.");
+            ValidateIconEmoji($"Section '{section.Title}'", section.IconKey, section.IconEmoji);
             if (section.Pages.Count == 0)
                 throw new InvalidOperationException($"Section '{section.Title}' must contain at least one page.");
 
@@ -397,6 +504,12 @@ public static class HavenRichNotesValidator
                     throw new InvalidOperationException($"Page ID '{page.Id}' is duplicated in the board.");
                 if (string.IsNullOrWhiteSpace(page.Title))
                     throw new InvalidOperationException("Rich board pages must have non-empty titles.");
+                if (!HavenRichSectionIcons.IsSupported(page.IconKey) &&
+                    page.IconKey != HavenRichSectionIcons.Emoji)
+                    throw new InvalidOperationException($"Page icon key '{page.IconKey}' is not supported.");
+                if (!HavenRichSectionIcons.IsSupportedColor(page.IconColor))
+                    throw new InvalidOperationException("Page icon color must be null or a six-digit #RRGGBB value.");
+                ValidateIconEmoji($"Page '{page.Title}'", page.IconKey, page.IconEmoji);
                 if (!HavenRichPageLayoutModes.IsSupported(page.LayoutMode))
                     throw new InvalidOperationException($"Page layout mode '{page.LayoutMode}' is not supported.");
                 if (page.PageType != HavenRichPageTypes.Native &&
@@ -839,10 +952,12 @@ public static partial class HavenRichNotesOps
 
         var section = RequireSection(notes, sectionId);
         var normalizedColor = iconColor?.ToUpperInvariant();
-        if (section.IconKey == iconKey && section.IconColor == normalizedColor && section.GeneratedIcon is null)
+        if (section.IconKey == iconKey && section.IconColor == normalizedColor &&
+            section.GeneratedIcon is null && section.IconEmoji is null)
             return;
         section.IconKey = iconKey;
         section.IconColor = normalizedColor;
+        section.IconEmoji = null;
         section.GeneratedIcon = null;
         Touch(notes);
     }
@@ -863,7 +978,110 @@ public static partial class HavenRichNotesOps
             return;
         section.IconKey = HavenRichSectionIcons.Generated;
         section.IconColor = normalizedColor;
+        section.IconEmoji = null;
         section.GeneratedIcon = HavenRichSectionIconGeometry.Copy(generatedIcon);
+        Touch(notes);
+    }
+
+    /// <summary>
+    /// Chooses a Unicode emoji as a section's icon. AppFlowy's model — the reference for this behaviour —
+    /// stores the sequence itself on the entity, which is what this does: nothing references a glyph table,
+    /// so the board keeps its icon without the catalogue on disk.
+    /// </summary>
+    public static void SetSectionIconEmoji(HavenRichNotes notes, string sectionId, string emoji, string? iconColor)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var section = RequireSection(notes, sectionId);
+        ApplyIconSlot(notes, $"Section '{section.Title}'", () => (section.IconKey, section.IconColor, section.IconEmoji),
+            key => section.IconKey = key, color => section.IconColor = color, emojiValue => section.IconEmoji = emojiValue,
+            HavenRichSectionIcons.Emoji, emoji, iconColor, clearGeometry: () => section.GeneratedIcon = null);
+    }
+
+    /// <summary>Chooses one of the closed Boards silhouettes for a page.</summary>
+    public static void SetPageIcon(HavenRichNotes notes, string pageId, string iconKey, string? iconColor)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        if (!HavenRichSectionIcons.IsSupported(iconKey))
+            throw new ArgumentException("Page icon key is not in the supported Boards silhouette catalog.", nameof(iconKey));
+        var page = RequirePage(notes, pageId);
+        ApplyIconSlot(notes, $"Page '{page.Title}'", () => (page.IconKey, page.IconColor, page.IconEmoji),
+            key => page.IconKey = key, color => page.IconColor = color, emojiValue => page.IconEmoji = emojiValue,
+            iconKey, null, iconColor, clearGeometry: null);
+    }
+
+    /// <summary>Chooses a Unicode emoji as a page's icon, shown in the tree row and the page header.</summary>
+    public static void SetPageIconEmoji(HavenRichNotes notes, string pageId, string emoji, string? iconColor)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var page = RequirePage(notes, pageId);
+        ApplyIconSlot(notes, $"Page '{page.Title}'", () => (page.IconKey, page.IconColor, page.IconEmoji),
+            key => page.IconKey = key, color => page.IconColor = color, emojiValue => page.IconEmoji = emojiValue,
+            HavenRichSectionIcons.Emoji, emoji, iconColor, clearGeometry: null);
+    }
+
+    /// <summary>
+    /// Remove in the donor's picker: the entity keeps existing, its icon returns to the mark every entity of
+    /// that kind used before an icon could be chosen.
+    /// </summary>
+    public static void ClearPageIcon(HavenRichNotes notes, string pageId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var page = RequirePage(notes, pageId);
+        if (page.IconKey == HavenRichSectionIcons.PageDefault && page.IconColor is null && page.IconEmoji is null)
+            return;
+        page.IconKey = HavenRichSectionIcons.PageDefault;
+        page.IconColor = null;
+        page.IconEmoji = null;
+        Touch(notes);
+    }
+
+    /// <summary>Sets or clears the board's own identity icon, used by landing cards and the board switcher.</summary>
+    public static void SetBoardIcon(HavenRichNotes notes, string? iconKey, string? iconEmoji, string? iconColor)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        if (string.IsNullOrWhiteSpace(iconKey))
+        {
+            if (notes.IconKey is null && notes.IconColor is null && notes.IconEmoji is null) return;
+            notes.IconKey = null;
+            notes.IconColor = null;
+            notes.IconEmoji = null;
+            Touch(notes);
+            return;
+        }
+        ApplyIconSlot(notes, "Board", () => (notes.IconKey ?? "", notes.IconColor, notes.IconEmoji),
+            key => notes.IconKey = key, color => notes.IconColor = color, emojiValue => notes.IconEmoji = emojiValue,
+            iconKey, iconEmoji, iconColor, clearGeometry: null);
+    }
+
+    /// <summary>
+    /// One rule for every icon slot write, so a board, section or page cannot disagree about what a valid
+    /// icon is. The getters and setters are passed because the three owners keep their own fields; an
+    /// unchanged choice skips the revision touch so a no-op click does not mark the board dirty.
+    /// </summary>
+    private static void ApplyIconSlot(HavenRichNotes notes, string owner,
+        Func<(string Key, string? Color, string? Emoji)> current,
+        Action<string> setKey, Action<string?> setColor, Action<string?> setEmoji,
+        string iconKey, string? emoji, string? iconColor, Action? clearGeometry)
+    {
+        if (!HavenRichSectionIcons.IsSupported(iconKey) && iconKey != HavenRichSectionIcons.Emoji)
+            throw new ArgumentException($"{owner} icon key '{iconKey}' is not in the supported Boards icon catalog.", nameof(iconKey));
+        if (!HavenRichSectionIcons.IsSupportedColor(iconColor))
+            throw new ArgumentException($"{owner} icon color must be null or a six-digit #RRGGBB value.", nameof(iconColor));
+        if (iconKey == HavenRichSectionIcons.Emoji && !HavenRichSectionIcons.IsPlausibleEmojiSequence(emoji))
+            throw new ArgumentException($"{owner} icon key 'emoji' requires a single Unicode emoji sequence.", nameof(emoji));
+        if (iconKey != HavenRichSectionIcons.Emoji && emoji is not null)
+            throw new ArgumentException($"{owner} emoji is only valid when the icon key is 'emoji'.", nameof(emoji));
+
+        var normalizedColor = iconColor?.ToUpperInvariant();
+        var normalizedEmoji = iconKey == HavenRichSectionIcons.Emoji ? emoji : null;
+        var existing = current();
+        if (existing.Key == iconKey && existing.Color == normalizedColor && existing.Emoji == normalizedEmoji)
+            return;
+
+        setKey(iconKey);
+        setColor(normalizedColor);
+        setEmoji(normalizedEmoji);
+        clearGeometry?.Invoke();
         Touch(notes);
     }
 

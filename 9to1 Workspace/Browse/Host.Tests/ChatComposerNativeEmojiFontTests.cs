@@ -1,4 +1,5 @@
 using Haven.Desktop.Prefabs;
+using Haven.Infrastructure.Emoji;
 using Haven.Desktop.Views.Pages.Chat;
 using Xunit;
 
@@ -51,7 +52,7 @@ public sealed class ChatComposerNativeEmojiFontTests
         Assert.NotEmpty(candidates);
         Assert.All(candidates, candidate =>
         {
-            Assert.Contains(ComposerEmojiCatalogue.Entries, entry => entry.Text == candidate);
+            Assert.Contains(EmojiCatalogue.Entries, entry => entry.Text == candidate);
             Assert.DoesNotContain(".svg", candidate);
         });
     }

@@ -12,6 +12,7 @@ using CakeOS.Cui.Themes;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Prefabs;
+using Haven.Infrastructure.Emoji;
 using HavenOS.Apps.Spaces.Chat;
 
 namespace Haven.Desktop.Views.Pages.Chat;
@@ -472,7 +473,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             };
             return value is not null;
         }
-        if (item is ComposerEmoji emoji)
+        if (item is EmojiEntry emoji)
         {
             value = path switch
             {
@@ -566,7 +567,7 @@ public static class ComposerEmojiIconPool
         var curated = Curated.Select(Normalize).ToHashSet(StringComparer.Ordinal);
         var blacklist = Suggestive.Select(Normalize).ToHashSet(StringComparer.Ordinal);
         var pool = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var entry in ComposerEmojiCatalogue.Entries)
+        foreach (var entry in EmojiCatalogue.Entries)
         {
             if (entry.Group.Equals("Flags", StringComparison.Ordinal)) continue;
             var normalized = Normalize(entry.Text);
@@ -574,7 +575,7 @@ public static class ComposerEmojiIconPool
             if (blacklist.Contains(normalized)) continue;
             pool.Add(entry.Text);
         }
-        return pool.Count == 0 ? pool.ToArray() : ComposerEmojiCatalogue.Entries
+        return pool.Count == 0 ? pool.ToArray() : EmojiCatalogue.Entries
             .Select(entry => entry.Text).Where(pool.Contains).Distinct(StringComparer.Ordinal).ToArray();
     }
 }

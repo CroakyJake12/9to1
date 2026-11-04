@@ -1,5 +1,7 @@
 namespace Haven.Desktop.Prefabs;
 
+using Haven.Infrastructure.Emoji;
+
 /// <summary>
 /// The narrow, non-visual catalogue query engine behind the composer's emoji picker. It is a pure
 /// function over the canonical Unicode catalogue: given a search query and an opaque cursor, it
@@ -26,7 +28,7 @@ public static class ComposerEmojiCatalogueQuery
     /// truthful total match count, the zero-based start offset of this window, and opaque prev/next
     /// cursor tokens (null when the window is at the corresponding boundary).</summary>
     public sealed record Result(
-        IReadOnlyList<ComposerEmoji> Items,
+        IReadOnlyList<EmojiEntry> Items,
         int TotalCount,
         int StartOffset,
         Cursor? Prev,
@@ -40,23 +42,23 @@ public static class ComposerEmojiCatalogueQuery
     {
         var all = Filter(query);
         var total = all.Count;
-        if (total == 0) return new Result(Array.Empty<ComposerEmoji>(), 0, 0, null, null);
+        if (total == 0) return new Result(Array.Empty<EmojiEntry>(), 0, 0, null, null);
 
         var start = cursor is { } c ? Math.Clamp(c.Offset, 0, total - 1) : 0;
         start = start / PageSize * PageSize; // align to the page boundary (bounded decode)
         var count = Math.Min(PageSize, total - start);
-        var items = new ComposerEmoji[count];
+        var items = new EmojiEntry[count];
         for (var i = 0; i < count; i++) items[i] = all[start + i];
         return new Result(items, total, start,
             start > 0 ? new Cursor(start - PageSize) : null,
             start + count < total ? new Cursor(start + PageSize) : null);
     }
 
-    private static IReadOnlyList<ComposerEmoji> Filter(string? query)
+    private static IReadOnlyList<EmojiEntry> Filter(string? query)
     {
         var trimmed = query?.Trim();
-        if (string.IsNullOrEmpty(trimmed)) return ComposerEmojiCatalogue.Entries;
-        return ComposerEmojiCatalogue.Entries.Where(entry =>
+        if (string.IsNullOrEmpty(trimmed)) return EmojiCatalogue.Entries;
+        return EmojiCatalogue.Entries.Where(entry =>
             entry.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase)
             || entry.Group.Contains(trimmed, StringComparison.OrdinalIgnoreCase)
             || entry.Text == trimmed).ToArray();

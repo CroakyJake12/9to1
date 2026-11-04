@@ -1,4 +1,5 @@
 using Avalonia;
+using Haven.Infrastructure.Emoji;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -284,7 +285,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
             Assert.True(glyphs.Length >= 6, "viewport must realize a bounded grid of emoji cells");
             var unicodeGlyph = glyphs[0];
             var glyphText = Assert.IsType<string>(unicodeGlyph.Content);
-            Assert.Contains(ComposerEmojiCatalogue.Entries, entry => entry.Text == glyphText);
+            Assert.Contains(EmojiCatalogue.Entries, entry => entry.Text == glyphText);
             Assert.Equal(emojiFontFamily, unicodeGlyph.FontFamily?.Name);
             var origins = glyphs.Select(button => OriginIn(button, viewport!)).ToArray();
             var rows = origins.Select(origin => origin.Y).Distinct().ToArray();
@@ -354,11 +355,11 @@ public sealed class ChatComposerEmojiPickerViewportTests
             // The numeric total label reports the truthful full-catalogue total on the final page.
             var totalLabel = FindLabel(view, "emoji-total");
             Assert.NotNull(totalLabel);
-            Assert.EndsWith(ComposerEmojiCatalogue.Entries.Count.ToString(CultureInfo.InvariantCulture),
+            Assert.EndsWith(EmojiCatalogue.Entries.Count.ToString(CultureInfo.InvariantCulture),
                 totalLabel!.Text, StringComparison.Ordinal);
 
             // The final page's realized glyphs are genuine catalogue entries (complete reach).
-            var catalogueGlyphs = ComposerEmojiCatalogue.Entries.Select(e => e.Text).ToHashSet(StringComparer.Ordinal);
+            var catalogueGlyphs = EmojiCatalogue.Entries.Select(e => e.Text).ToHashSet(StringComparer.Ordinal);
             Assert.True(realized.All(b => b.Content is string g && catalogueGlyphs.Contains(g)),
                 "every realized cell must be a real catalogue sequence");
 
@@ -368,7 +369,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
             search!.Text = "flag"; PumpLayout(window);
             var flagButtons = EmojiCells(viewport);
             var flagSet = ComposerEmojiCatalogueQuery.Evaluate("flag", null).Items
-                .Select(e => ((ComposerEmoji)e).Text).ToHashSet(StringComparer.Ordinal);
+                .Select(e => ((EmojiEntry)e).Text).ToHashSet(StringComparer.Ordinal);
             Assert.True(flagButtons.Any(b => b.Content is string s && flagSet.Contains(s)),
                 "flags must be reachable through real picker search");
 

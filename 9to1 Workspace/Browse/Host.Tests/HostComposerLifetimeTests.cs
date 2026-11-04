@@ -1,4 +1,5 @@
 using Avalonia;
+using Haven.Infrastructure.Emoji;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
@@ -290,7 +291,7 @@ public sealed class HostComposerLifetimeTests
         Assert.NotEmpty(candidates);
 
         // No trigger candidate may come from the Flags group (generic/country/subdivision).
-        var flagTexts = ComposerEmojiCatalogue.Entries
+        var flagTexts = EmojiCatalogue.Entries
             .Where(entry => entry.Group.Equals("Flags", StringComparison.Ordinal))
             .Select(entry => entry.Text)
             .ToHashSet(StringComparer.Ordinal);

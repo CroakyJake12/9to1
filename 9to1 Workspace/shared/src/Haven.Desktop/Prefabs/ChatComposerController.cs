@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Haven.Infrastructure.Emoji;
 using Avalonia.Threading;
 using Haven.UI;
 using Haven.UI.Components;
@@ -105,7 +106,7 @@ public sealed class ChatComposerController
         void Refresh()
         {
             foreach (var child in results.Children.ToArray()) results.Remove(child);
-            var matches = ComposerEmojiCatalogue.Entries.Where(entry =>
+            var matches = EmojiCatalogue.Entries.Where(entry =>
                 entry.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 entry.Group.Contains(query, StringComparison.OrdinalIgnoreCase) || entry.Text == query).ToArray();
             foreach (var entry in matches.Skip(page * pageSize).Take(pageSize))
