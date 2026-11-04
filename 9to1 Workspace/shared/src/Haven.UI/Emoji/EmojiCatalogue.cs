@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Haven.Infrastructure.Emoji;
+namespace Haven.UI.Emoji;
 
 /// <summary>
 /// One fully-qualified Unicode emoji sequence with its CLDR name and Unicode group. This is the single
@@ -138,7 +138,7 @@ public static class EmojiCatalogue
     private static IReadOnlyList<EmojiEntry> Read()
     {
         using var stream = typeof(EmojiCatalogue).Assembly
-            .GetManifestResourceStream("Haven.Infrastructure.Resources.emoji-test-17.0.txt")
+            .GetManifestResourceStream("Haven.UI.Resources.emoji-test-17.0.txt")
             ?? throw new InvalidOperationException("The Unicode emoji catalogue resource is missing.");
         using var reader = new StreamReader(stream);
         var result = new List<EmojiEntry>();

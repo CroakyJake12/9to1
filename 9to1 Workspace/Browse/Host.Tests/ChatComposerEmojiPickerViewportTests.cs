@@ -1,5 +1,5 @@
 using Avalonia;
-using Haven.Infrastructure.Emoji;
+using Haven.UI.Emoji;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;

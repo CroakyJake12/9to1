@@ -13,12 +13,6 @@
     <PlatformTarget Condition="!$([MSBuild]::IsOSPlatform('Windows'))">AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <!-- The canonical Unicode 17 emoji catalogue: one dataset shared by the chat composer picker and
-         the Boards icon picker, so search results and accessible names agree across surfaces. -->
-    <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Infrastructure.Resources.emoji-test-17.0.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
     <!-- Legacy Boards is retained as a portable data/validation codec only, never its app or store owner. -->

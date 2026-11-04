@@ -1,5 +1,5 @@
 using Haven.Desktop.Prefabs;
-using Haven.Infrastructure.Emoji;
+using Haven.UI.Emoji;
 using Haven.Desktop.Views.Pages.Chat;
 using Xunit;
 

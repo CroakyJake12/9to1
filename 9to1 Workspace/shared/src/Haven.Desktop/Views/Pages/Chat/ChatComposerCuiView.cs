@@ -12,7 +12,7 @@ using CakeOS.Cui.Themes;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Prefabs;
-using Haven.Infrastructure.Emoji;
+using Haven.UI.Emoji;
 using HavenOS.Apps.Spaces.Chat;
 
 namespace Haven.Desktop.Views.Pages.Chat;

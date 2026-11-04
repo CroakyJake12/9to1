@@ -163,7 +163,13 @@ public static class NavBuilder
         };
         row.Children.Add(chevron);
         Control sectionIcon;
-        if (section.GeneratedIcon is { } generatedIcon)
+        if (BoardsCuiIconResolver.TryCreateIdentityIcon(section.IconKey, section.IconEmoji,
+                section.IconColor, 20, "Section icon") is { } sectionEmoji)
+        {
+            ToolTip.SetTip(sectionEmoji, section.Title);
+            sectionIcon = sectionEmoji;
+        }
+        else if (section.GeneratedIcon is { } generatedIcon)
         {
             var image = new Image
             {
@@ -323,19 +329,27 @@ public static class NavBuilder
         row.Children.Add(selectedMarker);
         row.Children.Add(disclosure);
         Grid.SetColumn(disclosure, 1);
-        var pageIcon = new Image
+        // UX27-BOARD-012 requires "an actual page/section icon" in every tree row. Until the page icon field
+        // existed this row could only ever draw the one generic mark; it now draws whatever the owner chose,
+        // and falls back to exactly that mark when they chose nothing.
+        Control pageIcon = BoardsCuiIconResolver.TryCreateIdentityIcon(page.IconKey, page.IconEmoji,
+            page.IconColor, 20, "Page icon")
+            ?? new Image
+            {
+                Source = BoardsCuiIconResolver.CreateSectionIcon(page.IconKey,
+                    BoardsCuiIconResolver.SemanticBrush(page.IconKey, colorOverride: page.IconColor)),
+                Width = 16,
+                Height = 16,
+                Stretch = Avalonia.Media.Stretch.Uniform,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
+        if (pageIcon is Image pageIconImage)
         {
-            Source = BoardsCuiIconResolver.CreateSectionIcon(BoardsIcons.Page,
-                BoardsCuiIconResolver.SemanticBrush(BoardsIcons.Page)),
-            Width = 16,
-            Height = 16,
-            Stretch = Avalonia.Media.Stretch.Uniform,
-            VerticalAlignment = VerticalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-        };
-        BoardsCuiIconResolver.ObserveSemanticIcon(pageIcon, BoardsIcons.Page);
-        ToolTip.SetTip(pageIcon, "Page");
-        Avalonia.Automation.AutomationProperties.SetName(pageIcon, "Page icon");
+            BoardsCuiIconResolver.ObserveSemanticIcon(pageIconImage, page.IconKey, page.IconColor);
+            Avalonia.Automation.AutomationProperties.SetName(pageIconImage, "Page icon");
+        }
+        ToolTip.SetTip(pageIcon, page.Title);
         Grid.SetColumn(pageIcon, 2);
         row.Children.Add(pageIcon);
         var button = new Button

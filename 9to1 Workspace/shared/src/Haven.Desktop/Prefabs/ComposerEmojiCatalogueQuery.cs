@@ -1,6 +1,6 @@
 namespace Haven.Desktop.Prefabs;
 
-using Haven.Infrastructure.Emoji;
+using Haven.UI.Emoji;
 
 /// <summary>
 /// The narrow, non-visual catalogue query engine behind the composer's emoji picker. It is a pure

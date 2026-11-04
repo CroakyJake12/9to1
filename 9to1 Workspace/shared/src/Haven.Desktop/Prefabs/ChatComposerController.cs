@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Haven.Infrastructure.Emoji;
+using Haven.UI.Emoji;
 using Avalonia.Threading;
 using Haven.UI;
 using Haven.UI.Components;

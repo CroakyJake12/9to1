@@ -7,6 +7,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <EmbeddedResource Include="Resources\**\*.hui" />
+    <!-- The canonical Unicode 17 emoji catalogue: one dataset shared by the chat composer's emoji picker
+         and the Boards icon picker, so search results, categories and accessible names agree across
+         surfaces. Every fully-qualified sequence, with its CLDR name and Unicode group. -->
+    <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.UI.Resources.emoji-test-17.0.txt" />
     <EmbeddedResource Include="Prefabs\**\*.hui" />
     <EmbeddedResource Include="DynamicUI\**\*.hui" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>

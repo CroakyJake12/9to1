@@ -28,6 +28,8 @@ public sealed class RichBoardSection
     public string Title { get; set; } = "Untitled section";
     public string IconKey { get; set; } = HavenRichSectionIcons.Default;
     public string? IconColor { get; set; }
+    /// <summary>Unicode emoji kept when <see cref="IconKey"/> is "emoji".</summary>
+    public string? IconEmoji { get; set; }
     public HavenRichSectionGeneratedIcon? GeneratedIcon { get; set; }
     public List<RichBoardPage> Pages { get; set; } = [];
 }
@@ -40,6 +42,15 @@ public sealed class RichBoardPage
     public string Id { get; set; } = "page-" + Guid.NewGuid().ToString("N")[..12];
     public string? ParentPageId { get; set; }
     public string Title { get; set; } = "Untitled page";
+    /// <summary>
+    /// Page identity icon (canonical v2 line 9423 <c>Icon?</c>). The vocabulary and the rules are the
+    /// section's, so one picker and one renderer serve both; "file" is what every page drew before the
+    /// field existed and remains the default.
+    /// </summary>
+    public string IconKey { get; set; } = HavenRichSectionIcons.PageDefault;
+    public string? IconColor { get; set; }
+    /// <summary>Unicode emoji kept when <see cref="IconKey"/> is "emoji".</summary>
+    public string? IconEmoji { get; set; }
     public string PageType { get; set; } = HavenRichPageTypes.Native;
     public Haven.Application.BoardEmbeddedArtifactReference? EmbeddedArtifact { get; set; }
     public bool IsCanvasLocked { get; set; }

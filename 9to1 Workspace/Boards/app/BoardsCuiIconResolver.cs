@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Input;
@@ -8,6 +9,7 @@ using Avalonia.Threading;
 using CakeOS.Cui.Themes;
 using Haven.UI;
 using CakeOS.Apps.Boards.Contract;
+using Haven.UI.Emoji;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -45,6 +47,48 @@ public static class BoardsCuiIconResolver
         if (target is Image semanticIcon)
             ObserveSemanticIcon(semanticIcon, key);
         return CreateIcon(key, SemanticBrush(key, target));
+    }
+
+    /// <summary>
+    /// Identity-icon element for a board, section or page slot. An owner-chosen emoji is painted as text -
+    /// the only faithful way to render a Unicode sequence, and the CUI host already supplies the emoji face
+    /// through its font fallback chain - on the optional rounded colour square the reference design uses,
+    /// because a multicolour emoji cannot be tinted so the stored colour has to become the tile behind it.
+    /// Every other icon key returns null and the caller keeps Haven's maintained vector silhouette, which is
+    /// what the owner's 25 October rule requires for tool and action icons.
+    /// </summary>
+    public static Control? TryCreateIdentityIcon(string? iconKey, string? iconEmoji, string? iconColor,
+        double slotSize, string fallbackAccessibleName)
+    {
+        if (iconKey != HavenRichSectionIcons.Emoji ||
+            !HavenRichSectionIcons.IsPlausibleEmojiSequence(iconEmoji))
+            return null;
+
+        var accessibleName = EmojiCatalogue.Find(iconEmoji)?.Name is { Length: > 0 } name
+            ? $"{name} icon"
+            : fallbackAccessibleName;
+        var glyph = new TextBlock
+        {
+            Text = iconEmoji!,
+            FontSize = Math.Round(slotSize * 0.72),
+            TextAlignment = TextAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(glyph, accessibleName);
+        if (string.IsNullOrWhiteSpace(iconColor))
+        {
+            glyph.Width = slotSize;
+            return glyph;
+        }
+        return new Border
+        {
+            Width = slotSize,
+            Height = slotSize,
+            CornerRadius = new CornerRadius(Math.Round(slotSize * 0.28)),
+            Background = new SolidColorBrush(Color.Parse(iconColor)),
+            Child = glyph,
+        };
     }
 
     internal static void ObserveSemanticIcon(Image target, string key, string? colorOverride = null) =>

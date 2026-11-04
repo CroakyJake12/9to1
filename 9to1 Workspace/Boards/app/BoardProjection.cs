@@ -21,6 +21,7 @@ internal static class Projector
             Title = s.Title,
             IconKey = s.IconKey,
             IconColor = s.IconColor,
+            IconEmoji = s.IconEmoji,
             GeneratedIcon = s.GeneratedIcon is null ? null : HavenRichSectionIconGeometry.Copy(s.GeneratedIcon),
             Pages = s.Pages.Select(page => ProjectPage(rich, page)).ToList()
         }).ToList();
@@ -32,6 +33,9 @@ internal static class Projector
         ParentPageId = page.ParentPageId,
         TabberOwnerBlockId = page.TabberOwnerBlockId,
         Title = page.Title,
+        IconKey = page.IconKey,
+        IconColor = page.IconColor,
+        IconEmoji = page.IconEmoji,
         PageType = page.PageType,
         EmbeddedArtifact = page.EmbeddedArtifact,
         IsCanvasLocked = page.IsCanvasLocked,
@@ -819,6 +823,12 @@ internal static class MergeDeltas
                 throw new InvalidOperationException("A generated section icon requires validated geometry.");
             HavenRichNotesOps.SetSectionGeneratedIcon(rich, sectionId, viewSection.GeneratedIcon, viewSection.IconColor);
         }
+        else if (viewSection.IconKey == HavenRichSectionIcons.Emoji)
+        {
+            if (string.IsNullOrEmpty(viewSection.IconEmoji))
+                throw new InvalidOperationException("An emoji section icon requires the emoji value.");
+            HavenRichNotesOps.SetSectionIconEmoji(rich, sectionId, viewSection.IconEmoji, viewSection.IconColor);
+        }
         else
             HavenRichNotesOps.SetSectionIcon(rich, sectionId, viewSection.IconKey, viewSection.IconColor);
     }
@@ -826,6 +836,12 @@ internal static class MergeDeltas
     private static void ImportPageTree(HavenRichSection section, RichBoardPage viewPage)
     {
         var page = HavenRichNotesOps.ImportPage(section, viewPage.Id, viewPage.Title);
+        // The icon is entity identity, not page content, so it is re-applied here the same way the page's
+        // other identity dimensions are: an edit that touched only text must not silently drop the owner's
+        // chosen icon.
+        page.IconKey = viewPage.IconKey;
+        page.IconColor = viewPage.IconColor;
+        page.IconEmoji = viewPage.IconKey == HavenRichSectionIcons.Emoji ? viewPage.IconEmoji : null;
         page.ParentPageId = viewPage.ParentPageId;
         page.TabberOwnerBlockId = viewPage.TabberOwnerBlockId;
         page.IsCanvasLocked = viewPage.IsCanvasLocked;
