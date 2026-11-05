@@ -43,10 +43,22 @@ public static class BoardsCuiIconResolver
         if (!source.StartsWith("icon:", StringComparison.Ordinal)) return null;
         if (!target.TryFindResource("CuiTextBrush", out var resource) || resource is not IBrush)
             throw new InvalidOperationException("A Boards catalog icon requires the scoped CUI text brush.");
-        var key = source[5..];
+        // An identity icon can carry the owner's chosen colour, and the override travels in the source string
+        // (icon:file|#FFB3261E) because a view model is not allowed to build Avalonia media objects: it is
+        // constructed off the UI thread, where reading a brush throws. The same reference also feeds the
+        // observer below, so a theme change keeps the owner's colour instead of reverting to the semantic one.
+        var reference = source[5..];
+        var separator = reference.IndexOf('|');
+        var key = separator < 0 ? reference : reference[..separator];
+        var colorOverride = separator < 0 || separator == reference.Length - 1 ? null : reference[(separator + 1)..];
         if (target is Image semanticIcon)
-            ObserveSemanticIcon(semanticIcon, key);
-        return CreateIcon(key, SemanticBrush(key, target));
+            ObserveSemanticIcon(semanticIcon, key, colorOverride);
+        var tintedBrush = SemanticBrush(key, target, colorOverride);
+        // The same key-to-factory choice the observer makes on refresh, so the first render and every later
+        // theme change draw the identical silhouette.
+        return BoardsIcons.SectionIconChoices.Contains(key, StringComparer.Ordinal)
+            ? CreateSectionIcon(key, tintedBrush)
+            : CreateIcon(key, tintedBrush);
     }
 
     /// <summary>

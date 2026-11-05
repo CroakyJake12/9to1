@@ -679,6 +679,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             case "RemoveIconPickerIcon":
                 await RemovePickerIconAsync(cancellationToken);
                 break;
+            case "OpenPageIconPickerForActivePage":
+                OpenActivePageIconPicker();
+                break;
             case "ApplySectionIconColor" when parameter is string iconColor:
                 await ApplyIconColorAsync(iconColor, cancellationToken);
                 break;
@@ -1174,6 +1177,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("IsEditingMode", enabled);
         Set("IsViewingMode", !enabled);
         Set("CanChangeLayoutMode", CanChangeLayoutMode);
+        // The page header's icon slot is displayed in both modes but only opens the picker while editing, so
+        // the mode change has to republish it. Without this the slot keeps whatever activation state the last
+        // document push published, which is what let the header change a page icon from View mode in test.
+        RefreshPageIconState(CurrentPage());
         RefreshSnapState();
         RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
@@ -4618,6 +4625,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("SectionListText", string.Join("  |  ", doc.Sections.Select(s => s.Title)));
             Set("PageListText", string.Join("  |  ", CurrentSection().Pages.Select(p => p.Title)));
             Set("PageTitle", page.Title);
+            RefreshPageIconState(page);
             Set("IsNativePage", string.Equals(page.PageType, HavenRichPageTypes.Native, StringComparison.Ordinal));
             Set("CanChangeLayoutMode", CanChangeLayoutMode);
             Set("LayoutModeLabel", LayoutModeLabel);

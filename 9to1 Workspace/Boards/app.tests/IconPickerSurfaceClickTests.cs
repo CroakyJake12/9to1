@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.Contract;
@@ -8,14 +7,23 @@ using Xunit;
 namespace CakeOS.Apps.Boards.App.Tests;
 
 /// <summary>
-/// Drives the emoji grid through the rendered CUI surface rather than through the view model's command
+/// Drives the icon surface through the rendered CUI controls rather than through the view model's command
 /// dispatcher, which is what the earlier picker tests did. That difference is the point: in the running
 /// application clicking an emoji cell changed nothing while Shuffle - the same popover, a parameterless
-/// command - stored an emoji and recorded it. A command-level test could not see that, because it never
-/// exercised the authored action wiring.
+/// command - stored an emoji and recorded it, and a command-level test could not see either the failure or
+/// the fix, because it never exercised the authored action wiring.
 /// </summary>
+[Collection(BoardSessionTestCollection.Name)]
 public sealed class IconPickerSurfaceClickTests
 {
+    /// <summary>
+    /// A rendered Boards surface, plus the theme settings it was opened over so that closing the surface
+    /// restores them. These tests change process-wide CUI state, so the pair has to travel with the surface
+    /// rather than sit in a shared field another test could overwrite.
+    /// </summary>
+    private sealed record Surface(
+        BoardsWritablePresentation Presentation, Window Host, BoardsThemeMode PriorMode, CuiTheme PriorCuiTheme);
+
     private static byte[] SmallBoard()
     {
         var root = Path.Combine(Path.GetTempPath(), "icon-surface-" + Guid.NewGuid().ToString("N"));
@@ -28,8 +36,12 @@ public sealed class IconPickerSurfaceClickTests
         return File.ReadAllBytes(path);
     }
 
-    [Fact]
-    public void Clicking_an_emoji_cell_in_the_rendered_picker_stores_it_on_the_page()
+    /// <summary>
+    /// A mounted Boards surface at a fixed size. The CUI runtime only realises authored elements while
+    /// dispatcher jobs are pumped, so everything these tests click has to come from a surface that has been
+    /// measured, arranged and drained, not from a view model built in isolation.
+    /// </summary>
+    private static Surface OpenRenderedSurface(string tag)
     {
         var priorMode = TestUiThread.Run(() => BoardsTheme.Mode);
         var priorCuiTheme = TestUiThread.Run(() => CuiSurfacePaletteCatalog.ActiveTheme);
@@ -40,31 +52,85 @@ public sealed class IconPickerSurfaceClickTests
             Avalonia.Application.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
         });
 
-        var bytes = SmallBoard();
         var opening = TestUiThread.Run(() => BoardsWritablePresentation.OpenWritableDocumentAsync(
-            bytes, "inline:icon-surface", "icon-surface-click",
+            SmallBoard(), "inline:icon-surface-" + tag, "icon-surface-" + tag,
             (_, _, _, _) => ValueTask.FromResult(new BoardsExternalSaveReceipt(
                 false, null, "no-external-save", "Test surface does not write to the owner's Files.")),
             standaloneChrome: true));
         var presentation = TestPump.Pump(opening, "open presentation");
-        Window? window = null;
+        var host = TestUiThread.Run(() =>
+        {
+            var window = new Window { Width = 1440, Height = 900, Content = presentation.Content };
+            window.Show();
+            window.Measure(new Avalonia.Size(1440, 900));
+            window.Arrange(new Avalonia.Rect(0, 0, 1440, 900));
+            presentation.Content.Measure(new Avalonia.Size(1440, 900));
+            presentation.Content.Arrange(new Avalonia.Rect(0, 0, 1440, 900));
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            return window;
+        });
+        TestPump.Pump(presentation.WaitUntilReadyAsync(), "ready");
+        TestPump.Pump(presentation.DrainRenderingAsync(), "render");
+        return new Surface(presentation, host, priorMode, priorCuiTheme);
+    }
+
+    private static void CloseRenderedSurface(Surface surface)
+    {
+        TestUiThread.Run(surface.Host.Close);
+        TestPump.Pump(surface.Presentation.DisposeAsync().AsTask(), "dispose");
+        TestUiThread.Run(() =>
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = surface.PriorCuiTheme;
+            BoardsTheme.SetMode(surface.PriorMode);
+        });
+    }
+
+    /// <summary>An authored element the running surface actually realised, found by its authored ID.</summary>
+    private static T? Find<T>(Surface surface, string automationId) where T : Control =>
+        TestUiThread.Run(() => BoardsCuiControlFinder.FindByAutomationId<T>(surface.Presentation.Content, automationId));
+
+    private static string AccessibleName(Control control) =>
+        TestUiThread.Run(() => Avalonia.Automation.AutomationProperties.GetName(control)) ?? string.Empty;
+
+    // Avalonia objects belong to the UI thread, so a test thread may hold a reference to a control found on
+    // the surface but may not read its properties. These helpers are how the assertions look at what the
+    // owner would actually see: is it shown, is it enabled, and what text is in it.
+    private static bool Shown(Control control) => TestUiThread.Run(() => control.IsVisible);
+
+    private static bool Enabled(Control control) => TestUiThread.Run(() => control.IsEnabled);
+
+    private static string TextOf(TextBlock block) => TestUiThread.Run(() => block.Text) ?? string.Empty;
+
+    private static object? SourceOf(Image image) => TestUiThread.Run(() => image.Source);
+
+    /// <summary>The emoji cells the picker currently draws, identified by their CLDR accessible names.</summary>
+    private static List<Button> EmojiGridButtons(Surface surface) =>
+        TestUiThread.Run(() => surface.Presentation.Content.GetVisualDescendants()
+            .OfType<Button>()
+            .Where(button => !string.IsNullOrWhiteSpace(Avalonia.Automation.AutomationProperties.GetName(button)) &&
+                Haven.UI.Emoji.EmojiCatalogue.Entries.Any(entry =>
+                    entry.Name == Avalonia.Automation.AutomationProperties.GetName(button)))
+            .ToList());
+
+    private static void Click(Surface surface, Control control)
+    {
+        TestUiThread.Run(() =>
+        {
+            control.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent, control));
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        });
+        // The authored header shows its emoji inside an <If> branch, which the runtime rebuilds in a later
+        // pass; without draining, the element the owner would see has not been mounted when the assertions run.
+        TestPump.Pump(surface.Presentation.DrainRenderingAsync(), "after-click-render");
+    }
+
+    [Fact]
+    public void Clicking_an_emoji_cell_in_the_rendered_picker_stores_it_on_the_page()
+    {
+        var surface = OpenRenderedSurface("cell");
         try
         {
-            window = TestUiThread.Run(() =>
-            {
-                var host = new Window { Width = 1440, Height = 900, Content = presentation.Content };
-                host.Show();
-                host.Measure(new Avalonia.Size(1440, 900));
-                host.Arrange(new Avalonia.Rect(0, 0, 1440, 900));
-                presentation.Content.Measure(new Avalonia.Size(1440, 900));
-                presentation.Content.Arrange(new Avalonia.Rect(0, 0, 1440, 900));
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                return host;
-            });
-            TestPump.Pump(presentation.WaitUntilReadyAsync(), "ready");
-            TestPump.Pump(presentation.DrainRenderingAsync(), "render");
-
-            var viewModel = presentation.ViewModel;
+            var viewModel = surface.Presentation.ViewModel;
             var session = viewModel.Session;
             var section = session.Document.Sections[0];
             var page = section.Pages[0];
@@ -77,19 +143,10 @@ public sealed class IconPickerSurfaceClickTests
             });
             Assert.True(viewModel.Get("IsSectionIconPickerOpen") as bool?, "the authored picker should be open");
 
-            var emojiButtons = TestUiThread.Run(() => presentation.Content.GetVisualDescendants()
-                .OfType<Button>()
-                .Where(button => !string.IsNullOrWhiteSpace(Avalonia.Automation.AutomationProperties.GetName(button)) &&
-                    Haven.UI.Emoji.EmojiCatalogue.Entries.Any(entry =>
-                        entry.Name == Avalonia.Automation.AutomationProperties.GetName(button)))
-                .ToList());
+            var emojiButtons = EmojiGridButtons(surface);
             Assert.NotEmpty(emojiButtons);
 
-            TestUiThread.Run(() =>
-            {
-                emojiButtons[0].RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent, emojiButtons[0]));
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-            });
+            Click(surface, emojiButtons[0]);
 
             var after = session.Document.Sections[0].Pages[0];
             Assert.Equal(HavenRichSectionIcons.Emoji, after.IconKey);
@@ -98,13 +155,147 @@ public sealed class IconPickerSurfaceClickTests
         }
         finally
         {
-            if (window is not null) TestUiThread.Run(window.Close);
-            TestPump.Pump(presentation.DisposeAsync().AsTask(), "dispose");
+            CloseRenderedSurface(surface);
+        }
+    }
+
+    /// <summary>
+    /// The reference design puts the page's icon to the left of its title, and that slot is where the owner
+    /// opens the picker while reading the page they are on. Both halves matter: the slot must exist in the
+    /// rendered header (an authored element the runtime never realises is invisible to the owner), and its
+    /// activation must target the displayed page, not whichever one the tree happens to highlight.
+    /// </summary>
+    [Fact]
+    public void The_page_header_icon_slot_opens_the_shared_picker_for_the_displayed_page()
+    {
+        var surface = OpenRenderedSurface("header");
+        try
+        {
+            var viewModel = surface.Presentation.ViewModel;
+            var session = viewModel.Session;
+            var page = session.Document.Sections[0].Pages[0];
+
             TestUiThread.Run(() =>
             {
-                CuiSurfacePaletteCatalog.ActiveTheme = priorCuiTheme;
-                BoardsTheme.SetMode(priorMode);
+                if (!viewModel.IsEditMode) viewModel.DispatchAsync("ToggleEditView", null).GetAwaiter().GetResult();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             });
+
+            var slot = Find<Button>(surface, "PageIconButton");
+            Assert.NotNull(slot);
+            Assert.False(string.IsNullOrWhiteSpace(AccessibleName(slot!)),
+                "the header icon slot needs a name that says it is this page's icon");
+            Assert.Contains("icon", AccessibleName(slot!), StringComparison.OrdinalIgnoreCase);
+
+            Click(surface, slot!);
+
+            Assert.True(viewModel.Get("IsSectionIconPickerOpen") as bool?,
+                "the header slot should open the same shared picker the tree rows use");
+            Assert.Equal("page", viewModel.Get("IconPickerTargetKind") as string);
+
+            var emojiButtons = EmojiGridButtons(surface);
+            Assert.NotEmpty(emojiButtons);
+            Click(surface, emojiButtons[0]);
+
+            var after = session.Document.Sections[0].Pages[0];
+            Assert.Equal(HavenRichSectionIcons.Emoji, after.IconKey);
+            Assert.False(string.IsNullOrEmpty(after.IconEmoji));
+
+            // Applying an icon through the picker has to update the header it was opened from, otherwise the
+            // owner sees no confirmation that the page they are standing on changed.
+            Assert.True(viewModel.Get("PageIconIsEmoji") as bool?,
+                "the header should switch to the emoji form once an emoji is chosen");
+            Assert.Equal(after.IconEmoji, viewModel.Get("PageIconGlyph") as string);
+            var glyph = Find<TextBlock>(surface, "PageIconGlyph");
+            Assert.NotNull(glyph);
+            Assert.True(Shown(glyph!), "the chosen emoji should be drawn in the header");
+            Assert.Equal(after.IconEmoji, TextOf(glyph!));
+        }
+        finally
+        {
+            CloseRenderedSurface(surface);
+        }
+    }
+
+    /// <summary>
+    /// The icon belongs to the page, not to the editing state, so it stays drawn in View mode; only its
+    /// activation is withheld there. This is the same rule the tree rows follow, asserted on the rendered
+    /// header rather than in the projection, because the rule is enforced by authored bindings.
+    /// </summary>
+    [Fact]
+    public void The_page_header_icon_stays_displayed_but_inert_outside_edit_mode()
+    {
+        var surface = OpenRenderedSurface("viewmode");
+        try
+        {
+            var viewModel = surface.Presentation.ViewModel;
+            var session = viewModel.Session;
+            var section = session.Document.Sections[0];
+            var page = section.Pages[0];
+
+            TestUiThread.Run(() =>
+            {
+                if (!viewModel.IsEditMode) viewModel.DispatchAsync("ToggleEditView", null).GetAwaiter().GetResult();
+                viewModel.OpenPageIconPicker(section.Id, page.Id);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            });
+            var emojiButtons = EmojiGridButtons(surface);
+            Assert.NotEmpty(emojiButtons);
+            Click(surface, emojiButtons[0]);
+
+            TestUiThread.Run(() =>
+            {
+                if (viewModel.IsEditMode) viewModel.DispatchAsync("ToggleEditView", null).GetAwaiter().GetResult();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            });
+            Assert.False(viewModel.IsEditMode, "the surface should be back in View mode");
+
+            var slot = Find<Button>(surface, "PageIconButton");
+            Assert.NotNull(slot);
+            Assert.False(Enabled(slot!),
+                "View mode must not offer to change the page's icon, but the icon itself stays visible");
+            var glyph = Find<TextBlock>(surface, "PageIconGlyph");
+            Assert.NotNull(glyph);
+            Assert.True(Shown(glyph!), "a chosen icon belongs to the page and is still shown in View mode");
+        }
+        finally
+        {
+            CloseRenderedSurface(surface);
+        }
+    }
+
+    /// <summary>
+    /// A page with a vector identity icon publishes a catalog reference (icon:file, or icon:file|#RRGGBBAA
+    /// when the owner has tinted it) rather than a media object, because the view model that publishes it can
+    /// be built on a background thread while a save or reload is in flight. The reference is only useful if
+    /// the surface really turns it into a drawing, so this asserts both halves: what is published, and what
+    /// the rendered header holds after resolution.
+    /// </summary>
+    [Fact]
+    public void The_header_vector_icon_publishes_a_catalog_reference_and_resolves_it_on_the_surface()
+    {
+        var surface = OpenRenderedSurface("vector");
+        try
+        {
+            var viewModel = surface.Presentation.ViewModel;
+            var page = viewModel.Session.Document.Sections[0].Pages[0];
+            Assert.Equal($"icon:{page.IconKey}", viewModel.Get("PageIconSource") as string);
+
+            var image = Find<Image>(surface, "PageIconImage");
+            Assert.NotNull(image);
+            Assert.True(Shown(image!), "a page's vector identity icon is shown in the header in both modes");
+            Assert.NotNull(SourceOf(image!));
+
+            var tinted = TestUiThread.Run(() => BoardsCuiIconResolver.Resolve("icon:file|#FFFF918A", image!));
+            Assert.NotNull(tinted);
+            Assert.NotSame(SourceOf(image!), tinted);
+
+            var toolbar = TestUiThread.Run(() => BoardsCuiIconResolver.Resolve("icon:undo", image!));
+            Assert.NotNull(toolbar);
+        }
+        finally
+        {
+            CloseRenderedSurface(surface);
         }
     }
 }

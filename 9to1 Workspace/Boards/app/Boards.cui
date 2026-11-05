@@ -13,6 +13,7 @@
     <Action name="ApplyIconSkinTone" command="ApplyIconSkinTone" parameter="{Binding tone.Value}" />
     <Action name="PickRandomEmojiIcon" command="PickRandomEmojiIcon" />
     <Action name="RemoveIconPickerIcon" command="RemoveIconPickerIcon" />
+    <Action name="OpenPageIconPickerForActivePage" command="OpenPageIconPickerForActivePage" />
   </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="256 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
@@ -276,7 +277,27 @@
                    blocks keep their own page coordinates. -->
               <Container margin="76 10" MaxWidth="760" HorizontalAlignment="Stretch" Type="Vertical Stack" ID="DocumentContentLayer">
                 <Text ID="EmbeddedPageBreadcrumb" Text="{Binding PageBreadcrumb}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="0 0 0 4" Active="{Binding IsEmbeddedPresentation}" AccessibleName="Current Board, section and page" />
-                <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Margin="0 0 0 4" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" />
+                <!-- The reference design puts the page's identity icon to the left of its title, and the
+                     icon slot is also where the shared picker opens from the header. The icon stays drawn in
+                     View mode; only the activation is withheld, matching the tree rows. -->
+                <Container Type="Horizontal Stack" CellGap="8" Margin="-44 0 0 4" VerticalAlignment="Center">
+                  <!-- The reference design puts the page's identity icon to the left of its title, and this
+                       slot is where the shared picker opens from the header. The icon stays drawn in View
+                       mode; only its activation is withheld, matching the tree rows. The row is inset by the
+                       icon's width plus the gap so the title lands back on the content column's edge: block
+                       text must align with the page title (an owner rule, checked at 1 px by every Capture_*
+                       test), and an inline icon would otherwise indent the title 44 units away from every
+                       block beneath it. The mark overhangs into the column's left margin instead. -->
+                  <Button ID="PageIconButton" Action="OpenPageIconPickerForActivePage" Width="36" Height="36" Padding="2" Background="Transparent" BorderWidth="0" CornerRadius="8" IsEnabled="{Binding IsPageIconEditable}" Interactive="{Binding IsPageIconEditable}" AccessibleName="{Binding PageIconAccessibleName}" Tooltip="Choose the icon for this page">
+                    <Container Type="Vertical Stack" CellGap="0">
+                      <If Condition="{Binding PageIconIsEmoji}">
+                        <Text ID="PageIconGlyph" Text="{Binding PageIconGlyph}" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </If>
+                      <Image ID="PageIconImage" Source="{Binding PageIconSource}" Width="26" Height="26" Active="{Binding PageIconIsVector}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Container>
+                  </Button>
+                  <Input ID="PageTitleBox" Type="Text" AccessibleName="Page title" Value="{Binding PageTitle, fallback=Welcome}" WriteBack="False" FontSize="28" FontWeight="Bold" Padding="0" Background="Transparent" CornerRadius="0" BorderWidth="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                </Container>
                 <Text ID="EmbeddedPageStatus" Text="{Binding EmbeddedPageMessage}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" Active="{Binding EmbeddedPageUnavailable}" AccessibleName="Embedded artifact page status" />
                 <Container Type="Vertical Stack" ID="EmbeddedArtifactHost" />
                 <Container Type="Grid" ID="PageBlocksSurface" RowSizes="Auto">

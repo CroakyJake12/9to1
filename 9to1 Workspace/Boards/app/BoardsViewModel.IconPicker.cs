@@ -237,6 +237,46 @@ public sealed partial class BoardsViewModel
     /// The icon the target entity currently carries, with whether Remove would do anything. Read through
     /// one place so the popover and the row it opened cannot disagree.
     /// </summary>
+    /// <summary>
+    /// Publishes the active page's identity icon for the page header, where the reference design shows the
+    /// icon to the left of the title. The element itself is always displayed - an icon the owner chose
+    /// belongs to the page, not to the editing state - and only its activation is withheld outside Edit mode,
+    /// the same rule the tree rows follow.
+    /// </summary>
+    private void RefreshPageIconState(RichBoardPage page)
+    {
+        var isEmoji = page.IconKey == HavenRichSectionIcons.Emoji &&
+                      HavenRichSectionIcons.IsPlausibleEmojiSequence(page.IconEmoji);
+        var emojiName = isEmoji ? EmojiCatalogue.Find(page.IconEmoji)?.Name : null;
+        Set("PageIconIsEmoji", isEmoji);
+        Set("PageIconIsVector", !isEmoji);
+        Set("PageIconGlyph", isEmoji ? page.IconEmoji! : string.Empty);
+        Set("PageIconAccessibleName", isEmoji
+            ? $"{emojiName ?? "page"} icon for this page"
+            : $"{BoardsIcons.SectionIconLabel(page.IconKey)} icon for this page");
+        Set("IsPageIconEditable", CanEdit && IsEditMode);
+        // The header image is authored as Source="{Binding PageIconSource}" with the catalog form
+        // icon:<key>|<colour>. The string form matters: this method runs during the document push, which can
+        // happen on a background thread while a save or a reload is in flight, and Boards' icon resolver
+        // reads theme brushes that belong to the UI thread. Home already publishes icon: references for the
+        // same reason, and the resolver turns them into the tinted silhouette when the surface renders.
+        Set("PageIconSource", isEmoji ? null : IconReference(page.IconKey, page.IconColor));
+    }
+
+    /// <summary>
+    /// The catalog reference for an identity icon, carrying the owner's chosen colour when the entity has one.
+    /// Purely textual, so it is safe to publish from any thread and safe to keep in view-model state.
+    /// </summary>
+    private static string IconReference(string iconKey, string? iconColor) =>
+        string.IsNullOrWhiteSpace(iconColor) ? $"icon:{iconKey}" : $"icon:{iconKey}|{iconColor}";
+
+    /// <summary>Opens the shared picker for whichever page is currently displayed.</summary>
+    public void OpenActivePageIconPicker()
+    {
+        if (!CanEdit || !IsEditMode) return;
+        OpenPageIconPicker(CurrentSection().Id, CurrentPage().Id);
+    }
+
     private (string Key, string? Emoji, string? Color, bool IsPage, bool HasChosenIcon) CurrentIconSlot()
     {
         if (IconPickerPage() is { } page)

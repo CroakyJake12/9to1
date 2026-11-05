@@ -18,6 +18,13 @@ using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
 
+/// <summary>
+/// Rendered-surface work: every test here mounts a real window and flips process-wide CUI theme state for the
+/// duration of the render, so these tests share the serialised Boards collection rather than running beside
+/// it. Uncollected, they raced with the capture tests and produced failures that came from the shared headless
+/// application, not from the candidate under test.
+/// </summary>
+[Collection(BoardSessionTestCollection.Name)]
 public sealed class VisualCaptureTests
 {
     internal static string ShotsDirectory()
@@ -112,6 +119,12 @@ public sealed class VisualCaptureTests
             bitmap.Render(window);
             bitmap.Save(path);
         }
+        // The plain board frames are written here, before any check runs, so a geometry failure still leaves
+        // the picture as evidence. This used to be missing: the plain Capture_* tests asserted File.Exists on
+        // frames that only existed because an earlier run had written them, and when /tmp was cleared every
+        // one of them failed on a candidate that rendered fine. A test that passes on a stale artifact is not
+        // evidence, so the save is unconditional and the assertion can then mean something.
+        SaveCapture(shotPath);
 
         if (openSectionIconPicker)
         {
