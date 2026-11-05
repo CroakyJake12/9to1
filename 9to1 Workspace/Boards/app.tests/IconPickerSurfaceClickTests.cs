@@ -116,7 +116,11 @@ public sealed class IconPickerSurfaceClickTests
     {
         TestUiThread.Run(() =>
         {
-            control.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent, control));
+            // A authored menu row is a MenuItem, which raises its own Click event rather than Button.ClickEvent.
+            var routed = control is Avalonia.Controls.MenuItem
+                ? new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.MenuItem.ClickEvent, control)
+                : new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent, control);
+            control.RaiseEvent(routed);
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         });
         // The authored header shows its emoji inside an <If> branch, which the runtime rebuilds in a later
@@ -257,6 +261,42 @@ public sealed class IconPickerSurfaceClickTests
             var glyph = Find<TextBlock>(surface, "PageIconGlyph");
             Assert.NotNull(glyph);
             Assert.True(Shown(glyph!), "a chosen icon belongs to the page and is still shown in View mode");
+        }
+        finally
+        {
+            CloseRenderedSurface(surface);
+        }
+    }
+
+    /// <summary>
+    /// The Board menu is the entry point for the Board's icon, so it has to exist in the rendered surface and
+    /// its row has to reach the shared popover with the Board as target. A stored field with a menu row that
+    /// does nothing is exactly what canonical v2 line 9397 forbids.
+    /// </summary>
+    [Fact]
+    public void The_Board_menu_offers_the_icon_action_and_it_targets_the_Board()
+    {
+        var surface = OpenRenderedSurface("boardmenu");
+        try
+        {
+            var viewModel = surface.Presentation.ViewModel;
+            TestUiThread.Run(() =>
+            {
+                if (!viewModel.IsEditMode) viewModel.DispatchAsync("ToggleEditView", null).GetAwaiter().GetResult();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            });
+
+            var row = Find<Control>(surface, "BoardIconMenuItem");
+            Assert.NotNull(row);
+            Assert.True(Enabled(row!), "the Board's icon can be set while a Board is open in Edit mode");
+            Assert.Contains("icon", AccessibleName(row!), StringComparison.OrdinalIgnoreCase);
+
+            Click(surface, row!);
+
+            Assert.True(viewModel.Get("IsSectionIconPickerOpen") as bool?,
+                "the Board menu row must open the same popover the tree rows and the page header use");
+            Assert.Equal("board", viewModel.Get("IconPickerTargetKind") as string);
+            Assert.Contains("Board appearance", viewModel.Get("SectionIconPickerTitle") as string);
         }
         finally
         {

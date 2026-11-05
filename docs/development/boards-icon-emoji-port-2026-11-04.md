@@ -208,9 +208,16 @@ Frames: `~/Documents/9to1/boards-native-2026-11-04/frames/h01_board_open.png`, `
 **The evidence location changed, and why.** This machine rebooted on 5 November and `/tmp` was cleared. That
 destroyed the earlier drivers (`drive_window.py`, the icon probes) and the v01-v04 frames quoted in the table
 above, so those files no longer exist even though their measurements were reported honestly at the time. The
-tooling has been rebuilt in `~/Documents/9to1/boards-native-2026-11-04` - outside Git, outside `/tmp` - and
-the surviving half (`appctl.py`, `nat.py`, `frames.py`) was copied from `~/Documents/9to1/law-import-2026-11-03/native`.
-Evidence that only exists under `/tmp` is not evidence the next person can check.
+tooling has been gathered in `~/Documents/9to1/boards-native-2026-11-04` - outside Git, outside `/tmp` - from
+the copies that survived in `~/Documents/9to1/law-import-2026-11-03/native`. Evidence that only exists under
+`/tmp` is not evidence the next person can check.
+
+One correction to what this section first said: it claimed `drive_window.py` had been destroyed and rebuilt.
+It had not been destroyed at all - the driver the native passes actually use is committed at
+`eng/development/drive_window.py`, and when a reconstructed copy was dropped beside the scripts the committed
+one won the import and the reconstruction was dead weight (removed). Only the icon-specific scripts and the
+frames were genuinely lost with `/tmp`. Checked rather than assumed: `python3 -c "import drive_window;
+print(drive_window.__file__)"` after importing `appctl`, which inserts `eng/development` on the path.
 
 Three corrections in this pass, each found by measurement rather than assumption:
 
@@ -239,12 +246,61 @@ plain captures (`#111111`) while the dark capture shows `#F8F8FC`. The plain cap
 under the dark Glow palette, a combination the owner's app never shows, and committed markup for the title is
 unchanged. Recorded rather than "fixed" by recolouring a harness artifact.
 
+## Third pass: the Board itself, and the card that shows it
+
+The Board is now the third target for the same popover, entered from **Board menu → "Icon and emoji…"** (authored
+in the `BoardSwitcher` menu beside Rename, in the position the menu's own order puts it). The session surface
+exists on all three owners: the interface, the contract adapter - which writes through
+`HavenRichNotesOps.SetBoardIcon`, so the contract stays the owner of the field - and the in-memory session the
+tests and the embedded host use. The landing card reads the mark from the saved document: an owner-chosen emoji
+as text, anything else through the same catalog reference the page header publishes, and a Board whose owner
+never chose one keeps the mark it has always drawn.
+
+What the running application showed, in order, with each number measured from the frame:
+
+| Step | Measured |
+| --- | --- |
+| Board menu opened | the flyout is **its own X window**, 622x867, discovered by diffing viewable windows before and after the click; grabbing the application window could never have seen it |
+| Menu rows located | nine text rows found in the authored order, with "Icon and emoji…" at y 580, between Rename… and Board properties… (`b02_menu_popup.png`) |
+| That row clicked | the shared popover opened in the application window, panel at 910-1950 x 337-1561, window changed 8.26%; the title reads **"Board appearance · Law"** and Recent shows the emoji just chosen (`c03_landing.png` - labelled for what it actually is, not what was intended) |
+| Emoji cell clicked | cell (986,1169), window changed 8.31% |
+| Application's own close route | `richNotes` carries `iconKey=emoji`, `iconEmoji` the chosen sequence, `recentIconEmoji` recorded - and **no page or section icon changed**, which is what proves the target was the Board rather than whatever was displayed |
+| Deliverable | `07678b69d3a8f43e…` unchanged before and after; scratch deleted; profile board metadata restored |
+| Landing view after relaunch | Board menu → "All Boards…" (row five, y 418, needs 2.6 s for the flyout to map on a relaunched instance where 1.3 s was not enough). The **Law card shows the chosen emoji**; the three Untitled boards keep the maintained violet folder mark (`d01_landing.png`) |
+
+Two native-driver faults found and fixed rather than worked around. A menu flyout is a separate override-redirect
+window, so the first attempt reported "no popup" while reading the application window's pixmap; and the row
+detector assumed light text on a dark surface, which is the icon popover's arrangement but not the menu's - it
+is now adaptive against the surface the popup itself reports. The switcher label was profiled on the frame
+(x 100-185, y 35-55): the first two attempts clicked the app icon and the status line, which do nothing.
+
+Three faults in the product that the Board target exposed, all pre-existing:
+
+1. `RefreshSectionIconPickerChoices` closed the popover whenever there was no section target. That is why
+   opening it for a Board looked like a dead menu row.
+2. The Icon tab and the colour row read `section.IconKey` and `section.IconColor`. For a **page** target the
+   section is the page's parent, so the popover was marking the section's icon as the page's - wrong entity
+   selected, wrong colour ticked. Both now read `CurrentIconSlot()`, one place, whichever entity opened it.
+3. Every picker confirmation was written and then overwritten in the same action: the write path set StatusText
+   ("Section icon set to books.") and then called the refresh, whose document push sets StatusText from the
+   session status. The message that tells the owner which entity changed never reached the status line, for any
+   target. Confirmations are queued and published after the refresh now.
+
+The card's presentation members, the item bindings and the menu row are covered by tests, including one that
+finds `BoardIconMenuItem` in the rendered surface, checks it is enabled in Edit mode and asserts that invoking
+it opens the popover with target `board`. What is still not done at Board level: the board switcher's own label
+shows no identity mark - its menu item takes an image `IconSource`, which cannot carry an emoji - and the
+landing "Recent pages" list does not show page icons.
+
 ## Still open on this surface
+
 
 
 - Done as of the second pass above: the page header carries the page's icon and opens the picker from it,
   verified on screen.
-- Landing-card and board-switcher icons likewise read the new board-level fields nowhere yet.
+- Landing cards now read the board-level fields and are proven on screen. The **board switcher label**
+  still shows no identity mark: a CUI menu item takes an image `IconSource`, which cannot carry an emoji, so
+  that needs a framework answer rather than a substitute.
 - `Suggest` remains section-only, because the model suggestion flow is driven from a section name; the tab is
   disabled rather than hidden inert for a page target.
 - Upload (image icon) and cover images remain deferred with the reason recorded above, not dropped.
