@@ -322,6 +322,158 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
                 Document.RecentIconEmoji.Count - HavenRichNotes.RecentIconEmojiLimit);
     }
 
+    /// <summary>
+    /// Trash for the in-memory session, which is what tests and the embedded host drive. It mirrors the
+    /// contract rules - the same refusals, the same subtree grouping and the same recorded-place restore -
+    /// so a behaviour claim made against this session cannot diverge from the store-backed one.
+    /// </summary>
+    private readonly List<(RichBoardTrashEntry Entry, RichBoardPage Page)> _trashedPages = [];
+
+    public ValueTask<BoardsTrashImpact> GetTrashImpactAsync(string pageId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var owner = FindSection(pageId);
+        if (owner.section is null || owner.page is null)
+            return ValueTask.FromResult(new BoardsTrashImpact(0, 0));
+        var group = TrashSubtree(owner.section, owner.page);
+        return ValueTask.FromResult(new BoardsTrashImpact(group.Count - 1, group.Sum(page => page.Blocks.Count)));
+    }
+
+    public ValueTask<BoardsTrashResult> MovePageToTrashAsync(string pageId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var found = FindSection(pageId);
+        if (found.section is null || found.page is null)
+            return ValueTask.FromResult(BoardsTrashResult.Refused("That page is not in this board."));
+        var (section, page) = found;
+        if (page.TabberOwnerBlockId is not null)
+            return ValueTask.FromResult(BoardsTrashResult.Refused(
+                "This page is a tab inside another page; close that tab instead."));
+        if (section.Pages.Count(item => item.TabberOwnerBlockId is null) <= 1)
+            return ValueTask.FromResult(BoardsTrashResult.Refused("The final page of a section cannot be trashed."));
+
+        var group = TrashSubtree(section, page);
+        foreach (var pane in section.Pages
+                     .Where(item => item.TabberOwnerBlockId is not null &&
+                                    group.Any(owner => owner.Blocks.Any(block =>
+                                        string.Equals(block.Id, item.TabberOwnerBlockId, StringComparison.Ordinal))))
+                     .Where(item => !group.Contains(item)))
+            group.Add(pane);
+
+        var groupId = Guid.NewGuid().ToString("N");
+        var trashedUtc = DateTimeOffset.UtcNow;
+        MarkDirty();
+        foreach (var item in group)
+        {
+            _trashedPages.Add((new RichBoardTrashEntry
+            {
+                PageId = item.Id,
+                GroupId = groupId,
+                Title = string.IsNullOrWhiteSpace(item.Title) ? "Untitled page" : item.Title.Trim(),
+                IconKey = item.IconKey,
+                IconEmoji = item.IconEmoji,
+                SectionId = section.Id,
+                SectionTitle = section.Title,
+                SubtreePageCount = group.Count - 1,
+                BlockCount = group.Sum(each => each.Blocks.Count),
+                TrashedUtc = trashedUtc,
+            }, item));
+            // The recorded parent is kept on the page itself: a restore needs it, and clearing it here would
+            // destroy exactly the metadata the requirement says must survive trashing.
+            section.Pages.Remove(item);
+            // Only the group root is listed, exactly as the store-backed projection does it: the descendants
+            // are retained for the restore but are not offered as separate actions. Publishing every page
+            // here would make the in-memory session and the real one disagree about what the panel shows.
+            if (ReferenceEquals(item, page))
+                Document.Trash.Add(_trashedPages[^1].Entry);
+        }
+        RelocateOrphans(section, groupId);
+        return ValueTask.FromResult(new BoardsTrashResult(true, null));
+    }
+
+    public ValueTask<BoardsTrashRestoreResult> RestorePageFromTrashAsync(string pageId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var root = _trashedPages.FirstOrDefault(item => item.Page.Id == pageId);
+        if (root.Page is null)
+            return ValueTask.FromResult(BoardsTrashRestoreResult.Refused("That page is not in the Trash."));
+        var group = _trashedPages.Where(item => SameGroup(item, root)).ToList();
+        var section = Document.Sections.FirstOrDefault(candidate => candidate.Id == root.Entry.SectionId);
+        if (section is null)
+            return ValueTask.FromResult(BoardsTrashRestoreResult.Refused(
+                "The section that held this page is no longer in this board."));
+
+        var relocated = false;
+        MarkDirty();
+        foreach (var (entry, page) in group.OrderBy(item => TrashDepth(item.Page, group)))
+        {
+            var hadParent = page.ParentPageId is not null;
+            var parentIsLive = hadParent && section.Pages.Any(candidate => candidate.Id == page.ParentPageId);
+            if (hadParent && !parentIsLive)
+            {
+                page.ParentPageId = null;
+                relocated = true;
+            }
+            section.Pages.Add(page);
+            Document.Trash.Remove(entry);
+            _trashedPages.Remove((entry, page));
+        }
+        return ValueTask.FromResult(new BoardsTrashRestoreResult(true, null, section.Title, relocated));
+    }
+
+    private static bool SameGroup((RichBoardTrashEntry Entry, RichBoardPage Page) candidate,
+        (RichBoardTrashEntry Entry, RichBoardPage Page) root) =>
+        string.Equals(candidate.Entry.GroupId, root.Entry.GroupId, StringComparison.Ordinal);
+
+    private static int TrashDepth(RichBoardPage page, IReadOnlyCollection<(RichBoardTrashEntry Entry, RichBoardPage Page)> group)
+    {
+        var depth = 0;
+        var parent = page.ParentPageId;
+        while (parent is not null && depth < group.Count)
+        {
+            var next = group.FirstOrDefault(item => item.Page.Id == parent).Page;
+            if (next is null)
+                break;
+            parent = next.ParentPageId;
+            depth++;
+        }
+        return depth;
+    }
+
+    private static List<RichBoardPage> TrashSubtree(RichBoardSection section, RichBoardPage page)
+    {
+        var group = new List<RichBoardPage> { page };
+        for (var index = 0; index < group.Count; index++)
+            group.AddRange(section.Pages.Where(child => child.ParentPageId == group[index].Id && !group.Contains(child)));
+        return group;
+    }
+
+    private static void RelocateOrphans(RichBoardSection section, string groupId)
+    {
+        // A page whose parent was trashed but which stayed live moves to the section root, so the tree the
+        // owner sees never holds a pointer to a page that is no longer in it.
+        foreach (var orphan in section.Pages.Where(item => item.ParentPageId is not null &&
+                     !section.Pages.Any(candidate => candidate.Id == item.ParentPageId)).ToList())
+            orphan.ParentPageId = null;
+    }
+
+    private (RichBoardSection? section, RichBoardPage? page) FindSection(string pageId)
+    {
+        foreach (var section in Document.Sections)
+        {
+            var page = section.Pages.FirstOrDefault(candidate => candidate.Id == pageId);
+            if (page is not null)
+                return (section, page);
+        }
+        return (null, null);
+    }
+
     private RichBoardSection RequireSection(string sectionId) =>
         Document.Sections.FirstOrDefault(candidate => candidate.Id == sectionId)
         ?? throw new KeyNotFoundException("Section was not found.");

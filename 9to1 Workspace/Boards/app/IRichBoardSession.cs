@@ -26,6 +26,32 @@ public sealed class RichBoardDocument
     /// picker's Recent section is the same data on screen and on disk.</summary>
     public List<string> RecentIconEmoji { get; set; } = [];
     public List<RichBoardSection> Sections { get; set; } = [];
+    /// <summary>
+    /// Trashed pages available for restore, projected from the contract so the panel cannot show something
+    /// the file does not hold. Group roots only: a trashed subtree is offered as one action.
+    /// </summary>
+    public List<RichBoardTrashEntry> Trash { get; set; } = [];
+}
+
+/// <summary>One row in the Trash panel.</summary>
+public sealed class RichBoardTrashEntry
+{
+    public required string PageId { get; init; }
+    /// <summary>The trashed action this page travelled with, so a subtree restores as one unit.</summary>
+    public required string GroupId { get; init; }
+    public required string Title { get; init; }
+    public string? IconKey { get; init; }
+    public string? IconEmoji { get; init; }
+    public required string SectionId { get; init; }
+    public required string SectionTitle { get; init; }
+    public int SubtreePageCount { get; init; }
+    public int BlockCount { get; init; }
+    public DateTimeOffset TrashedUtc { get; init; }
+    public string TrashedLabel => TrashedUtc.LocalDateTime.ToString("g");
+    public string IconGlyph => IconKey == CakeOS.Apps.Boards.Contract.HavenRichSectionIcons.Emoji
+        ? IconEmoji ?? string.Empty
+        : string.Empty;
+    public bool IconIsEmoji => IconKey == CakeOS.Apps.Boards.Contract.HavenRichSectionIcons.Emoji;
 }
 
 /// <summary>A section (group of pages) in the rich-notes document.</summary>
@@ -324,6 +350,49 @@ public interface IRichBoardSession : IAsyncDisposable
     ValueTask SetPageIconEmojiAsync(string pageId, string emoji, string? iconColor,
         CancellationToken cancellationToken = default);
     ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// What would leave navigation if this page were trashed - the counts the confirmation has to state,
+    /// taken from the same operation the action performs, so a confirmation can never disagree with what
+    /// actually happens.
+    /// </summary>
+    ValueTask<BoardsTrashImpact> GetTrashImpactAsync(string pageId, CancellationToken cancellationToken = default);
+
+    /// <summary>Moves a page, with its subtree, into the Trash. Refusals carry their reason.</summary>
+    ValueTask<BoardsTrashResult> MovePageToTrashAsync(string pageId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Puts a trashed page and its subtree back. The result says whether the page returned to the place it
+    /// was recorded at or had to be relocated, which is what lets the status line tell the owner instead of
+    /// leaving them to discover it.
+    /// </summary>
+    ValueTask<BoardsTrashRestoreResult> RestorePageFromTrashAsync(string pageId,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>The impact figures a Trash confirmation must state (UX27-BOARD-015).</summary>
+public sealed record BoardsTrashImpact(int SubpageCount, int BlockCount);
+
+/// <summary>
+/// Thrown inside a session mutation so the session's rollback path runs: a refused Trash or Restore attempt
+/// must not consume an undo step or leave a half-applied tree. The message is the reason shown to the owner.
+/// </summary>
+public sealed class BoardsTrashRefusalException : InvalidOperationException
+{
+    public BoardsTrashRefusalException(string reason) : base(reason) { }
+}
+
+/// <summary>Outcome of a trash action; a refusal always carries the reason the owner should see.</summary>
+public sealed record BoardsTrashResult(bool Succeeded, string? Reason)
+{
+    public static BoardsTrashResult Refused(string reason) => new(false, reason);
+}
+
+/// <summary>Outcome of a restore, including whether the page came back where it was recorded.</summary>
+public sealed record BoardsTrashRestoreResult(bool Succeeded, string? Reason, string? SectionTitle,
+    bool RelocatedToSectionRoot)
+{
+    public static BoardsTrashRestoreResult Refused(string reason) => new(false, reason, null, false);
 }
 
 /// <summary>Optional session capability contract for immutable embedded document views.</summary>

@@ -19,6 +19,24 @@ internal static class Projector
         view.IconColor = rich.IconColor;
         view.IconEmoji = rich.IconEmoji;
         view.RecentIconEmoji = rich.RecentIconEmoji.ToList();
+        // Group roots only, with the counts the owner was shown when the action was taken. A section that has
+        // since gone away is labelled honestly rather than dropped, because the page is still recoverable
+        // content the owner may want to find.
+        view.Trash = rich.Trash.Where(entry => entry.IsGroupRoot).Select(entry => new RichBoardTrashEntry
+        {
+            PageId = entry.Page.Id,
+            GroupId = entry.GroupId,
+            Title = string.IsNullOrWhiteSpace(entry.Page.Title) ? "Untitled page" : entry.Page.Title.Trim(),
+            IconKey = entry.Page.IconKey,
+            IconEmoji = entry.Page.IconEmoji,
+            SectionId = entry.SectionId,
+            SectionTitle = rich.Sections.FirstOrDefault(section => section.Id == entry.SectionId)?.Title
+                ?? "(section no longer in this board)",
+            SubtreePageCount = rich.Trash.Count(other => other.GroupId == entry.GroupId) - 1,
+            BlockCount = rich.Trash.Where(other => other.GroupId == entry.GroupId)
+                .Sum(other => other.Page.Blocks.Count),
+            TrashedUtc = entry.TrashedUtc,
+        }).OrderByDescending(entry => entry.TrashedUtc).ToList();
         view.Sections = rich.Sections.Select(s => new RichBoardSection
         {
             Id = s.Id,

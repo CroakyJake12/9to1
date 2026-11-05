@@ -1566,6 +1566,81 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
+    public async ValueTask<BoardsTrashImpact> GetTrashImpactAsync(string pageId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var (subpages, blocks) = HavenRichNotesOps.TrashImpact(_real.Rich, pageId);
+            return new BoardsTrashImpact(subpages, blocks);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<BoardsTrashResult> MovePageToTrashAsync(string pageId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            // A refusal is thrown rather than returned inside the mutation: the session rolls the head back
+            // and records no history for a mutation that never happened, so a refused trash cannot consume an
+            // undo step or leave a half-applied tree.
+            try
+            {
+                await _real.MutateAsync(rich =>
+                {
+                    if (!HavenRichNotesOps.TryMovePageToTrash(rich, pageId, out var refusal))
+                        throw new BoardsTrashRefusalException(refusal ?? "The page could not be trashed.");
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (BoardsTrashRefusalException refusal)
+            {
+                RefreshView();
+                return BoardsTrashResult.Refused(refusal.Message);
+            }
+            RefreshView();
+            return new BoardsTrashResult(true, null);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<BoardsTrashRestoreResult> RestorePageFromTrashAsync(string pageId,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            HavenRichTrashRestore? outcome = null;
+            try
+            {
+                await _real.MutateAsync(rich =>
+                {
+                    var attempted = HavenRichNotesOps.RestorePageFromTrash(rich, pageId);
+                    if (!attempted.Succeeded)
+                        throw new BoardsTrashRefusalException(attempted.RefusalReason ??
+                            "The page could not be restored.");
+                    outcome = attempted;
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (BoardsTrashRefusalException refusal)
+            {
+                RefreshView();
+                return BoardsTrashRestoreResult.Refused(refusal.Message);
+            }
+            RefreshView();
+            return new BoardsTrashRestoreResult(true, null, outcome?.SectionTitle, outcome?.ParentWasMissing == true);
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     /// <summary>Chooses or clears the Board's identity icon through the contract operation.</summary>
     public async ValueTask SetBoardIconAsync(string? iconKey, string? iconEmoji, string? iconColor,
         CancellationToken cancellationToken = default)
