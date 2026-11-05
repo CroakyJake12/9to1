@@ -187,10 +187,63 @@ And one gap in my own test coverage, now closed: the picker tests dispatched `Ap
 to the view model, so they never exercised the authored action binding. The rendered-surface test does, and
 that is the difference between "the command works" and "the thing the owner clicks works".
 
+## Second pass: the page header, and where the evidence had to live
+
+The header now carries the displayed page's icon to the left of its title and opens the same shared picker
+from that slot. Verified on screen, on a scratch copy of the owner's Law board, in the running application:
+
+| Step | Measured |
+| --- | --- |
+| Slot located from the frame | saturated 44x44 block at (874, 286), 156 saturated pixels before any change |
+| Click on the slot | picker opened, window changed 8.16%, popover measured at left 910 right 1950 top 337 bottom 1561 |
+| Emoji cell clicked in the grid | cell (986, 1169), window changed 8.22%, header saturation 156 to 236 |
+| Application's own close route | file carries page "Criminal Law" `iconKey=emoji`, `iconEmoji=😀`, `recentIconEmoji=["😀"]` |
+| Relaunch | header mark still detected by colour (152 saturated pixels), crop shows 😀 painted left of the title |
+| Deliverable | `07678b69d3a8f43e…` byte-identical before and after; scratch deleted |
+
+Frames: `~/Documents/9to1/boards-native-2026-11-04/frames/h01_board_open.png`, `h02_after_header_click.png`,
+`h03_after_emoji.png`, `h03b_header_crop.png`, `h04_reopened.png`, `h04b_header_crop.png`, with
+`header_run_memory.json` holding MemAvailable, swap free and the application's RSS at every step.
+
+**The evidence location changed, and why.** This machine rebooted on 5 November and `/tmp` was cleared. That
+destroyed the earlier drivers (`drive_window.py`, the icon probes) and the v01-v04 frames quoted in the table
+above, so those files no longer exist even though their measurements were reported honestly at the time. The
+tooling has been rebuilt in `~/Documents/9to1/boards-native-2026-11-04` - outside Git, outside `/tmp` - and
+the surviving half (`appctl.py`, `nat.py`, `frames.py`) was copied from `~/Documents/9to1/law-import-2026-11-03/native`.
+Evidence that only exists under `/tmp` is not evidence the next person can check.
+
+Three corrections in this pass, each found by measurement rather than assumption:
+
+1. **The view model must not build media objects.** My first header version generated the icon image inside
+   `RefreshPageIconState`, which runs during the document push - a push that happens on a background thread
+   whenever a save or reload is in flight. Nine picker tests then failed with "The calling thread cannot
+   access this object because a different thread owns it". The view model now publishes a textual catalog
+   reference (`icon:file`, or `icon:file|#RRGGBBAA` when the owner has tinted it) and the UI-thread resolver
+   turns it into a drawing, which is what Home already does. While there, the resolver carries the colour
+   override into the theme-change observer and chooses the same factory for the first paint as the observer
+   uses later, so a mark cannot switch silhouette families under a theme flip.
+2. **An inline icon breaks the owner's alignment rule.** Every `Capture_*` test checks that block text aligns
+   with the page title at 1 px, and an inline icon indented the title by 44 units - six captures failed on it.
+   The row is inset by the icon's width plus its gap, so the mark overhangs into the column's left margin and
+   the title returns to the content edge.
+3. **Six of those failures were also a lie about the suite.** The plain `Capture_*` tests assert `File.Exists`
+   on a frame, but the plain path never saved one: only the style-menu and picker paths called the save. They
+   had been passing on PNGs left in `/tmp` by earlier runs. With `/tmp` cleared, every plain capture failed on
+   a candidate that rendered fine. The save is now unconditional and happens before the checks, so a geometry
+   failure still leaves the picture. Separately, `VisualCaptureTests` and the icon surface tests had no
+   xUnit collection attribute, so they raced over process-wide CUI theme state: 13 failures that were not
+   candidate defects became 7 deterministic ones once they shared the serialised Boards collection.
+
+One thing that looked like a defect in the fresh frames and is not: the page title reads near-black in the
+plain captures (`#111111`) while the dark capture shows `#F8F8FC`. The plain captures run the Light variant
+under the dark Glow palette, a combination the owner's app never shows, and committed markup for the title is
+unchanged. Recorded rather than "fixed" by recolouring a harness artifact.
+
 ## Still open on this surface
 
-- The page header icon (the reference shows the icon beside the H1) is not wired yet: the contract field,
-  the tree row and the picker all exist, the header does not.
+
+- Done as of the second pass above: the page header carries the page's icon and opens the picker from it,
+  verified on screen.
 - Landing-card and board-switcher icons likewise read the new board-level fields nowhere yet.
 - `Suggest` remains section-only, because the model suggestion flow is driven from a section name; the tab is
   disabled rather than hidden inert for a page target.
