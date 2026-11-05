@@ -15,6 +15,11 @@
     <Action name="RemoveIconPickerIcon" command="RemoveIconPickerIcon" />
     <Action name="OpenPageIconPickerForActivePage" command="OpenPageIconPickerForActivePage" />
     <Action name="OpenBoardIconPicker" command="OpenBoardIconPicker" />
+    <Action name="OpenTrashPanel" command="OpenTrashPanel" />
+    <Action name="CloseTrashPanel" command="CloseTrashPanel" />
+    <Action name="CancelTrashConfirm" command="CancelTrashConfirm" />
+    <Action name="ConfirmMovePageToTrash" command="ConfirmMovePageToTrash" />
+    <Action name="RestoreTrashedPage" command="RestoreTrashedPage" parameter="{Binding entry.Target}" />
   </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="256 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
@@ -41,6 +46,9 @@
                        offered where a Board can be edited, and it is a real action: the icon is a stored field on
                        the Board, drawn on its card. -->
                   <Button Type="Menu Item" ID="BoardIconMenuItem" Content="Icon and emoji…" Action="OpenBoardIconPicker" IsEnabled="{Binding CanSetBoardIcon}" Interactive="{Binding CanSetBoardIcon}" AccessibleName="Choose the icon for this Board" ToolTip="Choose the icon that represents this Board" />
+                  <!-- Trashed pages are recoverable content, so they need a place the owner can find rather
+                       than being a claim in a status line. The label names the contents, not an action. -->
+                  <Button Type="Menu Item" ID="BoardTrashMenuItem" Content="Trash…" Action="OpenTrashPanel" IsEnabled="{Binding CanOpenTrash}" Interactive="{Binding CanOpenTrash}" AccessibleName="Show trashed pages" ToolTip="Pages moved to the Trash, with Restore" />
                   <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
                   <!-- The AppFlowy stage-one comparison surface stays available to the developer through
                        the opt-in BOARDS_STAGE_ONE_PREVIEW=1 process seam. It is deliberately not offered
@@ -409,6 +417,58 @@
           </Container>
         </If>
         <If Condition="{Binding HasNoRecentPages}"><Text Text="Pages you open will appear here." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></If>
+      </Container>
+      <!-- The impact confirmation the requirement asks for: the counts are read through the same session
+           operation the action performs, so what is stated here cannot disagree with what happens. -->
+      <Container Type="Overlay" ID="TrashConfirmBackdrop" Row="1" Column="0" ColumnSpan="2" Active="{Binding IsTrashConfirmOpen}" Background="#88000000" BorderWidth="0">
+        <Container Type="Overlay" ID="TrashConfirmPanel" Width="430" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="18" CornerRadius="18" BorderWidth="0">
+          <Container Type="Grid" RowSizes="Auto Auto Auto Auto" CellGap="12">
+            <Text ID="TrashConfirmTitle" Row="0" Text="{Binding TrashConfirmTitle}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" AccessibleName="Trash confirmation title" />
+            <Text ID="TrashConfirmImpact" Row="1" Text="{Binding TrashConfirmImpact}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="What would move to the Trash" />
+            <Container Row="2" Type="Horizontal Stack" CellGap="8" HorizontalAlignment="Right">
+              <Button ID="TrashConfirmCancel" Content="Cancel" Action="CancelTrashConfirm" AccessibleName="Cancel moving the page to the Trash" Padding="12 8" CornerRadius="10" />
+              <Button ID="TrashConfirmMove" Content="Move to Trash" Action="ConfirmMovePageToTrash" AccessibleName="Confirm moving the page to the Trash" Padding="12 8" CornerRadius="10" FontWeight="SemiBold" />
+            </Container>
+            <Text Row="3" Text="Nothing is destroyed. Restore is offered from the Board menu's Trash." TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Container>
+      </Container>
+      <Container Type="Overlay" ID="TrashPanelBackdrop" Row="1" Column="0" ColumnSpan="2" Active="{Binding IsTrashPanelOpen}" Background="#88000000" BorderWidth="0">
+        <Container Type="Overlay" ID="TrashPanel" Width="560" Height="520" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="18" CornerRadius="18" BorderWidth="0">
+          <Container Type="Grid" RowSizes="Auto 1fr Auto" CellGap="10">
+            <Container Type="Horizontal Stack" Row="0" CellGap="8" VerticalAlignment="Center">
+              <Container Type="Vertical Stack" CellGap="2" HorizontalAlignment="Stretch">
+                <Text Text="Trash" FontSize="19" FontWeight="SemiBold" />
+                <Text Text="Pages moved here keep their content. Restore puts them back where they were." TextWrapping="Wrap" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Button ID="TrashPanelClose" Content="Close" Action="CloseTrashPanel" AccessibleName="Close Trash" Padding="10 6" CornerRadius="10" />
+            </Container>
+            <Container Type="Vertical Stack" Row="1" CellGap="8">
+              <If Condition="{Binding HasTrashEntries}">
+                <Container Type="Vertical Stack" CellGap="6" Role="list" AccessibleName="Trashed pages">
+                  <Repeat Source="{Binding TrashEntries}" As="entry" Key="{Binding entry.PageId}" Panel="Vertical Stack">
+                    <Container Type="Horizontal Stack" CellGap="10" Padding="10 8" CornerRadius="10" Background="{Resource CuiPanel2Brush}" Role="listitem">
+                      <Container Type="Vertical Stack" CellGap="0" Width="26" MinWidth="26">
+                        <Text Text="{Binding entry.IconGlyph}" FontSize="20" Active="{Binding entry.IconIsEmoji}" AccessibleName="{Binding entry.IconAccessibleName}" />
+                      </Container>
+                      <Container Type="Vertical Stack" CellGap="2" HorizontalAlignment="Stretch">
+                        <Text Text="{Binding entry.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <Text Text="{Binding entry.Counts}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Text Text="{Binding entry.SectionTitle}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Text Text="{Binding entry.TrashedLabel}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="When it was moved to the Trash" />
+                      </Container>
+                      <Button Content="Restore" Action="RestoreTrashedPage" AccessibleName="Restore this page from the Trash" Padding="12 6" CornerRadius="10" IsEnabled="{Binding CanEdit}" Interactive="{Binding CanEdit}" />
+                    </Container>
+                  </Repeat>
+                </Container>
+              </If>
+              <If Condition="{Binding HasNoTrashEntries}">
+                <Text ID="TrashPanelEmpty" Text="Nothing is in the Trash. A page moved here stays recoverable until it is restored." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </If>
+            </Container>
+            <Text Row="2" Text="A restore returns a page to the place it left. If that parent is gone, the status line says where it came back instead." FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Container>
       </Container>
       <Container Type="Overlay" ID="SectionIconPickerBackdrop" Row="1" Column="0" ColumnSpan="2" Active="{Binding IsSectionIconPickerOpen}" Background="#88000000" BorderWidth="0">
         <Container Type="Overlay" ID="SectionIconPickerPanel" Width="520" Height="620" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="18" CornerRadius="18" BorderWidth="0">

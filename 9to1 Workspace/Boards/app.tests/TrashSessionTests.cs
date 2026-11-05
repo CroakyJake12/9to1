@@ -23,8 +23,9 @@ public sealed class TrashSessionTests
         section.Pages.Add(new RichBoardPage { Title = "Homicide" });
 
         var impact = await session.GetTrashImpactAsync(container.Id);
-        Assert.Equal(1, impact.SubpageCount);
-        Assert.True(impact.BlockCount >= 1, "the confirmation has to count the blocks that would leave");
+        var counted = impact ?? throw new InvalidOperationException("the page is in the board");
+        Assert.Equal(1, counted.SubpageCount);
+        Assert.True(counted.BlockCount >= 1, "the confirmation has to count the blocks that would leave");
 
         var result = await session.MovePageToTrashAsync(container.Id);
         Assert.True(result.Succeeded, result.Reason ?? "the trash should have been accepted");
@@ -94,6 +95,58 @@ public sealed class TrashSessionTests
         var backChild = section.Pages.Single(page => page.Id == child.Id);
         Assert.True(backChild.ParentPageId is null,
             "a live page may not keep a parent pointer into the Trash - that is the silent orphaning the requirement forbids");
+    }
+
+    /// <summary>
+    /// UX27-BOARD-015 requires that a move is one undo transaction. Trashing and restoring each go through the
+    /// session's single mutation gate, so one Ctrl+Z has to reverse exactly one of them - and a refusal must not
+    /// consume a step, which is why refusals are thrown inside the mutation.
+    /// </summary>
+    [Fact]
+    public async Task One_undo_reverses_exactly_one_trash_and_one_restore()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync($"memory://boards/trash-undo-{Guid.NewGuid():N}");
+        var pages = session.Document.Sections[0].Pages;
+        pages[0].Title = "Criminal Law";
+        var child = new RichBoardPage { Title = "Actus reus", ParentPageId = pages[0].Id };
+        pages.Add(child);
+        pages.Add(new RichBoardPage { Title = "Homicide" });
+        var containerId = pages[0].Id;
+        // The fixture's own edits are not an action the owner took, so they are closed out as a checkpoint
+        // before the trashing under test. Without this the first undo would go back to the pristine board, and
+        // the test would measure the fixture rather than the trash.
+        session.MarkDirty();
+
+        Assert.True((await session.MovePageToTrashAsync(containerId)).Succeeded);
+        Assert.DoesNotContain(session.Document.Sections[0].Pages, page => page.Id == containerId);
+
+        Assert.True(await session.UndoAsync());
+        var backAfterUndo = session.Document.Sections[0].Pages;
+        Assert.Contains(backAfterUndo, page => page.Id == containerId);
+        Assert.Contains(backAfterUndo, page => page.Id == child.Id);
+        // One undo restores the whole subtree, not a fragment of it.
+        Assert.Equal(containerId, backAfterUndo.Single(page => page.Id == child.Id).ParentPageId);
+        Assert.Empty(session.Document.Trash);
+
+        Assert.True((await session.MovePageToTrashAsync(containerId)).Succeeded);
+        var restored = await session.RestorePageFromTrashAsync(containerId);
+        Assert.True(restored.Succeeded, restored.Reason ?? "restore should have worked");
+        Assert.True(await session.UndoAsync());
+        Assert.DoesNotContain(session.Document.Sections[0].Pages, page => page.Id == containerId);
+        Assert.NotEmpty(session.Document.Trash);
+    }
+
+    [Fact]
+    public async Task A_refused_trash_consumes_no_undo_step_and_leaves_nothing_behind()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync($"memory://boards/trash-undo-{Guid.NewGuid():N}");
+        var only = Assert.Single(session.Document.Sections[0].Pages);
+        Assert.False((await session.MovePageToTrashAsync(only.Id)).Succeeded);
+        Assert.False(session.CanUndo, "a refused attempt must not create an undo step");
+        Assert.Single(session.Document.Sections[0].Pages);
+        Assert.Empty(session.Document.Trash);
     }
 
     [Fact]

@@ -194,10 +194,10 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         var normalizedColor = iconColor?.ToUpperInvariant();
         if (section.IconKey == iconKey && section.IconColor == normalizedColor)
             return ValueTask.CompletedTask;
-        MarkDirty();
         section.IconKey = iconKey;
         section.IconColor = normalizedColor;
         section.GeneratedIcon = null;
+        MarkDirty();
         return ValueTask.CompletedTask;
     }
 
@@ -213,12 +213,12 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         if (section.IconKey == HavenRichSectionIcons.Emoji && section.IconEmoji == emoji &&
             section.IconColor == normalizedColor)
             return ValueTask.CompletedTask;
-        MarkDirty();
         NoteRecentEmoji(emoji);
         section.IconKey = HavenRichSectionIcons.Emoji;
         section.IconEmoji = emoji;
         section.IconColor = normalizedColor;
         section.GeneratedIcon = null;
+        MarkDirty();
         return ValueTask.CompletedTask;
     }
 
@@ -233,10 +233,10 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         var normalizedColor = NormalizedIconColor(iconColor);
         if (page.IconKey == iconKey && page.IconColor == normalizedColor && page.IconEmoji is null)
             return ValueTask.CompletedTask;
-        MarkDirty();
         page.IconKey = iconKey;
         page.IconColor = normalizedColor;
         page.IconEmoji = null;
+        MarkDirty();
         return ValueTask.CompletedTask;
     }
 
@@ -252,11 +252,11 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         if (page.IconKey == HavenRichSectionIcons.Emoji && page.IconEmoji == emoji &&
             page.IconColor == normalizedColor)
             return ValueTask.CompletedTask;
-        MarkDirty();
         NoteRecentEmoji(emoji);
         page.IconKey = HavenRichSectionIcons.Emoji;
         page.IconEmoji = emoji;
         page.IconColor = normalizedColor;
+        MarkDirty();
         return ValueTask.CompletedTask;
     }
 
@@ -270,10 +270,10 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         {
             if (Document.IconKey is null && Document.IconColor is null && Document.IconEmoji is null)
                 return ValueTask.CompletedTask;
-            MarkDirty();
             Document.IconKey = null;
             Document.IconColor = null;
             Document.IconEmoji = null;
+            MarkDirty();
             return ValueTask.CompletedTask;
         }
         if (iconKey == HavenRichSectionIcons.Emoji)
@@ -283,19 +283,19 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
             if (Document.IconKey == HavenRichSectionIcons.Emoji && Document.IconEmoji == iconEmoji &&
                 Document.IconColor == normalizedColor)
                 return ValueTask.CompletedTask;
-            MarkDirty();
             NoteRecentEmoji(iconEmoji!);
             Document.IconKey = HavenRichSectionIcons.Emoji;
             Document.IconEmoji = iconEmoji;
             Document.IconColor = normalizedColor;
+            MarkDirty();
             return ValueTask.CompletedTask;
         }
         if (Document.IconKey == iconKey && Document.IconColor == normalizedColor && Document.IconEmoji is null)
             return ValueTask.CompletedTask;
-        MarkDirty();
         Document.IconKey = iconKey;
         Document.IconColor = normalizedColor;
         Document.IconEmoji = null;
+        MarkDirty();
         return ValueTask.CompletedTask;
     }
 
@@ -306,10 +306,10 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         var page = RequirePage(pageId);
         if (page.IconKey == HavenRichSectionIcons.PageDefault && page.IconColor is null && page.IconEmoji is null)
             return ValueTask.CompletedTask;
-        MarkDirty();
         page.IconKey = HavenRichSectionIcons.PageDefault;
         page.IconColor = null;
         page.IconEmoji = null;
+        MarkDirty();
         return ValueTask.CompletedTask;
     }
 
@@ -324,21 +324,31 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
 
     /// <summary>
     /// Trash for the in-memory session, which is what tests and the embedded host drive. It mirrors the
-    /// contract rules - the same refusals, the same subtree grouping and the same recorded-place restore -
-    /// so a behaviour claim made against this session cannot diverge from the store-backed one.
+    /// contract rules - the same refusals, the same subtree grouping, the same recorded-place restore - and it
+    /// keeps the retained pages inside the document, on the Trash row, so undo and redo restore the tree and
+    /// the Trash together instead of leaving one half of the action behind.
     /// </summary>
-    private readonly List<(RichBoardTrashEntry Entry, RichBoardPage Page)> _trashedPages = [];
-
-    public ValueTask<BoardsTrashImpact> GetTrashImpactAsync(string pageId,
+    public ValueTask<BoardsTrashImpact?> GetTrashImpactAsync(string pageId,
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
         var owner = FindSection(pageId);
         if (owner.section is null || owner.page is null)
-            return ValueTask.FromResult(new BoardsTrashImpact(0, 0));
+            return ValueTask.FromResult((BoardsTrashImpact?)null);
         var group = TrashSubtree(owner.section, owner.page);
-        return ValueTask.FromResult(new BoardsTrashImpact(group.Count - 1, group.Sum(page => page.Blocks.Count)));
+        return ValueTask.FromResult<BoardsTrashImpact?>(new BoardsTrashImpact(
+            group.Count - 1, group.Sum(page => page.Blocks.Count), TrashRefusalFor(owner.section, owner.page)));
+    }
+
+    /// <summary>The same three questions the contract asks, in one place so the two cannot drift.</summary>
+    private static string? TrashRefusalFor(RichBoardSection section, RichBoardPage page)
+    {
+        if (page.TabberOwnerBlockId is not null)
+            return "This page is a tab inside another page; close that tab instead.";
+        if (section.Pages.Count(item => item.TabberOwnerBlockId is null) <= 1)
+            return "The final page of a section cannot be trashed.";
+        return null;
     }
 
     public ValueTask<BoardsTrashResult> MovePageToTrashAsync(string pageId,
@@ -350,11 +360,8 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         if (found.section is null || found.page is null)
             return ValueTask.FromResult(BoardsTrashResult.Refused("That page is not in this board."));
         var (section, page) = found;
-        if (page.TabberOwnerBlockId is not null)
-            return ValueTask.FromResult(BoardsTrashResult.Refused(
-                "This page is a tab inside another page; close that tab instead."));
-        if (section.Pages.Count(item => item.TabberOwnerBlockId is null) <= 1)
-            return ValueTask.FromResult(BoardsTrashResult.Refused("The final page of a section cannot be trashed."));
+        if (TrashRefusalFor(section, page) is { } refusal)
+            return ValueTask.FromResult(BoardsTrashResult.Refused(refusal));
 
         var group = TrashSubtree(section, page);
         foreach (var pane in section.Pages
@@ -364,34 +371,29 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
                      .Where(item => !group.Contains(item)))
             group.Add(pane);
 
-        var groupId = Guid.NewGuid().ToString("N");
-        var trashedUtc = DateTimeOffset.UtcNow;
-        MarkDirty();
-        foreach (var item in group)
+        var entry = new RichBoardTrashEntry
         {
-            _trashedPages.Add((new RichBoardTrashEntry
+            PageId = page.Id,
+            GroupId = Guid.NewGuid().ToString("N"),
+            Title = string.IsNullOrWhiteSpace(page.Title) ? "Untitled page" : page.Title.Trim(),
+            IconKey = page.IconKey,
+            IconEmoji = page.IconEmoji,
+            SectionId = section.Id,
+            SectionTitle = section.Title,
+            SubtreePageCount = group.Count - 1,
+            BlockCount = group.Sum(each => each.Blocks.Count),
+            TrashedUtc = DateTimeOffset.UtcNow,
+            Retained = group.Select(item => new RichBoardTrashedPage
             {
-                PageId = item.Id,
-                GroupId = groupId,
-                Title = string.IsNullOrWhiteSpace(item.Title) ? "Untitled page" : item.Title.Trim(),
-                IconKey = item.IconKey,
-                IconEmoji = item.IconEmoji,
-                SectionId = section.Id,
-                SectionTitle = section.Title,
-                SubtreePageCount = group.Count - 1,
-                BlockCount = group.Sum(each => each.Blocks.Count),
-                TrashedUtc = trashedUtc,
-            }, item));
-            // The recorded parent is kept on the page itself: a restore needs it, and clearing it here would
-            // destroy exactly the metadata the requirement says must survive trashing.
+                Page = item,
+                ParentPageId = item.ParentPageId,
+                SortIndex = section.Pages.IndexOf(item),
+            }).ToList(),
+        };
+        foreach (var item in group)
             section.Pages.Remove(item);
-            // Only the group root is listed, exactly as the store-backed projection does it: the descendants
-            // are retained for the restore but are not offered as separate actions. Publishing every page
-            // here would make the in-memory session and the real one disagree about what the panel shows.
-            if (ReferenceEquals(item, page))
-                Document.Trash.Add(_trashedPages[^1].Entry);
-        }
-        RelocateOrphans(section, groupId);
+        Document.Trash.Add(entry);
+        MarkDirty();
         return ValueTask.FromResult(new BoardsTrashResult(true, null));
     }
 
@@ -400,44 +402,49 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
     {
         ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
-        var root = _trashedPages.FirstOrDefault(item => item.Page.Id == pageId);
-        if (root.Page is null)
+        var entry = Document.Trash.FirstOrDefault(item => item.PageId == pageId);
+        if (entry is null)
             return ValueTask.FromResult(BoardsTrashRestoreResult.Refused("That page is not in the Trash."));
-        var group = _trashedPages.Where(item => SameGroup(item, root)).ToList();
-        var section = Document.Sections.FirstOrDefault(candidate => candidate.Id == root.Entry.SectionId);
+        var section = Document.Sections.FirstOrDefault(candidate => candidate.Id == entry.SectionId);
         if (section is null)
             return ValueTask.FromResult(BoardsTrashRestoreResult.Refused(
                 "The section that held this page is no longer in this board."));
 
         var relocated = false;
-        MarkDirty();
-        foreach (var (entry, page) in group.OrderBy(item => TrashDepth(item.Page, group)))
+        // Shallowest first, so a parent is back in the tree before a page that records it as its parent.
+        foreach (var retained in entry.Retained.OrderBy(item => DepthInTree(item, entry.Retained)))
         {
-            var hadParent = page.ParentPageId is not null;
-            var parentIsLive = hadParent && section.Pages.Any(candidate => candidate.Id == page.ParentPageId);
+            var page = retained.Page;
+            var hadParent = retained.ParentPageId is not null;
+            var parentIsLive = hadParent && section.Pages.Any(candidate => candidate.Id == retained.ParentPageId);
             if (hadParent && !parentIsLive)
             {
+                // A recorded parent that is not coming back cannot stay as the page's parent: the live tree must
+                // not point into the Trash, so the page returns to the section root and the result says so.
                 page.ParentPageId = null;
                 relocated = true;
             }
-            section.Pages.Add(page);
-            Document.Trash.Remove(entry);
-            _trashedPages.Remove((entry, page));
+            else if (hadParent)
+            {
+                page.ParentPageId = retained.ParentPageId;
+            }
+            var insertAt = hadParent && parentIsLive
+                ? Math.Clamp(retained.SortIndex, 0, section.Pages.Count)
+                : section.Pages.Count;
+            section.Pages.Insert(insertAt, page);
         }
+        Document.Trash.Remove(entry);
+        MarkDirty();
         return ValueTask.FromResult(new BoardsTrashRestoreResult(true, null, section.Title, relocated));
     }
 
-    private static bool SameGroup((RichBoardTrashEntry Entry, RichBoardPage Page) candidate,
-        (RichBoardTrashEntry Entry, RichBoardPage Page) root) =>
-        string.Equals(candidate.Entry.GroupId, root.Entry.GroupId, StringComparison.Ordinal);
-
-    private static int TrashDepth(RichBoardPage page, IReadOnlyCollection<(RichBoardTrashEntry Entry, RichBoardPage Page)> group)
+    private static int DepthInTree(RichBoardTrashedPage item, IReadOnlyList<RichBoardTrashedPage> group)
     {
         var depth = 0;
-        var parent = page.ParentPageId;
+        var parent = item.ParentPageId;
         while (parent is not null && depth < group.Count)
         {
-            var next = group.FirstOrDefault(item => item.Page.Id == parent).Page;
+            var next = group.FirstOrDefault(candidate => candidate.Page.Id == parent);
             if (next is null)
                 break;
             parent = next.ParentPageId;
@@ -452,15 +459,6 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         for (var index = 0; index < group.Count; index++)
             group.AddRange(section.Pages.Where(child => child.ParentPageId == group[index].Id && !group.Contains(child)));
         return group;
-    }
-
-    private static void RelocateOrphans(RichBoardSection section, string groupId)
-    {
-        // A page whose parent was trashed but which stayed live moves to the section root, so the tree the
-        // owner sees never holds a pointer to a page that is no longer in it.
-        foreach (var orphan in section.Pages.Where(item => item.ParentPageId is not null &&
-                     !section.Pages.Any(candidate => candidate.Id == item.ParentPageId)).ToList())
-            orphan.ParentPageId = null;
     }
 
     private (RichBoardSection? section, RichBoardPage? page) FindSection(string pageId)
@@ -504,7 +502,6 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         if (section.IconKey == HavenRichSectionIcons.Generated && section.IconColor == normalizedColor &&
             HavenRichSectionIconGeometry.AreEqual(section.GeneratedIcon, generatedIcon))
             return ValueTask.CompletedTask;
-        MarkDirty();
         section.IconKey = HavenRichSectionIcons.Generated;
         section.IconColor = normalizedColor;
         section.GeneratedIcon = HavenRichSectionIconGeometry.Copy(generatedIcon);

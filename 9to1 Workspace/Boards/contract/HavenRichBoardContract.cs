@@ -1227,24 +1227,11 @@ public static partial class HavenRichNotesOps
     public static bool TryMovePageToTrash(HavenRichNotes notes, string pageId, out string? refusalReason)
     {
         ArgumentNullException.ThrowIfNull(notes);
-        refusalReason = null;
-        var section = notes.Sections.FirstOrDefault(item => item.Pages.Any(page => page.Id == pageId));
-        if (section is null)
-        {
-            refusalReason = "That page is not in this board.";
+        refusalReason = TrashRefusal(notes, pageId);
+        if (refusalReason is not null)
             return false;
-        }
+        var section = notes.Sections.First(item => item.Pages.Any(page => page.Id == pageId));
         var page = section.Pages.Single(item => item.Id == pageId);
-        if (page.TabberOwnerBlockId is not null)
-        {
-            refusalReason = "This page is a tab inside another page; close that tab instead.";
-            return false;
-        }
-        if (section.Pages.Count(item => item.TabberOwnerBlockId is null) <= 1)
-        {
-            refusalReason = "The final page of a section cannot be trashed.";
-            return false;
-        }
 
         // The subtree travels as one group, so a restore cannot leave descendants behind. Panes owned by a
         // tabber on any of those pages travel too: their owner is leaving navigation, and an owner-less pane
@@ -1280,6 +1267,25 @@ public static partial class HavenRichNotesOps
         return true;
     }
 
+    /// <summary>
+    /// Why this page cannot be moved to the Trash, or null when it can. The action asks the same question the
+    /// confirmation does: an application that offered "Move to Trash" for a page this refuses would be a dead
+    /// control, which canonical v2 line 9397 forbids.
+    /// </summary>
+    public static string? TrashRefusal(HavenRichNotes notes, string pageId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var section = notes.Sections.FirstOrDefault(item => item.Pages.Any(page => page.Id == pageId));
+        if (section is null)
+            return "That page is not in this board.";
+        var page = section.Pages.Single(item => item.Id == pageId);
+        if (page.TabberOwnerBlockId is not null)
+            return "This page is a tab inside another page; close that tab instead.";
+        if (section.Pages.Count(item => item.TabberOwnerBlockId is null) <= 1)
+            return "The final page of a section cannot be trashed.";
+        return null;
+    }
+
     /// <summary>The pages the owner can see in the Trash: one row per trashed action, newest first.</summary>
     public static IReadOnlyList<HavenRichTrashedPage> TrashRoots(HavenRichNotes notes)
     {
@@ -1289,13 +1295,17 @@ public static partial class HavenRichNotesOps
             .ToArray();
     }
 
-    /// <summary>How many pages and blocks would leave navigation, for the confirmation the requirement asks for.</summary>
-    public static (int SubpageCount, int BlockCount) TrashImpact(HavenRichNotes notes, string pageId)
+    /// <summary>
+    /// How many pages and blocks would leave navigation, for the confirmation the requirement asks for. A null
+    /// result means the page is not in this board: zeros would be a real answer about an empty page, and the
+    /// confirmation must be able to tell the two apart.
+    /// </summary>
+    public static (int SubpageCount, int BlockCount)? TrashImpact(HavenRichNotes notes, string pageId)
     {
         ArgumentNullException.ThrowIfNull(notes);
         var section = notes.Sections.FirstOrDefault(item => item.Pages.Any(page => page.Id == pageId));
         if (section is null)
-            return (0, 0);
+            return null;
         var group = new List<HavenRichPage> { section.Pages.Single(item => item.Id == pageId) };
         for (var index = 0; index < group.Count; index++)
             group.AddRange(section.Pages.Where(item => item.ParentPageId == group[index].Id && !group.Contains(item)));

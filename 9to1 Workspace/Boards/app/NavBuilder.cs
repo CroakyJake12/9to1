@@ -408,7 +408,10 @@ public static class NavBuilder
             AddMenuItem(menu, "Duplicate", async () => await vm.DuplicatePageAsync(section.Id, page.Id));
             AddMenuItem(menu, "Move up", async () => await vm.MovePageAsync(section.Id, page.Id, -1));
             AddMenuItem(menu, "Move down", async () => await vm.MovePageAsync(section.Id, page.Id, 1));
-            AddMenuItem(menu, "Delete", async () => await vm.DeletePageAsync(section.Id, page.Id));
+            // Hard delete is replaced by the recoverable route. Two destructive-sounding rows in the same
+            // menu invite the wrong click, and UX27-BOARD-015 describes the recoverable one; the impact
+            // confirmation is raised by the view model before anything leaves navigation.
+            AddMenuItem(menu, "Move to Trash…", () => vm.PromptMovePageToTrashAsync(section.Id, page.Id));
             AddMenuItem(menu, "Add subpage", async () => await vm.AddSubpageAsync(section.Id, page.Id));
             if (page.ParentPageId is not null)
                 AddMenuItem(menu, "Move to section root", async () => await vm.SetPageParentAsync(section.Id, page.Id, null));

@@ -36,6 +36,8 @@ internal static class Projector
             BlockCount = rich.Trash.Where(other => other.GroupId == entry.GroupId)
                 .Sum(other => other.Page.Blocks.Count),
             TrashedUtc = entry.TrashedUtc,
+            // The store-backed path restores through the contract, so it does not need the retained pages here;
+            // carrying them across the projection would only invite a second copy of the same subtree.
         }).OrderByDescending(entry => entry.TrashedUtc).ToList();
         view.Sections = rich.Sections.Select(s => new RichBoardSection
         {

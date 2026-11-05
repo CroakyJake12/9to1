@@ -1566,7 +1566,7 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
-    public async ValueTask<BoardsTrashImpact> GetTrashImpactAsync(string pageId,
+    public async ValueTask<BoardsTrashImpact?> GetTrashImpactAsync(string pageId,
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -1574,8 +1574,13 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var (subpages, blocks) = HavenRichNotesOps.TrashImpact(_real.Rich, pageId);
-            return new BoardsTrashImpact(subpages, blocks);
+            var impact = HavenRichNotesOps.TrashImpact(_real.Rich, pageId);
+            // A null from the contract means the page is not in this board, which is a different answer from
+            // a page that is here and has nothing in it.
+            return impact is { } counted
+                ? new BoardsTrashImpact(counted.SubpageCount, counted.BlockCount,
+                    HavenRichNotesOps.TrashRefusal(_real.Rich, pageId))
+                : null;
         }
         finally { _mergeGate.Release(); }
     }

@@ -418,6 +418,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             };
             return value is not null;
         }
+        if (TryGetItemValueForTrash(path ?? string.Empty, item, out var trashValue))
+        {
+            value = trashValue;
+            return true;
+        }
+        value = null;
         if (item is RecentPageCard page && _allRecentPages.Any(actual => ReferenceEquals(actual, page)))
         {
             value = path switch
@@ -697,6 +703,21 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 break;
             case "OpenBoardIconPicker":
                 OpenBoardIconPicker();
+                break;
+            case "OpenTrashPanel":
+                OpenTrashPanel();
+                break;
+            case "CloseTrashPanel":
+                CloseTrashPanel();
+                break;
+            case "CancelTrashConfirm":
+                CancelTrashConfirm();
+                break;
+            case "ConfirmMovePageToTrash":
+                await ConfirmMovePageToTrashAsync(cancellationToken);
+                break;
+            case "RestoreTrashedPage" when parameter is RichBoardTrashEntry trashEntry:
+                await RestoreTrashedPageAsync(trashEntry, cancellationToken);
                 break;
             case "ApplySectionIconColor" when parameter is string iconColor:
                 await ApplyIconColorAsync(iconColor, cancellationToken);
@@ -1157,6 +1178,15 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("CanSaveBoard", CanSaveBoard);
         Set("CanRenameBoard", CanRenameBoard);
         Set("CanSetBoardIcon", CanSetBoardIcon);
+        Set("CanOpenTrash", CanOpenBoardMenu);
+        Set("CanOpenTrash", CanOpenBoardMenu);
+        Set("IsTrashPanelOpen", false);
+        Set("HasTrashEntries", false);
+        Set("HasNoTrashEntries", true);
+        Set("TrashEntries", Array.Empty<RichBoardTrashEntry>());
+        Set("IsTrashConfirmOpen", false);
+        Set("TrashConfirmTitle", string.Empty);
+        Set("TrashConfirmImpact", string.Empty);
         Set("CanSaveAs", CanSaveAs);
         Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
         Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);

@@ -47,11 +47,29 @@ public sealed class RichBoardTrashEntry
     public int SubtreePageCount { get; init; }
     public int BlockCount { get; init; }
     public DateTimeOffset TrashedUtc { get; init; }
+
+    /// <summary>
+    /// The pages this Trash row is holding: the row's page plus everything under it, each with the parent and
+    /// position it had when it left navigation. It lives on the row rather than in a side list because the
+    /// document is what undo and redo restore - a retained page kept outside the document would survive an undo
+    /// as a duplicate waiting to be restored twice. A store-backed session leaves this empty and restores
+    /// through the contract instead.
+    /// </summary>
+    public List<RichBoardTrashedPage> Retained { get; init; } = [];
+
     public string TrashedLabel => TrashedUtc.LocalDateTime.ToString("g");
     public string IconGlyph => IconKey == CakeOS.Apps.Boards.Contract.HavenRichSectionIcons.Emoji
         ? IconEmoji ?? string.Empty
         : string.Empty;
     public bool IconIsEmoji => IconKey == CakeOS.Apps.Boards.Contract.HavenRichSectionIcons.Emoji;
+}
+
+/// <summary>One retained page inside a Trash row, with where it was.</summary>
+public sealed class RichBoardTrashedPage
+{
+    public required RichBoardPage Page { get; init; }
+    public string? ParentPageId { get; init; }
+    public int SortIndex { get; init; }
 }
 
 /// <summary>A section (group of pages) in the rich-notes document.</summary>
@@ -356,7 +374,7 @@ public interface IRichBoardSession : IAsyncDisposable
     /// taken from the same operation the action performs, so a confirmation can never disagree with what
     /// actually happens.
     /// </summary>
-    ValueTask<BoardsTrashImpact> GetTrashImpactAsync(string pageId, CancellationToken cancellationToken = default);
+    ValueTask<BoardsTrashImpact?> GetTrashImpactAsync(string pageId, CancellationToken cancellationToken = default);
 
     /// <summary>Moves a page, with its subtree, into the Trash. Refusals carry their reason.</summary>
     ValueTask<BoardsTrashResult> MovePageToTrashAsync(string pageId, CancellationToken cancellationToken = default);
@@ -371,7 +389,15 @@ public interface IRichBoardSession : IAsyncDisposable
 }
 
 /// <summary>The impact figures a Trash confirmation must state (UX27-BOARD-015).</summary>
-public sealed record BoardsTrashImpact(int SubpageCount, int BlockCount);
+/// <summary>
+/// What a Trash would mean for this page. The refusal travels with the counts on purpose: the application has
+/// to know before it opens a confirmation that the operation itself will refuse, rather than drawing a Move
+/// button that does nothing.
+/// </summary>
+public sealed record BoardsTrashImpact(int SubpageCount, int BlockCount, string? Refusal)
+{
+    public bool CanTrash => Refusal is null;
+}
 
 /// <summary>
 /// Thrown inside a session mutation so the session's rollback path runs: a refused Trash or Restore attempt

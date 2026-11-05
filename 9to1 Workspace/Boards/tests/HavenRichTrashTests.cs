@@ -170,11 +170,26 @@ public sealed class HavenRichTrashTests
     }
 
     [Fact]
+    public void An_unknown_page_is_reported_as_absent_rather_than_as_a_page_with_nothing_in_it()
+    {
+        // Zero counts would be a real answer about an empty page, and the confirmation has to tell those two
+        // apart - a blank popover beside a Move button is exactly what the requirement forbids.
+        var notes = BoardWithTree();
+        Assert.Null(HavenRichNotesOps.TrashImpact(notes, "page-not-here"));
+        var known = notes.Sections[0].Pages.Single(page => page.Title == "Mens rea");
+        var impact = HavenRichNotesOps.TrashImpact(notes, known.Id);
+        Assert.True(impact is not null, "a page that is in the board gets a count, not null");
+        Assert.Equal(0, impact!.Value.SubpageCount);
+    }
+
+    [Fact]
     public void Impact_counts_the_subpages_and_blocks_that_would_leave_navigation()
     {
         var notes = BoardWithTree();
         var container = notes.Sections[0].Pages.Single(page => page.Title == "Criminal Law");
-        var (subpages, blocks) = HavenRichNotesOps.TrashImpact(notes, container.Id);
+        var counted = HavenRichNotesOps.TrashImpact(notes, container.Id)
+            ?? throw new InvalidOperationException("the page is in the board");
+        var (subpages, blocks) = counted;
         Assert.Equal(2, subpages);
         var expectedBlocks = notes.Sections[0].Pages
             .Where(page => page.Id == container.Id || page.ParentPageId == container.Id)
@@ -183,7 +198,9 @@ public sealed class HavenRichTrashTests
         Assert.Equal(expectedBlocks, blocks);
 
         var leaf = notes.Sections[0].Pages.Single(page => page.Title == "Homicide");
-        var (leafSubpages, leafBlocks) = HavenRichNotesOps.TrashImpact(notes, leaf.Id);
+        var leafImpact = HavenRichNotesOps.TrashImpact(notes, leaf.Id)
+            ?? throw new InvalidOperationException("the page is in the board");
+        var (leafSubpages, leafBlocks) = leafImpact;
         Assert.Equal(0, leafSubpages);
         // Counted against the fixture rather than assumed, so a fresh page's own default block cannot make
         // this test agree with a wrong implementation.
