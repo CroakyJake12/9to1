@@ -1566,6 +1566,22 @@ public sealed partial class ContractSessionAdapter : IRichBoardSession, IBoardTe
         finally { _mergeGate.Release(); }
     }
 
+    /// <summary>Chooses or clears the Board's identity icon through the contract operation.</summary>
+    public async ValueTask SetBoardIconAsync(string? iconKey, string? iconEmoji, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetBoardIcon(rich, iconKey, iconEmoji, iconColor), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     /// <summary>Remove in the picker: the page returns to the default page mark and stays the same page.</summary>
     public async ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default)
     {

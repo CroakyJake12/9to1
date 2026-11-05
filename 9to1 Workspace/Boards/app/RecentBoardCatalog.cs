@@ -106,7 +106,7 @@ public sealed class RecentBoardCatalog
                 var preview = page?.Blocks.Select(block => block.PlainText).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text))
                     ?? (page is null ? "No pages" : $"{notes.Sections.Sum(section => section.Pages.Count)} pages · {notes.Sections.Count} sections");
                 result.Add(new RecentBoardCard(reference.Path, reference.Path, notes.Title, preview,
-                    document.ModifiedUtc, true));
+                    document.ModifiedUtc, true, notes.IconKey, notes.IconEmoji, notes.IconColor));
             }
             catch (Exception error) when (IsExpectedBoardReadFailure(error))
             {
@@ -161,10 +161,41 @@ public sealed record RecentBoardCatalogDocument(int SchemaVersion, List<RecentBo
     List<RecentPageReference> Pages);
 
 public sealed record RecentBoardCard(string Id, string Path, string Title, string Preview,
-    DateTimeOffset ModifiedUtc, bool IsAvailable)
+    DateTimeOffset ModifiedUtc, bool IsAvailable, string? IconKey = null, string? IconEmoji = null,
+    string? IconColor = null)
 {
     public RecentBoardCard Target => this;
     public string IconLabel => "▤";
+
+    /// <summary>
+    /// How the card draws this Board's identity icon. The fields come from the saved document, so the card and
+    /// the file cannot disagree, and an owner-chosen emoji is painted as text because a Unicode sequence has no
+    /// vector equivalent. Boards whose owner chose nothing keep the maintained mark they have always shown.
+    /// </summary>
+    public bool IconIsEmoji => IconKey == HavenRichSectionIcons.Emoji &&
+        HavenRichSectionIcons.IsPlausibleEmojiSequence(IconEmoji);
+
+    public bool IconIsVector => !IconIsEmoji;
+
+    public string IconGlyph => IconIsEmoji ? IconEmoji! : string.Empty;
+
+    /// <summary>
+    /// The catalog reference the card's image resolves, in the same form the page header publishes
+    /// (icon:key, with the owner's colour carried after a bar). It is never empty on purpose: a Repeat item
+    /// binding has to resolve, and the CUI loader rejects an image source the host cannot register, so a null
+    /// or blank reference here would be a diagnostic rather than an invisible image. The element's own Active
+    /// binding is what hides it when the Board's icon is an emoji.
+    /// </summary>
+    public string IconSource => IconIsEmoji
+        ? "icon:folder"
+        : string.IsNullOrWhiteSpace(IconColor)
+            ? $"icon:{IconKey ?? "folder"}"
+            : $"icon:{IconKey ?? "folder"}|{IconColor}";
+
+    public string IconAccessibleName => IconIsEmoji
+        ? $"{Haven.UI.Emoji.EmojiCatalogue.Find(IconEmoji)?.Name ?? "emoji"} board icon"
+        : "Board";
+
     public string ModifiedLabel => ModifiedUtc.ToLocalTime().ToString("g");
     public string AvailabilityLabel => IsAvailable ? string.Empty : "Unavailable · choose Open to locate or recover this board.";
 }

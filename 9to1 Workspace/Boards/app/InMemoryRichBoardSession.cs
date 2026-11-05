@@ -260,6 +260,45 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession, IBoardSessionL
         return ValueTask.CompletedTask;
     }
 
+    public ValueTask SetBoardIconAsync(string? iconKey, string? iconEmoji, string? iconColor,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var normalizedColor = NormalizedIconColor(iconColor);
+        if (string.IsNullOrWhiteSpace(iconKey))
+        {
+            if (Document.IconKey is null && Document.IconColor is null && Document.IconEmoji is null)
+                return ValueTask.CompletedTask;
+            MarkDirty();
+            Document.IconKey = null;
+            Document.IconColor = null;
+            Document.IconEmoji = null;
+            return ValueTask.CompletedTask;
+        }
+        if (iconKey == HavenRichSectionIcons.Emoji)
+        {
+            if (!HavenRichSectionIcons.IsPlausibleEmojiSequence(iconEmoji))
+                throw new ArgumentException("An emoji icon requires a single Unicode emoji sequence.", nameof(iconEmoji));
+            if (Document.IconKey == HavenRichSectionIcons.Emoji && Document.IconEmoji == iconEmoji &&
+                Document.IconColor == normalizedColor)
+                return ValueTask.CompletedTask;
+            MarkDirty();
+            NoteRecentEmoji(iconEmoji!);
+            Document.IconKey = HavenRichSectionIcons.Emoji;
+            Document.IconEmoji = iconEmoji;
+            Document.IconColor = normalizedColor;
+            return ValueTask.CompletedTask;
+        }
+        if (Document.IconKey == iconKey && Document.IconColor == normalizedColor && Document.IconEmoji is null)
+            return ValueTask.CompletedTask;
+        MarkDirty();
+        Document.IconKey = iconKey;
+        Document.IconColor = normalizedColor;
+        Document.IconEmoji = null;
+        return ValueTask.CompletedTask;
+    }
+
     public ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();

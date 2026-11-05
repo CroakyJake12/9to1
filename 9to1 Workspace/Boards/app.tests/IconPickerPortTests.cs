@@ -287,6 +287,117 @@ public sealed class IconPickerPortTests
         vm.Dispose();
     }
 
+    /// <summary>
+    /// The Board is the third target for the same popover. Canonical v2 line 9421 lists Icon? among the Board
+    /// fields, so this is a specified field with a real entry point in the Board menu, not a preference; and
+    /// because a Board icon is optional, the popover must not offer Remove before the owner has chosen one.
+    /// </summary>
+    [Fact]
+    public async Task Opening_from_the_Board_targets_the_Board_and_offers_no_suggestion_tab()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync($"memory://boards/icon-board-{Guid.NewGuid():N}");
+        var vm = new BoardsViewModel(session);
+        EnableEdit(vm);
+
+        Ui(vm, "OpenBoardIconPicker");
+        Assert.True(vm.Get("IsSectionIconPickerOpen") as bool?, "the Board menu opens the shared popover");
+        Assert.Equal("board", vm.Get("IconPickerTargetKind"));
+        Assert.Contains("Board appearance", vm.Get("SectionIconPickerTitle") as string);
+        var tabs = Tabs(vm);
+        Assert.False(tabs.Single(tab => tab.Key == "suggest").IsEnabled,
+            "suggestions come from a section name today, so a Board target must not be offered that tab");
+        Assert.False(vm.Get("CanUseIconPickerSuggest") as bool?);
+        Assert.False(vm.Get("CanRemoveIcon") as bool?,
+            "a Board with no chosen icon has nothing to remove, so Remove must not sit there doing nothing");
+        Assert.NotEmpty(EmojiSections(vm));
+        vm.Dispose();
+    }
+
+    [Fact]
+    public async Task Choosing_an_emoji_for_the_Board_stores_it_remembers_it_and_Remove_leaves_no_icon()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync($"memory://boards/icon-board-{Guid.NewGuid():N}");
+        var vm = new BoardsViewModel(session);
+        EnableEdit(vm);
+
+        Ui(vm, "OpenBoardIconPicker");
+        Ui(vm, "ApplyEmojiIconChoice", "📚");
+        Assert.Equal(HavenRichSectionIcons.Emoji, session.Document.IconKey);
+        Assert.Equal("📚", session.Document.IconEmoji);
+        Assert.True(session.Document.RecentIconEmoji.Contains("📚"),
+            "the Board records what its owner used");
+        Assert.False(vm.Get("IsSectionIconPickerOpen") as bool?, "a chosen icon is a finished decision");
+        Assert.True((vm.Get("StatusText") as string)?.Contains("Board icon set to") == true,
+            "the status has to name the entity that changed, not just the icon");
+
+        Ui(vm, "OpenBoardIconPicker");
+        Assert.True(vm.Get("CanRemoveIcon") as bool?);
+        Ui(vm, "RemoveIconPickerIcon");
+        Assert.Null(session.Document.IconKey);
+        Assert.Null(session.Document.IconEmoji);
+        Assert.Null(session.Document.IconColor);
+        Assert.True((vm.Get("StatusText") as string)?.Contains("Board icon removed") == true,
+            "removing the Board icon has to say so");
+        vm.Dispose();
+    }
+
+    [Fact]
+    public async Task Tinting_a_Board_with_no_icon_keeps_the_maintained_mark_and_tinting_an_emoji_Board_sets_the_tile()
+    {
+        await using var session = new InMemoryRichBoardSession();
+        await session.OpenAsync($"memory://boards/icon-board-{Guid.NewGuid():N}");
+        var vm = new BoardsViewModel(session);
+        EnableEdit(vm);
+
+        // A colour needs something to tint, and a Board that has never chosen an icon already draws the
+        // maintained mark on its card, so tinting must keep that shape rather than swap it.
+        Ui(vm, "OpenBoardIconPicker");
+        Ui(vm, "ApplySectionIconColor", "#7026D9");
+        Assert.Equal("folder", session.Document.IconKey);
+        Assert.Equal("#7026D9", session.Document.IconColor);
+
+        Ui(vm, "OpenBoardIconPicker");
+        Ui(vm, "ApplyEmojiIconChoice", "📚");
+        Ui(vm, "OpenBoardIconPicker");
+        Ui(vm, "ApplySectionIconColor", "#187B72");
+        Assert.Equal(HavenRichSectionIcons.Emoji, session.Document.IconKey);
+        Assert.Equal("📚", session.Document.IconEmoji);
+        // An emoji cannot be recoloured, so the stored colour is the tile behind it.
+        Assert.Equal("#187B72", session.Document.IconColor);
+        vm.Dispose();
+    }
+
+    /// <summary>
+    /// The Board's icon is only useful if the landing card reads the saved document rather than a fixed glyph.
+    /// These are the presentation members the card binds, checked against the record a card is built from.
+    /// </summary>
+    [Fact]
+    public void A_Board_card_presents_the_icon_the_board_file_carries()
+    {
+        var marked = new RecentBoardCard("b1", "/tmp/b1.9to1board", "Law", "Criminal Law",
+            DateTimeOffset.UtcNow, true, IconKey: HavenRichSectionIcons.Emoji, IconEmoji: "📚");
+        Assert.True(marked.IconIsEmoji);
+        Assert.False(marked.IconIsVector);
+        Assert.Equal("📚", marked.IconGlyph);
+        Assert.Equal("books board icon", marked.IconAccessibleName);
+
+        var tinted = new RecentBoardCard("b2", "/tmp/b2.9to1board", "Maths", "Pure",
+            DateTimeOffset.UtcNow, true, IconKey: "calendar", IconColor: "#7026D9");
+        Assert.True(tinted.IconIsVector);
+        // The owner's colour travels in the same catalog reference the page header publishes.
+        Assert.Equal("icon:calendar|#7026D9", tinted.IconSource);
+
+        var unmarked = new RecentBoardCard("b3", "/tmp/b3.9to1board", "Old", "Nothing",
+            DateTimeOffset.UtcNow, true);
+        Assert.True(unmarked.IconIsVector);
+        // A Board that never chose an icon keeps the mark its card has always drawn.
+        Assert.Equal("icon:folder", unmarked.IconSource);
+        Assert.Equal(string.Empty, unmarked.IconGlyph);
+        Assert.Equal("Board", unmarked.IconAccessibleName);
+    }
+
     private static (RichBoardSection Section, RichBoardPage Page) FirstPage(InMemoryRichBoardSession session)
     {
         var section = session.Document.Sections[0];

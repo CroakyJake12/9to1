@@ -14,6 +14,7 @@
     <Action name="PickRandomEmojiIcon" command="PickRandomEmojiIcon" />
     <Action name="RemoveIconPickerIcon" command="RemoveIconPickerIcon" />
     <Action name="OpenPageIconPickerForActivePage" command="OpenPageIconPickerForActivePage" />
+    <Action name="OpenBoardIconPicker" command="OpenBoardIconPicker" />
   </Actions>
   <Page>
     <Container Type="Grid" ColumnSizes="256 1fr" RowSizes="Auto 1fr" Background="{Resource CuiWorkspaceMaterial}">
@@ -36,6 +37,10 @@
               <Button Type="Menu Item" ID="BoardSwitcherRecorded" Active="{Binding CanOpenRecordedBoard}" Content="Open saved Board" Action="OpenRecordedBoard" IsEnabled="{Binding CanOpenRecordedBoard}" Interactive="{Binding CanOpenRecordedBoard}" AccessibleName="Open the exact saved Board" />
 
                   <Button Type="Menu Item" ID="RenameBoardMenuItem" Content="Rename…" Action="RenameBoard" Interactive="{Binding CanRenameBoard}" AccessibleName="Rename board" />
+                  <!-- The Board's own identity icon, in the same popover the section and page rows open. It is
+                       offered where a Board can be edited, and it is a real action: the icon is a stored field on
+                       the Board, drawn on its card. -->
+                  <Button Type="Menu Item" ID="BoardIconMenuItem" Content="Icon and emoji…" Action="OpenBoardIconPicker" IsEnabled="{Binding CanSetBoardIcon}" Interactive="{Binding CanSetBoardIcon}" AccessibleName="Choose the icon for this Board" ToolTip="Choose the icon that represents this Board" />
                   <Button Type="Menu Item" ID="FileBoardProperties" Content="Board properties…" Action="BoardProperties" />
                   <!-- The AppFlowy stage-one comparison surface stays available to the developer through
                        the opt-in BOARDS_STAGE_ONE_PREVIEW=1 process seam. It is deliberately not offered
@@ -344,7 +349,15 @@
                    text is left-aligned (measured icon centre x 847 against the title pill centre x 761, device
                    pixels), which is what made it look like it belonged to nothing; it leads the card now. -->
               <Container Type="Vertical Stack" Width="280" Padding="16" Margin="0 0 0 8" Background="{Resource CuiFloatingSurfaceMaterial}" CornerRadius="10" CellGap="8" Role="listitem">
-                <Image Source="icon:folder" Width="24" Height="24" HorizontalAlignment="Left" AccessibleName="Board" />
+                <!-- The Board's own identity icon (canonical v2 line 9421) is read from the saved document, so a
+                     Board the owner marked with an emoji shows that emoji on its card and every other Board keeps
+                     the maintained catalog mark. Two elements rather than one: an Image whose source the host
+                     cannot register is a load diagnostic, so the vector element always carries a resolvable
+                     reference and is simply not drawn for an emoji Board. -->
+                <Container Type="Vertical Stack" CellGap="0" Width="28" Height="28">
+                  <Text Text="{Binding board.IconGlyph}" FontSize="22" Active="{Binding board.IconIsEmoji}" HorizontalAlignment="Left" AccessibleName="{Binding board.IconAccessibleName}" />
+                  <Image Source="{Binding board.IconSource}" Width="24" Height="24" Active="{Binding board.IconIsVector}" HorizontalAlignment="Left" AccessibleName="{Binding board.IconAccessibleName}" />
+                </Container>
                 <!-- Same frame: the card already has a surface, so the title's own filled button chrome
                      drew a second blob inside the card and the two backgrounds fought. The action stays on
                      this button (it is the entry point and keeps its accessible name); only its box goes. -->

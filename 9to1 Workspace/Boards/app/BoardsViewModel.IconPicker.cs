@@ -18,6 +18,27 @@ namespace CakeOS.Apps.Boards.App;
 /// </summary>
 public sealed partial class BoardsViewModel
 {
+    /// <summary>The mark a Board's card draws when its owner has chosen no icon, and the shape a colour choice
+    /// tints in that case. Kept in one place because the landing card and the picker have to agree.</summary>
+    private const string BoardMaintainedIconKey = "folder";
+
+    /// <summary>
+    /// A picker confirmation is queued here and published after the refresh, because the refresh pushes the
+    /// document bindings and that push sets StatusText from the session's own status. Setting the message
+    /// before it - which is how this read before - meant "Section icon set to books." was written and then
+    /// overwritten inside the same action, so the owner never saw which icon had been stored.
+    /// </summary>
+    private string? _pendingIconAnnouncement;
+
+    private void AnnounceIconChange(string message) => _pendingIconAnnouncement = message;
+
+    private void PublishPendingIconAnnouncement()
+    {
+        if (_pendingIconAnnouncement is null) return;
+        Set("StatusText", _pendingIconAnnouncement);
+        _pendingIconAnnouncement = null;
+    }
+
     /// <summary>Opens the same popover for a page, with that page as the target.</summary>
     public void OpenPageIconPicker(string sectionId, string pageId)
     {
@@ -28,10 +49,34 @@ public sealed partial class BoardsViewModel
         CancelSectionIconSuggestion();
         _sectionIconPickerSectionId = section.Id;
         _iconPickerPageId = page.Id;
+        _iconPickerBoardTarget = false;
         _generatedSectionIconPreviews = [];
         _sectionIconSearchText = string.Empty;
         Set("SectionIconPickerSearch", string.Empty);
         Set("SectionIconPickerTitle", $"Page appearance · {page.Title}");
+        Set("HasGeneratedSectionIconPreview", false);
+        Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
+        Set("IsSectionIconPickerOpen", true);
+        RefreshSectionIconPickerChoices();
+    }
+
+    /// <summary>
+    /// Opens the same popover with the Board as its target. The reference application gives a workspace the
+    /// same icon treatment as its pages, and canonical v2 line 9421 lists Icon? among the Board fields, so a
+    /// Board icon is a specified field rather than a preference. This is not a second picker: only the target
+    /// differs.
+    /// </summary>
+    public void OpenBoardIconPicker()
+    {
+        if (!CanSetBoardIcon) return;
+        CancelSectionIconSuggestion();
+        _sectionIconPickerSectionId = null;
+        _iconPickerPageId = null;
+        _iconPickerBoardTarget = true;
+        _generatedSectionIconPreviews = [];
+        _sectionIconSearchText = string.Empty;
+        Set("SectionIconPickerSearch", string.Empty);
+        Set("SectionIconPickerTitle", $"Board appearance · {_session.Document.Title}");
         Set("HasGeneratedSectionIconPreview", false);
         Set("GeneratedSectionIconPreviews", Array.Empty<BoardsGeneratedSectionIconPreviewView>());
         Set("IsSectionIconPickerOpen", true);
@@ -50,11 +95,20 @@ public sealed partial class BoardsViewModel
 
     private bool IconPickerTargetsPage => _iconPickerPageId is not null;
 
+    private bool IconPickerTargetsBoard => _iconPickerBoardTarget;
+
+    /// <summary>
+    /// The Suggest tab asks the configured image model for a mark from an entity's name. It is offered where
+    /// that flow exists today - for a section title - and withheld elsewhere, so a tab never promises something
+    /// the application cannot do for the thing that opened it.
+    /// </summary>
+    private bool IconPickerSuggestAvailable => !IconPickerTargetsPage && !IconPickerTargetsBoard;
+
     /// <summary>Switches which set of choices the popover is showing. This never writes an icon.</summary>
     private void SelectIconPickerTab(string tabKey)
     {
         if (tabKey is not ("emoji" or "icon" or "suggest")) return;
-        if (tabKey == "suggest" && IconPickerTargetsPage) return;
+        if (tabKey == "suggest" && !IconPickerSuggestAvailable) return;
         if (_iconPickerTab == tabKey) return;
         _iconPickerTab = tabKey;
         Set("SectionIconPickerSearch", string.Empty);
@@ -76,7 +130,23 @@ public sealed partial class BoardsViewModel
             Set("StatusText", "That is not one of the Unicode emoji Boards can use as an icon.");
             return;
         }
-        if (IconPickerTargetsPage)
+        if (IconPickerTargetsBoard)
+        {
+            try
+            {
+                await _session.SetBoardIconAsync(HavenRichSectionIcons.Emoji, entry.Text,
+                    _session.Document.IconColor, cancellationToken);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                                              InvalidOperationException or ArgumentException)
+            {
+                Set("StatusText", "The Board icon could not be saved. Try again.");
+                return;
+            }
+            AnnounceIconChange($"Board icon set to {entry.Name}.");
+        }
+        else if (IconPickerTargetsPage)
         {
             var page = IconPickerPage();
             if (page is null) return;
@@ -91,7 +161,7 @@ public sealed partial class BoardsViewModel
                 Set("StatusText", "The page icon could not be saved. Try again.");
                 return;
             }
-            Set("StatusText", $"Page icon set to {entry.Name}.");
+            AnnounceIconChange($"Page icon set to {entry.Name}.");
         }
         else
         {
@@ -108,12 +178,13 @@ public sealed partial class BoardsViewModel
                 Set("StatusText", "The section icon could not be saved. Try again.");
                 return;
             }
-            Set("StatusText", $"Section icon set to {entry.Name}.");
+            AnnounceIconChange($"Section icon set to {entry.Name}.");
         }
 
         PushDocumentToBindings();
         NavRebuildRequested?.Invoke();
         RequestRebuild();
+        PublishPendingIconAnnouncement();
         // Shuffle keeps the popover open for another roll, exactly as the reference control does; a chosen
         // emoji is a finished decision, so it closes.
         if (isRandom) RefreshSectionIconPickerChoices();
@@ -140,6 +211,23 @@ public sealed partial class BoardsViewModel
     private async Task RemovePickerIconAsync(CancellationToken cancellationToken)
     {
         if (!RequireEditMode()) return;
+        if (IconPickerTargetsBoard)
+        {
+            try
+            {
+                await _session.SetBoardIconAsync(null, null, null, cancellationToken);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                                              InvalidOperationException or ArgumentException)
+            {
+                Set("StatusText", "The Board icon could not be removed. Try again.");
+                return;
+            }
+            AnnounceIconChange("Board icon removed.");
+            RefreshAfterIconWrite();
+            return;
+        }
         if (IconPickerTargetsPage)
         {
             var page = IconPickerPage();
@@ -155,14 +243,14 @@ public sealed partial class BoardsViewModel
                 Set("StatusText", "The page icon could not be removed. Try again.");
                 return;
             }
-            Set("StatusText", "Page icon removed.");
+            AnnounceIconChange("Page icon removed.");
             RefreshAfterIconWrite();
             return;
         }
         var section = IconPickerSection();
         if (section is null) return;
         if (!await SetSectionIconAsync(section.Id, HavenRichSectionIcons.Default, null, cancellationToken)) return;
-        Set("StatusText", "Section icon removed.");
+        AnnounceIconChange("Section icon removed.");
         RefreshAfterIconWrite();
     }
 
@@ -172,6 +260,30 @@ public sealed partial class BoardsViewModel
         if (iconColor is not null && !HavenRichSectionIcons.IsSupportedColor(iconColor))
         {
             Set("StatusText", "Choose an available icon color.");
+            return;
+        }
+        if (IconPickerTargetsBoard)
+        {
+            var document = _session.Document;
+            try
+            {
+                if (document.IconKey == HavenRichSectionIcons.Emoji && document.IconEmoji is { Length: > 0 } boardEmoji)
+                    await _session.SetBoardIconAsync(HavenRichSectionIcons.Emoji, boardEmoji, iconColor, cancellationToken);
+                else
+                    // A colour needs something to tint. A Board with no chosen icon already draws the maintained
+                    // mark on its card, so tinting keeps that same mark rather than swapping shapes.
+                    await _session.SetBoardIconAsync(document.IconKey ?? BoardMaintainedIconKey, null, iconColor,
+                        cancellationToken);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                                              InvalidOperationException or ArgumentException)
+            {
+                Set("StatusText", "The Board icon color could not be saved. Try again.");
+                return;
+            }
+            AnnounceIconChange(iconColor is null ? "Board icon follows the theme color." : "Board icon color saved.");
+            RefreshAfterIconWrite();
             return;
         }
         if (IconPickerTargetsPage)
@@ -192,7 +304,7 @@ public sealed partial class BoardsViewModel
                 Set("StatusText", "The page icon color could not be saved. Try again.");
                 return;
             }
-            Set("StatusText", iconColor is null ? "Page icon follows the theme color." : "Page icon color saved.");
+            AnnounceIconChange(iconColor is null ? "Page icon follows the theme color." : "Page icon color saved.");
             RefreshAfterIconWrite();
             return;
         }
@@ -211,7 +323,7 @@ public sealed partial class BoardsViewModel
                 Set("StatusText", "The section icon color could not be saved. Try again.");
                 return;
             }
-            Set("StatusText", iconColor is null ? "Section icon follows the theme color." : "Section icon color saved.");
+            AnnounceIconChange(iconColor is null ? "Section icon follows the theme color." : "Section icon color saved.");
             RefreshAfterIconWrite();
             return;
         }
@@ -224,6 +336,7 @@ public sealed partial class BoardsViewModel
         NavRebuildRequested?.Invoke();
         RequestRebuild();
         RefreshSectionIconPickerChoices();
+        PublishPendingIconAnnouncement();
     }
 
     /// <summary>
@@ -277,13 +390,21 @@ public sealed partial class BoardsViewModel
         OpenPageIconPicker(CurrentSection().Id, CurrentPage().Id);
     }
 
-    private (string Key, string? Emoji, string? Color, bool IsPage, bool HasChosenIcon) CurrentIconSlot()
+    private (string Key, string? Emoji, string? Color, string Kind, bool HasChosenIcon) CurrentIconSlot()
     {
+        if (IconPickerTargetsBoard)
+        {
+            var document = _session.Document;
+            // A Board icon is optional in the contract: null means no icon has been chosen, and the card draws
+            // the maintained mark. Remove is therefore offered only when something is actually set.
+            return (document.IconKey ?? string.Empty, document.IconEmoji, document.IconColor, "board",
+                document.IconKey is not null || document.IconColor is not null);
+        }
         if (IconPickerPage() is { } page)
-            return (page.IconKey, page.IconEmoji, page.IconColor, true,
+            return (page.IconKey, page.IconEmoji, page.IconColor, "page",
                 page.IconKey != HavenRichSectionIcons.PageDefault || page.IconColor is not null);
         var section = IconPickerSection() ?? throw new InvalidOperationException("The icon picker has no target.");
-        return (section.IconKey, section.IconEmoji, section.IconColor, false,
+        return (section.IconKey, section.IconEmoji, section.IconColor, "section",
             section.IconKey != HavenRichSectionIcons.Default || section.GeneratedIcon is not null ||
             section.IconColor is not null);
     }
@@ -295,10 +416,10 @@ public sealed partial class BoardsViewModel
     /// </summary>
     private void RefreshIconPickerSharedState()
     {
-        if (IconPickerSection() is null) return;
+        if (!IconPickerTargetsBoard && IconPickerSection() is null) return;
         var slot = CurrentIconSlot();
 
-        Set("IconPickerTargetKind", slot.IsPage ? "page" : "section");
+        Set("IconPickerTargetKind", slot.Kind);
         Set("IsIconPickerEmojiTab", _iconPickerTab == "emoji");
         Set("IsIconPickerIconTab", _iconPickerTab == "icon");
         Set("IsIconPickerSuggestTab", _iconPickerTab == "suggest");
@@ -310,10 +431,10 @@ public sealed partial class BoardsViewModel
         {
             new BoardsIconTabView("emoji", "Emoji", _iconPickerTab == "emoji", true),
             new BoardsIconTabView("icon", "Icon", _iconPickerTab == "icon", true),
-            new BoardsIconTabView("suggest", "Suggest", _iconPickerTab == "suggest", !slot.IsPage),
+            new BoardsIconTabView("suggest", "Suggest", _iconPickerTab == "suggest", IconPickerSuggestAvailable),
         };
         Set("IconPickerTabs", _iconPickerTabs);
-        Set("CanUseIconPickerSuggest", !slot.IsPage);
+        Set("CanUseIconPickerSuggest", IconPickerSuggestAvailable);
 
         var built = IconPickerEmojiModel.Sections(_sectionIconSearchText,
                 string.IsNullOrEmpty(_iconSkinTone) ? null : _iconSkinTone, RecentIconEmoji())

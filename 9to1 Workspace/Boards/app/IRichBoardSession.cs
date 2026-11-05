@@ -314,6 +314,13 @@ public interface IRichBoardSession : IAsyncDisposable
         CancellationToken cancellationToken = default);
     ValueTask SetPageIconAsync(string pageId, string iconKey, string? iconColor,
         CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Chooses the Board's own identity icon (canonical v2 line 9421 <c>Icon?</c>). Passing a null key is the
+    /// Remove action: the Board goes back to the maintained mark its card draws when nothing is chosen.
+    /// </summary>
+    ValueTask SetBoardIconAsync(string? iconKey, string? iconEmoji, string? iconColor,
+        CancellationToken cancellationToken = default);
+
     ValueTask SetPageIconEmojiAsync(string pageId, string emoji, string? iconColor,
         CancellationToken cancellationToken = default);
     ValueTask ClearPageIconAsync(string pageId, CancellationToken cancellationToken = default);

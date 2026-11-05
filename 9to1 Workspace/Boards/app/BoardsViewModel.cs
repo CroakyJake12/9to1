@@ -54,6 +54,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private readonly IBoardsSectionIconGenerationHost? _sectionIconGenerationHost;
     private string? _sectionIconPickerSectionId;
     private string? _iconPickerPageId;
+    // The same popover also targets the Board itself. The flag is explicit rather than inferred from "no
+    // section and no page", so a picker opened for a Board cannot be mistaken for a half-open one.
+    private bool _iconPickerBoardTarget;
     private string _iconPickerTab = "emoji";
     private string _iconSkinTone = string.Empty;
     private string _sectionIconSearchText = string.Empty;
@@ -408,6 +411,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 "Id" => board.Id, "Target" => board, "Path" => board.Path, "Title" => board.Title,
                 "Preview" => board.Preview, "ModifiedLabel" => board.ModifiedLabel,
                 "IconLabel" => board.IconLabel, "IsAvailable" => board.IsAvailable,
+                "IconIsEmoji" => board.IconIsEmoji, "IconIsVector" => board.IconIsVector,
+                "IconGlyph" => board.IconGlyph, "IconSource" => board.IconSource,
+                "IconAccessibleName" => board.IconAccessibleName,
                 "AvailabilityLabel" => board.AvailabilityLabel, _ => null
             };
             return value is not null;
@@ -448,6 +454,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// they were only reachable at all from the File menu once a board was open).</summary>
     public bool CanSaveBoard => CanEdit && HasOpenBoard;
     public bool CanRenameBoard => CanEdit && HasOpenBoard && IsEditMode;
+    /// <summary>The Board's identity icon follows the same availability as its name: part of the Board's
+    /// identity, editable while a Board is open in Edit mode.</summary>
+    public bool CanSetBoardIcon => CanRenameBoard;
     public bool CanCreateBoard => CanSwitchBoard || CanEdit && _homeBoardCreationHost is not null &&
         !_homeCreationOperationInProgress && !_homeBoardCreationHost.HasUnresolvedCreation;
     public bool CanAddWritePage => _embeddedArtifactHost is not null && CanEdit && _isEditMode && _pendingEmbeddedPageLink is null;
@@ -503,6 +512,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("AdaptivePropertiesVisible", false);
         Set("BoardMenuTitle", "Boards ▾");
         Set("CanRenameBoard", false);
+        Set("CanSetBoardIcon", false);
         Set("CanOpenBoardMenu", CanOpenBoardMenu);
         Set("CanSaveAs", false);
         Set("CanSaveBoard", false);
@@ -681,6 +691,9 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 break;
             case "OpenPageIconPickerForActivePage":
                 OpenActivePageIconPicker();
+                break;
+            case "OpenBoardIconPicker":
+                OpenBoardIconPicker();
                 break;
             case "ApplySectionIconColor" when parameter is string iconColor:
                 await ApplyIconColorAsync(iconColor, cancellationToken);
@@ -1140,6 +1153,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("CanCreateBoard", CanCreateBoard);
         Set("CanSaveBoard", CanSaveBoard);
         Set("CanRenameBoard", CanRenameBoard);
+        Set("CanSetBoardIcon", CanSetBoardIcon);
         Set("CanSaveAs", CanSaveAs);
         Set("CanRetryHomeBoardOpen", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryOpenCreatedBoard == true);
         Set("CanRetryBoardCreationSettlement", !_homeCreationOperationInProgress && _homeBoardCreationHost?.CanRetryCreationSettlement == true);
@@ -2703,6 +2717,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (section is null) return;
         CancelSectionIconSuggestion();
         _iconPickerPageId = null;
+        _iconPickerBoardTarget = false;
         _sectionIconPickerSectionId = section.Id;
         _generatedSectionIconPreviews = [];
         _sectionIconSearchText = string.Empty;
@@ -2719,6 +2734,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     {
         CancelSectionIconSuggestion();
         _iconPickerPageId = null;
+        _iconPickerBoardTarget = false;
         _sectionIconPickerSectionId = null;
         _generatedSectionIconPreviews = [];
         Set("HasGeneratedSectionIconPreview", false);
@@ -2737,12 +2753,17 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         var section = _sectionIconPickerSectionId is { } sectionId
             ? _session.Document.Sections.FirstOrDefault(item => item.Id == sectionId)
             : null;
-        if (section is null)
+        if (section is null && !IconPickerTargetsBoard)
         {
             CloseSectionIconPicker();
             return;
         }
 
+        // One reader for the target's current slot, whichever entity opened the popover. Reading section.*
+        // directly was wrong twice over: a Board target has no section at all, and for a Page target the
+        // section is the page's parent, so the Icon tab and the colour row marked the section's icon as if it
+        // were the page's.
+        var slot = CurrentIconSlot();
         var query = _sectionIconSearchText.Trim();
         _sectionIconPickerChoices = BoardsIcons.SectionIconChoices
             .Select(key => (Key: key, Label: BoardsIcons.SectionIconLabel(key)))
@@ -2753,25 +2774,25 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 choice.Key,
                 choice.Label,
                 BoardsCuiIconResolver.CreateSectionIcon(choice.Key,
-                    BoardsCuiIconResolver.SemanticBrush(choice.Key, colorOverride: section.IconColor)),
-                string.Equals(section.IconKey, choice.Key, StringComparison.Ordinal)))
+                    BoardsCuiIconResolver.SemanticBrush(choice.Key, colorOverride: slot.Color)),
+                string.Equals(slot.Key, choice.Key, StringComparison.Ordinal)))
             .ToArray();
         _sectionIconPickerColors = BoardsIcons.SectionIconColors
             .Select(choice => new BoardsSectionIconColorChoiceView(
                 choice.Name,
                 choice.Hex,
                 new SolidColorBrush(Color.Parse(choice.Hex)),
-                string.Equals(section.IconColor, choice.Hex, StringComparison.OrdinalIgnoreCase)))
+                string.Equals(slot.Color, choice.Hex, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
         RefreshIconPickerSharedState();
         Set("SectionIconPickerChoices", _sectionIconPickerChoices);
         Set("SectionIconPickerColors", _sectionIconPickerColors);
         Set("HasSectionIconPickerChoices", _sectionIconPickerChoices.Count > 0);
-        Set("SectionIconPickerHasThemeColor", section.IconColor is null);
-        Set("SectionIconPickerColor", section.IconColor ?? string.Empty);
+        Set("SectionIconPickerHasThemeColor", slot.Color is null);
+        Set("SectionIconPickerColor", slot.Color ?? string.Empty);
         if (_generatedSectionIconPreviews.Count > 0)
         {
-            var generatedBrush = BoardsCuiIconResolver.SemanticBrush("section", colorOverride: section.IconColor);
+            var generatedBrush = BoardsCuiIconResolver.SemanticBrush("section", colorOverride: slot.Color);
             Set("GeneratedSectionIconPreviews", CreateGeneratedPreviewViews(_generatedSectionIconPreviews,
                 generatedBrush, Volatile.Read(ref _sectionIconPickerEpoch)));
         }
