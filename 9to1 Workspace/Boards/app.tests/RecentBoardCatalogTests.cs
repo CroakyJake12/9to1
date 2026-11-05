@@ -6,6 +6,61 @@ namespace CakeOS.Apps.Boards.App.Tests;
 
 public sealed class RecentBoardCatalogTests
 {
+
+    /// <summary>
+    /// The landing cards are only honest if they read what the file carries. This writes the Board and page
+    /// icons through the real session, closes it, and then builds the cards from the saved file - the same
+    /// route the landing view takes - so a card cannot agree with the editor and disagree with the disk.
+    /// </summary>
+    [Fact]
+    public async Task Saved_Board_and_page_icons_reach_the_landing_cards()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-card-icons-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(Path.Combine(root, "store"));
+            var boardPath = Path.Combine(root, "Marked.9to1board");
+            string sectionId;
+            string pageId;
+            await using (var session = await ContractSessionAdapter.CreateNewAtPathAsync(store, boardPath))
+            {
+                var section = Assert.Single(session.Document.Sections);
+                var page = Assert.Single(section.Pages);
+                sectionId = section.Id;
+                pageId = page.Id;
+                await session.SetBoardIconAsync(HavenRichSectionIcons.Emoji, "📚", null);
+                await session.SetPageIconEmojiAsync(page.Id, "⚖️", null);
+                await session.SaveAsync();
+            }
+
+            var catalog = new RecentBoardCatalog(Path.Combine(root, "recent-board-paths.json"));
+            catalog.Record(boardPath);
+            catalog.RecordPage(boardPath, sectionId, pageId);
+
+            var boardCards = await catalog.LoadCardsAsync(store);
+            var boardCard = Assert.Single(boardCards);
+            Assert.True(boardCard.IconIsEmoji, "the Board's own mark comes from the saved file");
+            Assert.Equal("📚", boardCard.IconGlyph);
+            Assert.Equal("books board icon", boardCard.IconAccessibleName);
+
+            var pageCards = await catalog.LoadRecentPagesAsync(store);
+            var pageCard = Assert.Single(pageCards);
+            Assert.True(pageCard.IconIsEmoji);
+            Assert.Equal("⚖️", pageCard.IconGlyph);
+            // The name comes from the CLDR catalogue rather than from this test's guess about what a glyph is
+            // called, so the assertion checks the composition rule and that a real name was resolved.
+            var scalesName = Haven.UI.Emoji.EmojiCatalogue.Find("⚖️")?.Name;
+            Assert.False(string.IsNullOrEmpty(scalesName), "the catalogue should know this emoji");
+            Assert.Equal($"{scalesName} page icon", pageCard.IconAccessibleName);
+            Assert.False(pageCard.IconIsVector);
+        }
+        finally
+        {
+            try { Directory.Delete(root, recursive: true); } catch (IOException) { }
+        }
+    }
+
     [Fact]
     public async Task Landing_cards_resolve_real_board_and_recent_page_references()
     {

@@ -135,7 +135,7 @@ public sealed class RecentBoardCatalog
                 if (section is null || page is null) continue;
                 result.Add(new RecentPageCard(reference.Path, section.Id, page.Id, notes.Title, page.Title,
                     page.Blocks.Select(block => block.PlainText).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text)) ?? "No text preview",
-                    reference.OpenedUtc));
+                    reference.OpenedUtc, page.IconKey, page.IconEmoji, page.IconColor));
             }
             catch (Exception error) when (IsExpectedBoardReadFailure(error))
             {
@@ -201,9 +201,34 @@ public sealed record RecentBoardCard(string Id, string Path, string Title, strin
 }
 
 public sealed record RecentPageCard(string Path, string SectionId, string PageId, string BoardTitle,
-    string PageTitle, string Preview, DateTimeOffset OpenedUtc)
+    string PageTitle, string Preview, DateTimeOffset OpenedUtc, string? IconKey = null,
+    string? IconEmoji = null, string? IconColor = null)
 {
     public string Id => Path + "|" + SectionId + "|" + PageId;
     public RecentPageCard Target => this;
     public string OpenedLabel => OpenedUtc.ToLocalTime().ToString("g");
+
+    /// <summary>
+    /// The page's identity mark, read from the saved Board like every other field on this row. A page whose
+    /// owner chose an emoji shows that emoji as text; every other page shows the maintained mark, so this
+    /// cannot make an untouched page look different from how it looked before.
+    /// </summary>
+    public bool IconIsEmoji => IconKey == HavenRichSectionIcons.Emoji &&
+        HavenRichSectionIcons.IsPlausibleEmojiSequence(IconEmoji);
+
+    public bool IconIsVector => !IconIsEmoji;
+
+    public string IconGlyph => IconIsEmoji ? IconEmoji! : string.Empty;
+
+    /// <summary>Never blank, for the same reason as the Board card: an image source the host cannot register
+    /// is a load diagnostic, so visibility is the element's Active binding, not an empty reference.</summary>
+    public string IconSource => IconIsEmoji
+        ? "icon:" + HavenRichSectionIcons.PageDefault
+        : string.IsNullOrWhiteSpace(IconColor)
+            ? "icon:" + (IconKey ?? HavenRichSectionIcons.PageDefault)
+            : "icon:" + (IconKey ?? HavenRichSectionIcons.PageDefault) + "|" + IconColor;
+
+    public string IconAccessibleName => IconIsEmoji
+        ? (Haven.UI.Emoji.EmojiCatalogue.Find(IconEmoji)?.Name ?? "emoji") + " page icon"
+        : "Page";
 }

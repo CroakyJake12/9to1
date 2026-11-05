@@ -292,6 +292,24 @@ it opens the popover with target `board`. What is still not done at Board level:
 shows no identity mark - its menu item takes an image `IconSource`, which cannot carry an emoji - and the
 landing "Recent pages" list does not show page icons.
 
+## Fourth pass: the landing rows, and the last honest gap
+
+The "Recent pages" row now leads with the page's own mark, read from the saved file. Set through the real entry
+points in the running application - Board menu row for the Board, page header slot for the page - then closed
+through the application's own route and reopened:
+
+| Measured | Value |
+| --- | --- |
+| Board menu row clicked | "Icon and emoji…" at y 580 in the flyout window; popover opened; grid cell chosen, window changed 8.30% |
+| Header slot clicked | mark located at (874, 286) by colour, 156 saturated pixels before, 236 after the emoji was chosen; popover opened at 910-1950 x 337-1561, window changed 7.85% |
+| Commit through the application | Board `iconKey=emoji` with the chosen sequence, **and** page "Criminal Law" `iconKey=emoji` - two entities, both written through the app, neither touched by a file edit |
+| Landing view after relaunch | the **Law** board card leads with the chosen emoji and the **"Criminal Law" recent-page row leads with its own emoji**, while the three Untitled boards keep the maintained violet folder mark (`frames/e02_landing.png`) |
+| Deliverable | `07678b69d3a8f43e…` unchanged before and after; scratch deleted; profile board metadata restored |
+
+The one Board-level surface still without a mark is the **board switcher label**: an authored menu item takes an
+image `IconSource`, and an emoji has no image equivalent that would keep its colour, so this needs a framework
+answer rather than a monochrome substitute. Recorded as open, not silently skipped.
+
 ## Still open on this surface
 
 

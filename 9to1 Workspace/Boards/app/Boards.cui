@@ -385,7 +385,16 @@
                 <!-- Measured (2 Nov frame 229): this stack was cross-aligned to the centre of the row, so a
                      four-line page summary started ~330 device pixels (166 logical) inside a full-width row
                      and the empty grey to its left read as a mistake rather than as padding. -->
-                <Container Type="Vertical Stack" CellGap="4" HorizontalAlignment="Left">
+                <!-- The page's own mark leads the row, as it does in the navigation tree and in the page
+                     header. An emoji the owner chose is painted as text; anything else resolves the maintained
+                     catalog reference. Both elements exist because an unresolvable image source is a load
+                     diagnostic, and only one of them is active for a given page. -->
+                <Container Type="Horizontal Stack" CellGap="10" HorizontalAlignment="Left" VerticalAlignment="Center">
+                  <Container Type="Vertical Stack" CellGap="0" Width="26" MinWidth="26">
+                    <Text Text="{Binding page.IconGlyph}" FontSize="20" Active="{Binding page.IconIsEmoji}" AccessibleName="{Binding page.IconAccessibleName}" />
+                    <Image Source="{Binding page.IconSource}" Width="22" Height="22" Active="{Binding page.IconIsVector}" AccessibleName="{Binding page.IconAccessibleName}" />
+                  </Container>
+                  <Container Type="Vertical Stack" CellGap="4" HorizontalAlignment="Left">
                   <Text Text="{Binding page.PageTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
                   <Text Text="{Binding page.BoardTitle}" Foreground="{Resource CuiTextSoftBrush}" />
                   <Container Type="Horizontal Stack" CellGap="4">
@@ -393,6 +402,7 @@
                     <Text Text="{Binding page.OpenedLabel}" Foreground="{Resource CuiTextSoftBrush}" />
                   </Container>
                   <Text Text="{Binding page.Preview}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
                 </Container>
               </Button>
             </Repeat>

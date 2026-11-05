@@ -424,7 +424,10 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             {
                 "Id" => page.Id, "Target" => page, "Path" => page.Path, "PageId" => page.PageId,
                 "PageTitle" => page.PageTitle, "BoardTitle" => page.BoardTitle,
-                "Preview" => page.Preview, "OpenedLabel" => page.OpenedLabel, _ => null
+                "Preview" => page.Preview, "OpenedLabel" => page.OpenedLabel,
+                "IconIsEmoji" => page.IconIsEmoji, "IconIsVector" => page.IconIsVector,
+                "IconGlyph" => page.IconGlyph, "IconSource" => page.IconSource,
+                "IconAccessibleName" => page.IconAccessibleName, _ => null
             };
             return value is not null;
         }
