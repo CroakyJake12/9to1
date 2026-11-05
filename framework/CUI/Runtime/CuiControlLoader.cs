@@ -3412,6 +3412,18 @@ public sealed partial class CuiControlLoader : IDisposable
                     ?? throw new ArgumentException($"Icon source '{resolved}' is not registered by this host.");
                 return;
             }
+            if (propName.Equals("IconGlyph", StringComparison.OrdinalIgnoreCase))
+            {
+                // A blank authored or bound glyph is "no mark", not a diagnostic: the value frequently comes
+                // from a binding whose entity has no text mark today. An unresolvable image reference stays an
+                // error, because that is a typo rather than an absent choice.
+                if (control is not CuiMenuItem glyphItem) throw new ArgumentException("IconGlyph requires a menu item.");
+                // An authored empty attribute is refused by the compiler, so a blank can only arrive from a
+                // binding that has nothing to show yet. Normalise it to no mark here, where both the literal
+                // and the update path pass through.
+                glyphItem.IconGlyph = string.IsNullOrWhiteSpace(resolved) ? null : resolved.Trim();
+                return;
+            }
             if (control is Image && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
             {
                 var image = _controlRegistry.ResolveImageSource(resolved, control);

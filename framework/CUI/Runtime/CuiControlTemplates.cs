@@ -570,6 +570,19 @@ public static class CuiControlTemplates
         var iconImage = new Image { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
         Bind(iconImage, Image.SourceProperty, owner, "Icon"); row.Children.Add(iconImage);
         var iconContent = new ContentPresenter(); Bind(iconContent, ContentPresenter.ContentProperty, owner, "Icon"); row.Children.Add(iconContent);
+        // The text form of the icon slot: a colour emoji or another glyph cannot be carried by an image, and
+        // an entity mark may be exactly that. It shares the slot, the sizing and the non-hit-testable role of
+        // the image form so the two cannot disagree about layout.
+        var iconGlyph = new TextBlock
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false,
+            Focusable = false,
+        };
+        Bind(iconGlyph, TextBlock.TextProperty, owner, "IconGlyph");
+        Resource(iconGlyph, TextBlock.ForegroundProperty, "CuiTextBrush");
+        Grid.SetColumn(iconGlyph, 0); row.Children.Add(iconGlyph);
         TextBlock? shortcut = null, arrow = null;
         if (!owner.IsTopLevel)
         {
@@ -584,10 +597,19 @@ public static class CuiControlTemplates
         {
             var iconOnly = owner is CuiMenuItem { IconOnly: true };
             var hasImage = owner.Icon is Avalonia.Media.IImage;
+            var hasGlyph = owner is CuiMenuItem glyphOwner && glyphOwner.HasIconGlyph;
             var hasToggle = !owner.IsTopLevel && owner.ToggleType != MenuItemToggleType.None;
-            var checkOverIcon = iconOnly || owner.Icon is not null;
-            row.ColumnDefinitions = new(owner.IsTopLevel ? "*" : "24,*,Auto,12");
-            Grid.SetColumn(header, owner.IsTopLevel || iconOnly ? 0 : 1);
+            var checkOverIcon = iconOnly || owner.Icon is not null || hasGlyph;
+            // Whether the label survives the mark. The image case keeps the rule the framework already had - a
+            // top-level image item shows only its mark - because other surfaces are built on that. A text mark
+            // hides the label only for an icon-only item, so a Board can show its mark beside its name.
+            var labelVisible = !((hasImage && (owner.IsTopLevel || iconOnly)) || (hasGlyph && iconOnly));
+            // A top-level item declares one column, which was enough while a mark always replaced the label.
+            // With both shown, sharing that column draws the mark on top of the name - seen in a real window,
+            // where the Board's emoji landed across "Law". Separate the two instead.
+            var topLevelPair = owner.IsTopLevel && labelVisible && (hasImage || hasGlyph);
+            row.ColumnDefinitions = new(owner.IsTopLevel ? (topLevelPair ? "Auto,*" : "*") : "24,*,Auto,12");
+            Grid.SetColumn(header, owner.IsTopLevel ? (topLevelPair ? 1 : 0) : (iconOnly ? 0 : 1));
             Grid.SetColumn(check, 0);
             Grid.SetColumn(iconImage, 0);
             Grid.SetColumn(iconContent, 0);
@@ -597,13 +619,21 @@ public static class CuiControlTemplates
             var explicitIconSize = owner is CuiMenuItem { IconSize: { } size } ? size : double.NaN;
             iconImage.Width = iconImage.Height = double.IsNaN(explicitIconSize) ? iconOnly ? 36 : 20 : explicitIconSize;
             iconContent.Width = iconContent.Height = explicitIconSize;
-            iconImage.IsVisible = hasImage;
-            iconContent.IsVisible = !hasImage && owner.Icon is not null;
+            // Same size rule as the image form. The glyph is not height-clipped, because a colour emoji is
+            // taller than a line box and clipping it would cut the mark the owner chose.
+            iconGlyph.FontSize = double.IsNaN(explicitIconSize) ? (iconOnly ? 36 : 20) : explicitIconSize;
+            iconGlyph.Width = iconGlyph.Height = double.IsNaN(explicitIconSize) ? (iconOnly ? 36 : 20) : explicitIconSize;
+            iconImage.IsVisible = hasImage && !hasGlyph;
+            iconContent.IsVisible = !hasImage && owner.Icon is not null && !hasGlyph;
+            iconGlyph.IsVisible = hasGlyph;
+            // Spacing between a mark and the label beside it. Only needed where the two share a row by the
+            // column rule above; seen without it in a real window, where the Board's emoji butted into "Law".
+            iconGlyph.Margin = topLevelPair ? new Thickness(0, 0, 8, 0) : new Thickness(0);
             check.IsVisible = hasToggle;
             check.Text = owner.IsChecked
                 ? owner.ToggleType == MenuItemToggleType.Radio ? "●" : "✓"
                 : string.Empty;
-            header.IsVisible = !(hasImage && (owner.IsTopLevel || iconOnly));
+            header.IsVisible = labelVisible;
             if (shortcut is not null)
             {
                 Grid.SetColumn(shortcut, 2);
@@ -617,7 +647,7 @@ public static class CuiControlTemplates
         }
         owner.PropertyChanged += (_, change) =>
         {
-            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconOnlyProperty || change.Property == CuiMenuItem.IconSizeProperty
+            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconGlyphProperty || change.Property == CuiMenuItem.IconOnlyProperty || change.Property == CuiMenuItem.IconSizeProperty
                 || change.Property == Avalonia.Controls.MenuItem.ToggleTypeProperty
                 || change.Property == Avalonia.Controls.MenuItem.IsCheckedProperty) UpdateRow();
         };

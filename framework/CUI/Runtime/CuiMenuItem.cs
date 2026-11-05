@@ -31,6 +31,18 @@ public sealed class CuiMenuItem : MenuItem
     public static readonly StyledProperty<double?> IconSizeProperty = AvaloniaProperty.Register<CuiMenuItem, double?>(nameof(IconSize),
         validate: value => value is null || double.IsFinite(value.Value) && value.Value is > 0 and <= 256);
     public double? IconSize { get => GetValue(IconSizeProperty); set => SetValue(IconSizeProperty, value); }
+    /// <summary>
+    /// A text mark for the menu item's icon slot - a Unicode emoji or another single glyph. An image cannot
+    /// carry a colour emoji, and an entity's chosen mark may be one, so the slot needs a first-class text
+    /// form rather than a monochrome substitute. Blank means no mark, which is different from an unknown
+    /// image reference and is therefore accepted rather than reported.
+    /// </summary>
+    public static readonly StyledProperty<string?> IconGlyphProperty = AvaloniaProperty.Register<CuiMenuItem, string?>(
+        nameof(IconGlyph), validate: value => value is null || value.Trim().Length <= 16);
+    public string? IconGlyph { get => GetValue(IconGlyphProperty); set => SetValue(IconGlyphProperty, value); }
+    /// <summary>Whether the icon slot should draw a text mark. Blank means no mark, which keeps a bound empty
+    /// value - the normal state before an owner chooses anything - from looking like an error.</summary>
+    public bool HasIconGlyph => !string.IsNullOrWhiteSpace(IconGlyph) && IconGlyph!.Trim().Length > 0;
     public int MenuColumns { get => GetValue(MenuColumnsProperty); set => SetValue(MenuColumnsProperty, value); }
     public bool IconOnly { get => GetValue(IconOnlyProperty); set => SetValue(IconOnlyProperty, value); }
     private long _focusRecoveryGeneration;

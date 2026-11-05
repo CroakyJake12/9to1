@@ -383,6 +383,22 @@ public sealed partial class BoardsViewModel
     private static string IconReference(string iconKey, string? iconColor) =>
         string.IsNullOrWhiteSpace(iconColor) ? $"icon:{iconKey}" : $"icon:{iconKey}|{iconColor}";
 
+    /// <summary>
+    /// Publishes the Board's mark for the board switcher, and only the text form of it. An authored image on a
+    /// top-level menu item hides that item's label - a rule the framework had before this work, which other
+    /// surfaces rely on - so giving the switcher an image mark would trade the Board's name for its icon. A
+    /// Board marked with an emoji shows the emoji beside its name; a Board marked with a vector silhouette
+    /// shows its name alone, and the card and tree still carry the mark. Making the image form safe beside a
+    /// label is a framework decision with its own evidence, not a change to make from one app.
+    /// </summary>
+    private void RefreshBoardIconState()
+    {
+        var document = _session.Document;
+        var isEmoji = document.IconKey == HavenRichSectionIcons.Emoji &&
+                      HavenRichSectionIcons.IsPlausibleEmojiSequence(document.IconEmoji);
+        Set("BoardIconGlyph", isEmoji ? document.IconEmoji! : string.Empty);
+    }
+
     /// <summary>Opens the shared picker for whichever page is currently displayed.</summary>
     public void OpenActivePageIconPicker()
     {

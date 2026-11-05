@@ -305,6 +305,60 @@ public sealed class IconPickerSurfaceClickTests
     }
 
     /// <summary>
+    /// The board switcher is where the owner sees which Board they are in, so the Board's own mark belongs
+    /// there. An owner-chosen emoji is carried as a text mark - an image cannot hold a colour emoji - and the
+    /// mark stays visible in View mode, because it identifies the Board rather than an editing state.
+    /// </summary>
+    [Fact]
+    public void The_board_switcher_shows_the_Board_chosen_mark()
+    {
+        var surface = OpenRenderedSurface("switcher");
+        try
+        {
+            var viewModel = surface.Presentation.ViewModel;
+            TestUiThread.Run(() =>
+            {
+                if (!viewModel.IsEditMode) viewModel.DispatchAsync("ToggleEditView", null).GetAwaiter().GetResult();
+                viewModel.DispatchAsync("OpenBoardIconPicker", null).GetAwaiter().GetResult();
+                viewModel.DispatchAsync("ApplyEmojiIconChoice", "📚").GetAwaiter().GetResult();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            });
+            Assert.Equal(HavenRichSectionIcons.Emoji, viewModel.Session.Document.IconKey);
+
+            var item = Find<CakeOS.Cui.Runtime.CuiMenuItem>(surface, "BoardSwitcher");
+            Assert.NotNull(item);
+            Assert.True(TestUiThread.Run(() => item!.HasIconGlyph),
+                "the switcher has to carry the mark the Board was given");
+            Assert.Equal("📚", TestUiThread.Run(() => item!.IconGlyph));
+            Assert.True(TestUiThread.Run(() => item.GetVisualDescendants().OfType<TextBlock>()
+                .Any(text => text.Text == "📚" && text.IsVisible)), "the mark is drawn, not merely stored");
+
+            // The native pass caught this the way a headless test would not: the first version of the template
+            // hid the label whenever a mark existed, so the switcher showed the emoji and lost the Board's
+            // name - the one thing that control exists to tell the owner.
+            var title = TestUiThread.Run(() => viewModel.Get("BoardMenuTitle") as string);
+            Assert.False(string.IsNullOrWhiteSpace(title), "the switcher keeps naming the Board");
+            Assert.True(TestUiThread.Run(() => item.GetVisualDescendants().OfType<TextBlock>()
+                .Any(text => text.IsVisible && text.Text == title)),
+                "a mark sits beside the Board's name, it does not replace it");
+
+            // View mode keeps the identity mark and only withdraws the editing routes.
+            TestUiThread.Run(() =>
+            {
+                viewModel.DispatchAsync("ToggleEditView", null).GetAwaiter().GetResult();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            });
+            Assert.False(viewModel.IsEditMode);
+            Assert.True(TestUiThread.Run(() => item!.HasIconGlyph),
+                "a Board mark belongs to the Board, not to the editing state");
+        }
+        finally
+        {
+            CloseRenderedSurface(surface);
+        }
+    }
+
+    /// <summary>
     /// A page with a vector identity icon publishes a catalog reference (icon:file, or icon:file|#RRGGBBAA
     /// when the owner has tinted it) rather than a media object, because the view model that publishes it can
     /// be built on a background thread while a save or reload is in flight. The reference is only useful if

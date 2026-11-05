@@ -4650,6 +4650,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("PageListText", string.Join("  |  ", CurrentSection().Pages.Select(p => p.Title)));
             Set("PageTitle", page.Title);
             RefreshPageIconState(page);
+            RefreshBoardIconState();
             Set("IsNativePage", string.Equals(page.PageType, HavenRichPageTypes.Native, StringComparison.Ordinal));
             Set("CanChangeLayoutMode", CanChangeLayoutMode);
             Set("LayoutModeLabel", LayoutModeLabel);
