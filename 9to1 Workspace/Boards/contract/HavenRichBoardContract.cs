@@ -33,6 +33,14 @@ public sealed class HavenRichNotes
     public List<string> RecentIconEmoji { get; set; } = [];
     public const int RecentIconEmojiLimit = 12;
 
+    /// <summary>
+    /// Pages the owner moved to the Trash. UX27-BOARD-015 requires that a trashed page leaves normal
+    /// navigation while its content and its parent/order metadata are retained and recoverable, so the page
+    /// object itself is kept here rather than a summary of it. Absent on boards written before this existed,
+    /// which simply means an empty Trash; nothing about the stored shape of a live page changes.
+    /// </summary>
+    public List<HavenRichTrashedPage> Trash { get; set; } = [];
+
     public static HavenRichNotes Create(string? title = null)
     {
         var notes = new HavenRichNotes();
@@ -41,6 +49,43 @@ public sealed class HavenRichNotes
         notes.Sections = [new HavenRichSection { Title = "Notes", Pages = [new HavenRichPage { Title = "Start here" }] }];
         return notes;
     }
+}
+
+/// <summary>
+/// One page held in the Trash, with where it was so it can be put back. A trashed container keeps its whole
+/// subtree here - the descendants are entries with the same <see cref="GroupId" /> - so restoring the
+/// container cannot orphan the pages under it, which UX27-BOARD-015 calls out explicitly.
+/// </summary>
+public sealed class HavenRichTrashedPage
+{
+    /// <summary>The retained page, blocks and all. Navigation excludes it; restore puts it back.</summary>
+    public required HavenRichPage Page { get; set; }
+
+    /// <summary>Identity of the trashed subtree this entry belongs to.</summary>
+    public required string GroupId { get; set; }
+
+    /// <summary>The page the owner acted on. Descendants travel with it and are not listed on their own.</summary>
+    public bool IsGroupRoot { get; set; }
+
+    public required string SectionId { get; set; }
+
+    /// <summary>Parent at the moment of trashing, so a restore can return to the same place.</summary>
+    public string? ParentPageId { get; set; }
+
+    /// <summary>Position within that parent or section at the moment of trashing.</summary>
+    public int SortIndex { get; set; }
+
+    public DateTimeOffset TrashedUtc { get; set; }
+}
+
+/// <summary>
+/// What a restore actually did, so the application can say it out loud instead of leaving the owner to notice
+/// that a page came back somewhere other than where it was.
+/// </summary>
+public sealed record HavenRichTrashRestore(bool Succeeded, string? SectionTitle, bool ParentWasMissing,
+    string? RefusalReason)
+{
+    public static HavenRichTrashRestore Failed(string reason) => new(false, null, false, reason);
 }
 
 public sealed class HavenRichSection
@@ -486,8 +531,26 @@ public static class HavenRichNotesValidator
             notes.RecentIconEmoji.Distinct(StringComparer.Ordinal).Count() != notes.RecentIconEmoji.Count)
             throw new InvalidOperationException("Board recent icons must be distinct emoji sequences.");
         ValidateIconEmoji("Board", notes.IconKey ?? HavenRichSectionIcons.Default, notes.IconEmoji);
+        var trashedIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var entry in notes.Trash)
+        {
+            RequireId(entry.Page.Id, "Trashed page");
+            if (!trashedIds.Add(entry.Page.Id))
+                throw new InvalidOperationException("A page may appear in the Trash only once.");
+            RequireId(entry.GroupId, "Trash group");
+            if (entry.SortIndex < 0)
+                throw new InvalidOperationException("A trashed page needs a non-negative recorded position.");
+        }
+        foreach (var entry in notes.Trash.Where(item => !item.IsGroupRoot))
+            if (!notes.Trash.Any(other => other.IsGroupRoot && other.GroupId == entry.GroupId))
+                throw new InvalidOperationException("A trashed descendant must travel with the page it came from.");
         HavenRichStyles.ValidateStyles(notes);
         var allPageIds = new HashSet<string>(StringComparer.Ordinal);
+        // A page cannot be both open and in the Trash: that is the state a buggy writer would produce, and
+        // once it exists every later read has to guess which copy is real.
+        foreach (var live in notes.Sections.SelectMany(section => section.Pages))
+            if (trashedIds.Contains(live.Id))
+                throw new InvalidOperationException($"Page '{live.Id}' is both open and in the Trash.");
         var allGraphIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var section in notes.Sections)
         {
@@ -1154,6 +1217,146 @@ public static partial class HavenRichNotesOps
             Touch(notes);
         }
         return removed;
+    }
+
+    /// <summary>
+    /// Moves a page, and everything under it, into the Trash. This is the recoverable route UX27-BOARD-015
+    /// asks for; it deliberately does not destroy content, and the refusal reasons are returned rather than
+    /// swallowed so the application can state them.
+    /// </summary>
+    public static bool TryMovePageToTrash(HavenRichNotes notes, string pageId, out string? refusalReason)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        refusalReason = null;
+        var section = notes.Sections.FirstOrDefault(item => item.Pages.Any(page => page.Id == pageId));
+        if (section is null)
+        {
+            refusalReason = "That page is not in this board.";
+            return false;
+        }
+        var page = section.Pages.Single(item => item.Id == pageId);
+        if (page.TabberOwnerBlockId is not null)
+        {
+            refusalReason = "This page is a tab inside another page; close that tab instead.";
+            return false;
+        }
+        if (section.Pages.Count(item => item.TabberOwnerBlockId is null) <= 1)
+        {
+            refusalReason = "The final page of a section cannot be trashed.";
+            return false;
+        }
+
+        // The subtree travels as one group, so a restore cannot leave descendants behind. Panes owned by a
+        // tabber on any of those pages travel too: their owner is leaving navigation, and an owner-less pane
+        // would be a dangling reference rather than content the owner can recover.
+        var group = new List<HavenRichPage> { page };
+        for (var index = 0; index < group.Count; index++)
+            group.AddRange(section.Pages.Where(item => item.ParentPageId == group[index].Id && !group.Contains(item)));
+        var ownedPanes = section.Pages
+            .Where(item => item.TabberOwnerBlockId is not null &&
+                           group.Any(owner => owner.Blocks.Any(block => block.Id == item.TabberOwnerBlockId)))
+            .ToList();
+        foreach (var pane in ownedPanes)
+            if (!group.Contains(pane))
+                group.Add(pane);
+
+        var groupId = Guid.NewGuid().ToString("N");
+        var trashedUtc = DateTimeOffset.UtcNow;
+        foreach (var item in group)
+            notes.Trash.Add(new HavenRichTrashedPage
+            {
+                Page = item,
+                GroupId = groupId,
+                IsGroupRoot = ReferenceEquals(item, page),
+                SectionId = section.Id,
+                ParentPageId = item.ParentPageId,
+                SortIndex = section.Pages.IndexOf(item),
+                TrashedUtc = trashedUtc,
+            });
+        foreach (var item in group)
+            section.Pages.Remove(item);
+        NormalizePages(section);
+        Touch(notes);
+        return true;
+    }
+
+    /// <summary>The pages the owner can see in the Trash: one row per trashed action, newest first.</summary>
+    public static IReadOnlyList<HavenRichTrashedPage> TrashRoots(HavenRichNotes notes)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        return notes.Trash.Where(entry => entry.IsGroupRoot)
+            .OrderByDescending(entry => entry.TrashedUtc)
+            .ToArray();
+    }
+
+    /// <summary>How many pages and blocks would leave navigation, for the confirmation the requirement asks for.</summary>
+    public static (int SubpageCount, int BlockCount) TrashImpact(HavenRichNotes notes, string pageId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var section = notes.Sections.FirstOrDefault(item => item.Pages.Any(page => page.Id == pageId));
+        if (section is null)
+            return (0, 0);
+        var group = new List<HavenRichPage> { section.Pages.Single(item => item.Id == pageId) };
+        for (var index = 0; index < group.Count; index++)
+            group.AddRange(section.Pages.Where(item => item.ParentPageId == group[index].Id && !group.Contains(item)));
+        return (group.Count - 1, group.Sum(item => item.Blocks.Count));
+    }
+
+    /// <summary>
+    /// Puts a trashed page, with its subtree, back where it was. When the recorded parent no longer exists the
+    /// page returns to the section root and the outcome says so, because a silent relocation is exactly the
+    /// orphaning the requirement forbids.
+    /// </summary>
+    public static HavenRichTrashRestore RestorePageFromTrash(HavenRichNotes notes, string pageId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var root = notes.Trash.FirstOrDefault(entry => entry.Page.Id == pageId);
+        if (root is null)
+            return HavenRichTrashRestore.Failed("That page is not in the Trash.");
+        var group = notes.Trash.Where(entry => entry.GroupId == root.GroupId).ToList();
+        var section = notes.Sections.FirstOrDefault(item => item.Id == root.SectionId);
+        if (section is null)
+            return HavenRichTrashRestore.Failed("The section that held this page is no longer in this board.");
+
+        var relocatedAny = false;
+        foreach (var entry in group.OrderBy(item => DepthIn(item, group)))
+        {
+            // A recorded parent that is not coming back with this group cannot stay as the page's parent: the
+            // validator rightly rejects a live page pointing at a missing one, and leaving it would hide the
+            // relocation instead of reporting it. The page returns to the section root and the outcome says so.
+            var hadParent = entry.ParentPageId is not null;
+            var parentIsLive = hadParent && section.Pages.Any(page => page.Id == entry.ParentPageId);
+            if (hadParent && !parentIsLive)
+            {
+                entry.Page.ParentPageId = null;
+                relocatedAny = true;
+            }
+            // A page that never had a parent belongs back at its recorded position in the section. Only a page
+            // whose recorded parent is gone has to be appended, and that is the case the outcome reports.
+            var targetIndex = hadParent && !parentIsLive
+                ? section.Pages.Count
+                : Math.Clamp(entry.SortIndex, 0, section.Pages.Count);
+            section.Pages.Insert(targetIndex, entry.Page);
+            notes.Trash.Remove(entry);
+        }
+        NormalizePages(section);
+        Touch(notes);
+        return new HavenRichTrashRestore(true, section.Title, relocatedAny, null);
+    }
+
+    private static int DepthIn(HavenRichTrashedPage entry, IReadOnlyCollection<HavenRichTrashedPage> group)
+    {
+        var depth = 0;
+        var parent = entry.ParentPageId;
+        while (parent is not null && depth < group.Count)
+        {
+            var next = group.FirstOrDefault(item => item.Page.Id == parent);
+            if (next is null)
+                break;
+            parent = next.ParentPageId;
+            depth++;
+        }
+        return depth;
     }
 
     /// <summary>Deep-copies a page with fresh stable ids.</summary>
