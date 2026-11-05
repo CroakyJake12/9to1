@@ -310,15 +310,54 @@ The one Board-level surface still without a mark is the **board switcher label**
 image `IconSource`, and an emoji has no image equivalent that would keep its colour, so this needs a framework
 answer rather than a monochrome substitute. Recorded as open, not silently skipped.
 
+## Fifth pass: the board switcher mark needed a framework answer, and the framework got one
+
+The switcher was the last surface with no mark, and it was blocked for a real reason: an authored menu item can
+only take an image (`IconSource`), and a colour emoji has no image equivalent that keeps its colour. Under the
+standing rule - missing CUI expressiveness is a framework gap to implement, not a licence for a parallel
+authoring path or a monochrome substitute - `CuiMenuItem` now has a first-class **`IconGlyph`**: a text mark
+that shares the image slot's sizing (`IconSize`, same 36/20 defaults), its non-hit-testable role and its
+precedence. Blank means no mark, because a bound empty value is the normal state before an owner chooses
+anything; the compiler still refuses an authored empty attribute, so blank arrives only through a binding. A
+text run longer than a mark is reported at load (CUIR053) instead of drawing a sentence in the icon box.
+
+Two layout faults appeared only in the running window, not in any headless tree:
+
+1. **The mark hid the Board's name.** The framework already hides a top-level item's label when a mark is
+   present; that rule is left exactly as it was, because other surfaces are built on it. A text mark now hides
+   the label only for an icon-only item. The first native crop showed `😀▾` with no "Law" at all - the control
+   had lost the thing it exists to tell the owner.
+2. **Mark and label then overlapped**, the emoji drawn across "Law", because a top-level item declares a single
+   column - harmless while a mark always replaced the label. They now get separate columns with an 8-unit gap,
+   and the framework test measures that gap by translated position, since bounds are self-relative and a naive
+   comparison reads a correct layout as an overlap.
+
+| Measured on screen | Value |
+| --- | --- |
+| Mark set through the Board menu, committed by the application's own close route | `iconKey=emoji` with the chosen sequence |
+| Relaunch, switcher band sampled | saturated mark runs at x 90-126 in the toolbar band, `fileStillCarries` confirms the field |
+| Frame | `frames/f02_switcher_crop.png` shows the mark, an 8-unit gap and the name `Law ▾` intact |
+| Deliverable | `07678b69d3a8f43e…` unchanged; scratch deleted; profile metadata restored |
+
+A native-process note worth keeping: the first spacing re-check looked unchanged because the launcher runs the
+built application, and the margin had only been compiled into the test run. A native re-run needs the
+application rebuilt first - `CakeOS.Cui.Runtime.dll` timestamp checked afterwards (21:52) before the pass that
+produced the gap.
+
+Scope stated honestly: the switcher carries only the **text** form. Giving that top-level item an image mark
+would hit the pre-existing hide-the-label rule, and changing that rule for every CUI app is a framework
+decision needing its own evidence, so a Board marked with a vector silhouette shows its name alone in the
+switcher while its card, tree row and page header still carry the mark.
+
 ## Still open on this surface
 
 
 
 - Done as of the second pass above: the page header carries the page's icon and opens the picker from it,
   verified on screen.
-- Landing cards now read the board-level fields and are proven on screen. The **board switcher label**
-  still shows no identity mark: a CUI menu item takes an image `IconSource`, which cannot carry an emoji, so
-  that needs a framework answer rather than a substitute.
+- Done in the fifth pass: the switcher shows an owner-chosen emoji mark beside the Board's name, on screen.
+  A Board marked with a **vector** silhouette still shows its name alone in the switcher, because the
+  framework's pre-existing top-level image rule hides the label - recorded above, not quietly worked around.
 - `Suggest` remains section-only, because the model suggestion flow is driven from a section name; the tab is
   disabled rather than hidden inert for a page target.
 - Upload (image icon) and cover images remain deferred with the reason recorded above, not dropped.
