@@ -22,7 +22,7 @@ public sealed class MeshSyncQueueTests
     {
         var (store, root) = NewBoards();
         var board = HavenBoardDocumentCodec.CreateNew("Original title");
-        await store.SaveDocumentAtPathAsync(board, Path.Combine(root, board.DocumentId.ToString("N") + ".9to1board"), CancellationToken.None);
+        await store.SaveDocumentAtPathAsync(board, IdentityPath(root, board.DocumentId), CancellationToken.None);
 
         var state = new MemoryStateStore(StateWithPeer());
         var offlineTransport = new PeerTransport(autoAcknowledge: false, connected: false);
@@ -41,9 +41,9 @@ public sealed class MeshSyncQueueTests
         // The board is edited while the peer is still away, and the app is restarted.
         board.RichNotes!.Title = "Revised while offline";
         board.RichNotes.Version = 2;
-        await store.SaveDocumentAtPathAsync(board, Path.Combine(root, board.DocumentId.ToString("N") + ".9to1board"), CancellationToken.None);
+        await store.SaveDocumentAtPathAsync(board, IdentityPath(root, board.DocumentId), CancellationToken.None);
 
-        var restartTransport = new PeerTransport(autoAcknowledge: true, connected: false);
+        var restartTransport = new PeerTransport(autoAcknowledge: true, connected: true);
         await using var secondRun = CreateDevice(state, restartTransport, root);
         await secondRun.InitialiseAsync(CancellationToken.None);
 
@@ -65,7 +65,7 @@ public sealed class MeshSyncQueueTests
     {
         var (store, root) = NewBoards();
         var board = HavenBoardDocumentCodec.CreateNew("Vector fields");
-        var boardPath = Path.Combine(root, board.DocumentId.ToString("N") + ".9to1board");
+        var boardPath = IdentityPath(root, board.DocumentId);
         await store.SaveDocumentAtPathAsync(board, boardPath, CancellationToken.None);
 
         var memory = new MemoryStateStore(StateWithPeer(MeshCoordinator.SyncOutboundCapability));
@@ -131,6 +131,9 @@ public sealed class MeshSyncQueueTests
         return (new JsonFileHavenBoardStore(root), root);
     }
 
+    private static string IdentityPath(string root, Guid documentId) =>
+        Path.Combine(root, BoardsMeshResourceOwner.IdentityFileName(documentId));
+
     private static MeshPersistentState StateWithPeer(params string[] grants) =>
         new(MeshPersistentState.CurrentVersion,
             new MeshLocalIdentity(LocalDevice, "Local PC", MeshDeviceClass.Desktop, CapabilityPlatform.Linux, new string('d', 64), DateTimeOffset.UtcNow.AddDays(-3)),
@@ -169,9 +172,12 @@ public sealed class MeshSyncQueueTests
         }
     }
 
-    private sealed class MemoryIdentitySecrets : IMeshIdentitySecretStore
+    /// <summary>Seeded from the state's identity when one exists, because InitialiseAsync refuses an identity whose key is absent.</summary>
+    private sealed class MemoryIdentitySecrets(MeshLocalIdentity? existingIdentity) : IMeshIdentitySecretStore
     {
-        private readonly Dictionary<Guid, string> _values = new();
+        private readonly Dictionary<Guid, string> _values = existingIdentity is null
+            ? new()
+            : new() { [existingIdentity.DeviceId] = "test-secret" };
         public Task<string?> GetPrivateKeyAsync(Guid deviceId, CancellationToken cancellationToken) =>
             Task.FromResult(_values.TryGetValue(deviceId, out var value) ? value : null);
         public Task SetPrivateKeyAsync(Guid deviceId, string privateKey, CancellationToken cancellationToken)

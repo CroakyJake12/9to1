@@ -730,6 +730,37 @@
         "Automations device-level action catalogue and Admin cross-account Business Mesh policy"
       ],
       "recommendation": "Option 1 for the wire and authority shape, but keep the decision split: Mesh transports and records, the owning app decides. For the MVP payload the Boards document must be authoritative over its own merge - Mesh proposes a mutation, Boards accepts or raises a visible conflict, and nothing is auto-applied to a board. The new mesh.sync capability key must default to OFF to satisfy the no-automatic-sharing MUST. Hold only the public MeshSyncMutation shape change for the owner answer; the transport message, the adapter, the queue/ack states and the tests can proceed on main without pre-empting that answer."
+    },
+{
+      "id": "OPEN-2026-11-08-MESH-BOARD-SCOPE-PROFILE-AND-WRITER",
+      "at": "2026-11-08T17:35:00Z",
+      "status": "owner question raised; boards sync proven at adapter/service level only; nothing wired into the running composition",
+      "title": "Which scope owns a synchronized board, and who is allowed to write the file while Boards may have it open?",
+      "owner_words": [
+        "Mesh data sharing/sync MUST be namespace/object scoped. Personal Mesh may sync selected personal Den/chat/context/project state; Team/Organisation modes may sync explicitly shared team/org state while preserving personal/private namespaces. (canonical v2, Haven and shared platform services > Mesh)",
+        "Joining Mesh MUST NOT automatically share all local files, secrets, model context or app data. (same section)",
+        "Home Core owns Mesh; Files owns canonical file identity and storage; each app retains its defined data ownership. (LE-01 ownership)",
+        "Owner instruction of 8 November 2026 in this conversation: build the first Mesh-sync MVP on the Boards document, install the pinned toolchain locally, and compile each edit unit."
+      ],
+      "measured_basis": "main @ da8fe97a, read-only inspection. BoardsLocalDocuments.cs:103 places boards at <DataDirectory>/Boards/profiles/<sha256(profileId)>/drafts/, :107 gives each construction its own JsonFileHavenBoardStore, :116 re-records every *.9to1board in that one directory into recent.json on open, and :120 PathFor(id) names a board with the dashed Guid format. App.UnifiedWorkspaceHost.cs:741 and :785 construct BoardsLocalDocuments per operation with (profileId, DataDirectory/Boards, workspace resolver), so no single long-lived store instance exists inside Haven.Desktop, and Boards/app/Program.cs plus Boards/Host show Boards also running as its own process over the same files. RecentBoardCatalog.LoadCardsAsync iterates its explicit _references index rather than scanning a directory, so a board that arrived from another device appears only because of the :116 recovery scan in the same directory, never in a different one. My own first pass wrote <DocumentId:N>.9to1board and enumerated with SearchOption.AllDirectories; both were wrong: the naming left a received board that BoardsPathFor could not resolve, and the recursive scan would have pulled other profiles' draft directories into one Mesh scope, which the sharing rules forbid. Both were corrected and are pinned by checks (a scoped owner finds its own board; an owner aimed at the data root returns null rather than reaching across profiles).",
+      "options": [
+        "A. Register one Mesh Boards owner per signed-in profile scope, rooted at that profile's drafts directory, with the profile as the personal namespace and a visible per-scope sharing switch; the other device must hold the same identity (the existing grant pair already gates direction).",
+        "B. Give Mesh its own synchronized landing directory that is not Boards' drafts directory, and have Boards import/open a copy from there deliberately, so Mesh never writes inside a live Boards scope.",
+        "C. Move the write side into the process that owns Boards (a Boards-owned typed Mesh service inside the Boards host), so exactly one process ever holds a Boards store for a given scope."
+      ],
+      "conflicts": [
+        "Two processes can now hold a JsonFileHavenBoardStore over the same directory; the store's semaphore is per-instance, so mutual exclusion is not guaranteed across processes, and a Mesh write landing while Boards autosaves the same board is a real interleaving risk. The engine's hash/revision divergence check turns a silent overwrite into a conflict, which limits the damage but is not a lock.",
+        "The store's per-operation construction in the desktop host means 'reuse the same instance' is not achievable as a wiring shortcut; option A needs a per-scope registration, option C needs a cross-process call.",
+        "Boards recents is an explicit index (recent.json), so any received-board visibility depends on the directory-level recovery scan, which only helps inside the exact scope that owns the board.",
+        "The personal/team namespace field on MeshSyncMutation is still the earlier held decision (OPEN-2026-11-08-MESH-SYNC-WIRE-CONTRACT); choosing A encodes scope by directory rather than by a field, which may or may not satisfy the reviewer for Team Mesh later."
+      ],
+      "affected_products": [
+        "Home Core Mesh (resource owners, grants, sync state)",
+        "Boards (drafts directory per profile, recent index, save/autosave, close-veto)",
+        "Accounts and permissions (which profile may share which scope)",
+        "Admin cross-account Business Mesh once team namespaces exist"
+      ],
+      "recommendation": "Option A for the MVP, because it keeps the existing personal pairing model and needs no cross-process protocol, with two conditions stated now: Mesh must never be registered over the Boards data root, only over one profile's drafts directory; and while a board is open in Boards on this device, Mesh must not write that file. If the reviewer wants a hard guarantee against concurrent writers, option C is the correct long-term shape, but it is a separate piece of work and should not be smuggled into tonight's MVP."
     }
   ]
 }

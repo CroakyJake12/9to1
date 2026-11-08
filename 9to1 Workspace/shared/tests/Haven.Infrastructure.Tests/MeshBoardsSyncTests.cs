@@ -176,6 +176,34 @@ public sealed class MeshBoardsSyncTests
     }
 
     [Fact]
+    public async Task ABoardOutsideThisOwnersScopeIsNeverReadWhileTheRightScopeFindsIt()
+    {
+        var (dataRootStore, dataRoot) = NewStore();
+        try
+        {
+            // The real Boards layout nests one directory per profile beneath the data root.
+            var scopedRoot = Path.Combine(dataRoot, "profiles", "profile-key", "drafts");
+            Directory.CreateDirectory(scopedRoot);
+            var scopedStore = new JsonFileHavenBoardStore(scopedRoot);
+            var board = HavenBoardDocumentCodec.CreateNew("Belongs to one profile");
+            await scopedStore.SaveDocumentAtPathAsync(board, Path.Combine(scopedRoot, BoardsMeshResourceOwner.IdentityFileName(board.DocumentId)), CancellationToken.None);
+
+            // Pointed at the data root, the owner must not reach across scopes and offer someone else's board.
+            var atDataRoot = new BoardsMeshResourceOwner(dataRootStore, dataRoot);
+            Assert.Null(await atDataRoot.CaptureAsync(board.DocumentId, CancellationToken.None));
+            Assert.Null(await atDataRoot.GetCurrentAsync(HavenBoardDocument.FormatIdentity, board.DocumentId, CancellationToken.None));
+
+            // Pointed at that one scope, it finds exactly that board and nothing else.
+            var atScope = new BoardsMeshResourceOwner(scopedStore, scopedRoot);
+            var captured = await atScope.CaptureAsync(board.DocumentId, CancellationToken.None);
+            Assert.NotNull(captured);
+            Assert.Equal(1L, captured!.Revision);
+            Assert.Equal(MeshSyncOperationKind.Replace, captured.Kind);
+        }
+        finally { Delete(dataRoot); }
+    }
+
+    [Fact]
     public async Task PairedLoopbackDevicesSyncARealBoardFileAndTheReceiverReopensIt()
     {
         var (storeA, rootA) = NewStore();
@@ -226,8 +254,9 @@ public sealed class MeshBoardsSyncTests
     private static MeshResourceSnapshot LocalBoard(long revision, string hash) =>
         new(BoardIdentity, HavenBoardDocument.FormatIdentity, revision, hash, Guid.Empty, DateTimeOffset.UtcNow, null);
 
+    /// <summary>The same dashed identity file name Boards itself uses, so a received board stays openable.</summary>
     private static string IdentityPath(string root, Guid documentId) =>
-        Path.Combine(root, documentId.ToString("N") + ".9to1board");
+        Path.Combine(root, BoardsMeshResourceOwner.IdentityFileName(documentId));
 
     /// <summary>A rich-only board has no task facet, so the canonical store requires an explicit path.</summary>
     private static Task SaveRichAsync(JsonFileHavenBoardStore store, string root, HavenBoardDocument document) =>

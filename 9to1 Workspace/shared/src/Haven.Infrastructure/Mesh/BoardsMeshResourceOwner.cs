@@ -81,7 +81,7 @@ public sealed class BoardsMeshResourceOwner(JsonFileHavenBoardStore boards, stri
             // A rich-only board has no task facet to name its file, so it is stored under a path derived from
             // its stable identity. Location never defines the board, and FindAsync resolves it by identity again
             // on the next pass.
-            await boards.SaveDocumentAtPathAsync(document, Path.Combine(_root, document.DocumentId.ToString("N") + ".9to1board"), cancellationToken)
+            await boards.SaveDocumentAtPathAsync(document, Path.Combine(_root, IdentityFileName(document.DocumentId)), cancellationToken)
                 .ConfigureAwait(false);
             return true;
         }
@@ -123,13 +123,15 @@ public sealed class BoardsMeshResourceOwner(JsonFileHavenBoardStore boards, stri
     }
 
     /// <summary>
-    /// Locates the physical board file carrying this logical identity. Files the codec will not accept are
-    /// skipped rather than allowed to hide a readable copy of the same board elsewhere.
+    /// Locates the physical board file carrying this logical identity. The scan is one level deep on purpose:
+    /// a real Boards data root nests a further directory per profile, and reaching across those scopes would
+    /// silently share one person's boards with another, which the Mesh sharing rules forbid. Files the codec
+    /// will not accept are skipped rather than allowed to hide a readable copy elsewhere.
     /// </summary>
     private async Task<(HavenBoardDocument Document, string Path)?> FindAsync(Guid documentId, CancellationToken cancellationToken)
     {
         if (documentId == Guid.Empty || !Directory.Exists(_root)) return null;
-        foreach (var path in Directory.EnumerateFiles(_root, "*.9to1board", SearchOption.AllDirectories))
+        foreach (var path in Directory.EnumerateFiles(_root, "*.9to1board"))
         {
             cancellationToken.ThrowIfCancellationRequested();
             HavenBoardDocument? document;
@@ -139,6 +141,13 @@ public sealed class BoardsMeshResourceOwner(JsonFileHavenBoardStore boards, stri
         }
         return null;
     }
+
+    /// <summary>
+    /// File name for a synchronized board inside this scope. It stays aligned with BoardsLocalDocuments.PathFor,
+    /// which uses the dashed Guid format: writing the other shape would leave a received board on disk that
+    /// Boards could not open by its own identity rule.
+    /// </summary>
+    public static string IdentityFileName(Guid documentId) => documentId.ToString("D", System.Globalization.CultureInfo.InvariantCulture) + ".9to1board";
 
     private static long RevisionOf(HavenBoardDocument document) =>
         Math.Max(document.Snapshot?.Version ?? 0, document.RichNotes?.Version ?? 0);
