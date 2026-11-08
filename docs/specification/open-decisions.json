@@ -698,6 +698,38 @@
         "any app reusing the CUI insert surface pattern"
       ],
       "recommendation": "Third option for the empty-result feedback (it is unambiguous and does not change the destination flow), and hold the destination-versus-search question until the state machine is fixed, then review live with the owner. The keyboard-focus findings (rows 114, 117) must be repaired first: adding an empty state into a list that is being cleared under it would create a second defect."
+    },
+{
+      "id": "OPEN-2026-11-08-MESH-SYNC-WIRE-CONTRACT",
+      "at": "2026-11-08T15:25:00Z",
+      "status": "owner question raised; no source changed; MVP payload selected as the Boards document by owner choice on 8 Nov 2026",
+      "title": "Mesh object sync: what is the wire contract, which service holds revision authority, and what namespace/consent gate keeps sharing safe by default?",
+      "owner_words": [
+        "Mesh data sharing/sync MUST be namespace/object scoped. (canonical v2, Haven and shared platform services > Mesh, register G0:L1308-a2d00a69 family)",
+        "Personal Mesh may sync selected personal Den/chat/context/project state; Team/Organisation modes may sync explicitly shared team/org state while preserving personal/private namespaces. (G0:L1308-3162f5103f)",
+        "Joining Mesh MUST NOT automatically share all local files, secrets, model context or app data. (G0:L1308-74477da694)",
+        "Remote capability invocation MUST use typed APIs and pass both caller-side and target-device permission/policy checks. (G0:L1310-26552f113c)",
+        "Owner decision recorded 8 Nov 2026 in this conversation: build the first Mesh-sync MVP on the Boards document as the payload, and install the pinned .NET SDK and PowerShell locally so each edit unit can be compiled."
+      ],
+      "measured_basis": "Source identity main @ dc456398c551ac09e4eb96012730864755b92c9c. Mesh exists and is composed: App.axaml.cs:56 AddHavenMesh(), MainView.Mesh.cs:23 -> MeshPage, 4,342 lines across shared/src/Haven.Application/Mesh, shared/src/Haven.Infrastructure/Mesh and shared/src/Haven.Desktop/Views/Pages/Mesh, with 1,577 lines and 41 [Fact]/[Theory] methods in shared/tests. The sync state machine is real (Haven.Core/Mesh/MeshSyncEngine.cs: duplicate-safe OperationId, BaseRevision successor check, IgnoreStale, genuine Conflict) and ApplySyncAsync (MeshCoordinator.cs:232) persists a 4,096-operation dedupe window plus 256 conflicts. The gap is measured, not inferred: zero production call sites reach ApplySyncAsync, MeshSyncMutation is never constructed anywhere in the tree, and no 'sync.*' wire message type exists - handled types are only transfer.*, task.*, handoff.request, device.* and runtime.*. MeshResourceStore.TryApplyAsync replaces the whole payload, and its own docstring says feature stores require explicit adapters before Mesh may write them. MeshSyncMutation carries ResourceType/ResourceId/Revision/BaseRevision/ContentHash/OriginDeviceId/Payload and no namespace or entitlement field. Environment: global.json pins 10.0.301 while only SDK 8.0.133 and no pwsh were present; both were installed user-scope on 8 Nov 2026 (log /tmp/opencode/toolchain-install.log) and the guard-clean compile of Haven.Core returned result OK, exit 0, 4.6 s, peak process-tree RSS 97 MiB, minimum MemAvailable 2,347 MiB at floor 1,100 MiB (log /tmp/opencode/build-core.log). eng/development/checks.json registers 5 checks and none of them cover shared/src Mesh or Haven.Infrastructure.Tests/Haven.Desktop.Tests.",
+      "options": [
+        "A new typed 'sync.mutation' message on the existing pinned-fingerprint TLS session, with a per-peer mesh.sync capability grant defaulting to OFF and the owning app/service as revision authority; MeshResourceStore keeps only the sync journal and conflict records, never a shadow copy of application data.",
+        "Reuse the shipped transfer.file path to move whole .9to1board files and let the Boards owner resolve convergence at open time through its existing duplicate-origin/conflict rules (UX27-BOARD-007/008).",
+        "A separate sync service outside MeshCoordinator that owns polling, retries and merge, with Mesh transport used only as a channel."
+      ],
+      "conflicts": [
+        "MeshSyncMutation has no namespace/entitlement field, so option 1 requires a public Core record change (compatibility + security), which also touches handoff and task payloads.",
+        "Mesh's current store-level behaviour is whole-payload replacement, while UX27-BOARD-008 forbids choosing between divergent revisions by wall-clock alone and requires preserving both revisions or invoking the domain conflict resolver. Auto-applying boards from Mesh would break the Boards concurrency requirement.",
+        "The Mesh page launch defect in the 27 October reported-bug list (row A03) is unconfirmed against current main and sits upstream of any native two-device evidence.",
+        "MeshSyncEngine.Evaluate treats a mutation whose BaseRevision is absent as a Conflict, so an MVP that edits before the resource has ever crossed the wire will surface a conflict unless the initial create is expressed as BaseRevision <= 0."
+      ],
+      "affected_products": [
+        "Home Core Mesh (transport, coordinator, state store, resource store)",
+        "Boards (document identity, RichNotes revision, Save As destination, conflict resolver)",
+        "Spaces conversation placement under Local/Mesh/Cloud once boards sync is proven",
+        "Automations device-level action catalogue and Admin cross-account Business Mesh policy"
+      ],
+      "recommendation": "Option 1 for the wire and authority shape, but keep the decision split: Mesh transports and records, the owning app decides. For the MVP payload the Boards document must be authoritative over its own merge - Mesh proposes a mutation, Boards accepts or raises a visible conflict, and nothing is auto-applied to a board. The new mesh.sync capability key must default to OFF to satisfy the no-automatic-sharing MUST. Hold only the public MeshSyncMutation shape change for the owner answer; the transport message, the adapter, the queue/ack states and the tests can proceed on main without pre-empting that answer."
     }
   ]
 }
