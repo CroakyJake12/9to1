@@ -261,6 +261,20 @@ public sealed record MeshSyncPublishResult(
     string Reason,
     IReadOnlyList<MeshSyncDelivery> Deliveries);
 
+/// <summary>
+/// A pending synchronization intent, persisted so an offline destination survives an application restart. It
+/// deliberately carries no payload and no content hash: the resource belongs to its owning feature, so a replay
+/// re-captures whatever that feature holds at replay time instead of delivering a stale copy from Mesh state or
+/// duplicating user content inside Mesh storage.
+/// </summary>
+public sealed record MeshSyncIntent(
+    Guid ResourceId,
+    string ResourceType,
+    Guid PeerDeviceId,
+    MeshSyncDeliveryState State,
+    string Detail,
+    DateTimeOffset RequestedAt);
+
 public sealed record MeshConflict(
     Guid Id,
     Guid ResourceId,
@@ -297,9 +311,10 @@ public sealed record MeshPersistentState(
     IReadOnlyList<MeshConflict> Conflicts,
     IReadOnlyList<MeshWorkMember>? WorkMembers = null,
     IReadOnlyList<MeshWorkMessage>? WorkMessages = null,
-    IReadOnlyList<MeshWorkItem>? WorkItems = null)
+    IReadOnlyList<MeshWorkItem>? WorkItems = null,
+    IReadOnlyList<MeshSyncIntent>? SyncIntents = null)
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     public static MeshPersistentState Empty { get; } = new(
         CurrentVersion,

@@ -25,10 +25,12 @@ public sealed partial class MeshCoordinator
 
     private const string SyncMutationMessage = "sync.mutation";
     private const string SyncAcknowledgementMessage = "sync.ack";
+    private const int SyncIntentRetention = 512;
     private static readonly TimeSpan SyncAcknowledgementWindow = TimeSpan.FromSeconds(15);
 
     private readonly ConcurrentDictionary<(Guid OperationId, Guid PeerDeviceId), TaskCompletionSource<MeshSyncAcknowledgement>> _pendingSyncAcknowledgements = new();
     private readonly ConcurrentDictionary<(Guid OperationId, Guid PeerDeviceId), MeshSyncDelivery> _syncDeliveries = new();
+    private readonly ConcurrentDictionary<Guid, byte> _replayingPeers = new();
 
     public IReadOnlyList<MeshSyncDelivery> GetSyncDeliveries() =>
         _syncDeliveries.Values.OrderByDescending(item => item.UpdatedAt).Take(200).ToArray();
@@ -77,8 +79,8 @@ public sealed partial class MeshCoordinator
             if (peer.DeviceId == mutation.OriginDeviceId) continue;
             if (GetPresence(peer).Connection != MeshConnectionState.Connected)
             {
-                deliveries.Add(RecordDelivery(mutation, peer.DeviceId, MeshSyncDeliveryState.QueuedOffline,
-                    "The device is offline. The operation stays queued and is confirmed only after an acknowledged attempt.", cancellationToken));
+                deliveries.Add(await RecordDeliveryAsync(mutation, peer.DeviceId, MeshSyncDeliveryState.QueuedOffline,
+                    "The device is offline. The operation stays queued and is confirmed only after an acknowledged attempt.", cancellationToken).ConfigureAwait(false));
                 continue;
             }
             deliveries.Add(await DeliverMutationAsync(mutation, peer, cancellationToken).ConfigureAwait(false));
@@ -97,22 +99,22 @@ public sealed partial class MeshCoordinator
             await _transport.SendAsync(peer.DeviceId, SyncMutationMessage, JsonSerializer.Serialize(mutation), cancellationToken).ConfigureAwait(false);
             using var window = new CancellationTokenSource(SyncAcknowledgementWindow);
             var acknowledgement = await completion.Task.WaitAsync(window.Token).ConfigureAwait(false);
-            return RecordDelivery(mutation, peer.DeviceId, acknowledgement.Decision switch
+            return await RecordDeliveryAsync(mutation, peer.DeviceId, acknowledgement.Decision switch
             {
                 MeshSyncDecisionKind.Apply => MeshSyncDeliveryState.Acknowledged,
                 MeshSyncDecisionKind.Conflict => MeshSyncDeliveryState.ConflictReported,
                 MeshSyncDecisionKind.Rejected => MeshSyncDeliveryState.Rejected,
                 _ => MeshSyncDeliveryState.Sent
-            }, acknowledgement.Reason, cancellationToken);
+            }, acknowledgement.Reason, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or SocketException or OperationCanceledException or JsonException)
         {
             return ex switch
             {
-                OperationCanceledException => RecordDelivery(mutation, peer.DeviceId, MeshSyncDeliveryState.Unconfirmed,
-                    "The peer did not answer inside the acknowledgement window, so the change was sent but not confirmed.", cancellationToken),
-                _ => RecordDelivery(mutation, peer.DeviceId, MeshSyncDeliveryState.QueuedOffline,
-                    "The Mesh session failed before the change could be delivered. The change remains queued on this device.", cancellationToken)
+                OperationCanceledException => await RecordDeliveryAsync(mutation, peer.DeviceId, MeshSyncDeliveryState.Unconfirmed,
+                    "The peer did not answer inside the acknowledgement window, so the change was sent but not confirmed.", cancellationToken).ConfigureAwait(false),
+                _ => await RecordDeliveryAsync(mutation, peer.DeviceId, MeshSyncDeliveryState.QueuedOffline,
+                    "The Mesh session failed before the change could be delivered. The change remains queued on this device.", cancellationToken).ConfigureAwait(false)
             };
         }
         finally
@@ -121,12 +123,74 @@ public sealed partial class MeshCoordinator
         }
     }
 
-    private MeshSyncDelivery RecordDelivery(MeshSyncMutation mutation, Guid peerDeviceId, MeshSyncDeliveryState state, string detail, CancellationToken cancellationToken)
+    private async Task<MeshSyncDelivery> RecordDeliveryAsync(MeshSyncMutation mutation, Guid peerDeviceId, MeshSyncDeliveryState state, string detail, CancellationToken cancellationToken)
     {
         var delivery = new MeshSyncDelivery(mutation.OperationId, mutation.ResourceId, mutation.ResourceType, mutation.Revision, peerDeviceId, state, detail, DateTimeOffset.UtcNow);
         _syncDeliveries[(mutation.OperationId, peerDeviceId)] = delivery;
+        await RememberIntentAsync(delivery, cancellationToken).ConfigureAwait(false);
         StateChanged?.Invoke();
         return delivery;
+    }
+
+    /// <summary>State version 2 has no intents at all, so every read goes through this rather than trusting the field.</summary>
+    private IReadOnlyList<MeshSyncIntent> SyncIntents => _state.SyncIntents ?? [];
+
+    /// <summary>
+    /// Keeps a destination pending while a change has not landed, and clears it as soon as that peer answers or
+    /// refuses. The pending row is an intent only: content stays with the owning feature, so a replay after a
+    /// restart or a reconnect delivers the current state rather than a stale copy Mesh happened to be holding.
+    /// </summary>
+    private async Task RememberIntentAsync(MeshSyncDelivery delivery, CancellationToken cancellationToken)
+    {
+        var settled = delivery.State is MeshSyncDeliveryState.Acknowledged or MeshSyncDeliveryState.Rejected
+            or MeshSyncDeliveryState.ConflictReported or MeshSyncDeliveryState.Sent;
+        var remaining = SyncIntents
+            .Where(intent => !(intent.PeerDeviceId == delivery.PeerDeviceId && intent.ResourceId == delivery.ResourceId))
+            .ToList();
+        if (!settled)
+            remaining.Add(new MeshSyncIntent(delivery.ResourceId, delivery.ResourceType, delivery.PeerDeviceId, delivery.State, delivery.Detail, delivery.UpdatedAt));
+        _state = _state with { SyncIntents = remaining.TakeLast(SyncIntentRetention).ToArray() };
+        await _stateStore.SaveAsync(_state, cancellationToken).ConfigureAwait(false);
+    }
+
+    public IReadOnlyList<MeshSyncIntent> GetPendingSyncIntents() =>
+        SyncIntents.Where(intent => intent.State is MeshSyncDeliveryState.QueuedOffline or MeshSyncDeliveryState.Unconfirmed)
+            .OrderBy(intent => intent.RequestedAt)
+            .ToArray();
+
+    /// <summary>One replay per peer at a time; a reconnect that arrives during a replay is covered by the pass in flight.</summary>
+    private void ReplayPendingSyncForPeer(Guid peerDeviceId)
+    {
+        if (!_replayingPeers.TryAdd(peerDeviceId, 0)) return;
+        _ = ReplayPendingSyncAsync(peerDeviceId);
+    }
+
+    private async Task ReplayPendingSyncAsync(Guid peerDeviceId)
+    {
+        try
+        {
+            if (!_initialised) return;
+            var peer = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == peerDeviceId);
+            if (peer is null || peer.TrustState != MeshPeerTrustState.Trusted) return;
+            var grants = (peer.AllowedRemoteCapabilities ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (!grants.Contains(SyncOutboundCapability)) return;
+
+            var pending = SyncIntents
+                .Where(intent => intent.PeerDeviceId == peerDeviceId
+                    && intent.State is MeshSyncDeliveryState.QueuedOffline or MeshSyncDeliveryState.Unconfirmed)
+                .Select(intent => (intent.ResourceType, intent.ResourceId))
+                .Distinct()
+                .ToArray();
+            foreach (var (resourceType, resourceId) in pending)
+            {
+                try { await PublishWholeResourceAsync(resourceType, resourceId, CancellationToken.None).ConfigureAwait(false); }
+                catch (Exception ex) when (ex is InvalidOperationException or ArgumentException) { }
+            }
+        }
+        finally
+        {
+            _replayingPeers.TryRemove(peerDeviceId, out _);
+        }
     }
 
     private bool TryHandleSyncMessage(MeshTransportMessage message)

@@ -52,14 +52,16 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
             _state = await _stateStore.LoadAsync(cancellationToken).ConfigureAwait(false);
             if (_state.Version > MeshPersistentState.CurrentVersion)
                 throw new InvalidDataException($"Mesh state version {_state.Version} is newer than this 9to1 build supports.");
-            if (_state.Version < MeshPersistentState.CurrentVersion || _state.WorkMembers is null || _state.WorkMessages is null || _state.WorkItems is null)
+            if (_state.Version < MeshPersistentState.CurrentVersion || _state.WorkMembers is null || _state.WorkMessages is null
+                    || _state.WorkItems is null || _state.SyncIntents is null)
             {
                 _state = _state with
                 {
                     Version = MeshPersistentState.CurrentVersion,
                     WorkMembers = _state.WorkMembers ?? [],
                     WorkMessages = _state.WorkMessages ?? [],
-                    WorkItems = _state.WorkItems ?? []
+                    WorkItems = _state.WorkItems ?? [],
+                    SyncIntents = _state.SyncIntents ?? []
                 };
                 await _stateStore.SaveAsync(_state, cancellationToken).ConfigureAwait(false);
             }
@@ -395,6 +397,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         };
         if (connection != MeshConnectionState.Connected && _fileTransfers is not null)
             _ = _fileTransfers.AbortSourceAsync(deviceId, CancellationToken.None);
+        if (connection == MeshConnectionState.Connected) ReplayPendingSyncForPeer(deviceId);
         StateChanged?.Invoke();
     }
 

@@ -161,12 +161,24 @@ Behaviour that the checks actually pin down: a board resource is keyed by `Haven
 Evidence: `Haven.Infrastructure.Tests` filtered on `Mesh` → **Passed: 70, Failed: 0, Skipped: 0**, guard-clean (`result OK`, 13.6 s incremental, peak process-tree RSS 185 MiB, min MemAvailable 8,299 MiB at floor 1,100 MiB). Log `/tmp/opencode/mesh-boards-u4d.log`. Twenty new checks in this session on top of the 50 that existed. Compile failures along the way are retained, not hidden: a missing `using Haven.Core` and a wrong property path (`Snapshot.Title`) each produced a red run first (`/tmp/opencode/mesh-boards-u4.log`, `-u4b.log`, `-u4c.log`).
 
 Still not claimed for U4: the desktop/Home composition does not call `AddBoardsMeshResourceOwner` yet, so no on-screen board can sync; the Mesh-side owner must be shown to use the **same** `JsonFileHavenBoardStore` instance Boards uses (two stores over one directory would mean two write locks); whether the Boards landing page/recents would even list a board that arrived from another device is unexamined; and boards larger than the 768 KiB sync frame still need the file-transfer-plus-reference route, which is not built.
-## 15. Where this leaves the plan (updated after U4)
+## 17. U5 landed: durability without duplicating content (suite now 73/73)
 
-1. Done this session: the Mesh composition repair (§4), U1 sync wire, U2 permission gates, U4 Boards owner adapter with whole-state rules.
-2. **U5** exactly as designed in §11 (persisted intents, re-capture on reconnect, state v3 migration), then the deferred `MeshLocalDevice` classification resolver from §9.4.
-3. **U6** Mesh view: delivery rows and conflict rows. The share/accept grant buttons exist only as source until `Haven.Desktop` compiles — second attempt in progress (§13).
-4. Wire `AddBoardsMeshResourceOwner(root)` into the real desktop/Home composition using the **same** `JsonFileHavenBoardStore` instance Boards uses, and demonstrate that identity rather than assume it.
+`MeshPersistentState` is at **version 3** with `SyncIntents`. An intent is `(ResourceId, ResourceType, PeerDeviceId, State, Detail, RequestedAt)` and deliberately carries **no payload and no content hash**, so Mesh state never holds a second copy of somebody's board. `RecordDeliveryAsync` persists an intent when a change did not land (`QueuedOffline`, `Unconfirmed`) and clears it when the peer answers, refuses or conflicts. `ConnectionChanged → Connected` triggers one replay pass per peer, which **re-captures from the owning feature** — so a board edited while the peer was away replays as the new content rather than a stale snapshot. A version-2 state, which genuinely has no `SyncIntents` field, is read through a null-safe accessor rather than force-unwrapped, and migrates by the same pattern the existing work-mode fields already use.
+
+Suite: `Haven.Infrastructure.Tests` filtered on `Mesh` → **Passed: 73, Failed: 0, Skipped: 0** (50 at session start → 59 → 70 → 73; **23 new checks this session**), guard-clean 36.7 s, peak process-tree RSS 249 MiB, min MemAvailable 7,777 MiB at floor 1,100 MiB. Log `/tmp/opencode/mesh-queue-u5b.log`; the red run before it is retained at `/tmp/opencode/mesh-queue-u5.log`.
+
+The new checks pin: an offline destination stays pending, **survives a restart into a new coordinator over the same state**, and then replays the board with the revised title present and the original title **absent** from the transmitted payload; an acknowledged delivery leaves nothing pending; and the v2→v3 migration keeps peers, remote tasks, conflicts and the applied-operation window intact.
+
+Worth naming because it happened twice: both times my own fixture supplied a Mesh identity with no private key, and `InitialiseAsync` refused to start with "identity metadata exists, but its private identity secret is missing… Re-pair this 9to1 installation rather than silently replacing its identity". That is the fail-closed behaviour working, exercised on the test harness rather than on the product.
+
+Still not claimed after U5: no application code calls `PublishWholeResourceAsync` yet; the desktop/Home composition does not register `AddBoardsMeshResourceOwner`, so no real board can sync on screen; the Mesh view shows no delivery, intent or conflict rows; and nothing Mesh has been observed natively in this session.
+
+## 18. Remaining steps, updated after U5
+
+1. Done this session: the Mesh composition repair (§4), U1 sync wire, U2 permission gates, U4 Boards owner adapter with whole-state rules, U5 durable intents and reconnect replay.
+2. **U5b (next)**: call `AddBoardsMeshResourceOwner(root)` from the real composition using the **same** `JsonFileHavenBoardStore` instance Boards uses, and add the app-side call that actually publishes after a durable save. Until both exist, no board can sync on screen.
+3. **U6**: Mesh view rows for deliveries, pending intents and conflicts. `MeshDashboardSnapshot` already carries conflicts but nothing displays them; the share/accept grant buttons exist in source and have compiled once (§13).
+4. The deferred `MeshLocalDevice` classification resolver from §9.4, which also gates the non-Windows DEVICE provider question.
 5. Native activation needs the owner's decision on the receipt chain (§13). Until then, no sanctioned launch.
 6. Two-instance on-screen test on this PC (two development profiles, pairing by pasted offer), then the same journey on the supplied second device.
 7. Standing non-claims for everything here: no Mesh native acceptance, no two-physical-device evidence, no ARM packaging, no independent acceptance; namespace/object scoping still open; boards larger than the 768 KiB sync frame are not synchronizable yet; Boards landing/recents discovery of a received board is unexamined.
