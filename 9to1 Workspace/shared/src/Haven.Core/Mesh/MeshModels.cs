@@ -51,7 +51,13 @@ public enum MeshTaskStatus
 public enum MeshSyncOperationKind
 {
     Upsert,
-    Delete
+    Delete,
+    /// <summary>
+    /// The payload is the complete current state of the resource, not a delta. A device that has never held the
+    /// resource can adopt it; a device holding a different copy is told it conflicts instead of being silently
+    /// overwritten. Revisions come from the owning resource's own version fields, never from a clock.
+    /// </summary>
+    Replace
 }
 
 public enum MeshSyncDecisionKind

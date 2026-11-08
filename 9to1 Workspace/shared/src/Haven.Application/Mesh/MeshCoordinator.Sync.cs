@@ -34,6 +34,26 @@ public sealed partial class MeshCoordinator
         _syncDeliveries.Values.OrderByDescending(item => item.UpdatedAt).Take(200).ToArray();
 
     /// <summary>
+    /// Asks the owning feature for the complete current state of one of its resources and offers it to the peers
+    /// this device is allowed to share with. The owner's answer is stamped with this device's identity here, so
+    /// an owner can never assert an origin, and a feature with no capture contract is refused rather than
+    /// guessed at. Returns null when the owner has no such resource.
+    /// </summary>
+    public async Task<MeshSyncPublishResult?> PublishWholeResourceAsync(string resourceType, Guid resourceId, CancellationToken cancellationToken)
+    {
+        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceType);
+        if (resourceId == Guid.Empty) throw new ArgumentException("A resource identity is required.", nameof(resourceId));
+        if (_merge is not IMeshResourceStateCapture capture)
+            throw new InvalidOperationException($"No Mesh resource owner for '{resourceType}' can produce a complete state, so nothing was published.");
+        var captured = await capture.CaptureAsync(resourceId, cancellationToken).ConfigureAwait(false);
+        if (captured is null) return null;
+        if (!string.Equals(captured.ResourceType, resourceType, StringComparison.Ordinal) || captured.ResourceId != resourceId || captured.OriginDeviceId != Guid.Empty)
+            throw new InvalidOperationException("The captured resource state does not describe the requested resource, so it was not published.");
+        return await PublishResourceChangeAsync(captured with { OriginDeviceId = _state.LocalIdentity!.DeviceId }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Applies one locally authored resource change through the owning merge service, then offers it to each
     /// peer this device has been told to share with. Offline and refused destinations stay visible per peer.
     /// </summary>

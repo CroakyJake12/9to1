@@ -17,6 +17,23 @@ public sealed class MeshSyncEngine
         if (appliedOperationIds.Contains(incoming.OperationId))
             return new(MeshSyncDecisionKind.Duplicate, "This synchronization operation was already applied.", current, incoming);
 
+        if (incoming.Kind == MeshSyncOperationKind.Replace)
+        {
+            if (current is null)
+                return new(MeshSyncDecisionKind.Apply, "This device held no copy of the resource, so the complete incoming state was adopted as the whole resource.", null, incoming);
+            if (string.Equals(current.ContentHash, incoming.ContentHash, StringComparison.OrdinalIgnoreCase))
+                return new(MeshSyncDecisionKind.Duplicate, "The incoming content already matches the local resource.", current, incoming);
+            if (incoming.Revision <= current.Revision)
+                return new(MeshSyncDecisionKind.IgnoreStale, "A newer local revision already exists; the older whole-state payload was kept only as synchronization evidence.", current, incoming);
+            if (incoming.BaseRevision < current.Revision)
+                return new(
+                    MeshSyncDecisionKind.Conflict,
+                    "Both devices changed this resource from different revisions, so a visible conflict keeps both copies rather than letting one device win on arrival order.",
+                    current,
+                    incoming);
+            return new(MeshSyncDecisionKind.Apply, "The incoming whole-state revision follows the local revision directly.", current, incoming);
+        }
+
         if (current is null)
         {
             return incoming.BaseRevision <= 0
