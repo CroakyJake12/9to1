@@ -39,6 +39,9 @@ public sealed class MeshPageViewModel : ObservableObject, IDisposable
     public ObservableCollection<MeshRuntimeChoiceViewModel> RuntimeChoices { get; } = [];
     public ObservableCollection<MeshIncomingClipboard> ReceivedClipboards { get; } = [];
     public ObservableCollection<MeshReceivedFile> ReceivedFiles { get; } = [];
+    public ObservableCollection<MeshSyncDelivery> SyncDeliveries { get; } = [];
+    public ObservableCollection<MeshSyncIntent> PendingSyncs { get; } = [];
+    public ObservableCollection<MeshConflict> SyncConflicts { get; } = [];
 
     public string Status { get => _status; private set => SetProperty(ref _status, value); }
     public string PairingOffer { get => _pairingOffer; private set => SetProperty(ref _pairingOffer, value); }
@@ -73,8 +76,14 @@ public sealed class MeshPageViewModel : ObservableObject, IDisposable
         Replace(WorkItems, work.RecentWork);
         Replace(ReceivedClipboards, transfers.RecentClipboards);
         Replace(ReceivedFiles, transfers.RecentFiles);
+        Replace(SyncDeliveries, _mesh.GetSyncDeliveries());
+        Replace(PendingSyncs, _mesh.GetPendingSyncIntents());
+        Replace(SyncConflicts, dashboard.Conflicts);
         if (DirectWorkerId is { } direct && !Workers.Any(worker => worker.Member.WorkerId == direct)) DirectWorkerId = null;
-        Status = $"{Devices.Count} trusted device{(Devices.Count == 1 ? string.Empty : "s")} · {Workers.Count} Work Mode member{(Workers.Count == 1 ? string.Empty : "s")} · {ReceivedFiles.Count} recent file{(ReceivedFiles.Count == 1 ? string.Empty : "s")}";
+        var synchronization = $"{SyncDeliveries.Count} synchronization result{(SyncDeliveries.Count == 1 ? string.Empty : "s")}";
+        if (PendingSyncs.Count > 0) synchronization += $" · {PendingSyncs.Count} still waiting";
+        if (SyncConflicts.Count > 0) synchronization += $" · {SyncConflicts.Count} unresolved conflict{(SyncConflicts.Count == 1 ? string.Empty : "s")}";
+        Status = $"{Devices.Count} trusted device{(Devices.Count == 1 ? string.Empty : "s")} · {Workers.Count} Work Mode member{(Workers.Count == 1 ? string.Empty : "s")} · {ReceivedFiles.Count} recent file{(ReceivedFiles.Count == 1 ? string.Empty : "s")} · {synchronization}";
     }
 
     public async Task RefreshRuntimeChoicesAsync(CancellationToken cancellationToken)

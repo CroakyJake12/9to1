@@ -57,6 +57,7 @@ internal sealed partial class MeshHavenScene
             foreach (var device in _viewModel.Devices) parent.Add(BuildDeviceCard(device));
         }
 
+        BuildSynchronizationContent(parent);
         BuildTransferHistory(parent);
 
         if (_viewModel.NearbyDevices.Count > 0)

@@ -92,6 +92,52 @@ public sealed class MeshHavenSceneTests
         Assert.Contains(scene.Root.DescendantsAndSelf().OfType<Text>(), element => element.Content.Contains("SHA-256 verified", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void Device_card_offers_both_synchronization_directions_as_explicit_switches()
+    {
+        var coordinator = new MeshCoordinator(new EmptyStateStore(), new EmptySecrets(), new EmptyTransport(), new EmptyCapabilities(), new EmptyMerge());
+        using var viewModel = new MeshPageViewModel(coordinator);
+        var deviceId = Guid.NewGuid();
+        var peer = new MeshPeerRecord(deviceId, "Peer", MeshDeviceClass.Desktop, CapabilityPlatform.Linux, new string('a', 64), MeshPeerTrustState.Trusted, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, "192.168.1.2:4242");
+        var presence = new MeshPresenceSnapshot(deviceId, MeshPresenceState.Available, MeshConnectionState.Connected, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, []);
+        viewModel.Devices.Add(new MeshPeerSnapshot(peer, presence));
+        using var scene = new MeshHavenScene(viewModel);
+
+        AssertNamed(scene.Root, $"Mesh.Grant.{deviceId:N}.{MeshCoordinator.SyncInboundCapability}");
+        AssertNamed(scene.Root, $"Mesh.Grant.{deviceId:N}.{MeshCoordinator.SyncOutboundCapability}");
+    }
+
+    [Fact]
+    public void Synchronization_surface_reports_real_per_destination_state_and_never_implies_success()
+    {
+        var coordinator = new MeshCoordinator(new EmptyStateStore(), new EmptySecrets(), new EmptyTransport(), new EmptyCapabilities(), new EmptyMerge());
+        using var viewModel = new MeshPageViewModel(coordinator);
+        const string BoardType = "9to1.board"; // the Boards Mesh owner advertises exactly this resource type
+        var resourceId = Guid.NewGuid();
+        var reached = Guid.NewGuid();
+        var away = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        viewModel.SyncDeliveries.Add(new MeshSyncDelivery(Guid.NewGuid(), resourceId, BoardType, 4, reached,
+            MeshSyncDeliveryState.Acknowledged, "peer accepted the whole state", now));
+        viewModel.PendingSyncs.Add(new MeshSyncIntent(resourceId, BoardType, away,
+            MeshSyncDeliveryState.QueuedOffline, "The device is offline. The operation stays queued and is confirmed only after an acknowledged attempt.", now));
+        viewModel.SyncConflicts.Add(new MeshConflict(Guid.NewGuid(), resourceId, BoardType,
+            new MeshResourceSnapshot(resourceId, BoardType, 5, "localhash0000", Guid.Empty, now, null),
+            new MeshSyncMutation(Guid.NewGuid(), resourceId, BoardType, MeshSyncOperationKind.Replace, 3, 6, "remotehash0000", away, now, "{}"),
+            now, "both devices changed this resource"));
+
+        using var scene = new MeshHavenScene(viewModel);
+        var said = scene.Root.DescendantsAndSelf().OfType<Text>().Select(element => element.Content).ToList();
+
+        Assert.Contains(said, text => text.Contains("Waiting for 1 destination", StringComparison.Ordinal));
+        Assert.Contains(said, text => text.Contains("revision 4", StringComparison.Ordinal) && text.Contains("Acknowledged", StringComparison.Ordinal));
+        Assert.Contains(said, text => text.Contains("offline", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(said, text => text.Contains("both copies kept, neither applied", StringComparison.Ordinal));
+        Assert.Contains(said, text => text.Contains("never an older copy kept here", StringComparison.Ordinal));
+        Assert.DoesNotContain(said, text => text.Contains("up to date", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static HavenElement AssertNamed(HavenElement root, string name) =>
         Assert.Single(root.DescendantsAndSelf(), element => element.Name == name);
 
