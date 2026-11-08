@@ -77,8 +77,8 @@ Log `/tmp/opencode/boards-draft-baseline.log`. This is the first recorded run of
 | Unit | Change | Check after it |
 |---|---|---|
 | U0 | done — Mesh DI composition repair (§4) | `Haven.Infrastructure.Tests --filter ~Mesh` → 50/50 PASS |
-| U1 | Add `sync.mutation` + `sync.ack` message types to `IMeshTransport`/`SecureLanMeshTransport` and a route in `MeshCoordinator.OnMessageReceived` (`:390`) that calls the existing `ApplySyncAsync` | same filtered run + new loopback two-peer test |
-| U2 | New `mesh.sync` capability key in the grant model + `MeshCapabilitySource`, defaulting OFF; refuse `sync.mutation` from peers without it, on both ends | `MeshWorkModeTests`/`DeviceActions`-style grant tests |
+| U1 | **DONE 8 Nov** — `sync.mutation` + `sync.ack` on the existing session, routed in `OnMessageReceived` into the shared apply path (`ApplyEvaluatedAsync`) | run `~Mesh`: **59/59 PASS** (was 50), two of them over two real `SecureLanMeshTransport` instances on loopback TLS |
+| U2 | **DONE 8 Nov** — two explicit gates, `mesh-resource-sync-in` (receiver) and `mesh-resource-share-out` (sender), both OFF by default; the receiver re-checks that the mutation's origin matches the session that delivered it; grant buttons added to the Mesh device card | covered by the deny, spoofed-origin and revoke checks below; **the two `Haven.Desktop` button lines are not yet compiled** (see §9.3) |
 | U3 | Namespace/entitlement field on `MeshSyncMutation` + enforcement in `MeshSyncEngine.Evaluate` (held pending the owner answer on `OPEN-2026-11-08-MESH-SYNC-WIRE-CONTRACT`; may land as a separate additive record to avoid pre-empting the public-shape decision) | new negative tests: personal namespace cannot reach team namespace |
 | U4 | Boards owner adapter: one file-backed `.9to1board` document → `MeshSyncMutation` (identity from `BoardID`, revision from the document/`RichNotes.Version`, `ContentHash` from the serialized bytes), with Boards deciding merge/conflict — Mesh only proposes | `BoardsSaveDurabilityRegression` + new Mesh↔Boards round-trip test in `app.tests` |
 | U5 | Per-destination queue/ack/retry states + offline rule, and restart replay from `MeshStateStore` | `MeshReliabilityTests` additions; kill-and-rejoin case |
@@ -94,9 +94,45 @@ Then, separately and not before: the native two-device pass (this PC + one more 
 - Native desktop launch of the Mesh page, ARM packaging, install, and the seven quality criteria: **NOT RUN / PAUSED for full acceptance** per the standing owner instruction of 24 October 2026.
 - A green unit test is not an on-screen experience. Everything above that distinction is stated in its own column, and no percentage of Mesh completeness is being claimed here.
 
-## 8. Next executable actions (handoff state)
+## 9. U1 + U2 landed later the same day (8 Nov 2026), and the measured device-test blocker
 
-1. Done — the Boards draft/durability run returned and is recorded in §5 (20/20 pass, 121.9 s, peak RSS 326 MiB) together with the audit answers for (a) draft durability, (b) destination/Save-As, (c) rich save/reopen, (d) equations **absent first-party** and (e) **no typed model-facing Board tool**.
-2. Decide, from the owner, the `MeshSyncMutation` public-shape question (option A vs B in `OPEN-2026-11-08-MESH-SYNC-WIRE-CONTRACT`). Only that decision is held; U1, U2, U4–U6 continue without it.
-3. Then U1 → U2 → U4 in that order, each compiled under the guard with the narrow `Haven.Infrastructure.Tests` graph (71 s cold, 15 s incremental), serially.
-4. Ask the owner which second device to use for the native pair test before writing U5/U6 UI expectations.
+### 9.1 What the code now does
+- `Haven.Core/Mesh/MeshModels.cs`: `MeshSyncDecisionKind.Rejected` added (policy refusal kept separate from merge outcomes), plus new wire types `MeshSyncAcknowledgement`, `MeshSyncDelivery`, `MeshSyncDeliveryState` and `MeshSyncPublishResult`.
+- New `Haven.Application/Mesh/MeshCoordinator.Sync.cs`: `PublishResourceChangeAsync` applies a locally authored change through the shared merge/journal path, then offers it **only** to peers this installation was told to share with (`mesh-resource-share-out`), one destination row per peer. Offline peer → `QueuedOffline` instead of silence; no answer inside 15 s → `Unconfirmed`; payload over 768 KiB refused locally with a reason pointing at the Mesh file-transfer path. Inbound `sync.mutation` requires a trusted session, that the mutation's `OriginDeviceId` equals the peer on that session, and the local `mesh-resource-sync-in` grant — then the existing `MeshSyncEngine` rules run and the receiver answers with its decision **and its own local revision**.
+- `MeshCoordinator.ApplySyncAsync` was split so the trust gate stays with the caller that knows the source, and `ApplyEvaluatedAsync` is shared by the inbound peer route and the local originator. The public peer-facing gate is unchanged.
+- No change to the public `MeshSyncMutation` shape, so the held namespace/entitlement decision stays open; the sharing boundary today is the two explicit grants.
+
+### 9.2 Evidence (guard receipts, `-m:1`, no node reuse, floor 1,100 MiB)
+| Run | Result |
+|---|---|
+| `~Mesh` before any change | 49/50 — one real composition failure (§4) |
+| after the composition fix | 50/50 |
+| U1 first compile | compiled clean; 7 of the 9 new checks failed because **my fixture** supplied an identity whose private secret was absent, and `InitialiseAsync` correctly refused to start ("identity metadata exists, but its private identity secret is missing") |
+| U1 final `~Mesh` | **Passed: 59, Failed: 0, Skipped: 0**, 15.4 s incremental, peak process-tree RSS 146 MiB, min MemAvailable 1,301 MiB. Logs `/tmp/opencode/mesh-sync-unit1.log`, `-unit1b.log`, `-unit1c.log` |
+
+The nine new checks: converge one board revision over **two real `SecureLanMeshTransport` instances on loopback TLS** with distinct device identities and pinned fingerprints; sender-only opt-in leaves the receiver applying nothing and answering `Rejected`; a mutation claiming a foreign origin is refused on the delivering session; an authorised mutation applies once and a replay answers `Duplicate`; an older revision answers `IgnoreStale` with the newer local content intact; divergent edits produce a conflict row holding both revisions and both content hashes while applying nothing; an offline peer stays `QueuedOffline` with nothing sent; an oversized payload is refused before any send; a revoked device receives nothing and its stale share grant is ignored.
+
+Claim boundary: all of it is in-process. Real TLS over 127.0.0.1 is far stronger than a mock transport, but it is **not** two physical devices, not the app UI, and not a persisted restart replay.
+
+### 9.3 The measured blocker for the on-screen test
+The owning command for a runnable copy — guarded `Haven.Desktop.csproj` build into a new runtime directory, per `docs/development/live-preview.md` — was attempted at source `b5f9968d`: **MEM GUARD stop at 221 s when MemAvailable reached 967 MiB against the 1,100 MiB floor.** Peak build-tree RSS was only **388 MiB**, so the compiler is not the hog: MemAvailable sits near 2.5 GiB with the resident inference host at ~47 GiB, swap essentially exhausted and roughly 4.5 GiB held by desktop applications. Stated plainly:
+- `Haven.Desktop` has never compiled with the sync changes, so the two new `GrantButton` lines are **unverified source**. I am not claiming they are broken either.
+- No approved runtime directory exists, so there is no on-screen evidence and nothing to copy to a second device yet.
+Ranked options: (a) close roughly 2 GiB of desktop applications and retry the build; (b) build `Haven.Desktop` on the device that will be the second peer (needs SDK `10.0.3xx` there); (c) deliberately lower the guard floor and record a relaxed-memory admission — that risks the OOM killer reaching this session's own inference host, so I will not do it without an explicit owner instruction.
+Useful detail for the pair test: pairing consumes a **pasted offer containing an explicit endpoint**, so it does not depend on multicast discovery. A reachable TCP port is enough, which removes AP client-isolation as a hard blocker.
+
+### 9.4 Deferred, with reasons — not silently skipped
+- **Device classification.** `MeshCoordinator.cs:73-74`, `MeshCapabilitySource.cs:10` and `MeshInboundDeviceActionExecutor.cs:43` disagree with each other: two-way branches make a Linux installation present itself as Android for identity and capability advertisement, and as **Windows** for inbound device actions. This is the same item the unified host record leaves open ("Existing non-Windows Mesh Android/Phone classification remains open"). The intended repair is one shared resolver (`MeshLocalDevice.Platform` / `.DeviceClass`) in `Haven.Core`, used by all three. Deferred out of U1 because the inbound device-action path selects a native provider by platform, so changing it moves behaviour on a surface I cannot exercise in this session.
+- **Durable queue and restart replay (U5).** `QueuedOffline` and `Unconfirmed` are in-memory only; a restart loses them. Needs a `MeshPersistentState` version bump plus migration.
+
+### 9.5 What `U4` actually needs from Boards (measured, not assumed)
+`JsonFileHavenBoardStore.cs:11` gives a clean canonical mapping: `HavenBoardDocument(Format "9to1.board", SchemaVersion 5, **DocumentId**, CreatedUtc, ModifiedUtc, Snapshot, RichNotes)` and `RichNotes.Version` already advances per mutation inside `RichBoardSession`. So the adapter is: `ResourceId = DocumentId`, `ResourceType = "9to1.board"`, `Revision = RichNotes.Version` (with an adapter-maintained counter when a board has no rich notes), `ContentHash = SHA-256` of the serialized document, and the apply side writes through the Boards store's own save path after the Boards owner accepts — Mesh never writes a board file behind the store's back, and the receiving side's conflict row keeps both revisions, matching `UX27-BOARD-008`'s "preserve both divergent revisions … never choose by wall-clock timestamp alone". One design decision remains: boards above the 768 KiB sync frame travel as a Mesh file transfer with only the reference synchronized.
+
+## 10. Next executable actions (handoff state, 8 Nov 2026, after U1/U2)
+
+1. **U4** Boards adapter exactly as mapped in §9.5, compiled with the narrow `Haven.Infrastructure.Tests` graph (71 s cold, 15 s incremental), plus a Boards save/reopen round-trip check in `CakeOS.Apps.Boards.App.Tests`.
+2. **U5** durable queue and per-destination acknowledgement across an app restart (`MeshPersistentState` version bump plus migration), and the deferred `MeshLocalDevice` classification resolver from §9.4.
+3. **U6** Mesh view work: the share/accept grant buttons now exist, but the delivery rows and conflict rows are still absent. Then compile `Haven.Desktop` — currently memory-blocked (§9.3) — so the two new UI lines stop being unverified source.
+4. **Owner action** when reachable: free roughly 2 GiB, or name a second machine that can build, so an approved immutable runtime exists at all.
+5. The earliest genuine on-screen pair test is **one PC with two development profiles** (two Mesh identities, pairing by pasted offer, sync visible on both). Then repeat the same journey on the supplied second device. **The extra device is only needed at that last step.**
+6. Standing non-claims for everything in this document: no Mesh native acceptance, no two-physical-device evidence, no ARM packaging, no independent acceptance, and Mesh data sharing/sync namespace scoping is still unmet and open.

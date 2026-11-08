@@ -59,7 +59,9 @@ public enum MeshSyncDecisionKind
     Apply,
     Duplicate,
     IgnoreStale,
-    Conflict
+    Conflict,
+    /// <summary>Refused by a policy gate on one of the two devices before any merge rule was consulted.</summary>
+    Rejected
 }
 
 public enum MeshHandoffStatus
@@ -202,6 +204,56 @@ public sealed record MeshSyncDecision(
     string Reason,
     MeshResourceSnapshot? Current,
     MeshSyncMutation Incoming);
+
+/// <summary>
+/// The receiving device's typed answer to one synchronization mutation. It reports the policy outcome
+/// separately from the merge outcome, so a peer can tell "refused by permission" from "merged" from
+/// "kept as a conflict" instead of inferring it from silence.
+/// </summary>
+public sealed record MeshSyncAcknowledgement(
+    Guid OperationId,
+    Guid ResourceId,
+    string ResourceType,
+    MeshSyncDecisionKind Decision,
+    string Reason,
+    long LocalRevision,
+    Guid AcknowledgingDeviceId,
+    DateTimeOffset AcknowledgedAt);
+
+public enum MeshSyncDeliveryState
+{
+    /// <summary>The peer is not connected; the operation stays queued for a later acknowledged attempt.</summary>
+    QueuedOffline,
+    Sent,
+    Acknowledged,
+    Rejected,
+    ConflictReported,
+    /// <summary>No answer inside the acknowledgement window; the mutation was sent but not confirmed.</summary>
+    Unconfirmed
+}
+
+/// <summary>
+/// Per-destination state for one synchronization operation. Each device keeps its own row per peer so a
+/// partial fan-out cannot be reported as a completed sync, and so an offline peer stays visibly pending.
+/// </summary>
+public sealed record MeshSyncDelivery(
+    Guid OperationId,
+    Guid ResourceId,
+    string ResourceType,
+    long Revision,
+    Guid PeerDeviceId,
+    MeshSyncDeliveryState State,
+    string Detail,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>
+/// One local apply plus its fan-out. A partial fan-out is reported per destination rather than collapsed
+/// into a single "synced" boolean, because some peers may be offline and others may refuse by permission.
+/// </summary>
+public sealed record MeshSyncPublishResult(
+    MeshSyncDecisionKind LocalDecision,
+    string Reason,
+    IReadOnlyList<MeshSyncDelivery> Deliveries);
 
 public sealed record MeshConflict(
     Guid Id,

@@ -99,6 +99,8 @@ internal sealed partial class MeshHavenScene
         permissions.Add(GrantButton(peer.DeviceId, "computer-device-use", "Device actions", grants));
         permissions.Add(GrantButton(peer.DeviceId, MeshCoordinator.RemoteClipboardCapability, "Clipboard receive", grants));
         permissions.Add(GrantButton(peer.DeviceId, MeshCoordinator.RemoteFileCapability, "File receive", grants));
+        permissions.Add(GrantButton(peer.DeviceId, MeshCoordinator.SyncInboundCapability, "Accept sync from this device", grants));
+        permissions.Add(GrantButton(peer.DeviceId, MeshCoordinator.SyncOutboundCapability, "Share my changes with this device", grants));
         card.Add(permissions);
 
         var actions = new Container { Layout = HavenLayout.Wrap };

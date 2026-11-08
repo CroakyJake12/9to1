@@ -233,6 +233,17 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
     {
         await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
         _ = RequireTrustedPeer(mutation.OriginDeviceId);
+        return await ApplyEvaluatedAsync(mutation, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Shared merge and journal path for the inbound peer route and the local originator alike. The trust check
+    /// stays with the caller that knows where a mutation came from, so a local edit is not forced through the
+    /// peer gate while a remote one cannot bypass it.
+    /// </summary>
+    private async Task<MeshSyncDecision> ApplyEvaluatedAsync(MeshSyncMutation mutation, CancellationToken cancellationToken)
+    {
+        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
         var current = await _merge.GetCurrentAsync(mutation.ResourceType, mutation.ResourceId, cancellationToken).ConfigureAwait(false);
         var applied = _state.AppliedSyncOperations.ToHashSet();
         var decision = _sync.Evaluate(current, mutation, applied);
@@ -391,6 +402,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
     {
         var peer = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == message.SourceDeviceId);
         if (peer is null || peer.TrustState != MeshPeerTrustState.Trusted) return;
+        if (TryHandleSyncMessage(message)) return;
         if (TryHandleDeviceMessage(message)) return;
         if (TryHandleRuntimeMessage(message)) return;
         if (TryHandleTaskMessage(message)) return;
