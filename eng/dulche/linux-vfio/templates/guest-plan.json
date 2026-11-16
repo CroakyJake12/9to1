@@ -1,0 +1,74 @@
+{
+  "schema": "9to1.dulche.guest-plan/v1",
+  "status": "INERT_REVIEW_TEMPLATE",
+  "execution_enabled": false,
+  "name_prefix": "dulche-v100-proof-",
+  "machine": "q35",
+  "accelerator": "kvm",
+  "vcpus": 2,
+  "ram_mib": 4096,
+  "cpu": {
+    "model": "host",
+    "host_phys_bits": false,
+    "phys_bits": 39
+  },
+  "pci": {
+    "root_port_id": "gpuroot",
+    "prefetchable_reserve_gib": 64,
+    "mmio_reserve_mib": 64,
+    "host_pci_hole64_gib": 128,
+    "ovmf_mmio64_mib": 131072,
+    "attachment": "NONE; V100 BDF filled from a fresh inspected single-device group only after separate approval.",
+    "rombar": false,
+    "reset_method": "bus; capability only, reliability UNVERIFIED",
+    "reject_5080_and_audio": true,
+    "reject_shared_group_or_reset_domain": true
+  },
+  "disk": {
+    "preserve_original": "/home/jacob/Documents/Default Project/vm/v100-vm.qcow2",
+    "preserve_backing": "/home/jacob/Documents/Default Project/vm/noble-server.img",
+    "preserve_nvram": "/home/jacob/Documents/Default Project/vm/vm_vars.fd",
+    "candidate": "Fresh uniquely named qcow2 overlay and NVRAM copy, after approval; hash originals before and after.",
+    "never_attach_host_windows_disk": true,
+    "guest_image_mutation": "Candidate overlay only; keep failed overlays and evidence."
+  },
+  "firmware": {
+    "preserve_secure_boot": true,
+    "preserve_signature_enforcement": true,
+    "existing_ovmf_candidate": "/usr/share/OVMF/OVMF_CODE_4M.fd",
+    "admission": "Reconcile existing guest secure-boot state and driver-signature evidence. No switching firmware or weakening enforcement to make driver load."
+  },
+  "network": {
+    "type": "QEMU user network",
+    "restrict": true,
+    "host_forward_bind": "127.0.0.1",
+    "host_forward_port": 55164,
+    "guest_port": 22,
+    "bridge": null,
+    "nat_general_egress": false,
+    "port_rule": "Recheck unoccupied port without replacing an existing listener."
+  },
+  "display": "none",
+  "autostart": false,
+  "auto_restart": false,
+  "no_reboot": true,
+  "qmp": {
+    "transport": "unix",
+    "directory_mode": "0700",
+    "socket_mode": "0600",
+    "path": "<fresh-owned-session>/qmp.sock",
+    "authorization": "Only independently supervised session owner can stop this exact VM."
+  },
+  "rollback": [
+    "Stop only exact owned candidate worker/VM using independently verified custody, confirm guest work ceased.",
+    "After explicit approval and no outstanding DMA, restore only V100 to recorded prior unbound state and clear only the override this session set.",
+    "Leave RTX 5080 driver and display untouched. Preserve original disk, backing image, NVRAM, candidate overlay and all evidence.",
+    "If reset/unbind fails, stop automation and report; no retry, host reboot or global driver unload without new approval."
+  ],
+  "not_proven": [
+    "Guest boot with current exact overlay and firmware",
+    "Guest signature-safe R580 load",
+    "Actual bus reset recovery",
+    "Actual independent guest cessation within five-second reserve"
+  ]
+}

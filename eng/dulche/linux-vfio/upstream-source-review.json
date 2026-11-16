@@ -1,0 +1,153 @@
+{
+  "commit": "b1b770d90d94cad9e9ea5b993bdbc383a522fb28",
+  "files": [
+    {
+      "path": "CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/CMakeLists.txt",
+      "bytes": 11159,
+      "sha256": "ede5bbf33de939489087579c2b212a097d3bbb208146b12077d375ae5ee7dc58"
+    },
+    {
+      "path": "common/arg.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/common/arg.cpp",
+      "bytes": 226516,
+      "sha256": "010823f370c875a8685ee06b8ce4994408e091aab4bfff9e5b6a2d73646bd1e0"
+    },
+    {
+      "path": "common/common.h",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/common/common.h",
+      "bytes": 59898,
+      "sha256": "f3be7677b8d76981a0b773360c192516b5cc1c112a52f7b5876e27b1daf19773"
+    },
+    {
+      "path": "tools/rpc/README.md",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/rpc/README.md",
+      "bytes": 5787,
+      "sha256": "0a0defd60fac434baa467375ee7c3c12f952d6685cda6a9b5e91b6edbb67d20a"
+    },
+    {
+      "path": "tools/rpc/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/rpc/CMakeLists.txt",
+      "bytes": 1238,
+      "sha256": "9cd362a1ad4285c17de55c70b4284913e31c02179953e8374077c2acb6653569"
+    },
+    {
+      "path": "tools/rpc/rpc-server.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/rpc/rpc-server.cpp",
+      "bytes": 9187,
+      "sha256": "0bef22416395b1abe4e84046e7a1ffc0a89ab6bf04d3e6bf468f87a82f453ba0"
+    },
+    {
+      "path": "tools/server/README.md",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/server/README.md",
+      "bytes": 139914,
+      "sha256": "0d16e91b78b8fe1306e6f0dc69b0bd8571f0fa2dbc1ef10252299a67db9dcdbf"
+    },
+    {
+      "path": "tools/server/server.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/server/server.cpp",
+      "bytes": 33917,
+      "sha256": "a58e21d5f413f4e9b9bbffe6050d971c47d5b78695bf5211f257ceb3c8b56a70"
+    },
+    {
+      "path": "ggml/src/ggml-cuda/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-cuda/CMakeLists.txt",
+      "bytes": 11175,
+      "sha256": "4777921dc1477afd26c8d55c1b98f90b63a7b553a5f016d4dfd080e6302d9452"
+    },
+    {
+      "path": "ggml/src/ggml-cuda/common.cuh",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-cuda/common.cuh",
+      "bytes": 59258,
+      "sha256": "b07a0c0719d8a8080e456ffaa73fe0fb468b9a63287bbaae7c0aca56270b69dc"
+    },
+    {
+      "path": "ggml/src/ggml-rpc/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-rpc/CMakeLists.txt",
+      "bytes": 1855,
+      "sha256": "e4d2d69cb8d74478d9192d791dfe7fbd75ef3477b88c9cb8eef522b516618c99"
+    },
+    {
+      "path": "ggml/src/ggml-rpc/ggml-rpc.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-rpc/ggml-rpc.cpp",
+      "bytes": 140363,
+      "sha256": "9ea32c4001989ce6fa0d302c594a784312fb4d6e51dad2f73bde6289413382fd"
+    },
+    {
+      "path": "ggml/include/ggml-rpc.h",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/include/ggml-rpc.h",
+      "bytes": 1174,
+      "sha256": "9f5531b5376e44da8f4881b5e39b80c91794e1fe42e5ee19d041cb9070162f39"
+    },
+    {
+      "path": "SECURITY.md",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/SECURITY.md",
+      "bytes": 7505,
+      "sha256": "78ec7307fd4a94b39daced4f992abadf4874dfa20124d8b3ef17eba9a8ee528d"
+    },
+    {
+      "path": "ggml/src/ggml-rpc/transport.h",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-rpc/transport.h",
+      "bytes": 1057,
+      "sha256": "5859ae198de5c8df1d7184eb7eca13adab5cf2d5548910052756ad6d0ef53cc7"
+    },
+    {
+      "path": "ggml/src/ggml-rpc/transport.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-rpc/transport.cpp",
+      "bytes": 26087,
+      "sha256": "236fde41d95e89c805b512bafc7ae9ac19425fb362bdbf9c7903a9c0f809010a"
+    },
+    {
+      "path": "ggml/src/ggml-rpc/protocol.h",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "tools/server/server-http.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/server/server-http.cpp",
+      "bytes": 44189,
+      "sha256": "87fdb0dd70145b1f8daa5d9fdfe4451842adc2fcc7ef078498d4bcb54cf1ac47"
+    },
+    {
+      "path": "tools/server/server-http.h",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/server/server-http.h",
+      "bytes": 3941,
+      "sha256": "29c53f7ffde226edf3e6f48463e4807f7e554ca12e476099f90e0ff18142978d"
+    },
+    {
+      "path": "tools/server/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/server/CMakeLists.txt",
+      "bytes": 1970,
+      "sha256": "1974622da49a72c8f9e244ad70d70c42a913ab390ef705985e7bdb763230e737"
+    },
+    {
+      "path": "tools/cli/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/cli/CMakeLists.txt",
+      "bytes": 772,
+      "sha256": "6094ef7727f29dc18d88765611a6771deb083f9e3acf3b5d18eca8706349c5a7"
+    },
+    {
+      "path": "tools/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/CMakeLists.txt",
+      "bytes": 1084,
+      "sha256": "13f3219d2858128c469330aafbdf7ded61291a6a3a8785d16d8ffa4de7059d48"
+    },
+    {
+      "path": "ggml/src/ggml-backend-reg.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-backend-reg.cpp",
+      "bytes": 18239,
+      "sha256": "0a23a627cec97926fb1fbb2b1bf4fa7fed4900aa21b0215302eced797231578b"
+    },
+    {
+      "path": "common/common.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/common/common.cpp",
+      "bytes": 86489,
+      "sha256": "69d4aeea15fbc50302944714ebf80195259b0c500453db13e7c7a21a0606bdc7"
+    },
+    {
+      "path": "ggml/CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/CMakeLists.txt",
+      "bytes": 21924,
+      "sha256": "8877303bbec515684887b8285debb6da6c1f0dfaea3920398327458ad34fc24d"
+    }
+  ]
+}

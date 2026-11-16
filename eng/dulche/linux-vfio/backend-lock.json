@@ -1,0 +1,67 @@
+{
+  "schema": "9to1.dulche.backend-candidate-lock/v1",
+  "status": "SOURCE_REVIEWED_NOT_BUILT_NOT_RUNTIME_VERIFIED",
+  "upstream": {
+    "repository": "https://github.com/ggml-org/llama.cpp",
+    "release": "v1.0.0",
+    "commit": "b1b770d90d94cad9e9ea5b993bdbc383a522fb28",
+    "same_commit_both_ends": true,
+    "rpc_protocol": "10.0.0",
+    "protocol_note": "Source header is authoritative; README runtime example v3.0.0 is stale."
+  },
+  "cuda": {
+    "toolkit": "12.9.1",
+    "nvcc": "12.9.86",
+    "host_architectures": "120a-real",
+    "guest_architectures": "70-real",
+    "jit_ptx_required": false,
+    "runtime_verified": false
+  },
+  "drivers": {
+    "host_observed": "595.99.02 open",
+    "host_action": "PRESERVE",
+    "guest_candidate": "580.196.07 proprietary",
+    "guest_package_hashes": null,
+    "guest_action": "NOT_INSTALLED_BY_PREPARATION"
+  },
+  "build": {
+    "cmake_cache": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "GGML_NATIVE": "OFF",
+      "GGML_CUDA": "ON",
+      "GGML_RPC": "ON",
+      "GGML_CUDA_NCCL": "OFF",
+      "GGML_RPC_RDMA": "OFF",
+      "GGML_BACKEND_DL": "OFF",
+      "LLAMA_BUILD_TESTS": "OFF",
+      "LLAMA_BUILD_SERVER": "ON"
+    },
+    "host_targets": [
+      "llama-server"
+    ],
+    "guest_targets": [
+      "ggml-rpc-server"
+    ],
+    "parallel_jobs": 2,
+    "binaries_sha256": null,
+    "build_rule": "Fresh versioned out-of-tree builds with exact source and dependencies; no replacing existing Dulche CPU build or Strata donor."
+  },
+  "runtime_candidate_environment": {
+    "GGML_RPC_NO_RDMA": "1",
+    "GGML_RPC_NO_COMM": "1"
+  },
+  "dangerous_probe_note": "Do not invoke CUDA backend executables even with --help before the guarded allowance; ggml-rpc-server loads backends before argument parsing.",
+  "support_limits": [
+    "RPC remains experimental and insecure; SSH isolation does not confer production support.",
+    "No Thunder/Strata interoperation or pooled VRAM claim.",
+    "Ubuntu host combination not established as NVIDIA certified; R580 notes name RHEL9 KVM.",
+    "Existing guest kernel/package support and signature state require read-only inspection; never disable signature enforcement."
+  ],
+  "sources": [
+    "https://github.com/ggml-org/llama.cpp/blob/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/include/ggml-rpc.h",
+    "https://github.com/ggml-org/llama.cpp/blob/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/ggml/src/ggml-cuda/CMakeLists.txt",
+    "https://github.com/ggml-org/llama.cpp/blob/b1b770d90d94cad9e9ea5b993bdbc383a522fb28/tools/rpc/rpc-server.cpp",
+    "https://docs.nvidia.com/cuda/archive/12.9.1/cuda-toolkit-release-notes/index.html",
+    "https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-580-196-07/index.html"
+  ]
+}

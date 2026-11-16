@@ -1,0 +1,59 @@
+{
+  "schema": "9to1.dulche.transport-plan/v1",
+  "status": "INERT_REVIEW_TEMPLATE",
+  "execution_enabled": false,
+  "guest_rpc": {
+    "listen": "127.0.0.1",
+    "port": 50052,
+    "device": "CUDA0 after exact guest UUID verification",
+    "cache": false,
+    "allow_public_listener": false
+  },
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 55164,
+    "user": "v100",
+    "host_key_alias": "dulche-v100-proof-reviewed",
+    "strict_host_key_checking": "yes",
+    "user_known_hosts_file": "<reviewed-private-known-hosts>",
+    "required_host_key_fingerprint": null,
+    "identity_file": "<owned-private-key>",
+    "identities_only": true,
+    "batch_mode": true,
+    "exit_on_forward_failure": true,
+    "gateway_ports": false,
+    "forward_agent": false,
+    "forward_x11": false,
+    "control_master": false,
+    "request_tty": false,
+    "local_forward": "127.0.0.1:50053 -> guest 127.0.0.1:50052",
+    "host_key_rule": "Obtain and verify host key through independent candidate provisioning evidence. Never trust ssh-keyscan alone or StrictHostKeyChecking=no."
+  },
+  "host_rpc_endpoint": "127.0.0.1:50053",
+  "host_http_endpoint": "<existing-owned-Dulche-socket>.sock",
+  "candidate_inference": {
+    "rpc_before_device_selection": true,
+    "devices": [
+      "CUDA0",
+      "RPC0"
+    ],
+    "split_mode": "layer",
+    "tensor_split": [
+      1,
+      1
+    ],
+    "gpu_layers": 99,
+    "context": 512,
+    "batch": 32,
+    "ubatch": 32,
+    "threads": 2,
+    "parallel": 1,
+    "predict": 8,
+    "fit": "off",
+    "no_warmup": true,
+    "note": "Inert option map only. No warmup does not suppress initialization. Actual work on both GPUs must be demonstrated, not inferred from residency."
+  },
+  "host_service_change": "Keep production AF_UNIX-only service unchanged; a future reviewed candidate profile narrowly permits its loopback TCP connection.",
+  "security_note": "RPC has no trustworthy public-network security boundary. Loopback is reachable by local users; retain single-user custody, restricted guest account and no untrusted tenants. SSH protects transit, not malicious local clients.",
+  "rollback": "Close only session-owned tunnel, worker and socket; preserve keys and logs; no global kill or service replacement."
+}
