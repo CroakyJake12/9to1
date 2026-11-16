@@ -345,7 +345,7 @@ public sealed partial class App : Avalonia.Application
                 try
                 {
                     if (!await TryAwaitOriginalStartupContinuationAsync(original,
-                        () => services.GetRequiredService<MeshCoordinator>().InitialiseAsync(CancellationToken.None))) return;
+                        () => services.GetRequiredService<MeshCoordinator>().WarmupTrustedPeersAsync(original.Token))) return;
                 }
                 catch (Exception meshException)
                 {

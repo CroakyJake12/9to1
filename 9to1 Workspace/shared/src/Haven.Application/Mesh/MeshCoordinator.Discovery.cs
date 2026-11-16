@@ -95,6 +95,7 @@ public sealed partial class MeshCoordinator
 
     private void OnDiscoveryCandidateObserved(MeshDiscoveryCandidate candidate)
     {
+        if (!_initialised || Volatile.Read(ref _retiring) != 0 || _pendingRevocations.ContainsKey(candidate.DeviceId)) return;
         if (_state.LocalIdentity?.DeviceId == candidate.DeviceId) return;
 
         var known = _state.TrustedPeers.FirstOrDefault(peer => peer.DeviceId == candidate.DeviceId);
@@ -132,9 +133,10 @@ public sealed partial class MeshCoordinator
         try
         {
             MeshPeerRecord peer;
-            await _gate.WaitAsync().ConfigureAwait(false);
+            await _gate.WaitAsync(_networkLifetime.Token).ConfigureAwait(false);
             try
             {
+                if (!_initialised || Volatile.Read(ref _retiring) != 0 || _pendingRevocations.ContainsKey(candidate.DeviceId)) return;
                 peer = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == candidate.DeviceId)
                     ?? throw new UnauthorizedAccessException("The discovered Mesh device is no longer known.");
                 if (peer.TrustState != MeshPeerTrustState.Trusted)
@@ -156,21 +158,26 @@ public sealed partial class MeshCoordinator
             StateChanged?.Invoke();
 
             var reconnectCandidate = peer with { LastKnownEndpoint = candidate.Endpoint };
-            await _transport.ConnectAsync(reconnectCandidate, CancellationToken.None).ConfigureAwait(false);
+            await _transport.ConnectAsync(reconnectCandidate, _networkLifetime.Token).ConfigureAwait(false);
 
             // ConnectAsync verifies both the pinned certificate fingerprint and device ID.
             // Only now may discovery refresh the durable endpoint used on future restarts.
-            await _gate.WaitAsync().ConfigureAwait(false);
+            await _gate.WaitAsync(_networkLifetime.Token).ConfigureAwait(false);
             try
             {
                 var verified = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == candidate.DeviceId);
-                if (verified is { TrustState: MeshPeerTrustState.Trusted }
+                if (Volatile.Read(ref _retiring) == 0 && !_pendingRevocations.ContainsKey(candidate.DeviceId) && verified is { TrustState: MeshPeerTrustState.Trusted }
                     && string.Equals(verified.PublicKeyFingerprint, candidate.PublicKeyFingerprint, StringComparison.OrdinalIgnoreCase))
                 {
-                    await ReplacePeerAsync(verified with { LastKnownEndpoint = candidate.Endpoint }, CancellationToken.None).ConfigureAwait(false);
+                    await ReplacePeerLockedAsync(verified with { LastKnownEndpoint = candidate.Endpoint }, _networkLifetime.Token).ConfigureAwait(false);
                 }
+                else await _transport.DisconnectAsync(candidate.DeviceId, CancellationToken.None).ConfigureAwait(false);
             }
             finally { _gate.Release(); }
+        }
+        catch (OperationCanceledException) when (_networkLifetime.IsCancellationRequested)
+        {
+            await _transport.DisconnectAsync(candidate.DeviceId, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException
                                    or System.Net.Sockets.SocketException
@@ -204,13 +211,17 @@ public sealed partial class MeshCoordinator
     private async Task StopDiscoveryAsync()
     {
         if (_discovery is null) return;
-        _discovery.CandidateObserved -= OnDiscoveryCandidateObserved;
+        var causes = new List<Exception>();
+        try { _discovery.CandidateObserved -= OnDiscoveryCandidateObserved; }
+        catch (Exception error) { causes.Add(error); }
         lock (_nearbyExpiryTimerGate)
         {
             _nearbyExpiryTimerStopped = true;
-            _nearbyExpiryTimer?.Dispose();
-            _nearbyExpiryTimer = null;
+            try { _nearbyExpiryTimer?.Dispose(); } catch (Exception error) { causes.Add(error); }
+            finally { _nearbyExpiryTimer = null; }
         }
-        try { if (_discovery.IsRunning) await _discovery.StopAsync(CancellationToken.None).ConfigureAwait(false); } catch { }
+        try { if (_discovery.IsRunning) await _discovery.StopAsync(CancellationToken.None).ConfigureAwait(false); }
+        catch (Exception error) { causes.Add(error); }
+        if (causes.Count != 0) throw new AggregateException("Mesh discovery retirement retained cleanup failures.", causes);
     }
 }

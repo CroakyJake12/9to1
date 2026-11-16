@@ -28,7 +28,8 @@ public sealed partial class MeshCoordinator
 
     public async Task<IReadOnlyList<ProviderModelDescriptor>> GetRemoteModelsAsync(CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        var activation = await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false);
+        if (activation is not (MeshAutomaticStartResult.Started or MeshAutomaticStartResult.AlreadyRunning)) return [];
         var models = new List<ProviderModelDescriptor>();
         foreach (var peer in ConnectedTrustedPeers())
         {
@@ -51,7 +52,7 @@ public sealed partial class MeshCoordinator
     public async Task<string> CompleteRemoteModelAsync(string route, OllamaChatRequest request, CancellationToken cancellationToken)
     {
         var target = MeshRemoteModelProvider.DecodeRoute(route);
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        DemandAutomaticNetworkStarted(await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false));
         _ = RequireTrustedPeer(target.DeviceId);
         var requestId = Guid.NewGuid();
         var payload = new MeshModelCompleteRequest(requestId, target.ProviderId, request with { Model = target.ModelName });
@@ -63,7 +64,7 @@ public sealed partial class MeshCoordinator
     public async Task<OllamaToolResponse> ChatWithRemoteModelToolsAsync(string route, OllamaToolRequest request, CancellationToken cancellationToken)
     {
         var target = MeshRemoteModelProvider.DecodeRoute(route);
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        DemandAutomaticNetworkStarted(await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false));
         _ = RequireTrustedPeer(target.DeviceId);
         var requestId = Guid.NewGuid();
         var payload = new MeshModelToolsRequest(requestId, target.ProviderId, request with { Model = target.ModelName });
@@ -74,7 +75,8 @@ public sealed partial class MeshCoordinator
 
     public async Task<IReadOnlyList<MeshRemoteAgentDescriptor>> GetRemoteAgentsAsync(CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        var activation = await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false);
+        if (activation is not (MeshAutomaticStartResult.Started or MeshAutomaticStartResult.AlreadyRunning)) return [];
         var agents = new List<MeshRemoteAgentDescriptor>();
         foreach (var peer in ConnectedTrustedPeers())
         {
@@ -91,7 +93,7 @@ public sealed partial class MeshCoordinator
 
     public async Task<string> ExecuteRemoteAgentAsync(Guid deviceId, Guid agentId, string prompt, CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        DemandAutomaticNetworkStarted(await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false));
         _ = RequireTrustedPeer(deviceId);
         if (agentId == Guid.Empty) throw new ArgumentException("Remote agent ID is required.", nameof(agentId));
         if (string.IsNullOrWhiteSpace(prompt)) throw new ArgumentException("Remote agent prompt is required.", nameof(prompt));

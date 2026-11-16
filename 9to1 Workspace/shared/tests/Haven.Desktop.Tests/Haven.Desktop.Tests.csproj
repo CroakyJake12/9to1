@@ -20,14 +20,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Haven.Desktop\Haven.Desktop.csproj"
                       SetTargetFramework="TargetFramework=$(TargetFramework)" />
-    <PackageReference Include="Avalonia.Headless.XUnit" Condition="'$(TargetFramework)' != 'net10.0'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
     <PackageReference Include="coverlet.collector"><PrivateAssets>all</PrivateAssets></PackageReference>
   </ItemGroup>
-  <!-- Portable owning tests must use the SAME approved fork as Desktop and CUI Runtime. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+  <!-- Both owning targets use the SAME approved fork as Desktop and CUI Runtime. -->
+  <ItemGroup>
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.XUnit/Avalonia.Headless.XUnit.csproj" />
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj" />
@@ -74,7 +73,6 @@
     <Compile Include="DeveloperManualSaveAllTests.cs" />
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
     <Compile Include="NotificationServiceStorageStartupTests.cs" />
-    <Compile Include="ApplicationLifecycleStartupTests.cs" />
     <Compile Include="BrowserTabHoverContractTests.cs" />
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
     <Compile Include="UnifiedHomeContentTests.cs;DesktopOriginalShutdownSequenceTests.cs" />

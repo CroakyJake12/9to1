@@ -81,9 +81,10 @@ public sealed class ApplicationLifecycleService : IApplicationLifecycle
         try
         {
             await (actualStage = CheckPreviousShutdownAsync(cancellationToken)).ConfigureAwait(false);
+            // Database initialization owns the verified pre-migration backup. Do not
+            // reopen the live file after initialization may retain provider handles.
             await (actualStage = _database.InitializeAsync(cancellationToken)).ConfigureAwait(false);
             await (actualStage = RunSqliteIntegrityCheckAsync(cancellationToken)).ConfigureAwait(false);
-            await (actualStage = RunPreMigrationBackupsAsync(cancellationToken)).ConfigureAwait(false);
 
             var markerPath = GetStartupMarkerPath();
             await (actualStage = File.WriteAllTextAsync(markerPath, DateTimeOffset.UtcNow.ToString("O"), cancellationToken)).ConfigureAwait(false);
@@ -212,23 +213,6 @@ public sealed class ApplicationLifecycleService : IApplicationLifecycle
         catch (Exception ex)
         {
             await _diagnostics.RecordErrorAsync("Integrity", $"SQLite integrity check failed: {ex.Message}", null, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    /// <summary>
-    /// Runs run pre migration backups async while preserving the surrounding cancellation and error-handling contract.
-    /// </summary>
-    private async Task RunPreMigrationBackupsAsync(CancellationToken cancellationToken)
-    {
-        var backupDir = Path.Combine(_paths.DataDirectory, "backups");
-        Directory.CreateDirectory(backupDir);
-        var dbPath = _paths.DatabasePath;
-        if (File.Exists(dbPath))
-        {
-            var backupPath = Path.Combine(backupDir, $"haven-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.db");
-            await using var source = File.OpenRead(dbPath);
-            await using var dest = File.Create(backupPath);
-            await source.CopyToAsync(dest, cancellationToken).ConfigureAwait(false);
         }
     }
 

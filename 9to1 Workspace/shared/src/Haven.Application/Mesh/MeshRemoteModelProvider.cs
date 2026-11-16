@@ -14,6 +14,11 @@ public sealed class MeshRemoteModelProvider(MeshCoordinator mesh) : IModelProvid
     public async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)
     {
         var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        var activation = await mesh.WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false);
+        if (activation is not (MeshAutomaticStartResult.Started or MeshAutomaticStartResult.AlreadyRunning))
+            return new(Id, false, activation == MeshAutomaticStartResult.IdentityRepairRequired
+                ? "Mesh identity needs attention before reconnecting." : "No paired Mesh devices are configured.",
+                System.Diagnostics.Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
         var dashboard = await mesh.GetDashboardAsync(cancellationToken).ConfigureAwait(false);
         var connected = dashboard.TrustedPeers.Count(peer => peer.Presence.Connection == MeshConnectionState.Connected);
         return new(Id, connected > 0, connected > 0 ? $"{connected} trusted Mesh device(s) connected." : "No trusted Mesh devices are connected.", System.Diagnostics.Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);

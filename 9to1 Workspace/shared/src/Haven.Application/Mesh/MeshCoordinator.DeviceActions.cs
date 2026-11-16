@@ -33,7 +33,7 @@ public sealed partial class MeshCoordinator
             var peer = RequireTrustedPeer(deviceId);
             var grants = (peer.AllowedRemoteCapabilities ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
             if (allowed) grants.Add(capabilityKey.Trim()); else grants.Remove(capabilityKey.Trim());
-            await ReplacePeerAsync(peer with { AllowedRemoteCapabilities = grants.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray() }, cancellationToken).ConfigureAwait(false);
+            await ReplacePeerLockedAsync(peer with { AllowedRemoteCapabilities = grants.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToArray() }, cancellationToken).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
         StateChanged?.Invoke();
@@ -41,7 +41,7 @@ public sealed partial class MeshCoordinator
 
     public async Task<DeviceCapabilitySnapshot> GetRemoteDeviceSnapshotAsync(Guid deviceId, CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        DemandAutomaticNetworkStarted(await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false));
         var peer = RequireTrustedPeer(deviceId);
         var presence = GetPresence(peer);
         if (presence.Connection != MeshConnectionState.Connected)
@@ -60,7 +60,7 @@ public sealed partial class MeshCoordinator
         bool sourcePermissionGranted,
         CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        DemandAutomaticNetworkStarted(await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false));
         _ = RequireTrustedPeer(deviceId);
         if (string.IsNullOrWhiteSpace(actionKey)) throw new ArgumentException("Device action key is required.", nameof(actionKey));
         if (string.IsNullOrWhiteSpace(capabilityKey)) throw new ArgumentException("Device capability key is required.", nameof(capabilityKey));

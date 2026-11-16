@@ -460,10 +460,12 @@ public sealed partial class App
                     token => AdmitHomeSettingsAsync(request, token)),
                 library: request => CreateHomeLibraryPage(request, actualTheme.Context));
             IBrowseEngineHostFactory? engines = null;
+#if HAVEN_LINUX_CHROMIUM
             if (!OperatingSystem.IsWindows())
                 engines = new ChromiumEngineFactory(
                     _services.GetRequiredService<BrowserDownloadTransport>(),
                     _services.GetRequiredService<IBrowserNativeDownloadService>());
+#endif
 #if HAVEN_WINDOWS_DESKTOP
             engines = new WindowsChromiumEngineFactory((tab, engine, origin, kind) =>
                 (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published."))

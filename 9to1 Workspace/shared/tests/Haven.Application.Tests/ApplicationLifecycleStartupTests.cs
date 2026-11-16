@@ -2,7 +2,7 @@ using Haven.Application;
 using Haven.Infrastructure;
 using Microsoft.Data.Sqlite;
 
-namespace Haven.Desktop.Tests;
+namespace Haven.Application.Tests;
 
 // Actual production lifecycle and SQLite; controlled diagnostic/task siblings only.
 public sealed class ApplicationLifecycleStartupTests
@@ -75,6 +75,24 @@ public sealed class ApplicationLifecycleStartupTests
     }
 
     [Fact]
+    public async Task Startup_does_not_reopen_database_after_initializer_retains_its_file_handle()
+    {
+        using var paths = new Paths();
+        using var database = new DatabaseHoldingExclusiveFileHandle(paths.DatabasePath);
+        var diagnostics = new AppDiagnostics();
+        var lifecycle = new ApplicationLifecycleService(paths, database, diagnostics);
+
+        await lifecycle.StartupAsync(TestContext.Current.CancellationToken)
+            .WaitAsync(Bound, TestContext.Current.CancellationToken);
+
+        Assert.True(database.HasOpenHandle);
+        Assert.True(lifecycle.IsStartupComplete);
+        Assert.False(lifecycle.IsSafeMode);
+        Assert.True(File.Exists(Path.Combine(paths.DataDirectory, ".startup")));
+        Assert.False(File.Exists(Path.Combine(paths.DataDirectory, ".shutdown")));
+    }
+
+    [Fact]
     public async Task Readiness_waits_for_the_same_held_success_diagnostic_after_actual_SQLite_startup()
     {
         using var paths = new Paths();
@@ -126,6 +144,24 @@ public sealed class ApplicationLifecycleStartupTests
             database.InitializeAsync(token), Task.FromException(sibling));
     }
 
+    private sealed class DatabaseHoldingExclusiveFileHandle(string databasePath) : IAppDatabase, IDisposable
+    {
+        private FileStream? _handle;
+        public bool HasOpenHandle => _handle is { CanRead: true };
+
+        public Task InitializeAsync(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            Directory.CreateDirectory(Path.GetDirectoryName(databasePath)!);
+            if (!File.Exists(databasePath)) File.WriteAllBytes(databasePath, [1]);
+            // Mirrors Windows SQLite/provider custody after InitializeAsync returns.
+            _handle = new FileStream(databasePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            return Task.CompletedTask;
+        }
+
+        public void Dispose() => _handle?.Dispose();
+    }
+
     private sealed class Diagnostics(Func<string, string, Task> record) : IAppDiagnostics
     {
         private readonly AppDiagnostics _actual = new();
@@ -148,6 +184,20 @@ public sealed class ApplicationLifecycleStartupTests
         public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
         public string LogsDirectory => Path.Combine(DataDirectory, "logs");
         public string LegacyStatePath => Path.Combine(DataDirectory, "legacy");
-        public void Dispose() => Directory.Delete(DataDirectory, recursive: true);
+        public void Dispose()
+        {
+            // Release only this fixture's SQLite pool before removing its private files.
+            // ClearAllPools would interfere with other concurrently executing tests.
+            using var pool = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = DatabasePath,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Cache = SqliteCacheMode.Shared,
+                Pooling = true,
+                ForeignKeys = true
+            }.ToString());
+            SqliteConnection.ClearPool(pool);
+            Directory.Delete(DataDirectory, recursive: true);
+        }
     }
 }

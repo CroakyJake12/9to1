@@ -31,11 +31,19 @@ public sealed class LanMeshDiscoveryService : IMeshDiscoveryService
         if (IsRunning) return Task.CompletedTask;
         var listenerPort = ParsePrivateEndpointPort(localEndpoint);
         var socket = new UdpClient(AddressFamily.InterNetwork);
-        socket.Client.ExclusiveAddressUse = false;
-        socket.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        socket.Client.Bind(new IPEndPoint(IPAddress.Any, Port));
-        socket.JoinMulticastGroup(Group);
-        socket.MulticastLoopback = false;
+        try
+        {
+            socket.Client.ExclusiveAddressUse = false;
+            socket.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.Client.Bind(new IPEndPoint(IPAddress.Any, Port));
+            socket.JoinMulticastGroup(Group);
+            socket.MulticastLoopback = false;
+        }
+        catch
+        {
+            socket.Dispose(); // This candidate has not been published to _socket yet.
+            throw;
+        }
         _socket = socket;
         _local = new(localIdentity.DeviceId, localIdentity.DisplayName, localIdentity.DeviceClass, localIdentity.Platform, localIdentity.PublicKeyFingerprint, listenerPort);
         _lifetime = new CancellationTokenSource();

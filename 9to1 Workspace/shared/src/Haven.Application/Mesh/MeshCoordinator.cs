@@ -43,61 +43,8 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
     public event Action? StateChanged;
 
-    public async Task InitialiseAsync(CancellationToken cancellationToken)
-    {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            if (_initialised) return;
-            _state = await _stateStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-            if (_state.Version > MeshPersistentState.CurrentVersion)
-                throw new InvalidDataException($"Mesh state version {_state.Version} is newer than this 9to1 build supports.");
-            if (_state.Version < MeshPersistentState.CurrentVersion || _state.WorkMembers is null || _state.WorkMessages is null
-                    || _state.WorkItems is null || _state.SyncIntents is null)
-            {
-                _state = _state with
-                {
-                    Version = MeshPersistentState.CurrentVersion,
-                    WorkMembers = _state.WorkMembers ?? [],
-                    WorkMessages = _state.WorkMessages ?? [],
-                    WorkItems = _state.WorkItems ?? [],
-                    SyncIntents = _state.SyncIntents ?? []
-                };
-                await _stateStore.SaveAsync(_state, cancellationToken).ConfigureAwait(false);
-            }
-
-            if (_state.LocalIdentity is null)
-            {
-                var deviceId = Guid.NewGuid();
-                using var signingKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-                var key = Convert.ToBase64String(signingKey.ExportPkcs8PrivateKey());
-                var fingerprint = Convert.ToHexString(SHA256.HashData(signingKey.ExportSubjectPublicKeyInfo())).ToLowerInvariant();
-                var platform = OperatingSystem.IsWindows() ? CapabilityPlatform.Windows : CapabilityPlatform.Android;
-                var deviceClass = OperatingSystem.IsWindows() ? MeshDeviceClass.Desktop : MeshDeviceClass.Phone;
-                _state = _state with
-                {
-                    Version = MeshPersistentState.CurrentVersion,
-                    LocalIdentity = new MeshLocalIdentity(deviceId, Environment.MachineName, deviceClass, platform, fingerprint, DateTimeOffset.UtcNow)
-                };
-                await _identitySecrets.SetPrivateKeyAsync(deviceId, key, cancellationToken).ConfigureAwait(false);
-                await _stateStore.SaveAsync(_state, cancellationToken).ConfigureAwait(false);
-            }
-
-            var privateKey = await _identitySecrets.GetPrivateKeyAsync(_state.LocalIdentity.DeviceId, cancellationToken).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(privateKey))
-                throw new InvalidDataException("Mesh identity metadata exists, but its private identity secret is missing. Re-pair this 9to1 installation rather than silently replacing its identity.");
-
-            await _transport.StartAsync(_state.LocalIdentity, privateKey, cancellationToken).ConfigureAwait(false);
-            await _transport.SetTrustedPeersAsync(_state.TrustedPeers, cancellationToken).ConfigureAwait(false);
-            await StartDiscoveryAsync(cancellationToken).ConfigureAwait(false);
-            _initialised = true;
-        }
-        finally
-        {
-            _gate.Release();
-        }
-        StateChanged?.Invoke();
-    }
+    public Task InitialiseAsync(CancellationToken cancellationToken) =>
+        InitialiseCoreAsync(NetworkStartIntent.ExplicitUser, cancellationToken);
 
     public async Task<MeshPairingOffer> CreatePairingOfferAsync(CancellationToken cancellationToken)
     {
@@ -146,21 +93,42 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         var peer = new MeshPeerRecord(
             observed.DeviceId, observed.DisplayName, observed.DeviceClass, observed.Platform, observed.PublicKeyFingerprint,
             MeshPeerTrustState.Trusted, existing?.FirstSeenAt ?? now, now, null, observed.Endpoint);
-        await ReplacePeerAsync(peer, cancellationToken).ConfigureAwait(false);
-        UpdatePresence(observed, MeshPresenceState.Available, MeshConnectionState.Connected, now);
+        if (!await TryStorePairedPeerAsync(peer, observed, cancellationToken).ConfigureAwait(false))
+        {
+            await _transport.DisconnectAsync(peer.DeviceId, CancellationToken.None).ConfigureAwait(false);
+            return new(false, "The device trust changed while pairing. The connection was not retained.");
+        }
         StateChanged?.Invoke();
         return new(true, $"Trusted {peer.DisplayName}. Future connections must present the same device identity fingerprint.", peer);
     }
 
     public async Task RevokeAsync(Guid deviceId, CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
-        var peer = RequireKnownPeer(deviceId);
-        var revoked = peer with { TrustState = MeshPeerTrustState.Revoked, RevokedAt = DateTimeOffset.UtcNow };
-        await ReplacePeerAsync(revoked, cancellationToken).ConfigureAwait(false);
-        await _transport.DisconnectAsync(deviceId, cancellationToken).ConfigureAwait(false);
-        _presence[deviceId] = OfflinePresence(revoked, DateTimeOffset.UtcNow);
-        StateChanged?.Invoke();
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _retiring) != 0, this);
+        _pendingRevocations.AddOrUpdate(deviceId, 1, (_, count) => checked(count + 1));
+        try
+        {
+            MeshPeerRecord revoked;
+            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                ObjectDisposedException.ThrowIf(Volatile.Read(ref _retiring) != 0, this);
+                if (!_initialised)
+                {
+                    var stored = await _stateStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+                    ValidateStartupState(stored);
+                    _state = NormalizeStartupState(stored);
+                }
+                var peer = RequireKnownPeer(deviceId);
+                revoked = peer with { TrustState = MeshPeerTrustState.Revoked, RevokedAt = DateTimeOffset.UtcNow };
+                await ReplacePeerLockedAsync(revoked, cancellationToken).ConfigureAwait(false);
+            }
+            finally { _gate.Release(); }
+            await _transport.DisconnectAsync(deviceId, cancellationToken).ConfigureAwait(false);
+            _presence[deviceId] = OfflinePresence(revoked, DateTimeOffset.UtcNow);
+            StateChanged?.Invoke();
+        }
+        finally { FinishPendingRevocation(deviceId); }
     }
 
     public async Task ConnectAsync(Guid deviceId, CancellationToken cancellationToken)
@@ -178,7 +146,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         HavenSurface sourceSurface,
         CancellationToken cancellationToken)
     {
-        await EnsureInitialisedAsync(cancellationToken).ConfigureAwait(false);
+        DemandAutomaticNetworkStarted(await WarmupTrustedPeersAsync(cancellationToken).ConfigureAwait(false));
         var peer = RequireTrustedPeer(targetDeviceId);
         if (string.IsNullOrWhiteSpace(instruction)) throw new ArgumentException("A task instruction is required.", nameof(instruction));
 
@@ -284,6 +252,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
     private async Task EnsureInitialisedAsync(CancellationToken cancellationToken)
     {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _retiring) != 0, this);
         if (!_initialised) await InitialiseAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -293,7 +262,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
     private MeshPeerRecord RequireTrustedPeer(Guid deviceId)
     {
         var peer = RequireKnownPeer(deviceId);
-        if (peer.TrustState != MeshPeerTrustState.Trusted) throw new UnauthorizedAccessException("The remote device is not trusted.");
+        if (peer.TrustState != MeshPeerTrustState.Trusted || _pendingRevocations.ContainsKey(deviceId)) throw new UnauthorizedAccessException("The remote device is not trusted.");
         return peer;
     }
 
@@ -314,12 +283,12 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         return snapshot;
     }
 
-    private async Task ReplacePeerAsync(MeshPeerRecord peer, CancellationToken cancellationToken)
+    private async Task ReplacePeerLockedAsync(MeshPeerRecord peer, CancellationToken cancellationToken)
     {
         var peers = _state.TrustedPeers.Where(item => item.DeviceId != peer.DeviceId).Append(peer).ToArray();
         _state = _state with { TrustedPeers = peers };
         await _stateStore.SaveAsync(_state, cancellationToken).ConfigureAwait(false);
-        await _transport.SetTrustedPeersAsync(_state.TrustedPeers, cancellationToken).ConfigureAwait(false);
+        await _transport.SetTrustedPeersAsync(CurrentStartupPeers(automatic: false), cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<MeshTaskReceipt> RecordTaskAsync(MeshTaskReceipt receipt, CancellationToken cancellationToken)
@@ -343,6 +312,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
     private void OnPeerObserved(MeshTransportPeer peer)
     {
+        if (Volatile.Read(ref _retiring) != 0 || _pendingRevocations.ContainsKey(peer.DeviceId)) return;
         var known = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == peer.DeviceId);
         if (known is null || known.TrustState != MeshPeerTrustState.Trusted) return;
         if (!string.Equals(known.PublicKeyFingerprint, peer.PublicKeyFingerprint, StringComparison.OrdinalIgnoreCase))
@@ -357,6 +327,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
     private void OnPairingCompleted(MeshTransportPeer peer)
     {
+        if (Volatile.Read(ref _retiring) != 0 || _pendingRevocations.ContainsKey(peer.DeviceId)) return;
         _ = AcceptInboundPairingAsync(peer);
     }
 
@@ -371,9 +342,22 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         try
         {
             await _gate.WaitAsync().ConfigureAwait(false);
-            try { await ReplacePeerAsync(peer, CancellationToken.None).ConfigureAwait(false); }
+            try
+            {
+                if (!CanAcceptPeerLocked(peer))
+                {
+                    await _transport.DisconnectAsync(peer.DeviceId, CancellationToken.None).ConfigureAwait(false);
+                    return;
+                }
+                await ReplacePeerLockedAsync(peer, CancellationToken.None).ConfigureAwait(false);
+                if (!CanAcceptPeerLocked(peer))
+                {
+                    await _transport.DisconnectAsync(peer.DeviceId, CancellationToken.None).ConfigureAwait(false);
+                    return;
+                }
+                UpdatePresence(observed, MeshPresenceState.Available, MeshConnectionState.Connected, now);
+            }
             finally { _gate.Release(); }
-            UpdatePresence(observed, MeshPresenceState.Available, MeshConnectionState.Connected, now);
             StateChanged?.Invoke();
         }
         catch (Exception)
@@ -384,6 +368,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
     private void OnConnectionChanged(Guid deviceId, MeshConnectionState connection)
     {
+        if (Volatile.Read(ref _retiring) != 0 || _pendingRevocations.ContainsKey(deviceId)) return;
         var known = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == deviceId);
         if (known is null || known.TrustState != MeshPeerTrustState.Trusted) return;
         var now = DateTimeOffset.UtcNow;
@@ -403,6 +388,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
     private void OnMessageReceived(MeshTransportMessage message)
     {
+        if (Volatile.Read(ref _retiring) != 0 || _pendingRevocations.ContainsKey(message.SourceDeviceId)) return;
         var peer = _state.TrustedPeers.FirstOrDefault(item => item.DeviceId == message.SourceDeviceId);
         if (peer is null || peer.TrustState != MeshPeerTrustState.Trusted) return;
         if (TryHandleSyncMessage(message)) return;
@@ -428,16 +414,16 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         _presence[peer.DeviceId] = new(peer.DeviceId, presence, connection, now, now, peer.Capabilities);
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        _transport.PeerObserved -= OnPeerObserved;
-        _transport.PairingCompleted -= OnPairingCompleted;
-        _transport.ConnectionChanged -= OnConnectionChanged;
-        _transport.MessageReceived -= OnMessageReceived;
-        await StopDiscoveryAsync().ConfigureAwait(false);
-        if (_transport.IsRunning) await _transport.StopAsync(CancellationToken.None).ConfigureAwait(false);
-        // The transport and discovery services are injected dependencies. Their owner (normally DI)
-        // disposes them after the coordinator has stopped and detached from them.
-        _gate.Dispose();
+        lock (_retirementGate)
+        {
+            if (_retirement is null)
+            {
+                Volatile.Write(ref _retiring, 1);
+                _retirement = DisposeNetworkCoreAsync();
+            }
+            return new(_retirement);
+        }
     }
 }
