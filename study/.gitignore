@@ -1,0 +1,4 @@
+# Personal learning history, local reference exports and classroom documents.
+# Keep these out of the 9to1 GitHub repository by default.
+/state/
+/materials/

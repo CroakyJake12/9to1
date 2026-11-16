@@ -17,7 +17,7 @@
       "NOT-ASSESSED"
     ],
     "min_terms_for_tier": 2,
-    "files_indexed": 6802
+    "files_indexed": 6848
   },
   "specification": "docs/specification/9to1-development-specification-v2.md",
   "summary": {
@@ -552,12 +552,12 @@
     "Present": {
       "must_rows": 223,
       "TEST-ASSERTED": 1,
-      "CODE-PRESENT": 6,
+      "CODE-PRESENT": 8,
       "MIRROR-ONLY": 1,
-      "WEAK-SINGLE-TERM": 133,
+      "WEAK-SINGLE-TERM": 134,
       "NO-EVIDENCE": 41,
       "NO-PROBE-TERMS": 4,
-      "NO-DISTINCTIVE-TERM": 37,
+      "NO-DISTINCTIVE-TERM": 34,
       "hand_states": {
         "IMPLEMENTED": 0,
         "PARTIAL": 0,
@@ -568,7 +568,7 @@
       "implemented_pct": 0.0,
       "implemented_or_partial_pct": 0.0,
       "not_implemented_pct": 0.0,
-      "code_presence_pct": 3.1,
+      "code_presence_pct": 4.0,
       "test_asserted_pct": 0.4,
       "no_evidence_pct": 18.4,
       "mirror_only_pct": 0.4

@@ -38,5 +38,8 @@
     "compaction": {
       "model": "homepc/strata-dynamic#high"
     }
-  }
+  },
+  "instructions": [
+    ".opencode/study/always-on.md"
+  ]
 }
