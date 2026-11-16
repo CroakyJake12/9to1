@@ -269,7 +269,12 @@ class LocalSession:
         self._step_lock = threading.RLock()
         self._updating = False
         self.model_artifacts = {name: ref.sha256 for name, ref in bundle.artifacts.items()}
+        self._model_artifact_refs = {name: asdict(ref) for name, ref in bundle.artifacts.items()}
         self.optimizer = torch.optim.Adam([p for p in self.model.parameters() if p.requires_grad], lr=1e-4, foreach=False)
+        self._parameter_updates = (
+            {name: 0 for name, param in self.model.named_parameters() if param.requires_grad}
+            if purpose == "software_test_only" and method in ("full", "lora") else {}
+        )
         self.updates = 0
 
     def snapshot(self) -> dict:
@@ -290,13 +295,33 @@ class LocalSession:
             if isinstance(value, (tuple, list)):
                 return type(value)(clone(item) for item in value)
             return copy.deepcopy(value)
-        return {"schema": 1, "kind": "hf-local-session", "method": self.method,
+        state = {"schema": 1, "kind": "hf-local-session", "method": self.method,
                 "purpose": self.purpose, "updates": self.updates, "failed": self.failed,
                 "model": clone(self.model.state_dict()), "optimizer": clone(self.optimizer.state_dict()),
                 "model_config": self.model.config.to_dict(), "rng": torch.get_rng_state().clone(),
                 "adapter_config": copy.deepcopy(self.adapter_config),
                 "model_artifacts": dict(self.model_artifacts), "dataset_manifest_sha256": self.dataset.sha256,
                 "torch_version": str(torch.__version__)}
+        if self.purpose == "software_test_only" and self.method in ("full", "lora"):
+            from .restore import resume_metadata
+            state["resume"] = resume_metadata(self)
+        return state
+
+    def restore_checkpoint(self, publication) -> None:
+        """Restore a verified CPU software checkpoint into a fresh custody attempt."""
+        if not self._step_lock.acquire(blocking=False):
+            raise RuntimeError("An update or restore is already in progress")
+        try:
+            if self._updating:
+                raise RuntimeError("An update or restore is already in progress")
+            self._updating = True
+            try:
+                from .restore import restore_checkpoint
+                restore_checkpoint(self, publication)
+            finally:
+                self._updating = False
+        finally:
+            self._step_lock.release()
 
     def step_file(self, file_id: str, *, cancelled=lambda: False) -> dict:
         if not self._step_lock.acquire(blocking=False):
@@ -359,6 +384,9 @@ class LocalSession:
                    for slot in self.optimizer.state.values() for value in slot.values()):
                 raise FloatingPointError("Nonfinite optimizer update; preserve failed candidate")
             self.updates += 1
+            if self._parameter_updates:
+                for name in with_gradient:
+                    self._parameter_updates[name] += 1
             record = {"schema": 1, "status": "completed", "method": self.method, "purpose": self.purpose, "update": self.updates,
                 "loss": float(loss.detach()), "loss_target_tokens": int((batch["labels"][:, 1:] != -100).sum()),
                 "selected": tuple(selected), "with_gradient": with_gradient, "nonzero_gradient": nonzero,
