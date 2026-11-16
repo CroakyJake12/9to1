@@ -7,7 +7,7 @@ const allowedExports = new Set([
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
-async function readJsonText(response) {
+async function readJsonText(response, signal) {
     if (!response.body) return "";
     const mediaType = response.headers.get("Content-Type")?.split(";", 1)[0]?.trim().toLowerCase();
     if (mediaType !== "application/json" && !mediaType?.endsWith("+json")) {
@@ -19,18 +19,27 @@ async function readJsonText(response) {
     const decoder = new TextDecoder("utf-8", { fatal: true });
     let bytes = 0;
     let result = "";
+    let cancellation;
+    const cancelReader = () => cancellation ??= reader.cancel().catch(() => {});
+    const onAbort = () => { cancelReader(); };
+    signal.addEventListener("abort", onAbort, { once: true });
     try {
+        signal.throwIfAborted();
         while (true) {
             const { value, done } = await reader.read();
+            signal.throwIfAborted();
             if (done) return result + decoder.decode();
             bytes += value.byteLength;
             if (bytes > maximumJsonBytes) throw new Error("Files returned an oversized response.");
             result += decoder.decode(value, { stream: true });
         }
     } catch (error) {
-        await reader.cancel().catch(() => {});
+        // Join the same cancellation started by abort; do not acknowledge a
+        // drained request while its original response is still cancelling.
+        await cancelReader();
         throw error;
     } finally {
+        signal.removeEventListener("abort", onAbort);
         reader.releaseLock();
     }
 }
@@ -217,16 +226,27 @@ export function createFilesBrowserBridge({
                 redirect: "error",
                 signal: controller.signal,
             });
+            // A response may arrive after cancellation (including a host fetch
+            // continuation). Drain it without letting stale denial revoke a live
+            // group or starting another read of its private response body.
+            if (controller.signal.aborted) {
+                await response.body?.cancel().catch(() => {});
+                controller.signal.throwIfAborted();
+            }
             if ((response.status === 401 || response.status === 403) && (action !== "context" || group.enrolled)) {
                 if (group.active) {
                     revoke(groupId);
                     // The native reset drains this request. Never await the reset here.
                     queueMicrotask(() => { onSessionLost(); });
                 }
-                if (response.body) await response.body.cancel();
+                if (response.body) await response.body.cancel().catch(error => {
+                    // revoke() aborts this fetch too. Its expected body abort
+                    // must not replace the server's authoritative denial.
+                    if (error?.name !== "AbortError") throw error;
+                });
                 return JSON.stringify({ status: response.status, body: "" });
             }
-            const responseBody = await readJsonText(response);
+            const responseBody = await readJsonText(response, controller.signal);
             controller.signal.throwIfAborted();
             return JSON.stringify({ status: response.status, body: responseBody });
         });
