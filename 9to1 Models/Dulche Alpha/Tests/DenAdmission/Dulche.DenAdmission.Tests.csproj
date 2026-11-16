@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <EmbeddedResource Include="Fixtures/*.jsonl" />
   </ItemGroup>
 </Project>
