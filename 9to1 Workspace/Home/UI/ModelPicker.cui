@@ -3,6 +3,7 @@
     <Action name="Refresh" command="Refresh" parameter="{Binding RefreshSelection}" />
     <Action name="RefreshCatalogue" command="RefreshCatalogue" />
     <Action name="AddCatalogueCandidate" command="AddCatalogueCandidate" parameter="{Binding model.Selection}" />
+    <Action name="ToggleFamily" command="ToggleFamily" parameter="{Binding family.ToggleSelection}" />
     <Action name="SelectCurrentRoute" command="SelectRoute" parameter="{Binding CurrentRouteSelection}" />
     <Action name="SelectRoute" command="SelectRoute" parameter="{Binding route.Selection}" />
     <Action name="ChatCategory" command="SelectCategory" parameter="chat" />
@@ -49,18 +50,44 @@
         <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" TextWrapping="Wrap" />
         <Container id="model-catalogue" background="{Resource CuiPanelBrush}" padding="14" margin="0 8 8 8" Type="Vertical Stack" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
           <Container Type="Vertical Stack">
-            <Text id="model-catalogue-title" text="Add a model from the current authorised catalogue" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-            <Button id="model-catalogue-refresh" action="RefreshCatalogue" content="Refresh catalogue" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Refresh the authorised model catalogue" />
+            <Text id="model-catalogue-title" text="Add a model to your route" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+            <Button id="model-catalogue-refresh" action="RefreshCatalogue" content="Refresh catalogue" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Refresh the model list" />
           </Container>
           <Text id="model-catalogue-status" text="{Binding CatalogueStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 6" TextWrapping="Wrap" />
-          <If condition="{Binding HasCatalogue}">
-            <Repeat Source="{Binding Catalogue}" As="model" Key="{Binding model.Identity}">
+          <Repeat Source="{Binding Families}" As="family" Key="{Binding family.Identity}">
+            <Container id="model-planned-family" Type="Vertical Stack" padding="12" margin="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+              <Text id="model-planned-family-title" text="{Binding family.Title}" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+              <Text id="model-planned-family-description" text="{Binding family.Description}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" margin="0 6" />
+              <Button id="model-family-toggle" action="ToggleFamily" content="{Binding family.ToggleLabel}" accessible-name="{Binding family.ToggleLabel}" HorizontalAlignment="Left" />
+              <If condition="{Binding family.Expanded}">
+                <Container id="model-planned-family-expanded" Type="Vertical Stack" margin="0 8 0 0">
+                  <Text id="model-planned-fallback-status" text="{Binding family.FallbackStatus}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Repeat Source="{Binding family.Children}" As="model" Key="{Binding model.Identity}">
+                    <Container id="model-planned-fallback-entry" Type="Vertical Stack" padding="10" margin="0 8 0 0">
+                      <Text id="model-fallback-actual-name" text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                      <Text id="model-fallback-publisher-id" text="{Binding model.PublisherIdentity}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text id="model-fallback-label" text="{Binding model.FamilyLabel}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text id="model-fallback-provider" text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text id="model-fallback-runtime" text="{Binding model.RuntimeState}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text id="model-fallback-resources" text="{Binding model.ResourceSummary}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Text id="model-fallback-quant" text="{Binding model.Quantisation}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                      <Button id="model-fallback-add-route" action="AddCatalogueCandidate" content="Add to route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Add Qwen3.8-Flash-Next to the route" />
+                    </Container>
+                  </Repeat>
+                </Container>
+              </If>
+            </Container>
+          </Repeat>
+          <If condition="{Binding HasUngroupedCatalogue}">
+            <Repeat Source="{Binding UngroupedCatalogue}" As="model" Key="{Binding model.Identity}">
               <Container id="model-catalogue-entry" margin="0 5 0 0" Type="Vertical Stack">
                 <Container Type="Vertical Stack">
                   <Text text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
                   <Text text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                   <Text text="{Binding model.Locality}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                   <Text text="{Binding model.Capabilities}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Text id="model-catalogue-resource-details" text="{Binding model.ResourceSummary}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Text id="model-catalogue-quant-details" text="{Binding model.Quantisation}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                 </Container>
                 <Button action="AddCatalogueCandidate" content="Add to route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Add this catalogue model to the route draft" />
               </Container>

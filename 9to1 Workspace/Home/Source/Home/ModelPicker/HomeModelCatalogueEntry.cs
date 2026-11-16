@@ -46,7 +46,10 @@ public sealed record HomeModelCatalogueEntry(
     HomeModelProviderFacts ProviderFacts,
     string? ProviderName = null,
     string? PrivacyResidency = null,
-    string? LifecycleLabel = null)
+    string? LifecycleLabel = null,
+    HomeModelPickerPresentation? Presentation = null,
+    string? ExternalModelId = null,
+    HomeModelProviderReportedMetadata? ReportedMetadata = null)
 {
     public static HomeModelCatalogueEntry From(HomeModelPickerCatalogueEntry entry)
     {
@@ -60,10 +63,10 @@ public sealed record HomeModelCatalogueEntry(
             entry.DisplayName,
             string.IsNullOrWhiteSpace(entry.Alias) ? Array.Empty<string>() : [entry.Alias],
             entry.ProviderId,
+            entry.Presentation?.Source,
             null,
-            null,
-            null,
-            null,
+            entry.Presentation?.Format,
+            entry.Presentation?.Quantisation,
             Array.Empty<string>(),
             Array.AsReadOnly(entry.Capabilities?.Order(StringComparer.OrdinalIgnoreCase).ToArray() ?? []),
             entry.ContextWindow,
@@ -71,8 +74,8 @@ public sealed record HomeModelCatalogueEntry(
             Array.Empty<string>(),
             PortableMetric.Empty(),
             PortableMetric.Empty(),
-            PortableMetric.Empty(),
-            PortableMetric.Empty(),
+            entry.Presentation?.StorageMetric ?? PortableMetric.Empty(),
+            entry.Presentation?.HardwareMemoryMetric ?? PortableMetric.Empty(),
             new HomeModelProviderFacts(
                 HomeModelProviderAvailability.Unknown,
                 entry.IsLocal,
@@ -82,7 +85,10 @@ public sealed record HomeModelCatalogueEntry(
                 null),
             entry.ProviderName,
             entry.PrivacyResidency,
-            entry.LifecycleState);
+            entry.LifecycleState,
+            entry.Presentation,
+            entry.Presentation?.ExternalModelId,
+            entry.ReportedMetadata);
     }
 
     public static HomeModelCatalogueEntry From(ModelRecord model, HomeModelProviderFacts? providerFacts = null)
@@ -102,7 +108,7 @@ public sealed record HomeModelCatalogueEntry(
             model.DisplayName,
             Copy(model.Aliases),
             providerId,
-            model.Source,
+            null, // Den Source is unrestricted private description, not safe picker presentation.
             model.Family,
             model.Format,
             model.Quantisation,
@@ -121,7 +127,8 @@ public sealed record HomeModelCatalogueEntry(
                 null,
                 null,
                 null,
-                null));
+                null),
+            ExternalModelId: model.OfficialArtifact?.ExternalModelId);
     }
 
     public bool MatchesQuery(string? query)

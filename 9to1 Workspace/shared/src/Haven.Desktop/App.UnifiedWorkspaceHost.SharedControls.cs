@@ -1185,6 +1185,13 @@ public sealed partial class App
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
                             HomeModelPickerAction.RefreshCatalogue), cancellationToken));
                         return;
+                    case "ToggleFamily" when parameter is HomeModelPickerFamilySelection family:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.ToggleFamily, FamilyKey: family.FamilyKey), cancellationToken));
+                        return;
+                    case "ToggleFamily":
+                        RefuseMalformed(command);
+                        return;
                     case "AddCatalogueCandidate" when parameter is HomeModelPickerCatalogueSelection candidate:
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
                             HomeModelPickerAction.AddCatalogueCandidate, ProviderId: candidate.ProviderId,

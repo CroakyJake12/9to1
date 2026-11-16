@@ -3,6 +3,7 @@ using System.Text.Json;
 using CakeOS.Cui;
 using Haven.Core;
 using HavenOS.Home.Core;
+using NineToOne.Dulche.Den;
 
 namespace HavenOS.Home;
 
@@ -32,7 +33,11 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
         string? effectiveSelectedReasoningId = null,
         string? pendingApprovalRequestId = null,
         IReadOnlyList<HomeModelPickerCatalogueEntry>? catalogue = null,
-        string? catalogueStatus = null)
+        string? catalogueStatus = null,
+        HomeModelFamilyReleaseContext? familyRelease = null,
+        IReadOnlySet<string>? expandedFamilies = null,
+        bool? catalogueObserved = null,
+        bool catalogueReadFailed = false)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _scope = scope;
@@ -44,7 +49,7 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
         _effectiveSelectedReasoningId = effectiveSelectedReasoningId;
         _pendingApprovalRequestId = pendingApprovalRequestId;
         _catalogue = catalogue ?? [];
-        _catalogueStatus = catalogueStatus ?? "Load the authorised model catalogue to add a route candidate.";
+        _catalogueStatus = catalogueStatus ?? "Refresh the model list to add a model to your route.";
         Routes = Array.AsReadOnly((state.Snapshot?.Routes ?? [])
             .Select(route => new HomeModelPickerRouteRow(
                 route.RouteId == state.SelectedRouteId && state.DraftRoute is { } draft ? draft : route,
@@ -60,11 +65,20 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
             return new HomeModelPickerTraceRow(text, occurrence);
         }).ToArray());
         Catalogue = Array.AsReadOnly(_catalogue.Select(entry => new HomeModelPickerCatalogueRow(entry)).ToArray());
+        var planned = (familyRelease ?? new()).Phase == ModelFamilyCataloguePhase.PlannedLocalRelease;
+        var fallback = planned ? _catalogue.Where(HomeModelPickerFamilyRow.IsExactFallback).ToArray() : [];
+        Families = planned ? Array.AsReadOnly(new[] { new HomeModelPickerFamilyRow(fallback,
+            expandedFamilies?.Contains(HomeModelPickerFamilyRow.PlannedQwen4Key) == true,
+            catalogueObserved ?? catalogue is not null, catalogueReadFailed) }) : [];
+        UngroupedCatalogue = Array.AsReadOnly(_catalogue.Where(entry => !planned || !HomeModelPickerFamilyRow.IsExactFallback(entry))
+            .Select(entry => new HomeModelPickerCatalogueRow(entry)).ToArray());
     }
 
     public IReadOnlyList<HomeModelPickerRouteRow> Routes { get; }
     public IReadOnlyList<HomeModelPickerTraceRow> Trace { get; }
     public IReadOnlyList<HomeModelPickerCatalogueRow> Catalogue { get; }
+    public IReadOnlyList<HomeModelPickerCatalogueRow> UngroupedCatalogue { get; }
+    public IReadOnlyList<HomeModelPickerFamilyRow> Families { get; }
 
     public bool HasSnapshot => _state.Snapshot is not null;
 
@@ -89,6 +103,9 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
             case "HasTrace": value = Trace.Count != 0; return true;
             case "Catalogue": value = Catalogue; return true;
             case "HasCatalogue": value = Catalogue.Count != 0; return true;
+            case "UngroupedCatalogue": value = UngroupedCatalogue; return true;
+            case "HasUngroupedCatalogue": value = UngroupedCatalogue.Count != 0; return true;
+            case "Families": value = Families; return true;
             case "CatalogueStatus": value = _catalogueStatus; return true;
             case "Preview.ResolutionState": value = _state.Preview?.ResolutionState ?? string.Empty; return true;
             case "Preview.Trace": value = Trace; return true;
@@ -131,6 +148,42 @@ public sealed record HomeModelPickerCandidateSelection(string ProviderId, string
 public sealed record HomeModelPickerCandidateToggleSelection(string ProviderId, string ModelId, string? ArtifactRevision, bool Enabled);
 public sealed record HomeModelPickerReasoningLevelSelection(string ProviderId, string ModelId, string? ArtifactRevision, string? ReasoningLevelId);
 public sealed record HomeModelPickerCatalogueSelection(string ProviderId, string ModelId, string? ArtifactRevision);
+public sealed record HomeModelPickerFamilySelection(string FamilyKey);
+
+/// <summary>Non-executable presentation grouping. Deliberately exposes no model Selection.</summary>
+public sealed class HomeModelPickerFamilyRow : ICuiBindingContext
+{
+    public const string PlannedQwen4Key = "planned:qwen4-local";
+    public string Identity => PlannedQwen4Key;
+    public bool Expanded { get; }
+    private readonly bool _catalogueObserved;
+    private readonly bool _catalogueReadFailed;
+    public IReadOnlyList<HomeModelPickerCatalogueRow> Children { get; }
+    internal HomeModelPickerFamilyRow(IReadOnlyList<HomeModelPickerCatalogueEntry> entries, bool expanded, bool catalogueObserved, bool catalogueReadFailed)
+    { Expanded = expanded; _catalogueObserved = catalogueObserved; _catalogueReadFailed = catalogueReadFailed; Children = Array.AsReadOnly(entries.Select(entry => new HomeModelPickerCatalogueRow(entry)).ToArray()); }
+
+    internal static bool IsExactFallback(HomeModelPickerCatalogueEntry entry) =>
+        entry.IsLocal == true && entry.Presentation is { FamilyLabel: ModelFamilyCatalogueLabel.TemporaryDevelopmentFallbackForPlannedQwen4 } facts &&
+        !string.IsNullOrWhiteSpace(facts.BindingRevision) &&
+        string.Equals(facts.ExternalModelId, "Qwen/Qwen3.8-Flash-Next", StringComparison.OrdinalIgnoreCase);
+
+    public bool TryGetValue(string path, out object? value)
+    {
+        value = path switch
+        {
+            "Identity" => Identity, "Title" => "Qwen4 — planned", "Expanded" => Expanded,
+            "Description" => "Qwen4 is planned for local use. Qwen3.8-Flash-Next is the development fallback.",
+            "ToggleLabel" => Expanded ? "Collapse Qwen4 planned family" : "Expand Qwen4 planned family",
+            "ToggleSelection" => new HomeModelPickerFamilySelection(Identity), "Children" => Children,
+            "FallbackStatus" => !_catalogueObserved
+                ? _catalogueReadFailed ? "Could not check the Qwen3.8 fallback. Try refreshing." : "Refresh to check for a Qwen3.8 fallback."
+                : Children.Count == 0 ? "No Qwen3.8 fallback is registered yet."
+                : "Qwen3.8 development fallback",
+            _ => null
+        };
+        return value is not null;
+    }
+}
 
 public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
 {
@@ -159,9 +212,38 @@ public sealed class HomeModelPickerCatalogueRow : ICuiBindingContext
             case "ProviderName": value = _entry.ProviderName; return true;
             case "Locality": value = Locality; return true;
             case "Capabilities": value = Capabilities; return true;
+            case "FamilyLabel": value = _entry.Presentation?.FamilyLabel switch
+            {
+                ModelFamilyCatalogueLabel.TemporaryDevelopmentFallbackForPlannedQwen4 => "Qwen3.8-Flash-Next · Development fallback",
+                ModelFamilyCatalogueLabel.Legacy => "Qwen3.8 Legacy",
+                _ => ""
+            }; return true;
+            case "PublisherIdentity": value = _entry.Presentation?.ExternalModelId ?? "Publisher identity not supplied"; return true;
+            case "RuntimeState": value = string.IsNullOrWhiteSpace(_entry.LifecycleState) ? "Availability unknown" : "Status: " + _entry.LifecycleState; return true;
+            case "ResourceSummary":
+                var metadata = _entry.Presentation;
+                var sizeLabel = metadata?.KnownStorageBytes is > 0
+                    ? "Model file: " + SizeLabel(metadata?.KnownStorageBytes)
+                    : _entry.ReportedMetadata is { } reported
+                        ? "Reported model file: " + SizeLabel(reported.ReportedSizeBytes)
+                        : "Model file: unknown";
+                value = (metadata is { ResourceClass: not ModelResourceClass.Unknown } ? metadata.ResourceClass + " · " : "")
+                    + sizeLabel + $" · Required memory: {SizeLabel(metadata?.KnownHardwareMemoryBytes)}";
+                return true;
+            case "Quantisation":
+                value = _entry.Presentation?.Quantisation is { } declaredQuant && !string.IsNullOrWhiteSpace(declaredQuant) ? declaredQuant
+                    : _entry.ReportedMetadata?.ReportedQuantisation is { } quant ? "Reported quantization: " + quant
+                    : "Quantization unknown";
+                return true;
             case "Selection": value = new HomeModelPickerCatalogueSelection(_entry.ProviderId, _entry.ModelId, _entry.ArtifactRevision); return true;
             default: value = null; return false;
         }
+    }
+    private static string SizeLabel(long? bytes)
+    {
+        if (bytes is not > 0) return "unknown";
+        var gib = bytes.Value / (1024m * 1024 * 1024);
+        return gib < 0.01m ? "<0.01 GiB" : gib.ToString("0.##", CultureInfo.InvariantCulture) + " GiB";
     }
 }
 

@@ -54,7 +54,8 @@ public sealed class HomeModelRouteActionPolicies : IHomeActionPolicySource
 /// mutation requires the same Home broker and the repository's actual expected revision.</summary>
 public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity profiles, IVersionedModelRouteRepository routes,
     IModelProviderRegistry providers, IPrivacyPreferenceStore privacy, ResourceAuthorizationService resources,
-    HomeResourceOperationBroker operations) : IHomeModelPickerOriginalActorFeatureProvider
+    HomeResourceOperationBroker operations, IHomeModelCatalogueMetadataSource? metadataSource = null,
+    HomeModelFamilyReleaseContext? familyRelease = null) : IHomeModelPickerOriginalActorFeatureProvider
 {
     private readonly ConcurrentDictionary<string, (HomeResourceExecutionCapability Capability, string RouteId)> _pendingAudits = new();
 
@@ -67,13 +68,46 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         var actor = await ActorAsync("models.routes.read", ResourceAccess.Read, cancellationToken).ConfigureAwait(false);
         if (actor is null) return Denied<HomeModelCataloguePage>();
         var models = await providers.GetModelsAsync(new ModelCataloguePolicy(AllowRemote: !privacy.Current.LocalOnlyMode), cancellationToken).ConfigureAwait(false);
-        if (await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor) return Denied<HomeModelCataloguePage>();
-        var entries = models.Where(model => string.IsNullOrWhiteSpace(query) || model.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-            model.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Select(model => new HomeModelPickerCatalogueEntry(
-                model.ProviderId, model.Name, null, model.Label, providers.Find(model.ProviderId)?.DisplayName ?? model.ProviderId,
-                model.IsLocal, model.Capabilities.Select(value => value.ToString()).ToHashSet(StringComparer.Ordinal),
-                model.ContextWindow, null, null, null)).ToArray();
-        return new(true, "Ready", "Current authorised provider catalogue.", new(entries, 0, entries.Length, false, 0));
+        if (!await CatalogueActorIsCurrentAsync(actor, cancellationToken).ConfigureAwait(false)) return Denied<HomeModelCataloguePage>();
+        var entries = new List<HomeModelPickerCatalogueEntry>();
+        var metadataUnavailable = false;
+        foreach (var model in models.Where(model => string.IsNullOrWhiteSpace(query) || model.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                     model.Label.Contains(query, StringComparison.OrdinalIgnoreCase)))
+        {
+            HomeModelPickerPresentation? presentation = null;
+            if (metadataSource is not null)
+            {
+                var identity = new ModelIdentity(model.ProviderId, model.Name, null);
+                HomeModelCatalogueMetadataBinding? binding = null;
+                try
+                {
+                    binding = await metadataSource.FindAsync(actor, identity, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception error) when (error is IOException or InvalidDataException or NineToOne.Dulche.Den.DenException)
+                { metadataUnavailable = true; } // Reject metadata, not the already-authorized generic model.
+                // A changed principal must stop this enumeration immediately,
+                // before projecting stale metadata or asking for another row.
+                if (!await CatalogueActorIsCurrentAsync(actor, cancellationToken).ConfigureAwait(false)) return Denied<HomeModelCataloguePage>();
+                try { presentation = HomeModelCatalogueMetadataProjection.Project(identity, binding, familyRelease ?? new()); }
+                catch (Exception error) when (error is InvalidDataException or NineToOne.Dulche.Den.DenException)
+                { metadataUnavailable = true; }
+            }
+            entries.Add(new(model.ProviderId, model.Name, null, model.Label,
+                providers.Find(model.ProviderId)?.DisplayName ?? model.ProviderId, model.IsLocal,
+                model.Capabilities.Select(value => value.ToString()).ToHashSet(StringComparer.Ordinal),
+                model.ContextWindow, null, null, null, presentation,
+                HomeModelProviderReportedMetadata.From(model.Model.SizeBytes, model.Model.Quantization)));
+        }
+        if (!await CatalogueActorIsCurrentAsync(actor, cancellationToken).ConfigureAwait(false)) return Denied<HomeModelCataloguePage>();
+        return new(true, metadataUnavailable ? "MetadataPartial" : "Ready",
+            metadataUnavailable ? "Model list updated. Some details are unavailable." : "Model list updated.",
+            new(Array.AsReadOnly(entries.ToArray()), 0, entries.Count, false, 0, familyRelease ?? new()));
+    }
+
+    private async Task<bool> CatalogueActorIsCurrentAsync(AuthenticatedResourceActor expected, CancellationToken cancellationToken)
+    {
+        try { return await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) == expected; }
+        catch (UnauthorizedAccessException) { return false; } // Existing profile no longer belongs to this principal.
     }
 
     public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category,

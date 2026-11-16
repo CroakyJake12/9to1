@@ -23,6 +23,7 @@ public enum HomeModelPickerAction
     PreviewResolution,
     SetReasoningLevel,
     CommitReasoningLevel,
+    ToggleFamily,
 }
 
 public sealed record HomeModelPickerActionRequest(
@@ -38,12 +39,17 @@ public sealed record HomeModelPickerActionRequest(
     string? AppId = null,
     string? AgentId = null,
     string? ReasoningLevelId = null,
-    JsonElement? Context = null);
+    JsonElement? Context = null,
+    string? FamilyKey = null);
 
 /// <summary>Owns the authored Home model-picker CUI document and the typed action queue for its host.</summary>
 public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPropertyChanged
 {
     private readonly Queue<HomeModelPickerActionRequest> _actions = new();
+    private readonly HashSet<string> _expandedFamilies = new(StringComparer.Ordinal);
+    private HomeModelFamilyReleaseContext _familyRelease = new();
+    private bool _catalogueObserved;
+    private bool _catalogueReadFailed;
 
     public HomeModelPickerCuiSurface(CuiDocument document)
     {
@@ -61,7 +67,7 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     public string? EffectiveArtifactRevision { get; private set; }
     public string? EffectiveSelectedReasoningId { get; private set; }
     public IReadOnlyList<HomeModelPickerCatalogueEntry> Catalogue { get; private set; } = [];
-    public string CatalogueStatus { get; private set; } = "Load the authorised model catalogue to add a route candidate.";
+    public string CatalogueStatus { get; private set; } = "Refresh the model list to add a model to your route.";
     public string? PendingApprovalRequestId { get; set; }
     public string? PendingAuditRequestId { get; set; }
     public HomeModelPickerCuiProjection Projection { get; private set; } =
@@ -111,6 +117,9 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     public void ApplyCatalogue(HomeModelCataloguePage? page, string status)
     {
         Catalogue = page?.Items ?? [];
+        _catalogueObserved = page is not null;
+        _catalogueReadFailed = page is null;
+        if (page is not null) _familyRelease = page.FamilyRelease ?? new();
         CatalogueStatus = status;
         RebuildProjection();
     }
@@ -119,13 +128,15 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     {
         Projection = new HomeModelPickerCuiProjection(State, Scope, Category,
             EffectiveAdvertisedReasoningIds, EffectiveProviderId, EffectiveModelId, EffectiveArtifactRevision,
-            EffectiveSelectedReasoningId, PendingApprovalRequestId, Catalogue, CatalogueStatus);
+            EffectiveSelectedReasoningId, PendingApprovalRequestId, Catalogue, CatalogueStatus, _familyRelease, _expandedFamilies, _catalogueObserved, _catalogueReadFailed);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
     public bool Request(HomeModelPickerActionRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.Action == HomeModelPickerAction.ToggleFamily && !Projection.Families.Any(group => group.Identity == request.FamilyKey))
+            return false;
         if (request.Action == HomeModelPickerAction.SelectCategory && string.IsNullOrWhiteSpace(request.Category))
             return false;
         if (request.Action == HomeModelPickerAction.SelectRoute && string.IsNullOrWhiteSpace(request.RouteId))
@@ -139,6 +150,14 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
             return false;
 
         _actions.Enqueue(request);
+        return true;
+    }
+
+    public bool ToggleFamily(string familyKey)
+    {
+        if (!Projection.Families.Any(group => group.Identity == familyKey)) return false;
+        if (!_expandedFamilies.Add(familyKey)) _expandedFamilies.Remove(familyKey);
+        RebuildProjection();
         return true;
     }
 
@@ -204,6 +223,9 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
                 {
                     HomeModelPickerAction.RefreshCatalogue => Box(await LoadCatalogueAsync(cancellationToken).ConfigureAwait(false)),
                     HomeModelPickerAction.AddCatalogueCandidate => Box(AddCatalogueCandidate(action)),
+                    HomeModelPickerAction.ToggleFamily => CanPublish() && Surface.ToggleFamily(action.FamilyKey ?? "")
+                        ? new(true, "FamilyToggled", "Catalogue family expansion updated.")
+                        : Failure<object>("FamilyNotFound", "Choose a current catalogue family."),
                     HomeModelPickerAction.Refresh => Box(await _editor.RefreshAsync(
                         action.Scope ?? Surface.Scope,
                         action.Category ?? Surface.Category,
@@ -247,7 +269,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
     private async Task<HomeCoreOperationResult<HomeModelCataloguePage>> LoadCatalogueAsync(CancellationToken cancellationToken)
     {
         var result = await _editor.GetCatalogueAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-        if (CanPublish()) Surface.ApplyCatalogue(result.Value, result.Succeeded ? "Authorised model catalogue loaded." : result.Message);
+        if (CanPublish()) Surface.ApplyCatalogue(result.Value, result.Message);
         return result;
     }
 
