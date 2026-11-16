@@ -1,0 +1,61 @@
+{
+  "family": "Montserrat",
+  "retrievedAt": "2026-11-15T14:53:01.347Z",
+  "source": "Google Fonts CSS API and Google Fonts repository",
+  "stylesheet": {
+    "url": "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap",
+    "sha256": "c5fb0952827e5cced2d4fc91f6343f5e6ffe3294edf166265cee125c8c508f7f",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+  },
+  "license": {
+    "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/OFL.txt",
+    "file": "OFL-Montserrat.txt",
+    "sha256": "8b7141c03fa4f8d44e6345d5d4931709290f0f67875e452e95ac1fd3a027802e"
+  },
+  "fonts": [
+    {
+      "subset": "latin-ext",
+      "style": "italic",
+      "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUQjIg1_i6t8kCHKm459WxRxy7mw9c.woff2",
+      "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF",
+      "file": "montserrat-latin-ext-italic.woff2",
+      "sha256": "9f7c3dc0c1fdbc8b09d53d1beb4aca048a5aff376ac5423878e03e83e89a7fe8",
+      "bytes": 74892,
+      "weight": "100 900",
+      "format": "woff2"
+    },
+    {
+      "subset": "latin",
+      "style": "italic",
+      "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUQjIg1_i6t8kCHKm459WxRyS7m.woff2",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+      "file": "montserrat-latin-italic.woff2",
+      "sha256": "0eb22e3d769a66a92dbd82e3aefa5740e5bc21afa4485f62f92b22656d49182a",
+      "bytes": 39632,
+      "weight": "100 900",
+      "format": "woff2"
+    },
+    {
+      "subset": "latin-ext",
+      "style": "normal",
+      "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2",
+      "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF",
+      "file": "montserrat-latin-ext-normal.woff2",
+      "sha256": "54d9a78b7ff60b689ad9f3017ffac8547b5d871afec733f6c1c3ae36577ee504",
+      "bytes": 70688,
+      "weight": "100 900",
+      "format": "woff2"
+    },
+    {
+      "subset": "latin",
+      "style": "normal",
+      "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+      "file": "montserrat-latin-normal.woff2",
+      "sha256": "06b16db7a969135d48d38c49183be7fb88d4452e2a3011957c7851941f4e4879",
+      "bytes": 37956,
+      "weight": "100 900",
+      "format": "woff2"
+    }
+  ]
+}

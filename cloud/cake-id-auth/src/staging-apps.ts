@@ -1,12 +1,16 @@
 import { AUTHORIZATION_SCOPES } from "./contract";
 import type { Env } from "./env";
+import { accountManagementPage } from "./pages";
 
 const CLIENT_NAME = "9to1 staging apps";
 const REDIRECT_URI = "https://9to1-apps-staging-20261005.jcbailey008.workers.dev/oauth/callback";
 
-type ClientDefinition = {
+export type ClientDefinition = {
   name: string; redirectUri: string; applicationType: "web" | "native";
   grants: readonly string[]; scopes: readonly string[];
+  expectedClientId?: string;
+  allowSkipConsent?: boolean;
+  legacyName?: string;
 };
 const WEB_CLIENT: ClientDefinition = {
   name: CLIENT_NAME, redirectUri: REDIRECT_URI, applicationType: "web",
@@ -24,9 +28,9 @@ const PRESENT_CLIENT: ClientDefinition = {
   applicationType: "web", grants: ["authorization_code", "refresh_token"],
   scopes: AUTHORIZATION_SCOPES,
 };
-type PublicClientState =
+export type PublicClientState =
   | { kind: "conflict" }
-  | { kind: "ready"; clientId: string }
+  | { kind: "ready"; clientId: string; directSignIn?: boolean; displayNameCurrent?: boolean }
   | { kind: "missing"; registration: ReturnType<typeof registration> };
 type ClientState = { kind: "not-admin" } | PublicClientState;
 export type PresentAppState = ClientState;
@@ -60,23 +64,26 @@ function exactArray(encoded: string, expected: readonly string[]): boolean {
 }
 
 // Read-only metadata observation. Authority remains the maintained create-client endpoint.
-async function readClientState(env: Env, userId: string, client: ClientDefinition): Promise<ClientState> {
+export async function readClientState(env: Env, userId: string, client: ClientDefinition): Promise<ClientState> {
   const admin = await env.DB.prepare("SELECT 1 FROM user WHERE id = ? AND role = 'admin' LIMIT 1")
     .bind(userId).first();
   if (admin === null) return { kind: "not-admin" };
+  const legacyName = client.expectedClientId ? client.legacyName ?? null : null;
   const result = await env.DB.prepare(
     'SELECT clientId, userId, name, redirectUris, tokenEndpointAuthMethod, applicationType, ' +
     'grantTypes, responseTypes, scopes, disabled, skipConsent, requirePKCE, ' +
-    '(clientSecret IS NULL) AS noSecret FROM oauthClient WHERE userId = ? AND name = ? LIMIT 2')
-    .bind(userId, client.name).all<PublicRow>();
+    '(clientSecret IS NULL) AS noSecret FROM oauthClient WHERE userId = ? AND (name = ? OR (? IS NOT NULL AND name = ?)) AND (? IS NULL OR clientId = ?) LIMIT 2')
+    .bind(userId, client.name, legacyName, legacyName, client.expectedClientId ?? null, client.expectedClientId ?? null).all<PublicRow>();
   if (!result.success) throw new Error("Staging client metadata lookup failed.");
   const rows = result.results;
-  if (rows.length === 0) return { kind: "missing", registration: registration(client) };
+  if (rows.length === 0) return client.expectedClientId ? { kind: "conflict" } : { kind: "missing", registration: registration(client) };
   if (rows.length !== 1) return { kind: "conflict" };
   const row = rows[0];
+  const maySkipConsent = client.allowSkipConsent === true && !!client.expectedClientId && row.clientId === client.expectedClientId;
+  const acceptedName = row.name === client.name || (legacyName !== null && row.clientId === client.expectedClientId && row.name === legacyName);
   if (typeof row.clientId !== "string" || !row.clientId || row.clientId.length > 256 ||
-      row.userId !== userId || row.name !== client.name || row.noSecret !== 1 ||
-      (row.disabled ?? 0) !== 0 || (row.skipConsent ?? 0) !== 0 ||
+      row.userId !== userId || !acceptedName || row.noSecret !== 1 ||
+      (row.disabled ?? 0) !== 0 || ((row.skipConsent ?? 0) !== 0 && !(maySkipConsent && row.skipConsent === 1)) ||
       row.tokenEndpointAuthMethod !== "none" || row.applicationType !== client.applicationType ||
       (row.requirePKCE !== null && row.requirePKCE !== 1) ||
       !exactArray(row.redirectUris, [client.redirectUri]) ||
@@ -92,7 +99,8 @@ async function readClientState(env: Env, userId: string, client: ClientDefinitio
   // Recheck the canonical role after the metadata reads; do not expose cached session roles.
   const stillAdmin = await env.DB.prepare("SELECT 1 FROM user WHERE id = ? AND role = 'admin' LIMIT 1")
     .bind(userId).first();
-  return stillAdmin === null ? { kind: "not-admin" } : { kind: "ready", clientId: row.clientId };
+  return stillAdmin === null ? { kind: "not-admin" } : { kind: "ready", clientId: row.clientId,
+    ...(client.expectedClientId ? { directSignIn: row.skipConsent === 1, displayNameCurrent: row.name === client.name } : {}) };
 }
 
 // GET only observes public metadata; the existing session-owned POST remains the sole creator.
@@ -123,15 +131,11 @@ export function stagingAppsAccountPage(name: string, state: StagingAppsState,
     describe("Staging web app client", state) + describe("Windows native app client", state.native) +
     (state.kind !== "conflict" && state.native.kind !== "conflict" &&
       (state.kind === "missing" || state.native.kind === "missing")
-      ? '<form id="connect-staging-apps"><button type="submit">Connect staging apps</button></form>' : "");
+      ? '<form id="connect-staging-apps"><button class="secondary" type="submit">Connect staging apps</button></form>' : "");
   const presentConnection = present.kind === "not-admin" ? "" :
     `<section aria-labelledby="present-connection-heading"><h2 id="present-connection-heading">Present preview</h2><p>Public browser client for <code>${html(PRESENT_CLIENT.redirectUri)}</code>.</p>` +
     describe("Present preview client", present) +
-    (present.kind === "missing" ? '<form id="connect-present-app"><button type="submit">Connect Present preview</button></form>' : "") +
+    (present.kind === "missing" ? '<form id="connect-present-app"><button class="secondary" type="submit">Connect Present preview</button></form>' : "") +
     '<p id="present-app-status" role="status" aria-live="polite"></p></section>';
-  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CAKE ID account</title><body><main><h1>CAKE ID</h1><p>Signed in as ${html(name)}</p><p><a href="/api/account/profile">Profile API</a> · <a href="/api/account/sessions">Sessions API</a></p>${connected}<p id="staging-apps-status" role="status" aria-live="polite"></p>${presentConnection}<form method="post" action="/api/auth/sign-out"><button type="submit">Sign out</button></form><script src="/assets/auth-ui.js?clients=20261012-01" defer></script></main></body></html>`, {
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store",
-      "x-content-type-options": "nosniff", "referrer-policy": "no-referrer",
-      "content-security-policy": "default-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'" },
-  });
+  return accountManagementPage("Your 9to1 Account", `<div class="card-heading"><p class="eyebrow">9to1 Account</p><h1 id="account-title">Your 9to1 Account.</h1><p>Signed in as ${html(name)}.</p></div><p>Your profile and preferences belong to one 9to1 Account across CakeMods and 9to1.</p><nav class="management-actions" aria-label="Your account and websites"><a href="https://9to1.uk/auth/sign-in">Open your 9to1 Account →</a><a href="https://cakemods.com/">Visit CakeMods →</a></nav><section class="management-section"><h2>Sign-in security</h2><p>Manage your devices in your 9to1 Account, or sign out of this shared session here.</p><form method="post" action="/api/auth/sign-out"><button class="secondary" type="submit">Sign out of 9to1 Account</button></form></section>${state.kind === "not-admin" ? "" : `<section class="management-section"><h2>Website administration</h2><p>Manage the website connections and prepare invitations for testing.</p><nav class="management-actions" aria-label="Account administration"><a href="/account/production-sites">Website sign-in</a><a href="/account/invitations">Invitations</a></nav><details class="management-details"><summary>Development connections</summary>${connected}<p id="staging-apps-status" role="status" aria-live="polite"></p>${presentConnection}</details></section>`}`);
 }

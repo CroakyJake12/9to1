@@ -1,0 +1,137 @@
+/* CakeMods public visual layer. Every selector stays inside the brand wrapper. */
+.brand-cake{--cake-paper:#f7f5ef;--cake-ink:#20211e;--cake-muted:#62645c;--cake-line:#d7d8cf;--cake-coral:#ff795f;--cake-lavender:#c6b5ee;--paper:var(--cake-paper);--ink:var(--cake-ink);--muted:var(--cake-muted);--line:var(--cake-line);background:var(--cake-paper);color:var(--cake-ink)}
+.brand-cake .cake-container{width:min(var(--content),calc(100% - 96px));margin-inline:auto}
+.brand-cake .cake-container *{box-sizing:border-box}
+.brand-cake .cake-container a{color:inherit}
+.brand-cake .cake-container a:focus-visible,.brand-cake .cake-search input:focus-visible{outline:3px solid var(--focus-color);outline-offset:5px}
+.brand-cake .cake-eyebrow{font-size:var(--text-label);letter-spacing:.09em;font-weight:650;line-height:1.5;margin:0 0 24px;text-transform:uppercase}
+.brand-cake .cake-hero{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--space-7);align-items:center;padding-block:var(--space-7) 56px}
+.brand-cake .cake-hero h1,.brand-cake .cake-page-intro h1{font-size:clamp(48px,5.4vw,76px);line-height:1.01;letter-spacing:-.055em;font-weight:650;margin:0 0 var(--space-5)}
+.brand-cake .cake-hero em,.brand-cake .cake-page-intro em{font-family:var(--font-editorial);font-weight:400;letter-spacing:-.055em}
+.brand-cake .cake-lead{font-size:clamp(17px,1.55vw,21px);line-height:1.6;color:var(--cake-muted);margin:0;max-width:580px;letter-spacing:-.015em}
+.brand-cake .cake-actions{display:flex;align-items:center;gap:var(--space-5);flex-wrap:wrap;margin-top:var(--space-5)}
+.brand-cake .cake-button{display:inline-flex;align-items:center;justify-content:space-between;gap:26px;min-height:50px;padding:14px 22px;background:var(--cake-ink);border:1px solid var(--cake-ink);border-radius:var(--control-radius);color:var(--cake-paper)!important;font-size:14px;font-weight:650;line-height:1.4;text-decoration:none;transition:background var(--motion-fast) var(--motion-ease),transform var(--motion-fast) var(--motion-ease)}
+.brand-cake .cake-button:hover{background:#3f4239;transform:translateY(-2px)}
+.brand-cake .cake-button-secondary{background:transparent;color:var(--cake-ink)!important}
+.brand-cake .cake-button-secondary:hover{background:#e8e9df}
+.brand-cake .cake-button span,.brand-cake .cake-text-link span{font-size:20px;font-weight:400;line-height:1}
+.brand-cake .cake-text-link{display:inline-flex;align-items:center;gap:12px;min-height:44px;text-decoration:none;font-size:14px;font-weight:650;line-height:1.5}
+.brand-cake .cake-text-link:hover{text-decoration:underline;text-underline-offset:5px}
+
+.brand-cake .cake-section{padding-block:var(--space-8)}
+.brand-cake .cake-section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-6);margin-bottom:var(--space-6)}
+.brand-cake .cake-section-heading h2,.brand-cake .cake-account-strip h2,.brand-cake .cake-roadmap-strip h2,.brand-cake .cake-community-info h2{font-size:clamp(30px,3.4vw,44px);line-height:1.08;letter-spacing:-.05em;font-weight:600;margin:0}
+.brand-cake .cake-section-heading p:not(.cake-eyebrow){max-width:330px;font-size:15px;line-height:1.65;color:var(--cake-muted);margin:0 0 3px}
+.brand-cake .cake-section-heading .cake-eyebrow{margin-bottom:19px}
+.brand-cake .cake-product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.brand-cake .cake-product{display:flex;flex-direction:column;justify-content:space-between;min-height:350px;padding:var(--space-5);border-radius:var(--surface-radius);text-decoration:none;transition:transform var(--motion-fast) var(--motion-ease);overflow:hidden}
+.brand-cake .cake-product:hover{transform:translateY(-3px)}
+.brand-cake .cake-product-studio{background:var(--cake-lavender)}
+.brand-cake .cake-product-racing{background:#252922;color:#f7f5ef!important}
+.brand-cake .cake-product-community{background:#f1a58e}
+.brand-cake .cake-product-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand-cake .cake-product-top>span:last-child{font-size:26px;line-height:1}
+.brand-cake .cake-tag{font-size:var(--text-label);font-weight:650;letter-spacing:.04em;line-height:1.4}
+
+.brand-cake .cake-product h3{font-size:28px;font-weight:600;letter-spacing:-.045em;line-height:1.15;margin:0 0 12px}
+.brand-cake .cake-product p{font-size:14px;line-height:1.6;max-width:285px;margin:0 0 24px;opacity:.85}
+.brand-cake .cake-product-link{display:inline-flex;gap:12px;align-items:center;font-size:13px;font-weight:650}
+.brand-cake .cake-product-link>span{font-size:20px}
+.brand-cake .cake-community-symbol{display:flex;position:relative;height:110px;align-items:center;padding-left:12px}
+.brand-cake .cake-community-symbol span{width:64px;height:64px;border-radius:50%;border:2px solid #4f3128;margin-left:-12px;position:relative}
+.brand-cake .cake-community-symbol span:nth-child(2){background:#f7f5ef;transform:translateY(-21px);z-index:2}
+.brand-cake .cake-community-symbol span:nth-child(3){background:#d95c3d}
+.brand-cake .cake-racing-mark{position:relative;height:130px;display:flex;align-items:center;overflow:hidden}
+.brand-cake .cake-racing-mark>span{font-style:italic;font-size:84px;letter-spacing:-.1em;font-weight:750;position:relative;z-index:1;transform:translateX(18px)}
+.brand-cake .cake-racing-mark i{position:absolute;left:15px;top:30px;width:200px;height:15px;transform:rotate(-19deg);background:#c6db8f}
+.brand-cake .cake-racing-mark i:nth-child(2){top:57px;left:50px;opacity:.5}
+.brand-cake .cake-racing-mark i:nth-child(3){top:84px;left:85px;opacity:.2}
+.brand-cake .cake-community-section{padding-block:var(--space-8);background:#eeeee6}
+.brand-cake .cake-community-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+.brand-cake .cake-community-card{min-width:0;overflow:hidden;background:var(--cake-paper);border:1px solid #d8d9cf;border-radius:var(--surface-radius);transition:transform var(--motion-fast) var(--motion-ease)}
+.brand-cake .cake-community-card:hover{transform:translateY(-3px)}
+.brand-cake .cake-community-card[hidden]{display:none}
+.brand-cake .cake-community-art{height:128px;position:relative;overflow:hidden;display:grid;place-items:center;isolation:isolate}
+.brand-cake .cake-tone-coral{background:#f1a58e}
+.brand-cake .cake-tone-lavender{background:#c6b5ee}
+.brand-cake .cake-tone-lime{background:#d3dfa5}
+.brand-cake .cake-tone-blue{background:#adc9d9}
+.brand-cake .cake-community-art img{display:block;width:110px;height:110px;object-fit:contain;z-index:1}
+.brand-cake .cake-community-art>span{font-size:65px;font-weight:700;letter-spacing:-.07em;z-index:1;transform:rotate(-8deg)}
+.brand-cake .cake-community-art i{position:absolute;width:140px;height:140px;border:1px solid #20211e38;border-radius:50%;right:-35px;bottom:-45px}
+.brand-cake .cake-community-art i:after{content:'';position:absolute;inset:-25px;border:1px solid #20211e25;border-radius:50%}
+.brand-cake .cake-community-copy{padding:22px 19px 23px}
+.brand-cake .cake-card-meta{font-size:var(--text-label);line-height:1.5;letter-spacing:0;margin:0 0 14px;color:var(--cake-muted)}
+.brand-cake .cake-card-meta>span{padding-inline:3px;opacity:.5}
+.brand-cake .cake-community-copy h3{font-size:19px;letter-spacing:-.04em;font-weight:650;margin:0 0 12px;line-height:1.3}
+.brand-cake .cake-community-copy h3 a{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:var(--control-height);text-decoration:none}
+.brand-cake .cake-community-copy h3 a:hover{text-decoration:underline;text-underline-offset:4px}
+.brand-cake .cake-community-copy h3 span{font-size:20px;font-weight:400;flex-shrink:0}
+.brand-cake .cake-community-copy>p:last-child{font-size:var(--text-small);line-height:1.6;color:var(--cake-muted);margin:0}
+.brand-cake .cake-roadmap-strip{padding-block:var(--space-7);display:flex;align-items:center;justify-content:space-between;gap:40px}
+.brand-cake .cake-roadmap-strip .cake-eyebrow{margin-bottom:16px}
+.brand-cake .cake-roadmap-strip h2{font-size:36px}
+.brand-cake .cake-roadmap-strip p:not(.cake-eyebrow){font-size:15px;line-height:1.6;color:var(--cake-muted);margin:16px 0 0;max-width:550px}
+.brand-cake .cake-account-strip{background:var(--cake-lavender);border-radius:var(--surface-radius);padding:var(--space-7);display:flex;align-items:center;justify-content:space-between;gap:40px;margin-bottom:var(--space-7)}
+.brand-cake .cake-account-strip .cake-eyebrow{margin-bottom:18px}
+.brand-cake .cake-account-strip p:not(.cake-eyebrow){max-width:420px;font-size:15px;line-height:1.65;margin:19px 0 0}
+.brand-cake .cake-account-strip .cake-button{flex-shrink:0}
+.brand-cake .cake-page-intro{padding-block:var(--space-7) var(--space-6)}
+.brand-cake .cake-page-intro h1{font-size:clamp(40px,4.8vw,64px);margin-bottom:28px}
+.brand-cake .cake-page-intro .cake-lead{max-width:610px}
+.brand-cake .cake-directory{padding-bottom:45px}
+.brand-cake .cake-directory-toolbar{display:flex;align-items:center;justify-content:space-between;gap:32px;border-top:1px solid var(--cake-line);padding-block:29px 34px}
+.brand-cake .cake-directory-toolbar h2{font-size:20px;line-height:1.4;letter-spacing:-.025em;font-weight:650;margin:0}
+.brand-cake #cake-community-count{font-size:13px;color:var(--cake-muted);margin:5px 0 0}
+.brand-cake .cake-search{width:min(100%,380px)}
+.brand-cake .cake-search label{font-size:var(--text-label);display:block;font-weight:650;margin-bottom:8px}
+.brand-cake .cake-search>div{position:relative}
+.brand-cake .cake-search>div>span{position:absolute;left:14px;top:8px;font-size:25px;line-height:1;pointer-events:none}
+.brand-cake .cake-search input{font:inherit;font-size:var(--text-small);line-height:1.5;background:#fffefa;border:1px solid #a6aa9c;border-radius:var(--control-radius);padding:13px 12px 13px 42px;min-height:48px;width:100%;color:var(--cake-ink);box-shadow:none}
+.brand-cake .cake-search>p{font-size:var(--text-label);color:var(--cake-muted);margin:6px 0 0}
+.brand-cake .cake-empty{padding:32px 24px;border:1px solid var(--cake-line);text-align:center;border-radius:var(--surface-radius);font-size:16px;line-height:1.6}
+.brand-cake .cake-empty[hidden]{display:none}
+.brand-cake .cake-note{padding:32px 0 68px;display:flex;align-items:center;justify-content:space-between;gap:32px}
+.brand-cake .cake-note h2{font-size:28px;letter-spacing:-.04em;line-height:1.25;margin:0 0 10px;font-weight:600}
+.brand-cake .cake-note p{font-size:15px;line-height:1.65;color:var(--cake-muted);max-width:620px;margin:0}
+.brand-cake .cake-note .cake-button{flex-shrink:0}
+.brand-cake .cake-products-page{padding-bottom:35px}
+.brand-cake .cake-breadcrumb{display:flex;align-items:center;gap:13px;padding-top:34px;font-size:12px;line-height:1.5;color:var(--cake-muted);flex-wrap:wrap}
+.brand-cake .cake-breadcrumb a{text-underline-offset:4px}
+.brand-cake .cake-community-detail{display:grid;grid-template-columns:.85fr 1.2fr;gap:70px;padding-block:var(--space-7);align-items:center}
+.brand-cake .cake-community-detail-art{height:280px;border-radius:var(--surface-radius)}
+.brand-cake .cake-community-detail-art img{width:70%;max-width:230px;height:calc(100% - 32px);object-fit:contain}
+.brand-cake .cake-community-detail-art>span{font-size:140px}
+.brand-cake .cake-community-detail-art i{width:270px;height:270px;right:-80px;bottom:-80px}
+.brand-cake .cake-community-detail h1{font-size:clamp(40px,5vw,65px);line-height:1.1;letter-spacing:-.065em;font-weight:600;margin:0 0 24px;overflow-wrap:anywhere}
+.brand-cake .cake-small{font-size:12px;line-height:1.6;color:var(--cake-muted);margin:18px 0 0}
+.brand-cake .cake-community-info{display:grid;grid-template-columns:1fr 1fr;gap:70px;border-top:1px solid var(--cake-line);padding-block:58px}
+.brand-cake .cake-community-info h2{font-size:35px}
+.brand-cake .cake-prose{font-size:16px;line-height:1.75;color:var(--cake-muted)}
+.brand-cake .cake-prose h3{font-size:19px;color:var(--cake-ink);margin:0 0 8px;line-height:1.4;font-weight:650}
+.brand-cake .cake-prose p{margin:0 0 26px}
+@media(min-width:1500px){.brand-cake .cake-hero{padding-block:56px 64px}}
+@media(max-width:1100px){.brand-cake .cake-container{width:calc(100% - 56px)}.brand-cake .cake-hero{gap:30px;padding-top:52px}.brand-cake .cake-hero h1{font-size:clamp(48px,5.9vw,64px)}.brand-cake .cake-community-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.brand-cake .cake-community-art{height:140px}.brand-cake .cake-product{padding:22px;min-height:350px}.brand-cake .cake-product h3{font-size:25px}.brand-cake .cake-tag{font-size:var(--text-label)}.brand-cake .cake-community-detail{gap:40px}.brand-cake .cake-community-detail-art{height:280px}.brand-cake .cake-community-info{gap:40px}}
+@media(max-width:760px){.brand-cake .cake-container{width:calc(100% - 40px)}.brand-cake .cake-hero{grid-template-columns:1fr;gap:var(--space-6);padding-block:var(--space-6) var(--space-7)}.brand-cake .cake-hero h1{font-size:clamp(44px,9.4vw,60px)}.brand-cake .cake-eyebrow{font-size:var(--text-label);margin-bottom:var(--space-4)}.brand-cake .cake-section{padding-block:58px}.brand-cake .cake-section-heading{display:block;margin-bottom:28px}.brand-cake .cake-section-heading>p,.brand-cake .cake-section-heading>.cake-text-link{margin-top:23px!important}.brand-cake .cake-section-heading h2{font-size:37px}.brand-cake .cake-product-grid{grid-template-columns:1fr;gap:16px}.brand-cake .cake-product{padding:25px;min-height:330px}.brand-cake .cake-product h3{font-size:29px}.brand-cake .cake-product p{max-width:400px}.brand-cake .cake-community-section{padding-block:54px}.brand-cake .cake-community-grid{gap:15px}.brand-cake .cake-community-art{height:128px}.brand-cake .cake-community-art>span{font-size:58px}.brand-cake .cake-community-copy{padding:18px 14px 20px}.brand-cake .cake-community-copy h3{font-size:17px;overflow-wrap:anywhere}.brand-cake .cake-card-meta{font-size:var(--text-label)}.brand-cake .cake-community-copy>p:last-child{font-size:var(--text-small)}.brand-cake .cake-roadmap-strip{display:block;padding-block:46px}.brand-cake .cake-roadmap-strip h2{font-size:32px}.brand-cake .cake-roadmap-strip>.cake-text-link,.brand-cake .cake-roadmap-strip>.cake-button{margin-top:22px}.brand-cake .cake-account-strip{display:block;padding:32px 27px;margin-bottom:42px}.brand-cake .cake-account-strip h2{font-size:32px}.brand-cake .cake-account-strip .cake-button{margin-top:25px}.brand-cake .cake-page-intro{padding-block:var(--space-6) var(--space-5)}.brand-cake .cake-directory-toolbar{display:block}.brand-cake .cake-search{margin-top:24px;width:100%}.brand-cake .cake-note{display:block;padding-bottom:44px}.brand-cake .cake-note .cake-button{margin-top:22px}.brand-cake .cake-community-detail{grid-template-columns:1fr;padding-block:32px 45px;gap:32px}.brand-cake .cake-community-detail-art{height:200px}.brand-cake .cake-community-detail-art>span{font-size:100px}.brand-cake .cake-community-info{grid-template-columns:1fr;gap:30px;padding-block:40px}.brand-cake .cake-community-info h2{font-size:30px}.brand-cake .cake-prose{font-size:15px}.brand-cake .cake-products-page{padding-bottom:10px}}
+@media(max-width:480px){.brand-cake .cake-community-grid{grid-template-columns:1fr}.brand-cake .cake-community-art{height:128px}.brand-cake .cake-community-copy h3{font-size:20px}.brand-cake .cake-community-copy>p:last-child{font-size:14px}}
+@media(max-width:380px){.brand-cake .cake-container{width:calc(100% - 32px)}.brand-cake .cake-hero h1{font-size:44px}.brand-cake .cake-page-intro h1{font-size:38px}}
+
+
+.brand-cake .cake-studio-mark{padding-block:20px}
+.brand-cake .cake-studio-mark img{display:block;width:96px;height:auto;object-fit:contain}
+.brand-cake .cake-hero-board{min-width:0;padding:var(--space-5);background:#eee9df;border:1px solid var(--cake-line);border-radius:var(--surface-radius)}
+.brand-cake .cake-board-heading .cake-eyebrow{margin-bottom:var(--space-2)}
+.brand-cake .cake-board-heading h2{font-size:1.6rem;line-height:1.2;margin:0 0 var(--space-5);letter-spacing:-.035em}
+.brand-cake .cake-board-list{display:grid;gap:var(--space-3)}
+.brand-cake .cake-board-community{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;min-height:90px;padding:16px 18px;border-radius:var(--control-radius);text-decoration:none;transition:box-shadow var(--motion-fast) var(--motion-ease)}
+.brand-cake .cake-board-community:first-child{background:var(--cake-coral);transform:rotate(-1deg)}
+.brand-cake .cake-board-community:nth-child(2){transform:rotate(.8deg)}
+.brand-cake .cake-board-community:hover{box-shadow:inset 0 0 0 2px #20211e55}
+.brand-cake .cake-board-category{font-size:var(--text-label);line-height:1.4}
+.brand-cake .cake-board-community strong{grid-column:1;font-size:clamp(1.15rem,2.2vw,1.6rem);line-height:1.25;font-weight:650;letter-spacing:-.03em;overflow-wrap:anywhere}
+.brand-cake .cake-board-platform{grid-column:2;grid-row:1/span 2;align-self:center;display:flex;align-items:center;gap:8px;font-size:var(--text-label)}
+.brand-cake .cake-board-platform>span{font-size:22px}
+.brand-cake .cake-board-all{width:100%;justify-content:space-between;margin-top:var(--space-3);padding-inline:4px}
+@media(max-width:760px){.brand-cake .cake-hero-board{width:100%;max-width:560px}.brand-cake .cake-board-heading h2{margin-bottom:var(--space-4)}.brand-cake .cake-board-community{min-height:82px}.brand-cake .cake-hero-copy{max-width:580px}}
+@media(max-width:380px){.brand-cake .cake-hero-board{padding:20px}.brand-cake .cake-board-community{padding:14px}.brand-cake .cake-board-platform{font-size:12px;gap:4px}}
+@media(prefers-reduced-motion:reduce){.brand-cake .cake-button,.brand-cake .cake-product,.brand-cake .cake-community-card,.brand-cake .cake-board-community{transition:none}.brand-cake .cake-button:hover,.brand-cake .cake-product:hover,.brand-cake .cake-community-card:hover{transform:none}}

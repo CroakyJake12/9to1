@@ -4,11 +4,11 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 const temp = mkdtempSync(path.join(tmpdir(),'9to1-theme-sql-'));
-await build({ entryPoints:[new URL('../src/theme-preferences.ts',import.meta.url).pathname], bundle:true, platform:'node', format:'esm', outfile:path.join(temp,'theme.mjs') });
+await build({ entryPoints:[fileURLToPath(new URL('../src/theme-preferences.ts',import.meta.url))], bundle:true, platform:'node', format:'esm', outfile:path.join(temp,'theme.mjs') });
 const {readThemePreference,writeThemePreference} = await import(pathToFileURL(path.join(temp,'theme.mjs')));
 rmSync(temp,{recursive:true});
 const accountA='11111111-1111-4111-8111-111111111111', accountB='22222222-2222-4222-8222-222222222222';

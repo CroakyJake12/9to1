@@ -30,6 +30,10 @@ var tests = new (string Name, Func<string, Task> Run)[]
     ("loaded-item-sorting-preserves-identities-and-selection", LoadedSort),
     ("stale-and-moved-rows-cannot-remain-selected", StaleSelection),
     ("search-capability-and-private-teardown-are-enforced", SearchPrivacy),
+    ("trash-restore-commits-and-refreshes-the-cui-view", TrashRestoreFlow),
+    ("trash-restore-refusal-does-not-claim-commit", TrashRestoreRefusal),
+    ("disconnect-clears-current-drive-while-google-revocation-unconfirmed", UnconfirmedGoogleRevocation),
+    ("lost-disconnect-reply-hides-files-until-connection-is-verified", UnknownDisconnect),
 };
 Console.WriteLine($"EXPECTED={tests.Length}; backend=DurableDriveProvider; browser=NOT_RUN; HTTP=NOT_RUN");
 var passed = 0;
@@ -373,6 +377,110 @@ static async Task SearchPrivacy(string directory)
     Check(!noSearch.TrySetValue("SearchText", new string('x', 257)), "Unbounded search input accepted.");
 }
 
+static async Task TrashRestoreFlow(string directory)
+{
+    var s = Store(directory);
+    var drive = new TrashRestoreFixture(s.Provider, s.Owner);
+    using var view = new FilesBrowserController(drive, s.Owner);
+    await view.InitializeAsync(null, default);
+    var item = await Create(view, "Recoverable folder");
+    await view.DispatchAsync("Select", view.Items.Single(row => row.Metadata.Id == item.Id));
+    Check(view.IsActionAvailable("Trash") is true, "The selected owner item did not enable recoverable Trash.");
+    await view.DispatchAsync("Trash", null);
+    await view.DispatchAsync("Save", null);
+    Check(drive.IsTrashed && view.Items.Count == 0 && Value(view, "Status") as string == "Moved to Trash.",
+        "The acknowledged Trash mutation did not leave the file view in the expected state.");
+    Check(drive.LastCommitted is { Operation: "Delete", State: FilesOperationState.Committed, ResultRevisionId: not null },
+        "Trash did not receive an acknowledged result revision.");
+
+    await view.DispatchAsync("ShowTrash", null);
+    Check(Value(view, "InTrash") is true && view.Items.Single().Metadata.Id == item.Id,
+        "The committed item was not available in the provider Trash view.");
+    await view.DispatchAsync("Select", view.Items.Single());
+    Check(view.IsActionAvailable("Restore") is true, "The selected Trash item did not enable Restore.");
+    await view.DispatchAsync("Restore", null);
+    await view.DispatchAsync("Save", null);
+    Check(!drive.IsTrashed && view.Items.Count == 0 && Value(view, "Status") as string == "Restored to the original folder.",
+        "The acknowledged Restore did not clear the Trash view or report its committed result.");
+    Check(drive.LastCommitted is { Operation: "Restore", State: FilesOperationState.Committed, ResultRevisionId: not null },
+        "Restore did not receive an acknowledged result revision.");
+
+    await view.DispatchAsync("ExitTrash", null);
+    Check(Value(view, "InTrash") is false && view.Items.Single().Metadata.Id == item.Id &&
+        view.Items.Single().Metadata.ParentId == item.ParentId,
+        "The restored canonical item did not return to its original folder view.");
+}
+
+static async Task TrashRestoreRefusal(string directory)
+{
+    var s = Store(directory);
+    var drive = new TrashRestoreFixture(s.Provider, s.Owner);
+    using var view = new FilesBrowserController(drive, s.Owner);
+    await view.InitializeAsync(null, default);
+    var item = await Create(view, "Refused restore folder");
+    await view.DispatchAsync("Select", view.Items.Single(row => row.Metadata.Id == item.Id));
+    await view.DispatchAsync("Trash", null);
+    await view.DispatchAsync("Save", null);
+    Check(drive.IsTrashed, "The fixture did not establish the committed Trash precondition.");
+    await view.DispatchAsync("ShowTrash", null);
+    await view.DispatchAsync("Select", view.Items.Single());
+
+    drive.RefuseNextRestore = true;
+    await view.DispatchAsync("Restore", null);
+    await view.DispatchAsync("Save", null);
+
+    Check(drive.IsTrashed && view.Items.Count == 1 && view.SelectedItem?.Id == item.Id,
+        "A refused Restore changed provider state or removed the private row.");
+    Check(Value(view, "Status") is string status && status != "Restored to the original folder.",
+        "A refused Restore was shown as committed.");
+    Check(drive.LastCommitted?.Operation == "Delete",
+        "A refused Restore produced a committed provider acknowledgement.");
+}
+
+static async Task UnconfirmedGoogleRevocation(string directory)
+{
+    var s = Store(directory);
+    using (var setup = new FilesBrowserController(s.Provider, s.Owner))
+    {
+        await setup.InitializeAsync(null, default);
+        await Create(setup, "Private folder");
+    }
+    var adapter = new DisconnectFixture(s.Provider, s.Owner, lostReply: false);
+    using var view = new FilesBrowserController(adapter, s.Owner);
+    await view.InitializeAsync(null, default);
+    await view.DispatchAsync("Select", view.Items.Single());
+    Check(view.SelectedItem?.Name == "Private folder", "Setup did not show the real selected item.");
+    var clearedBeforeRefresh = false;
+    adapter.BeforeRefresh = () => clearedBeforeRefresh = view.Items.Count == 0 && view.SelectedItem is null &&
+        Value(view, "ShowBrowser") is false;
+    await view.DispatchAsync("DisconnectDrive", null);
+    Check(clearedBeforeRefresh && adapter.RefreshCount == 2 && !adapter.Context.Connected && Value(view, "DriveDisconnected") is true &&
+        Value(view, "Status") is string status && status.Contains("Disconnected in 9to1", StringComparison.Ordinal) &&
+        status.Contains("Google did not confirm", StringComparison.Ordinal),
+        "The view failed to distinguish the acknowledged local close and unconfirmed Google permission.");
+}
+
+static async Task UnknownDisconnect(string directory)
+{
+    var s = Store(directory);
+    using (var setup = new FilesBrowserController(s.Provider, s.Owner))
+    {
+        await setup.InitializeAsync(null, default);
+        await Create(setup, "Still connected");
+    }
+    var adapter = new DisconnectFixture(s.Provider, s.Owner, lostReply: true);
+    using var view = new FilesBrowserController(adapter, s.Owner);
+    await view.InitializeAsync(null, default);
+    await view.DispatchAsync("DisconnectDrive", null);
+    Check(view.Items.Count == 0 && Value(view, "ShowBrowser") is false && Value(view, "DriveDisconnected") is false &&
+        Value(view, "Status") is string status && status.Contains("Could not confirm", StringComparison.Ordinal) &&
+        view.IsActionAvailable("RefreshDriveConnection") is true && view.IsActionAvailable("ConnectDrive") is false,
+        "A lost reply retained private rows or implied that Drive was disconnected.");
+    await view.DispatchAsync("RefreshDriveConnection", null);
+    Check(adapter.RefreshCount == 2 && view.Items.Single().Metadata.Name == "Still connected" &&
+        Value(view, "ShowBrowser") is true, "Verified connected context did not restore the real provider view.");
+}
+
 // Fault injection wraps the real durable engine; it discards one successful reply after disk commit.
 // It does not replace storage or supply a synthetic success result.
 sealed class LoseFirstMutationReply(IFilesProvider real) : IFilesProvider
@@ -396,6 +504,130 @@ abstract class RealProviderAdapter(IFilesProvider real) : IFilesProvider
     public virtual Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? name, CancellationToken ct) => real.MutateAsync(operation, name, ct);
     public IAsyncEnumerable<FilesChangeEvent> SubscribeAsync(FilesChangeCursor? after, CancellationToken ct) => real.SubscribeAsync(after, ct);
     public Task<FilesPage<FilesChangeEvent>> GetChangesAsync(FilesChangeCursor? after, int limit, CancellationToken ct) => real.GetChangesAsync(after, limit, ct);
+}
+sealed class TrashRestoreFixture(IFilesProvider real, string owner) : RealProviderAdapter(real), IFilesBrowserDrive
+{
+    private readonly Dictionary<HostedItemId, HostedItemMetadata> _visible = [];
+    private readonly Dictionary<HostedItemId, HostedItemMetadata> _trash = [];
+    private bool _connected = true;
+
+    public bool IsTrashed => _trash.Count != 0;
+    public bool RefuseNextRestore { get; set; }
+    public FilesOperation? LastCommitted { get; private set; }
+    public override FilesLocation Location => base.Location with
+    {
+        Kind = FilesLocationKind.ConnectedCloud,
+        Capabilities = _connected ? base.Location.Capabilities : FilesProviderCapabilities.None,
+    };
+    public FilesDriveContext Context => new(owner, "Fixture owner", _connected, Location, Usage());
+
+    public override async Task<FilesPage<HostedItemMetadata>> ListAsync(HostedItemId? parentId, FilesSearchQuery? query,
+        string? pageToken, CancellationToken ct)
+    {
+        var page = await Real.ListAsync(parentId, query, pageToken, ct);
+        foreach (var item in page.Items) _visible[item.Id] = item;
+        return page;
+    }
+
+    public override async Task<FilesResult<HostedItemMetadata>> GetAsync(HostedItemId itemId, CancellationToken ct)
+    {
+        if (_trash.TryGetValue(itemId, out var trashed)) return FilesResult<HostedItemMetadata>.Success(trashed);
+        var result = await Real.GetAsync(itemId, ct);
+        if (result.IsSuccess && result.Value is { } item) _visible[itemId] = item;
+        return result;
+    }
+
+    public override async Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken ct)
+    {
+        if (operation.Operation == "Restore" && RefuseNextRestore)
+        {
+            RefuseNextRestore = false;
+            return FilesResult<FilesOperation>.Failure(new(FilesErrorCode.RevisionConflict,
+                "The item changed before Restore.", "Restore", operation.ItemId.ToString(), true, false));
+        }
+
+        _visible.TryGetValue(operation.ItemId, out var before);
+        var result = await Real.MutateAsync(operation, newName, ct);
+        if (!result.IsSuccess || result.Value is not { ResultRevisionId: { } revision } committed) return result;
+
+        var updated = (before ?? _trash.GetValueOrDefault(operation.ItemId)) is { } item
+            ? item with { CurrentRevisionId = revision, ModifiedAt = committed.UpdatedAt }
+            : null;
+        if (updated is not null) _visible[operation.ItemId] = updated;
+        if (operation.Operation == "Delete" && updated is not null) _trash[operation.ItemId] = updated;
+        else if (operation.Operation == "Restore") _trash.Remove(operation.ItemId);
+        LastCommitted = committed;
+        return result;
+    }
+
+    public Task<FilesPage<HostedItemMetadata>> ListTrashAsync(string? pageToken, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        return Task.FromResult(new FilesPage<HostedItemMetadata>(
+            _trash.Values.OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ToArray(), null));
+    }
+
+    public Task<FilesDriveContext> RefreshContextAsync(CancellationToken ct) => Task.FromResult(Context);
+    public Task<FilesDriveUsage> ReadUsageAsync(CancellationToken ct) => Task.FromResult(Usage());
+    public Task ConnectAsync(CancellationToken ct) { _connected = true; return Task.CompletedTask; }
+    public Task<FilesDriveDisconnectOutcome> DisconnectAsync(CancellationToken ct)
+    { _connected = false; return Task.FromResult(FilesDriveDisconnectOutcome.Disconnected); }
+    public void OpenPrivacyNotice() { }
+    public Task<FilesBrowserUploadFile?> PickUploadAsync(CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> BeginUploadAsync(FilesOperationId id, HostedItemId? parent, FilesBrowserUploadFile file, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> ReadUploadAsync(FilesTransferId id, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress?> FindUploadAsync(FilesOperationId id, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> WriteUploadChunkAsync(FilesTransferId id, string handle, long offset, int length, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> CancelUploadAsync(FilesTransferId id, CancellationToken ct) => throw new NotSupportedException();
+    public void ReleaseUpload(string handle) => throw new NotSupportedException();
+    public Task<FilesBrowserDownload> PrepareDownloadAsync(HostedItemId id, string? mime, CancellationToken ct) => throw new NotSupportedException();
+    public void OpenDownload(FilesBrowserDownload download) => throw new NotSupportedException();
+
+    private static FilesDriveUsage Usage()
+    {
+        var budget = new FilesDriveBudget(50_000, 0, 50_000, null);
+        return new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), budget, budget, budget, budget);
+    }
+}
+
+sealed class DisconnectFixture(IFilesProvider real, string owner, bool lostReply) : RealProviderAdapter(real), IFilesBrowserDrive
+{
+    private bool _connected = true;
+    public int RefreshCount { get; private set; }
+    public Action? BeforeRefresh { get; set; }
+    public override FilesLocation Location => base.Location with
+    {
+        Kind = FilesLocationKind.ConnectedCloud,
+        Capabilities = _connected ? base.Location.Capabilities : FilesProviderCapabilities.None,
+    };
+    public FilesDriveContext Context => new(owner, "Test owner", _connected, Location, null);
+    public Task<FilesDriveContext> RefreshContextAsync(CancellationToken ct)
+    {
+        RefreshCount++;
+        BeforeRefresh?.Invoke();
+        return Task.FromResult(Context);
+    }
+    public Task<FilesDriveDisconnectOutcome> DisconnectAsync(CancellationToken ct)
+    {
+        if (lostReply) throw new IOException("Controlled lost disconnect reply.");
+        _connected = false;
+        return Task.FromResult(FilesDriveDisconnectOutcome.GoogleRevocationUnconfirmed);
+    }
+    public void OpenPrivacyNotice() => throw new NotSupportedException();
+    public Task<FilesDriveUsage> ReadUsageAsync(CancellationToken ct) => throw new NotSupportedException();
+    public Task ConnectAsync(CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesPage<HostedItemMetadata>> ListTrashAsync(string? pageToken, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadFile?> PickUploadAsync(CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> BeginUploadAsync(FilesOperationId id, HostedItemId? parent, FilesBrowserUploadFile file, CancellationToken ct)
+        => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> ReadUploadAsync(FilesTransferId id, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress?> FindUploadAsync(FilesOperationId id, CancellationToken ct) => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> WriteUploadChunkAsync(FilesTransferId id, string handle, long offset, int length, CancellationToken ct)
+        => throw new NotSupportedException();
+    public Task<FilesBrowserUploadProgress> CancelUploadAsync(FilesTransferId id, CancellationToken ct) => throw new NotSupportedException();
+    public void ReleaseUpload(string handle) => throw new NotSupportedException();
+    public Task<FilesBrowserDownload> PrepareDownloadAsync(HostedItemId id, string? mime, CancellationToken ct) => throw new NotSupportedException();
+    public void OpenDownload(FilesBrowserDownload download) => throw new NotSupportedException();
 }
 sealed class SearchUnsupportedProvider(IFilesProvider real) : RealProviderAdapter(real)
 {

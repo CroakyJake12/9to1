@@ -24,6 +24,10 @@ public static partial class Program
                 RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
             });
             MarkStartup("backend:ready");
+            Application!.FilesRegistration = FilesEnabled()
+                ? async (registry, current) => { await Files.FilesBrowserFeature.RegisterAsync(registry, current); }
+                : null;
+            await Application!.RegisterPrivateFilesAsync();
             await Application!.OpenFragmentAsync(ReadFragment());
         }
         catch (Exception exception)
@@ -86,6 +90,9 @@ public static partial class Program
 
     [JSImport("reduceMotion", "nineToOneBrowser")]
     internal static partial bool ReduceMotion();
+
+    [JSImport("filesEnabled", "nineToOneBrowser")]
+    internal static partial bool FilesEnabled();
 
     [JSImport("releasePrivateAccountContext", "nineToOneBrowser")]
     internal static partial Task ReleasePrivateAccountContext();

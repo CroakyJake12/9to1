@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import { tmpdir } from 'node:os';
@@ -12,6 +12,16 @@ const manifest = { fixtureOnly: true, apiResource: 'http://127.0.0.1:8798', issu
   browserOrigin: 'https://client.example.test:5096', redirectUri: 'https://client.example.test:5096/callback',
   clientId: 'public-fixture-client', scopes: 'openid profile cake:profile:read cake:profile:write',
   accounts: [{ password: 'MUST-NOT-ENTER-PUBLIC-CONFIG' }], localTestKey: 'PRIVATE-KEY-MUST-NOT-ENTER-CONFIG' };
+
+function opensslExecutable() {
+  if (process.platform !== 'win32') return 'openssl';
+  const gitExecPath = spawnSync('git', ['--exec-path'], { encoding: 'utf8', timeout: 5000 });
+  if (gitExecPath.status === 0) {
+    const bundled = path.resolve(gitExecPath.stdout.trim(), '..', '..', '..', 'mingw64', 'bin', 'openssl.exe');
+    if (existsSync(bundled)) return bundled;
+  }
+  return 'openssl';
+}
 
 test('public configuration copies only routing fields and refuses nonfixture authority', () => {
   const config = publicAccountConfiguration(manifest);
@@ -33,7 +43,7 @@ test('proxy upstream cannot target remote services, userinfo or another path', (
 test('real loopback proxy preserves app bytes, callback URL secrecy and host boundary', async () => {
   const folder = mkdtempSync(path.join(tmpdir(), '9to1-theme-proxy-test-'));
   const key = path.join(folder, 'key.pem'), cert = path.join(folder, 'cert.pem');
-  const generated = spawnSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
+  const generated = spawnSync(opensslExecutable(), ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
     '-subj', '/CN=client.example.test', '-keyout', key, '-out', cert], { stdio: 'ignore', timeout: 15000 });
   assert.equal(generated.status, 0);
   const observed = [];

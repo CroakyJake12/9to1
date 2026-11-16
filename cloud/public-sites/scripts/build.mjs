@@ -1,0 +1,13 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {build} from 'esbuild';
+import {createHash} from 'node:crypto';
+import {cakeClientScript} from '../src/cake.mjs';
+import {accountScript} from '../src/account.mjs';
+import {MONTSERRAT_CSS} from '../src/brand-assets.mjs';
+const styles=MONTSERRAT_CSS+'\n'+(await Promise.all(['base','cake','nine'].map(x=>readFile(new URL('../src/'+x+'.css',import.meta.url),'utf8')))).join('\n');
+const script=cakeClientScript+'\n'+accountScript;
+const assetVersion=createHash('sha256').update(styles+script).digest('hex').slice(0,16);
+await writeFile(new URL('../src/site-assets.mjs',import.meta.url),`export const styles=${JSON.stringify(styles)};\nexport const script=${JSON.stringify(script)};\nexport const assetVersion=${JSON.stringify(assetVersion)};\n`);
+await mkdir(new URL('../dist/',import.meta.url),{recursive:true});
+await build({entryPoints:[new URL('../src/main.mjs',import.meta.url).pathname.replace(/^\/([A-Z]:)/,'$1')],bundle:true,format:'esm',platform:'neutral',target:'es2022',outfile:new URL('../dist/worker.mjs',import.meta.url).pathname.replace(/^\/([A-Z]:)/,'$1'),external:['cloudflare:workers'],minify:true});
+console.log('Built public websites and account client.');

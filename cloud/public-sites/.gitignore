@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.dev.vars
+.env*
+evidence/
+npm-cache/
+src/site-assets.mjs
+identity/node_modules/
+identity/.build/
+identity/.wrangler/

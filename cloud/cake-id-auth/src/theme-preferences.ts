@@ -4,7 +4,7 @@ import { json } from "./pages";
 export interface ThemePrincipal { accountId: string; sessionId: string; accessExpiresAt?: number }
 type ObjectValue = Record<string, unknown>;
 // Shared wire validator is used by the browser cache and this authenticated API.
-import { validThemePreference } from "../../../apps/Web/Auth/theme-preference-contract.js";
+import { validThemePreference } from "../shared/theme-preference-contract.js";
 
 // Each read and commit is joined to the live original session inside its SQL
 // statement. A preliminary JWT check alone cannot authorize a delayed write.

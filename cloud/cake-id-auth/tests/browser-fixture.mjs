@@ -20,6 +20,15 @@ for (const method of ["equal", "notEqual", "ok", "match", "doesNotMatch", "rejec
 }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const varsPath = path.join(root, ".dev.vars");
+if (existsSync(varsPath)) {
+  throw new Error("Refusing to overwrite an existing local .dev.vars file. Move it temporarily, then rerun this isolated test.");
+}
+
+// Validate loopback port input and occupancy before platform custody checks,
+// fixture secrets, or persistence state are created.
+const fixturePort = parseFixturePort(process.env.CAKE_BROWSER_FIXTURE_PORT);
+await assertFixturePortFree(fixturePort);
 
 if (process.platform !== "linux") {
   console.error("SKIP: this custody-checked reusable fixture requires Linux /proc process-group inspection; no test secrets or database state created.");
@@ -33,12 +42,10 @@ if (authority.status !== 0) {
   process.exit(77);
 }
 
-const varsPath = path.join(root, ".dev.vars");
 const runId = randomBytes(8).toString("hex");
 const browserOrigin = "https://client.example.test:5096";
 const callback = `${browserOrigin}/callback`;
 const persistPath = path.join(root, ".local-run", runId);
-const fixturePort = parseFixturePort(process.env.CAKE_BROWSER_FIXTURE_PORT);
 const baseURL = `http://127.0.0.1:${fixturePort}`;
 const authPath = "/api/auth";
 const resource = baseURL;
@@ -52,12 +59,7 @@ const devVars = [
   `ALLOWED_WEB_ORIGINS=${process.env.CAKE_BROWSER_FIXTURE_ISSUER_ORIGIN_TEST === "1" ? browserOrigin : `${baseURL},${browserOrigin}`}`,
 ].join("\n") + "\n";
 
-if (existsSync(varsPath)) {
-  throw new Error("Refusing to overwrite an existing local .dev.vars file. Move it temporarily, then rerun this isolated test.");
-}
-
-// Refuse occupied loopback ports before secrets/state; a later race still fails strict custody closed.
-await assertFixturePortFree(fixturePort);
+// A later port race still fails strict custody closed before secrets/state.
 mkdirSync(persistPath, { recursive: true, mode: 0o700 });
 writeFileSync(varsPath, devVars, { flag: "wx", mode: 0o600 });
 

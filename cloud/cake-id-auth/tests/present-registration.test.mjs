@@ -66,6 +66,12 @@ test('Account page exposes exact callback and its independent action only to an 
   assert.match(html,/id="connect-present-app"/);assert.match(html,/id="connect-staging-apps"/);assert.ok(html.includes(callback));assert.ok(html.includes('Admin &lt;unsafe&gt;'));
   assert.doesNotMatch(await stagingAppsAccountPage('Other',{kind:'not-admin'},{kind:'not-admin'}).text(),/connect-present-app|connect-staging-apps/);db.close();
 });
+test('management page presents one 9to1 Account and a CakeMods homepage link',async()=>{
+  const html=await stagingAppsAccountPage('Operator',{kind:'not-admin'},{kind:'not-admin'}).text();
+  assert.ok(html.includes('href="https://9to1.uk/auth/sign-in">Open your 9to1 Account'));
+  assert.ok(html.includes('href="https://cakemods.com/">Visit CakeMods'));
+  assert.doesNotMatch(html,/Open CAKE account|Open 9to1 account|either account page|https:\/\/cakemods\.com\/auth\/sign-in/);
+});
 
 async function withBrowser(replies,run,{lock=true}={}) {
   const original={document:globalThis.document,navigator:Object.getOwnPropertyDescriptor(globalThis,'navigator'),fetch:globalThis.fetch};

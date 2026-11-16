@@ -1,4 +1,4 @@
-import { LOGIN_LIMITS } from "./contract";
+import { AUTH_BASE_PATH, LOGIN_LIMITS } from "./contract";
 import type { Env } from "./env";
 
 interface LimitResult {
@@ -85,9 +85,18 @@ export async function checkLoginLimit(env: Env, request: Request, identifier: st
 
 export async function readLoginIdentifier(request: Request): Promise<string> {
   try {
-    const body = await request.clone().json() as { email?: unknown; username?: unknown };
-    if (typeof body.email === "string") return `email:${body.email.trim().toLowerCase().slice(0, 320)}`;
-    if (typeof body.username === "string") return `username:${body.username.trim().toLowerCase().slice(0, 320)}`;
+    const path = new URL(request.url).pathname;
+    const field = path === `${AUTH_BASE_PATH}/sign-in/email` ? "email"
+      : path === `${AUTH_BASE_PATH}/sign-in/username` ? "username" : null;
+    if (!field) return "unknown:";
+    const body = await request.clone().json() as unknown;
+    if (!body || typeof body !== "object" || Array.isArray(body)) return "unknown:";
+    // Match the provider's route-specific identifier; unrelated fields cannot rotate its bucket.
+    const value = (body as Record<string, unknown>)[field];
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase().slice(0, 320);
+      if (normalized) return `${field}:${normalized}`;
+    }
   } catch {
     // Treat malformed or absent identifiers as one generic bucket per source address.
   }

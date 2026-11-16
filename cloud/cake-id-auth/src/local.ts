@@ -3,55 +3,62 @@ import worker, { fetchRequest } from "./index";
 import { createAuthOptions } from "./auth";
 import type { Env } from "./env";
 import { json } from "./pages";
+import GUARDRAILS_MIGRATION from "../migrations/0000_cake_guardrails.sql";
+import AUTH_MIGRATION from "../migrations/0001_better_auth.sql";
 import THEME_MIGRATION from "../migrations/0002_account_theme_preference.sql";
+import TURNSTILE_MIGRATION from "../migrations/0003_turnstile_redemptions.sql";
+import INVITATIONS_MIGRATION from "../migrations/0004_account_invitations.sql";
+import POLICY_MIGRATION from "../migrations/0005_public_account_policy.sql";
+import RESET_FENCE_MIGRATION from "../migrations/0006_password_reset_fence.sql";
 
 let initialization: Promise<void> | undefined;
-let generatedSql = "";
+let initializedSql = "";
+let initializedInstanceId = "";
+const localMigrations = [
+  ["0000_cake_guardrails.sql", GUARDRAILS_MIGRATION],
+  ["0001_better_auth.sql", AUTH_MIGRATION],
+  ["0002_account_theme_preference.sql", THEME_MIGRATION],
+  ["0003_turnstile_redemptions.sql", TURNSTILE_MIGRATION],
+  ["0004_account_invitations.sql", INVITATIONS_MIGRATION],
+  ["0005_public_account_policy.sql", POLICY_MIGRATION],
+  ["0006_password_reset_fence.sql", RESET_FENCE_MIGRATION],
+] as const;
 
 async function initialize(env: Env): Promise<void> {
   console.log("[local-test] creating local-only D1 tables");
   const probe = await env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>();
   if (probe?.ok !== 1) throw new Error("D1 local health query failed");
   console.log("[local-test] D1 health query succeeded");
-  const localStatements = [
-    `CREATE TABLE IF NOT EXISTS cake_reserved_usernames (
-      username TEXT PRIMARY KEY COLLATE NOCASE,
-      ownerUserId TEXT NULL,
-      reason TEXT NOT NULL,
-      createdAt INTEGER NOT NULL
-    )`,
-    `CREATE TABLE IF NOT EXISTS cake_login_attempts (
-      keyHash TEXT PRIMARY KEY,
-      windowStartedAt INTEGER NOT NULL,
-      attempts INTEGER NOT NULL,
-      lockedUntil INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL
-    )`,
-    `CREATE TABLE IF NOT EXISTS cake_email_outbox (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      recipient TEXT NOT NULL,
-      subject TEXT NOT NULL,
-      body TEXT NOT NULL,
-      createdAt INTEGER NOT NULL
-    )`,
-    "CREATE INDEX IF NOT EXISTS cake_email_outbox_recipient_created ON cake_email_outbox(recipient, createdAt DESC)",
-    "INSERT OR IGNORE INTO cake_reserved_usernames (username, ownerUserId, reason, createdAt) VALUES ('croakyjake', NULL, 'Reserved identity; bind only to a separately verified canonical AccountID', 0)",
-  ];
-  for (let index = 0; index < localStatements.length; index++) {
-    console.log(`[local-test] applying local D1 statement ${index + 1}/${localStatements.length}`);
-    await env.DB.prepare(localStatements[index]).run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS cake_local_test_migrations (name TEXT PRIMARY KEY NOT NULL)").run();
+  for (const [name, sql] of localMigrations) {
+    const applied = await env.DB.prepare("SELECT name FROM cake_local_test_migrations WHERE name = ?").bind(name).first();
+    if (applied) continue;
+    // These pinned files end each statement at a line boundary; semicolons
+    // inside their single-line string literals must remain part of the SQL.
+    const statements = sql.replace(/^[ \t]*--[^\r\n]*$/gm, "")
+      .split(/;[ \t]*(?:\r?\n|$)/).map(statement => statement.trim()).filter(Boolean);
+    if (!statements.length) throw new Error(`Empty local migration: ${name}`);
+    const results = await env.DB.batch([
+      ...statements.map(statement => env.DB.prepare(statement)),
+      env.DB.prepare("INSERT INTO cake_local_test_migrations (name) VALUES (?)").bind(name),
+    ]);
+    if (results.some(result => !result.success)) throw new Error(`Local migration failed: ${name}`);
+    console.log(`[local-test] applied canonical migration ${name}`);
   }
-  console.log("[local-test] custom D1 tables ready");
 
+  // Inspect the maintained provider schema without silently changing the
+  // canonical versioned schema used by production migrations.
   const migration = await getMigrations(createAuthOptions(env));
   if (migration.unsafeChanges.length || migration.schemaProblems.length) {
     throw new Error("Local auth schema does not match the pinned Better Auth version");
   }
-  generatedSql = await migration.compileMigrations();
-  console.log("[local-test] Better Auth D1 migration plan compiled");
-  await migration.runMigrations();
-  console.log("[local-test] Better Auth D1 schema ready");
-  await env.DB.prepare(THEME_MIGRATION.replace("CREATE TABLE accountThemePreference", "CREATE TABLE IF NOT EXISTS accountThemePreference")).run();
+  // The pinned generator emits a lone terminator even for an empty plan.
+  if (!/^[\s;]*$/.test(await migration.compileMigrations())) {
+    throw new Error("Canonical local migrations leave unapplied Better Auth schema changes");
+  }
+  initializedSql = localMigrations.map(([, sql]) => sql).join("\n\n");
+  initializedInstanceId = crypto.randomUUID();
+  console.log("[local-test] canonical D1 schema ready and provider schema checked");
 }
 
 function sameSecret(a: string | null, b: string | undefined): boolean {
@@ -74,8 +81,14 @@ async function testEndpoint(request: Request, env: Env): Promise<Response | null
 
   if (request.method === "GET" && url.pathname === "/__test/health") return json({ ready: true, mode: "local-test-only" });
   if (request.method === "GET" && url.pathname === "/__test/schema") {
-    const sql = generatedSql;
+    const sql = initializedSql;
     return sql ? new Response(sql, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } }) : json({ error: "schema_unavailable" }, 503);
+  }
+  if (request.method === "GET" && url.pathname === "/__test/schema-state") {
+    const migrations = await env.DB.prepare("SELECT name FROM cake_local_test_migrations ORDER BY name").all<{ name: string }>();
+    const columns = await env.DB.prepare("PRAGMA table_info(user)").all<{ name: string; type: string; notnull: number; dflt_value: string | null }>();
+    return json({ instanceId: initializedInstanceId, migrations: (migrations.results ?? []).map(row => row.name),
+      credentialGeneration: columns.results?.find(column => column.name === "credentialGeneration") ?? null });
   }
   if (request.method === "GET" && url.pathname === "/__test/outbox") {
     const recipient = (url.searchParams.get("recipient") ?? "").toLowerCase();

@@ -1,0 +1,247 @@
+<Cui id="app.studio" version="1">
+  <Actions>
+    <Action name="Home" command="Navigate" parameter="Home" />
+    <Action name="Projects" command="Navigate" parameter="Projects" />
+    <Action name="Harnesses" command="Navigate" parameter="Harnesses" />
+    <Action name="Tools" command="Navigate" parameter="Tools" />
+    <Action name="Agents" command="Navigate" parameter="Agents" />
+    <Action name="Playground" command="Navigate" parameter="Playground" />
+    <Action name="Evaluations" command="Navigate" parameter="Evaluations" />
+    <Action name="TestSuites" command="Navigate" parameter="Test Suites" />
+    <Action name="Replay" command="Navigate" parameter="Replay" />
+    <Action name="Schemas" command="Navigate" parameter="Schemas" />
+    <Action name="ModelRouters" command="Navigate" parameter="Model Routers" />
+    <Action name="GenerativeUi" command="Navigate" parameter="Generative UI" />
+    <Action name="RunProfiles" command="Navigate" parameter="Run Profiles" />
+    <Action name="Templates" command="Navigate" parameter="Templates" />
+    <Action name="EngineCheck" command="Navigate" parameter="Engine self-check" />
+    <Action name="ChooseRow" command="OpenRow" parameter="{Binding row}" />
+    <Action name="ChooseAttempt" command="SelectAttempt" parameter="{Binding attempt}" />
+  </Actions>
+  <Page>
+    <Container id="studio-shell" Type="Grid" ColumnSizes="240 1fr" background="{Resource CuiBackgroundBrush}">
+      <Container id="studio-navigation" Type="Vertical Stack" padding="18" VerticalScrolling="True" background="{Resource CuiShellBrush}">
+        <Text text="9to1" font-size="16" margin="0,0,0,8" id="studio-text-001" />
+        <Text text="AI Studio" font-size="25" font-weight="Bold" margin="0,0,0,20" id="studio-text-002" />
+        <Button content="Home" action="Home" id="studio-button-home-003" />
+        <Button content="Projects" action="Projects" id="studio-button-projects-004" />
+        <Text text="Build" font-weight="Bold" margin="0,18,0,6" id="studio-text-005" />
+        <Button content="Harnesses" action="Harnesses" id="studio-button-harnesses-006" />
+        <Button content="Agents" action="Agents" id="studio-button-agents-007" />
+        <Button content="Tools" action="Tools" id="studio-button-tools-008" />
+        <Text text="Test and debug" font-weight="Bold" margin="0,18,0,6" id="studio-text-009" />
+        <Button content="Playground" action="Playground" id="studio-button-playground-010" />
+        <Button content="Evaluations" action="Evaluations" id="studio-button-evaluations-011" />
+        <Button content="Test Suites" action="TestSuites" id="studio-button-testsuites-012" />
+        <Button content="Replay" action="Replay" id="studio-button-replay-013" />
+        <Button id="studio-engine-navigation" content="Engine self-check" action="EngineCheck" />
+        <Text text="Resources" font-weight="Bold" margin="0,18,0,6" id="studio-text-014" />
+        <Button content="Schemas" action="Schemas" id="studio-button-schemas-015" />
+        <Button content="Model Routers" action="ModelRouters" id="studio-button-modelrouters-016" />
+        <Button content="Generative UI" action="GenerativeUi" id="studio-button-generativeui-017" />
+        <Button content="Run Profiles" action="RunProfiles" id="studio-button-runprofiles-018" />
+        <Button content="Templates" action="Templates" margin="0,14,0,0" id="studio-button-templates-019" />
+      </Container>
+      <Container Column="1" Type="Grid" RowSizes="Auto 1fr" id="studio-container-020">
+        <Container Type="Grid" ColumnSizes="1fr Auto" padding="24,16" background="{Resource CuiShellBrush}" id="studio-container-021">
+          <Text text="{Binding Page}" font-size="18" vertical-alignment="Center" id="studio-text-022" />
+          <Button Column="1" content="Open / Import" action="Import" Interactive="{Binding CanEdit}" id="studio-button-import-023" />
+        </Container>
+        <Container Row="1" Type="Vertical Stack" padding="28" VerticalScrolling="True" HorizontalScrolling="False" id="studio-container-024">
+          <Text text="{Binding Title}" font-size="28" font-weight="Bold" id="studio-text-025" />
+          <Text text="{Binding Subtitle}" text-wrapping="Wrap" margin="0,8,0,20" id="studio-text-026" />
+          <If Condition="{Binding HasNotice}">
+            <Container Type="Vertical Stack" padding="16" margin="0,0,0,18" background="{Resource CuiShellBrush}" id="studio-container-027">
+              <Text text="{Binding NoticeTitle}" font-size="18" font-weight="Bold" id="studio-text-028" />
+              <Text id="studio-notice" text="{Binding Notice}" text-wrapping="Wrap" margin="0,8" />
+              <Button content="Dismiss" action="DismissNotice" horizontal-alignment="Left" id="studio-button-dismissnotice-029" />
+            </Container>
+          </If>
+          <If Condition="{Binding ShowSearch}">
+            <Container Type="Grid" ColumnSizes="1fr Auto" margin="0,0,0,16" id="studio-container-030">
+              <Input id="studio-search" Type="Text" Value="{Binding Search, Mode=TwoWay}" placeholder-text="Search projects and templates" accessible-name="Search projects and templates" Interactive="{Binding CanEdit}" />
+              <Button Column="1" content="Search / Refresh" action="Refresh" margin="10,0,0,0" Interactive="{Binding CanEdit}" id="studio-button-refresh-031" />
+            </Container>
+          </If>
+          <If Condition="{Binding ShowHome}">
+            <Container Type="Vertical Stack" id="studio-container-032">
+              <Text text="Author Harnesses and Tools, edit canonical Agents, and validate them through shared services." text-wrapping="Wrap" id="studio-text-033" />
+              <Container Type="Wrap" margin="0,14" id="studio-container-034">
+                <Button content="New Harness" action="CreateHarness" id="studio-button-createharness-035" />
+                <Button content="New Agent" action="Agents" id="studio-button-agents-036" />
+                <Button content="New Tool" action="Tools" id="studio-button-tools-037" />
+                <Button content="Starter templates" action="Templates" id="studio-button-templates-038" />
+              </Container>
+            </Container>
+          </If>
+          <If Condition="{Binding ShowToolTypes}">
+            <Container Type="Wrap" margin="0,0,0,16" id="studio-container-039">
+              <Button content="New Skill" action="CreateSkill" id="studio-button-createskill-040" />
+              <Button content="New Plugin" action="CreatePlugin" id="studio-button-createplugin-041" />
+              <Button content="New MCP Client" action="CreateMcp" id="studio-button-createmcp-042" />
+            </Container>
+          </If>
+          <If Condition="{Binding ShowProjectList}">
+            <Container Type="Vertical Stack" id="studio-container-043">
+              <If Condition="{Binding ShowHarnessCreation}">
+                <Button content="New Harness" action="CreateHarness" horizontal-alignment="Left" margin="0,0,0,12" id="studio-button-createharness-044" />
+              </If>
+              <If Condition="{Binding RowsEmpty}">
+                <Text text="No projects match. Create one from a versioned template." text-wrapping="Wrap" id="studio-text-045" />
+              </If>
+              <Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}">
+                <Container Type="Grid" ColumnSizes="1fr Auto" padding="14" margin="0,0,0,8" background="{Resource CuiShellBrush}" id="studio-container-046">
+                  <Container Type="Vertical Stack" id="studio-container-047">
+                    <Text text="{Binding row.Title}" font-size="17" id="studio-text-048" />
+                    <Text text="{Binding row.Detail}" text-wrapping="Wrap" margin="0,6,0,0" id="studio-text-049" />
+                  </Container>
+                  <Button Column="1" content="Open" action="ChooseRow" id="studio-button-chooserow-050" />
+                </Container>
+              </Repeat>
+            </Container>
+          </If>
+          <If Condition="{Binding ShowTemplates}">
+            <Container Type="Vertical Stack" id="studio-container-051">
+              <Text text="Versioned starter definitions. Creating one preserves template provenance." text-wrapping="Wrap" margin="0,0,0,16" id="studio-text-052" />
+              <Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}">
+                <Container Type="Grid" ColumnSizes="1fr Auto" padding="14" margin="0,0,0,8" background="{Resource CuiShellBrush}" id="studio-container-053">
+                  <Container Type="Vertical Stack" id="studio-container-054">
+                    <Text text="{Binding row.Title}" font-size="17" id="studio-text-055" />
+                    <Text text="{Binding row.Detail}" text-wrapping="Wrap" id="studio-text-056" />
+                  </Container>
+                  <Button Column="1" content="Create" action="ChooseRow" id="studio-button-chooserow-057" />
+                </Container>
+              </Repeat>
+            </Container>
+          </If>
+          <If Condition="{Binding ShowProjectEditor}">
+            <Container Type="Vertical Stack" id="studio-container-058">
+              <Text text="Name" id="studio-text-059" />
+              <Input id="studio-project-name" Type="Text" Value="{Binding Name, Mode=TwoWay}" accessible-name="Project name" Interactive="{Binding CanEdit}" margin="0,6,0,14" />
+              <Text text="Inspectable definition" id="studio-text-060" />
+              <Input id="studio-project-definition" Type="Text" Value="{Binding Definition, Mode=TwoWay}" multiline="True" min-height="300" accessible-name="Project definition JSON" Interactive="{Binding CanEdit}" margin="0,6,0,14" />
+              <Text text="Edits are version-checked and retained in history. Saving does not run, install or activate a definition." text-wrapping="Wrap" id="studio-text-061" />
+              <Container Type="Wrap" margin="0,14" id="studio-container-062">
+                <Button content="Save draft" action="SaveProject" id="studio-button-saveproject-063" />
+                <Button content="Validate" action="ValidateProject" id="studio-button-validateproject-064" />
+                <If Condition="{Binding IsHarness}">
+                  <Button content="Preview / Test" action="PreviewProject" id="studio-button-previewproject-065" />
+                </If>
+                <If Condition="{Binding IsTool}">
+                  <Button content="Install" action="InstallTool" id="studio-button-installtool-066" />
+                </If>
+                <Button content="History" action="ProjectHistory" id="studio-button-projecthistory-067" />
+                <Button content="Duplicate" action="DuplicateProject" id="studio-button-duplicateproject-068" />
+                <Button content="Export JSON" action="ExportProject" id="studio-button-exportproject-069" />
+                <Button content="Move to recovery" action="RecoverProject" id="studio-button-recoverproject-070" />
+              </Container>
+            </Container>
+          </If>
+          <If Condition="{Binding ShowAgents}">
+            <Container Type="Vertical Stack" id="studio-container-071">
+              <Text text="Canonical Den/Dulche Agents remain owned by their shared service. When that service is unregistered this draft is not saved." text-wrapping="Wrap" id="studio-text-072" />
+              <Text text="Name" margin="0,14,0,6" id="studio-text-073" />
+              <Input Type="Text" Value="{Binding Name, Mode=TwoWay}" accessible-name="Agent name" id="studio-input-074" />
+              <Text text="Description" margin="0,14,0,6" id="studio-text-075" />
+              <Input Type="Text" Value="{Binding Description, Mode=TwoWay}" accessible-name="Agent description" id="studio-input-076" />
+              <Text text="Plugins, Skills and knowledge files require canonical capability references. Availability, default model and quick actions require the owning service." text-wrapping="Wrap" margin="0,14" id="studio-text-077" />
+              <Text text="Instructions" id="studio-text-078" />
+              <Input Type="Text" Value="{Binding Instructions, Mode=TwoWay}" multiline="True" min-height="200" accessible-name="Agent instructions" margin="0,6,0,14" id="studio-input-079" />
+              <Button content="Create canonical Agent" action="CreateAgent" horizontal-alignment="Left" id="studio-button-createagent-080" />
+            </Container>
+          </If>
+          <If Condition="{Binding ShowPlayground}">
+            <Container Type="Vertical Stack" id="studio-container-081">
+              <Text text="Test requests use the canonical Dulche runtime. An unavailable adapter makes no model or tool call." text-wrapping="Wrap" id="studio-text-082" />
+              <Text text="Test instructions" margin="0,14,0,6" id="studio-text-083" />
+              <Input Type="Text" Value="{Binding Instructions, Mode=TwoWay}" multiline="True" min-height="100" accessible-name="Playground instructions" id="studio-input-084" />
+              <Text text="Input" margin="0,14,0,6" id="studio-text-085" />
+              <Input Type="Text" Value="{Binding Input, Mode=TwoWay}" multiline="True" min-height="120" accessible-name="Playground input" id="studio-input-086" />
+              <Button content="Run test" action="RunPlayground" horizontal-alignment="Left" margin="0,14" id="studio-button-runplayground-087" />
+            </Container>
+          </If>
+          <If Condition="{Binding ShowReplay}">
+            <Text text="The canonical Dulche replay adapter is not registered. No run history or simulated replay result is shown." text-wrapping="Wrap" id="studio-text-088" />
+          </If>
+          <If Condition="{Binding ShowResourceCreate}">
+            <Container Type="Vertical Stack" id="studio-container-089">
+              <Text text="Versioned local definitions do not imply runtime support." text-wrapping="Wrap" id="studio-text-090" />
+              <Text text="Name" margin="0,14,0,6" id="studio-text-091" />
+              <Input Type="Text" Value="{Binding Name, Mode=TwoWay}" accessible-name="Resource name" id="studio-input-092" />
+              <Text text="Definition JSON" margin="0,14,0,6" id="studio-text-093" />
+              <Input Type="Text" Value="{Binding Definition, Mode=TwoWay}" multiline="True" min-height="240" accessible-name="New resource definition" id="studio-input-094" />
+              <Button content="Create resource" action="CreateResource" horizontal-alignment="Left" margin="0,14" id="studio-button-createresource-095" />
+              <Text text="Saved resources" font-size="20" margin="0,8" id="studio-text-096" />
+              <If Condition="{Binding RowsEmpty}">
+                <Text text="No saved resources yet." id="studio-text-097" />
+              </If>
+              <Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}">
+                <Container Type="Grid" ColumnSizes="1fr Auto" padding="12" margin="0,0,0,8" background="{Resource CuiShellBrush}" id="studio-container-098">
+                  <Container Type="Vertical Stack" id="studio-container-099">
+                    <Text text="{Binding row.Title}" id="studio-text-100" />
+                    <Text text="{Binding row.Detail}" text-wrapping="Wrap" id="studio-text-101" />
+                  </Container>
+                  <Button Column="1" content="Open" action="ChooseRow" id="studio-button-chooserow-102" />
+                </Container>
+              </Repeat>
+            </Container>
+          </If>
+          <If Condition="{Binding ShowResourceEditor}">
+            <Container Type="Vertical Stack" id="studio-container-103">
+              <Text text="Name" id="studio-text-104" />
+              <Input Type="Text" Value="{Binding Name, Mode=TwoWay}" accessible-name="Saved resource name" margin="0,6,0,14" id="studio-input-105" />
+              <Text text="Definition JSON" id="studio-text-106" />
+              <Input Type="Text" Value="{Binding Definition, Mode=TwoWay}" multiline="True" min-height="300" accessible-name="Saved resource definition" margin="0,6,0,14" id="studio-input-107" />
+              <Text text="Saving retains a revision. Evaluation and test runs require the exact target revision and registered runtime." text-wrapping="Wrap" id="studio-text-108" />
+              <Container Type="Wrap" margin="0,14" id="studio-container-109">
+                <Button content="Save" action="SaveResource" id="studio-button-saveresource-110" />
+                <Button content="History" action="ResourceHistory" id="studio-button-resourcehistory-111" />
+                <If Condition="{Binding IsEvaluation}">
+                  <Button content="Run evaluation" action="RunEvaluation" id="studio-button-runevaluation-112" />
+                </If>
+                <If Condition="{Binding IsTestSuite}">
+                  <Button content="Run tests" action="RunTestSuite" id="studio-button-runtestsuite-113" />
+                </If>
+                <Button content="Move to recovery" action="RecoverResource" id="studio-button-recoverresource-114" />
+              </Container>
+            </Container>
+          </If>
+          <If Condition="{Binding ShowEngine}">
+            <Container id="engine-self-check" Type="Vertical Stack">
+              <Text text="{Binding EngineTitle}" font-size="22" font-weight="Bold" id="studio-text-115" />
+              <Text text="{Binding EngineDescription}" text-wrapping="Wrap" margin="0,8" id="studio-text-116" />
+              <Text text="{Binding EngineReady}" text-wrapping="Wrap" id="studio-text-117" />
+              <Text id="engine-error" text="{Binding EngineError}" text-wrapping="Wrap" margin="0,8" />
+              <If Condition="{Binding EngineUnknown}">
+                <Text text="The outcome is not confirmed. Refresh the retained status before trying another run." text-wrapping="Wrap" id="studio-text-118" />
+              </If>
+              <Container Type="Wrap" margin="0,14" id="studio-container-119">
+                <Button id="engine-launch" content="Run self-check" action="EngineRun" Interactive="{Binding CanEngineRun}" />
+                <Button id="engine-refresh" content="Refresh status and history" action="EngineRefresh" />
+                <Button id="engine-pause" content="Pause" action="EnginePause" Interactive="{Binding CanEnginePause}" />
+                <Button id="engine-recover" content="Check recovery" action="EngineRecover" Interactive="{Binding CanEngineRecover}" />
+              </Container>
+              <If Condition="{Binding EnginePausePending}">
+                <Text text="Pause requested. Waiting for the checkpoint boundary and recorded outcome." text-wrapping="Wrap" id="studio-text-120" />
+              </If>
+              <Text id="engine-status" text="{Binding EngineSummary}" text-wrapping="Wrap" font-size="18" />
+              <Text text="{Binding EngineReason}" text-wrapping="Wrap" margin="0,8" id="studio-text-121" />
+              <Text text="Check recovery repeats the second arithmetic update from an eligible first checkpoint. It does not resume language-model training." text-wrapping="Wrap" margin="0,8,0,18" id="studio-text-122" />
+              <Text text="Retained attempts" font-size="20" id="studio-text-123" />
+              <Repeat Source="{Binding EngineRows}" As="attempt" Key="{Binding attempt.Id}">
+                <Container Type="Grid" ColumnSizes="1fr Auto" padding="12" margin="0,8" background="{Resource CuiShellBrush}" id="studio-container-124">
+                  <Container Type="Vertical Stack" id="studio-container-125">
+                    <Text text="{Binding attempt.Title}" text-wrapping="Wrap" id="studio-text-126" />
+                    <Text text="{Binding attempt.Detail}" text-wrapping="Wrap" id="studio-text-127" />
+                  </Container>
+                  <Button Column="1" content="Inspect" action="ChooseAttempt" id="studio-button-chooseattempt-128" />
+                </Container>
+              </Repeat>
+              <Button content="Load more" action="EngineMore" Interactive="{Binding CanEngineMore}" horizontal-alignment="Left" id="studio-button-enginemore-129" />
+            </Container>
+          </If>
+        </Container>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

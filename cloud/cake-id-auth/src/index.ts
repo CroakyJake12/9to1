@@ -1,12 +1,32 @@
 import { verifyOAuthQueryParams } from "@better-auth/oauth-provider";
-import { createAuth } from "./auth";
+import { createAuth, googleCredentials, registrationHeld } from "./auth";
 import { AUTH_BASE_PATH } from "./contract";
 import type { Env } from "./env";
 import { checkLoginLimit, checkRateLimit, readEmailIdentifier, readLoginIdentifier } from "./limiter";
-import { consentPage, forgotPasswordPage, json, resetPasswordPage, signInPage, signUpPage } from "./pages";
+import { consentPage, forgotPasswordPage, invitationsPage, json, onboardingPage, resetPasswordPage, signInPage, signUpPage } from "./pages";
 import { handleResourceApi } from "./resource-api";
 import { readPresentAppState, readStagingAppsState, stagingAppsAccountPage } from "./staging-apps";
+import { enableOwnedSignIn, readProductionSitesState, productionSitesPage } from "./production-sites";
+import { publicAppDestination, readPublicApp } from "./public-app";
+import { prepareTurnstile, turnstileRequired, turnstileSiteKey, verifyTurnstile } from "./turnstile";
+import { invitationRequest, isInvitationAdministrator } from "./invitations";
+import { acceptAccountPolicy, policyVersions } from "./public-policy";
+import { purgeTransientData } from "./maintenance";
+import { flushSecurityEvents, recordSecurityEvent } from "./security-telemetry";
 import AUTH_UI from "../public/auth-ui.txt";
+import { brandAssetResponse } from "./brand-assets";
+
+// Provider logs attach the original request URL even to a static console event.
+// Only fixed paths may emit a failure event; recovery tokens can be path segments.
+const safeFailureLogPaths = new Set([
+  "/sign-in", "/sign-up", "/forgot-password", "/reset-password", "/consent", "/account",
+  "/account/onboarding", "/account/invitations", "/account/production-sites", "/account/production-sites/state",
+  "/api/auth/sign-in/email", "/api/auth/sign-in/username", "/api/auth/sign-in/social", "/api/auth/sign-up/email",
+  "/api/auth/request-password-reset", "/api/auth/reset-password", "/api/auth/send-verification-email", "/api/auth/verify-email",
+  "/api/auth/callback/google", "/api/auth/oauth2/authorize", "/api/auth/oauth2/token", "/api/auth/oauth2/consent",
+  "/api/auth/oauth2/userinfo", "/api/auth/oauth2/introspect", "/api/account/current", "/api/account/profile",
+  "/api/account/theme", "/api/account/sessions", "/api/account/export", "/api/account/signout", "/api/account/revoke-other-sessions",
+]);
 
 function emailConsentContext(url: URL): { clientId: string; scopes: string[] } | null {
   const query = url.search.slice(1);
@@ -61,6 +81,11 @@ function addCors(response: Response, headers: Headers): Response {
 
 export async function fetchRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
+  const asset = brandAssetResponse(request); if (asset) return asset;
+  const publicApp = readPublicApp(url.searchParams);
+  const signupPolicy = registrationHeld(env) ? null : policyVersions(env);
+  const preparedChallenge = await prepareTurnstile(request, env);
+  if (preparedChallenge instanceof Response) return preparedChallenge;
   const publicMethod = publicOAuthMethod(url.pathname);
   const publicCors = publicMethod ? publicOAuthCors(request, env, publicMethod) : null;
   if (publicCors && request.method === "OPTIONS") {
@@ -87,12 +112,19 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     return new Response(null, { status: 303, headers: { "location": `${url.origin}/account`, "cache-control": "no-store" } });
   }
   if (request.method === "GET" && url.pathname === "/assets/auth-ui.js") {
-    return new Response(AUTH_UI, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
+    return new Response(AUTH_UI, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-content-type-options": "nosniff" } });
   }
-  if (request.method === "GET" && url.pathname === "/sign-in") return signInPage();
-  if (request.method === "GET" && url.pathname === "/sign-up") return signUpPage();
-  if (request.method === "GET" && url.pathname === "/forgot-password") return forgotPasswordPage();
-  if (request.method === "GET" && url.pathname === "/reset-password") return resetPasswordPage();
+  if (request.method === "GET" && url.pathname === "/sign-in") {
+    if (url.searchParams.get("social") === "complete") {
+      const session = await auth.api.getSession({ headers: request.headers });
+      if (session) return new Response(null, { status: 303, headers: {
+        location: new URL(publicAppDestination(publicApp), url.origin).href, "cache-control": "no-store" } });
+    }
+    return signInPage(publicApp, googleCredentials(env) !== null, turnstileSiteKey(env), turnstileRequired(request, env), signupPolicy);
+  }
+  if (request.method === "GET" && url.pathname === "/sign-up") return signUpPage(publicApp, googleCredentials(env) !== null, turnstileSiteKey(env), turnstileRequired(request, env), signupPolicy);
+  if (request.method === "GET" && url.pathname === "/forgot-password") return forgotPasswordPage(publicApp, googleCredentials(env) !== null, turnstileSiteKey(env), turnstileRequired(request, env), signupPolicy);
+  if (request.method === "GET" && url.pathname === "/reset-password") return resetPasswordPage(publicApp);
   if (request.method === "GET" && url.pathname === "/consent") {
     const query = emailConsentContext(url);
     const secret = (await auth.$context).secret;
@@ -101,11 +133,44 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     if (!session) return Response.redirect(`${new URL(env.AUTH_BASE_URL).origin}/sign-in${url.search}`, 302);
     return consentPage(query.clientId, query.scopes);
   }
-  if (request.method === "GET" && ["/account", "/account/staging-apps", "/account/present-app"].includes(url.pathname)) {
+  if (url.pathname === "/account/invitations" && ["GET", "POST"].includes(request.method)) {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session) return json({ error: "unauthorized" }, 401);
+    if (!await isInvitationAdministrator(env, session.user.id)) return json({ error: "forbidden" }, 403);
+    if (request.method === "GET") return invitationsPage();
+    return invitationRequest(request, env, session.user.id);
+  }
+  if (url.pathname === "/account/onboarding" && ["GET", "POST"].includes(request.method)) {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session) return json({ error: "unauthorized" }, 401);
+    const policy = policyVersions(env);
+    if (!policy) return json({ error: "account_policy_unavailable" }, 503);
+    if (request.method === "POST") {
+      try { return await acceptAccountPolicy(request, env, session.user.id, session.session.id); }
+      catch { return json({ error: "account_policy_unavailable" }, 503); }
+    }
+    if (url.searchParams.has("client_id") || url.searchParams.has("sig")) {
+      if (!await verifyOAuthQueryParams(url.search.slice(1), (await auth.$context).secret))
+        return json({ error: "invalid_authorization_request" }, 400);
+    }
+    return onboardingPage(publicApp, policy);
+  }
+  if (url.pathname === "/account/production-sites" && request.method === "POST") {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session) return json({ error: "unauthorized" }, 401);
+    return enableOwnedSignIn(request, env, session.user.id, auth.api);
+  }
+  if (request.method === "GET" && ["/account", "/account/staging-apps", "/account/present-app", "/account/production-sites", "/account/production-sites/state"].includes(url.pathname)) {
     const session = await auth.api.getSession({ headers: request.headers });
     if (!session) return url.pathname === "/account"
       ? Response.redirect(`${url.origin}/sign-in`, 302) : json({ error: "unauthorized" }, 401);
     try {
+      if (url.pathname === "/account/production-sites" || url.pathname === "/account/production-sites/state") {
+        const production = await readProductionSitesState(env, session.user.id);
+        return url.pathname === "/account/production-sites"
+          ? productionSitesPage(production)
+          : json(production, production.kind === "not-admin" ? 403 : 200);
+      }
       if (url.pathname === "/account/present-app") {
         const present = await readPresentAppState(env, session.user.id);
         return json(present, present.kind === "not-admin" ? 403 : 200);
@@ -134,6 +199,7 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
       const identifier = await readLoginIdentifier(request);
       const limit = await checkLoginLimit(env, request, identifier);
       if (!limit.allowed) {
+        recordSecurityEvent("rate_limited");
         return new Response(JSON.stringify({ error: "too_many_attempts", message: "Too many sign-in attempts. Try again later." }), {
           status: 429,
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "retry-after": String(limit.retryAfterSeconds) },
@@ -157,6 +223,7 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
         lockSeconds: 60 * 60,
       });
       if (!limit.allowed) {
+        recordSecurityEvent("rate_limited");
         return new Response(JSON.stringify({ error: "too_many_attempts", message: "Too many account email requests. Try again later." }), {
           status: 429,
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "retry-after": String(limit.retryAfterSeconds) },
@@ -167,13 +234,31 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     }
   }
 
+  if (preparedChallenge) {
+    const denial = await verifyTurnstile(preparedChallenge, request, env);
+    if (denial) return denial;
+  }
   const reply = await auth.handler(request);
   return publicCors ? addCors(reply, publicCors) : reply;
 }
 
 const worker = {
-  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    return fetchRequest(request, env, ctx);
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    try { return await fetchRequest(request, env, ctx); }
+    catch {
+      if (safeFailureLogPaths.has(new URL(request.url).pathname)) recordSecurityEvent("service_error");
+      return json({ error: "service_unavailable" }, 503);
+    }
+  },
+  async scheduled(_controller: ScheduledController, env: Env): Promise<void> {
+    try {
+      const counts = await purgeTransientData(env);
+      console.info(JSON.stringify({ event: "account_transient_retention", counts }));
+      flushSecurityEvents();
+    } catch {
+      console.error(JSON.stringify({ event: "account_transient_retention_failed" }));
+      throw new Error("account_transient_retention_failed");
+    }
   },
 };
 

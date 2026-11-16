@@ -1,12 +1,11 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Markup.Xaml;
 
 namespace HavenOS.AIStudio;
 
 public sealed partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize() { } // Presentation resources are owned by the CUI scene.
 
     public override void OnFrameworkInitializationCompleted()
     {

@@ -1,14 +1,27 @@
 import assert from 'node:assert/strict';
-import { closeSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { closeSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { launchFixtureCustodian } from './fixture-launch.mjs';
+import { launchFixtureCustodian, stripNodeInjectionEnvironment } from './fixture-launch.mjs';
 import { finishIntegrationCleanup } from './integration-lifecycle.mjs';
 const folder=mkdtempSync(path.join(os.tmpdir(),'cake-fixture-launch-control-'));
 const custodian=new URL('./linux-fixture-custodian.py',import.meta.url).pathname;
 const spawnFailure=new Error('isolated synchronous spawn failure');
 const closeFailure=new Error('isolated close failure');
 const closeAndFail=fd=>{closeSync(fd);throw closeFailure};
+assert.deepEqual(stripNodeInjectionEnvironment({nOdE_Options:'x',Node_Path:'y',NODE_REPL_EXTERNAL_MODULE:'z',KEEP:'value'}),{KEEP:'value'});
+let preloadMarker;
+let workerEnvironment;
+if(process.platform === 'win32') {
+  preloadMarker=path.join(folder,'node-preload-marker');
+  const preload=path.join(folder,'node-preload.cjs');
+  writeFileSync(preload,`require('node:fs').writeFileSync(${JSON.stringify(preloadMarker)},'executed')`);
+  workerEnvironment={...process.env};
+  for(const name of Object.keys(workerEnvironment))
+    if(['NODE_OPTIONS','NODE_PATH','NODE_REPL_EXTERNAL_MODULE'].includes(name.toUpperCase())) delete workerEnvironment[name];
+  workerEnvironment.nOdE_Options=`--require=${preload}`;
+  workerEnvironment.NoDe_PaTh=folder;
+}
 let worker, exited, primaryFailure, receipt='';
 try {
   assert.throws(()=>launchFixtureCustodian(custodian,['/bin/true'],folder,path.join(folder,'no-child.json'),{
@@ -16,7 +29,7 @@ try {
   }),error=>error instanceof AggregateError && error.errors[0]===spawnFailure && error.errors[1]===closeFailure &&
     error.fixtureJournalCloseError===closeFailure);
   worker=launchFixtureCustodian(custodian,[process.execPath,'-e','setInterval(()=>{},1000)'],folder,
-    path.join(folder,'real-child.json'),{close:closeAndFail});
+    path.join(folder,'real-child.json'),{close:closeAndFail,env:workerEnvironment});
   // Install original-child control before assertions: their failure must still stop/reap this actual child.
   for(const stream of [worker.stdout,worker.stderr]) stream.on('data',()=>{});
   worker.stdio[3].setEncoding('utf8').on('data',chunk=>{receipt+=chunk});
@@ -31,12 +44,19 @@ finally {
       worker.stdin.end('stop\n');
       assert.equal(await exited,0);
       const proof=JSON.parse(receipt);
-      assert.equal(proof.strictReaped,true);assert.equal(proof.originalsDisappeared,true);
+      if(worker.fixtureCustodyMode === 'owned-direct-child') {
+        assert.equal(proof.custody,'owned-direct-child-handle');
+        assert.equal(proof.directChildExited,true);
+        assert.equal(proof.processTreeCustody,false);
+      } else {
+        assert.equal(proof.strictReaped,true);assert.equal(proof.originalsDisappeared,true);
+      }
       assert.deepEqual(JSON.parse(readFileSync(path.join(folder,'real-child.json'),'utf8')),proof);
-      // Injection actually closed its known fd before throwing; strict proof exists for this owned test directory only.
+      if(preloadMarker) assert.equal(existsSync(preloadMarker),false,'mixed-case NODE_OPTIONS did not execute the temporary preload in either owned Node process');
+      // Injection actually closed its known fd before throwing; the receipt proves only the platform's declared custody scope.
       rmSync(folder,{recursive:true});
     }
   });
 }
 if(primaryFailure) throw primaryFailure;
-console.log('PASS: actual spawned handle retained and strictly drained after close error; original spawn+close objects retained');
+console.log(`PASS: actual spawned handle retained and drained after close error (${worker.fixtureCustodyMode}); original spawn+close objects retained`);

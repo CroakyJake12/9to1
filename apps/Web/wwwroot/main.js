@@ -9,6 +9,8 @@ import { createPresentModule } from './present-indexeddb.js';
 import { createPrivateContextLifecycle } from './browser-private-context.js';
 import { createTaskExecutionHost } from './task-execution-host.js';
 import * as homeLocalPreferences from './home-local-preferences.js';
+import { createFilesBrowserBridge } from './files-browser.js';
+import { createFilesSessionMonitor } from './browser-files-session.js';
 
 const platform = createBrowserPlatform(window, document);
 platform.markStartup('javascript:begin');
@@ -19,15 +21,22 @@ let owner;
 let notes;
 let present;
 let taskStorage;
+let files;
+let filesSession;
 let released = false;
 let releaseTask;
 const verifiedOwnerChange = Symbol('verified owner change');
 const terminalRelease = Symbol('terminal private release');
+const endedFilesSession = Symbol('ended Files session');
 const cleanupFailed = () => platform.showStatus('PrivateContextCleanupFailed',
     'Private content closed, but cleanup did not complete. Reload before signing in.');
 const lifecycle = createPrivateContextLifecycle({
-    beginOwnerReset: operation => operation === terminalRelease ? owner.RevokePrivateContext()
-        : operation === verifiedOwnerChange ? owner.OwnedAccountContextChanged() : owner.PrivateContextInvalidated(),
+    beginOwnerReset: operation => {
+        filesSession?.cancelCheck();
+        files?.revokeAll();
+        return operation === terminalRelease || operation === endedFilesSession ? owner.RevokePrivateContext()
+            : operation === verifiedOwnerChange ? owner.OwnedAccountContextChanged() : owner.PrivateContextInvalidated();
+    },
     clearPresentation: () => { accessibility?.clear(); },
     onFailure: cleanupFailed,
 });
@@ -56,7 +65,9 @@ function releasePrivateAccountContext() {
     let taskStorageDrain;
     try { taskStorageDrain = taskStorage?.dispose(); }
     catch (error) { lifecycle.holdFailure(error); errors.push(error); }
-    Promise.allSettled([lifecycle.join(), accountDrain, presentDrain, taskStorageDrain]).then(async settled => {
+    const filesDrain = files?.drainAll();
+    const filesSessionDrain = filesSession?.dispose();
+    Promise.allSettled([lifecycle.join(), accountDrain, presentDrain, taskStorageDrain, filesDrain, filesSessionDrain]).then(async settled => {
         for (const result of settled) if (result.status === 'rejected') errors.push(result.reason);
         // A real broker continuation may issue another native reset after the
         // first join settles. Join it once all broker work has truly settled.
@@ -68,6 +79,15 @@ function releasePrivateAccountContext() {
         else resolve();
     });
     return releaseTask;
+}
+
+function endFilesSession() {
+    if (released) return;
+    try { lifecycle.begin(endedFilesSession); }
+    catch (error) { lifecycle.holdFailure(error); return; }
+    Promise.all([lifecycle.join(), files.drainAll(), filesSession?.dispose()]).then(() => {
+        if (!released) window.location.assign('/account?notice=signed-out');
+    }).catch(error => lifecycle.holdFailure(error));
 }
 
 async function replaceVerifiedOwner() {
@@ -96,13 +116,24 @@ try {
         notes = createNotesModule();
         present = createPresentModule();
         taskStorage = createTaskExecutionHost();
+        const filesHost = window.location.pathname.startsWith('/files/');
+        files = createFilesBrowserBridge({ onSessionLost: () => filesSession?.invalidate() });
+        const filesEnabled = () => filesHost && !filesSession?.invalidated;
+        if (filesEnabled() && !window.location.hash) platform.writeFragment('#/app.files', true);
         platform.markStartup('javascript:services-created');
         if (!isCompatible) throw new Error('BrowserCapabilityUnavailable');
         const { dotnet } = await import('./_framework/dotnet.js');
         platform.markStartup('runtime:begin');
         const runtime = await dotnet.create();
         platform.markStartup('runtime:ready');
-        runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext });
+        runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext, filesEnabled,
+            markStartup(stage) {
+                platform.markStartup(stage);
+                if (stage === 'backend:ready' && filesHost && !released && !filesSession)
+                    filesSession = createFilesSessionMonitor(window, document, endFilesSession);
+            },
+        });
+        runtime.setModuleImports('nineToOneFiles', files);
         runtime.setModuleImports('nineToOneHomeLocal', homeLocalPreferences);
         runtime.setModuleImports('nineToOneHomeAccountTheme', accounts.themePreferences);
         runtime.setModuleImports('nineToOneWave', waveBrowser);
@@ -124,7 +155,7 @@ try {
         await accounts.prepare();
         platform.markStartup('accounts:ready');
         accessibility = createBrowserAccessibility(window, document, owner);
-        unsubscribe = platform.subscribe(owner.LocationChanged,
+        unsubscribe = platform.subscribe(fragment => { if (!filesSession?.invalidated) owner.LocationChanged(fragment); },
             () => { releasePrivateAccountContext().catch(cleanupFailed); },
             () => { accounts.invalidatePrivateContext('page_restored').catch(() => {
                 cleanupFailed();

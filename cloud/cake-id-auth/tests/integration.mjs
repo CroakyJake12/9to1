@@ -49,6 +49,16 @@ const cookies = new Map();
 let syntheticSource = 0;
 const realFetch = globalThis.fetch.bind(globalThis);
 
+function startWorker() {
+  serverOutput = "";
+  const wrangler = path.join(root, "node_modules", "wrangler", "bin", "wrangler.js");
+  worker = spawn(process.execPath, [
+    wrangler, "dev", "--local", "--config", "wrangler.local.jsonc", "--ip", "127.0.0.1", "--port", "8798", "--persist-to", persistPath,
+  ], { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+  worker.stdout.setEncoding("utf8").on("data", (chunk) => { serverOutput = (serverOutput + chunk).slice(-16000); });
+  worker.stderr.setEncoding("utf8").on("data", (chunk) => { serverOutput = (serverOutput + chunk).slice(-16000); });
+}
+
 async function waitForWorkerExit(timeoutMs = 5000) {
   if (!worker || worker.exitCode !== null) return true;
   return Promise.race([
@@ -227,7 +237,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
   const consentPage = await globalThis.fetch(activeURL, { redirect: "manual", headers: { accept: "text/html", "sec-fetch-mode": "navigate" } });
   assert.equal(consentPage.status, 200, "consent screen verifies the signed OAuth query");
   const consentHtml = await consentPage.text();
-  assert.match(consentHtml, /Authorize application/);
+  assert.match(consentHtml, /<h1 id="account-title">Connect an app\.<\/h1>/);
 
   const consent = await authClient.oauth2.consent({ accept: true });
   assert.equal(consent.error, null, `OAuth consent failed: ${JSON.stringify(consent.error)}`);
@@ -266,20 +276,36 @@ async function exchangeCode(discovery, clientId, code, verifier, expectedStatus 
 
 let testAccount;
 let durationMs = {};
+let schemaBootstrapRestartVerified = false;
 try {
-  const wrangler = path.join(root, "node_modules", "wrangler", "bin", "wrangler.js");
-  worker = spawn(process.execPath, [
-    wrangler, "dev", "--local", "--config", "wrangler.local.jsonc", "--ip", "127.0.0.1", "--port", "8798", "--persist-to", persistPath,
-  ], { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
-  worker.stdout.setEncoding("utf8").on("data", (chunk) => { serverOutput = (serverOutput + chunk).slice(-16000); });
-  worker.stderr.setEncoding("utf8").on("data", (chunk) => { serverOutput = (serverOutput + chunk).slice(-16000); });
+  startWorker();
   await waitForWorker();
 
   const schema = await response("/__test/schema", { headers: { "x-local-test-key": testKey } });
-  assert.equal(schema.status, 200, "actual Better Auth D1 schema was generated");
+  assert.equal(schema.status, 200, "canonical versioned auth D1 schema was applied");
   const schemaSql = await schema.text();
-  assert.match(schemaSql, /oauth/i, "OAuth provider tables are included in generated D1 schema");
-  assert.match(schemaSql, /jwks/i, "signing key table is included in generated D1 schema");
+  assert.match(schemaSql, /oauth/i, "OAuth provider tables are included in versioned D1 schema");
+  assert.match(schemaSql, /jwks/i, "signing key table is included in versioned D1 schema");
+  const readSchemaState = async () => {
+    const result = await response("/__test/schema-state", { headers: { "x-local-test-key": testKey } });
+    assert.equal(result.status, 200, "guarded local schema metadata is available");
+    const state = await result.json();
+    assert.match(state.instanceId, /^[0-9a-f-]{36}$/, "schema metadata identifies this initialized Worker instance");
+    assert.equal(state.migrations.join(","), ["0000_cake_guardrails.sql", "0001_better_auth.sql", "0002_account_theme_preference.sql", "0003_turnstile_redemptions.sql", "0004_account_invitations.sql", "0005_public_account_policy.sql", "0006_password_reset_fence.sql"].join(","), "each canonical migration is recorded exactly once");
+    assert.equal(state.credentialGeneration?.type, "INTEGER");
+    assert.equal(state.credentialGeneration?.notnull, 1, "real D1 generation column is NOT NULL");
+    assert.equal(state.credentialGeneration?.dflt_value, "0", "real D1 generation column has DEFAULT 0");
+    return state;
+  };
+  const initialSchemaState = await readSchemaState();
+  await stopWorker();
+  startWorker();
+  await waitForWorker();
+  const restartedSchemaState = await readSchemaState();
+  assert.notEqual(restartedSchemaState.instanceId, initialSchemaState.instanceId, "restart evidence comes from a fresh Worker instance");
+  assert.equal(JSON.stringify(restartedSchemaState.migrations), JSON.stringify(initialSchemaState.migrations), "restart reuses canonical migrations without duplicate application");
+  assert.equal(JSON.stringify(restartedSchemaState.credentialGeneration), JSON.stringify(initialSchemaState.credentialGeneration), "restart preserves the actual D1 generation constraint");
+  schemaBootstrapRestartVerified = true;
 
   const loginPage = await response("/sign-in");
   assert.equal(loginPage.status, 200);
@@ -611,6 +637,7 @@ try {
   console.log(JSON.stringify({
     result: "passed",
     assertionsExecuted: assertionCount,
+    schemaBootstrapRestartVerified,
     environment: "local Wrangler Workerd + local D1 only",
     issuer: discovery.issuer,
     authorizationEndpoint: discovery.authorization_endpoint,

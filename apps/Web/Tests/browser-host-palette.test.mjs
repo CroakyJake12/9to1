@@ -4,15 +4,17 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { createBrowserPlatform } from '../wwwroot/browser-platform.js';
 
-const html = await readFile(new URL('../wwwroot/index.html', import.meta.url), 'utf8');
-const startupScript = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const startupScript = await readFile(new URL('../wwwroot/host-bootstrap.js', import.meta.url), 'utf8');
 
 test('canonical bright and dark host colours survive startup without creating another preference owner', () => {
     const storage = new Map([['9to1.home.local-appearance.v1', 'existing-owner-envelope']]);
     const localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
     const current = new Map();
     const windowObject = { location: { hash: '' }, localStorage };
-    const documentObject = { documentElement: { style: { setProperty: (key, value) => current.set(key, value) } } };
+    const documentObject = {
+        documentElement: { style: { setProperty: (key, value) => current.set(key, value) } },
+        addEventListener() {},
+    };
     const platform = createBrowserPlatform(windowObject, documentObject);
     for (const palette of [['#ffffff', '#111111', '#f4f6f8'], ['#06090d', '#eeeeee', '#121526']]) {
         platform.setHostPalette(...palette);

@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nine-files-private",
+  "main": "src/worker.mjs",
+  "account_id": "8aea00ca3c4635410861efcc6a5f593b",
+  "compatibility_date": "2026-11-15",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": ".build/browser/wwwroot",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "limits": { "cpu_ms": 300000, "subrequests": 1000000 },
+  "vars": {
+    "FILES_DEDICATED_GOOGLE_PROJECT": "true",
+    "GOOGLE_DRIVE_PROJECT_ID": "quick-doodad-514818-p1",
+    // Owner-only live run 63baae4f-32be-41c3-ad81-071489a2ab23 verified
+    // atomic markers, stale If-Match 412, move, recoverable Trash and restore.
+    "DRIVE_CONDITIONAL_WRITES_VERIFIED": "true"
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "DRIVE_PROJECT", "class_name": "DriveProject" },
+      { "name": "WEB_SESSIONS", "class_name": "WebSession", "script_name": "cake-public-websites" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DriveProject"] }],
+  // OAuth codes and resumable upload addresses must not enter request traces.
+  // Only bounded operational diagnostics may be logged; no request/body logging.
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false },
+    "traces": { "enabled": false }
+  }
+}

@@ -52,6 +52,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
 
     /// <summary>Registration is supplied by the composition root after obtaining real authenticated owner adapters.</summary>
     public BrowserSurfaceRegistry Surfaces => _surfaces;
+    internal Func<BrowserSurfaceRegistry, Func<bool>, Task>? FilesRegistration { get; set; }
     public bool HasUnsavedChanges => !_disposed && _surfaces.HasUnsavedChanges;
 
     internal string ReadAccessibility()
@@ -593,7 +594,27 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         await DrainPrivateContextResetTasksAsync();
         if (_disposed || _closing || version != _privateContextVersion || _privateContextResets != 0) return;
         _accountSettings = BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces);
+        await RegisterPrivateFilesAsync();
         QueueNavigation(Program.ReadFragment());
+    }
+
+    internal async Task RegisterPrivateFilesAsync()
+    {
+        if (FilesRegistration is not { } register || _disposed || _closing || _privateContextResets != 0) return;
+        var version = _privateContextVersion;
+        try
+        {
+            await register(_surfaces,
+                () => !_disposed && !_closing && _privateContextResets == 0 && version == _privateContextVersion);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception)
+        {
+            // The Files server establishes its owner. A missing connection must
+            // not manufacture a local provider or prevent other apps from opening.
+            if (!_disposed && version == _privateContextVersion)
+                Program.ShowStatus("FilesUnavailable", "Files could not verify this account. Open your 9to1 Account, then reload Files.");
+        }
     }
 
     private sealed class HomeAdmission(BrowserApplication application, BrowserHomeContext home) : IBrowserPresentationAdmission

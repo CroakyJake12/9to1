@@ -7,6 +7,7 @@
     <AssemblyName>NineToOne.Wave.BrowserEngine</AssemblyName>
     <WaveOwnerRoot>$(MSBuildProjectDirectory)/../../../../9to1 Workspace/Wave</WaveOwnerRoot>
     <WaveMediaOwnerRoot>$(MSBuildProjectDirectory)/../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Media</WaveMediaOwnerRoot>
+    <WavePythonExecutable Condition="'$(WavePythonExecutable)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">python</WavePythonExecutable>
     <WavePythonExecutable Condition="'$(WavePythonExecutable)' == ''">python3</WavePythonExecutable>
   </PropertyGroup>
   <ItemGroup>

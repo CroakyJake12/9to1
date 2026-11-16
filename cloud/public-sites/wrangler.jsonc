@@ -1,0 +1,15 @@
+﻿{
+  "$schema": "../files-drive/node_modules/wrangler/config-schema.json",
+  "name": "cake-public-websites",
+  "account_id": "8aea00ca3c4635410861efcc6a5f593b",
+  "main": "dist/worker.mjs",
+  "compatibility_date": "2026-11-15",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "services": [{"binding":"IDENTITY","service":"cake-id-release-validation"},{"binding":"FILES","service":"nine-files-private"}],
+  "durable_objects": {"bindings":[{"name":"WEB_SESSIONS","class_name":"WebSession"}]},
+  "migrations": [{"tag":"v1","new_sqlite_classes":["WebSession"]}],
+  "observability": {"enabled":true,"redact_query_string":true,"logs":{"enabled":true,"invocation_logs":false},"traces":{"enabled":false}},
+  "limits":{"cpu_ms":1000,"subrequests":1000000}
+}
