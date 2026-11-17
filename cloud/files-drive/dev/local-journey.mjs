@@ -91,6 +91,19 @@ export async function runJourney({ connect, fixture, tlsPort, state, chrome }) {
       return { controls: await evaluate(session, snapshot) };
     });
 
+    await step('folder-search', async () => {
+      await until(session, set('Search names in this folder', 'Fixture'), 15000, 'search text binding');
+      await until(session, click('Search folder'), 15000, 'search action');
+      await until(session, `(() => { const s = __nine.status();
+        return s.controls.includes("Local Fixture Folder") && !s.controls.includes("welcome.txt"); })()`,
+      20000, 'search-filtered rows');
+      await until(session, click('Clear search'), 15000, 'clear search action');
+      await until(session, `(() => { const s = __nine.status();
+        return s.controls.includes("Local Fixture Folder") && s.controls.includes("welcome.txt"); })()`,
+      20000, 'restored listing after clear');
+      return { query: 'Fixture' };
+    });
+
     await step('create-folder', async () => {
       await until(session, click('New folder'), 15000, 'new folder action');
       await until(session, set('Folder or item name', 'Journey Folder'), 15000, 'name input accepted');

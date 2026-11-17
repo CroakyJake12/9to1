@@ -9,11 +9,14 @@ production deployment. Google OAuth, live Drive access and deployment stay separ
 
 - Started from verified clean `main` at `3dd901e876f73a378dedd40407d828ee5658f518`, then
   fast-forwarded to `9cc997fd879ab1b3f22e68e5f939f2514e4b0fc2`; nothing local was ever ahead.
-- Browser runtime under test: the sealed CI artifact `files-web-candidate` from run 44095155303,
-  built from `5d9191025bdf1d680e2d02143a877d544bbd87fe` (inner `wwwroot.zip`
-  SHA-256 `516eb05a34dd2b580f2b16c628adbea813bbe2d4bdbf88f211faae1d25ddb9db`, 346 files).
-  The two product-relevant commits between that build and current main are CI/test-only for the
-  browser bundle; the local .NET WASM rebuild from this checkout is recorded separately below.
+- Browser runtime under test: two bundles. First the sealed CI artifact `files-web-candidate`
+  from run 44095155303 (`5d9191025…`, inner `wwwroot.zip` SHA-256
+  `516eb05a34dd2b580f2b16c628adbea813bbe2d4bdbf88f211faae1d25ddb9db`). Then this checkout was
+  rebuilt locally through the documented pinned path (`run-ordinary-web-publish.py` with exact
+  SDK 10.0.401, wasm-tools, Bun 1.3.4): source commit `3f9a3db17`, 346 files, `wwwroot.zip`
+  SHA-256 `fa61f9b1b7defc79b9d3d6748dad0a6916632ea2a9963dde4459f3c98f208668`, receipt
+  `a3d95e121f003adee169d55ee9043122a82d75959dae3157febb268b1398fb48` — PASS with source and
+  public custody verified. All Chrome evidence below was then re-run against the local bundle.
 
 ## What this is
 
@@ -31,10 +34,14 @@ request outside its own endpoints.
 ## Run it
 
 ```sh
+# Optional: rebuild the sealed bundle from this exact checkout (pinned SDK 10.0.401):
+DOTNET_ROOT=/tmp/files-dotnet-10.0.401 PATH=/tmp/files-dotnet-10.0.401:$PATH \
+  python3 -B apps/Web/Tests/ci/run-ordinary-web-publish.py \
+  --expected-commit "$(git rev-parse HEAD)" --output /tmp/opencode/files-web-candidate-local
 cd cloud/files-drive
 npm ci                                   # pinned toolchain
 node dev/local-candidate.mjs \
-  --wwwroot /tmp/opencode/files-web-candidate-run9/wwwroot --connect --keep
+  --wwwroot /tmp/opencode/files-web-candidate-local/sdk-publish/wwwroot --connect --keep
 ```
 
 Open the printed Chrome with
@@ -59,7 +66,8 @@ node dev/local-candidate.mjs --journey --report /tmp/opencode/local-journey-repo
 | Native Files contracts | `dotnet run --project apps/Web/Files/Tests/FilesBrowser.Tests.csproj -c Release` on SDK 10.0.301, isolated disk | 26/26 PASS |
 | Sealed bundle in real Chrome (CI parity) | `smoke-public-files-runtime.py` anonymous and disconnected; `smoke-connected-files-runtime.py`; `smoke-files-navigation-journey.py` with Chrome-for-Testing 157 | all PASS, native peer evidence |
 | Repair that unblocked it | `test_script_loaded_from_separate_test_file_without_modifying_published_assets` deterministically errored on `3dd910e87` (re-ran the pristine-probe guard after `serve_connected` had already extended `smoke.PROBE`, and double-mutated it); now reads the exact injected served text and additionally asserts on-disk bundle bytes stay unchanged | full routing-validation suite green; CI run 44100832836 was red exactly here |
-| Full interactive journey | `dev/local-candidate.mjs --journey`: boot connected, create folder, rename (v2 strong-`If-Match` PATCH), resumable upload, download with byte-exact SHA-256 match through Chrome's download manager, move, Trash, restore, reload persistence, disconnect (revoke) and fixture reconnection, all through rendered native CUI accessibility peers | 11/11 PASS, 11 screenshots retained, zero unexpected provider hosts |
+| Locally built bundle in real Chrome | all four CI-parity smokes re-run against `files-web-candidate-local/sdk-publish/wwwroot` | anonymous, disconnected, connected-root and navigation-journey all PASS |
+| Full interactive journey | `dev/local-candidate.mjs --journey`: boot connected, folder search/clear, create folder, rename (v2 strong-`If-Match` PATCH), resumable upload, download with byte-exact SHA-256 match through Chrome's download manager, move, Trash, restore, reload persistence, disconnect (revoke) and fixture reconnection, all through rendered native CUI accessibility peers | 12/12 PASS on the locally built bundle (11/11 first on the CI bundle), screenshots retained per step, zero unexpected provider hosts |
 
 ## Explicit limits
 
