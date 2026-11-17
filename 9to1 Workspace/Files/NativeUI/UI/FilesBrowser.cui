@@ -1,7 +1,5 @@
 <Cui id="9to1.Files.NativeBrowser" version="1">
   <Actions>
-    <Action name="SelectFolderTab" command="9to1.Files.Tab.Select" parameter="{Binding tab}" />
-    <Action name="CloseFolderTab" command="9to1.Files.Tab.Close" parameter="{Binding tab}" />
     <Action name="RevokeDisplayedGrant" command="9to1.Files.Share.Revoke" parameter="{Binding share}" />
     <Action name="EditDisplayedGrantScope" command="9to1.Files.Share.EditScope" parameter="{Binding share}" />
     <Action name="ReviewDisplayedGrantScope" command="9to1.Files.Share.ReviewScope" />
@@ -12,19 +10,8 @@
     <Action name="OpenSidebarFolder" command="9to1.Files.OpenSidebarFolder" parameter="{Binding folder}" />
   </Actions>
   <Page>
-    <Container id="files-browser-shell" Type="Grid" RowSizes="Auto Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}" AccessibleName="Files browser">
-      <Container id="files-folder-tabs" Row="0" Type="Grid" ColumnSizes="1fr Auto" MinHeight="40" Padding="12 4" Background="{Resource CuiPanelBrush}">
-        <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
-          <Repeat Source="{Binding FolderTabs}" As="tab" Key="{Binding tab.id}" Panel="Horizontal Stack">
-            <Container Type="Horizontal Stack" CellGap="4" Padding="8 2" Margin="0 0 4 0" CornerRadius="8" Background="{Resource CuiPanel2Brush}">
-              <Button Content="{Binding tab.label}" Action="SelectFolderTab" Interactive="{Binding tab.canSelect}" AccessibleName="{Binding tab.label}" MinHeight="30" Chromeless="True" />
-              <Button Content="×" Action="CloseFolderTab" Interactive="{Binding tab.canClose}" AccessibleName="{Binding tab.closeName}" Width="28" Height="28" Chromeless="True" />
-            </Container>
-          </Repeat>
-        </Container>
-        <Button id="files-new-tab" Column="1" Content="+" Action="9to1.Files.Tab.New" Interactive="{Binding CanNewFolderTab}" AccessibleName="Open Files root in a new tab" Width="34" Height="32" Chromeless="True" />
-      </Container>
-      <Container id="files-navigation" Row="1" Type="Grid" RowSizes="Auto Auto" ColumnSizes="{Binding NavigationColumns}" MinHeight="48" Padding="12 6" CellGap="8" Background="{Resource CuiPanelBrush}">
+    <Container id="files-browser-shell" Type="Grid" RowSizes="Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}" AccessibleName="Files browser">
+      <Container id="files-navigation" Row="0" Type="Grid" RowSizes="Auto Auto" ColumnSizes="{Binding NavigationColumns}" MinHeight="48" Padding="12 6" CellGap="8" Background="{Resource CuiPanelBrush}">
         <Container Type="Horizontal Stack" CellGap="2">
           <Button id="files-back" Content="←" Action="9to1.Files.Back" Interactive="{Binding CanBack}" AccessibleName="Previous folder" Width="36" Height="32" Chromeless="True" />
           <Button id="files-forward" Content="→" Action="9to1.Files.Forward" Interactive="{Binding CanForward}" AccessibleName="Next folder in history" Width="36" Height="32" Chromeless="True" />
@@ -39,7 +26,7 @@
           <Button id="files-search" Column="1" Content="Search" Action="9to1.Files.Search" Interactive="{Binding CanNavigate}" AccessibleName="Search canonical names in this folder" />
         </Container>
       </Container>
-      <Container id="files-content-layout" Row="2" Type="Grid" ColumnSizes="{Binding BodyColumns}" RowSizes="{Binding BodyRows}" CellGap="8" Padding="8">
+      <Container id="files-content-layout" Row="1" Type="Grid" ColumnSizes="{Binding BodyColumns}" RowSizes="{Binding BodyRows}" CellGap="8" Padding="8">
         <Container id="files-sidebar" Type="Vertical Stack" IsVisible="{Binding SidebarVisible}" Width="240" Padding="8 12" CellGap="6" VerticalScrolling="True" Background="{Resource CuiPanelBrush}" AccessibleName="Files navigation">
           <Text Text="Locations" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 4" />
           <Button id="files-home" Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" AccessibleName="Go to Files root" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
@@ -59,7 +46,6 @@
             </Button>
             <Button id="files-open" Content="Open" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" />
             <Button id="files-preview" Content="Preview" Action="PreviewSelectedText" Interactive="{Binding CanPreviewText}" AccessibleName="Read-only preview of selected text file" />
-            <Button id="files-open-folder-tab" Content="Open in new tab" Action="9to1.Files.Tab.OpenFolder" Interactive="{Binding CanOpenFolderTab}" />
             <Button Content="New / edit" Type="Menu Item" AccessibleName="Folder and item changes">
         <Input id="files-name-input" accessible-name="Folder or item name" Type="Text" />
         <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
@@ -146,7 +132,7 @@
         </If>
         </Container>
       </Container>
-      <Container Row="3" Type="Horizontal Stack" Height="32" Padding="16 4" Background="{Resource CuiPanelBrush}" CellGap="12">
+      <Container Row="2" Type="Horizontal Stack" Height="32" Padding="16 4" Background="{Resource CuiPanelBrush}" CellGap="12">
         <Text id="files-status" Text="{Binding Status}" AccessibleName="Files operation status" VerticalAlignment="Center" />
       </Container>
     </Container>

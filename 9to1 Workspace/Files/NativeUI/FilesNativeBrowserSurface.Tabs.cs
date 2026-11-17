@@ -271,7 +271,7 @@ public sealed partial class FilesNativeBrowserSurface
             RequireOriginalAlive(linked.Token);
             if (!ReferenceEquals(_activeFolderTab, activated)) throw new InvalidOperationException("The activated tab changed during publication.");
             activated.State = CaptureFolderTabState();
-            _status = $"{page.FolderTitle}: {page.Items.Count} items on the first page. {_folderTabs.Count} tabs open.";
+            _status = $"{page.FolderTitle}: {page.Items.Count} items on the first page.";
             focusItems = true;
         }
         catch (Exception error)
