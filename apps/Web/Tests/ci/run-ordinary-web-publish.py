@@ -10,6 +10,8 @@ import re
 import sys
 import zipfile
 
+from generated_map_custody import snapshot_generated_maps, restore_generated_maps
+
 COMMON_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 PUBLIC_LIMIT = 128 * 1024 * 1024
 SOURCE_ROOTS = ["apps/Web", "framework/CUI", "9to1 Workspace/Home", "9to1 Workspace/shared/src",
@@ -188,6 +190,7 @@ def main():
     result = {"status": "NOT_RUN", "sourceCommit": None, "packageCache": env["NUGET_PACKAGES"],
               "scope": "Normal source build/publish and public artifact custody; browser/runtime/provider/deployment/full parity NOT_RUN"}
     before, after = [], []
+    tracked_map_originals = None
     try:
         head = commands.run("git-head", ["git", "rev-parse", "HEAD"], 15).strip()
         if not re.fullmatch(r"[0-9a-f]{40}", args.expected_commit) or head != args.expected_commit:
@@ -215,6 +218,7 @@ def main():
         commands.cwd = webapp
         try:
             commands.run("locked-assets-install", [bun, "install", "--frozen-lockfile"], 180)
+            tracked_map_originals = snapshot_generated_maps(root)
             commands.run("owner-assets-build", [bun, "build.js"], 120)
         finally:
             commands.cwd = root
@@ -264,6 +268,10 @@ def main():
             exported = published["_framework/" + name]
             if exported["bytes"] != source_asset.stat().st_size or exported["sha256"] != sha(source_asset):
                 raise RuntimeError("Published owner browser module differs from actual build.js output: " + name)
+        # The SDK has already copied the regenerated maps into public wwwroot.
+        # Restore tracked source *after* that copy, without changing public assets.
+        restore_generated_maps(root, tracked_map_originals)
+        tracked_map_originals = None
         after = source_snapshot(root, tree)
         write_json(diagnostics / "source-after.json", after)
         commands.run("git-clean-after", ["git", "diff", "--exit-code", "HEAD", "--"], 15)
@@ -293,6 +301,11 @@ def main():
     except Exception as error:
         result.update(status="FAIL", error=repr(error))
     finally:
+        if tracked_map_originals is not None:
+            try:
+                restore_generated_maps(root, tracked_map_originals)
+            except Exception as recovery_error:
+                result.update(status="FAIL", sourceMapRecoveryError=repr(recovery_error))
         try:
             if before:
                 after = source_snapshot(root, tree)
