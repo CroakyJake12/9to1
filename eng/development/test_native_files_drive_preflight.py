@@ -279,6 +279,51 @@ class NativeDrivePreflightTests(unittest.TestCase):
         self.assertFalse(result["ready_for_sign_in"])
         self.assertEqual(result["client_secret_file"], "not_regular")
 
+    def test_stale_config_parent_approval_cannot_follow_private_secret(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        outside = self.root / "outside-secrets"
+        outside.mkdir()
+        secret = outside / "google-drive-client-secret.txt"
+        sentinel = "RACE_SENTINEL_NEVER_READ"
+        secret.write_text(sentinel)
+        secret.chmod(0o600)
+        (self.home / ".config").mkdir()
+        (self.home / ".config/9to1").symlink_to(outside, target_is_directory=True)
+        # Simulate an old metadata check approving a path just before a swap.
+        # The secret inspector itself must distrust that stale approval.
+        with patch.object(app, "config_path_safe", return_value=True):
+            result = app.get_client_secret_status(self.home)
+        self.assertEqual(result, "unsafe_config_path")
+        self.assertEqual(secret.read_text(), sentinel)
+
+    def test_secret_parent_swap_after_fd_admission_remains_on_original_inode(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        directory = self.home / ".config/9to1"
+        directory.mkdir(parents=True)
+        secret = directory / "google-drive-client-secret.txt"
+        secret.write_text("PRIVATE_SENTINEL_DO_NOT_LOG")
+        secret.chmod(0o600)
+        outside = self.root / "redirected-secret"
+        outside.mkdir()
+        swapped_secret = outside / "google-drive-client-secret.txt"
+        swapped_secret.write_text("EXPOSED_SENTINEL_DO_NOT_LOG")
+        swapped_secret.chmod(0o644)
+        original_open = os.open
+        swapped = [False]
+        def switch_parent(path, flags, *args, **kwargs):
+            if path == "google-drive-client-secret.txt" and kwargs.get("dir_fd") is not None:
+                directory.rename(self.home / ".config/original-9to1")
+                directory.symlink_to(outside, target_is_directory=True)
+                swapped[0] = True
+            return original_open(path, flags, *args, **kwargs)
+        with patch.object(os, "open", side_effect=switch_parent):
+            result = app.get_client_secret_status(self.home)
+        self.assertTrue(swapped[0], "Must exercise the actual FD-race boundary")
+        self.assertEqual(result, "private_regular")
+        self.assertEqual(swapped_secret.read_text(), "EXPOSED_SENTINEL_DO_NOT_LOG")
+
     def test_optional_secret_status_reported_in_cli_without_secret_or_path(self):
         self.prepare_profile()
         config = self.home / ".config/9to1"

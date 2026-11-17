@@ -80,15 +80,53 @@ def config_path_safe(home: Path) -> bool:
 
 
 def get_client_secret_status(home: Path) -> str:
-    """Inspect only metadata for the optional confidential OAuth client secret.
+    """Inspect only inode metadata via no-follow descriptors; never read secret bytes.
 
-    The application currently reads this file directly if present. Never read
-    it, even when regular and private; this preflight cannot validate its value.
+    Linux O_PATH holds the file without read permission or opening FIFOs for I/O.
+    In particular, a renamed/symlink-swapped config parent cannot redirect
+    this check after its parent directory descriptor has been opened.
     """
-    if not config_path_safe(home):
+    if not home.is_absolute() or ".." in home.parts or not hasattr(os, "O_PATH"):
         return "unsafe_config_path"
-    return inspect_file(home / ".config" / "9to1" / EXPECTED_SECRET_FILENAME,
-                        require_private=True)
+    directories = [*home.parts[1:], ".config", "9to1"]
+    home_index = len(home.parts) - 2
+    dir_flags = os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    parent_fd = -1
+    secret_fd = -1
+    try:
+        parent_fd = os.open("/", dir_flags)
+        for index, component in enumerate(directories):
+            next_fd = os.open(component, dir_flags, dir_fd=parent_fd)
+            os.close(parent_fd)
+            parent_fd = next_fd
+            info = os.fstat(parent_fd)
+            sticky_system_dir = info.st_uid == 0 and bool(info.st_mode & stat.S_ISVTX)
+            if info.st_mode & 0o022 and not sticky_system_dir:
+                return "unsafe_config_path"
+            if index >= home_index and info.st_uid != os.getuid():
+                return "unsafe_config_path"
+        secret_fd = os.open(EXPECTED_SECRET_FILENAME,
+                            os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC,
+                            dir_fd=parent_fd)
+        info = os.fstat(secret_fd)
+        if stat.S_ISLNK(info.st_mode):
+            return "symlink"
+        if not stat.S_ISREG(info.st_mode):
+            return "not_regular"
+        if info.st_uid != os.getuid():
+            return "wrong_owner"
+        if stat.S_IMODE(info.st_mode) & 0o077:
+            return "exposed_permissions"
+        return "private_regular"
+    except FileNotFoundError:
+        return "absent"
+    except (OSError, ValueError):
+        return "unsafe_config_path"
+    finally:
+        if secret_fd >= 0:
+            os.close(secret_fd)
+        if parent_fd >= 0:
+            os.close(parent_fd)
 
 
 def _read_public_client_id(home: Path) -> str:
