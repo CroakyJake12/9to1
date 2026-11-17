@@ -1,4 +1,7 @@
 import importlib.util
+import json
+import shutil
+import subprocess
 from pathlib import Path
 import tempfile
 import unittest
@@ -64,6 +67,54 @@ class SmokeTests(unittest.TestCase):
         self.assertTrue(smoke.boot_complete(smoke.read_probe(ready)))
         runtime_only = '<pre id="files-runtime-smoke-evidence">{"markers":["9to1:runtime:ready"],"redirectObserved":true}</pre>'
         self.assertFalse(smoke.boot_complete(smoke.read_probe(runtime_only)))
+
+    @unittest.skipUnless(shutil.which('node'), 'The CI browser publisher installs Node.js')
+    def test_injected_js_preserves_observed_markers_across_signout_navigation(self):
+        # Executes the actual test-only injected JavaScript in Node's VM with
+        # disposable DOM primitives. This is not a substitute for real Chrome.
+        harness = r"""
+const fs = require('node:fs');
+const vm = require('node:vm');
+const input = JSON.parse(fs.readFileSync(0,'utf8'));
+const script = source => source.match(/<script>([\s\S]*?)<\/script>/)[1];
+const events = new Map(), values = new Map(), marks = [];
+const elements = new Map();
+const document = {
+    body: { append(el) { if(el.id) elements.set(el.id,el); } },
+    createElement() { return { id: '', textContent: '', hidden: false }; },
+    querySelector(selector) { return selector === '#browser-status'
+        ? { dataset: { code: 'Loading' }, textContent: 'Opening 9to1' }
+        : selector === '#nine-to-one-root' ? {} : null; },
+    getElementById(id) { return elements.get(id); }
+};
+const context = {
+    document,
+    location: { hash: '#/app.files', pathname: '/files/' },
+    performance: { getEntriesByType: () => marks.map(name => ({name})) },
+    sessionStorage: { setItem: (k,v) => values.set(k,v), getItem: k => values.get(k)||null },
+    window: { addEventListener: (name,callback) => events.set(name,callback) },
+    PerformanceObserver: class { observe() {} },
+    setInterval: () => 1,
+    JSON,
+    Array
+};
+vm.runInNewContext(script(input.probe), context);
+marks.push('9to1:host','9to1:runtime:ready','9to1:backend:ready');
+events.get('pagehide')();
+context.location.pathname='/account';
+const destination = { id: input.id, textContent: '' };
+elements.set(input.id, destination);
+vm.runInNewContext(script(input.account), context);
+console.log(destination.textContent);
+"""
+        result = subprocess.run([shutil.which('node'), '-e', harness],
+            input=json.dumps({'probe': smoke.PROBE, 'account': smoke.ACCOUNT_LANDING, 'id':smoke.SNAPSHOT_ID}),
+            text=True, capture_output=True, timeout=5, check=True)
+        evidence = json.loads(result.stdout)
+        self.assertTrue(evidence['redirectObserved'])
+        self.assertEqual(evidence['landedAt'], '/account')
+        self.assertTrue(smoke.boot_complete(evidence))
+        self.assertEqual(evidence['markers'], ['9to1:host', '9to1:runtime:ready', '9to1:backend:ready'])
 
 if __name__ == '__main__':
     unittest.main()
