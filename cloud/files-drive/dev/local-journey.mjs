@@ -104,6 +104,15 @@ export async function runJourney({ connect, fixture, tlsPort, state, chrome }) {
       return { query: 'Fixture' };
     });
 
+    await step('grid-details-toggle', async () => {
+      if (!await evaluate(session, enabled('Details'))) throw new Error('Details toggle unavailable');
+      await until(session, click('Details'), 10000, 'switch to details list');
+      await until(session, has('welcome.txt') && enabled('Grid'), 10000, 'rows still resolvable in list view');
+      await until(session, click('Grid'), 10000, 'switch back to grid');
+      await until(session, has('welcome.txt') && enabled('Details'), 10000, 'tiles still resolvable in grid view');
+      return { view: 'round-trip' };
+    });
+
     await step('create-folder', async () => {
       await until(session, click('New folder'), 15000, 'new folder action');
       await until(session, set('Folder or item name', 'Journey Folder'), 15000, 'name input accepted');
