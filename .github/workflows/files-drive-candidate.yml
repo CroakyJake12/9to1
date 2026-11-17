@@ -161,10 +161,17 @@ jobs:
           set -euo pipefail
           python3 -B -m unittest discover \
             -s apps/Web/Tests/ci -p 'test_smoke_public_files_runtime.py' -v
+      - name: Upload sealed public WebAssembly bundle and receipt (not deployed)
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: files-web-candidate
+          path: /tmp/files-web-candidate/public-artifact
+          if-no-files-found: error
+          retention-days: 7
       - name: Smoke actual published WebAssembly with headless Chrome (anonymous fixture)
-        # The artifact is still published if the separate browser runtime fails.
-        # A successful compilation is not silently equated with a usable UI.
-        continue-on-error: true
+        # The compiled artifact is uploaded first. Chrome failure makes CI red
+        # while preserving the genuine build and its diagnostics for investigation.
         shell: bash
         run: |
           set -euo pipefail
@@ -180,12 +187,4 @@ jobs:
             /tmp/files-web-candidate/diagnostics
             apps/Web/Tests/ci/run-ordinary-web-publish.py
           if-no-files-found: warn
-          retention-days: 7
-      - name: Upload sealed public WebAssembly bundle and receipt (not deployed)
-        if: success()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: files-web-candidate
-          path: /tmp/files-web-candidate/public-artifact
-          if-no-files-found: error
           retention-days: 7

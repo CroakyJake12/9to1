@@ -45,5 +45,25 @@ class SmokeTests(unittest.TestCase):
         self.assertIn('9to1:runtime:ready', smoke.read_probe(doc)['markers'])
         self.assertIsNone(smoke.read_probe('<div>none</div>'))
 
+    def test_anonymous_account_landing_uses_test_only_evidence_without_claiming_login(self):
+        with smoke.serve(self.root) as (url, hits):
+            with urlopen(url.replace('/files/', '/account?notice=signed-out'), timeout=2) as response:
+                page = response.read().decode('utf-8')
+                self.assertEqual(response.status, 200)
+                self.assertIn(smoke.SNAPSHOT_ID, page)
+                self.assertIn('sessionStorage', page)
+                self.assertNotIn('Access granted', page)
+            self.assertEqual(hits['/account'], 1)
+
+    def test_redirect_probe_is_decoded_with_no_invented_success(self):
+        empty = '<pre id="files-runtime-smoke-evidence">{"markers":[],"redirectObserved":true,"landedAt":"/account"}</pre>'
+        result = smoke.read_probe(empty)
+        self.assertEqual(result['landedAt'], '/account')
+        self.assertFalse(smoke.boot_complete(result))
+        ready = '<pre id="files-runtime-smoke-evidence">{"markers":["9to1:runtime:ready","9to1:backend:ready"],"redirectObserved":true}</pre>'
+        self.assertTrue(smoke.boot_complete(smoke.read_probe(ready)))
+        runtime_only = '<pre id="files-runtime-smoke-evidence">{"markers":["9to1:runtime:ready"],"redirectObserved":true}</pre>'
+        self.assertFalse(smoke.boot_complete(smoke.read_probe(runtime_only)))
+
 if __name__ == '__main__':
     unittest.main()

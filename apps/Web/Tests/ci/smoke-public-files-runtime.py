@@ -23,30 +23,59 @@ REQUIRED = ('index.html', 'main.js', '_framework/dotnet.js')
 SNAPSHOT_ID = 'files-runtime-smoke-evidence'
 # Test-only instrumentation on the served HTML response. Published bytes on disk
 # (including the actual .NET/Avalonia modules) remain completely unchanged.
-PROBE = '''<script>
-(() => {
+PROBE_KEY = '9to1.files.runtime-smoke.v1'
+PROBE = f'''<script>
+(() => {{
+    // This instrumentation is injected in the disposable HTTP response only;
+    // neither the sealed assets nor the production session code are modified.
     const evidence = document.createElement('pre');
-    evidence.id = 'files-runtime-smoke-evidence';
+    evidence.id = '{SNAPSHOT_ID}';
     evidence.hidden = true;
     document.body.append(evidence);
     const failures = [];
-    window.addEventListener('error', e => failures.push(String(e.message || 'script resource error')));
-    window.addEventListener('unhandledrejection', e => failures.push(String(e.reason)));
-    function record() {
+    function record() {{
         const status = document.querySelector('#browser-status');
-        evidence.textContent = JSON.stringify({
+        const snapshot = {{
             markers: performance.getEntriesByType('mark').filter(x => x.name.startsWith('9to1:')).map(x => x.name),
             hash: location.hash,
             status: status?.dataset.code ?? null,
             message: status?.textContent?.slice(0, 250) ?? null,
             errors: failures.slice(0, 8),
             rootExists: !!document.querySelector('#nine-to-one-root')
-        });
-    }
+        }};
+        const encoded = JSON.stringify(snapshot);
+        evidence.textContent = encoded;
+        try {{ sessionStorage.setItem('{PROBE_KEY}', encoded); }} catch {{ /* fail closed: no fake evidence */ }}
+    }}
+    window.addEventListener('error', e => {{ failures.push(String(e.message || 'script resource error')); record(); }});
+    window.addEventListener('unhandledrejection', e => {{ failures.push(String(e.reason)); record(); }});
+    // Preserve the last *observed* markers before an actual 401-driven
+    // sign-out tears down this document. No marker is ever synthesized.
+    window.addEventListener('pagehide', record);
+    new PerformanceObserver(record).observe({{ type: 'mark', buffered: true }});
     setInterval(record, 200);
     record();
-})();
+}})();
 </script>'''
+
+# The genuine app can end its anonymous boot by navigating to /account.
+# Preserve its *previously observed* evidence on that exact test-only landing.
+# This is not an account page or an authenticated session simulation.
+ACCOUNT_LANDING = f'''<!doctype html><html><head><meta charset="utf-8">
+<title>Files browser smoke: anonymous redirect</title></head><body>
+<p>Anonymous test fixture: no account authenticated.</p>
+<pre id="{SNAPSHOT_ID}"></pre>
+<script>
+(() => {{
+    let prior = null;
+    try {{ prior = JSON.parse(sessionStorage.getItem('{PROBE_KEY}') || 'null'); }} catch {{}}
+    const observed = prior && typeof prior === 'object' && !Array.isArray(prior) ? prior : {{}};
+    const evidence = {{ ...observed, redirectObserved: true, landedAt: location.pathname,
+        markers: Array.isArray(observed.markers) ? observed.markers : [] }};
+    document.getElementById('{SNAPSHOT_ID}').textContent = JSON.stringify(evidence);
+}})();
+</script></body></html>'''
+
 
 
 def verified_root(path):
@@ -80,6 +109,10 @@ def make_handler(root, hits):
                 content = b'{"error":{"code":"SignInRequired","message":"No test owner session"}}'
                 self.send_response(401)
                 self.send_header('Content-Type', 'application/json')
+            elif path == '/account':
+                content = ACCOUNT_LANDING.encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
             elif path.startswith('/files/') and '%' not in path and '\\' not in path and '//' not in path:
                 name = path[len('/files/'):]
                 if not name or name == 'index.html':
@@ -144,6 +177,14 @@ def read_probe(dom):
         return None
 
 
+def boot_complete(probe):
+    if not isinstance(probe, dict):
+        return False
+    markers = probe.get('markers', [])
+    return isinstance(markers, list) and {'9to1:runtime:ready', '9to1:backend:ready'}.issubset(markers) \
+        and not probe.get('errors') and probe.get('status') != 'BrowserRuntimeUnavailable'
+
+
 def run(root, chrome, budget_ms, timeout):
     with tempfile.TemporaryDirectory(prefix='9to1-chrome-profile-') as profile:
         with serve(root) as (url, hits):
@@ -155,12 +196,17 @@ def run(root, chrome, budget_ms, timeout):
                 process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          text=True, errors='replace', timeout=timeout, check=False)
                 probe = read_probe(process.stdout)
-                runtime_ready = bool(probe and '9to1:runtime:ready' in probe.get('markers', []))
+                markers = probe.get('markers', []) if isinstance(probe, dict) else []
+                runtime_ready = '9to1:runtime:ready' in markers
+                backend_ready = '9to1:backend:ready' in markers
                 # Explicitly distinguish boot evidence from the authenticated
                 # Files user journey, which must remain unverified here.
                 record = {'runner': 'real headless Chromium against actual published wwwroot',
                           'auth': 'unauthenticated disposable 401 fixture',
-                          'runtimeReady': runtime_ready, 'exitCode': process.returncode,
+                          'runtimeReady': runtime_ready, 'backendReady': backend_ready,
+                          'bootComplete': boot_complete(probe),
+                          'anonymousRedirect': bool(probe and probe.get('redirectObserved')),
+                          'exitCode': process.returncode,
                           'probe': probe, 'resourceRequests': dict(hits),
                           'chromeErrors': process.stderr[-3000:],
                           'publishedAssetsUntouched': True,
@@ -187,7 +233,7 @@ def main():
                   'googleDriveAcceptance': 'NOT RUN'}
     else:
         result = run(root, chrome, args.virtual_time_budget_ms, args.timeout_seconds)
-        result['status'] = 'PASS' if result.get('runtimeReady') and result.get('exitCode') == 0 else 'FAIL'
+        result['status'] = 'PASS' if result.get('bootComplete') and result.get('exitCode') == 0 else 'FAIL'
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({k: v for k, v in result.items() if k != 'chromeErrors'}, indent=2))
