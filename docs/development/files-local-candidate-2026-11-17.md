@@ -100,6 +100,20 @@ assets remains a separately approved owner action.
 
 Coordination: repair and dev tools receipted in issue #27; scopes released on publication.
 
+## Production deployment — 17 November 2026, 16:52 UTC (owner directive of this evening)
+
+Under the owner's explicit "fully functioning files + actual drive connection tonight" directive, this PC deployed `cloud/files-drive` from current main with the owner completing the Cloudflare OAuth consent in person (`wrangler login` as jcbailey008@gmail.com, account `8aea00ca…`): **`nine-files-private` version `e6b29c30-122c-4695-b7f4-2f5389c5feb6`**. Bindings and secrets unchanged; DO state (the owner's existing Drive connection) preserved; no routes or workers.dev changes.
+
+Post-deploy verification (independent tooling, read-only):
+`eng/development/files_live_parity_gate.py https://9to1.uk` → `CURRENT_ASSETS_VERIFIED`,
+`sealedArtifactVerified=true`, `publicAssetsMatched=true` against the exact sealed bundle
+locally rebuilt from `184ac5c6` (the CI-green `7ed47fc2c` app code). Anonymous gate remains
+enforced (`/files/` → 303 sign-in, `/api/files/v1/context` → 401). `dev/live-check.mjs` then
+walks the owner's real session through the rendered CUI with screenshots: connection state,
+real listing, real thumbnail proxy, and one clearly named disposable folder through
+create/rename/search/reload-persistence into a recoverable Trash end state — pre-existing
+Drive files are never modified and nothing is purged.
+
 ## Haven interactive development instance (same day)
 
 The current native app (modern Boards, Files and the rest of main) is running as
