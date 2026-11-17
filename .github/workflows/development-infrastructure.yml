@@ -53,6 +53,12 @@ jobs:
         run: |
           set -euo pipefail
           python3 -B -m unittest discover -s eng/development -p 'test_files_*_gate.py' -v
+      - name: Verify Ubuntu Files HTTPS shortcut without credentials or network
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n eng/development/files-web-launcher.sh
+          python3 -B -m unittest discover -s eng/development -p 'test_files_web_launcher.py' -v
       - name: Validate operational guards using actual filesystem and concurrent processes
         run: |
           mkdir -p "$RUNNER_TEMP/infrastructure-evidence"
