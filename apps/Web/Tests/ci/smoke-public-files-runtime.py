@@ -24,6 +24,19 @@ SNAPSHOT_ID = 'files-runtime-smoke-evidence'
 # Test-only instrumentation on the served HTML response. Published bytes on disk
 # (including the actual .NET/Avalonia modules) remain completely unchanged.
 PROBE_KEY = '9to1.files.runtime-smoke.v1'
+# Strictly synthetic CUI presentation fixture. It never establishes an account,
+# returns a Google OAuth URL, or touches the canonical remote provider.
+# Only /context GET can succeed in this mode, and it advertises no Drive access.
+DISCONNECTED_CONTEXT = {
+    'accountId': 'disposable-first-use-only', 'displayName': 'Disposable UI fixture',
+    'connected': False, 'configurationRequired': True, 'usage': None,
+    'location': {
+        'id': {'value': '45c45608-231a-42bf-89b6-eec6b9ec2007'},
+        'name': 'Google Drive', 'kind': 'ConnectedCloud', 'capabilities': 'None',
+        'providerId': 'google-drive', 'credentialReference': None,
+        'isAvailable': True, 'unavailableReason': None,
+    },
+}
 PROBE = f'''<script>
 (() => {{
     // This instrumentation is injected in the disposable HTTP response only;
@@ -41,7 +54,13 @@ PROBE = f'''<script>
             status: status?.dataset.code ?? null,
             message: status?.textContent?.slice(0, 250) ?? null,
             errors: failures.slice(0, 8),
-            rootExists: !!document.querySelector('#nine-to-one-root')
+            rootExists: !!document.querySelector('#nine-to-one-root'),
+            // Actual native CUI accessibility projection, not invented labels.
+            // Never publish arbitrary user content or account names to the report.
+            filesControls: [...document.querySelectorAll('#native-control-semantics [data-native-peer-id]')]
+                .map(peer => peer.getAttribute('aria-label'))
+                .filter(name => ['Connect Google Drive', 'Files privacy', 'Refresh connection',
+                    'Disconnect Google Drive'].includes(name))
         }};
         const encoded = JSON.stringify(snapshot);
         evidence.textContent = encoded;
@@ -89,7 +108,7 @@ def verified_root(path):
     return root
 
 
-def make_handler(root, hits):
+def make_handler(root, hits, scenario="anonymous"):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):
             pass
@@ -100,14 +119,22 @@ def make_handler(root, hits):
         def do_HEAD(self):
             self._serve(send_body=False)
 
+        def do_POST(self):
+            # Even in a synthetic owner presentation test, never admit mutations.
+            self.send_error(405)
+
         def _serve(self, send_body=True):
             path = urlsplit(self.path).path
             hits[path] += 1
             if path.startswith('/api/files/v1/'):
-                # Never invent a successful authenticated owner. The real
-                # Files feature must reject this anonymous fixture.
-                content = b'{"error":{"code":"SignInRequired","message":"No test owner session"}}'
-                self.send_response(401)
+                if scenario == 'disconnected' and path == '/api/files/v1/context':
+                    # Presentation-only fake account. Not a login: no cookies,
+                    # OAuth, Drive lists, transfers or mutation endpoints.
+                    content = json.dumps(DISCONNECTED_CONTEXT).encode('utf-8')
+                    self.send_response(200)
+                else:
+                    content = b'{"error":{"code":"PermissionDenied","message":"No provider or account session"}}'
+                    self.send_response(401 if scenario == 'anonymous' else 403)
                 self.send_header('Content-Type', 'application/json')
             elif path == '/account':
                 content = ACCOUNT_LANDING.encode('utf-8')
@@ -154,9 +181,11 @@ def make_handler(root, hits):
 
 
 @contextmanager
-def serve(root):
+def serve(root, scenario='anonymous'):
+    if scenario not in ('anonymous', 'disconnected'):
+        raise ValueError('Unknown disposable Files smoke scenario')
     hits = Counter()
-    server = ThreadingHTTPServer(('127.0.0.1', 0), make_handler(root, hits))
+    server = ThreadingHTTPServer(('127.0.0.1', 0), make_handler(root, hits, scenario))
     worker = Thread(target=server.serve_forever, daemon=True)
     worker.start()
     try:
@@ -185,9 +214,17 @@ def boot_complete(probe):
         and not probe.get('errors') and probe.get('status') != 'BrowserRuntimeUnavailable'
 
 
-def run(root, chrome, budget_ms, timeout):
+def first_use_visible(probe):
+    if not boot_complete(probe) or not probe.get('rootExists') or probe.get('hash') != '#/app.files':
+        return False
+    controls = probe.get('filesControls')
+    return isinstance(controls, list) and 'Connect Google Drive' in controls \
+        and 'Files privacy' in controls and 'Disconnect Google Drive' not in controls
+
+
+def run(root, chrome, budget_ms, timeout, scenario='anonymous'):
     with tempfile.TemporaryDirectory(prefix='9to1-chrome-profile-') as profile:
-        with serve(root) as (url, hits):
+        with serve(root, scenario) as (url, hits):
             command = [chrome, '--headless=new', '--disable-gpu', '--disable-dev-shm-usage',
                        '--no-sandbox', '--no-first-run', '--no-default-browser-check',
                        f'--user-data-dir={profile}', f'--virtual-time-budget={budget_ms}',
@@ -202,10 +239,13 @@ def run(root, chrome, budget_ms, timeout):
                 # Explicitly distinguish boot evidence from the authenticated
                 # Files user journey, which must remain unverified here.
                 record = {'runner': 'real headless Chromium against actual published wwwroot',
-                          'auth': 'unauthenticated disposable 401 fixture',
+                          'auth': 'unauthenticated disposable 401 fixture' if scenario == 'anonymous'
+                              else 'synthetic disconnected CUI-only fixture; no actual account',
+                          'fixture': scenario, 'filesFirstUseVisible': first_use_visible(probe),
                           'runtimeReady': runtime_ready, 'backendReady': backend_ready,
                           'bootComplete': boot_complete(probe),
                           'anonymousRedirect': bool(probe and probe.get('redirectObserved')),
+                          'connectedDrive': False,
                           'exitCode': process.returncode,
                           'probe': probe, 'resourceRequests': dict(hits),
                           'chromeErrors': process.stderr[-3000:],
@@ -215,7 +255,7 @@ def run(root, chrome, budget_ms, timeout):
             except subprocess.TimeoutExpired:
                 return {'runtimeReady': False, 'error': 'Chrome timed out',
                         'timeoutSeconds': timeout, 'resourceRequests': dict(hits),
-                        'googleDriveAcceptance': 'NOT RUN'}
+                        'googleDriveAcceptance': 'NOT RUN', 'fixture': scenario}
 
 
 def main():
@@ -223,6 +263,7 @@ def main():
     ap.add_argument('--wwwroot', type=Path, required=True)
     ap.add_argument('--report', type=Path, required=True)
     ap.add_argument('--chrome', default=None)
+    ap.add_argument('--scenario', choices=('anonymous', 'disconnected'), default='anonymous')
     ap.add_argument('--timeout-seconds', type=int, default=110)
     ap.add_argument('--virtual-time-budget-ms', type=int, default=45000)
     args = ap.parse_args()
@@ -230,10 +271,11 @@ def main():
     chrome = args.chrome or shutil.which('google-chrome') or shutil.which('chromium')
     if not chrome:
         result = {'status': 'NOT_RUN', 'reason': 'Chrome executable absent',
-                  'googleDriveAcceptance': 'NOT RUN'}
+                  'fixture': args.scenario, 'googleDriveAcceptance': 'NOT RUN'}
     else:
-        result = run(root, chrome, args.virtual_time_budget_ms, args.timeout_seconds)
-        result['status'] = 'PASS' if result.get('bootComplete') and result.get('exitCode') == 0 else 'FAIL'
+        result = run(root, chrome, args.virtual_time_budget_ms, args.timeout_seconds, args.scenario)
+        expected = result.get('anonymousRedirect') if args.scenario == 'anonymous' else result.get('filesFirstUseVisible')
+        result['status'] = 'PASS' if result.get('bootComplete') and result.get('exitCode') == 0 and expected else 'FAIL'
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({k: v for k, v in result.items() if k != 'chromeErrors'}, indent=2))

@@ -177,7 +177,18 @@ jobs:
           set -euo pipefail
           python3 -B apps/Web/Tests/ci/smoke-public-files-runtime.py \
             --wwwroot '/tmp/files-web-candidate/sdk-publish/wwwroot' \
+            --scenario anonymous \
             --report '/tmp/files-web-candidate/diagnostics/browser-smoke.json'
+      - name: Verify actual disconnected Files CUI in Chrome (synthetic owner fixture)
+        # This presentation-only localhost fixture has no real 9to1 identity,
+        # OAuth, Google Drive access or mutation endpoint. Do not call it live acceptance.
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B apps/Web/Tests/ci/smoke-public-files-runtime.py \
+            --wwwroot '/tmp/files-web-candidate/sdk-publish/wwwroot' \
+            --scenario disconnected \
+            --report '/tmp/files-web-candidate/diagnostics/browser-first-use.json'
       - name: Upload read-only build failure diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
