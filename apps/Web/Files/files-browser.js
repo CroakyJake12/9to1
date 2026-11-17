@@ -1,13 +1,15 @@
 const basePath = "/api/files/v1";
 const maximumJsonBytes = 1024 * 1024;
 const maximumChunkBytes = 8 * 1024 * 1024;
+const maximumItemDenialBytes = 4096;
+const itemDenialTimeoutMs = 2000;
 const guidPattern = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i;
 const allowedExports = new Set([
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
-async function readJsonText(response, signal) {
+async function readJsonText(response, signal, maxBytes = maximumJsonBytes) {
     if (!response.body) return "";
     const mediaType = response.headers.get("Content-Type")?.split(";", 1)[0]?.trim().toLowerCase();
     if (mediaType !== "application/json" && !mediaType?.endsWith("+json")) {
@@ -30,7 +32,7 @@ async function readJsonText(response, signal) {
             signal.throwIfAborted();
             if (done) return result + decoder.decode();
             bytes += value.byteLength;
-            if (bytes > maximumJsonBytes) throw new Error("Files returned an oversized response.");
+            if (bytes > maxBytes) throw new Error("Files returned an oversized response.");
             result += decoder.decode(value, { stream: true });
         }
     } catch (error) {
@@ -237,6 +239,29 @@ export function createFilesBrowserBridge({
             if (controller.signal.aborted) {
                 await response.body?.cancel().catch(() => {});
                 controller.signal.throwIfAborted();
+            }
+            // Google may deny one item without revoking the authenticated 9to1
+            // owner. The Worker sends this exact bounded, typed GET-only error.
+            // Unknown/malformed 403s and every session/mutation denial still
+            // take the fail-closed branch below; never trust a bare HTTP 403.
+            if (response.status === 403 && group.enrolled && (action === "list" || action === "get")) {
+                let itemDenial = null;
+                try {
+                    const scope = AbortSignal.any([controller.signal, AbortSignal.timeout(itemDenialTimeoutMs)]);
+                    const body = await readJsonText(response, scope, maximumItemDenialBytes);
+                    const error = JSON.parse(body);
+                    if (error && !Array.isArray(error) && Object.keys(error).length === 4 &&
+                        error.code === "PermissionDenied" &&
+                        error.message === "Google Drive denied access to this item." &&
+                        error.notStarted === true && error.retryAt === null) itemDenial = body;
+                } catch {
+                    // Invalid, oversized, slow and non-JSON denials are never
+                    // accepted as an item-scoped permission response.
+                    controller.signal.throwIfAborted();
+                }
+                controller.signal.throwIfAborted();
+                if (itemDenial !== null && group.active && groups.get(groupId) === group)
+                    return JSON.stringify({ status: 403, body: itemDenial });
             }
             if ((response.status === 401 || response.status === 403) && (action !== "context" || group.enrolled)) {
                 if (group.active) {
