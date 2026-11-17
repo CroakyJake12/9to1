@@ -155,6 +155,22 @@ jobs:
         run: |
           set -euo pipefail
           npx --no-install wrangler deploy --dry-run --outdir "/tmp/files-worker-dry-run"
+      - name: Validate disposable browser smoke fixture routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover \
+            -s apps/Web/Tests/ci -p 'test_smoke_public_files_runtime.py' -v
+      - name: Smoke actual published WebAssembly with headless Chrome (anonymous fixture)
+        # The artifact is still published if the separate browser runtime fails.
+        # A successful compilation is not silently equated with a usable UI.
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B apps/Web/Tests/ci/smoke-public-files-runtime.py \
+            --wwwroot '/tmp/files-web-candidate/sdk-publish/wwwroot' \
+            --report '/tmp/files-web-candidate/diagnostics/browser-smoke.json'
       - name: Upload read-only build failure diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
