@@ -31,14 +31,10 @@
           <Text Text="Locations" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 4" />
           <Button id="files-home" Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" AccessibleName="Go to Files root" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
           <Button id="files-trash" Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" AccessibleName="Browse recoverable deleted items" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-drive" Content="Google Drive" Action="9to1.Files.Drive" IsVisible="{Binding DriveConnected}" Interactive="{Binding CanNavigate}" AccessibleName="Browse connected Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
-          <Button id="files-connect-drive" Type="Menu Item" Content="Connect Drive…" AccessibleName="Connect a storage provider" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True">
-            <Button id="files-connect-storage" Content="9to1 Storage" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" />
-            <Button id="files-connect-google" Content="Google Drive" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" />
-            <Button id="files-connect-server" Content="Server (Cloudflare R2, S3-compatible)" Action="9to1.Files.Drive.Server" />
-            <Button id="files-connect-selfhosted" Content="Self-Hosted (WebDAV)" Action="9to1.Files.Drive.SelfHosted" />
-            <Button id="files-drive-disconnect" Content="Disconnect Google Drive" Action="9to1.Files.Drive.Disconnect" IsVisible="{Binding DriveConnected}" />
-          </Button>
+          <Button id="files-drive" Content="Google Drive" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect or open Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
+          <Button id="files-connect-server" Content="Server Drive (R2, S3)" Action="9to1.Files.Drive.Server" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect a Cloudflare R2 or S3-compatible drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
+          <Button id="files-connect-selfhosted" Content="Self-Hosted Drive (WebDAV)" Action="9to1.Files.Drive.SelfHosted" Interactive="{Binding CanDriveConnect}" AccessibleName="Connect a self-hosted WebDAV drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
+          <Button id="files-drive-disconnect" Content="Disconnect Google Drive" Action="9to1.Files.Drive.Disconnect" IsVisible="{Binding DriveConnected}" AccessibleName="Disconnect Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
           <Text Text="{Binding SidebarHeading}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 16 8 4" TextWrapping="Wrap" />
           <Repeat Source="{Binding SidebarFolders}" As="folder" Key="{Binding folder.id}" Panel="Vertical Stack">
             <Button Action="OpenSidebarFolder" Interactive="{Binding CanNavigate}" AccessibleName="{Binding folder.openName}" HorizontalContentAlignment="Left" MinHeight="34" Chromeless="True">
@@ -51,8 +47,7 @@
             <Button Content="Locations" Type="Menu Item" IsVisible="{Binding CompactLayout}" AccessibleName="Files locations">
               <Button Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" />
               <Button Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" />
-              <Button Content="Google Drive" Action="9to1.Files.Drive" IsVisible="{Binding DriveConnected}" />
-              <Button Content="Connect Drive…" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" />
+              <Button Content="Google Drive" Action="9to1.Files.Drive.Connect" Interactive="{Binding CanDriveConnect}" />
             </Button>
             <Button id="files-open" Content="Open" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" />
             <Button id="files-preview" Content="Preview" Action="PreviewSelectedText" Interactive="{Binding CanPreviewText}" AccessibleName="Read-only preview of selected text file" />
