@@ -86,6 +86,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
     private string? _cursor;
     private string _name = "", _status = "";
     private string _searchDraft = "", _query = "", _sort = "NameAscending";
+    private bool _listView;
     private string _operation = "";
     private HostedItemMetadata? _moveTarget;
     private bool _inTrash;
@@ -208,6 +209,10 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             "SearchSummary" => _query.Length == 0 ? "All items in this folder" : $"Names containing: {_query}",
             "ShowFolderSearch" => !_inTrash,
             "SortDescription" => _sort switch { "NameDescending" => "Loaded items: name Z–A", "Newest" => "Loaded items: newest first", _ => "Loaded items: name A–Z" },
+            "ShowAsGrid" => !_listView,
+            "ShowAsList" => _listView,
+            "ViewToggleLabel" => _listView ? "Grid" : "Details",
+            "ItemCount" => _items.Count == 1 ? "1 item" : $"{_items.Count} items",
             "Editing" => _editing,
             "EditTitle" => _operation switch
             {
@@ -280,6 +285,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             or "CanCancelMove" or "ChoosingMoveDestination" or "MovePrompt" or "ShowFolderSearch"
             or "ShowUpload" or "CanUpload" or "UploadPending" or "UploadSummary" or "CanPauseUpload" or "CanResumeUpload"
             or "ShowUploadRunning" or "ShowUploadRecovery"
+            or "ShowAsGrid" or "ShowAsList" or "ViewToggleLabel" or "ItemCount"
             or "CanCancelUpload" or "ShowDownload" or "CanPrepareDownload" or "DownloadLabel" or "DownloadPrepared" or "CanSaveDownload"
             or "Name" or "SelectedName" or "SelectedDetails" or "CanBrowse" or "CanCreate"
             or "CanRename" or "CanOpen" or "CanUp" or "CanMore" or "CanSave" or "CanCancel" or "CanEditName";
@@ -329,6 +335,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             "Search" => !_editing && !_inTrash && !_folderUnavailable && capabilities.Supports(FilesProviderCapabilities.Read | FilesProviderCapabilities.Search),
             "ClearSearch" => !_editing && !_inTrash && (_query.Length != 0 || _searchDraft.Length != 0) && capabilities.Supports(FilesProviderCapabilities.Read),
             "SortNameAscending" or "SortNameDescending" or "SortNewest" => !_editing && capabilities.Supports(FilesProviderCapabilities.Read),
+            "ToggleView" => !_editing,
             "More" => !_editing && _cursor is not null,
             "NewFolder" => CanStartEdit && !_inTrash && !_folderUnavailable && capabilities.Supports(FilesProviderCapabilities.Write),
             "Rename" => CanStartEdit && !_inTrash && _selected is not null && capabilities.Supports(FilesProviderCapabilities.Rename),
@@ -426,6 +433,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
                 case "SortNameAscending": _sort = "NameAscending"; SortItems(); break;
                 case "SortNameDescending": _sort = "NameDescending"; SortItems(); break;
                 case "SortNewest": _sort = "Newest"; SortItems(); break;
+                case "ToggleView": _listView = !_listView; break;
                 case "NewFolder":
                     BeginEdit("CreateFolder", null, "", "Choose a folder name."); break;
                 case "Rename":

@@ -1,0 +1,25 @@
+{
+  "schema": "9to1.owner-correction/v1",
+  "date": "2026-17-11",
+  "surface": "Files",
+  "source": "Direct owner instruction in the local Strata PC OpenCode session, 17 November 2026, with screenshots",
+  "decision": "The Files frontend layout must be a mix of Google Drive's UI layout and the Files-app (files.community) shell. The previous single-column list presentation is judged unusable as a Drive frontend.",
+  "reference_screenshots": [
+    "Google Drive grid view: left sidebar (Home, Projects, My Drive, Computers, Shared with me, Recent, Starred, Spam, Bin, storage footer), top search, grid of preview tiles with labels below, hover checkboxes",
+    "Files-app shell: sidebar sections Pinned/Drives/Cloud Drives/Settings, tab strip, breadcrumb address bar, command bar (New, clipboard, rename, share, download, delete, more), grid/details view toggle and sort on the right, 'N items' footer"
+  ],
+  "pinned_flow_before_coding": [
+    "Open Files: Drive connection card and allowance live in the LEFT SIDEBAR; navigation (Files root, Trash / Back to files) is sidebar-primary like both references.",
+    "Main column: breadcrumb address text (Current location), then a command bar carrying the canonical actions: New folder, Open selected folder, Rename, Move…, Move to Trash…, Restore… (in Trash), Upload file…, Prepare download/Prepare PDF export/Save download, Back, Forward, Up, Refresh, view toggle, and the three sort controls with the loaded-window boundary note.",
+    "Items render by default as a WRAPPED GRID of labelled tiles (name button for selection plus canonical details text under it); a Grid/Details toggle switches to the previous row list. No item semantics change; selection still requires the current page.",
+    "Search, upload progress, move-destination and edit panels keep their canonical controls and labels directly above the item area.",
+    "A canonical item-count line sits at the footer ('N items'), and the Selection panel remains below the list as canonical detail surface.",
+    "Every accessible name and action used by existing first-party evidence remains identical ('Files root', 'Back', 'Forward', 'Up', 'Open selected folder', 'Search folder', 'Clear search', 'Disconnect Google Drive', 'Files privacy', 'New folder', 'Rename', 'Move…', 'Move here…', 'Move to Trash…', 'Trash', 'Restore…', 'Back to files', 'Upload file…', 'Prepare download', 'Save download', 'Name A–Z', 'Name Z–A', 'Newest', 'Load more items', 'Refresh', 'Files status', 'Current location', item name rows); the redesign re-positions canonical state only."
+  ],
+  "deferred_pending_separate_slices": [
+    "Google-style thumbnail tiles require a same-origin thumbnail proxy on the Worker (connect-src CSP and server-only credentials) plus quota kind — separate protocol slice with its own review; text/icon tiles first.",
+    "Sidebar sections for data the backend has no route for yet (Recent, Shared with me, Storage page, Projects) must not be rendered as inert fakes; they await canonical services.",
+    "Production deployment of the rebuilt bundle remains a separately approved action."
+  ],
+  "authority_note": "Screenshots are reference layouts, not sources of fake data; the canonical specification and this explicit owner decision govern. One shared app implementation (apps/Web/Files) embedded unchanged in Haven remains pinned."
+}
