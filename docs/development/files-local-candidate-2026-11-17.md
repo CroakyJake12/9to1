@@ -75,7 +75,7 @@ node dev/local-candidate.mjs --journey --report /tmp/opencode/local-journey-repo
 | Sealed bundle in real Chrome (CI parity) | `smoke-public-files-runtime.py` anonymous and disconnected; `smoke-connected-files-runtime.py`; `smoke-files-navigation-journey.py` with Chrome-for-Testing 157 | all PASS, native peer evidence |
 | Repair that unblocked it | `test_script_loaded_from_separate_test_file_without_modifying_published_assets` deterministically errored on `3dd910e87` (re-ran the pristine-probe guard after `serve_connected` had already extended `smoke.PROBE`, and double-mutated it); now reads the exact injected served text and additionally asserts on-disk bundle bytes stay unchanged | full routing-validation suite green; CI run 44100832836 was red exactly here |
 | Locally built bundle in real Chrome | all four CI-parity smokes re-run against `files-web-candidate-local/sdk-publish/wwwroot` | anonymous, disconnected, connected-root and navigation-journey all PASS |
-| Full interactive journey | `dev/local-candidate.mjs --journey`: boot connected, folder search/clear, create folder, rename (v2 strong-`If-Match` PATCH), resumable upload, download with byte-exact SHA-256 match through Chrome's download manager, Google-native PDF export, move, Trash, restore, reload persistence, disconnect (revoke) and fixture reconnection, all through rendered native CUI accessibility peers | 14/14 PASS on the locally built redesigned bundle (search, Grid/Details toggle and all management journeys), screenshots retained per step, zero unexpected provider hosts |
+| Full interactive journey | `dev/local-candidate.mjs --journey`: boot connected, folder search/clear, Grid/Details round-trip, create folder, rename (v2 strong-`If-Match` PATCH), resumable upload, download with byte-exact SHA-256 through Chrome's download manager, Google-native PDF export, move, Trash, restore, same-origin thumbnail route (owner 200, folder 404, non-owner 403), reload persistence, disconnect (revoke) and fixture reconnection, all through rendered native CUI accessibility peers | 15/15 PASS on the locally built redesigned bundle with canonical tile icons, screenshots retained per step, zero unexpected provider hosts |
 
 ## Explicit limits
 
@@ -90,5 +90,12 @@ node dev/local-candidate.mjs --journey --report /tmp/opencode/local-journey-repo
 - The in-app `Connect Google Drive` button navigates to the real
   `https://accounts.google.com/o/oauth2/v2/auth`; do not click it in the local browser — the
   fixture callback is completed by `connect()` as the journey does.
+
+Provider layer now additionally covers the same-origin thumbnail route (bounded
+64 KiB metered `thumbnail` kind, image-type allowlist, fail-closed): Worker suite
+90/90. Production asset drift independently confirmed by `eng/development/files_live_parity_gate.py`
+against `https://9to1.uk` on the current sealed candidate: `sealedArtifactVerified=true`,
+`publicAssetsMatched=false`, `status=STALE_OR_MISSING` — deploying reviewed current
+assets remains a separately approved owner action.
 
 Coordination: repair and dev tools receipted in issue #27; scopes released on publication.
