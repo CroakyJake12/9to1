@@ -58,6 +58,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 -B -m unittest discover -s eng/development -p 'test_native_files_drive_preflight.py' -v
+      - name: Verify native Files OAuth setup with disposable owner profiles (no credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s eng/development -p 'test_native_files_drive_setup.py' -v
       - name: Verify Ubuntu Files HTTPS shortcut without credentials or network
         shell: bash
         run: |
