@@ -90,6 +90,29 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             });
         };
         _items.DoubleTapped += async (_, _) => await InvokeFromNativeEventAsync("9to1.Files.Open");
+        // Drive-style row context menu on the list itself (the per-row CUI documents
+        // consume right-press before a container-owned menu would see it). Availability
+        // is re-read from the same canonical command gate on every opening, so the menu
+        // never offers an operation the current page or provider refuses.
+        {
+            var context = new ContextMenu();
+            string[][] contextItems = [["Open", "9to1.Files.Open"], ["Preview", "9to1.Files.Preview"],
+                ["Rename", "9to1.Files.Rename"], ["Move to Trash", "9to1.Files.Delete"],
+                ["Restore", "9to1.Files.Restore"], ["Manage access", "9to1.Files.Share.Get"],
+                ["Technical details", "9to1.Files.TechnicalDetails"]];
+            foreach (var (label, command) in contextItems.Select(row => (row[0], row[1])))
+            {
+                var item = new MenuItem { Header = label };
+                item.Click += async (_, _) => await InvokeFromNativeEventAsync(command);
+                context.Items.Add(item);
+            }
+            context.Opening += (_, _) =>
+            {
+                foreach (var (menuItem, pair) in context.Items.OfType<MenuItem>().Zip(contextItems))
+                    menuItem.IsEnabled = IsActionAvailable(pair[1]) == true;
+            };
+            _items.ContextMenu = context;
+        }
         _items.KeyDown += async (_, args) =>
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Open"); } };
         _search.KeyDown += async (_, args) =>

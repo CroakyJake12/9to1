@@ -75,15 +75,6 @@
             <Text Column="3" Text="Size" IsVisible="{Binding WideColumns}" VerticalAlignment="Center" HorizontalAlignment="Right" />
           </Container>
           <Input id="files-canonical-list" Type="List" Row="2" AccessibleName="Canonical Files items" BorderWidth="0" />
-          <Container id="files-item-context" Type="Context Menu">
-            <Button Content="Open" Type="Menu Item" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" />
-            <Button Content="Preview" Type="Menu Item" Action="PreviewSelectedText" Interactive="{Binding CanPreviewText}" />
-            <Button Content="Rename" Type="Menu Item" Action="9to1.Files.Rename" Interactive="{Binding CanRename}" />
-            <Button Content="Move to Trash" Type="Menu Item" Action="9to1.Files.Delete" Interactive="{Binding CanDelete}" />
-            <Button Content="Restore" Type="Menu Item" Action="9to1.Files.Restore" Interactive="{Binding CanRestore}" />
-            <Button Content="Manage access" Type="Menu Item" Action="9to1.Files.Share.Get" Interactive="{Binding CanReviewAccess}" />
-            <Button Content="Technical details" Type="Menu Item" Action="9to1.Files.TechnicalDetails" Interactive="{Binding CanShowDetails}" />
-          </Container>
           <Button id="files-next" Row="3" Content="Load more items" Action="9to1.Files.More" Interactive="{Binding CanMore}" IsVisible="{Binding CanMore}" HorizontalAlignment="Center" />
         </Container>
         <Container id="files-details-pane" MaxHeight="{Binding DetailsMaxHeight}" Column="{Binding DetailsColumn}" Row="{Binding DetailsRow}" Width="{Binding DetailsWidth}" IsVisible="{Binding HasSelection}" Type="Vertical Stack" CellGap="12" Padding="16" VerticalScrolling="True" Background="{Resource CuiPanelBrush}" AccessibleName="Selected item details">
