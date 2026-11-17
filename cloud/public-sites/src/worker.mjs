@@ -8,7 +8,7 @@ import {authRoute} from './auth.mjs';
 import {json} from './security.mjs';
 import {styles,script} from './site-assets.mjs';
 import {NINE_LOGO_URL,CAKEMODS_LOGO_URL,brandAssetResponse} from './brand-assets.mjs';
-export const VERSION='2026-11-16.2-files';
+export const VERSION='2026-11-17.1-preview-design';
 function site(request,env){
  const url=new URL(request.url),host=url.hostname;
  if(['cakemods.com','www.cakemods.com'].includes(host))return {brand:'cake',origin:'https://cakemods.com'};

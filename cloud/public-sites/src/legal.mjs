@@ -29,7 +29,7 @@
 export const legalContentVersions = Object.freeze({
   privacy: 'privacy-2026-11-15-v1',
   terms: 'invite-beta-terms-2026-11-15-v1',
-  cookies: 'cookies-2026-11-15-v1',
+  cookies: 'cookies-2026-11-17-v2',
 });
 
 const contact = '<a href="mailto:support@9to1.uk">support@9to1.uk</a>';
@@ -125,7 +125,7 @@ export const cookiesPage = {
   description: 'The sign-in, security and notice-preference storage used by CakeMods, 9to1 and 9to1 Account.',
   body: `<article class="prose-page"><p class="eyebrow">BROWSER STORAGE</p><h1>Cookies &amp; storage.</h1>
     <p class="lead">The public information pages do not add advertising or audience-analytics cookies. Invitation-only account access is being prepared; ordinary browsing does not start an account sign-in session.</p>
-    ${stamp}${related}
+    <p class="small">Last updated 17 November 2026.</p>${related}
     <h2>Why these are used</h2>
     <p>The account entries below describe the configured sign-in flows for restricted testing and future invited access. They are not a statement that public sign-in or invitation redemption is currently open.</p>
     <p>A sign-in cookie lets the service recognise the session you asked to start. Short-lived security cookies connect the beginning and end of a sign-in attempt. The account notice’s “Got it” control dismisses information; it is not agreement to advertising or optional tracking.</p>
@@ -147,6 +147,7 @@ export const cookiesPage = {
     <p>These are sign-in/security cookies on the account-service host. Not every flow sets every cookie. Browser session restoration can affect how long session-only storage remains available.</p>
     <h2>Notice preference</h2>
     <p>The account page uses a session-storage entry named <code>nine-account-cookie-notice-v1</code> to remember that you dismissed its notice in that browser tab. It contains the word “dismissed”, not your account information. It normally lasts for the tab’s session. You can reopen the notice using “Cookie information” in the account footer.</p>
+    <p>Each public website also uses <code>website-preview-notice-v1</code> in session storage after you dismiss the early-preview notice. It contains only “dismissed”, is separate for each website and normally lasts for the tab’s session. It is not sent to the server. You can reopen the notice using <strong>Preview</strong> in the header. If session storage is blocked, you can still dismiss the notice, but it may appear again on another page.</p>
     <h2>Cloudflare security checks and restricted areas</h2>
     <p>Where an account form uses Cloudflare Turnstile, the security check processes browser/network signals and a one-time challenge token. Cloudflare can also use security cookies when a challenge or access-control feature requires them. For example, <code>cf_clearance</code> is conditional on challenge/pre-clearance settings; restricted pages can use Cloudflare Access authentication cookies. Their presence and lifetime depend on the applicable security configuration.</p>
     <p>See <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Cloudflare’s Turnstile privacy information</a> and <a href="https://developers.cloudflare.com/cloudflare-challenges/concepts/clearance/">challenge-cookie explanation</a>, or contact ${contact} about a security cookie you see and its configured lifetime.</p>
