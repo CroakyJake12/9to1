@@ -101,10 +101,18 @@ class NavigationJourneyTests(unittest.TestCase):
                 child.parent.mkdir(parents=True, exist_ok=True)
                 child.write_text('<html><body></body></html>' if name == 'index.html' else 'fixture')
             with journey.interactive_fixture(root) as (_url, _hits, _requests):
-                contents = journey.connected.connected_probe()
+                # Read the exact text the fixture injects into served documents.
+                # Calling connected_probe() again here would re-run the pristine
+                # probe guard against the already-extended live probe, which is
+                # the integrity check doing its job, not a product failure.
+                contents = journey.connected.smoke.PROBE
                 self.assertIn('<script>', contents)
                 self.assertIn('files-navigation-smoke-evidence', contents)
                 self.assertIn('PerformAccessibility', contents)
+            for name in journey.connected.smoke.REQUIRED:
+                with self.subTest(asset=name):
+                    self.assertEqual((root / name).read_text(),
+                                     '<html><body></body></html>' if name == 'index.html' else 'fixture')
         self.assertIs(journey.connected.connected_probe, original_probe)
         self.assertIs(journey.connected.response_for, original_response)
 
