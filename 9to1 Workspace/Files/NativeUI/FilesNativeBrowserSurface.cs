@@ -39,7 +39,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private readonly ComboBox _sort = new()
     {
         ItemsSource = new[] { "Name: A–Z (page)", "Name: Z–A (page)" },
-        SelectedIndex = 0, Width = 200
+        SelectedIndex = 0, Width = 260
     };
     private CuiSceneHost? _scene;
     private FilesNativeBrowserPage? _page;

@@ -50,6 +50,15 @@ public sealed partial class FilesNativeBrowserSurface
             : File.Exists(DriveClientFilePath()) ? File.ReadAllText(DriveClientFilePath()).Trim() : "") is { Length: > 10 } id ? id : "";
     private static string DriveClientFilePath() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "9to1", "google-drive-client-id.txt");
+    // Console-created web-type clients carry a secret; desktop-type clients don't.
+    // The handshake adapts to either so the owner never has to recreate a client.
+    private static string? DriveClientSecret()
+    {
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "9to1", "google-drive-client-secret.txt");
+        return File.Exists(path) ? File.ReadAllText(path).Trim() is { Length: > 4 } secret ? secret : null : null;
+    }
+    private static void DriveApplyClientSecret(Dictionary<string, string> form)
+    { if (DriveClientSecret() is { } secret) form["client_secret"] = secret; }
 
     private bool DriveActionAvailable(string command) => command switch
     {
@@ -322,16 +331,22 @@ public sealed partial class FilesNativeBrowserSurface
                 ["prompt"] = "consent", ["state"] = state, ["code_challenge"] = challenge, ["code_challenge_method"] = "S256",
             });
             _status = "Opening your browser for one-time Google Drive permission…"; Changed();
-            Process.Start(new ProcessStartInfo(authorize) { UseShellExecute = true });
+            // Some sandboxed desktop sessions cannot launch a browser from inside apps;
+            // the same link is always left in the private temp file so consent can proceed
+            // by opening it manually. The listener is identical either way.
+            try { File.WriteAllText("/tmp/9to1-drive-auth-url.txt", authorize); } catch (IOException) { }
+            try { Process.Start(new ProcessStartInfo(authorize) { UseShellExecute = true }); }
+            catch (Exception) { _status = "No browser could be opened from Files. Open the link saved at /tmp/9to1-drive-auth-url.txt, then return here."; Changed(); }
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
             timeout.CancelAfter(TimeSpan.FromMinutes(5));
             var code = await WaitForDriveCodeAsync(listener, state, timeout.Token);
-            var tokenResponse = await DriveHttp.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(
-                new Dictionary<string, string>
-                {
-                    ["client_id"] = clientId, ["grant_type"] = "authorization_code", ["code"] = code,
-                    ["redirect_uri"] = redirect, ["code_verifier"] = verifier,
-                }), timeout.Token);
+            var exchangeForm = new Dictionary<string, string>
+            {
+                ["client_id"] = clientId, ["grant_type"] = "authorization_code", ["code"] = code,
+                ["redirect_uri"] = redirect, ["code_verifier"] = verifier,
+            };
+            DriveApplyClientSecret(exchangeForm);
+            var tokenResponse = await DriveHttp.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(exchangeForm), timeout.Token);
             var json = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync(timeout.Token)).RootElement;
             if (!tokenResponse.IsSuccessStatusCode || !json.TryGetProperty("refresh_token", out var refresh) ||
                 refresh.GetString() is not { Length: > 0 } issuedToken)
@@ -382,8 +397,9 @@ public sealed partial class FilesNativeBrowserSurface
         if (_accessToken is not null && DateTimeOffset.UtcNow < _driveTokenExpiry) return _accessToken;
         var clientId = DriveClientId();
         if (clientId.Length == 0) throw new InvalidOperationException("The Google OAuth client id is no longer configured.");
-        var response = await DriveHttp.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(
-            new Dictionary<string, string> { ["client_id"] = clientId, ["grant_type"] = "refresh_token", ["refresh_token"] = _driveAccount.RefreshToken }), token);
+        var refreshForm = new Dictionary<string, string> { ["client_id"] = clientId, ["grant_type"] = "refresh_token", ["refresh_token"] = _driveAccount.RefreshToken };
+        DriveApplyClientSecret(refreshForm);
+        var response = await DriveHttp.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(refreshForm), token);
         var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token)).RootElement;
         if (!response.IsSuccessStatusCode || json.GetProperty("access_token").GetString() is not { Length: > 0 } issued)
             throw new InvalidOperationException("Google refused the saved Drive permission; reconnect in Files.");
