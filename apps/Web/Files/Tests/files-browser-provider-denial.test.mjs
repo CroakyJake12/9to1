@@ -9,7 +9,7 @@ const itemDenied = { code: 'PermissionDenied', message: 'Google Drive denied acc
 const argsFor = action => action === 'get' ? JSON.stringify({ id: folder }) : action === 'list' ? JSON.stringify({ parentId: folder }) : '{}';
 const requestClosed = /Files request group is closed/;
 
-for (const action of ['list', 'get']) {
+for (const action of ['list']) {
     test(`a ${action} item-level provider permission 403 retains owner and exact typed reply`, async t => {
         let lost = 0;
         const requests = [];
@@ -40,17 +40,18 @@ for (const action of ['list', 'get']) {
 
 for (const [label, action, body, status, type] of [
     ['non-owner', 'list', ownerDenied, 403],
+    ['get must not bypass owner guard', 'get', itemDenied, 403],
     ['sign-in loss', 'get', { code: 'SignInRequired', message: 'Sign in.' }, 401],
     ['bad item text', 'list', { ...itemDenied, message: 'Unexpected denial' }, 403],
-    ['wrong code', 'get', { ...itemDenied, code: 'OwnerOnly' }, 403],
+    ['wrong code', 'list', { ...itemDenied, code: 'OwnerOnly' }, 403],
     ['not-started false', 'list', { ...itemDenied, notStarted: false }, 403],
-    ['retry date set', 'get', { ...itemDenied, retryAt: 12345 }, 403],
+    ['retry date set', 'list', { ...itemDenied, retryAt: 12345 }, 403],
     ['extraneous body properties', 'list', { ...itemDenied, more: true }, 403],
     ['permission-like mutation', 'mutate', itemDenied, 403],
     ['permission-like context', 'context', itemDenied, 403],
     ['permission-like usage', 'usage', itemDenied, 403],
     ['malformed item response', 'list', '{', 403, 'application/json'],
-    ['non-json item response', 'get', '<html>Denied</html>', 403, 'text/html'],
+    ['non-json item response', 'list', '<html>Denied</html>', 403, 'text/html'],
 ]) {
     test(`${label} remains an authoritative session denial`, async t => {
         let lost = 0;
@@ -138,7 +139,7 @@ test('oversized and stalled item-denial bodies fail closed without preserving a 
         });
         files.createGroup(kind);
         files.enroll(kind);
-        const denied = JSON.parse(await files.invoke(kind, 'denial', 'get', argsFor('get')));
+        const denied = JSON.parse(await files.invoke(kind, 'denial', 'list', argsFor('list')));
         assert.deepEqual(denied, { status: 403, body: '' });
         assert.equal(losses, 1);
         await assert.rejects(files.invoke(kind, 'after', 'usage', '{}'), requestClosed);
@@ -160,4 +161,24 @@ test('an un-enrolled request cannot use a provider-like 403 to bypass admission 
     const reply = JSON.parse(await files.invoke('notEnrolled', 'denied', 'list', argsFor('list')));
     assert.deepEqual(reply, { status: 403, body: '' });
     assert.equal(losses, 1);
+});
+
+
+test('canonical get returns a 200 typed provider error and preserves the bridge owner', async t => {
+    const typed = { value: null, error: { code: 'PermissionDenied', message: itemDenied.message,
+        action: 'Get', targetId: folder, isRecoverable: false, canRetry: false, retryAfter: null,
+        details: { notStarted: 'true' } } };
+    let count = 0, losses = 0;
+    const files = createFilesBrowserBridge({
+        fetchImpl: async () => ++count === 1 ? Response.json(typed) : Response.json({ allowed: true }),
+        onSessionLost: () => { losses++; },
+    });
+    t.after(async () => { files.revokeAll(); await files.drainAll(); });
+    files.createGroup('current'); files.enroll('current');
+    const get = JSON.parse(await files.invoke('current', 'item', 'get', argsFor('get')));
+    assert.equal(get.status, 200);
+    assert.deepEqual(JSON.parse(get.body), typed);
+    assert.equal(losses, 0);
+    const next = JSON.parse(await files.invoke('current', 'next', 'usage', '{}'));
+    assert.deepEqual(JSON.parse(next.body), { allowed: true });
 });

@@ -241,10 +241,10 @@ export function createFilesBrowserBridge({
                 controller.signal.throwIfAborted();
             }
             // Google may deny one item without revoking the authenticated 9to1
-            // owner. The Worker sends this exact bounded, typed GET-only error.
+            // owner. The Worker sends this exact bounded, typed list-only error.
             // Unknown/malformed 403s and every session/mutation denial still
             // take the fail-closed branch below; never trust a bare HTTP 403.
-            if (response.status === 403 && group.enrolled && (action === "list" || action === "get")) {
+            if (response.status === 403 && group.enrolled && action === "list") {
                 let itemDenial = null;
                 try {
                     const scope = AbortSignal.any([controller.signal, AbortSignal.timeout(itemDenialTimeoutMs)]);
