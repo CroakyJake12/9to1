@@ -214,6 +214,45 @@ jobs:
           python3 -B apps/Web/Tests/ci/smoke-files-navigation-journey.py \
             --wwwroot '/tmp/files-web-candidate/sdk-publish/wwwroot' \
             --report '/tmp/files-web-candidate/diagnostics/browser-navigation-journey.json'
+      - name: Reject false-green full Files journey reports (disposable fixtures)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover \
+            -s apps/Web/Tests/ci -p 'test_verify_full_files_journey.py' -v
+      - name: Test 15-step native Files journey against genuine Workerd and synthetic Drive
+        # Real compiled app + native controls + SQLite DO + Chrome; no live Google,
+        # production credentials or deployment. The local fixture owns every write.
+        shell: bash
+        working-directory: cloud/files-drive
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/opencode
+          bundle=/tmp/files-web-candidate/sdk-publish/wwwroot
+          report=/tmp/files-web-candidate/diagnostics/browser-worker-journey.json
+          test -f "$bundle/_framework/dotnet.js"
+          chrome="$(command -v google-chrome)"
+          node --check dev/local-candidate.mjs
+          result=0
+          node dev/local-candidate.mjs --journey --wwwroot "$bundle" \
+            --chrome "$chrome" --report "$report" || result=$?
+          if [ ! -s "$report" ]; then
+            echo "Full Files Worker journey produced no evidence report" >&2
+            exit 1
+          fi
+          python3 -B ../../apps/Web/Tests/ci/verify-full-files-journey.py \
+            --report "$report" --evidence-root /tmp/opencode || result=1
+          if [ "$result" -eq 0 ]; then
+            python3 - "$report" <<'PY'
+          import json
+          from pathlib import Path
+          import shutil
+          import sys
+          shots = Path(json.loads(Path(sys.argv[1]).read_text())['screenshots'])
+          shutil.copytree(shots, Path('/tmp/files-web-candidate/diagnostics/worker-journey-screenshots'))
+          PY
+          fi
+          exit "$result"
       - name: Upload read-only build failure diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
