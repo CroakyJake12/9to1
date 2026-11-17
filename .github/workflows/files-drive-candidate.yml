@@ -161,6 +161,8 @@ jobs:
           set -euo pipefail
           python3 -B -m unittest discover \
             -s apps/Web/Tests/ci -p 'test_smoke_public_files_runtime.py' -v
+          python3 -B -m unittest discover \
+            -s apps/Web/Tests/ci -p 'test_smoke_connected_files_runtime.py' -v
       - name: Upload sealed public WebAssembly bundle and receipt (not deployed)
         if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -189,6 +191,15 @@ jobs:
             --wwwroot '/tmp/files-web-candidate/sdk-publish/wwwroot' \
             --scenario disconnected \
             --report '/tmp/files-web-candidate/diagnostics/browser-first-use.json'
+      - name: Verify real Files connected folder CUI in Chrome (synthetic read-only provider)
+        # The only successful provider requests are disposable GETs to a
+        # synthetic local context/list. This is not live Google Drive acceptance.
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B apps/Web/Tests/ci/smoke-connected-files-runtime.py \
+            --wwwroot '/tmp/files-web-candidate/sdk-publish/wwwroot' \
+            --report '/tmp/files-web-candidate/diagnostics/browser-connected-root.json'
       - name: Upload read-only build failure diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
