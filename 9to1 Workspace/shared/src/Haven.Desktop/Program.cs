@@ -109,6 +109,11 @@ internal static class Program
     public static AppBuilder BuildAvaloniaApp() =>
         CakeOS.Cui.Runtime.CuiNativeHost.ConfigureFonts(AppBuilder.Configure<App>())
             .UsePlatformDetect()
+            // The GNOME/X11 session suppresses or misplaces Avalonia's native popup
+            // windows, so menus, combo dropdowns and context flyouts never appeared
+            // (owner-reported 17 November 2026). In-window overlays render reliably
+            // and are positioned by the same code path that already works for tooltips.
+            .With(new Avalonia.X11PlatformOptions { OverlayPopups = true })
             .LogToTrace();
 
     /// <summary>

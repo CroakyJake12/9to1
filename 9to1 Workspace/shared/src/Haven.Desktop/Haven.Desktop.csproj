@@ -72,6 +72,7 @@
          compile/runtime/build/publish graph instead of the NuGet Avalonia core/Desktop package
          binaries. This mirrors framework/CUI/Runtime, which already builds against the source fork. -->
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj" />
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj" />
     <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj" />
