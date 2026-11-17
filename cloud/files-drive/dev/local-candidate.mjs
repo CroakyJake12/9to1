@@ -86,6 +86,9 @@ export async function startCandidate({ wwwroot, state }) {
     explicitlyTrashed: false, appProperties: {}, bytes: null });
   fixture.seed('welcome.txt', fixture.root.id, 'Welcome to the local Files candidate fixture.\n');
   const nested = fixture.seed('readme.txt', 'localSeedFolder00000001', 'Nested fixture file.\n');
+  const gdoc = fixture.seed('Fixture doc', fixture.root.id, 'native body is never fetched; export serves bytes',
+    'application/vnd.google-apps.document');
+  gdoc.bytes = null; gdoc.size = undefined; gdoc.md5Checksum = undefined;
   nested.parents = ['localSeedFolder00000001'];
 
   const environment = {

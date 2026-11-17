@@ -52,7 +52,7 @@ node dev/local-candidate.mjs \
   --wwwroot /tmp/opencode/files-web-candidate-local/sdk-publish/wwwroot --connect --keep
 ```
 
-Open the printed Chrome with
+The `--open` mode launches its own visible Chrome; for a manual separate browser, point one at the app with
 `--host-resolver-rules="MAP 9to1.uk:443 127.0.0.1:<tlsPort>"` and
 `--ignore-certificate-errors` (both are dev-only; the certificate never leaves this machine),
 set the owner fixture session cookie shown in the SERVING receipt, click
@@ -75,7 +75,7 @@ node dev/local-candidate.mjs --journey --report /tmp/opencode/local-journey-repo
 | Sealed bundle in real Chrome (CI parity) | `smoke-public-files-runtime.py` anonymous and disconnected; `smoke-connected-files-runtime.py`; `smoke-files-navigation-journey.py` with Chrome-for-Testing 157 | all PASS, native peer evidence |
 | Repair that unblocked it | `test_script_loaded_from_separate_test_file_without_modifying_published_assets` deterministically errored on `3dd910e87` (re-ran the pristine-probe guard after `serve_connected` had already extended `smoke.PROBE`, and double-mutated it); now reads the exact injected served text and additionally asserts on-disk bundle bytes stay unchanged | full routing-validation suite green; CI run 44100832836 was red exactly here |
 | Locally built bundle in real Chrome | all four CI-parity smokes re-run against `files-web-candidate-local/sdk-publish/wwwroot` | anonymous, disconnected, connected-root and navigation-journey all PASS |
-| Full interactive journey | `dev/local-candidate.mjs --journey`: boot connected, folder search/clear, create folder, rename (v2 strong-`If-Match` PATCH), resumable upload, download with byte-exact SHA-256 match through Chrome's download manager, move, Trash, restore, reload persistence, disconnect (revoke) and fixture reconnection, all through rendered native CUI accessibility peers | 12/12 PASS on the locally built bundle (11/11 first on the CI bundle), screenshots retained per step, zero unexpected provider hosts |
+| Full interactive journey | `dev/local-candidate.mjs --journey`: boot connected, folder search/clear, create folder, rename (v2 strong-`If-Match` PATCH), resumable upload, download with byte-exact SHA-256 match through Chrome's download manager, Google-native PDF export, move, Trash, restore, reload persistence, disconnect (revoke) and fixture reconnection, all through rendered native CUI accessibility peers | 13/13 PASS on the locally built bundle (11/11 first on the CI bundle), screenshots retained per step, zero unexpected provider hosts |
 
 ## Explicit limits
 

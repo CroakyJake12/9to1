@@ -176,6 +176,24 @@ export async function runJourney({ connect, fixture, tlsPort, state, chrome }) {
       return { file: file.name, bytes: file.bytes.byteLength };
     });
 
+    await step('export-google-doc', async () => {
+      await until(session, click('Fixture doc'), 15000, 'Google-native selection');
+      await until(session, click('Prepare PDF export'), 15000, 'prepare export');
+      await until(session, click('Save download'), 30000, 'export ticket prepared');
+      const deadline = Date.now() + 45000;
+      let bytes = null;
+      while (Date.now() < deadline && !bytes) {
+        for (const name of ['Fixture doc.pdf', 'Fixture doc (1).pdf']) {
+          try { bytes = readFileSync(join(downloads, name)); } catch { /* not finished */ }
+        }
+        if (!bytes) await new Promise(resolveWait => setTimeout(resolveWait, 250));
+      }
+      if (!bytes || !bytes.subarray(0, 8).toString().includes('%PDF')) {
+        throw new Error('No PDF export bytes arrived from the real export route');
+      }
+      return { bytes: bytes.byteLength };
+    });
+
     await step('move-into-folder', async () => {
       await until(session, click('welcome.txt'), 15000, 'welcome selection');
       await until(session, click('Move…'), 15000, 'move action');
@@ -217,7 +235,8 @@ export async function runJourney({ connect, fixture, tlsPort, state, chrome }) {
       await until(session, ready, 60000, 'app ready after reload');
       await until(session, `(() => { const s = __nine.status();
         return s.controls.includes("Journey Renamed") && s.controls.includes("Local Fixture Folder")
-          && s.controls.includes("local-upload.txt") && !s.controls.includes("welcome.txt"); })()`,
+          && s.controls.includes("local-upload.txt") && s.controls.includes("Fixture doc")
+          && !s.controls.includes("welcome.txt"); })()`,
       30000, 'root restored after reload');
       return { controls: await evaluate(session, snapshot) };
     });
