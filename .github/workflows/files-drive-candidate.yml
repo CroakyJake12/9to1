@@ -1,0 +1,157 @@
+# Public, non-deploying candidate build. Never grants cloud/Drive credentials.
+name: Files Google Drive frontend candidate (build only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/files-drive-candidate.yml'
+      - 'apps/Web/**'
+      - 'cloud/files-drive/**'
+      - '9to1 Workspace/Files/CUI/**'
+      - 'framework/CUI/**'
+      - 'global.json'
+      - 'NuGet.Config'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: files-candidate-main
+  cancel-in-progress: false
+
+jobs:
+  bridge-and-provider:
+    name: Browser bridge and Workerd provider
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact source without retained credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source and browser bridge tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --check apps/Web/Files/files-browser.js
+          node --test apps/Web/Files/Tests/*.test.mjs
+      - name: Install pinned Cloudflare test dependencies
+        working-directory: cloud/files-drive
+        run: npm ci --no-audit --no-fund
+      - name: Execute provider and real Workerd SQLite tests with disposable fixtures
+        working-directory: cloud/files-drive
+        env:
+          FILES_DRIVE_TEST_TMP_ROOT: /tmp
+        run: npm test
+
+  native-files:
+    name: Canonical Files native contracts (disposable disk)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      DOTNET_NOLOGO: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+      MSBUILDDISABLENODEREUSE: '1'
+    steps:
+      - name: Checkout exact source without retained credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Initialize pinned CUI/Avalonia build dependencies
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Run canonical Files native tests on isolated real disk
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p "$RUNNER_TEMP/files-native-fixture"
+          dotnet run --project apps/Web/Files/Tests/FilesBrowser.Tests.csproj -c Release -- "$RUNNER_TEMP/files-native-fixture"
+
+  sealed-browser:
+    name: Publish real WebAssembly host and dry-run the Files Worker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      DOTNET_NOLOGO: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+      MSBUILDDISABLENODEREUSE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout exact source without retained credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Initialize only the pinned native browser gitlinks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.401'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build source-owned browser adapter and genuine .NET WebAssembly publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 apps/Web/Tests/ci/run-ordinary-web-publish.py \
+            --expected-commit "$GITHUB_SHA" \
+            --output "/tmp/files-web-candidate"
+      - name: Stage actual public output for the existing authenticated Files Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="/tmp/files-web-candidate/sdk-publish/wwwroot"
+          test -f "$source_dir/index.html"
+          test -f "$source_dir/main.js"
+          test -f "$source_dir/_framework/dotnet.js"
+          destination=cloud/files-drive/.build/browser/wwwroot
+          test ! -e "$destination"
+          mkdir -p "$destination"
+          cp -a "$source_dir/." "$destination/"
+          printf '%s\n' '**/*.gz' '**/*.br' '**/*.map' '**/*.pdb' > "$destination/.assetsignore"
+      - name: Install the locked Worker toolchain
+        working-directory: cloud/files-drive
+        run: npm ci --no-audit --no-fund
+      - name: Verify Files Worker plus staged real WebAssembly assets without deployment
+        working-directory: cloud/files-drive
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --no-install wrangler deploy --dry-run --outdir "/tmp/files-worker-dry-run"
+      - name: Upload read-only build failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: files-web-build-diagnostics
+          path: /tmp/files-web-candidate/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload sealed public WebAssembly bundle and receipt (not deployed)
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: files-web-candidate
+          path: /tmp/files-web-candidate/public-artifact
+          if-no-files-found: error
+          retention-days: 7
