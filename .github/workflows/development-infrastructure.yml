@@ -48,6 +48,11 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, verified upstream 2026-10-22
+      - name: Verify Files candidate artifact integrity guard against disposable archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s eng/development -p 'test_files_candidate_release_gate.py' -v
       - name: Validate operational guards using actual filesystem and concurrent processes
         run: |
           mkdir -p "$RUNNER_TEMP/infrastructure-evidence"
