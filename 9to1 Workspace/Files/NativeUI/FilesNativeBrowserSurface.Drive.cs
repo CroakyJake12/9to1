@@ -250,7 +250,13 @@ public sealed partial class FilesNativeBrowserSurface
                 if (mimeType == "application/vnd.google-apps.shortcut") continue;
                 var name = row.GetProperty("name").GetString() ?? "Untitled";
                 var isFolder = mimeType == "application/vnd.google-apps.folder";
-                long? size = row.TryGetProperty("size", out var sizeElement) && sizeElement.TryGetInt64(out var parsed) ? parsed : null;
+                // Drive v3 serialises size as a JSON string; accept either form.
+                long? size = null;
+                if (row.TryGetProperty("size", out var sizeElement))
+                {
+                    if (sizeElement.ValueKind == JsonValueKind.String && long.TryParse(sizeElement.GetString(), out var sizeText)) size = sizeText;
+                    else if (sizeElement.ValueKind == JsonValueKind.Number && sizeElement.TryGetInt64(out var sizeNumber)) size = sizeNumber;
+                }
                 var created = row.TryGetProperty("createdTime", out var createdElement) && DateTimeOffset.TryParse(createdElement.GetString(), out var createdValue) ? createdValue : DateTimeOffset.UtcNow;
                 var modified = row.TryGetProperty("modifiedTime", out var modifiedElement) && DateTimeOffset.TryParse(modifiedElement.GetString(), out var modifiedValue) ? modifiedValue : created;
                 items.Add(new HostedItemMetadata(DriveItemId(googleId), new FilesLocationId(DriveStoreId),
@@ -409,7 +415,11 @@ public sealed partial class FilesNativeBrowserSurface
         if (!response.IsSuccessStatusCode || json.GetProperty("access_token").GetString() is not { Length: > 0 } issued)
             throw new InvalidOperationException("Google refused the saved Drive permission; reconnect in Files.");
         _accessToken = issued;
-        _driveTokenExpiry = DateTimeOffset.UtcNow.AddSeconds(Math.Max(60, json.GetProperty("expires_in").GetInt32() - 120));
+        // Google has returned expires_in both as a number and as a string across clients.
+        var expiry = json.TryGetProperty("expires_in", out var expiresIn)
+            ? int.TryParse(expiresIn.ValueKind == JsonValueKind.String ? expiresIn.GetString() : expiresIn.GetRawText(), out var seconds) ? seconds : 3600
+            : 3600;
+        _driveTokenExpiry = DateTimeOffset.UtcNow.AddSeconds(Math.Max(60, expiry - 120));
         return issued;
     }
 
