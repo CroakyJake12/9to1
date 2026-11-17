@@ -37,7 +37,8 @@ public sealed partial class FilesNativeBrowserSurface
 
     private bool InDrive => _page?.StoreID == DriveStoreId;
     private static bool IsDriveCommand(string command) =>
-        command is "9to1.Files.Drive" or "9to1.Files.Drive.Connect" or "9to1.Files.Drive.Disconnect";
+        command is "9to1.Files.Drive" or "9to1.Files.Drive.Connect" or "9to1.Files.Drive.Disconnect"
+            or "9to1.Files.Drive.Server" or "9to1.Files.Drive.SelfHosted";
     private string DriveAccountPath => Path.Combine(
         Environment.GetEnvironmentVariable("HAVEN_DATA_DIR") ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "9to1-development", "profile"),
@@ -56,6 +57,9 @@ public sealed partial class FilesNativeBrowserSurface
         "9to1.Files.Drive" => Available && _pendingMutation is null,
         "9to1.Files.Drive.Connect" => Available && _pendingMutation is null,
         "9to1.Files.Drive.Disconnect" => Available && _pendingMutation is null && _driveAccount is not null,
+        // Truthful availability (V3-FILES-FEA-01): the chooser lists every provider kind;
+        // the ones not wired in this build answer honestly when selected.
+        "9to1.Files.Drive.Server" or "9to1.Files.Drive.SelfHosted" => Available && _pendingMutation is null,
         _ => false,
     };
 
@@ -89,6 +93,7 @@ public sealed partial class FilesNativeBrowserSurface
             case "DriveConnectVisible": value = !_driveAccountLoaded || _driveAccount is null; return true;
             case "DriveConnected": value = _driveAccountLoaded && _driveAccount is not null; return true;
             case "CanDrive": value = DriveActionAvailable("9to1.Files.Drive") && (_driveAccountLoaded ? _driveAccount is not null : File.Exists(DriveAccountPath)); return true;
+            case "CanDriveConnect": value = DriveActionAvailable("9to1.Files.Drive.Connect"); return true;
             default: value = null; return false;
         }
     }
@@ -99,7 +104,17 @@ public sealed partial class FilesNativeBrowserSurface
         EnsureDriveAccountLoaded();
         try
         {
-            if (command == "9to1.Files.Drive.Connect") { await DriveConnectAsync(token); return; }
+            if (command == "9to1.Files.Drive.Server")
+            { _status = "Server drives (Cloudflare R2, S3-compatible) will connect here; that provider is not wired in this build yet, so nothing was changed. Google Drive connects now."; return; }
+            if (command == "9to1.Files.Drive.SelfHosted")
+            { _status = "Self-hosted drives (WebDAV) will connect here; that provider is not wired in this build yet, so nothing was changed. Google Drive connects now."; return; }
+            if (command == "9to1.Files.Drive.Connect")
+            {
+                // The chooser's Google Drive entry reopens an already-connected drive
+                // instead of asking for consent again.
+                if (_driveAccount is not null) { _drivePath.Clear(); _drivePath.Add(DriveFolder.Root); _driveBack.Clear(); _query = ""; _search.Text = ""; await DrivePublishAsync(false, token); return; }
+                await DriveConnectAsync(token); return;
+            }
             if (command == "9to1.Files.Drive.Disconnect")
             {
                 _accessToken = null;
