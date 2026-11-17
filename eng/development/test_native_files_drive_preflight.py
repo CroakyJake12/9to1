@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import native_files_drive_preflight as app
 
@@ -125,13 +126,14 @@ class NativeDrivePreflightTests(unittest.TestCase):
         self.assertFalse(result["ready_for_sign_in"])
         self.assertEqual(result["profile"], "unsafe_relative_data_dir")
 
-    def test_missing_opener_is_explicit_not_oauth_success(self):
+    def test_missing_opener_is_advisory_for_approved_manual_consent(self):
         self.prepare_profile()
         self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
         self.opener.unlink()
         result = self.output()
         self.assertEqual(result["browser_opener"], "missing")
-        self.assertFalse(result["ready_for_sign_in"])
+        self.assertTrue(result["ready_for_sign_in"])
+        self.assertTrue(any("manual consent" in action.lower() for action in result["actions"]))
 
     def test_client_config_symlink_is_not_followed(self):
         self.prepare_profile()
@@ -186,7 +188,8 @@ class NativeDrivePreflightTests(unittest.TestCase):
         self.opener.unlink()
         failure = subprocess.run([sys.executable, str(script), "--json"], env=env,
                                  capture_output=True, text=True, timeout=15)
-        self.assertEqual(failure.returncode, 2)
+        self.assertEqual(failure.returncode, 0)
+        self.assertTrue(json.loads(failure.stdout)["ready_for_sign_in"])
         self.assertEqual(json.loads(failure.stdout)["browser_opener"], "missing")
 
 
@@ -295,6 +298,41 @@ class NativeDrivePreflightTests(unittest.TestCase):
         self.assertNotIn(sentinel, result.stdout)
         self.assertNotIn(str(self.home), result.stdout)
 
+
+    def test_public_client_id_is_read_via_no_follow_fds_after_parent_swap(self):
+        self.prepare_profile()
+        directory = self.home / ".config/9to1"
+        directory.mkdir(parents=True)
+        (directory / "google-drive-client-id.txt").write_text("invalid")
+        external = self.root / "redirected-public-id"
+        external.mkdir()
+        (external / "google-drive-client-id.txt").write_text(CLIENT)
+        original = app.config_path_safe
+        switched = [False]
+        def exchange(home):
+            allowed = original(home)
+            if not switched[0]:
+                directory.rename(self.home / ".config/original-9to1")
+                directory.symlink_to(external, target_is_directory=True)
+                switched[0] = True
+            return allowed
+        with patch.object(app, "config_path_safe", side_effect=exchange):
+            self.assertEqual(app.get_client_status(self.home, {}), "unsafe_config_path")
+        self.assertTrue(switched[0])
+
+    def test_public_client_id_read_is_bounded_to_4096_bytes(self):
+        self.prepare_profile()
+        directory = self.home / ".config/9to1"
+        directory.mkdir(parents=True)
+        (directory / "google-drive-client-id.txt").write_text("A" * 8192 + CLIENT)
+        self.assertEqual(app.get_client_status(self.home, {}), "unreadable_config")
+
+    def test_public_client_id_fifo_refused_without_blocking(self):
+        self.prepare_profile()
+        directory = self.home / ".config/9to1"
+        directory.mkdir(parents=True)
+        os.mkfifo(directory / "google-drive-client-id.txt", 0o600)
+        self.assertEqual(app.get_client_status(self.home, {}), "unsafe_config_path")
 
 if __name__ == "__main__":
     unittest.main()

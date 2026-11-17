@@ -91,6 +91,64 @@ def get_client_secret_status(home: Path) -> str:
                         require_private=True)
 
 
+def _read_public_client_id(home: Path) -> str:
+    """Read only the bounded public ID through checked, no-follow directory fds.
+
+    A preceding lstat of a path is not a safe admission for Path.read_text:
+    a renamed parent or file could be replaced by a symlink between the calls.
+    The token and optional secret are never opened by this function.
+    """
+    if not home.is_absolute() or ".." in home.parts:
+        return "unsafe_config_path"
+    directories = [*home.parts[1:], ".config", "9to1"]
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    directory_fd = -1
+    client_fd = -1
+    try:
+        directory_fd = os.open("/", flags)
+        home_index = len(home.parts) - 2
+        for index, component in enumerate(directories):
+            next_fd = os.open(component, flags, dir_fd=directory_fd)
+            os.close(directory_fd)
+            directory_fd = next_fd
+            metadata = os.fstat(directory_fd)
+            # The system-owned, sticky /tmp ancestor is allowed. No config
+            # directory or untrusted non-sticky ancestor may be writable by others.
+            sticky_system_dir = (metadata.st_uid == 0 and
+                                 metadata.st_mode & stat.S_ISVTX)
+            if (metadata.st_mode & 0o022) and not sticky_system_dir:
+                return "unsafe_config_path"
+            if index >= home_index and metadata.st_uid != os.getuid():
+                return "unsafe_config_path"
+        client_fd = os.open("google-drive-client-id.txt",
+                            os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
+                            dir_fd=directory_fd)
+        info = os.fstat(client_fd)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or
+                stat.S_IMODE(info.st_mode) & 0o022):
+            return "unsafe_config_path"
+        if info.st_size > 4096:
+            return "unreadable_config"
+        raw = os.read(client_fd, 4097)
+        if len(raw) > 4096:
+            return "unreadable_config"
+        value = raw.decode("utf-8").strip()
+        if len(value) <= 10:
+            return "missing"
+        return "configured_unverified" if value.endswith(CLIENT_SUFFIX) else "invalid_format"
+    except FileNotFoundError:
+        return "missing"
+    except UnicodeError:
+        return "unreadable_config"
+    except (OSError, ValueError):
+        return "unsafe_config_path"
+    finally:
+        if client_fd >= 0:
+            os.close(client_fd)
+        if directory_fd >= 0:
+            os.close(directory_fd)
+
+
 def get_client_status(home: Path, environment: dict[str, str]) -> str:
     from_env = environment.get("HAVEN_GOOGLE_DRIVE_CLIENT_ID", "").strip()
     if len(from_env) > 10:
@@ -98,20 +156,7 @@ def get_client_status(home: Path, environment: dict[str, str]) -> str:
     # Match native source's environment -> public client-ID file priority.
     if not config_path_safe(home):
         return "unsafe_config_path"
-    config = home / ".config" / "9to1" / "google-drive-client-id.txt"
-    state = inspect_file(config, require_private=False)
-    if state == "absent":
-        return "missing"
-    if state != "regular":
-        return "unsafe_config_path"
-    try:
-        # Public OAuth client ID only; never read token/account/secret files.
-        value = config.read_text(encoding="utf-8").strip()
-    except (OSError, UnicodeError):
-        return "unreadable_config"
-    if len(value) <= 10:
-        return "missing"
-    return "configured_unverified" if value.endswith(CLIENT_SUFFIX) else "invalid_format"
+    return _read_public_client_id(home)
 
 
 def check(environment: dict[str, str] | None = None, *, home: Path | None = None) -> dict[str, object]:
@@ -172,14 +217,13 @@ def check(environment: dict[str, str] | None = None, *, home: Path | None = None
     if client_secret_state not in ("absent", "private_regular"):
         actions.append("The optional native Google OAuth client-secret file or its directory is unsafe. A trusted local owner must correct it before sign-in; never copy or print the secret. Desktop clients do not need this file.")
     if opener_state != "available":
-        actions.append("An installed xdg-open helper is required for this Ubuntu browser sign-in workflow.")
+        actions.append("Automatic browser opening is unavailable. A reviewed private manual consent fallback may still work; do not share OAuth URLs, and do not rely on unsafe shared /tmp files.")
     actions.append("Even a passing preflight cannot verify OAuth consent, token validity, a Google Drive connection, or live file access.")
     return {"ready_for_sign_in": (
                 client_state == "configured_unverified" and
                 profile_state == "private_directory" and
                 credential_state in ("absent", "private_regular") and
-                client_secret_state in ("absent", "private_regular") and
-                opener_state == "available"),
+                client_secret_state in ("absent", "private_regular")),
             "client_id": client_state, "profile": profile_state,
             "account_file": credential_state, "client_secret_file": client_secret_state,
             "browser_opener": opener_state,
