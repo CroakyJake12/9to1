@@ -88,3 +88,35 @@ Evidence: `ux-*.png` captures in the PC session evidence directory
 (before/after pairs for tab right-click, Files row right-click,
 New/edit, sort combo, and the first menus that ever rendered:
 `ux-fix-sort.png`, `ux-fix-filerow.png`).
+
+## Recorded UI tour delivered to Google Drive (owner request, 21:5x UTC)
+
+ffmpeg installed user-locally (pip venv + imageio-ffmpeg static binary; no root);
+GNOME's built-in recorder was capped and unconfigurable on this image. Recorded
+71 s of 1080p/15 fps while driving the running 9to1 instance (Google Drive
+listing, folder open/back/refresh, Drive Trash, local Files, New/edit menu,
+Home/Board/Browse tabs, address controls) and uploaded through the app's own
+OAuth credential to the owner's real Drive root:
+
+| Drive file | id |
+| --- | --- |
+| 9to1-ui-tour-2026-11-17.webm (7.1 MiB, VP9) | 1rEjGsK3KbKrHNP-kRSE6yz0-qnXmAnrV |
+| 9to1-drive-listing.png | 1HdTOzt4GqQ1UDtZ9wFaCb0EEMMVh7h84 |
+| 9to1-files-connected-sidebar.png | 1HUnl3eMfndSMR4ykEGNfE4scMixfNxeL |
+| 9to1-files-command-menu.png | 1al4IEwACFvtMoYOZQRwDbhbMZ-YQFQKGg |
+
+All four verified present via an independent Drive API list (observer),
+trashed=false. Reviewer notes: synthetic pointer releases are unreliable on this
+display (proven earlier), so some tour clicks land as focus only — treat
+"nothing happened" moments as tooling limits, not UI behaviour, except where a
+known defect is documented above.
+
+## Goal closure — actual Drive connection (21:4x–21:5x UTC)
+
+The owner's click on Google Drive after the size-parse fix listed the real
+Drive (Bible, Law, Maths, whiteboard records, prior verification folders)
+inside Haven Files; token refresh with the matched client pair works; upload
+round-trip proven end to end (this very table's files went through Google's
+upload API with the app credential). Write buttons inside the app UI
+(New folder/rename/trash) ride the same DriveJsonAsync paths but have not each
+been individually clicked by a real mouse yet.
