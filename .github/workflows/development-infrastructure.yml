@@ -92,7 +92,7 @@ jobs:
           python3 -B eng/spec-coverage/assess.py verify-hand-evidence
       - name: Upload the coverage record
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886067c06451c # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: spec-coverage-record
           path: |
@@ -223,7 +223,7 @@ jobs:
           PY
         env:
           RUNNER_TEMP: ${{ runner.temp }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886067c06451c # v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: cui-framework-test-suites
@@ -265,7 +265,7 @@ jobs:
           PY
         env:
           RUNNER_TEMP: ${{ runner.temp }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886067c06451c # v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: cui-mirror-corpus-identity
