@@ -4,10 +4,11 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export async function launchChrome({ chrome, profileDir, args = [] }) {
+export async function launchChrome({ chrome, profileDir, args = [], headless = true }) {
   mkdirSync(profileDir, { recursive: true });
   const child = spawn(chrome, [
-    '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
+    ...(headless ? ['--headless=new'] : []),
+    '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
     '--no-first-run', '--no-default-browser-check', '--test-type', '--ignore-certificate-errors',
     `--user-data-dir=${profileDir}`, '--remote-debugging-port=0', ...args,
   ], { stdio: ['ignore', 'pipe', 'pipe'] });

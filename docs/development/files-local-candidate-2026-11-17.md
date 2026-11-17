@@ -33,6 +33,14 @@ request outside its own endpoints.
 
 ## Run it
 
+One command (opens the app visibly on this desktop with the fixture owner session):
+
+```sh
+cloud/files-drive/dev/run-local.sh   # optional first argument: sealed wwwroot directory
+```
+
+Or step by step:
+
 ```sh
 # Optional: rebuild the sealed bundle from this exact checkout (pinned SDK 10.0.401):
 DOTNET_ROOT=/tmp/files-dotnet-10.0.401 PATH=/tmp/files-dotnet-10.0.401:$PATH \

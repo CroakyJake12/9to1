@@ -172,6 +172,23 @@ async function main() {
       writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
       console.log(JSON.stringify({ status: report.status, failedStep: report.failedStep ?? null, report: reportPath }));
       exitCode = report.status === 'PASS' ? 0 : 1;
+    } else if (process.argv.includes('--open')) {
+      // Open the candidate in a visible Chrome on this machine's desktop. The
+      // fixture owner session is injected by CDP; nothing else can reach it.
+      const { launchChrome, attachPage } = await import(join(HERE, 'cdp.mjs'));
+      await candidate.connect();
+      const browser = await launchChrome({
+        chrome: arg('chrome', '/home/jacob/.cache/puppeteer/chrome/linux-157.0.8103.78/chrome-linux64/chrome'),
+        profileDir: join(state, 'visible-chrome'), headless: false,
+        args: [`--host-resolver-rules=MAP 9to1.uk:443 127.0.0.1:${candidate.tlsPort}`, '--window-size=1440,1200'],
+      });
+      const session = await attachPage(browser.client, FILES_ORIGIN + '/files/');
+      await session.send('Network.setCookie', { name: SESSION_COOKIE, value: OWNER_SID,
+        url: FILES_ORIGIN + '/files/', path: '/', secure: true, httpOnly: true, sameSite: 'None' });
+      await session.send('Page.reload');
+      console.log('Opened the Files candidate on the desktop with the fixture owner session. Ctrl-C closes both.');
+      await new Promise(resolveWait => process.once('SIGINT', resolveWait));
+      await browser.close().catch(() => {});
     } else {
       if (process.argv.includes('--connect')) await candidate.connect();
       console.log('Serving. Ctrl-C stops and discards all fixture state.');
