@@ -120,3 +120,32 @@ round-trip proven end to end (this very table's files went through Google's
 upload API with the app credential). Write buttons inside the app UI
 (New folder/rename/trash) ride the same DriveJsonAsync paths but have not each
 been individually clicked by a real mouse yet.
+
+## Frame-level verification of the tour, and a corrected clean Drive clip (22:0x UTC)
+
+Frame extraction of `9to1-ui-tour-2026-11-17.webm` showed **no in-app Drive listing frame**: the
+recorder grabbed screen region +0,0 while the 9to1 window sits at (985,214), so the tour mostly
+shows Firefox and the OpenCode window overlapping the app. That earlier tour stays in Drive as
+honest history; its "caveats" paragraph understated the problem — the region, not just the clicks,
+was wrong.
+
+Driving corrected: the Haven window can be **activated deterministically** (`_NET_ACTIVE_WINDOW`
+client message plus `set_input_focus`; `xprop -root _NET_ACTIVE_WINDOW` then confirms `0x300001b`),
+after which hovering the Google Drive sidebar row and pressing Enter activates it — the listing
+renders inside the app with real Drive items (1000011185.mp4, 9ttemp.png, the 9to1 specification
+documents, "Folders in Google Drive" with 9to1 Builds). This visually confirms the `015cdd44a`
+size-parse fix end to end in the running app, not just via the API observer.
+
+Re-recorded over the correct region (+985,214, 1680x1050) and uploaded through the app credential,
+independently re-listed via the Drive API:
+
+| Drive file | id |
+| --- | --- |
+| 9to1-drive-listing-live-2026-11-17.webm (13 s, Drive listing + hover; wheel-scroll synthetic events did not land) | 1Jy2PJi0XmlhuNRtVuheSXTy38c2Uczjc |
+| 9to1-drive-listing-inapp-full.png (full 2850x1820 window still, Drive listing, address chip "Google Drive") | 13B26GNXBjsrCTDNE36dd317vn84ihans |
+
+Evidence ladder for the Drive connection is now: token file + scope (tested) → Drive API list/upload
+via observer (real Drive verified) → **listing rendered in the app UI** (on-screen capture, this
+section) → owner's own real click reaching the provider earlier. Synthetic wheel scroll and the
+toolbar refresh in the clip did not register (known XTEST limitation); everything visible in the
+clip was produced by a real activation (hover + Enter).
