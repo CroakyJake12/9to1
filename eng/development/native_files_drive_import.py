@@ -50,7 +50,7 @@ def _read_private_json(source: Path, home: Path) -> dict:
 
     try:
         home_fd = setup._open_home(home)
-    except (OSError, setup.InstallError) as exc:
+    except (OSError, ValueError, setup.InstallError) as exc:
         raise ImportErrorSafe("Cannot safely access the private OAuth JSON file or its directories.") from exc
     directory_fd = home_fd
     try:
@@ -79,14 +79,14 @@ def _read_private_json(source: Path, home: Path) -> dict:
                 raise ImportErrorSafe("The OAuth JSON source changed or is too large.")
             try:
                 parsed = json.loads(data.decode("utf-8"), object_pairs_hook=_reject_duplicate_keys)
-            except (UnicodeError, ValueError) as exc:
+            except (UnicodeError, ValueError, RecursionError) as exc:
                 raise ImportErrorSafe("OAuth JSON is not valid UTF-8 JSON.") from exc
             if not isinstance(parsed, dict):
                 raise ImportErrorSafe("OAuth JSON must be a JSON object.")
             return parsed
         finally:
             os.close(fd)
-    except (OSError, setup.InstallError) as exc:
+    except (OSError, ValueError, setup.InstallError) as exc:
         raise ImportErrorSafe("Cannot safely access the private OAuth JSON file or its directories.") from exc
     finally:
         if directory_fd != home_fd:

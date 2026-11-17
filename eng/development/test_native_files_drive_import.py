@@ -174,6 +174,18 @@ class ImporterTest(unittest.TestCase):
         self.assertCountEqual(["OK", "REFUSED"], [out_a.strip(), out_b.strip()])
         self.assertEqual(ID + "\n", self.target.read_text())
 
+    def test_nul_filename_gives_fixed_safe_error_without_traceback(self):
+        bad = self.downloads / "bad\x00name.json"
+        with self.assertRaises(importer.ImportErrorSafe):
+            importer.import_desktop_json(bad, home=self.home)
+        self.assertFalse(self.target.exists())
+
+    def test_deeply_nested_json_refused_without_python_traceback(self):
+        self.source.write_text('[' * 1300 + '0' + ']' * 1300)
+        with self.assertRaises(importer.ImportErrorSafe):
+            self.run_import()
+        self.assertFalse(self.target.exists())
+
     def test_noninteractive_cli_refuses_without_revealing_source_path(self):
         with patch.object(sys, "stdin") as stdin, patch.object(sys, "stderr") as stderr:
             stdin.isatty.return_value = False
