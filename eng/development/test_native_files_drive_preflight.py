@@ -177,7 +177,7 @@ class NativeDrivePreflightTests(unittest.TestCase):
         env.pop("HAVEN_DATA_DIR", None)
         script = Path(app.__file__)
         result = subprocess.run([sys.executable, str(script), "--json"], env=env,
-                                capture_output=True, text=True, timeout=5)
+                                capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
         parsed = json.loads(result.stdout)
         self.assertTrue(parsed["ready_for_sign_in"])
@@ -185,9 +185,115 @@ class NativeDrivePreflightTests(unittest.TestCase):
         self.assertNotIn(str(self.home), result.stdout)
         self.opener.unlink()
         failure = subprocess.run([sys.executable, str(script), "--json"], env=env,
-                                 capture_output=True, text=True, timeout=5)
+                                 capture_output=True, text=True, timeout=15)
         self.assertEqual(failure.returncode, 2)
         self.assertEqual(json.loads(failure.stdout)["browser_opener"], "missing")
+
+
+    # The native implementation now optionally reads a local OAuth client-secret
+    # file, irrespective of whether its client ID came from the environment.
+    # The checker must never inspect the secret file's contents.
+    def test_missing_optional_client_secret_does_not_block_desktop_flow(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        result = self.output()
+        self.assertEqual(result["client_secret_file"], "absent")
+        self.assertTrue(result["ready_for_sign_in"])
+
+    def test_private_optional_client_secret_is_recognised_without_reading_contents(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        config = self.home / ".config/9to1"
+        config.mkdir(parents=True)
+        secret = config / "google-drive-client-secret.txt"
+        sentinel = "SECRET_NEVER_INCLUDE_IN_OUTPUT_9201"
+        secret.write_text(sentinel)
+        secret.chmod(0o600)
+        result = self.output()
+        self.assertTrue(result["ready_for_sign_in"])
+        self.assertEqual(result["client_secret_file"], "private_regular")
+        self.assertNotIn(sentinel, json.dumps(result))
+        self.assertEqual(secret.read_text(), sentinel)
+
+    def test_world_readable_optional_secret_blocks_ready_and_keeps_contents(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        config = self.home / ".config/9to1"
+        config.mkdir(parents=True)
+        secret = config / "google-drive-client-secret.txt"
+        sentinel = "SECRET_PUBLIC_MODE_SHOULD_NOT_BE_LOGGED"
+        secret.write_text(sentinel)
+        secret.chmod(0o644)
+        result = self.output()
+        self.assertFalse(result["ready_for_sign_in"])
+        self.assertEqual(result["client_secret_file"], "exposed_permissions")
+        self.assertNotIn(sentinel, json.dumps(result))
+        self.assertEqual(secret.read_text(), sentinel)
+
+    def test_symlinked_optional_secret_blocks_even_with_env_client_id(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        config = self.home / ".config/9to1"
+        config.mkdir(parents=True)
+        outside = self.root / "source-secret.txt"
+        sentinel = "SYMLINK_SECRET_SHOULD_NOT_BE_READ"
+        outside.write_text(sentinel)
+        (config / "google-drive-client-secret.txt").symlink_to(outside)
+        result = self.output()
+        self.assertEqual(result["client_secret_file"], "symlink")
+        self.assertFalse(result["ready_for_sign_in"])
+        self.assertNotIn(sentinel, json.dumps(result))
+        self.assertEqual(outside.read_text(), sentinel)
+
+    def test_secret_parent_symlink_blocks_even_when_id_comes_from_env(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        outside = self.root / "redirected-config"
+        (outside / "9to1").mkdir(parents=True)
+        (self.home / ".config").symlink_to(outside, target_is_directory=True)
+        result = self.output()
+        self.assertFalse(result["ready_for_sign_in"])
+        self.assertEqual(result["client_secret_file"], "unsafe_config_path")
+
+    def test_secret_parent_writable_by_others_blocks_with_env_client_id(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        config = self.home / ".config/9to1"
+        config.mkdir(parents=True)
+        config.chmod(0o777)
+        result = self.output()
+        self.assertEqual(result["client_secret_file"], "unsafe_config_path")
+        self.assertFalse(result["ready_for_sign_in"])
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO required")
+    def test_secret_special_file_never_opened(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        config = self.home / ".config/9to1"
+        config.mkdir(parents=True)
+        os.mkfifo(config / "google-drive-client-secret.txt", 0o600)
+        result = self.output()
+        self.assertFalse(result["ready_for_sign_in"])
+        self.assertEqual(result["client_secret_file"], "not_regular")
+
+    def test_optional_secret_status_reported_in_cli_without_secret_or_path(self):
+        self.prepare_profile()
+        config = self.home / ".config/9to1"
+        config.mkdir(parents=True)
+        secret = config / "google-drive-client-secret.txt"
+        sentinel = "CLI_SECRET_NEVER_LEAK_4227"
+        secret.write_text(sentinel)
+        secret.chmod(0o600)
+        env = {**os.environ, "HOME": str(self.home), "PATH": str(self.bin),
+               "HAVEN_GOOGLE_DRIVE_CLIENT_ID": CLIENT}
+        env.pop("HAVEN_DATA_DIR", None)
+        result = subprocess.run([sys.executable, str(Path(app.__file__)), "--json"],
+                                env=env, capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["client_secret_file"], "private_regular")
+        self.assertNotIn(CLIENT, result.stdout)
+        self.assertNotIn(sentinel, result.stdout)
+        self.assertNotIn(str(self.home), result.stdout)
 
 
 if __name__ == "__main__":

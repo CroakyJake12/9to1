@@ -17,6 +17,7 @@ import sys
 
 CLIENT_SUFFIX = ".apps.googleusercontent.com"
 EXPECTED_ACCOUNT_FILENAME = "google-drive-account.json"
+EXPECTED_SECRET_FILENAME = "google-drive-client-secret.txt"
 
 
 def inspect_file(path: Path, *, require_private: bool) -> str:
@@ -58,32 +59,53 @@ def inspect_directory(path: Path) -> str:
     return "private_directory"
 
 
-def get_client_status(home: Path, environment: dict[str, str]) -> str:
-    from_env = environment.get("HAVEN_GOOGLE_DRIVE_CLIENT_ID", "").strip()
-    if len(from_env) > 10:
-        return "configured_unverified" if from_env.endswith(CLIENT_SUFFIX) else "invalid_format"
-    # Follow native source's environment -> ~/.config/9to1/client-id file priority.
-    config_dir = home / ".config" / "9to1"
-    # A symlink in either user-config component can redirect a public ID.
-    for directory in (home / ".config", config_dir):
+def config_path_safe(home: Path) -> bool:
+    """Check the actual parent chain for *both* native OAuth config files.
+
+    A valid client ID supplied by an environment variable does NOT mean the
+    native app skips its optional client-secret file in ~/.config/9to1.
+    """
+    for directory in (home, home / ".config", home / ".config" / "9to1"):
         try:
             metadata = directory.lstat()
         except FileNotFoundError:
             continue
         except OSError:
-            return "unsafe_config_path"
+            return False
         if (not stat.S_ISDIR(metadata.st_mode) or
                 stat.S_IMODE(metadata.st_mode) & 0o022 or
                 (hasattr(os, "getuid") and metadata.st_uid != os.getuid())):
-            return "unsafe_config_path"
-    config = config_dir / "google-drive-client-id.txt"
+            return False
+    return True
+
+
+def get_client_secret_status(home: Path) -> str:
+    """Inspect only metadata for the optional confidential OAuth client secret.
+
+    The application currently reads this file directly if present. Never read
+    it, even when regular and private; this preflight cannot validate its value.
+    """
+    if not config_path_safe(home):
+        return "unsafe_config_path"
+    return inspect_file(home / ".config" / "9to1" / EXPECTED_SECRET_FILENAME,
+                        require_private=True)
+
+
+def get_client_status(home: Path, environment: dict[str, str]) -> str:
+    from_env = environment.get("HAVEN_GOOGLE_DRIVE_CLIENT_ID", "").strip()
+    if len(from_env) > 10:
+        return "configured_unverified" if from_env.endswith(CLIENT_SUFFIX) else "invalid_format"
+    # Match native source's environment -> public client-ID file priority.
+    if not config_path_safe(home):
+        return "unsafe_config_path"
+    config = home / ".config" / "9to1" / "google-drive-client-id.txt"
     state = inspect_file(config, require_private=False)
     if state == "absent":
         return "missing"
     if state != "regular":
         return "unsafe_config_path"
     try:
-        # Public OAuth client ID only; never read token/account files.
+        # Public OAuth client ID only; never read token/account/secret files.
         value = config.read_text(encoding="utf-8").strip()
     except (OSError, UnicodeError):
         return "unreadable_config"
@@ -101,7 +123,8 @@ def check(environment: dict[str, str] | None = None, *, home: Path | None = None
         if not profile.is_absolute():
             return {"ready_for_sign_in": False,
                     "client_id": "not_checked", "profile": "unsafe_relative_data_dir",
-                    "account_file": "not_checked", "browser_opener": "not_checked",
+                    "account_file": "not_checked", "client_secret_file": "not_checked",
+                    "browser_opener": "not_checked",
                     "actions": ["HAVEN_DATA_DIR must be an absolute directory."]}
     else:
         profile = home / ".local" / "share" / "9to1-development" / "profile"
@@ -137,6 +160,7 @@ def check(environment: dict[str, str] | None = None, *, home: Path | None = None
     else:
         credential_state = "not_checked"
     client_state = get_client_status(home, environment)
+    client_secret_state = get_client_secret_status(home)
     opener_state = "available" if shutil.which("xdg-open", path=environment.get("PATH", "")) else "missing"
     actions: list[str] = []
     if client_state != "configured_unverified":
@@ -145,6 +169,8 @@ def check(environment: dict[str, str] | None = None, *, home: Path | None = None
         actions.append("Review the native profile directory and its parents; prepare a real user-owned, non-symlink directory with mode 0700 before connecting. This checker does not modify it.")
     if credential_state not in ("absent", "private_regular", "not_checked"):
         actions.append("Do not use the existing native Drive credential file until a trusted local owner fixes its type, ownership or permission; never copy its contents into logs.")
+    if client_secret_state not in ("absent", "private_regular"):
+        actions.append("The optional native Google OAuth client-secret file or its directory is unsafe. A trusted local owner must correct it before sign-in; never copy or print the secret. Desktop clients do not need this file.")
     if opener_state != "available":
         actions.append("An installed xdg-open helper is required for this Ubuntu browser sign-in workflow.")
     actions.append("Even a passing preflight cannot verify OAuth consent, token validity, a Google Drive connection, or live file access.")
@@ -152,9 +178,11 @@ def check(environment: dict[str, str] | None = None, *, home: Path | None = None
                 client_state == "configured_unverified" and
                 profile_state == "private_directory" and
                 credential_state in ("absent", "private_regular") and
+                client_secret_state in ("absent", "private_regular") and
                 opener_state == "available"),
             "client_id": client_state, "profile": profile_state,
-            "account_file": credential_state, "browser_opener": opener_state,
+            "account_file": credential_state, "client_secret_file": client_secret_state,
+            "browser_opener": opener_state,
             "actions": actions}
 
 
@@ -167,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:
         print("Native Haven Files / Google Drive — read-only first-use preflight")
-        for name in ("client_id", "profile", "account_file", "browser_opener"):
+        for name in ("client_id", "profile", "account_file", "client_secret_file", "browser_opener"):
             print(f"  {name}: {result[name]}")
         print("  readiness: " + ("PREREQUISITES OBSERVED (not Google-tested)" if result["ready_for_sign_in"] else "OWNER ACTION REQUIRED"))
         for action in result["actions"]:
