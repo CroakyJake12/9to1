@@ -50,6 +50,36 @@ simply hasn't populated its menu items yet.
 Every row above is now implementable against a working popup
 infrastructure; before tonight none of them could appear at all.
 
+## Post-fix progress (same night, owner de-jank directive)
+
+Working on-screen after the overlay-popup fix (`780df2197`):
+
+- Browse context menu (Web Automations / Web Tools / Browse Settings)
+  and the tab-strip browser menu render at the pointer — first time
+  ever (`ux-fix-filerow.png`).
+- The full Files command menu renders with correct enabled/dimmed
+  states per the canonical command gate (`ux-ctx-newedit.png`).
+- Drive OAuth now tolerates secret-bearing console clients (optional
+  0600 secret file), always leaves the consent link at
+  `/tmp/9to1-drive-auth-url.txt`, and reports honestly when a
+  sandboxed session blocks launching a browser from inside the app
+  (`45ddd44a`). Row-attached context menu shipped (`a9dfba550`).
+
+Remaining defect proven tonight: right-clicking a Files **row**
+selects it (and shows details) but never raises ContextRequested —
+the row documents or the list swallow the event before the menu
+mechanism sees it. Four trigger variants tested (authored CUI
+container menu, list-attached ContextMenu press/release tunnel
+handlers, per-row ContextMenu); content and rendering are proven,
+the trigger is the open item. Haven **tab** right-click now has its
+pre-existing menu via the same fix path and works where the tab
+control receives ContextRequested.
+
+One instance (slot `ctx2-haven-1117`, run `42d53b65`) exited
+unprompted shortly after startup (~22:50 UTC) with no severity≥3 log
+line recorded — successor build runs stable (`50fc8c5c`); crash hunt
+queued with the input-trigger item.
+
 Evidence: `ux-*.png` captures in the PC session evidence directory
 (before/after pairs for tab right-click, Files row right-click,
 New/edit, sort combo, and the first menus that ever rendered:
