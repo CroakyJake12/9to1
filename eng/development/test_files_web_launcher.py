@@ -1,13 +1,19 @@
-import os, subprocess, tempfile, pathlib, unittest, stat
+import os, subprocess, tempfile, pathlib, unittest, stat, shutil
 HERE=pathlib.Path(__file__).resolve().parent
 SCRIPT=HERE/'files-web-launcher.sh'
 class LauncherTests(unittest.TestCase):
   def run_it(self,home,bindir,*args):
-    env={**os.environ,'HOME':str(home),'PATH':str(bindir)+':/usr/bin:/bin'}
+    env={**os.environ,'HOME':str(home),'PATH':str(bindir)}
     return subprocess.run(['/usr/bin/bash',str(SCRIPT),*args],env=env,text=True,capture_output=True)
   def fixture(self):
     tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
     root=pathlib.Path(tmp.name);home=root/'home';home.mkdir();bin=root/'bin';bin.mkdir()
+    # Use a hermetic executable search path: CI's installed Chromium must
+    # not override the disposable browser fixture on display-less runners.
+    for tool in ('dirname', 'pwd', 'basename', 'mkdir', 'cat', 'chmod', 'rm'):
+      installed=shutil.which(tool)
+      self.assertIsNotNone(installed,f'Missing required fixture utility: {tool}')
+      (bin/tool).symlink_to(installed)
     return home,bin
   def browser(self,bin,name):
     p=bin/name;p.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "${HOME}/called"\n');p.chmod(0o700)
@@ -27,6 +33,24 @@ class LauncherTests(unittest.TestCase):
     r=self.run_it(home,bin)
     self.assertEqual(r.returncode,0,r.stderr)
     self.assertEqual((home/'called').read_text(),'--app=https://9to1.uk/files/#/app.files\n')
+  def test_browser_priority_ignores_host_installations(self):
+    home,bin=self.fixture();self.browser(bin,'chromium');self.browser(bin,'google-chrome-stable')
+    r=self.run_it(home,bin,'--check')
+    self.assertEqual(r.returncode,0,r.stderr)
+    self.assertIn('Browser: google-chrome-stable',r.stdout)
+    self.assertFalse((home/'called').exists())
+  def test_xdg_open_only_fallback_uses_plain_https_url(self):
+    home,bin=self.fixture();self.browser(bin,'xdg-open')
+    r=self.run_it(home,bin)
+    self.assertEqual(r.returncode,0,r.stderr)
+    self.assertEqual((home/'called').read_text(),'https://9to1.uk/files/#/app.files\n')
+  def test_no_browser_or_opener_refuses_without_side_effects(self):
+    home,bin=self.fixture()
+    r=self.run_it(home,bin)
+    self.assertEqual(r.returncode,127,r.stderr)
+    self.assertIn('No supported browser or xdg-open',r.stderr)
+    self.assertFalse((home/'called').exists())
+    self.assertFalse((home/'.local').exists())
   def test_install_creates_noncredential_desktop_entry_and_refuses_overwrite(self):
     home,bin=self.fixture();self.browser(bin,'chromium')
     r=self.run_it(home,bin,'--install')
