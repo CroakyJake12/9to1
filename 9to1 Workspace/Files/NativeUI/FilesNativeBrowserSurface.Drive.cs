@@ -290,8 +290,13 @@ public sealed partial class FilesNativeBrowserSurface
 
     private void EnsureDriveAccountLoaded()
     {
-        if (_driveAccountLoaded) return;
+        // A credential created after startup (the usual first-connect order: the app
+        // offers Connect, the owner consents in the browser, the token lands later)
+        // must be picked up without restarting Files, so an empty cache is re-checked
+        // against the file every time rather than latched to "not connected".
+        if (_driveAccountLoaded && _driveAccount is not null) return;
         _driveAccountLoaded = true;
+        if (!File.Exists(DriveAccountPath)) { _driveAccount = null; return; }
         try
         {
             if (File.Exists(DriveAccountPath))
