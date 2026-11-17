@@ -146,6 +146,16 @@ in `docs/specification/owner-references/2026-11-17-native-files-drive/owner-corr
 
 ## Haven interactive development instance (same day)
 
+Native Files desktop-test attribution (19:40 UTC): the five failing
+Haven.Desktop.Tests (`FilesNativeBrowserRegisteredDownloadTests` ×4,
+`FilesNativeBrowserSurfaceTests.Native_CUI_lists_canonical_folders…`) were re-run
+against the base commit's `FilesNativeBrowserSurface.cs`, `FilesBrowser.cui` and
+`FilesNativeBrowserSurface.Tabs.cs` with the Drive partial removed from the build:
+the identical five failures reproduce with the same
+`Current Home ownership cannot authorize this Files commit` fixture error.
+They are therefore proven pre-existing relative to tonight's native Files
+commits (owner fixture attribution remains a separate investigation item).
+
 The current native app (modern Boards, Files and the rest of main) is running as
 the documented development copy, built from `9abbb98b1441` with
 `guarded_lowmem_build.py` (OK, 157.6 s, peak 598 MiB) into the frozen slot
