@@ -114,6 +114,36 @@ real listing, real thumbnail proxy, and one clearly named disposable folder thro
 create/rename/search/reload-persistence into a recoverable Trash end state — pre-existing
 Drive files are never modified and nothing is purged.
 
+## Evening realignment — native Files is the correct app (owner, 17 November 17:52 UTC)
+
+The owner directed a stop-and-recheck against the attached v3 specification and
+Interface Atlas. Verdict accepted: the target of the Drive goal is the native Haven
+desktop Files app (the one the owner uses on this PC — Locations/Trash sidebar,
+Folders in Files, canonical command bar). The web surface at `apps/Web/Files`
+remains the browser-hosted deployment of the same Worker-backed service, but the
+evening's Drive-connection goal is delivered into the native app. Decisions pinned
+in `docs/specification/owner-references/2026-11-17-native-files-drive/owner-correction.json`:
+
+- **Files-internal tabs withdrawn** (`0877e856`): the tab strip row, new/close
+  controls, "Open in new tab" and the tab-count footer are removed from
+  `FilesNativeBrowserSurface`/`FilesBrowser.cui`; files will move between
+  Haven tabs instead (Haven-tab drag integration is the named follow-up).
+- **Google Drive merged into native Files** (`abb2a5ca1`): Drive is an authorised
+  remote provider location over the canonical `HostedItemMetadata` contract —
+  one-time PKCE sign-in via the app's existing browser-launch OAuth pattern
+  (same platform abstraction Calendar/Mail use), refresh token kept in the
+  private profile directory (0600), then real provider-native browsing:
+  folder navigation with Back, search, create folder, rename, recoverable
+  Trash with restore, and Open that downloads the real bytes and hands them
+  to the system default application. Requires an owner-supplied Google
+  desktop OAuth client id (`HAVEN_GOOGLE_DRIVE_CLIENT_ID` or
+  `~/.config/9to1/google-drive-client-id.txt`); no secret is stored in Git.
+- Rebuilt and running as development slot `af22ca842-haven-1117` (guarded build
+  OK, source `abb2a5ca1`, reviewed-restart receipt `87a7c138`); the shipped
+  `HavenOS.Files.NativeUI.dll` embeds the Drive location and no longer contains
+  the tab-strip markup. Evidence tier: compiled and running; the live
+  Drive browse has NOT RUN until the owner completes the one-time consent.
+
 ## Haven interactive development instance (same day)
 
 The current native app (modern Boards, Files and the rest of main) is running as
