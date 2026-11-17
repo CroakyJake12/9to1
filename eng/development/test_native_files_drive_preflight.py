@@ -112,6 +112,51 @@ class NativeDrivePreflightTests(unittest.TestCase):
         self.assertEqual(result["account_file"], "private_regular")
         self.assertNotIn("connected", json.dumps(result).lower())
 
+    def test_account_status_uses_fd_metadata_not_racy_path_inspector(self):
+        self.prepare_profile()
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        token = self.profile / "google-drive-account.json"
+        token.write_text("SECRET_SENTINEL_MUST_NOT_BE_READ")
+        token.chmod(0o600)
+        with patch.object(app, "inspect_file", side_effect=AssertionError("stale pathname")):
+            result = self.output()
+        self.assertEqual(result["profile"], "private_directory")
+        self.assertEqual(result["account_file"], "private_regular")
+        self.assertTrue(result["ready_for_sign_in"])
+
+    def test_account_parent_swap_between_directory_and_inode_lookup_stays_anchored(self):
+        self.prepare_profile()
+        token = self.profile / "google-drive-account.json"
+        token.write_text("PRIVATE_TOKEN_NEVER_READ")
+        token.chmod(0o600)
+        other = self.root / "alternative-profile"
+        other.mkdir(mode=0o700)
+        exposed = other / "google-drive-account.json"
+        exposed.write_text("EXPOSED_TOKEN_NEVER_READ")
+        exposed.chmod(0o644)
+        original_open = os.open
+        swapped = [False]
+        def parent_swap(path, flags, *args, **kwargs):
+            if path == "google-drive-account.json" and kwargs.get("dir_fd") is not None:
+                self.profile.rename(self.profile.parent / "original-profile")
+                self.profile.symlink_to(other, target_is_directory=True)
+                swapped[0] = True
+            return original_open(path, flags, *args, **kwargs)
+        with patch.object(os, "open", side_effect=parent_swap):
+            state = app.inspect_profile_and_account(self.profile)
+        self.assertTrue(swapped[0], "Must exercise actual token lookup race window")
+        self.assertEqual(state, ("private_directory", "private_regular"))
+        self.assertEqual(exposed.read_text(), "EXPOSED_TOKEN_NEVER_READ")
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO required")
+    def test_account_fifo_metadata_is_refused_without_reading_or_blocking(self):
+        self.prepare_profile()
+        os.mkfifo(self.profile / "google-drive-account.json", 0o600)
+        self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = CLIENT
+        result = self.output()
+        self.assertEqual(result["account_file"], "not_regular")
+        self.assertFalse(result["ready_for_sign_in"])
+
     def test_bad_client_id_format_not_mistaken_for_desktop_connection(self):
         self.prepare_profile()
         self.environment["HAVEN_GOOGLE_DRIVE_CLIENT_ID"] = "https://attacker.example/oauth"

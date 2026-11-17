@@ -197,6 +197,68 @@ def get_client_status(home: Path, environment: dict[str, str]) -> str:
     return _read_public_client_id(home)
 
 
+def inspect_profile_and_account(profile: Path) -> tuple[str, str]:
+    """Inspect the native profile and token inode without reading credentials.
+
+    Linux O_PATH closes the path-based check/use race between ancestor
+    validation and credential metadata. It never opens the token for reading.
+    """
+    if not profile.is_absolute() or ".." in profile.parts or not hasattr(os, "O_PATH"):
+        return "uninspectable_ancestor", "not_checked"
+    components = profile.parts[1:]
+    if not components:
+        return "wrong_owner", "not_checked"
+    directory_fd = -1
+    credential_fd = -1
+    try:
+        directory_fd = os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        for index, component in enumerate(components):
+            opened_fd = os.open(component, os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC,
+                                dir_fd=directory_fd)
+            os.close(directory_fd)
+            directory_fd = opened_fd
+            info = os.fstat(directory_fd)
+            if stat.S_ISLNK(info.st_mode):
+                return "symlink_ancestor", "not_checked"
+            if not stat.S_ISDIR(info.st_mode):
+                status = "not_directory" if index == len(components) - 1 else "not_directory_ancestor"
+                return status, "not_checked"
+            if info.st_mode & 0o002 and not info.st_mode & stat.S_ISVTX:
+                return "writable_ancestor", "not_checked"
+            if index == len(components) - 1:
+                if info.st_uid != os.getuid():
+                    return "wrong_owner", "not_checked"
+                if stat.S_IMODE(info.st_mode) & 0o077:
+                    return "exposed_permissions", "not_checked"
+        try:
+            credential_fd = os.open(EXPECTED_ACCOUNT_FILENAME,
+                                    os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC,
+                                    dir_fd=directory_fd)
+        except FileNotFoundError:
+            return "private_directory", "absent"
+        info = os.fstat(credential_fd)
+        if stat.S_ISLNK(info.st_mode):
+            status = "symlink"
+        elif not stat.S_ISREG(info.st_mode):
+            status = "not_regular"
+        elif info.st_uid != os.getuid():
+            status = "wrong_owner"
+        elif stat.S_IMODE(info.st_mode) & 0o077:
+            status = "exposed_permissions"
+        else:
+            status = "private_regular"
+        return "private_directory", status
+    except FileNotFoundError:
+        return "absent", "not_checked"
+    except (OSError, ValueError):
+        return "uninspectable_ancestor", "not_checked"
+    finally:
+        if credential_fd >= 0:
+            os.close(credential_fd)
+        if directory_fd >= 0:
+            os.close(directory_fd)
+
+
 def check(environment: dict[str, str] | None = None, *, home: Path | None = None) -> dict[str, object]:
     environment = dict(os.environ if environment is None else environment)
     home = (Path.home() if home is None else Path(home)).absolute()
@@ -212,36 +274,9 @@ def check(environment: dict[str, str] | None = None, *, home: Path | None = None
     else:
         profile = home / ".local" / "share" / "9to1-development" / "profile"
 
-    # Test every existing component under HOME, not only the terminal profile,
-    # so a symlinked parent cannot silently redirect future token creation.
-    ancestor = profile
-    ancestor_problem = None
-    while ancestor != ancestor.parent:
-        try:
-            details = ancestor.lstat()
-        except FileNotFoundError:
-            details = None
-        except OSError:
-            ancestor_problem = "uninspectable_ancestor"
-            break
-        if details is not None:
-            if stat.S_ISLNK(details.st_mode):
-                ancestor_problem = "symlink_ancestor"
-                break
-            if not stat.S_ISDIR(details.st_mode) and ancestor != profile:
-                ancestor_problem = "not_directory_ancestor"
-                break
-            # A non-sticky world-writable parent could replace the private
-            # profile. Sticky /tmp is acceptable if the profile itself is 0700.
-            if details.st_mode & 0o002 and not details.st_mode & stat.S_ISVTX:
-                ancestor_problem = "writable_ancestor"
-                break
-        ancestor = ancestor.parent
-    profile_state = ancestor_problem or inspect_directory(profile)
-    if profile_state == "private_directory":
-        credential_state = inspect_file(profile / EXPECTED_ACCOUNT_FILENAME, require_private=True)
-    else:
-        credential_state = "not_checked"
+    # Inspect profile and saved-token metadata through one anchored path chain.
+    # Never open a token for reading or follow symlink-swapped parents.
+    profile_state, credential_state = inspect_profile_and_account(profile)
     client_state = get_client_status(home, environment)
     client_secret_state = get_client_secret_status(home)
     opener_state = "available" if shutil.which("xdg-open", path=environment.get("PATH", "")) else "missing"
