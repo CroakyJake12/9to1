@@ -90,6 +90,17 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             });
         };
         _items.DoubleTapped += async (_, _) => await InvokeFromNativeEventAsync("9to1.Files.Open");
+        // Drive-style right-click menu. Avalonia raises ContextRequested from the
+        // pointer-capture target, which for list selection is the generated
+        // ListBoxItem container (never the row content below it), so the menu is
+        // attached to each prepared container exactly once. Enabled states are
+        // re-read from the canonical command gate on every opening, so local pages
+        // and the Drive provider only ever offer operations they genuinely support.
+        _items.ContainerPrepared += (_, e) =>
+        {
+            if (e.Container is Control container && container.ContextMenu is null)
+                container.ContextMenu = BuildRowContextMenu();
+        };
         _items.KeyDown += async (_, args) =>
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Open"); } };
         _search.KeyDown += async (_, args) =>
@@ -845,11 +856,6 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _detailsRowLoaders.Add(loader, values);
         _detailsRowItems.Add(loader, item);
         var root = loaded.Root;
-        // Drive-style right-click menu on each row (the hit target where Avalonia
-        // raises ContextRequested). Availability is re-read from the same canonical
-        // command gate every time the menu opens, so local pages and the Drive
-        // provider both offer only the operations they genuinely support.
-        root.ContextMenu = BuildRowContextMenu();
         // Browse may detach this same Files view when selecting another tab.
         // Keep row bindings alive until the original surface performs its owning close.
         return root;
