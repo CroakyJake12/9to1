@@ -67,13 +67,17 @@ Working on-screen after the overlay-popup fix (`780df2197`):
 
 Remaining defect proven tonight: right-clicking a Files **row**
 selects it (and shows details) but never raises ContextRequested —
-the row documents or the list swallow the event before the menu
-mechanism sees it. Four trigger variants tested (authored CUI
-container menu, list-attached ContextMenu press/release tunnel
-handlers, per-row ContextMenu); content and rendering are proven,
-the trigger is the open item. Haven **tab** right-click now has its
-pre-existing menu via the same fix path and works where the tab
-control receives ContextRequested.
+SUPERSEDED minutes later: with the menu attached to the generated
+container (run `db9f6dd5`), the owner confirmed **right-click on a
+row opens the menu on the real mouse**. The failing verdicts produced
+by synthetic XTEST input were an artefact — on this display
+(Xwayland) synthetic pointer *releases* never arrive at all (proven
+with a minimal standalone repro: left and right releases both lost,
+with and without overlay popups), while Avalonia raises
+ContextRequested on release. Real input works; synthetic-input
+conclusions about menus are void. Open menu items on the list are now
+just the per-surface feature work above, plus the Haven-tab right-click
+needing the same owner eyeball.
 
 One instance (slot `ctx2-haven-1117`, run `42d53b65`) exited
 unprompted shortly after startup (~22:50 UTC) with no severity≥3 log
