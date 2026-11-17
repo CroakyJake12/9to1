@@ -99,3 +99,34 @@ against `https://9to1.uk` on the current sealed candidate: `sealedArtifactVerifi
 assets remains a separately approved owner action.
 
 Coordination: repair and dev tools receipted in issue #27; scopes released on publication.
+
+## Haven interactive development instance (same day)
+
+The current native app (modern Boards, Files and the rest of main) is running as
+the documented development copy, built from `9abbb98b1441` with
+`guarded_lowmem_build.py` (OK, 157.6 s, peak 598 MiB) into the frozen slot
+`~/.local/share/9to1-development/runtimes/9abbb98b1-haven-1117`, approved by
+`live_preview.py prepare` (`approved-haven-1117.json`) and started through the
+reviewed recovery of the retained 28 October failed exit
+(`REVIEWED_FAILED_EXIT_RESTART_NOT_NORMAL_RELOAD`). The app's own log shows
+`integrity-check-passed` (schema 29) and `startup-complete`.
+
+Relaunch after a normal close:
+
+```sh
+export DISPLAY=:1 DOTNET_ROOT=/home/jacob/.dotnet
+python3 -B eng/development/live_preview.py start \
+  --state-root "$HOME/.local/state/9to1-live-preview" \
+  --manifest "$HOME/.local/state/9to1-live-preview/approved-haven-1117.json"
+```
+
+After an abnormal exit the state demands a fresh reviewed `recover-failed` using
+the recorded `launch.json`/`exit.json` hashes, the same pattern as the retained
+`haven-1117-failure-review.json`.
+
+Close the window normally; the helper records the clean exit. `reload` (one-bug
+iteration without logout) additionally needs `wmctrl`, not currently installed —
+stop/start cycles work without new packages. The installed `/usr/lib/haven`
+package and its data are untouched; this copy uses the dedicated development
+profile only. Build/run receipts are private under `~/.local/share/9to1-development`
+and `~/.local/state/9to1-live-preview`.
