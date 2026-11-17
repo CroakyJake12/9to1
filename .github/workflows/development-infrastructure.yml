@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -B -m unittest discover -s eng/development -p 'test_files_candidate_release_gate.py' -v
+          python3 -B -m unittest discover -s eng/development -p 'test_files_*_gate.py' -v
       - name: Validate operational guards using actual filesystem and concurrent processes
         run: |
           mkdir -p "$RUNNER_TEMP/infrastructure-evidence"
