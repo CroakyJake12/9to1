@@ -224,6 +224,28 @@ export class DriveProvider {
     }
   }
 
+  // Same-origin presentation thumbnail. Google signs and serves thumbnails only to
+  // the credential holder, so the browser receives them exclusively through this
+  // bounded, metered, owner-checked proxy.
+  async thumbnail(id, signal) {
+    const canonical = guid(id);
+    const token = await this.#oauth.getAccessToken({ signal });
+    await this.#root(token, signal);
+    const googleId = remoteId(this.#store.googleId(canonical));
+    // Thumbnails are image bytes: use the raw bounded transport request, never the
+    // JSON reader, and keep the single metered attempt with its 64 KiB allowance.
+    const result = await this.#transport.request(requestUrl('v3', 'files/' + googleId + '/thumbnail', { pageSize: 'M' }), {
+      kind: 'thumbnail', signal, maxResponseBytes: 64 * 1024,
+      headers: { authorization: 'Bearer ' + token },
+    });
+    if (result.status === 401) await this.#oauth.rejectAccessToken?.(token);
+    if (result.status === 404) throw failure(404, 'ThumbnailUnavailable', 'This Files item has no thumbnail yet.');
+    if (result.status !== 200) throw providerError(result, this.#now());
+    const type = result.headers?.get('content-type')?.split(';')[0] ?? '';
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(type)) throw badMetadata();
+    return { bytes: result.bytes, contentType: type };
+  }
+
   async get(id, signal) {
     try {
       id = guid(id);

@@ -17,6 +17,7 @@ export const DRIVE_UNIT_COSTS = Object.freeze({
   upload: 50,
   download: 200,
   export: 200,
+  thumbnail: 5,
   // An app allowance for OAuth user-info, token and revocation requests, not a Drive cost.
   auth: 5,
 });

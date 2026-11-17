@@ -146,6 +146,13 @@ export class FilesProject {
           parentId: url.searchParams.get('parentId'), query: url.searchParams.get('query'),
           pageToken: url.searchParams.get('pageToken'), trash: url.searchParams.get('trash') === 'true',
         }, signal));
+        const thumbnail = /^\/items\/([0-9a-f-]+)\/thumbnail$/.exec(route);
+        if (thumbnail && request.method === 'GET') {
+          const image = await services.provider.thumbnail(thumbnail[1], signal);
+          return new Response(image.bytes, { headers: { 'content-type': image.contentType,
+            'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff',
+            'content-security-policy': "default-src 'none'", 'referrer-policy': 'no-referrer' } });
+        }
         const item = /^\/items\/([0-9a-f-]+)$/.exec(route);
         if (item && request.method === 'GET') return json(await services.provider.get(item[1], signal));
         if (route === '/operations' && request.method === 'POST') return json(await services.provider.mutate(await readJsonBody(request, 65536, signal), signal));

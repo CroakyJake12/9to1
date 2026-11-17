@@ -1050,7 +1050,24 @@ public sealed record FilesBrowserRow(HostedItemMetadata Metadata) : ICuiBindingC
     public bool TryGetValue(string path, out object? value)
     {
         value = path switch { "Id" => Metadata.Id.ToString(), "Name" => Metadata.Name,
-            "Details" => FilesBrowserController.ItemDetails(Metadata), _ => null };
-        return path is "Id" or "Name" or "Details";
+            "Details" => FilesBrowserController.ItemDetails(Metadata), "TileIcon" => TileIcon(Metadata), _ => null };
+        return path is "Id" or "Name" or "Details" or "TileIcon";
+    }
+
+    private static string TileIcon(HostedItemMetadata item)
+    {
+        if (item.Kind == HostedItemKind.Folder) return "icon:folder";
+        var contentType = item.ContentType ?? "";
+        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return "icon:image";
+        if (contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)) return "icon:play";
+        if (contentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)) return "icon:wave";
+        if (contentType.Contains("pdf", StringComparison.OrdinalIgnoreCase)) return "icon:study";
+        if (contentType.EndsWith("spreadsheet", StringComparison.OrdinalIgnoreCase) ||
+            contentType.Contains("spreadsheet", StringComparison.OrdinalIgnoreCase)) return "icon:table";
+        if (contentType.EndsWith("presentation", StringComparison.OrdinalIgnoreCase) ||
+            contentType.Contains("presentation", StringComparison.OrdinalIgnoreCase)) return "icon:slides";
+        if (contentType.EndsWith("document", StringComparison.OrdinalIgnoreCase) ||
+            contentType.Contains("document", StringComparison.OrdinalIgnoreCase)) return "icon:text";
+        return "icon:file";
     }
 }

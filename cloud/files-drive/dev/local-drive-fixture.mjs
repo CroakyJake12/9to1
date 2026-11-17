@@ -157,6 +157,11 @@ export function createDriveFixture({ projectId, clientId, ownerSub, ownerEmail }
     }
     const target = id === 'root' ? root : files.get(id);
     if (!target) return respondError(404, 'notFound');
+    if (method === 'GET' && action === 'thumbnail') {
+      if (target.mimeType === FOLDER || target.trashed) return respondError(404, 'noThumbnail');
+      const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+      return new Response(png, { headers: { 'content-type': 'image/png', 'content-length': String(png.byteLength) } });
+    }
     if (method === 'GET' && action === 'export') {
       const exported = new TextEncoder().encode('%PDF-1.4 local export fixture for ' + target.name + '\n%%EOF\n');
       return new Response(exported, { headers: { 'content-type': url.searchParams.get('mimeType') ?? 'application/pdf',

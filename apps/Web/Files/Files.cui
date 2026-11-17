@@ -136,7 +136,8 @@
               <Container Type="Wrap">
                 <Repeat id="files-grid-items" Source="{Binding Items}" As="item" Key="{Binding item.Id}">
                   <Container id="files-grid-tile" margin="0,8,14,8" Type="Vertical Stack" Width="208" Padding="10" Background="{Resource CuiPanelBrush}" CornerRadius="12">
-                    <Button id="files-grid-tile-name" content="{Binding item.Name}" action="SelectItem" horizontal-alignment="Stretch" Interactive="{Binding CanBrowse}" />
+                    <Image id="files-grid-tile-icon" Source="{Binding item.TileIcon}" Width="56" Height="56" HorizontalAlignment="Center" />
+                    <Button id="files-grid-tile-name" content="{Binding item.Name}" action="SelectItem" horizontal-alignment="Stretch" Interactive="{Binding CanBrowse}" margin="0,8,0,0" />
                     <Text id="files-grid-tile-details" text="{Binding item.Details}" text-wrapping="Wrap" margin="0,6,0,0" />
                   </Container>
                 </Repeat>
@@ -144,9 +145,12 @@
             </If>
             <If Condition="{Binding ShowAsList}">
               <Repeat id="files-list-items" Source="{Binding Items}" As="item" Key="{Binding item.Id}">
-                <Container id="files-list-row" margin="0,4" Type="Vertical Stack">
+                <Container id="files-list-row" margin="0,4" Type="Grid" ColumnSizes="Auto 1fr">
+                  <Image id="files-list-row-icon" Source="{Binding item.TileIcon}" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0" />
+                  <Container Type="Vertical Stack" Column="1">
                   <Button id="files-list-row-name" content="{Binding item.Name}" action="SelectItem" horizontal-alignment="Stretch" Interactive="{Binding CanBrowse}" />
                   <Text id="files-list-row-details" text="{Binding item.Details}" text-wrapping="Wrap" />
+                  </Container>
                 </Container>
               </Repeat>
             </If>

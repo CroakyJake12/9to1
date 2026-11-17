@@ -22,7 +22,7 @@ async function until(session, expression, timeoutMs, what) {
   return result;
 }
 
-export async function runJourney({ connect, fixture, tlsPort, state, chrome }) {
+export async function runJourney({ connect, api, fixture, tlsPort, state, chrome }) {
   const work = join(state, 'journey');
   mkdirSync(work, { recursive: true });
   const shots = join(work, 'screenshots');
@@ -237,6 +237,26 @@ export async function runJourney({ connect, fixture, tlsPort, state, chrome }) {
       await until(session, has('readme.txt'), 20000, 'folder contents restored');
       return { restoredTo: 'Local Fixture Folder', driveState:
         fixture.files.get([...fixture.files.values()].find(f => f.name === 'welcome.txt')?.id)?.trashed === false };
+    });
+
+    await step('thumbnail-route', async () => {
+      const listed = await (await api('/api/files/v1/items')).json();
+      const doc = listed.items.find(item => item.kind === 'File' && item.name === 'local-upload.txt');
+      if (!doc) throw new Error('uploaded row missing before thumbnail route check');
+      const response = await api('/api/files/v1/items/' + doc.id.value + '/thumbnail');
+      const bytes = Buffer.from(await response.arrayBuffer());
+      if (response.status !== 200 || !String(response.headers.get('content-type')).startsWith('image/')) {
+        throw new Error('Thumbnail route refused: ' + response.status);
+      }
+      const folder = listed.items.find(item => item.kind === 'Folder');
+      const folderProbe = await api('/api/files/v1/items/' + folder.id.value + '/thumbnail');
+      if (folderProbe.status !== 404) throw new Error('Folder thumbnail must fail closed, saw ' + folderProbe.status);
+      const wrongSession = await api('/api/files/v1/items/' + doc.id.value + '/thumbnail',
+        { headers: { cookie: '__Host-cake_session=' + 'W' + '0'.repeat(42) } });
+      if (wrongSession.status !== 403 && wrongSession.status !== 401) {
+        throw new Error('A non-owner session must not read thumbnails, saw ' + wrongSession.status);
+      }
+      return { bytes: bytes.byteLength, folderRefused: true, nonOwnerRefused: wrongSession.status };
     });
 
     await step('reload-persistence', async () => {
