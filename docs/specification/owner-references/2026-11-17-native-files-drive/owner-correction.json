@@ -1,0 +1,32 @@
+{
+  "schema": "9to1.owner-correction/v1",
+  "date": "2026-11-17",
+  "surface": "Files",
+  "title": "Native Haven Files is the correct app; withdraw Files-internal tabs; merge the Google Drive connection into it",
+  "owner_instructions": [
+    "STOP working on the separate web Files surface as the target of the Drive goal; the correct Files app is the native Haven desktop Files (the browser surface shown in the owner's 17 November screenshot: Locations Files/Trash sidebar, Folders in Files, Name/Date/Type/Size list, New-edit and Open command bar).",
+    "Remove the Files-internal tab strip (the second row of Files tabs). Files supports no tabs of its own; instead files will be dragged between Haven tabs.",
+    "Merge the Google Drive changes (the deployed cloud/files-drive connector work) into that native Files app: Google Drive becomes an authorised remote provider location in Files, per the v3 specification module 'Files and ten organisational folder views' (local and authorised remote providers, provider-native operations, recoverable Trash).",
+    "Resume the goal (fully functioning Files with an actual Drive connection) in the correct environment: the native Haven development instance on the PC, following the v3 specification and the Interface Atlas figures files / files-grid / files-context / files-organisation."
+  ],
+  "specification_authority": {
+    "v3_specification": "/home/jacob/Downloads/9to1_Development_Specification_v3.docx (owner attachment 17 November 2026)",
+    "interface_atlas": "/home/jacob/Downloads/9to1_Interface_Atlas.html (owner attachment 17 November 2026)",
+    "applicable_requirements": [
+      "V3-FILES-LAY-01 navigable locations, breadcrumbs, search, list/grid, selection, details/preview, genuine file operations, comfortable padding",
+      "V3-FILES-LAY-02/03 ten organisation types (Folder, Project, Sheet, Tree, Smart, Timeline, Pipeline, Catalogue, Stash, Matrix) with normal contents fallback",
+      "V3-FILES-FEA-01 provider-native create/open/import/rename/move/copy/delete/restore with truthful availability",
+      "V3-FILES-FEA-05 Preview and Open in App resolve the real owning app",
+      "V3-FILES-PER-01 recheck access; missing/revoked/quota conditions offer safe recovery",
+      "V3-OWNER-014 selected-row and content padding",
+      "figure rule: local availability and provider sync are separate statuses; a cloud outage does not block local folders"
+    ],
+    "note": "The owner states the v3 package predates the Google Drive connector request by about two weeks, so the connector itself is additional owner intent, not a contradiction."
+  },
+  "implementation_decision": {
+    "tab_withdrawal": "FilesBrowser.cui row 0 (folder tabs), the new-tab and per-tab close controls, the 'Open in new tab' command and the tab-count status text are withdrawn. The folder-tab state machine remains temporarily so history/session code stays untouched while Haven-tab drag integration is designed.",
+    "drive_provider": "Google Drive is added as a Files location over the canonical HostedItemMetadata contract (FilesLocationKind.ConnectedCloud semantics): one-time PKCE OAuth sign-in through the app's existing browser-launch pattern (like Calendar/Mail), access refreshed from a profile-stored refresh token, and provider-native list/navigate/search/create/rename/trash/restore/download against the owner's real Drive. Credentials stay in the owner's private profile directory; nothing is committed.",
+    "authentication_choice": "A direct provider connection needs a Google OAuth desktop client id supplied by the owner (HAVEN_GOOGLE_DRIVE_CLIENT_ID environment variable or ~/.config/9to1/google-drive-client-id.txt). The deployed cloud Worker (9to1.uk) keeps serving the browser Files app; the native connection is provider-direct per the specification's provider-connections prerequisite."
+  },
+  "status": "Pinned before coding (owner messages of 17 November 2026, 17:52-17:59 UTC). Implementation landed the same evening; on-screen verification pending the owner's live session."
+}

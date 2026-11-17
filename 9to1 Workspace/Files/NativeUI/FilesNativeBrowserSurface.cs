@@ -203,7 +203,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
 
     public bool TryGetValue(string path, out object? value)
     {
-        if (TryGetFolderTabsValue(path, out value) || TryGetSharingValue(path, out value) || TryGetTextPreviewValue(path, out value)) return true;
+        if (TryGetDriveValue(path, out value) || TryGetFolderTabsValue(path, out value) || TryGetSharingValue(path, out value) || TryGetTextPreviewValue(path, out value)) return true;
         value = path switch
         {
             "NavigationColumns" => Bounds.Width < 540 ? "Auto 1fr" : "Auto 1fr 260",
@@ -273,7 +273,9 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private bool CanOpenSelection => _page is { IsTrash: false } && _items.SelectedItem is HostedItemMetadata selected &&
         (selected.Kind == HostedItemKind.Folder || CanOpenTextSelection || selected.Kind == HostedItemKind.File && _packages is not null &&
          Path.GetExtension(selected.Name).ToLowerInvariant() is ".exe" or ".msi" or ".apk");
-    public bool? IsActionAvailable(string command) => IsFolderTabCommand(command) ? FolderTabActionAvailable(command)
+    public bool? IsActionAvailable(string command) => IsDriveCommand(command) ? DriveActionAvailable(command)
+        : InDrive ? DriveInPageActionAvailable(command)
+        : IsFolderTabCommand(command) ? FolderTabActionAvailable(command)
         : IsSharingCommand(command) ? SharingActionAvailable(command) : command switch
     {
         "9to1.Files.OpenSidebarFolder" or "9to1.Files.Home" or "9to1.Files.Trash" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available && _pendingMutation is null,
@@ -307,6 +309,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (InDrive || IsDriveCommand(command))
+            return new(TrackOriginalAsync(() => InvokeDriveAsync(command, parameter, cancellationToken)));
         if (command == "9to1.Files.OpenSidebarFolder")
         {
             Dispatcher.UIThread.VerifyAccess(); cancellationToken.ThrowIfCancellationRequested();

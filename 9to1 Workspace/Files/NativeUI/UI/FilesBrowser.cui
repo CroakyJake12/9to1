@@ -31,6 +31,9 @@
           <Text Text="Locations" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 4" />
           <Button id="files-home" Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" AccessibleName="Go to Files root" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
           <Button id="files-trash" Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" AccessibleName="Browse recoverable deleted items" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
+          <Button id="files-drive" Content="Google Drive" Action="9to1.Files.Drive" Interactive="{Binding CanDrive}" AccessibleName="Browse Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
+          <Button id="files-drive-connect" Content="Connect Google Drive…" Action="9to1.Files.Drive.Connect" IsVisible="{Binding DriveConnectVisible}" AccessibleName="Connect your Google Drive account" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
+          <Button id="files-drive-disconnect" Content="Disconnect Google Drive" Action="9to1.Files.Drive.Disconnect" IsVisible="{Binding DriveConnected}" AccessibleName="Disconnect Google Drive" HorizontalContentAlignment="Left" MinHeight="36" Chromeless="True" />
           <Text Text="{Binding SidebarHeading}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" Margin="8 16 8 4" TextWrapping="Wrap" />
           <Repeat Source="{Binding SidebarFolders}" As="folder" Key="{Binding folder.id}" Panel="Vertical Stack">
             <Button Action="OpenSidebarFolder" Interactive="{Binding CanNavigate}" AccessibleName="{Binding folder.openName}" HorizontalContentAlignment="Left" MinHeight="34" Chromeless="True">
@@ -43,6 +46,8 @@
             <Button Content="Locations" Type="Menu Item" IsVisible="{Binding CompactLayout}" AccessibleName="Files locations">
               <Button Content="Files" Action="9to1.Files.Home" Interactive="{Binding CanNavigate}" />
               <Button Content="Trash" Action="9to1.Files.Trash" Interactive="{Binding CanNavigate}" />
+              <Button Content="Google Drive" Action="9to1.Files.Drive" Interactive="{Binding CanDrive}" />
+              <Button Content="Connect Google Drive…" Action="9to1.Files.Drive.Connect" IsVisible="{Binding DriveConnectVisible}" />
             </Button>
             <Button id="files-open" Content="Open" Action="9to1.Files.Open" Interactive="{Binding CanOpen}" />
             <Button id="files-preview" Content="Preview" Action="PreviewSelectedText" Interactive="{Binding CanPreviewText}" AccessibleName="Read-only preview of selected text file" />
