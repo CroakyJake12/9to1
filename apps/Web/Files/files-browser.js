@@ -156,7 +156,7 @@ export function createFilesBrowserBridge({
 
     function createGroup(id) {
         if (groups.has(id)) throw new Error("Files request group already exists.");
-        groups.set(id, { active: true, enrolled: false, requests: new Map(), files: new Map(), picking: false });
+        groups.set(id, { active: true, enrolled: false, requests: new Map(), files: new Map(), picking: false, drainWork: null });
     }
 
     function enroll(id) {
@@ -177,8 +177,13 @@ export function createFilesBrowserBridge({
         const group = groups.get(id);
         if (!group) return;
         if (group.active) throw new Error("Revoke Files requests before closing.");
-        await Promise.allSettled([...group.requests.values()].map(entry => entry.work));
-        groups.delete(id);
+        // Every closer must join the first drain's original requests, even if
+        // their finalizers have already removed them from the live request map.
+        // Retire only this group; a late closer must never delete a reopened one.
+        group.drainWork ??= Promise.allSettled([...group.requests.values()].map(entry => entry.work)).then(() => {
+            if (groups.get(id) === group) groups.delete(id);
+        });
+        await group.drainWork;
     }
 
     function cancel(groupId, requestId) {
