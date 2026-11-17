@@ -56,6 +56,37 @@ try {
   await session.send('Page.enable'); await session.send('Network.enable');
   await session.send('Page.addScriptToEvaluateOnNewDocument', { source: HELPER });
   await session.send('Page.navigate', { url: app });
+  // Chrome windows opened from a background session can stay unmapped under the
+  // compositor; force-map and focus the owner's sign-in window so it is visible.
+  await new Promise(r => setTimeout(r, 2500));
+  const { execFile } = await import('node:child_process');
+  const raise = `
+from Xlib import display, X
+from Xlib.protocol import event
+import time
+d = display.Display(); root = d.screen().root
+def walk(win):
+    out = []
+    try: children = win.query_tree().children
+    except Exception: return out
+    for c in children:
+        try: cls = c.get_wm_class()
+        except Exception: cls = None
+        if cls and 'chrome' in str(cls[0] or '').lower(): out.append(c)
+        out += walk(c)
+    return out
+for w in walk(root):
+    def send(name, payload):
+        a = d.intern_atom(name)
+        w.send_event(event.ClientMessage(window=w.id, client_type=a, message_type=a, format=32, data=(32, payload)))
+    w.map(); w.configure(stack_mode=X.Above)
+    send('_NET_WM_STATE', (0, d.intern_atom('_NET_WM_STATE_HIDDEN'), 0, 0, 0))
+    send('_NET_WM_STATE', (1, d.intern_atom('_NET_WM_STATE_DEMANDS_ATTENTION'), 0, 0, 0))
+    send('_NET_ACTIVE_WINDOW', (2, int(time.time()), 0, 0, 0))
+    w.set_input_focus(X.RevertToParent, X.CurrentTime)
+d.sync(); print('raised', len(walk(root)))
+`;
+  await new Promise((resolveRaise) => execFile('python3', ['-c', raise], () => resolveRaise()));
   // Human step: the owner signs in once. Poll for the real session cookie only.
   await pollFor(session, `(async () => { const c = await document.cookie; return true; })()`, 5000).catch(() => true);
   let signed = false;
