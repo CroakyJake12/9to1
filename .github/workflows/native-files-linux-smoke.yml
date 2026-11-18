@@ -65,7 +65,7 @@ jobs:
       - name: Install disposable headless X11 and window manager on CI runner
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb openbox wmctrl dbus-x11
+          sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils dbus-x11
       - name: Launch the actual published apphost in a clean private profile and observe its own X11 window
         shell: bash
         env:

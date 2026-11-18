@@ -6,8 +6,10 @@ from pathlib import Path
 import stat
 import tempfile
 import unittest
+from unittest.mock import patch
+import subprocess
 
-from native_files_linux_smoke import owned_windows, private_child, run_smoke
+from native_files_linux_smoke import owned_windows, x11_windows, private_child, run_smoke
 
 
 class NativeFilesLinuxSmokeTests(unittest.TestCase):
@@ -17,6 +19,24 @@ class NativeFilesLinuxSmokeTests(unittest.TestCase):
 
     def test_rejects_partial_or_nonwindow_rows(self):
         self.assertEqual(owned_windows("0x01 0 123\nwindow 0 123 host Haven", 123), [])
+
+    def test_xprop_exact_process_pid_and_unrelated_window(self):
+        outputs = [
+            subprocess.CompletedProcess([], 0, "_NET_CLIENT_LIST(WINDOW): window id # 0x0001, 0x0002", ""),
+            subprocess.CompletedProcess([], 0, "_NET_WM_PID(CARDINAL) = 1234", ""),
+            subprocess.CompletedProcess([], 0, "_NET_WM_PID(CARDINAL) = 123", ""),
+        ]
+        with patch("native_files_linux_smoke.subprocess.run", side_effect=outputs) as proc:
+            self.assertEqual(x11_windows(123), ["0x0002"])
+        self.assertEqual(proc.call_count, 3)
+
+    def test_xprop_no_property_fails_closed(self):
+        outputs = [
+            subprocess.CompletedProcess([], 0, "_NET_CLIENT_LIST(WINDOW): window id # 0x04", ""),
+            subprocess.CompletedProcess([], 0, "_NET_WM_PID: not found.", ""),
+        ]
+        with patch("native_files_linux_smoke.subprocess.run", side_effect=outputs):
+            self.assertEqual(x11_windows(123), [])
 
     def test_private_child_is_exclusive_and_mode_private(self):
         with tempfile.TemporaryDirectory() as tmp:

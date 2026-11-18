@@ -5,7 +5,7 @@
 1. Run only the original `Haven.Desktop` host (which references `HavenOS.Files.NativeUI`) from the existing repository, not a detached Files app.
 2. Compile/publish the real host for linux-x64 using the repository's `9to1 Workspace/shared/eng/publish-haven-linux.sh`, .NET `10.0.401`, pinned Avalonia submodules and original dependency graph.
 3. Under an ephemeral GitHub Actions Linux runner, start a clean private HOME/XDG profile with no owner's files, OAuth configuration, account or saved token.
-4. Under Xvfb, observe a real visible X11 window owned by **the launched Haven apphost PID** using `wmctrl -lp`. The actual process must survive a stability check. Terminate only its freshly created process group.
+4. Under Xvfb, observe a real visible X11 window owned by **the launched Haven apphost PID** using `xprop` root/window properties. The actual process must survive a stability check. Terminate only its freshly created process group.
 5. Publish raw source commit, native package SHA and a non-secret PASS/FAIL summary in GitHub Actions logs; do **not** upload a native binary or owner profile to the public repository.
 
 ## What this does and does not prove

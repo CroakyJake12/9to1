@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import signal
 import stat
@@ -31,13 +32,25 @@ def owned_windows(wmctrl_output: str, pid: int) -> list[str]:
 
 
 def x11_windows(pid: int) -> list[str]:
-    result = subprocess.run(
-        ["/usr/bin/wmctrl", "-lp"], capture_output=True, text=True,
-        timeout=4, check=False,
+    """Probe window IDs and owning PIDs via X11 properties (no wmctrl dependency)."""
+    root = subprocess.run(
+        ["/usr/bin/xprop", "-root", "_NET_CLIENT_LIST"],
+        capture_output=True, text=True, timeout=4, check=False,
     )
-    if result.returncode != 0:
+    if root.returncode != 0:
         return []
-    return owned_windows(result.stdout, pid)
+    windows: list[str] = []
+    for window_id in re.findall(r"0x[0-9a-fA-F]+", root.stdout)[:128]:
+        details = subprocess.run(
+            ["/usr/bin/xprop", "-id", window_id, "_NET_WM_PID"],
+            capture_output=True, text=True, timeout=4, check=False,
+        )
+        if details.returncode != 0:
+            continue
+        match = re.search(r"_NET_WM_PID\(CARDINAL\)\s*=\s*(\d+)", details.stdout)
+        if match and int(match.group(1)) == pid:
+            windows.append(window_id)
+    return windows
 
 
 def private_child(parent: Path, name: str) -> Path:
