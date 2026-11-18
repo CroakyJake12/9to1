@@ -74,6 +74,14 @@ public sealed partial class MainView
                 case "close-others": await original.AwaitAsync(CloseTabsAsync(OpenTabs.Where(item => !ReferenceEquals(item, tab)).ToArray())); break;
                 case "close-left": await original.AwaitAsync(CloseTabsAsync(OpenTabs.Take(OpenTabs.IndexOf(tab)).ToArray())); break;
                 case "close-right": await original.AwaitAsync(CloseTabsAsync(OpenTabs.Skip(OpenTabs.IndexOf(tab) + 1).ToArray())); break;
+                case "new-tab": AddNewTab(); break;
+                case "reload": if (tab.Page is Views.Pages.Browser.BrowserPage browserPage) browserPage.ReloadCommand.Execute(null); break;
+                case "pin":
+                    // CTX-01 Pin/Unpin: a pinned tab stays put and cannot be closed until unpinned.
+                    tab.IsPinned = !tab.IsPinned;
+                    RefreshTopRailTabs();
+                    QueueWorkspaceSessionSave();
+                    break;
                 default:
                     if (request.Command.StartsWith("move-group:", StringComparison.Ordinal) &&
                         Guid.TryParse(request.Command["move-group:".Length..], out var groupId))
@@ -378,11 +386,12 @@ public sealed partial class MainView
         }
     }
 
-    private Task<bool> TryCloseTabAsync(WorkspaceTabViewModel? tab) =>
-        _originalShellWork.RunAsync(async original =>
+    private async Task<bool> TryCloseTabAsync(WorkspaceTabViewModel? tab)
+    {
+        var closed = await _originalShellWork.RunAsync(async original =>
     {
         original.BindPublicationGuard(() => !IsDisposed);
-        if (tab is null || !tab.IsCloseable || tab.IsPinned || tab.IsProtected || OpenTabs.Count <= 1) return false;
+        if (tab is null || !tab.IsCloseable || tab.IsPinned || tab.IsProtected) return false;
         var documentPreflight = CaptureOriginalDocumentTabClosePreflight(tab);
         if (documentPreflight.HasDocuments)
         {
@@ -397,7 +406,7 @@ public sealed partial class MainView
         {
             Dispatcher.UIThread.VerifyAccess();
             original.DemandPublication();
-            if (!OpenTabs.Contains(tab) || !tab.IsCloseable || tab.IsPinned || tab.IsProtected || OpenTabs.Count <= 1 ||
+            if (!OpenTabs.Contains(tab) || !tab.IsCloseable || tab.IsPinned || tab.IsProtected ||
                 (documentPreflight.HasDocuments && !documentPreflight.IsCurrentAndPrepared)) return false;
             if (ReferenceEquals(_secondaryTab, tab)) RemoveSplitView();
             // Detachment callbacks can begin accepted work or change a retained draft.
@@ -420,13 +429,23 @@ public sealed partial class MainView
             var index = OpenTabs.IndexOf(tab);
             OpenTabs.Remove(tab);
             if (ReferenceEquals(SelectedTab, tab))
-                SelectedTab = OpenTabs.ElementAtOrDefault(Math.Clamp(index - 1, 0, Math.Max(0, OpenTabs.Count - 1))) ?? OpenTabs.FirstOrDefault();
+            {
+                // HAV-TAB-003: selecting the nearest valid tab to the RIGHT, then to the left.
+                // After removal the right neighbour occupies the closed tab's index.
+                SelectedTab = OpenTabs.ElementAtOrDefault(Math.Clamp(index, 0, Math.Max(0, OpenTabs.Count - 1))) ?? OpenTabs.FirstOrDefault();
+            }
             RaisePropertyChanged(nameof(IsHorizontalTabsVisible));
+            _focusTopRailTabAfterRefresh = true; // HAV-TAB-003: focus lands on the resulting active tab.
             RefreshTopRailTabs();
             QueueWorkspaceSessionSave();
             return true;
         });
     });
+        // HAV-TAB-001/003: there is no fixed Home tab; closing the last tab opens the New tab
+        // surface (host-newtab) and it becomes the active tab.
+        if (closed && OpenTabs.Count == 0) AddNewTab();
+        return closed;
+    }
 
     private static bool HasUnsavedWork(object page) => page switch
     {

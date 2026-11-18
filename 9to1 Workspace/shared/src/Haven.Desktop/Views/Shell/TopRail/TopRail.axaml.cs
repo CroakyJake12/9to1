@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Automation;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -242,6 +243,17 @@ public sealed partial class TopRail : UserControl, IDisposable
 
     private Control BuildTab(TopRailTab tab)
     {
+        // HAV-TAB-002 / THEME-004: icon, LEFT-aligned bold title, then a visible close X that is
+        // separately focusable from the navigation target and carries an accessible name.
+        var lead = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 6d,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        if (!string.IsNullOrWhiteSpace(tab.IconKey))
+            lead.Children.Add(new HavenIcon { IconKey = tab.IconKey, Width = 14, Height = 14, VerticalAlignment = VerticalAlignment.Center });
         var title = new TextBlock
         {
             Text = tab.Title,
@@ -250,7 +262,7 @@ public sealed partial class TopRail : UserControl, IDisposable
             Foreground = tab.IsSelected ? ResourceBrush("HavenAccentBrush", Colors.Black) : ResourceBrush("HavenTextSecondaryBrush", Colors.Gray),
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            MaxWidth = 180
+            MaxWidth = 150
         };
 
         var underline = new HavenAdaptiveSurface
@@ -262,30 +274,58 @@ public sealed partial class TopRail : UserControl, IDisposable
             Background = tab.IsSelected
                 ? ResourceBrush("HavenAccentBrush", Colors.Black)
                 : Brushes.Transparent,
-            HorizontalAlignment = HorizontalAlignment.Center
+            HorizontalAlignment = HorizontalAlignment.Left
         };
 
         var titleAndUnderline = new StackPanel
         {
             Spacing = 0,
-            HorizontalAlignment = HorizontalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Left,
             Children = { title, underline }
         };
+        lead.Children.Add(titleAndUnderline);
+
+        var content = new DockPanel { LastChildFill = true };
+        if (tab.IsCloseable)
+        {
+            var close = new Button
+            {
+                Content = new HavenIcon { IconKey = "close", Width = 11, Height = 11 },
+                Width = 22,
+                Height = 30,
+                Padding = new Thickness(0),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(6, 0, 0, 0)
+            };
+            AutomationProperties.SetName(close, $"Close {tab.Title}");
+            close.Click += (_, _) =>
+            {
+                Fire("TopRail.Tabs.CloseTab");
+                TabCloseRequested?.Invoke(this, tab.Key);
+            };
+            DockPanel.SetDock(close, Dock.Right);
+            content.Children.Add(close);
+        }
+        content.Children.Add(lead);
 
         var button = new HavenTabButton
         {
-            Content = titleAndUnderline,
+            Content = content,
             IsSelected = tab.IsSelected,
             MinWidth = 72,
-            MaxWidth = 230,
+            MaxWidth = 260,
             Height = 48,
-            Padding = new Thickness(12, 5, 12, 3),
+            Padding = new Thickness(12, 5, 10, 3),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             CornerRadius = new CornerRadius(0),
+            HorizontalContentAlignment = HorizontalAlignment.Left,
             Tag = tab.Key
         };
         ToolTip.SetTip(button, tab.Title);
+        AutomationProperties.SetName(button, tab.Title);
         button.Click += (_, _) => InvokeTabSelection(tab.Key);
         button.PointerPressed += (_, args) =>
         {
@@ -513,7 +553,9 @@ public sealed record TopRailTab(
     bool IsCloseable,
     Guid? GroupId = null,
     string? GroupName = null,
-    bool IsGroupCollapsed = false);
+    bool IsGroupCollapsed = false,
+    bool IsPinned = false,
+    bool CanReload = false);
 
 public sealed class TabRenameRequestedEventArgs(string key, string title) : EventArgs
 {

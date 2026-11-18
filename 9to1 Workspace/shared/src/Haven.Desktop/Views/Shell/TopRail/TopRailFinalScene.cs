@@ -61,6 +61,7 @@ internal sealed class TopRailFinalScene
         TabStrip.SetValue(HavenProperties.Width, HavenLength.Px(72));
         TabStrip.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         TabStrip.ItemInvoked += (_, key) => TabSelected?.Invoke(this, key);
+        TabStrip.ItemCloseRequested += (_, key) => TabCloseRequested?.Invoke(this, key);
         TabStrip.ItemSecondaryInvoked += (_, key) =>
         {
             var tab = _tabs.FirstOrDefault(x => x.Key.Equals(key, StringComparison.Ordinal));
@@ -186,11 +187,22 @@ internal sealed class TopRailFinalScene
     public IReadOnlyList<TopRailTab> Tabs => _tabs;
     internal PopupMenu? ActiveTabMenu => _activeTabMenu;
 
+    /// <summary>The visible button for the currently selected tab; used to move keyboard focus after a close (HAV-TAB-003).</summary>
+    public Haven.UI.Components.Button? SelectedTabButton
+    {
+        get
+        {
+            for (var i = 0; i < _tabs.Count && i < TabStrip.ItemButtons.Count; i++)
+                if (_tabs[i].IsSelected) return TabStrip.ItemButtons[i];
+            return null;
+        }
+    }
+
     public void SetTabs(IReadOnlyList<TopRailTab> tabs)
     {
         _activeTabMenu?.Dismiss();
         _tabs = tabs.ToArray();
-        TabStrip.SetItems(_tabs.Select(x => new HavenTabStripItem(x.Key, x.Title, x.IsSelected, HasContextMenu: true)).ToArray());
+        TabStrip.SetItems(_tabs.Select(x => new HavenTabStripItem(x.Key, x.Title, x.IsSelected, HasContextMenu: true, x.IconKey, x.IsCloseable)).ToArray());
         TabStrip.SetValue(HavenProperties.Width, HavenLength.Px(PreferredTabStripWidth(_tabs)));
     }
 
@@ -208,9 +220,13 @@ internal sealed class TopRailFinalScene
         _activeTabMenu?.Dismiss();
         var items = new List<PopupMenuItem>
         {
+                new("New tab", () => RaiseCommand(tab, "new-tab"), IconKey: "plus"),
+                new(tab.IsPinned ? "Unpin tab" : "Pin tab", () => RaiseCommand(tab, "pin"), IconKey: "pin"),
+                new("Reload", () => RaiseCommand(tab, "reload"), IconKey: "refresh", Enabled: tab.CanReload),
                 new("Rename tab", () => TabRenameRequested?.Invoke(this, tab), IconKey: "edit"),
                 new("Generate name with AI", () => RaiseCommand(tab, "generate-name"), IconKey: "sparkles"),
                 new("Duplicate tab", () => RaiseCommand(tab, "duplicate"), IconKey: "copy"),
+                new("Mute tab (this tab has no audio stream yet)", () => { }, IconKey: "bell", Enabled: false),
                 new("Move tab left", () => RaiseCommand(tab, "move-left"), IconKey: "chevron-left", Enabled: index > 0),
                 new("Move tab right", () => RaiseCommand(tab, "move-right"), IconKey: "chevron-right", Enabled: index < _tabs.Count - 1),
                 new("Open in Split View", () => RaiseCommand(tab, "split"), IconKey: "window"),
@@ -220,7 +236,8 @@ internal sealed class TopRailFinalScene
                 new("Remove from Group", () => RaiseCommand(tab, "remove-group"), IconKey: "close", Enabled: tab.GroupId is not null),
                 new("Rename Group", () => RaiseCommand(tab, "rename-group"), IconKey: "edit", Enabled: tab.GroupId is not null),
                 new(tab.IsGroupCollapsed ? "Expand Group" : "Collapse Group", () => RaiseCommand(tab, "toggle-group"), IconKey: "folder", Enabled: tab.GroupId is not null),
-                new("Dissolve Group", () => RaiseCommand(tab, "dissolve-group"), IconKey: "close", Enabled: tab.GroupId is not null)
+                new("Dissolve Group", () => RaiseCommand(tab, "dissolve-group"), IconKey: "close", Enabled: tab.GroupId is not null),
+                new("Reopen closed tab (recently closed tabs are not tracked yet)", () => { }, IconKey: "history", Enabled: false)
         };
         foreach (var group in _tabs.Where(item => item.GroupId is not null && item.GroupId != tab.GroupId)
                      .DistinctBy(item => item.GroupId))
@@ -304,7 +321,8 @@ internal sealed class TopRailFinalScene
     private static double PreferredTabStripWidth(IReadOnlyList<TopRailTab> tabs)
     {
         if (tabs.Count == 0) return 72d;
-        var width = tabs.Sum(tab => Math.Clamp((Math.Min(tab.Title.Length, 24) * 8d) + 24d, 72d, 230d));
+        // Leading icon and the visible close control both consume tab width (HAV-TAB-002).
+        var width = tabs.Sum(tab => Math.Clamp((Math.Min(tab.Title.Length, 24) * 8d) + 24d + (string.IsNullOrWhiteSpace(tab.IconKey) ? 0d : 20d) + (tab.IsCloseable ? 30d : 0d), 72d, 260d));
         width += Math.Max(0, tabs.Count - 1) * 5d;
         return Math.Clamp(width, 72d, MaximumTabStripWidth);
     }

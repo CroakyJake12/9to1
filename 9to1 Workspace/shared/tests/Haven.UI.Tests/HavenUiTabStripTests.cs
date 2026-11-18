@@ -65,6 +65,44 @@ public sealed class HavenUiTabStripTests
     }
 
     [Fact]
+    public void Closable_tabs_expose_icon_and_a_separately_focusable_named_close_control()
+    {
+        var root = new Page();
+        var strip = new TabStrip();
+        var invoked = new List<string>();
+        var closed = new List<string>();
+        strip.ItemInvoked += (_, key) => invoked.Add(key);
+        strip.ItemCloseRequested += (_, key) => closed.Add(key);
+        strip.SetItems([
+            new TabStripItem("notes", "Notes", IsSelected: true, IconKey: "document", IsCloseable: true),
+            new TabStripItem("plain", "Plain")
+        ]);
+        root.Add(strip);
+        new HavenLayoutEngine().Layout(root, new HavenSize(600, 54), HavenPlatform.Windows, new TabMeasure());
+        var router = new HavenInputRouter(root);
+        Assert.Single(strip.CloseButtons);
+        Assert.Equal("Close Notes", strip.CloseButtons[0].Accessibility.AccessibleName);
+
+        // Pointer focus lands on the plain tab; activating Notes' X closes Notes only
+        // and never selects the tab it closes (HAV-TAB-002).
+        router.Focus(strip.ItemButtons[1]);
+        var close = strip.CloseButtons[0];
+        var point = new HavenPoint(close.Bounds.X + close.Bounds.Width / 2, close.Bounds.Y + close.Bounds.Height / 2);
+        router.PointerPressed(point);
+        Assert.True(router.PointerReleased(point));
+        Assert.Equal(new[] { "notes" }, closed);
+        Assert.Empty(invoked);
+
+        // The close control is its own focusable element, separate from the tab it closes,
+        // while arrow keys keep roving between tab items only (HAV-TAB-002, CTX-BASE keyboard).
+        Assert.True(strip.CloseButtons[0].Accessibility.Focusable);
+        Assert.NotSame(strip.ItemButtons[0], strip.CloseButtons[0]);
+        router.Focus(strip.ItemButtons[0]);
+        Assert.True(router.KeyDown(HavenKey.Right));
+        Assert.Same(strip.ItemButtons[1], router.Focused);
+    }
+
+    [Fact]
     public void Item_refresh_preserves_scroll_and_measured_overflow_state()
     {
         var strip = new TabStrip();
@@ -97,5 +135,15 @@ public sealed class HavenUiTabStripTests
         Assert.Equal(0d, strip.ScrollOffset);
         Assert.Equal(HavenVisibility.Collapsed, left.GetValue(HavenProperties.Visibility));
         Assert.Equal(HavenVisibility.Collapsed, right.GetValue(HavenProperties.Visibility));
+    }
+    private sealed class TabMeasure : IHavenMeasureContext
+    {
+        public HavenSize MeasureLeaf(HavenElement element, HavenSize available)
+        {
+            var width = element.GetValue(HavenProperties.Width) is HavenLength { Unit: HavenLengthUnit.Pixel } w
+                ? w.Value
+                : Math.Min(available.Width, 160d);
+            return new HavenSize(width, 44);
+        }
     }
 }

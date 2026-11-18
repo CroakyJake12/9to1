@@ -71,6 +71,10 @@ public sealed partial class TopRail
         _havenOwnedScene?.SetTabs(_havenTabs);
     }
 
+    /// <summary>Moves keyboard focus to the selected tab button (HAV-TAB-003 after a close).</summary>
+    public bool FocusSelectedTab() =>
+        _havenOwnedScene?.SelectedTabButton is { } button && HavenScene.FocusElement(button);
+
     private void WireHavenAnchorSubscriptions()
     {
         if (_havenAnchorSubscriptionsWired) return;

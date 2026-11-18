@@ -3673,6 +3673,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         StoredChatLabel.Text = "Temporary Chat";
     }
 
+    private bool _focusTopRailTabAfterRefresh;
+
     private void RefreshTopRailTabs()
     {
         CheckPendingOriginalFilesPublication();
@@ -3689,12 +3691,19 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             tab.IsCloseable,
             tab.GroupId,
             tab.GroupName,
-            tab.IsGroupCollapsed)).ToArray());
+            tab.IsGroupCollapsed,
+            tab.IsPinned,
+            tab.Page is Haven.Desktop.Views.Pages.Browser.BrowserPage)).ToArray());
         CheckPendingOriginalFilesPublication();
         TopRail.SetNavigationAvailability(
             SelectedTab?.CanGoBack == true,
             SelectedTab?.CanGoForward == true);
         CheckPendingOriginalFilesPublication();
+        if (_focusTopRailTabAfterRefresh)
+        {
+            _focusTopRailTabAfterRefresh = false;
+            TopRail.FocusSelectedTab();
+        }
         if (AllCommandItems.Count > 0) RefreshContextualActions();
     }
 
