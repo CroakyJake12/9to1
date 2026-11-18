@@ -228,6 +228,20 @@ def same_child(parent_fd: int, name: str, root_fd: int) -> bool:
         return False
 
 
+def same_parent_path(original_fd: int, parent: Path) -> bool:
+    """A renamed/replaced parent must not yield a false launchable path."""
+    try:
+        current_fd = open_private_parent(parent)
+    except AdmissionError:
+        return False
+    try:
+        original = os.fstat(original_fd)
+        current = os.fstat(current_fd)
+        return (original.st_dev, original.st_ino) == (current.st_dev, current.st_ino)
+    finally:
+        os.close(current_fd)
+
+
 def remove_own_tree(root_fd: int) -> None:
     # fwalk uses anchored directory descriptors; it never follows an attacker
     # substituted symlink to another tree during rollback.
@@ -271,6 +285,8 @@ def install_archive(archive: Path, expected_sha256: str, destination: Path) -> d
             digest_handle(handle, expected_sha256)
             if not same_child(parent_fd, destination.name, root_fd):
                 raise AdmissionError("Destination changed during installation")
+            if not same_parent_path(parent_fd, destination.parent):
+                raise AdmissionError("Destination parent changed during installation")
             fd = os.open("Haven", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=root_fd)
             with os.fdopen(fd, "rb") as binary:
                 if not is_elf_x64(binary.read(20)):

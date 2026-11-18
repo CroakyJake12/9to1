@@ -299,5 +299,31 @@ class NativePackageAdmissionTests(unittest.TestCase):
         self.assertFalse(destination.exists())
 
 
+    def test_fd_replaced_parent_after_copy_refuses_false_launch_path(self):
+        sha = self.package()
+        destination = self.private / "candidate"
+        relocated = self.root / "relocated-private"
+        replacement = self.root / "replacement-private"
+        replacement.mkdir(mode=0o700)
+        from native_files_package_admission import copy_member
+        swapped = False
+
+        def replace_parent_after_copy(*args, **kwargs):
+            nonlocal swapped
+            value = copy_member(*args, **kwargs)
+            if not swapped:
+                swapped = True
+                self.private.rename(relocated)
+                self.private.symlink_to(replacement, target_is_directory=True)
+            return value
+
+        with patch("native_files_package_admission.copy_member", side_effect=replace_parent_after_copy):
+            with self.assertRaises(AdmissionError):
+                install_archive(self.archive, sha, destination)
+        self.assertTrue(swapped)
+        self.assertFalse((replacement / "Haven").exists())
+        self.assertFalse((relocated / "candidate").exists())
+
+
 if __name__ == "__main__":
     unittest.main()
