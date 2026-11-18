@@ -182,5 +182,71 @@ class SourceCandidateTests(unittest.TestCase):
         self.assertNotEqual(env["HOME"], "/actual/home")
 
 
+class PublishIndexFdTests(unittest.TestCase):
+    """Actual Linux file descriptor and symlink-race checks; no Drive account."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="haven-publish-index-")
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name) / "publish"
+        self.root.mkdir()
+        (self.root / "nested").mkdir()
+        (self.root / "nested" / "document.bin").write_bytes(b"hello")
+        (self.root / "Haven").write_bytes(b"elf")
+        self.outside = Path(self.tmp.name) / "external.bin"
+        self.outside.write_bytes(b"foreign")
+
+    def test_nested_real_bytes_are_compared(self):
+        import hashlib
+        self.assertEqual(candidate._file_index(self.root), {
+            "Haven": hashlib.sha256(b"elf").hexdigest(),
+            "nested/document.bin": hashlib.sha256(b"hello").hexdigest()})
+
+    def test_symlinked_file_is_not_hashed(self):
+        target = self.root / "nested" / "document.bin"
+        target.unlink()
+        target.symlink_to(self.outside)
+        with self.assertRaises(candidate.CandidateError):
+            candidate._file_index(self.root)
+
+    def test_symlinked_directory_is_not_traversed(self):
+        (self.root / "nested" / "document.bin").unlink()
+        (self.root / "nested").rmdir()
+        (self.root / "nested").symlink_to(self.outside.parent, target_is_directory=True)
+        with self.assertRaises(candidate.CandidateError):
+            candidate._file_index(self.root)
+
+    def test_racing_file_replacement_does_not_follow_symlink(self):
+        target = self.root / "nested" / "document.bin"
+        original_open = os.open
+        def replace(path, flags, *args, **kwargs):
+            if path == "document.bin" and kwargs.get("dir_fd") is not None and flags & os.O_NOFOLLOW:
+                target.unlink()
+                target.symlink_to(self.outside)
+            return original_open(path, flags, *args, **kwargs)
+        with mock.patch.object(candidate.os, "open", side_effect=replace):
+            with self.assertRaises(candidate.CandidateError):
+                candidate._file_index(self.root)
+        self.assertEqual(self.outside.read_bytes(), b"foreign")
+
+    def test_same_bytes_but_replaced_inode_is_refused(self):
+        target = self.root / "nested" / "document.bin"
+        original_stat = os.stat
+        def replace(path, *args, **kwargs):
+            if path == "document.bin" and kwargs.get("dir_fd") is not None and kwargs.get("follow_symlinks") is False:
+                target.unlink()
+                target.write_bytes(b"hello")
+            return original_stat(path, *args, **kwargs)
+        with mock.patch.object(candidate.os, "stat", side_effect=replace):
+            with self.assertRaises(candidate.CandidateError):
+                candidate._file_index(self.root)
+
+    def test_symlinked_publish_root_is_refused(self):
+        alias = Path(self.tmp.name) / "redirect"
+        alias.symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(candidate.CandidateError):
+            candidate._file_index(alias)
+
+
 if __name__ == "__main__":
     unittest.main()

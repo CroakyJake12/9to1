@@ -132,21 +132,67 @@ def run_original_publisher(repo: Path, env: dict[str, str], candidate: Path) -> 
 
 
 def _file_index(root: Path) -> dict[str, str]:
+    """Hash a publish tree through pinned no-follow FDs, never lstat-then-open paths."""
     result: dict[str, str] = {}
-    for path, dirs, files in os.walk(root, followlinks=False):
-        base = Path(path)
-        for name in dirs:
-            if not stat.S_ISDIR((base / name).lstat().st_mode):
-                raise CandidateError("Native publish has an unexpected linked directory")
-        for name in files:
-            child = base / name
-            if not stat.S_ISREG(child.lstat().st_mode):
-                raise CandidateError("Native publish has a nonregular output")
-            h = hashlib.sha256()
-            with child.open("rb") as f:
-                for block in iter(lambda: f.read(1024 * 1024), b""):
-                    h.update(block)
-            result[str(child.relative_to(root))] = h.hexdigest()
+
+    def unchanged(before: os.stat_result, after: os.stat_result) -> bool:
+        return (before.st_dev, before.st_ino, before.st_mode, before.st_size,
+                before.st_mtime_ns, before.st_ctime_ns) == (
+                after.st_dev, after.st_ino, after.st_mode, after.st_size,
+                after.st_mtime_ns, after.st_ctime_ns)
+
+    def walk(parent_fd: int, parts: tuple[str, ...]) -> None:
+        # scandir accepts a directory FD on Linux. Capture no-follow metadata
+        # before each open so a concurrent replacement is either rejected or
+        # recognised as a changed inode, never silently read as another file.
+        with os.scandir(parent_fd) as listing:
+            entries = sorted(((item.name, item.stat(follow_symlinks=False))
+                              for item in listing), key=lambda item: item[0])
+        for name, initial in entries:
+            if name in ("", ".", "..") or "/" in name:
+                raise CandidateError("Native publish contains an unsafe entry")
+            if stat.S_ISDIR(initial.st_mode):
+                fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                             dir_fd=parent_fd)
+                try:
+                    if not unchanged(initial, os.fstat(fd)):
+                        raise CandidateError("Native publish directory changed during verification")
+                    walk(fd, (*parts, name))
+                    if (not unchanged(initial, os.fstat(fd)) or
+                            not unchanged(initial, os.stat(name, dir_fd=parent_fd,
+                                                          follow_symlinks=False))):
+                        raise CandidateError("Native publish directory changed during verification")
+                finally:
+                    os.close(fd)
+            elif stat.S_ISREG(initial.st_mode):
+                fd = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW,
+                             dir_fd=parent_fd)
+                with os.fdopen(fd, "rb") as stream:
+                    if not unchanged(initial, os.fstat(stream.fileno())):
+                        raise CandidateError("Native publish file changed during verification")
+                    digest = hashlib.sha256()
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        digest.update(block)
+                    if (not unchanged(initial, os.fstat(stream.fileno())) or
+                            not unchanged(initial, os.stat(name, dir_fd=parent_fd,
+                                                          follow_symlinks=False))):
+                        raise CandidateError("Native publish file changed during verification")
+                result["/".join((*parts, name))] = digest.hexdigest()
+            else:
+                raise CandidateError("Native publish contains a linked or nonregular entry")
+
+    try:
+        fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            first = os.fstat(fd)
+            walk(fd, ())
+            if (not unchanged(first, os.fstat(fd)) or
+                    not unchanged(first, os.stat(root, follow_symlinks=False))):
+                raise CandidateError("Native publish root changed during verification")
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        raise CandidateError("Native publish changed or contains an unsafe entry") from exc
     return result
 
 
