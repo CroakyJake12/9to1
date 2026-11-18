@@ -198,5 +198,106 @@ class NativePackageAdmissionTests(unittest.TestCase):
                 inspect_archive(self.archive, sha)
 
 
+    def test_fd_archive_fifo_refused_without_blocking(self):
+        fifo = self.root / "fifo.tar.gz"
+        os.mkfifo(fifo)
+        with self.assertRaises(AdmissionError):
+            inspect_archive(fifo, "0" * 64)
+
+    def test_fd_archive_symlink_replacement_at_open_refused(self):
+        sha = self.package()
+        alternate = self.root / "alternate.tar.gz"
+        alternate.write_bytes(self.archive.read_bytes())
+        moved = self.root / "moved-original.tar.gz"
+        real_open = os.open
+        swapped = False
+
+        def replace_at_open(path, flags, *args, **kwargs):
+            nonlocal swapped
+            if str(path) == str(self.archive) and not swapped:
+                swapped = True
+                self.archive.rename(moved)
+                self.archive.symlink_to(alternate)
+            return real_open(path, flags, *args, **kwargs)
+
+        with patch("native_files_package_admission.os.open", side_effect=replace_at_open):
+            with self.assertRaises(AdmissionError):
+                inspect_archive(self.archive, sha)
+        self.assertTrue(swapped)
+
+    def test_fd_swapped_destination_after_mkdir_does_not_write_victim(self):
+        sha = self.package()
+        destination = self.private / "candidate"
+        kept = self.private / "relocated-original"
+        victim = self.root / "victim"
+        victim.mkdir(mode=0o700)
+        (victim / "precious.txt").write_text("preserve")
+        real_mkdir = os.mkdir
+        swapped = False
+
+        def replace_after_mkdir(path, *args, **kwargs):
+            nonlocal swapped
+            value = real_mkdir(path, *args, **kwargs)
+            if path == destination.name and kwargs.get("dir_fd") is not None and not swapped:
+                swapped = True
+                destination.rename(kept)
+                destination.symlink_to(victim, target_is_directory=True)
+            return value
+
+        with patch("native_files_package_admission.os.mkdir", side_effect=replace_after_mkdir):
+            with self.assertRaises(AdmissionError):
+                install_archive(self.archive, sha, destination)
+        self.assertTrue(swapped)
+        self.assertEqual((victim / "precious.txt").read_text(), "preserve")
+        self.assertFalse((victim / "Haven").exists())
+
+    def test_fd_swapped_destination_mid_copy_does_not_mutate_or_clean_victim(self):
+        sha = self.package()
+        destination = self.private / "candidate"
+        kept = self.private / "relocated-original"
+        victim = self.root / "victim"
+        victim.mkdir(mode=0o700)
+        (victim / "precious.txt").write_text("preserve")
+        from native_files_package_admission import copy_member
+        swapped = False
+
+        def replace_after_copy(*args, **kwargs):
+            nonlocal swapped
+            value = copy_member(*args, **kwargs)
+            if not swapped:
+                swapped = True
+                destination.rename(kept)
+                destination.symlink_to(victim, target_is_directory=True)
+            return value
+
+        with patch("native_files_package_admission.copy_member", side_effect=replace_after_copy):
+            with self.assertRaises(AdmissionError):
+                install_archive(self.archive, sha, destination)
+        self.assertTrue(swapped)
+        self.assertTrue((kept / "Haven").exists())
+        self.assertFalse((victim / "Haven").exists())
+        self.assertEqual((victim / "precious.txt").read_text(), "preserve")
+
+    def test_fd_same_open_archive_mutation_invalidates_install_and_rolls_back(self):
+        sha = self.package()
+        destination = self.private / "candidate"
+        from native_files_package_admission import copy_member
+        changed = False
+
+        def mutate_after_copy(*args, **kwargs):
+            nonlocal changed
+            result = copy_member(*args, **kwargs)
+            if not changed:
+                changed = True
+                with self.archive.open("ab") as stream:
+                    stream.write(b"unexpected-same-inode-change")
+            return result
+
+        with patch("native_files_package_admission.copy_member", side_effect=mutate_after_copy):
+            with self.assertRaises(AdmissionError):
+                install_archive(self.archive, sha, destination)
+        self.assertFalse(destination.exists())
+
+
 if __name__ == "__main__":
     unittest.main()

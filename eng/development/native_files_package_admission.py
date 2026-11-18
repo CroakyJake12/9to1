@@ -7,6 +7,7 @@ Google Drive login, app runner, or acceptance test.
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import hmac
 import json
@@ -28,17 +29,32 @@ class AdmissionError(Exception):
     """A fixed, non-sensitive user-facing refusal."""
 
 
-def digest_archive(archive: Path, expected_sha256: str) -> str:
+def open_archive(archive: Path):
+    """Hold one no-follow archive inode for inspection, extraction and final hash."""
+    try:
+        fd = os.open(archive, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise AdmissionError("Archive must be a regular file, not a symlink") from exc
+        raise AdmissionError("Cannot read the chosen archive") from exc
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise AdmissionError("Archive must be a regular file, not a symlink")
+        return os.fdopen(fd, "rb")
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def digest_handle(handle, expected_sha256: str) -> str:
     if re.fullmatch(r"[0-9a-fA-F]{64}", expected_sha256) is None:
         raise AdmissionError("Expected SHA-256 must be exactly 64 hex characters")
     try:
-        mode = archive.lstat().st_mode
-        if not stat.S_ISREG(mode):
-            raise AdmissionError("Archive must be a regular file, not a symlink")
+        handle.seek(0)
         h = hashlib.sha256()
-        with archive.open("rb") as handle:
-            for block in iter(lambda: handle.read(CHUNK), b""):
-                h.update(block)
+        for block in iter(lambda: handle.read(CHUNK), b""):
+            h.update(block)
+        handle.seek(0)
     except (OSError, ValueError) as exc:
         raise AdmissionError("Cannot read the chosen archive") from exc
     actual = h.hexdigest()
@@ -46,6 +62,10 @@ def digest_archive(archive: Path, expected_sha256: str) -> str:
         raise AdmissionError("Archive SHA-256 differs from the supplied trusted digest")
     return actual
 
+
+def digest_archive(archive: Path, expected_sha256: str) -> str:
+    with open_archive(archive) as handle:
+        return digest_handle(handle, expected_sha256)
 
 def member_path(raw_name: str) -> tuple[str, ...]:
     if not raw_name or raw_name.startswith("/") or "\\" in raw_name or "\x00" in raw_name:
@@ -102,10 +122,10 @@ def inspect_members(tf: tarfile.TarFile) -> tuple[list[tuple[tarfile.TarInfo, tu
     return paths, total
 
 
-def inspect_archive(archive: Path, expected_sha256: str) -> dict[str, object]:
-    digest = digest_archive(archive, expected_sha256)
+def inspect_archive_handle(handle, expected_sha256: str) -> dict[str, object]:
+    digest = digest_handle(handle, expected_sha256)
     try:
-        with tarfile.open(archive, "r:gz") as tf:
+        with tarfile.open(fileobj=handle, mode="r:gz") as tf:
             entries, total = inspect_members(tf)
             host = next(entry for entry, parts in entries if parts == ("Haven",))
             h = tf.extractfile(host)
@@ -121,6 +141,10 @@ def inspect_archive(archive: Path, expected_sha256: str) -> dict[str, object]:
             "expanded_bytes": total, "target": "linux-x64", "runtime": "Haven.Desktop",
             "drive_login": "NOT_RUN", "native_launch": "NOT_RUN"}
 
+
+def inspect_archive(archive: Path, expected_sha256: str) -> dict[str, object]:
+    with open_archive(archive) as handle:
+        return inspect_archive_handle(handle, expected_sha256)
 
 def is_elf_x64(header: bytes) -> bool:
     return (len(header) >= 20 and header[:4] == b"\x7fELF" and
@@ -151,80 +175,124 @@ def open_private_parent(parent: Path) -> int:
             os.close(fd)
 
 
-def create_child_dirs(root: Path, parts: tuple[str, ...]) -> None:
-    current = root
-    for part in parts:
-        current = current / part
-        if current.exists():
-            if not current.is_dir() or current.is_symlink():
-                raise AdmissionError("Archive contains a conflicting directory")
-        else:
-            current.mkdir(mode=0o700)
+def create_child_dirs(root_fd: int, parts: tuple[str, ...]) -> int:
+    """Return an owned dirfd for private archive parents without pathname lookup."""
+    fd = os.dup(root_fd)
+    try:
+        for part in parts:
+            try:
+                os.mkdir(part, mode=0o700, dir_fd=fd)
+            except FileExistsError:
+                pass
+            next_fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                              dir_fd=fd)
+            os.close(fd)
+            fd = next_fd
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
 
 
-def copy_member(tf: tarfile.TarFile, entry: tarfile.TarInfo, target: Path) -> None:
+def copy_member(tf: tarfile.TarFile, entry: tarfile.TarInfo, parent_fd: int, name: str) -> None:
     source = tf.extractfile(entry)
     if source is None:
         raise AdmissionError("An archive member could not be read")
-    fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with source:
+        fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                     0o600, dir_fd=parent_fd)
+        try:
+            written = 0
+            with os.fdopen(fd, "wb", closefd=False) as dest:
+                while written < entry.size:
+                    block = source.read(min(CHUNK, entry.size - written))
+                    if not block:
+                        raise AdmissionError("An archive member was truncated")
+                    dest.write(block)
+                    written += len(block)
+                dest.flush()
+                os.fchmod(fd, 0o700 if entry.mode & 0o100 else 0o600)
+        finally:
+            os.close(fd)
+
+
+def same_child(parent_fd: int, name: str, root_fd: int) -> bool:
+    """Never follow a substituted symlink or remove somebody else's directory."""
     try:
-        written = 0
-        with source, os.fdopen(fd, "wb", closefd=False) as dest:
-            while written < entry.size:
-                block = source.read(min(CHUNK, entry.size - written))
-                if not block:
-                    raise AdmissionError("An archive member was truncated")
-                dest.write(block)
-                written += len(block)
-            dest.flush()
-            os.fchmod(fd, 0o700 if entry.mode & 0o100 else 0o600)
-    finally:
-        os.close(fd)
+        path_inode = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+        original_inode = os.fstat(root_fd)
+        return (stat.S_ISDIR(path_inode.st_mode) and
+                (path_inode.st_dev, path_inode.st_ino) ==
+                (original_inode.st_dev, original_inode.st_ino))
+    except OSError:
+        return False
+
+
+def remove_own_tree(root_fd: int) -> None:
+    # fwalk uses anchored directory descriptors; it never follows an attacker
+    # substituted symlink to another tree during rollback.
+    for _, dirs, files, walk_fd in os.fwalk(".", topdown=False, follow_symlinks=False,
+                                            dir_fd=root_fd):
+        for name in files:
+            os.unlink(name, dir_fd=walk_fd)
+        for name in dirs:
+            os.rmdir(name, dir_fd=walk_fd)
 
 
 def install_archive(archive: Path, expected_sha256: str, destination: Path) -> dict[str, object]:
-    result = inspect_archive(archive, expected_sha256)
     if not destination.is_absolute() or destination.name in ("", ".", ".."):
         raise AdmissionError("Destination must be an absolute, new named folder")
     if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{0,100}", destination.name):
         raise AdmissionError("Destination folder name contains unsupported characters")
-    parent_fd = open_private_parent(destination.parent)
-    made = False
-    try:
-        os.mkdir(destination.name, mode=0o700, dir_fd=parent_fd)
-        made = True
-        # Each target is freshly created; never follow archive links or overwrite files.
-        with tarfile.open(archive, "r:gz") as tf:
-            entries, _ = inspect_members(tf)
-            for entry, parts in entries:
-                if entry.isdir():
-                    create_child_dirs(destination, parts)
-                else:
-                    create_child_dirs(destination, parts[:-1])
-                    copy_member(tf, entry, destination.joinpath(*parts))
-        # The source could have been replaced after initial verification. Do not
-        # approve or leave any files from a changed tarball.
-        digest_archive(archive, expected_sha256)
-        with (destination / "Haven").open("rb") as h:
-            if not is_elf_x64(h.read(20)):
-                raise AdmissionError("Extracted executable does not match Linux x86-64")
-        result["installed"] = True
-        result["launch"] = "./Haven (from the new private destination; requires .NET 10 and a graphical Linux session)"
-        return result
-    except (OSError, tarfile.TarError, EOFError) as exc:
-        raise AdmissionError("Archive could not be installed safely") from exc
-    finally:
-        os.close(parent_fd)
-        if made and "installed" not in result:
-            # No existing destination can be affected: this directory was created
-            # using O_EXCL-equivalent mkdir on the checked parent descriptor.
-            for root, directories, files in os.walk(destination, topdown=False, followlinks=False):
-                for name in files:
-                    os.unlink(Path(root) / name)
-                for name in directories:
-                    os.rmdir(Path(root) / name)
-            destination.rmdir()
-
+    with open_archive(archive) as handle:
+        result = inspect_archive_handle(handle, expected_sha256)
+        parent_fd = open_private_parent(destination.parent)
+        root_fd = None
+        made = False
+        try:
+            os.mkdir(destination.name, mode=0o700, dir_fd=parent_fd)
+            made = True
+            root_fd = os.open(destination.name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                              dir_fd=parent_fd)
+            # Every archived file and directory is created relative to the newly
+            # opened private root FD, never a separately re-resolved pathname.
+            handle.seek(0)
+            with tarfile.open(fileobj=handle, mode="r:gz") as tf:
+                entries, _ = inspect_members(tf)
+                for entry, parts in entries:
+                    parent = create_child_dirs(root_fd, parts if entry.isdir() else parts[:-1])
+                    try:
+                        if not entry.isdir():
+                            copy_member(tf, entry, parent, parts[-1])
+                    finally:
+                        os.close(parent)
+            # Compare the *same opened archive inode* used for verification and
+            # extraction, even if its original pathname is renamed/replaced.
+            digest_handle(handle, expected_sha256)
+            if not same_child(parent_fd, destination.name, root_fd):
+                raise AdmissionError("Destination changed during installation")
+            fd = os.open("Haven", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=root_fd)
+            with os.fdopen(fd, "rb") as binary:
+                if not is_elf_x64(binary.read(20)):
+                    raise AdmissionError("Extracted executable does not match Linux x86-64")
+            result["installed"] = True
+            result["launch"] = "./Haven (from the new private destination; requires .NET 10 and a graphical Linux session)"
+            return result
+        except (OSError, tarfile.TarError, EOFError, ValueError) as exc:
+            raise AdmissionError("Archive could not be installed safely") from exc
+        finally:
+            try:
+                if made and "installed" not in result and root_fd is not None:
+                    # Roll back only our *own same-inode* directory. If a
+                    # same-user process renamed it, preserve both paths rather
+                    # than traversing or deleting the replacement.
+                    if same_child(parent_fd, destination.name, root_fd):
+                        remove_own_tree(root_fd)
+                        os.rmdir(destination.name, dir_fd=parent_fd)
+            finally:
+                if root_fd is not None:
+                    os.close(root_fd)
+                os.close(parent_fd)
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
