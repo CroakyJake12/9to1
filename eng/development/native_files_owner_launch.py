@@ -54,14 +54,15 @@ def _private_dir(path: Path) -> int:
         raise
 
 
-def _dir(parent: int, name: str) -> int:
+def _dir(parent: int, name: str, *, require_0700: bool = True) -> int:
     if not NAME.fullmatch(name):
         raise LaunchError("Unsafe candidate component")
     fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=parent)
     s = os.fstat(fd)
-    if s.st_uid != os.geteuid() or stat.S_IMODE(s.st_mode) != 0o700:
+    if s.st_uid != os.geteuid() or (stat.S_IMODE(s.st_mode) != 0o700 if require_0700
+                                     else bool(s.st_mode & 0o022)):
         os.close(fd)
-        raise LaunchError("Candidate and profile directories must be private")
+        raise LaunchError("Candidate directory permissions are unsafe")
     return fd
 
 
@@ -291,7 +292,9 @@ def launch(candidate: Path, profile: Path, revision: str, *, create_profile: boo
         expected = receipt.get("archive_sha256")
         if not isinstance(expected, str) or not DIGEST.fullmatch(expected):
             raise LaunchError("Candidate receipt lacks valid archive digest")
-        afd = _dir(cfd, "artifacts")
+        # The original publisher runs mkdir -p under the already-private root;
+        # artifacts may be 0755 but must never be writable by anyone else.
+        afd = _dir(cfd, "artifacts", require_0700=False)
         stack.callback(os.close, afd)
         archive_fd = _file(afd, ARCHIVE)
         stack.callback(os.close, archive_fd)

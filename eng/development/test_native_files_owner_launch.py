@@ -157,6 +157,16 @@ int main(void) {
         with self.assertRaises(LaunchError):
             self._go()
 
+    def test_original_publisher_artifacts_0755_with_private_root(self):
+        """The source publisher creates artifacts via mkdir -p under private root."""
+        (self.candidate / "artifacts").chmod(0o755)
+        self.assertEqual(self._go()["status"], "EXITED")
+
+    def test_artifacts_group_writable_even_under_private_root_refused(self):
+        (self.candidate / "artifacts").chmod(0o775)
+        with self.assertRaises(LaunchError):
+            self._go()
+
     def test_profile_lock_refuses_overlapping_launcher(self):
         self._go()
         fd = os.open(self.profile, os.O_RDONLY | os.O_DIRECTORY)
