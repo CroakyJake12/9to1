@@ -85,6 +85,7 @@ class SourceCandidateTests(unittest.TestCase):
         self.assertEqual(json.loads((self.destination / "receipt.json").read_text()), receipt)
         self.assertEqual(stat.S_IMODE((self.destination / "receipt.json").stat().st_mode), 0o600)
         self.assertEqual(stat.S_IMODE(self.destination.stat().st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE((self.destination / "publish.log").stat().st_mode), 0o600)
 
     def test_idempotency_refuses_overwriting_candidate(self):
         self.build()
@@ -166,6 +167,7 @@ class SourceCandidateTests(unittest.TestCase):
         with self.assertRaises(candidate.CandidateError):
             self.build()
         self.assertFalse((self.destination / "receipt.json").exists())
+        self.assertEqual(stat.S_IMODE((self.destination / "publish.log").stat().st_mode), 0o600)
 
     def test_private_environment_has_no_source_account_credentials(self):
         # Destination is intentionally created as a private staging root.

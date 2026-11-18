@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import shlex
 import stat
 import subprocess
@@ -99,6 +100,37 @@ def private_environment(candidate: Path, current: dict[str, str]) -> dict[str, s
     return env
 
 
+def run_original_publisher(repo: Path, env: dict[str, str], candidate: Path) -> None:
+    """Capture actionable build diagnostics privately; never leak secrets to CI logs.
+
+    The publisher runs in its own session so a timeout can terminate only the
+    build-owned group, rather than leaving an unrelated dotnet child running.
+    """
+    try:
+        fd = os.open(candidate / "publish.log", os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    except OSError as exc:
+        raise CandidateError("Cannot create a new private publisher log") from exc
+    with os.fdopen(fd, "wb") as log:
+        try:
+            proc = subprocess.Popen(["bash", str(repo / PUBLISHER)], cwd=repo,
+                                    env=env, stdout=log, stderr=subprocess.STDOUT,
+                                    start_new_session=True)
+        except OSError as exc:
+            raise CandidateError("Original native publisher could not start") from exc
+        try:
+            status = proc.wait(timeout=3300)
+        except subprocess.TimeoutExpired as exc:
+            os.killpg(proc.pid, signal.SIGTERM)
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait(timeout=10)
+            raise CandidateError("Original native publisher timed out; inspect private publish.log") from exc
+        if status != 0:
+            raise CandidateError(f"Original native publisher returned exit status {status}; inspect private publish.log")
+
+
 def _file_index(root: Path) -> dict[str, str]:
     result: dict[str, str] = {}
     for path, dirs, files in os.walk(root, followlinks=False):
@@ -148,7 +180,7 @@ def build_candidate(repo: Path, expected_sha: str, destination: Path, *, dotnet:
         sdk = check_sdk(dotnet, env=env, repo=repo)
         # Ensure no file was changed *while* preparing the private build environment.
         source_identity(repo, expected_sha)
-        _command(["bash", str(repo / PUBLISHER)], cwd=repo, env=env, timeout=3300)
+        run_original_publisher(repo, env, destination)
         source_identity(repo, expected_sha)
         archive = destination / "artifacts" / ARCHIVE
         publish = destination / "artifacts" / "publish"

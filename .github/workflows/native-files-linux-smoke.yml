@@ -71,6 +71,12 @@ jobs:
             --candidate-dir "$RUNNER_TEMP/native-files-source-root/verified-build"
           HAVEN_ARTIFACTS_DIR="$RUNNER_TEMP/native-files-source-root/verified-build/artifacts"
           test -s "$RUNNER_TEMP/native-files-source-root/verified-build/receipt.json"
+          test -s "$RUNNER_TEMP/native-files-source-root/verified-build/publish.log"
+          test "$(stat -c '%a' "$RUNNER_TEMP/native-files-source-root/verified-build/publish.log")" = "600"
+          python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["source_revision"] == sys.argv[2] and d["archive_sha256"] == sys.argv[3] and d["status"] == "BUILT_NOT_DRIVE_ACCEPTED"' \
+            "$RUNNER_TEMP/native-files-source-root/verified-build/receipt.json" \
+            "$GITHUB_SHA" \
+            "$(sha256sum "$RUNNER_TEMP/native-files-source-root/verified-build/artifacts/haven-linux-linux-x64.tar.gz" | cut -d' ' -f1)"
           test -x "$HAVEN_ARTIFACTS_DIR/publish/Haven"
           test -s "$HAVEN_ARTIFACTS_DIR/publish/Haven.dll"
           test -s "$HAVEN_ARTIFACTS_DIR/haven-linux-linux-x64.tar.gz"
