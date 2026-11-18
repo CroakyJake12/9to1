@@ -9,6 +9,8 @@ on:
       - '.github/workflows/native-files-linux-smoke.yml'
       - 'eng/development/native_files_source_candidate.py'
       - 'eng/development/test_native_files_source_candidate.py'
+      - 'eng/development/native_files_normal_close.py'
+      - 'eng/development/test_native_files_normal_close.py'
 permissions:
   contents: read
 concurrency:
@@ -114,7 +116,7 @@ jobs:
       - name: Install disposable headless X11 and window manager on CI runner
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils dbus-x11
+          sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils dbus-x11 libx11-dev
       - name: Launch both original and archive-extracted real Haven apphosts in distinct private X11 profiles
         shell: bash
         env:
@@ -125,6 +127,7 @@ jobs:
           mkdir -m 700 "$scratch"
           mkdir -m 700 "$scratch/archive-extracted"
           mkdir -m 700 "$scratch/profile-reopen"
+          mkdir -m 700 "$scratch/normal-close"
           export HAVEN_PUBLISHED="$HAVEN_ARTIFACTS_DIR/publish/Haven"
           export HAVEN_ADMITTED="$RUNNER_TEMP/native-files-archive-admission/haven-from-tar/Haven"
           test -x "$HAVEN_ADMITTED"
@@ -148,8 +151,15 @@ jobs:
               --executable "$HAVEN_ADMITTED" \
               --scratch-parent "$HAVEN_SMOKE_SCRATCH/profile-reopen" \
               --timeout-seconds 60
+            python3 -B -m unittest discover -s eng/development \
+              -p test_native_files_normal_close.py -v
+            python3 -B eng/development/native_files_normal_close.py \
+              --executable "$HAVEN_ADMITTED" \
+              --scratch-parent "$HAVEN_SMOKE_SCRATCH/normal-close" \
+              --timeout-seconds 60
           '
           test -s "$scratch/window-observation.json"
           test -s "$scratch/archive-extracted/window-observation.json"
           printf 'Original and extracted Haven apphosts opened their process-owned windows; Google OAuth and Drive mutations NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
-          printf 'The real extracted Haven apphost opened on two separate launches using one disposable profile; marker continuity only. Google OAuth, Drive data persistence and normal user close NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'The real extracted Haven apphost opened on two separate launches using one disposable profile; marker continuity only. Google OAuth and Drive data persistence NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'The real extracted Haven apphost passed two X11 WM_DELETE_WINDOW close/reopen cycles with exit code zero under one disposable profile; Google OAuth and Drive data persistence NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
