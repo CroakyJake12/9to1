@@ -55,25 +55,33 @@ jobs:
             *) printf 'Unexpected .NET SDK: %s\n' "$selected_sdk" >&2; exit 1 ;;
           esac
           python3 -B -m unittest discover -s eng/development -p 'test_native_files_linux_smoke.py' -v
-      - name: Publish the existing real Haven Desktop host for linux-x64 (no upload)
+      - name: Verify source-candidate orchestration using disposable Git publishers
         shell: bash
-        env:
-          NUGET_PACKAGES: ${{ runner.temp }}/native-files-nuget
-          HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-linux-candidate
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s eng/development -p 'test_native_files_source_candidate.py' -v
+      - name: Publish and privately admit the actual existing Haven.Desktop from exact source
+        shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          bash '9to1 Workspace/shared/eng/publish-haven-linux.sh'
+          mkdir -m 700 "$RUNNER_TEMP/native-files-source-root"
+          python3 -B eng/development/native_files_source_candidate.py \
+            --repo "$GITHUB_WORKSPACE" --expect-revision "$GITHUB_SHA" \
+            --candidate-dir "$RUNNER_TEMP/native-files-source-root/verified-build"
+          HAVEN_ARTIFACTS_DIR="$RUNNER_TEMP/native-files-source-root/verified-build/artifacts"
+          test -s "$RUNNER_TEMP/native-files-source-root/verified-build/receipt.json"
           test -x "$HAVEN_ARTIFACTS_DIR/publish/Haven"
           test -s "$HAVEN_ARTIFACTS_DIR/publish/Haven.dll"
           test -s "$HAVEN_ARTIFACTS_DIR/haven-linux-linux-x64.tar.gz"
+          test -x "$RUNNER_TEMP/native-files-source-root/verified-build/installed/Haven"
           file "$HAVEN_ARTIFACTS_DIR/publish/Haven"
           sha256sum "$HAVEN_ARTIFACTS_DIR/haven-linux-linux-x64.tar.gz"
-          printf 'Built source revision %s; native packaging only, NOT Drive acceptance.\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Exact-source Haven.Desktop linux-x64 publish, package verification and source receipt passed; no Drive acceptance.\n' >> "$GITHUB_STEP_SUMMARY"
       - name: Verify and privately extract the real native tarball before running it
         shell: bash
         env:
-          HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-linux-candidate
+          HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-source-root/verified-build/artifacts
         run: |
           set -euo pipefail
           scratch="$RUNNER_TEMP/native-files-archive-admission"
@@ -97,7 +105,7 @@ jobs:
       - name: Launch both original and archive-extracted real Haven apphosts in distinct private X11 profiles
         shell: bash
         env:
-          HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-linux-candidate
+          HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-source-root/verified-build/artifacts
         run: |
           set -euo pipefail
           scratch="$RUNNER_TEMP/native-files-smoke"
