@@ -49,9 +49,9 @@ jobs:
           selected_sdk="$(dotnet --version)"
           printf 'Repository-selected SDK: %s\n' "$selected_sdk"
           # global.json requests 10.0.301 with latestFeature; the runner may
-          # select that installed band rather than installed 10.0.401.
+          # select the newest compatible patch/feature band (observed 10.0.404).
           case "$selected_sdk" in
-            10.0.301|10.0.401) ;;
+            10.0.30[1-9]|10.0.4[0-9][0-9]) ;;
             *) printf 'Unexpected .NET SDK: %s\n' "$selected_sdk" >&2; exit 1 ;;
           esac
           python3 -B -m unittest discover -s eng/development -p 'test_native_files_linux_smoke.py' -v
