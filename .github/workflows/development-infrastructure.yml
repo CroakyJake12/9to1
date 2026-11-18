@@ -68,6 +68,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 -B -m unittest discover -s eng/development -p 'test_native_files_drive_import.py' -v
+      - name: Verify native Haven linux-x64 package admission against disposable tar archives (no Google access)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s eng/development -p 'test_native_files_package_admission.py' -v
       - name: Verify Ubuntu Files HTTPS shortcut without credentials or network
         shell: bash
         run: |
