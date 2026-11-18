@@ -70,11 +70,31 @@ jobs:
           file "$HAVEN_ARTIFACTS_DIR/publish/Haven"
           sha256sum "$HAVEN_ARTIFACTS_DIR/haven-linux-linux-x64.tar.gz"
           printf 'Built source revision %s; native packaging only, NOT Drive acceptance.\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify and privately extract the real native tarball before running it
+        shell: bash
+        env:
+          HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-linux-candidate
+        run: |
+          set -euo pipefail
+          scratch="$RUNNER_TEMP/native-files-archive-admission"
+          mkdir -m 700 "$scratch"
+          archive="$HAVEN_ARTIFACTS_DIR/haven-linux-linux-x64.tar.gz"
+          # This hash pins the bytes within this CI run; it is NOT an external signature.
+          archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
+          python3 -B eng/development/native_files_package_admission.py verify \
+            --archive "$archive" --sha256 "$archive_sha"
+          python3 -B eng/development/native_files_package_admission.py install \
+            --archive "$archive" --sha256 "$archive_sha" \
+            --destination "$scratch/haven-from-tar"
+          test -x "$scratch/haven-from-tar/Haven"
+          # Check all published bytes survived packaging and guarded extraction.
+          diff -qr "$HAVEN_ARTIFACTS_DIR/publish" "$scratch/haven-from-tar"
+          printf 'CI-built archive SHA-256 (not externally signed): %s\n' "$archive_sha" >> "$GITHUB_STEP_SUMMARY"
       - name: Install disposable headless X11 and window manager on CI runner
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils dbus-x11
-      - name: Launch the actual published apphost in a clean private profile and observe its own X11 window
+      - name: Launch both original and archive-extracted real Haven apphosts in distinct private X11 profiles
         shell: bash
         env:
           HAVEN_ARTIFACTS_DIR: ${{ runner.temp }}/native-files-linux-candidate
@@ -82,7 +102,10 @@ jobs:
           set -euo pipefail
           scratch="$RUNNER_TEMP/native-files-smoke"
           mkdir -m 700 "$scratch"
+          mkdir -m 700 "$scratch/archive-extracted"
           export HAVEN_PUBLISHED="$HAVEN_ARTIFACTS_DIR/publish/Haven"
+          export HAVEN_ADMITTED="$RUNNER_TEMP/native-files-archive-admission/haven-from-tar/Haven"
+          test -x "$HAVEN_ADMITTED"
           export HAVEN_SMOKE_SCRATCH="$scratch"
           dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' bash -c '
             set -euo pipefail
@@ -94,6 +117,12 @@ jobs:
               --scratch-parent "$HAVEN_SMOKE_SCRATCH" \
               --timeout-seconds 60 \
               --report "$HAVEN_SMOKE_SCRATCH/window-observation.json"
+            python3 -B eng/development/native_files_linux_smoke.py \
+              --executable "$HAVEN_ADMITTED" \
+              --scratch-parent "$HAVEN_SMOKE_SCRATCH/archive-extracted" \
+              --timeout-seconds 60 \
+              --report "$HAVEN_SMOKE_SCRATCH/archive-extracted/window-observation.json"
           '
           test -s "$scratch/window-observation.json"
-          printf 'Native window observation only; Google OAuth, Drive listing and mutations NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
+          test -s "$scratch/archive-extracted/window-observation.json"
+          printf 'Original and extracted Haven apphosts opened their process-owned windows; Google OAuth and Drive mutations NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
