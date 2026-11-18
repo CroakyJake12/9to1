@@ -55,6 +55,11 @@ jobs:
             *) printf 'Unexpected .NET SDK: %s\n' "$selected_sdk" >&2; exit 1 ;;
           esac
           python3 -B -m unittest discover -s eng/development -p 'test_native_files_linux_smoke.py' -v
+      - name: Verify native same-profile reopen runner using disposable fake apphosts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s eng/development -p 'test_native_files_profile_reopen.py' -v
       - name: Verify source-candidate orchestration using disposable Git publishers
         shell: bash
         run: |
@@ -117,6 +122,7 @@ jobs:
           scratch="$RUNNER_TEMP/native-files-smoke"
           mkdir -m 700 "$scratch"
           mkdir -m 700 "$scratch/archive-extracted"
+          mkdir -m 700 "$scratch/profile-reopen"
           export HAVEN_PUBLISHED="$HAVEN_ARTIFACTS_DIR/publish/Haven"
           export HAVEN_ADMITTED="$RUNNER_TEMP/native-files-archive-admission/haven-from-tar/Haven"
           test -x "$HAVEN_ADMITTED"
@@ -136,7 +142,12 @@ jobs:
               --scratch-parent "$HAVEN_SMOKE_SCRATCH/archive-extracted" \
               --timeout-seconds 60 \
               --report "$HAVEN_SMOKE_SCRATCH/archive-extracted/window-observation.json"
+            python3 -B eng/development/native_files_profile_reopen.py \
+              --executable "$HAVEN_ADMITTED" \
+              --scratch-parent "$HAVEN_SMOKE_SCRATCH/profile-reopen" \
+              --timeout-seconds 60
           '
           test -s "$scratch/window-observation.json"
           test -s "$scratch/archive-extracted/window-observation.json"
           printf 'Original and extracted Haven apphosts opened their process-owned windows; Google OAuth and Drive mutations NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf 'The real extracted Haven apphost opened on two separate launches using one disposable profile; marker continuity only. Google OAuth, Drive data persistence and normal user close NOT RUN.\n' >> "$GITHUB_STEP_SUMMARY"
