@@ -117,6 +117,9 @@ public sealed class HavenUiFoundationTests
         var transparent = new Button { Variant = ButtonVariant.Text };
         transparent.SetState(HavenElementState.Hover, true);
         root.Add(transparent);
+        // The renderer paints whatever layout produced; without a layout pass every bounds is the
+        // zero rect and the per-button bounds identity below cannot tell the two buttons apart.
+        new HavenLayoutEngine().Layout(root, new HavenSize(300, 200), HavenPlatform.Windows, new FixedMeasure());
 
         var commands = new HavenSceneRenderer().Render(root);
         var customFill = Assert.Single(commands.OfType<HavenFillRoundedRectCommand>(), command =>
