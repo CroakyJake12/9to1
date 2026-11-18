@@ -241,6 +241,16 @@ class PublishIndexFdTests(unittest.TestCase):
             with self.assertRaises(candidate.CandidateError):
                 candidate._file_index(self.root)
 
+    def test_symlinked_ancestor_of_publish_root_is_refused(self):
+        alias = Path(self.tmp.name) / "alias"
+        alias.symlink_to(self.root.parent, target_is_directory=True)
+        with self.assertRaises(candidate.CandidateError):
+            candidate._file_index(alias / "publish")
+
+    def test_relative_publish_root_is_refused(self):
+        with self.assertRaises(candidate.CandidateError):
+            candidate._file_index(Path("relative/publish"))
+
     def test_symlinked_publish_root_is_refused(self):
         alias = Path(self.tmp.name) / "redirect"
         alias.symlink_to(self.root, target_is_directory=True)

@@ -182,8 +182,19 @@ def _file_index(root: Path) -> dict[str, str]:
                 raise CandidateError("Native publish contains a linked or nonregular entry")
 
     try:
-        fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        # A no-follow open on only the final component still follows a symlink
+        # in an ancestor. Walk every component from / with a held directory FD.
+        if not root.is_absolute():
+            raise CandidateError("Native publish root must be an absolute path")
+        fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
         try:
+            for component in root.parts[1:]:
+                if component in ("", ".", ".."):
+                    raise CandidateError("Native publish root contains an unsafe component")
+                next_fd = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                                  dir_fd=fd)
+                os.close(fd)
+                fd = next_fd
             first = os.fstat(fd)
             walk(fd, ())
             if (not unchanged(first, os.fstat(fd)) or
