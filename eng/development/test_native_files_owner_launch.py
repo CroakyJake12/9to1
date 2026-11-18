@@ -203,6 +203,47 @@ int main(void) {
             launch(self.candidate, self.candidate / "owner", REV,
                    create_profile=True, dotnet=str(self.runtime))
 
+    def test_original_gnu_tar_nested_publish_is_accepted(self):
+        """Exercise the real publisher's tar -C publish -czf archive . layout."""
+        nested = self.candidate / "installed" / "framework" / "subdir"
+        nested.parent.mkdir(mode=0o700)
+        nested.mkdir(mode=0o700)
+        (nested / "plugin.so").write_bytes(b"nested-runtime-fixture")
+        archive = self.candidate / "artifacts" / ARCHIVE
+        subprocess.run(["tar", "-C", str(self.candidate / "installed"),
+                        "-czf", str(archive), "."], check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        receipt = json.loads((self.candidate / "receipt.json").read_text())
+        receipt["archive_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+        self._write_receipt(receipt)
+        self.assertEqual(self._go()["status"], "EXITED")
+
+    def test_archive_duplicate_member_rejected_even_when_receipt_updated(self):
+        archive = self.candidate / "artifacts" / ARCHIVE
+        with tarfile.open(archive, "w:gz") as tf:
+            for name in ("Haven", "Haven.dll", "Haven.runtimeconfig.json", "Haven.dll"):
+                tf.add(self.candidate / "installed" / name, arcname="./" + name)
+        receipt = json.loads((self.candidate / "receipt.json").read_text())
+        receipt["archive_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+        self._write_receipt(receipt)
+        with self.assertRaises(LaunchError):
+            self._go()
+
+    def test_archive_extra_symlink_rejected_even_with_matching_digest(self):
+        archive = self.candidate / "artifacts" / ARCHIVE
+        with tarfile.open(archive, "w:gz") as tf:
+            for name in ("Haven", "Haven.dll", "Haven.runtimeconfig.json"):
+                tf.add(self.candidate / "installed" / name, arcname="./" + name)
+            link = tarfile.TarInfo("./unsafe-link")
+            link.type = tarfile.SYMTYPE
+            link.linkname = "/etc/passwd"
+            tf.addfile(link)
+        receipt = json.loads((self.candidate / "receipt.json").read_text())
+        receipt["archive_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+        self._write_receipt(receipt)
+        with self.assertRaises(LaunchError):
+            self._go()
+
     def test_malformed_duplicate_receipt_keys_refused(self):
         path = self.candidate / "receipt.json"
         path.write_text('{"schema":"foo","schema":"bar"}')

@@ -34,7 +34,18 @@ The launcher checks the exact source SHA, 0600 build receipt, expected archive S
 
 ## Google account setup and limits
 
-A Google Cloud-approved **Desktop OAuth client ID**, consent and correct test-user access remain prerequisites for the native Drive connection. Configure/import it using the existing `eng/development/native_files_drive_setup.py` or `native_files_drive_import.py` and check with `native_files_drive_preflight.py` **in the selected isolated profile**; see each command's `--help`, and do not enter credentials into GitHub or chat. A ChatGPT Drive connector is not an application OAuth login. Do not use this helper to work on real owner storage as an automated acceptance test. No live file writes, sharing changes or deletions are authorised here.
+A Google Cloud-approved **Desktop OAuth client ID**, consent and correct test-user access remain prerequisites for the native Drive connection. After the first launcher creates the isolated profile and the app has closed, explicitly point the existing setup/import/preflight scripts **at that profile**, not the default personal HOME:
+
+```bash
+PROFILE="$HOME/.local/share/haven-owner-profiles/files"
+# Run interactively in your terminal: the client ID is entered locally, never in chat.
+env HOME="$PROFILE" XDG_CONFIG_HOME="$PROFILE/config" \
+  python3 -B eng/development/native_files_drive_setup.py --kind client-id
+env HOME="$PROFILE" XDG_CONFIG_HOME="$PROFILE/config" \
+  python3 -B eng/development/native_files_drive_preflight.py --json
+```
+
+If using `native_files_drive_import.py` instead, apply the **same explicit HOME/XDG_CONFIG_HOME prefix** to its `--help` and import invocation. The importer is optional; do not install both methods over the same credential file. Never enter client IDs, secrets, tokens or consent URLs into GitHub or chat. A ChatGPT Drive connector is not an application OAuth login. Do not use this helper to work on real owner storage as an automated acceptance test. No live file writes, sharing changes or deletions are authorised here.
 
 **Evidence levels at authoring:** 19/19 Python regression fixtures passed with actual private Linux filesystem operations, tar archives, compiled **synthetic** ELF x64 subprocesses and repeated persistent-profile starts. That is not a real Haven graphical launch with this new helper. Separate prior CI at source `4688b0d` compiled and X11-started the actual Haven application and passed normal WM_DELETE_WINDOW closes, but this new owner launcher was not part of that CI. There is no current private package delivery route. Real Google folder listing was previously owner/Strata-reported in issue #27, not independently rechecked by this new tool. Upload/download/export, search/pagination, rename/move, root creation, trash/restore, revoked credentials, failures and real normal-close/reopen Drive persistence remain **NOT ACCEPTED**.
 
