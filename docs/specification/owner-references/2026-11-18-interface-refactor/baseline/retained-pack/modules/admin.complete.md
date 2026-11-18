@@ -1,0 +1,126 @@
+# Admin — organisation scope and policy
+
+Module ID: `admin` · 9to1 Development Specification v3
+
+## Prerequisites
+
+- **CUI, themes and shared interaction system** — Typed UI components, theme tokens/materials, layout, focus, motion, accessibility and shared control states.
+- **Account, identity and resource entitlements** — Canonical CAKE account identity, secure sessions, server entitlements and resource allocation state.
+- **Permissions, approvals and execution scope** — Effective scoped grants, action approvals, policy intersections, revocation and audit.
+- **Models, discovery and universal model routing** — Model discovery/lifecycle, stable provider capabilities, ordered routing and truthful usage/effort metadata.
+
+## Overview
+
+Admin manages organisation users, roles, resources and policies with explicit organisation scope. It shows policy delivery and enforcement state rather than treating a saved policy draft as universally active.
+
+## Layouts & visible states
+
+- **V3-ADMIN-LAY-01** — Keep organisation identity/scope visible above user, role, policy, device and resource controls. Show members/roles in a useful table with concrete status.
+- **V3-ADMIN-LAY-02** — Distinguish draft, published, delivered, acknowledged and failed policy states; expose affected scope and current policy source.
+
+## Features & behaviour
+
+- **V3-ADMIN-FEA-01** — Manage membership, role-based capabilities, allowed models/providers, Plugins/MCP, shared resources and per-organisation limits using retained server contracts.
+- **V3-ADMIN-FEA-02** — Preserve organisation resource pools/ceilings and the separate Business/Business+ entitlement semantics. Do not conflate seat limits with model/storage allocation.
+- **V3-ADMIN-FEA-03** — Policy changes expose an inspectable effect/target set and conflict handling; auditing records who changed what.
+
+## Canonical entities & persistence
+
+- **V3-ADMIN-ENT-01** — Maintain OrganisationID, UserID/membership, RoleID, PolicyID/revision, assigned scope, acknowledgement records and audit event IDs.
+- **V3-ADMIN-ENT-02** — Server-authoritative billing/resource state is independent from local draft policy.
+
+## Permissions & recovery
+
+- **V3-ADMIN-PER-01** — Require the actual administrative grant for each operation. Admin views must not expose private personal conversations/memory merely because the user manages an organisation.
+- **V3-ADMIN-PER-02** — Failed delivery or offline devices remain visible and retryable without a false enforced status.
+
+## Acceptance checks
+
+- **V3-ADMIN-ACC-01** — Test role restrictions, policy draft→publish→device acknowledgement, revoked membership and mixed delivery outcomes.
+- **V3-ADMIN-ACC-02** — Verify personal/org switching cannot leak cross-scope private data.
+
+## Exact mock-up and state map
+
+- **9to1 Admin · People and policy scope** — screen `admin`. Organisation.
+
+## Source clause IDs
+
+ADM-01, ADM-02, ADM-03, ADM-04, ADM-05, ADM-06, ADM-07, ADM-08, ADM-09, ADM-10, ADM-11, ADM-12
+
+## Technical reading map
+
+- Admin — organisation scope and policy — 9to1 Admin; Product role, access and platforms (part 01) — `technical/admin-01.md` (2,374 words; V2-B0547).
+
+Technical clauses retain APIs, data models, platform, recovery, donor and acceptance details. The technical files are part of this module, not optional background reading. Shared prerequisites mean stable service/interface contracts must be available; they do not require every dependent app UI to be complete. Use the named chunk for the relevant subtask or the complete module file for its full retained contract.
+
+
+# Retained technical requirements
+
+# Admin — organisation scope and policy — 9to1 Admin; Product role, access and platforms (part 01)
+
+Reading status: active retained clauses, subject to the v3 owner overrides listed in the primary module. Historical process instructions and replaced original wording are stored separately.
+
+### V2-B0547 · v2 lines 2708–2753
+
+9to1 Admin
+ADM-01 — Product role, access and platforms
+9to1 Admin is a standalone Business-exclusive 9to1 application, not a renamed account-settings page or WordPress administration screen. It is the organisation-management interface for the Business features specified separately under Business features — functional specification. Business and Business + include it; the account-bound free Business grant defined for Jacob also applies. App access does not grant administrative permissions: every operation additionally requires the appropriate role and target scope.
+Admin MUST have Windows, 9to1-OS and browser/web surfaces sharing the same CAKE ID, organisation entities, domain APIs and permission evaluation. Native clients use Home’s shared services. The web app uses authenticated shared web services without requiring a local Home installation for ordinary organisation administration. Device operations require an enrolled compatible endpoint; a browser cannot directly enforce unsupported local OS controls. Unsupported capabilities MUST remain distinguishable from denied permission or an offline device.
+Admin owns management workflows and policy editing. The account/billing service owns subscriptions and ledgers; Spaces owns Team Spaces; Files owns shared-drive content; Connect owns communications; Home/Mesh owns pairing and device-resource execution; Dulche/Den owns Agents; the 9to1-OS policy service owns endpoint enforcement. Admin MUST invoke these canonical services rather than create duplicate content, Agent registries, payment records or a competing permission broker. This is a native CUI product built on those existing services; no new paid administration donor or hosting service is selected by this specification.
+ADM-02 — Navigation and organisation lifecycle
+The start screen MUST list organisations the user can manage, with an explicit organisation switcher and current organisation identity on every administrative screen. Navigation MUST include Overview; People; Roles & Permissions; Policies; Models, Apps & Features; Plugins & Settings; Usage & Credits; Billing; Team Space & Drive; Connect; Devices & Mesh; Team Agents; and Audit & Activity. Visibility is permission-filtered, while denial states explain the required capability without leaking inaccessible organisations.
+Overview MUST show member/seat counts, resource allocation and consumption, pending invitations/approvals, policy-deployment status, blocked actions, device health and billing state, each with source freshness. Unknown or stale values MUST NOT appear as zero or healthy. Search, filtering, accessible keyboard operation, bulk-selection previews and per-item bulk results are required. Admin is not an artifact editor: blank-document/template import surfaces are not applicable; organisation creation, invitation and configuration import/export replace them.
+Authorised owners MUST be able to create and edit organisation identity, manage ownership, inspect linked Business entitlement, archive/reactivate the organisation and request export or deletion. Ownership transfer requires authenticated acceptance by the recipient; removing or suspending the last active owner MUST be rejected. Archive is recoverable and distinct from permanent deletion. Deletion requires an impact preview, explicit confirmation and the applicable retention/export workflow, and MUST NOT delete a member’s personal account or personal artifacts.
+ADM-03 — People, roles and permissions
+People management MUST support invite, resend/revoke invitation, accept, list/search, assign/change roles, suspend, reinstate and remove membership. Membership states MUST distinguish Invited, Active, Suspended and Removed, with stable MembershipID and UserID. Invitations are time-bounded and single-use for the intended identity. Acceptance and capacity reservation MUST be transactional so concurrent requests cannot bypass the seat cap. The UI MUST distinguish members, pending/reserved invitations and external Connect correspondents; corresponding counting rules must be explicit, not hidden billing assumptions.
+Roles MUST be editable capability sets, not just labels. Provide owner, administrator and member roles, plus separately assignable billing, usage-reporting, device-management, Agent-management and audit-reading capabilities. Custom roles MUST support scoped read, add/edit, delete/recovery and specialised administrative actions. A role editor MUST show effective permissions and inherited restrictions. A delegated administrator MUST NOT grant capabilities outside their own delegation boundary, elevate themselves to owner or modify protected grants. Membership alone does not grant access to every shared document, private conversation or Agent memory.
+Suspension/removal MUST revoke organisation sessions/capabilities, block new organisation-funded jobs, remove applicable shared access and reconcile owned organisation resources and outstanding reservations. Show a transfer/reassignment preview for shared assets, scheduled Automations and Agent responsibilities. Already completed external actions remain historical facts. Revocation MUST leave personal accounts and unrelated organisations intact; offline devices must report pending revocation until enforcement is acknowledged.
+ADM-04 — Enforced policy editor
+Administrators MUST be able to enforce organisation-wide and role-specific policies, inspect their effective result for a selected member/device/Agent, and preview affected objects before publication. PolicySet and PolicyAssignment records MUST carry stable IDs, schema version, revision, scope, author, effective time and change reason. A change follows Draft → Validated → Published, with per-target delivery/enforcement status; publication is not proof that an offline endpoint applied it.
+Restrictions MUST cover model/provider access; apps; individual app features/actions; Plugins and their capabilities; Agents and Automations, including creation, editing, invocation, schedules and external side effects. Restricted capabilities must be enforced by the owning service at dispatch, not merely hidden in the UI. APIs, command-line tools, modified clients and nested Agent/Plugin calls receive the same policy decisions.
+Effective capability grants are the intersection of server entitlement, delegated role, organisation/role policy, object access, caller trust and applicable device/privacy restrictions. A denial at a required boundary cannot be overridden by a broader grant elsewhere. Conflicting mandatory settings or required-versus-blocked Plugin rules MUST produce a validation conflict instead of an arbitrary last-write-wins outcome. New sensitive requests remain subject to Home’s normal approval rules.
+ADM-05 — Required Plugins, forced settings and default models
+Admin MUST support required organisation-wide Plugins and additional requirements by role, with package identity, approved version/update policy, required configuration and deployment status. Required does not mean silently trusted: package integrity, compatibility, requested scopes and secret connections must validate before enablement. A blocked or failed required Plugin produces an actionable non-compliance state. Disabling an unsafe Plugin remains possible for authorised security response; updates cannot widen permissions without the required approval.
+Administrators MUST be able to force supported organisation/role settings and separately supply editable defaults. Members see the effective value, whether it is locked and which policy supplies it. Settings must be addressed by versioned typed keys supported by the target app/device; unsupported settings cannot be reported as applied. Forced settings affect only the managed scope and cannot silently rewrite personal settings outside it.
+Default-model configuration MUST support organisation defaults and role-specific defaults, plus permitted user overrides. The effective model must also satisfy model restrictions, entitlement, capability, privacy and local/cloud routing rules. An unavailable or prohibited default blocks with a clear reason or uses an explicitly authorised fallback; it MUST NOT silently send private local-only content to a cloud provider. Conflicting forced role defaults must be resolved explicitly in policy configuration before publication.
+ADM-06 — Subscription assignment, usage controls and rollover
+Usage & Credits MUST let authorised administrators assign a funded subscription/resource configuration to a member or role, choose a shared organisation pool or individually partitioned allocations, set limits, inspect consumption/reservations and move eligible unspent organisation-owned allocation between partitions. Changing a display tier or role MUST NOT mint credits, unlock an unfunded model band or duplicate an allocation. A cost-changing assignment requires the Billing approval flow rather than silently purchasing resources.
+Controls MUST include organisation, role and member ceilings for AI usage and applicable storage/site resources; warnings and hard-stop behaviour; configured time windows; and model/Agent/Automation attribution. A hard ceiling is enforced before work is admitted. No paid overage or automatic top-up is enabled merely because a warning threshold is crossed. Reports MUST separate allocated, available, reserved, consumed, rolled-over and expired credits and display the reset/expiry policy and freshness.
+Admins MUST be able to configure, by role, whether eligible expired/expiring credits may roll over, with explicit inheritance, allow or disallow settings and the supported carryover period/cap. This is a real server-enforced credit-lifecycle rule, not an interface label. Credit lots retain source allocation, original expiry, rollover policy/version and resulting expiry, with an auditable rollover event. Changes cannot spend the same credit twice or alter settled usage. Eligibility, funding and allowed carryover bounds come from the versioned billing policy; unresolved commercial durations are OPEN rather than guessed. Members MUST see their effective rollover rule.
+ADM-07 — Billing, invoices and reporting
+Billing MUST expose the current Business add-on, seat capacity, funded resource configurations, invoice/payment status and authorised invoice download, plus a preview of changes and their effective date. Separate the fixed organisation add-on from AI/storage/other resource costs. There is no per-seat fee. Usage allocation may change resource cost, but an invitation or role assignment must not conceal a seat charge.
+Purchases, upgrades or other spending require an authorised human’s explicit approval of a current quote identifying organisation, currency, itemised amount, recurring terms and effective date. Paid carrier numbers, third-party services and hosting are separate spending decisions. Approval must be bound to the quote/version and protected against replay; a changed or expired quote requires a new decision. Raw payment details remain in the trusted billing flow, never in Admin client code, Plugins, prompts or logs.
+Analytics MUST offer permission-filtered totals and breakdowns by period, member, role, model, app, Agent and pool, with exportable reports and reconciliation to ledger events. Estimates/forecasts are labelled separately from settled charges. Reporting is operational accounting, not covert inspection of message contents, documents or personal activity. Personal-account usage is excluded unless explicitly and validly brought into the organisation billing scope.
+ADM-08 — Shared resources, devices and team Agents
+Team Space & Drive MUST manage organisation ownership, role/group access, sharing restrictions, storage limits, access reviews, archival/recovery and export through Spaces/Files. Connect management MUST cover the organisation directory, channels/groups, delegated organisational identities, allowed external contact and Agent channel bindings through Connect. Administrative metadata access does not create a plaintext backdoor to encrypted or private conversations.
+Devices & Mesh MUST expose enrolled devices, owner/account, platform, supported capabilities, trust/enrolment state, last contact, effective policy and resource contributions. Authorised actions MUST include enrolment approval, group/role assignment, policy deployment, access/resource revocation and inspection of acknowledged enforcement. Cross-account Mesh grants require explicit enrolled-device trust and configured compute/storage limits. A stale/offline device remains Pending or Unknown; a submitted command is not reported as executed.
+Team Agents MUST list canonical organisation Agents and support create/import, assign owner/scope, edit/publish versions, configure model/tools/required Plugins and budgets, share invocation access, schedule approved work, pause/resume/stop, archive/recover and inspect authorised run history. AI Studio opens the same Agent for detailed authoring. Administrative control cannot silently copy private user memories, credentials or grants into a shared Agent. Revoked members cannot keep invoking an organisation Agent through an old endpoint.
+ADM-09 — Audit, failure and recovery
+Consequential management actions MUST record AuditEventID, OrgID, verified actor/delegation, action and target IDs, timestamp, policy/revision, approval reference where required, redacted before/after state and observed outcome. Policy evaluation denials, privilege changes, billing approvals, credit adjustments, device grants and Agent publication/revocation are auditable. Audit permission is separate from content access; secrets and unnecessary personal content are excluded. Administrators cannot silently edit historical audit entries.
+Mutations use optimistic revision checks and idempotency keys. Multi-target jobs expose JobID, target-level Succeeded/Failed/Pending/Skipped/RolledBack states, retry eligibility and cancellation limits. Failed policy rollout retains the last acknowledged safe policy and offers scoped rollback, not an invented all-success state. Unknown billing/external-action outcomes must be reconciled before retry. Offline administrative clients may inspect permitted cached metadata with a stale marker but cannot assert that a new server policy or purchase has taken effect.
+ADM-10 — Canonical data and API contract
+Canonical records MUST include Organisation, Membership, Role, CapabilityGrant, PolicySet, PolicyAssignment, ResourcePool, MemberAllocation, CreditLot, DeviceEnrolment, MeshGrant, TeamAgentBinding, Approval, AdminJob and AuditEvent. Each carries stable IDs, OrgID where applicable, lifecycle and revision/schema metadata. Identity and subscription authority remain server-side; caches are derived and permission-filtered. Exports omit secrets and preserve portable configuration plus dependency references; imports validate compatibility and require a dry-run/impact preview before mutation.
+The canonical management namespace is 9to1.Admin. Required action families are Organisations (List, Get, Create, Update, TransferOwnership, Archive, Restore, Export, RequestDeletion); Members (List, Invite, RevokeInvitation, AcceptInvitation, SetRoles, Suspend, Reinstate, Remove); Roles (List, Create, Update, Delete, GetEffectivePermissions); Policies (Get, Preview, Validate, Publish, GetDeployment, Rollback); Resources (GetUsage, SetAllocation, SetLimits, TransferAllocation, SetRolloverPolicy); Billing (GetConfiguration, PreviewChange, OpenCheckout, ListInvoices, DownloadInvoice); SharedResources (Get, PreviewAccessChange, ApplyAccessChange); Devices (List, Enrol, AssignPolicy, Revoke, GetEnforcement); Mesh (ListGrants, Grant, Revoke, SetLimits); Agents (List, Bind, Configure, Publish, SetAccess, SetBudget, ControlRun, Archive, Restore); and Audit/Jobs (List, Get, Export, Cancel where cancellable). Domain operations dispatch to their existing owning service; these are management entry points, not duplicate runtime implementations.
+Every action contract MUST declare typed arguments/results, permission scope, risk, reversibility and external effects. Scoped requests include OrgID and stable target IDs; mutations include ExpectedRevision and IdempotencyKey. Collection APIs provide cursor pagination and bounded page sizes; jobs provide JobID, status and target results. Success returns canonical IDs, new revision and applied/pending status. Failures return structured codes including PermissionDenied, EntitlementRequired, SeatLimitReached, PolicyDenied, PolicyConflict, RevisionConflict, InsufficientCredits, QuotaExceeded, ApprovalRequired, QuoteExpired, DeviceOffline, UnsupportedCapability and ProviderUnavailable, with recoverability/retry metadata. UI-only management actions are non-conformant.
+ADM-11 — Acceptance and release gates
+Acceptance MUST prove: a non-Business account cannot gain Admin capabilities; Business access without an admin role does not grant privileged operations; Jacob’s verified free grant works without enabling another account; a Business organisation with 50 active seats cannot admit a 51st concurrently; and Business + has no subscription seat cap while ordinary resource/security limits still apply. Verify that adding an unfunded seat never creates a seat invoice.
+End-to-end tests MUST cover organisation ownership transfer and last-owner protection; invite/suspend/remove with immediate server access revocation; custom-role restrictions through UI and direct API; blocked models/apps/features/Plugins/Automations; required Plugins by organisation and role; forced settings and default-model conflicts; shared versus individual budgets; role-based rollover; concurrency-safe credit reservation/settlement; itemised quote approval and retry protection; shared-resource ACLs; cross-account Mesh opt-in/revocation; and team-Agent isolation and lifecycle.
+Platform tests MUST cover Windows, 9to1-OS and web, including browser administration without local Home, unsupported endpoint controls and offline rollout remaining pending. Test restart/persistence, stale revisions, partial bulk failure, rollback, secret redaction, report reconciliation, keyboard/focus/screen-reader operation and equivalent API behaviour. Lists MUST remain paginated, exports/rollouts asynchronous where long-running, and expensive reports must not block policy checks. A rendered dashboard or stub action is not implementation completion.
+ADM-12 — Explicit open decisions
+OPEN: exact billing-period and carryover durations/caps not already fixed by the authoritative subscription policy; how pending and suspended memberships count toward reserved seat capacity; any Business +-only feature beyond the absence of a seat cap; contractual retention/support commitments; and supported version boundaries for endpoint management. These require explicit canonical decisions before the relevant behaviour ships. Do not invent paid SSO/SCIM, unlimited compute/storage, support SLAs, remote full-device wipe or access to personal content as implicit Business features.
+
+
+# Exact designs and implementation rules
+
+These figures are the exact current atlas compositions. Their stable screen IDs match the Word specification and editable source. Open the atlas for full-size theme and interaction inspection.
+
+## 9to1 Admin · People and policy scope
+
+![9to1 Admin · People and policy scope](../designs/admin.png)
+
+Screen ID: `admin`. Source: ADM-01–12: organisation identity, people, roles, policies and deployment state.
+
+- Every administrative screen displays the current organisation. Product entitlement does not confer admin privileges.
+- People states distinguish invited, active, suspended and removed. Effective permissions include role, policy and object scope.
+- Policy changes move through Draft, Validated and Published, then show per-target enforcement. An offline endpoint is not silently compliant.
+- Bulk changes preview their scope and report per-item outcomes. Personal accounts and unrelated organisations remain separate.

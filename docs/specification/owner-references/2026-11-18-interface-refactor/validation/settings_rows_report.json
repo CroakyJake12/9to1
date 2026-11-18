@@ -1,0 +1,142 @@
+{
+  "screenCount": 15,
+  "savedHTML": "preserved",
+  "unrelated": "excluded",
+  "reports": [
+    {
+      "id": "account",
+      "controls": 32,
+      "rows": 5,
+      "fields": 4,
+      "previewBlocks": 0,
+      "heading": "Account & subscription",
+      "unchangedControlState": true
+    },
+    {
+      "id": "appearance",
+      "controls": 36,
+      "rows": 5,
+      "fields": 0,
+      "previewBlocks": 8,
+      "heading": "Appearance",
+      "unchangedControlState": true
+    },
+    {
+      "id": "appearance-palette",
+      "controls": 21,
+      "rows": 0,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Accent palette",
+      "unchangedControlState": true
+    },
+    {
+      "id": "custom-theme",
+      "controls": 11,
+      "rows": 12,
+      "fields": 0,
+      "previewBlocks": 4,
+      "heading": "Create theme",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-account",
+      "controls": 32,
+      "rows": 5,
+      "fields": 4,
+      "previewBlocks": 0,
+      "heading": "Account & subscription",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-models",
+      "controls": 40,
+      "rows": 11,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "AI & models",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-permissions",
+      "controls": 31,
+      "rows": 7,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Permissions & trust",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-apps",
+      "controls": 34,
+      "rows": 12,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Apps & updates",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-storage",
+      "controls": 29,
+      "rows": 16,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Storage",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-mesh",
+      "controls": 28,
+      "rows": 4,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Mesh & devices",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-privacy",
+      "controls": 32,
+      "rows": 12,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Privacy",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-accessibility",
+      "controls": 30,
+      "rows": 9,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Accessibility",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-notifications",
+      "controls": 43,
+      "rows": 22,
+      "fields": 0,
+      "previewBlocks": 0,
+      "heading": "Notifications",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-advanced",
+      "controls": 34,
+      "rows": 12,
+      "fields": 0,
+      "previewBlocks": 1,
+      "heading": "Advanced",
+      "unchangedControlState": true
+    },
+    {
+      "id": "settings-provider",
+      "controls": 32,
+      "rows": 8,
+      "fields": 3,
+      "previewBlocks": 0,
+      "heading": "Provider",
+      "unchangedControlState": true
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "sourceAtlasSha256": "3eff4a6982513a47b521ba62c9c67b2d946520b04deb5fe48c3eb92d807759fc",
+  "portableAtlasSha256": "75c0abad2f971b430bf2b635f0cd9b2c911bc9e8aee552f35c1af33a421756d4",
+  "localizedModule": "atlas-specification-links-code",
+  "changedValue": "const specification JSON only",
+  "sectionCount": 62,
+  "nativeHeadingTargetsVerified": 62,
+  "allOtherBytesPreserved": true,
+  "rootAtlasModified": false,
+  "targets": [
+    {
+      "section": "overview",
+      "anchor": "t.0--h.87c0ypc2w1q6",
+      "url": "../SPECIFICATION.html#t.0--h.87c0ypc2w1q6"
+    },
+    {
+      "section": "theme",
+      "anchor": "t.8lnv8r5vlfea--h.p7f3vcvrqyuf",
+      "url": "../SPECIFICATION.html#t.8lnv8r5vlfea--h.p7f3vcvrqyuf"
+    },
+    {
+      "section": "shell",
+      "anchor": "t.8lnv8r5vlfea--h.lbrybk6tio42",
+      "url": "../SPECIFICATION.html#t.8lnv8r5vlfea--h.lbrybk6tio42"
+    },
+    {
+      "section": "home",
+      "anchor": "t.8lnv8r5vlfea--h.mz808bphuj0r",
+      "url": "../SPECIFICATION.html#t.8lnv8r5vlfea--h.mz808bphuj0r"
+    },
+    {
+      "section": "model",
+      "anchor": "t.8lnv8r5vlfea--h.xrco6lv5bzqg",
+      "url": "../SPECIFICATION.html#t.8lnv8r5vlfea--h.xrco6lv5bzqg"
+    },
+    {
+      "section": "browser",
+      "anchor": "t.8lnv8r5vlfea--h.cx3hialkcypo",
+      "url": "../SPECIFICATION.html#t.8lnv8r5vlfea--h.cx3hialkcypo"
+    },
+    {
+      "section": "ai",
+      "anchor": "t.8lnv8r5vlfea--h.oa4ewpkbzo55",
+      "url": "../SPECIFICATION.html#t.8lnv8r5vlfea--h.oa4ewpkbzo55"
+    },
+    {
+      "section": "spaces",
+      "anchor": "t.snkmezredh0m--h.gcnq9fao70bj",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.gcnq9fao70bj"
+    },
+    {
+      "section": "conversation",
+      "anchor": "t.snkmezredh0m--h.dnr7d7rvtzq0",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.dnr7d7rvtzq0"
+    },
+    {
+      "section": "assistants",
+      "anchor": "t.snkmezredh0m--h.umpfi2n7lxv2",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.umpfi2n7lxv2"
+    },
+    {
+      "section": "research",
+      "anchor": "t.snkmezredh0m--h.wdkb4gqz73fd",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.wdkb4gqz73fd"
+    },
+    {
+      "section": "shopping",
+      "anchor": "t.snkmezredh0m--h.6hh55jc4tvwu",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.6hh55jc4tvwu"
+    },
+    {
+      "section": "translate",
+      "anchor": "t.snkmezredh0m--h.ehzrofbr0txo",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.ehzrofbr0txo"
+    },
+    {
+      "section": "boards",
+      "anchor": "t.rd64lp4djv5h--h.obx9zkn0r4f2",
+      "url": "../SPECIFICATION.html#t.rd64lp4djv5h--h.obx9zkn0r4f2"
+    },
+    {
+      "section": "boardMenus",
+      "anchor": "t.rd64lp4djv5h--h.v9jjd4cfi3uz",
+      "url": "../SPECIFICATION.html#t.rd64lp4djv5h--h.v9jjd4cfi3uz"
+    },
+    {
+      "section": "recovery",
+      "anchor": "t.rd64lp4djv5h--h.efj52r5nvftr",
+      "url": "../SPECIFICATION.html#t.rd64lp4djv5h--h.efj52r5nvftr"
+    },
+    {
+      "section": "settings",
+      "anchor": "t.m73tfqsiwjxb--h.56uyf3qhxnd4",
+      "url": "../SPECIFICATION.html#t.m73tfqsiwjxb--h.56uyf3qhxnd4"
+    },
+    {
+      "section": "rows",
+      "anchor": "t.m73tfqsiwjxb--h.remliby9i6g6",
+      "url": "../SPECIFICATION.html#t.m73tfqsiwjxb--h.remliby9i6g6"
+    },
+    {
+      "section": "layout",
+      "anchor": "t.m73tfqsiwjxb--h.5612xasawprh",
+      "url": "../SPECIFICATION.html#t.m73tfqsiwjxb--h.5612xasawprh"
+    },
+    {
+      "section": "interactions",
+      "anchor": "t.i2f02j7wld0f--h.npb1u0b49l4v",
+      "url": "../SPECIFICATION.html#t.i2f02j7wld0f--h.npb1u0b49l4v"
+    },
+    {
+      "section": "index",
+      "anchor": "t.i2f02j7wld0f--h.3bacpidlqaeu",
+      "url": "../SPECIFICATION.html#t.i2f02j7wld0f--h.3bacpidlqaeu"
+    },
+    {
+      "section": "states",
+      "anchor": "t.i2f02j7wld0f--h.ehzycslzw460",
+      "url": "../SPECIFICATION.html#t.i2f02j7wld0f--h.ehzycslzw460"
+    },
+    {
+      "section": "expanded_architecture_architecture-authority",
+      "anchor": "t.pa5ml7516cye--h.pw1omlnpr6yj",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.pw1omlnpr6yj"
+    },
+    {
+      "section": "expanded_architecture_cui-public-contract",
+      "anchor": "t.pa5ml7516cye--h.n97k11359seg",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.n97k11359seg"
+    },
+    {
+      "section": "expanded_architecture_haven-host-contract",
+      "anchor": "t.pa5ml7516cye--h.njwxs8z2o0q0",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.njwxs8z2o0q0"
+    },
+    {
+      "section": "expanded_architecture_dulche-runtime",
+      "anchor": "t.pa5ml7516cye--h.rp1e87nyp3fx",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.rp1e87nyp3fx"
+    },
+    {
+      "section": "expanded_architecture_identity-resources",
+      "anchor": "t.pa5ml7516cye--h.jh44mj4ez0pc",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.jh44mj4ez0pc"
+    },
+    {
+      "section": "expanded_architecture_artifacts-persistence",
+      "anchor": "t.pa5ml7516cye--h.jusr8dyt2o58",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.jusr8dyt2o58"
+    },
+    {
+      "section": "expanded_architecture_files-library",
+      "anchor": "t.pa5ml7516cye--h.f3jjjlqsl0qs",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.f3jjjlqsl0qs"
+    },
+    {
+      "section": "expanded_architecture_mesh-sync",
+      "anchor": "t.pa5ml7516cye--h.8sb8vkcpiy4v",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.8sb8vkcpiy4v"
+    },
+    {
+      "section": "expanded_architecture_permissions-privacy",
+      "anchor": "t.pa5ml7516cye--h.fthskgy4ykf8",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.fthskgy4ykf8"
+    },
+    {
+      "section": "expanded_architecture_model-provider-lifecycle",
+      "anchor": "t.pa5ml7516cye--h.s3dg4saz9mjr",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.s3dg4saz9mjr"
+    },
+    {
+      "section": "expanded_architecture_den-memory-identity",
+      "anchor": "t.pa5ml7516cye--h.rzxe6ixb0y4j",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.rzxe6ixb0y4j"
+    },
+    {
+      "section": "expanded_architecture_capability-integrations",
+      "anchor": "t.pa5ml7516cye--h.ltug83ic0vdw",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.ltug83ic0vdw"
+    },
+    {
+      "section": "expanded_architecture_collaboration-contract",
+      "anchor": "t.pa5ml7516cye--h.3m9iva9pym0e",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.3m9iva9pym0e"
+    },
+    {
+      "section": "expanded_architecture_technical-bindings",
+      "anchor": "t.pa5ml7516cye--h.xoxs07kq4vhe",
+      "url": "../SPECIFICATION.html#t.pa5ml7516cye--h.xoxs07kq4vhe"
+    },
+    {
+      "section": "expanded_apps_app_contracts",
+      "anchor": "t.kixgfsrptana--h.xbw5wig84iiy",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.xbw5wig84iiy"
+    },
+    {
+      "section": "expanded_apps_write",
+      "anchor": "t.kixgfsrptana--h.igvu38mz15e3",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.igvu38mz15e3"
+    },
+    {
+      "section": "expanded_apps_present",
+      "anchor": "t.kixgfsrptana--h.h0ppxfr4ay3a",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.h0ppxfr4ay3a"
+    },
+    {
+      "section": "expanded_apps_canvas",
+      "anchor": "t.kixgfsrptana--h.zhah9zypzpqi",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.zhah9zypzpqi"
+    },
+    {
+      "section": "expanded_apps_learning",
+      "anchor": "t.kixgfsrptana--h.n4c00hofq37q",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.n4c00hofq37q"
+    },
+    {
+      "section": "expanded_apps_data_forms",
+      "anchor": "t.kixgfsrptana--h.x06anm3e9h0j",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.x06anm3e9h0j"
+    },
+    {
+      "section": "expanded_apps_files_link",
+      "anchor": "t.kixgfsrptana--h.il23drmnilho",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.il23drmnilho"
+    },
+    {
+      "section": "expanded_apps_planner_automations",
+      "anchor": "t.kixgfsrptana--h.z0pj1m8svz8t",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.z0pj1m8svz8t"
+    },
+    {
+      "section": "expanded_apps_media",
+      "anchor": "t.kixgfsrptana--h.jkq97rwo95g9",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.jkq97rwo95g9"
+    },
+    {
+      "section": "expanded_apps_build_creation",
+      "anchor": "t.kixgfsrptana--h.tu49h9cciub6",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.tu49h9cciub6"
+    },
+    {
+      "section": "expanded_apps_communication_live",
+      "anchor": "t.kixgfsrptana--h.ic10k7u4zffb",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.ic10k7u4zffb"
+    },
+    {
+      "section": "expanded_apps_interactive_artifacts",
+      "anchor": "t.kixgfsrptana--h.fct8yarsvzvu",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.fct8yarsvzvu"
+    },
+    {
+      "section": "expanded_apps_system_surfaces",
+      "anchor": "t.kixgfsrptana--h.t596isruul3c",
+      "url": "../SPECIFICATION.html#t.kixgfsrptana--h.t596isruul3c"
+    },
+    {
+      "section": "expanded_interaction_spaces_admission",
+      "anchor": "t.snkmezredh0m--h.9ep550j3d1do",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.9ep550j3d1do"
+    },
+    {
+      "section": "expanded_interaction_spaces_configuration",
+      "anchor": "t.snkmezredh0m--h.4mky232lqwbj",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.4mky232lqwbj"
+    },
+    {
+      "section": "expanded_interaction_spaces_specialised_workflows",
+      "anchor": "t.snkmezredh0m--h.ueir6qjn74g",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.ueir6qjn74g"
+    },
+    {
+      "section": "expanded_interaction_spaces_live_outputs",
+      "anchor": "t.snkmezredh0m--h.e5y9rooz8xbx",
+      "url": "../SPECIFICATION.html#t.snkmezredh0m--h.e5y9rooz8xbx"
+    },
+    {
+      "section": "expanded_interaction_interaction_lifecycle",
+      "anchor": "t.usni9fu0ls33--h.9ao1yopveqs1",
+      "url": "../SPECIFICATION.html#t.usni9fu0ls33--h.9ao1yopveqs1"
+    },
+    {
+      "section": "expanded_interaction_recovery_acceptance",
+      "anchor": "t.usni9fu0ls33--h.sw2s5kf9m5de",
+      "url": "../SPECIFICATION.html#t.usni9fu0ls33--h.sw2s5kf9m5de"
+    },
+    {
+      "section": "expanded_interaction_accessibility_acceptance",
+      "anchor": "t.usni9fu0ls33--h.iscu4dpyo0py",
+      "url": "../SPECIFICATION.html#t.usni9fu0ls33--h.iscu4dpyo0py"
+    },
+    {
+      "section": "expanded_interaction_qwen_delivery",
+      "anchor": "t.usni9fu0ls33--h.5q5m94gttag6",
+      "url": "../SPECIFICATION.html#t.usni9fu0ls33--h.5q5m94gttag6"
+    },
+    {
+      "section": "expanded_source_source_precedence",
+      "anchor": "t.4p1ufigmcz0n--h.fix4qdjk5uup",
+      "url": "../SPECIFICATION.html#t.4p1ufigmcz0n--h.fix4qdjk5uup"
+    },
+    {
+      "section": "expanded_source_nov18_override_ledger",
+      "anchor": "t.4p1ufigmcz0n--h.3nuwpd5l5vwp",
+      "url": "../SPECIFICATION.html#t.4p1ufigmcz0n--h.3nuwpd5l5vwp"
+    },
+    {
+      "section": "expanded_source_source_inventory",
+      "anchor": "t.4p1ufigmcz0n--h.cj9mqmp0yvah",
+      "url": "../SPECIFICATION.html#t.4p1ufigmcz0n--h.cj9mqmp0yvah"
+    },
+    {
+      "section": "expanded_source_remaining_decisions",
+      "anchor": "t.4p1ufigmcz0n--h.n36em6gqj5vz",
+      "url": "../SPECIFICATION.html#t.4p1ufigmcz0n--h.n36em6gqj5vz"
+    },
+    {
+      "section": "expanded_source_full_screen_coverage",
+      "anchor": "t.4p1ufigmcz0n--h.4pvcrngz3ufl",
+      "url": "../SPECIFICATION.html#t.4p1ufigmcz0n--h.4pvcrngz3ufl"
+    }
+  ]
+}

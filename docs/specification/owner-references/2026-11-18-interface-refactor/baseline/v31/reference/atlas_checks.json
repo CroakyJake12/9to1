@@ -1,0 +1,51 @@
+{
+  "screens": 177,
+  "errors": [],
+  "boards": [
+    {
+      "rootWidth": 1440,
+      "pillWidth": 908,
+      "pillScroll": 908,
+      "fixedX": 1195.890625,
+      "adaptiveRight": 1185.890625,
+      "toolbarScroll": 1184,
+      "toolbarWidth": 1184
+    },
+    {
+      "rootWidth": 1280,
+      "pillWidth": 760,
+      "pillScroll": 760,
+      "fixedX": 1047.890625,
+      "adaptiveRight": 1037.890625,
+      "toolbarScroll": 1024,
+      "toolbarWidth": 1024
+    },
+    {
+      "rootWidth": 1100,
+      "pillWidth": 594,
+      "pillScroll": 594,
+      "fixedX": 873.890625,
+      "adaptiveRight": 865.890625,
+      "toolbarScroll": 844,
+      "toolbarWidth": 844
+    },
+    {
+      "rootWidth": 1024,
+      "pillWidth": 618,
+      "pillScroll": 618,
+      "fixedX": 898,
+      "adaptiveRight": 890,
+      "toolbarScroll": 768,
+      "toolbarWidth": 768
+    },
+    {
+      "rootWidth": 900,
+      "pillWidth": 509,
+      "pillScroll": 509,
+      "fixedX": 780,
+      "adaptiveRight": 775,
+      "toolbarScroll": 644,
+      "toolbarWidth": 644
+    }
+  ]
+}

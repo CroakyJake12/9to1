@@ -1,0 +1,13 @@
+{
+  "checksPassed": 15,
+  "coveredScreens": [
+    "spaces-assistant-alex",
+    "spaces-assistant-maya",
+    "spaces-assistant-rowan"
+  ],
+  "originalControlsRetained": 90,
+  "originalTextNodesRetained": 159,
+  "preservation": "Every original control, action/input data attribute, portrait, message subtree and text node retained",
+  "interactions": "Workspace state, per-assistant isolation, editor restoration, options keyboard/routes, sidebar disclosure, narrow dismissal/focus loops, saved snapshot rehydration and editing guard passed",
+  "limitations": "Parser-backed DOM/VM execution, with synthetic narrow widths. CSS geometry and actual browser rendering are not verified."
+}

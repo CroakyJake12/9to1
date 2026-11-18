@@ -1,0 +1,22 @@
+{
+  "package": "9to1_Qwen_3_8_Handoff_2026-11-18",
+  "assembledAt": "2026-11-18T20:07:41.678402+00:00",
+  "documentId": "1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0",
+  "revisionId": "AHj4eMRx4s8O1mVNjJXwKeQefmbpHlET81TP7V9gaBntoBWfvMw_8AXX0dZ635M4Fd1nH9ojmNPP5kDRl_z8h8pLOWVQwICobUioZZu_ePU",
+  "documentSource": "source/doc-final.json",
+  "specification": [
+    "SPECIFICATION.md",
+    "SPECIFICATION.html"
+  ],
+  "atlas": "design/9to1_Interface_Atlas_v3.3_Editable.html",
+  "atlasSha256": "75c0abad2f971b430bf2b635f0cd9b2c911bc9e8aee552f35c1af33a421756d4",
+  "sourceAtlasSha256": "3eff4a6982513a47b521ba62c9c67b2d946520b04deb5fe48c3eb92d807759fc",
+  "portableAtlasSha256": "75c0abad2f971b430bf2b635f0cd9b2c911bc9e8aee552f35c1af33a421756d4",
+  "atlasLocalizationReport": "validation/atlas-localization-report.json",
+  "sourcePrecedence": "SOURCE_PRECEDENCE.md",
+  "retainedPack": "baseline/retained-pack",
+  "v31": "baseline/v31",
+  "screenAndSourceIndex": "source/SCREEN_AND_SOURCE_INDEX.json",
+  "scope": "Current specification and mockups plus unchanged retained product sources; unrelated tutoring kit excluded.",
+  "exportReport": "validation/export-report.json"
+}

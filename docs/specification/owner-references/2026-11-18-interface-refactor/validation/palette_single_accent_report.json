@@ -1,0 +1,31 @@
+{
+  "presets": [
+    {
+      "name": "Electric blue",
+      "accent": "#2455ff"
+    },
+    {
+      "name": "Iris",
+      "accent": "#7145ff"
+    },
+    {
+      "name": "Lagoon",
+      "accent": "#00b89c"
+    },
+    {
+      "name": "Sunset",
+      "accent": "#ff6847"
+    }
+  ],
+  "oneColourControl": true,
+  "legacyThreeColourUI": "upgraded",
+  "sameHueRoleTokens": true,
+  "savedPrimaryPreserved": true,
+  "unrelatedPreferencesAndContent": "preserved",
+  "undoExportRestore": "passed",
+  "normalAndHoverContrast": "passed",
+  "highContrast": "preserved",
+  "artAndStatusColours": "unchanged",
+  "minimumSecondaryHoverContrast": 5.047205862275802,
+  "minimumTertiaryHoverContrast": 5.4182865435898915
+}

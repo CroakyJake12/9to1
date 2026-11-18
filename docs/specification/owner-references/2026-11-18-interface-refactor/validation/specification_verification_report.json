@@ -1,0 +1,86 @@
+{
+  "tabs": [
+    {
+      "id": "t.0",
+      "title": "1. Overview, Rules, Philosophies",
+      "contentMatches": true,
+      "characters": 5156
+    },
+    {
+      "id": "t.8lnv8r5vlfea",
+      "title": "2. Haven & Frameworks",
+      "contentMatches": true,
+      "characters": 12827
+    },
+    {
+      "id": "t.snkmezredh0m",
+      "title": "3. Spaces",
+      "contentMatches": true,
+      "characters": 7049
+    },
+    {
+      "id": "t.rd64lp4djv5h",
+      "title": "4. Boards",
+      "contentMatches": true,
+      "characters": 4906
+    },
+    {
+      "id": "t.m73tfqsiwjxb",
+      "title": "5. Shared Settings",
+      "contentMatches": true,
+      "characters": 5133
+    },
+    {
+      "id": "t.i2f02j7wld0f",
+      "title": "6. Interactions & References",
+      "contentMatches": true,
+      "characters": 11027
+    },
+    {
+      "id": "t.pa5ml7516cye",
+      "title": "Tab 7",
+      "contentMatches": true,
+      "characters": 1
+    },
+    {
+      "id": "t.kixgfsrptana",
+      "title": "Tab 8",
+      "contentMatches": true,
+      "characters": 1
+    },
+    {
+      "id": "t.usni9fu0ls33",
+      "title": "Tab 9",
+      "contentMatches": true,
+      "characters": 1
+    },
+    {
+      "id": "t.4p1ufigmcz0n",
+      "title": "Tab 10",
+      "contentMatches": true,
+      "characters": 1
+    }
+  ],
+  "tables": [
+    {
+      "tab": "t.m73tfqsiwjxb",
+      "rows": 16,
+      "columns": 3
+    },
+    {
+      "tab": "t.i2f02j7wld0f",
+      "rows": 13,
+      "columns": 3
+    },
+    {
+      "tab": "t.i2f02j7wld0f",
+      "rows": 18,
+      "columns": 3
+    }
+  ],
+  "preservedHeadings": true,
+  "reservedTabsUnchanged": true,
+  "atlasLinks": 186,
+  "internalLinks": 29,
+  "words": 6310
+}

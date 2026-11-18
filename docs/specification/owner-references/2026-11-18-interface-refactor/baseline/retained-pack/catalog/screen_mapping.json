@@ -1,0 +1,817 @@
+[
+  {
+    "screen_id": "home-apps",
+    "module": "home",
+    "title": "Home · Apps"
+  },
+  {
+    "screen_id": "home-dashboard",
+    "module": "home",
+    "title": "Home · Dashboard"
+  },
+  {
+    "screen_id": "home-models",
+    "module": "models",
+    "title": "Models · Discover"
+  },
+  {
+    "screen_id": "home-library",
+    "module": "home",
+    "title": "Home · Library"
+  },
+  {
+    "screen_id": "home-mesh",
+    "module": "mesh",
+    "title": "Home · Mesh & devices"
+  },
+  {
+    "screen_id": "host-newtab",
+    "module": "browse",
+    "title": "9to1 · New Tab"
+  },
+  {
+    "screen_id": "host-browser",
+    "module": "browse",
+    "title": "9to1 · Browser"
+  },
+  {
+    "screen_id": "account",
+    "module": "identity",
+    "title": "Home · Account & permissions"
+  },
+  {
+    "screen_id": "onboarding",
+    "module": "identity",
+    "title": "9to1 · Welcome"
+  },
+  {
+    "screen_id": "home-models-installed",
+    "module": "models",
+    "title": "Models · Installed and saved"
+  },
+  {
+    "screen_id": "home-model-details",
+    "module": "models",
+    "title": "Models · Capability and requirements"
+  },
+  {
+    "screen_id": "host-newtab-customise",
+    "module": "browse",
+    "title": "New Tab · Customisation"
+  },
+  {
+    "screen_id": "host-newtab-widgets",
+    "module": "browse",
+    "title": "New Tab · Add a widget"
+  },
+  {
+    "screen_id": "host-model-picker",
+    "module": "models",
+    "title": "9to1 · Model picker"
+  },
+  {
+    "screen_id": "host-notifications",
+    "module": "notifications",
+    "title": "9to1 · Notifications"
+  },
+  {
+    "screen_id": "boards-launch",
+    "module": "boards",
+    "title": "Boards · Start"
+  },
+  {
+    "screen_id": "write-launch",
+    "module": "write",
+    "title": "Write · Start"
+  },
+  {
+    "screen_id": "present-launch",
+    "module": "present",
+    "title": "Present · Start"
+  },
+  {
+    "screen_id": "canvas-launch",
+    "module": "canvas",
+    "title": "Canvas · Start"
+  },
+  {
+    "screen_id": "boards-ink",
+    "module": "boards",
+    "title": "Boards · Draw on the page"
+  },
+  {
+    "screen_id": "boards-add",
+    "module": "boards",
+    "title": "Boards · Add page or section"
+  },
+  {
+    "screen_id": "boards-typing",
+    "module": "boards",
+    "title": "Boards · Typing within a block"
+  },
+  {
+    "screen_id": "boards-insert",
+    "module": "boards",
+    "title": "Boards · Insert a block"
+  },
+  {
+    "screen_id": "boards-editor",
+    "module": "boards",
+    "title": "Boards · Native page"
+  },
+  {
+    "screen_id": "boards-context",
+    "module": "boards",
+    "title": "Boards · Block actions"
+  },
+  {
+    "screen_id": "boards-recovery",
+    "module": "boards",
+    "title": "Boards · Save recovery"
+  },
+  {
+    "screen_id": "write-editor",
+    "module": "write",
+    "title": "Write · Page View"
+  },
+  {
+    "screen_id": "write-continuous",
+    "module": "write",
+    "title": "Write · Continuous View"
+  },
+  {
+    "screen_id": "write-review",
+    "module": "write",
+    "title": "Write · Selection & review"
+  },
+  {
+    "screen_id": "present-editor",
+    "module": "present",
+    "title": "Present · Editor"
+  },
+  {
+    "screen_id": "present-selection",
+    "module": "present",
+    "title": "Present · Selected object & notes"
+  },
+  {
+    "screen_id": "present-insert",
+    "module": "present",
+    "title": "Present · Insert gallery"
+  },
+  {
+    "screen_id": "present-transitions",
+    "module": "present",
+    "title": "Present · Transitions"
+  },
+  {
+    "screen_id": "present-actions",
+    "module": "present",
+    "title": "Present · Actions graph"
+  },
+  {
+    "screen_id": "present-presenter",
+    "module": "present",
+    "title": "Present · Presenter view"
+  },
+  {
+    "screen_id": "present-shape-builder",
+    "module": "present",
+    "title": "Present · Custom shape builder"
+  },
+  {
+    "screen_id": "canvas-shape-builder",
+    "module": "canvas",
+    "title": "Canvas · Custom shape builder"
+  },
+  {
+    "screen_id": "canvas-editor",
+    "module": "canvas",
+    "title": "Canvas · Drawing workspace"
+  },
+  {
+    "screen_id": "canvas-ai",
+    "module": "canvas",
+    "title": "Canvas · Contextual AI"
+  },
+  {
+    "screen_id": "canvas-pen-presets",
+    "module": "canvas",
+    "title": "Canvas · Pen presets"
+  },
+  {
+    "screen_id": "canvas-selection",
+    "module": "canvas",
+    "title": "Canvas · Shape selection & layers"
+  },
+  {
+    "screen_id": "canvas-insert",
+    "module": "canvas",
+    "title": "Canvas · Insert shapes"
+  },
+  {
+    "screen_id": "spaces-permissions",
+    "module": "spaces",
+    "title": "Spaces · Conversation permissions"
+  },
+  {
+    "screen_id": "spaces-emoji",
+    "module": "spaces",
+    "title": "Spaces · Native emoji picker"
+  },
+  {
+    "screen_id": "spaces-chat",
+    "module": "spaces",
+    "title": "Spaces · Conversation"
+  },
+  {
+    "screen_id": "spaces-compose",
+    "module": "spaces",
+    "title": "Spaces · Draft and contextual shelf"
+  },
+  {
+    "screen_id": "spaces-attachments",
+    "module": "spaces",
+    "title": "Spaces · Attach menu"
+  },
+  {
+    "screen_id": "spaces-running",
+    "module": "spaces",
+    "title": "Tasks · Run summary and approval"
+  },
+  {
+    "screen_id": "spaces-specialists",
+    "module": "spaces",
+    "title": "Spaces · Specialists"
+  },
+  {
+    "screen_id": "spaces-assistants",
+    "module": "spaces",
+    "title": "Assistants · Persistent collaborators"
+  },
+  {
+    "screen_id": "spaces-assistant-alex",
+    "module": "spaces",
+    "title": "Assistants · Alex Main"
+  },
+  {
+    "screen_id": "spaces-assistant-maya",
+    "module": "spaces",
+    "title": "Assistants · Maya Main"
+  },
+  {
+    "screen_id": "spaces-assistant-rowan",
+    "module": "spaces",
+    "title": "Assistants · Rowan Main"
+  },
+  {
+    "screen_id": "spaces-study",
+    "module": "spaces",
+    "title": "Study · Learning dashboard"
+  },
+  {
+    "screen_id": "study-subject",
+    "module": "spaces",
+    "title": "Study · Maths topic tracker"
+  },
+  {
+    "screen_id": "study-topic",
+    "module": "spaces",
+    "title": "Study · Lesson and Revision Bank"
+  },
+  {
+    "screen_id": "study-session",
+    "module": "spaces",
+    "title": "Study · Session modes and source policy"
+  },
+  {
+    "screen_id": "cards-study",
+    "module": "cards",
+    "title": "Cards · Study overview"
+  },
+  {
+    "screen_id": "cards-review",
+    "module": "cards",
+    "title": "Cards · Focused review"
+  },
+  {
+    "screen_id": "cards-edit",
+    "module": "cards",
+    "title": "Cards · Rich card editor"
+  },
+  {
+    "screen_id": "spaces-research",
+    "module": "spaces",
+    "title": "Research · Plan, sources and outputs"
+  },
+  {
+    "screen_id": "spaces-shopping",
+    "module": "spaces",
+    "title": "Shopping · Requirements and comparison"
+  },
+  {
+    "screen_id": "spaces-manage",
+    "module": "spaces",
+    "title": "Spaces · Settings and permission scope"
+  },
+  {
+    "screen_id": "spaces-translate",
+    "module": "spaces",
+    "title": "Translate · Conversational localisation"
+  },
+  {
+    "screen_id": "spaces-generative-ui",
+    "module": "spaces",
+    "title": "Spaces · Generated interactive planner"
+  },
+  {
+    "screen_id": "spaces-thinking",
+    "module": "spaces",
+    "title": "Spaces · Thinking and visible activity"
+  },
+  {
+    "screen_id": "spaces-subagents",
+    "module": "spaces",
+    "title": "Spaces · Coordinated subagents"
+  },
+  {
+    "screen_id": "spaces-subagent-detail",
+    "module": "spaces",
+    "title": "Spaces · Subagent scope and activity"
+  },
+  {
+    "screen_id": "spaces-present-working",
+    "module": "spaces",
+    "title": "Spaces · Presentation work in progress"
+  },
+  {
+    "screen_id": "spaces-canvas-working",
+    "module": "spaces",
+    "title": "Spaces · Canvas work in progress"
+  },
+  {
+    "screen_id": "spaces-generated-files",
+    "module": "spaces",
+    "title": "Spaces · Generated files and outputs"
+  },
+  {
+    "screen_id": "spaces-export-recovery",
+    "module": "spaces",
+    "title": "Spaces · Export failure and recovery"
+  },
+  {
+    "screen_id": "data",
+    "module": "data",
+    "title": "Data · Spreadsheet"
+  },
+  {
+    "screen_id": "data-approval",
+    "module": "data",
+    "title": "Data · Review an AI mutation"
+  },
+  {
+    "screen_id": "files",
+    "module": "files",
+    "title": "Files · Local files and details"
+  },
+  {
+    "screen_id": "planner",
+    "module": "planner",
+    "title": "Planner · Week and unscheduled tasks"
+  },
+  {
+    "screen_id": "automations",
+    "module": "automations",
+    "title": "Automations · Draft graph and activation"
+  },
+  {
+    "screen_id": "forms",
+    "module": "forms",
+    "title": "Forms · Assessment builder"
+  },
+  {
+    "screen_id": "picture",
+    "module": "picture",
+    "title": "Picture · Layered composition"
+  },
+  {
+    "screen_id": "wave",
+    "module": "wave",
+    "title": "Wave · Audio timeline and mixer"
+  },
+  {
+    "screen_id": "motion",
+    "module": "motion",
+    "title": "Motion · Video editing workspace"
+  },
+  {
+    "screen_id": "connect-mail",
+    "module": "connect",
+    "title": "Connect · Mail and a reply draft"
+  },
+  {
+    "screen_id": "connect-messages",
+    "module": "connect",
+    "title": "Connect · Team conversation"
+  },
+  {
+    "screen_id": "maps",
+    "module": "maps",
+    "title": "Maps · Route and place details"
+  },
+  {
+    "screen_id": "shelf",
+    "module": "shelf",
+    "title": "Shelf · Curated launch collection"
+  },
+  {
+    "screen_id": "vision-voice",
+    "module": "vision-voice",
+    "title": "Vision & Voice · Live session"
+  },
+  {
+    "screen_id": "play",
+    "module": "play",
+    "title": "Play · Human and Agent quiz match"
+  },
+  {
+    "screen_id": "files-grid",
+    "module": "files",
+    "title": "Files · Grid and selected board"
+  },
+  {
+    "screen_id": "files-context",
+    "module": "files",
+    "title": "Files · Selected file actions"
+  },
+  {
+    "screen_id": "planner-event",
+    "module": "planner",
+    "title": "Planner · Edit an event"
+  },
+  {
+    "screen_id": "planner-agenda",
+    "module": "planner",
+    "title": "Planner · Agenda view"
+  },
+  {
+    "screen_id": "data-formula",
+    "module": "data",
+    "title": "Data · Editing a formula"
+  },
+  {
+    "screen_id": "data-chart",
+    "module": "data",
+    "title": "Data · Chart insertion and preview"
+  },
+  {
+    "screen_id": "forms-preview",
+    "module": "forms",
+    "title": "Forms · Respondent preview"
+  },
+  {
+    "screen_id": "picture-mask",
+    "module": "picture",
+    "title": "Picture · Layer mask editing"
+  },
+  {
+    "screen_id": "picture-export",
+    "module": "picture",
+    "title": "Picture · Export image"
+  },
+  {
+    "screen_id": "wave-clip",
+    "module": "wave",
+    "title": "Wave · Selected clip and fades"
+  },
+  {
+    "screen_id": "wave-stems",
+    "module": "wave",
+    "title": "Wave · Split stems"
+  },
+  {
+    "screen_id": "motion-transition",
+    "module": "motion",
+    "title": "Motion · Transition at an edit"
+  },
+  {
+    "screen_id": "motion-export",
+    "module": "motion",
+    "title": "Motion · Render range and destination"
+  },
+  {
+    "screen_id": "automation-trigger",
+    "module": "automations",
+    "title": "Automations · Schedule trigger"
+  },
+  {
+    "screen_id": "connect-compose",
+    "module": "connect",
+    "title": "Connect · Compose a message"
+  },
+  {
+    "screen_id": "connect-schedule",
+    "module": "connect",
+    "title": "Connect · Schedule send review"
+  },
+  {
+    "screen_id": "maps-route-options",
+    "module": "maps",
+    "title": "Maps · Route options and stops"
+  },
+  {
+    "screen_id": "shelf-add",
+    "module": "shelf",
+    "title": "Shelf · Add an item"
+  },
+  {
+    "screen_id": "vision-session-sources",
+    "module": "vision-voice",
+    "title": "Vision & Voice · Sources and capture"
+  },
+  {
+    "screen_id": "build-code",
+    "module": "build-code",
+    "title": "Build · Code workspace"
+  },
+  {
+    "screen_id": "build-sites",
+    "module": "build-sites",
+    "title": "Build · Sites editor"
+  },
+  {
+    "screen_id": "build-stacks",
+    "module": "build-stacks",
+    "title": "Build · Stacks conflict review"
+  },
+  {
+    "screen_id": "ai-studio",
+    "module": "ai-studio",
+    "title": "AI Studio · Agent builder and test"
+  },
+  {
+    "screen_id": "terminal",
+    "module": "terminal",
+    "title": "Terminal · Command workspace"
+  },
+  {
+    "screen_id": "mini-computer",
+    "module": "mini-computer",
+    "title": "Mini Computer · Virtual machine"
+  },
+  {
+    "screen_id": "games",
+    "module": "games",
+    "title": "Games · Scene and components"
+  },
+  {
+    "screen_id": "link-flow",
+    "module": "link",
+    "title": "Link · Continuous Flow document"
+  },
+  {
+    "screen_id": "link-binder",
+    "module": "link",
+    "title": "Link · Binder overview and detail"
+  },
+  {
+    "screen_id": "prototype",
+    "module": "prototype",
+    "title": "Prototype · Interactive spring explorer"
+  },
+  {
+    "screen_id": "paths",
+    "module": "paths",
+    "title": "Paths · Branching learning route"
+  },
+  {
+    "screen_id": "replay",
+    "module": "replay",
+    "title": "Replay · Historical checkpoint"
+  },
+  {
+    "screen_id": "variants",
+    "module": "variants",
+    "title": "Present · Compare Variants"
+  },
+  {
+    "screen_id": "admin",
+    "module": "admin",
+    "title": "9to1 Admin · People and policy scope"
+  },
+  {
+    "screen_id": "os-go",
+    "module": "os",
+    "title": "9to1OS · Desktop and Go"
+  },
+  {
+    "screen_id": "launcher",
+    "module": "launcher",
+    "title": "Launcher · Mobile home"
+  },
+  {
+    "screen_id": "build-code-diagnostics",
+    "module": "build-code",
+    "title": "Build · Completion and diagnostics"
+  },
+  {
+    "screen_id": "build-sites-responsive",
+    "module": "build-sites",
+    "title": "Build Sites · Mobile breakpoint"
+  },
+  {
+    "screen_id": "build-stacks-freeze",
+    "module": "build-stacks",
+    "title": "Build Stacks · Freeze scope"
+  },
+  {
+    "screen_id": "ai-studio-permissions",
+    "module": "ai-studio",
+    "title": "AI Studio · Agent tool permissions"
+  },
+  {
+    "screen_id": "terminal-command-review",
+    "module": "terminal",
+    "title": "Terminal · Review an AI command"
+  },
+  {
+    "screen_id": "link-binder-insert",
+    "module": "link",
+    "title": "Link Binder · Add content"
+  },
+  {
+    "screen_id": "link-flow-block-edit",
+    "module": "link",
+    "title": "Link Flow · Source section and placement"
+  },
+  {
+    "screen_id": "prototype-parameters",
+    "module": "prototype",
+    "title": "Prototype · Edit a typed input"
+  },
+  {
+    "screen_id": "paths-branch-rule",
+    "module": "paths",
+    "title": "Paths · Edit a route condition"
+  },
+  {
+    "screen_id": "replay-event-detail",
+    "module": "replay",
+    "title": "Replay · Inspect a recorded change"
+  },
+  {
+    "screen_id": "files-organisation",
+    "module": "files",
+    "title": "Files · Sheet and organisation types"
+  },
+  {
+    "screen_id": "spaces-experiences",
+    "module": "spaces",
+    "title": "Spaces · Experiences"
+  },
+  {
+    "screen_id": "appearance",
+    "module": "settings",
+    "title": "Appearance · Theme and accent preferences"
+  },
+  {
+    "screen_id": "custom-theme",
+    "module": "cui",
+    "title": "Create Theme · Authoring and preview"
+  },
+  {
+    "screen_id": "components",
+    "module": "cui",
+    "title": "Components · Buttons, inputs and control states"
+  },
+  {
+    "screen_id": "states",
+    "module": "home",
+    "title": "States · Recovery and persistence reference"
+  },
+  {
+    "screen_id": "theme-bubble",
+    "module": "cui",
+    "title": "Bubble · Material and controls"
+  },
+  {
+    "screen_id": "theme-western",
+    "module": "cui",
+    "title": "Western · Material and controls"
+  },
+  {
+    "screen_id": "theme-retro",
+    "module": "cui",
+    "title": "Retro · Material and controls"
+  },
+  {
+    "screen_id": "settings-account",
+    "module": "settings",
+    "title": "Settings · Account & subscription"
+  },
+  {
+    "screen_id": "settings-models",
+    "module": "settings",
+    "title": "Settings · AI & models"
+  },
+  {
+    "screen_id": "settings-permissions",
+    "module": "settings",
+    "title": "Settings · Permissions & trust"
+  },
+  {
+    "screen_id": "settings-apps",
+    "module": "settings",
+    "title": "Settings · Apps & updates"
+  },
+  {
+    "screen_id": "settings-storage",
+    "module": "settings",
+    "title": "Settings · Storage"
+  },
+  {
+    "screen_id": "settings-mesh",
+    "module": "settings",
+    "title": "Settings · Mesh & devices"
+  },
+  {
+    "screen_id": "settings-privacy",
+    "module": "settings",
+    "title": "Settings · Privacy"
+  },
+  {
+    "screen_id": "settings-accessibility",
+    "module": "settings",
+    "title": "Settings · Accessibility"
+  },
+  {
+    "screen_id": "settings-notifications",
+    "module": "settings",
+    "title": "Settings · Notifications"
+  },
+  {
+    "screen_id": "settings-advanced",
+    "module": "settings",
+    "title": "Settings · Advanced"
+  },
+  {
+    "screen_id": "settings-provider",
+    "module": "settings",
+    "title": "Settings · Provider access detail"
+  },
+  {
+    "screen_id": "mobile-chat",
+    "module": "spaces",
+    "title": "Mobile · Spaces conversation"
+  },
+  {
+    "screen_id": "mobile-study",
+    "module": "spaces",
+    "title": "Mobile · Study dashboard"
+  },
+  {
+    "screen_id": "mobile-boards",
+    "module": "boards",
+    "title": "Mobile · Boards page drawer"
+  },
+  {
+    "screen_id": "mobile-permissions",
+    "module": "spaces",
+    "title": "Mobile · Conversation permissions"
+  },
+  {
+    "screen_id": "home-assistants",
+    "module": "assistants",
+    "title": "Home · Assistants"
+  },
+  {
+    "screen_id": "home-specialists",
+    "module": "assistants",
+    "title": "Home · Specialists"
+  },
+  {
+    "screen_id": "collaborators-picker",
+    "module": "assistants",
+    "title": "Present · Invite collaborators"
+  },
+  {
+    "screen_id": "write-collaborators-picker",
+    "module": "write",
+    "title": "Write · Invite collaborators"
+  },
+  {
+    "screen_id": "present-collaborators",
+    "module": "present",
+    "title": "Present · Working with collaborators"
+  },
+  {
+    "screen_id": "write-collaborators",
+    "module": "write",
+    "title": "Write · Working with collaborators"
+  },
+  {
+    "screen_id": "collaboration-review",
+    "module": "assistants",
+    "title": "Present · Review an AI change"
+  }
+]

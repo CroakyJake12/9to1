@@ -1,0 +1,22 @@
+{
+  "source": "v10 upload + replacement model module",
+  "checks": 15,
+  "passed": [
+    "three equal role tabs and three native collapsible sections",
+    "flat model rows have short source labels and Browse models",
+    "context edit remains a draft and synchronises the two existing surfaces",
+    "role changes, Enter in the input and unrelated editor updates never apply a draft",
+    "reverting a draft hides Apply and reload",
+    "invalid or unsafe context values cannot commit or reload",
+    "explicit Apply commits one preference and reloads once, preserving sibling state",
+    "model selection, route searches and per-role reasoning still work",
+    "role keyboard navigation retains roving focus and participant selection",
+    "undo and restored preferences replace stale drafts without triggering a new commit",
+    "over-capacity usage is truthful and the meter stays in its valid range",
+    "a saved older picker and context popover upgrade without a root reload",
+    "fresh launch reads the saved applied context preference",
+    "standalone mode applies locally and reloads only on the button",
+    "model-only tab centring and Professional control radius have scoped overrides"
+  ],
+  "limitation": "Executed JavaScript and parsed DOM structure only; no browser layout, rendering or connected model runtime was tested."
+}

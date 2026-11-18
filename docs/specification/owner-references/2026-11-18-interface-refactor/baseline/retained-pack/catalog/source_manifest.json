@@ -1,0 +1,52 @@
+[
+  {
+    "id": "v2",
+    "path": "source/original_v2.md",
+    "url": null,
+    "words": 223194,
+    "lines": 15235,
+    "sha256": "8dfe5908b6a92cfbe6ee42e01c4b4902fb7c657aaa33d9662219568994b1cb9e",
+    "acquisition": "Supplied attached file, original bytes preserved",
+    "retrieved_date": "2026-10-28"
+  },
+  {
+    "id": "annex",
+    "path": "source/professional_annex.md",
+    "url": "https://docs.google.com/document/d/12iLllJXQl_YdGM1J-MTbZuAyrhZN-oTpvdedRfo47nY/edit",
+    "words": 2304,
+    "lines": 88,
+    "sha256": "83523dba8071cb55091d17237ce66abcdcc0a9a8587c951bb14762397db2662f",
+    "acquisition": "Incorporated document read through connected Google Drive; text preserved",
+    "retrieved_date": "2026-10-28"
+  },
+  {
+    "id": "companion",
+    "path": "source/spaces_companion.md",
+    "url": "https://docs.google.com/document/d/12AbDnWynZjVbKZ5XhkkiGMmJkINOSqMfnPuHuI6XDBE/edit",
+    "words": 19629,
+    "lines": 676,
+    "sha256": "757cc7943e8aaab36fb03de7d75b3164f7f2e99ab9df47f4dae823f1c1a9ed77",
+    "acquisition": "Incorporated document read through connected Google Drive; text preserved",
+    "retrieved_date": "2026-10-28"
+  },
+  {
+    "id": "study",
+    "path": "source/study_annex.md",
+    "url": "https://docs.google.com/document/d/17Q_KpQjNgjEAtdVq9HwsnMYveFn6zfIbZBl3es5bptg/edit",
+    "words": 3601,
+    "lines": 117,
+    "sha256": "400da415fcfff0ab432274691aa7697bb2cbde8d2454635b49f004ca27f77e62",
+    "acquisition": "Incorporated document read through connected Google Drive; text preserved",
+    "retrieved_date": "2026-10-28"
+  },
+  {
+    "id": "scalability",
+    "path": "source/scalability_annex.md",
+    "url": "https://docs.google.com/document/d/1B7XG1fuW7auRuzXMRZQeuq2dp59pqrS0jHckg9B-ol4/edit",
+    "words": 1062,
+    "lines": 57,
+    "sha256": "567374d1a8a93a39f5ceb27319be8ed080a39fa394e29872d541d8936225a61f",
+    "acquisition": "Incorporated document read through connected Google Drive; text preserved",
+    "retrieved_date": "2026-10-28"
+  }
+]

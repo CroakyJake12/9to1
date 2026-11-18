@@ -1,0 +1,404 @@
+{
+  "originalScreens": 182,
+  "totalScreens": 247,
+  "addedRoutes": 65,
+  "manifestEntries": 73,
+  "existingAppEntries": 30,
+  "sourceControlsChecked": 52,
+  "allRegisteredDestinationsValid": true,
+  "originalRenderersPreserved": true,
+  "scopeSeparation": true,
+  "missingSources": [],
+  "routes": [
+    {
+      "route": "settings-general",
+      "scope": "Global",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-appearance",
+      "scope": "Global",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-theme-options",
+      "scope": "Global",
+      "links": 2,
+      "sourceBlocks": 2
+    },
+    {
+      "route": "settings-layout",
+      "scope": "Global",
+      "links": 2,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-ai",
+      "scope": "Global",
+      "links": 7,
+      "sourceBlocks": 3
+    },
+    {
+      "route": "settings-personalisation",
+      "scope": "Global",
+      "links": 2,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-plugins",
+      "scope": "Global",
+      "links": 3,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-skills",
+      "scope": "Global",
+      "links": 3,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-providers",
+      "scope": "Global",
+      "links": 4,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-voice",
+      "scope": "Global",
+      "links": 2,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-security",
+      "scope": "Global",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-security-general",
+      "scope": "Global",
+      "links": 2,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-sandbox",
+      "scope": "Global",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-profile",
+      "scope": "Global",
+      "links": 0,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-subscriptions",
+      "scope": "Global",
+      "links": 1,
+      "sourceBlocks": 2
+    },
+    {
+      "route": "settings-account-storage",
+      "scope": "Global",
+      "links": 2,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-local-general",
+      "scope": "This device",
+      "links": 5,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-installed-models",
+      "scope": "This device",
+      "links": 3,
+      "sourceBlocks": 2
+    },
+    {
+      "route": "settings-haven-general",
+      "scope": "Haven",
+      "links": 6,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-bookmarks",
+      "scope": "Haven",
+      "links": 5,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-history",
+      "scope": "Haven",
+      "links": 1,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-shortcuts",
+      "scope": "Haven",
+      "links": 1,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-haven-performance",
+      "scope": "Haven",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-newtab",
+      "scope": "Haven",
+      "links": 1,
+      "sourceBlocks": 6
+    },
+    {
+      "route": "settings-haven-tabs-address",
+      "scope": "Haven",
+      "links": 0,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-pinned",
+      "scope": "Haven",
+      "links": 5,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-shortcut-order",
+      "scope": "Haven",
+      "links": 0,
+      "sourceBlocks": 4
+    },
+    {
+      "route": "settings-haven-tab-history",
+      "scope": "Haven",
+      "links": 1,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-recent-files",
+      "scope": "Haven",
+      "links": 7,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-key-navigation",
+      "scope": "Haven",
+      "links": 1,
+      "sourceBlocks": 2
+    },
+    {
+      "route": "settings-haven-key-menus",
+      "scope": "Haven",
+      "links": 1,
+      "sourceBlocks": 2
+    },
+    {
+      "route": "settings-haven-services",
+      "scope": "Haven",
+      "links": 2,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-model-memory",
+      "scope": "Haven",
+      "links": 2,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-haven-storage-cache",
+      "scope": "Haven",
+      "links": 2,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-apps-shared",
+      "scope": "App",
+      "links": 3,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-app-spaces",
+      "scope": "App",
+      "links": 5,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-app-boards",
+      "scope": "App",
+      "links": 5,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-write",
+      "scope": "App",
+      "links": 5,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-present",
+      "scope": "App",
+      "links": 5,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-canvas",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-build",
+      "scope": "App",
+      "links": 6,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-app-data",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-files",
+      "scope": "App",
+      "links": 6,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-app-forms",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-planner",
+      "scope": "App",
+      "links": 5,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-automations",
+      "scope": "App",
+      "links": 5,
+      "sourceBlocks": 1
+    },
+    {
+      "route": "settings-app-picture",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-wave",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-motion",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-connect",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-maps",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-shelf",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-ai-studio",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-terminal",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-vision-and-voice",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-cards",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-play",
+      "scope": "App",
+      "links": 3,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-games",
+      "scope": "App",
+      "links": 3,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-link",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-prototype",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-paths",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-replay",
+      "scope": "App",
+      "links": 4,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-mini-computer",
+      "scope": "App",
+      "links": 3,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-admin",
+      "scope": "App",
+      "links": 3,
+      "sourceBlocks": 0
+    },
+    {
+      "route": "settings-app-launcher",
+      "scope": "App",
+      "links": 3,
+      "sourceBlocks": 0
+    }
+  ]
+}

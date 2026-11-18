@@ -1,0 +1,61 @@
+{
+  "changed_paragraphs": [
+    {
+      "before": "Version 3   28 October 2026",
+      "after": "Version 3.1   1 November 2026   |   Baseline: v3, 28 October 2026"
+    },
+    {
+      "before": "The mock-ups use illustrative content and state fixtures. Product implementation must supply actual data, durable save and export results, permission decisions and service state. The companion technical clauses remain part of the implementation contract.",
+      "after": "Mock-ups are illustrative, not product acceptance. Boards controls and theme-reference guidance are updated by the v3.1 amendment at the end. Unrelated baseline and retained technical contracts remain active."
+    },
+    {
+      "before": "The following owner decisions take precedence within their stated scope. They update the current layouts while retaining unrelated technical and data contracts.",
+      "after": "Current owner decisions take precedence within their scope. The v3.1 amendment at the end updates Boards controls and the next theme pass; unrelated technical and data contracts remain active."
+    },
+    {
+      "before": "Current overrides: V3-OWNER-011.",
+      "after": "Current overrides: V3-OWNER-011; v3.1 Boards amendment (V31-BOARDS-001–007)."
+    },
+    {
+      "before": "V3-BOARDS-LAY-01  Keep a compact board identity/breadcrumb/switcher, nested page tree, bottom Add/avatar and a contextual top floating toolbar. Expose independent Edit/View, Locked and Snap controls.",
+      "after": "V3-BOARDS-LAY-01  Board icon/name/file menu and Undo/Redo sit above the page tree. Keep footer Add/avatar; use grouped adaptive controls and fixed Add/Drawing/AI (v3.1). Edit/View, Locked and Snap stay independent."
+    },
+    {
+      "before": "1. The Add popup anchors above the fixed sidebar footer. It creates pages or sections, independently from toolbar Insert and inline block +.",
+      "after": "1. The Add popup anchors above the fixed sidebar footer. It creates pages or sections, independently from toolbar Add (content) and inline block +."
+    },
+    {
+      "before": "1. The visible insertion line is a boundary in the current page BlockTree. Inline +, slash and toolbar Insert share the same registered catalogue and target semantics.",
+      "after": "1. The visible insertion line is a boundary in the current page BlockTree. Inline +, slash and toolbar Add (content) share the same registered catalogue and target semantics."
+    },
+    {
+      "before": "2. Sidebar is 256 logical units by default, with 32-unit rows and 16-unit nesting. Board switcher stays above the tree; Add and avatar stay in the fixed footer.",
+      "after": "2. Sidebar is 256 logical units by default, with 32-unit rows and 16-unit nesting. Board icon/name/file menu and Undo/Redo stay above the tree; Add and avatar stay in the fixed footer."
+    },
+    {
+      "before": "3. The persistent footer Add creates pages/sections. Toolbar Insert and block + add content to the current page.",
+      "after": "3. The persistent footer Add creates pages/sections. Toolbar Add (content) and block + add content to the current page."
+    },
+    {
+      "before": "2. Boards identity remains top-left. The top toolbar retains Edit/View separately from Locked/Unlocked; they describe different constraints.",
+      "after": "2. Board icon, clickable name/file menu and Undo/Redo remain in the compact header. Edit/View stays separate from Locked/Unlocked; the two constrain different operations."
+    },
+    {
+      "before": "9to1 Development Specification v3",
+      "after": "9to1 Development Specification v3.1"
+    }
+  ],
+  "replaced_figures": [
+    "boards-ink",
+    "boards-add",
+    "boards-typing",
+    "boards-insert",
+    "boards-editor",
+    "boards-context",
+    "boards-recovery",
+    "mobile-boards"
+  ],
+  "original_paragraphs": 4171,
+  "output_paragraphs": 4227,
+  "additional_formatting": "Header/footer version/date updated; revised clause IDs retain compact bold prefix; amended figure notes retain original note styling; v3.1 TOC link added."
+}

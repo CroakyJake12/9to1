@@ -1,0 +1,14 @@
+{
+  "mounts": 182,
+  "errors": [],
+  "totalControls": 8462,
+  "preservedControls": 8206,
+  "expectedRemoved": 256,
+  "unexpectedLoss": [],
+  "changedControlData": [],
+  "authoredBlocks": 89,
+  "authoredChanges": [],
+  "duplicateIds": [],
+  "shellScreens": 109,
+  "settingsScreens": 15
+}

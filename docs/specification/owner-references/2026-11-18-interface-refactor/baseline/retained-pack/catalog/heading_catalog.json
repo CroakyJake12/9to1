@@ -1,0 +1,6074 @@
+[
+  {
+    "source": "v2",
+    "line": 3,
+    "type": "markdown",
+    "text": "# 9to1 Development Specification v2 — Expanded 27 October 2026"
+  },
+  {
+    "source": "v2",
+    "line": 11,
+    "type": "markdown",
+    "text": "## 0. Authority, provenance and how to use this edition"
+  },
+  {
+    "source": "v2",
+    "line": 13,
+    "type": "clause",
+    "text": "### UX27-AUTH-001 — Meaning of the labels"
+  },
+  {
+    "source": "v2",
+    "line": 19,
+    "type": "clause",
+    "text": "### UX27-AUTH-002 — Scope preservation and priority"
+  },
+  {
+    "source": "v2",
+    "line": 25,
+    "type": "clause",
+    "text": "### UX27-AUTH-003 — No implementation by analogy alone"
+  },
+  {
+    "source": "v2",
+    "line": 29,
+    "type": "clause",
+    "text": "### UX27-AUTH-004 — Baseline and recent amendments"
+  },
+  {
+    "source": "v2",
+    "line": 35,
+    "type": "clause",
+    "text": "### UX27-AUTH-005 — Explicit supersessions"
+  },
+  {
+    "source": "v2",
+    "line": 41,
+    "type": "clause",
+    "text": "### UX27-AUTH-006 — Source and review coverage"
+  },
+  {
+    "source": "v2",
+    "line": 49,
+    "type": "clause",
+    "text": "CUI-CONF-001–004, CUI-THEME-001–004, APP-AC-001–009, LAUNCH-001–006 and WRITE-AC-001–003 are mandatory. A renamed AXAML surface, native-theme workaround, disconnected test harness, missing donor functionality or attracti"
+  },
+  {
+    "source": "v2",
+    "line": 61,
+    "type": "clause",
+    "text": "PRESENT-UX-101 — Three integrated header tiers. The normal Present editor MUST show (1) a compact document/application header with Home navigation, Present identity, editable document name, truthful save/autosave state ("
+  },
+  {
+    "source": "v2",
+    "line": 64,
+    "type": "clause",
+    "text": "PRESENT-UX-102 — Floating rich toolbar. The toolbar MUST look like a single softly rounded floating CUI surface, separated subtly from the workspace with consistent margins/surface elevation; it MUST be predominantly ico"
+  },
+  {
+    "source": "v2",
+    "line": 67,
+    "type": "clause",
+    "text": "PRESENT-UX-103 — Primary actions versus inspector precision. Common formatting operations MUST be directly usable from the toolbar and/or contextual command surfaces without repeatedly opening or scrolling an inspector. "
+  },
+  {
+    "source": "v2",
+    "line": 70,
+    "type": "clause",
+    "text": "PRESENT-UX-104 — + Insert catalogue and shape gallery. A prominent + control MUST open a fully working, categorised Insert menu; the menu bar's Insert menu exposes the same domain actions. Cover all applicable donor/spec"
+  },
+  {
+    "source": "v2",
+    "line": 73,
+    "type": "clause",
+    "text": "PRESENT-UX-105 — Layout and side surfaces. Keep the slide thumbnail/navigator on the left, the actual central 16:9 or document-aspect slide canvas visually dominant, optional contextual inspector on the right and collaps"
+  },
+  {
+    "source": "v2",
+    "line": 76,
+    "type": "clause",
+    "text": "PRESENT-UX-106 — Notes are real content. Each selected slide's existing notes MUST appear immediately from the canonical NotesID/SlideID mapping in a real editable speaker-notes surface; 'Add Notes' or equivalent is an e"
+  },
+  {
+    "source": "v2",
+    "line": 80,
+    "type": "clause",
+    "text": "PRESENT-INT-101 — Separate object/content/interaction layers. The engine MUST distinguish each persistent slide ObjectID (e.g. text-box parent object, shape, image), its actual editable/rendered child content, and transi"
+  },
+  {
+    "source": "v2",
+    "line": 83,
+    "type": "clause",
+    "text": "PRESENT-INT-102 — Explicit editor interaction state machine. MUST distinguish idle, hover/preselection, selected object, text-editing, moving, resizing, rotating, multi-selection, insertion, panning and zooming. Single c"
+  },
+  {
+    "source": "v2",
+    "line": 86,
+    "type": "clause",
+    "text": "PRESENT-INT-103 — Deterministic hit-testing and pointer capture. Define correct event-routing priority for open menus, handles/adorners, active text editor, selected object, frontmost other objects and empty slide. Respe"
+  },
+  {
+    "source": "v2",
+    "line": 89,
+    "type": "clause",
+    "text": "PRESENT-INT-104 — Hover outlines, selection geometry and handles. Hovering over a selectable object MUST show an unobtrusive preselection outline before click; a selected object MUST show a stronger accurate bounding out"
+  },
+  {
+    "source": "v2",
+    "line": 92,
+    "type": "clause",
+    "text": "PRESENT-INT-105 — Cursor and direct manipulation feedback. Provide distinct relevant default/select, text caret, move/grab, horizontal/vertical/diagonal resize, rotate, crosshair for shape insertion, pan/grabbing and una"
+  },
+  {
+    "source": "v2",
+    "line": 95,
+    "type": "clause",
+    "text": "PRESENT-INT-106 — Selection and keyboard quality. MUST handle Shift-click multi-selection, suitable area selection, overlapping objects, group/ungroup, duplication, delete, copy/paste, z-order and keyboard nudging where "
+  },
+  {
+    "source": "v2",
+    "line": 98,
+    "type": "clause",
+    "text": "PRESENT-INT-107 — Reliable scrolling and zoom. Normal mouse wheel scrolls the correct hovered scroll container (slide list, inspector, notes or oversized canvas), with appropriate event propagation rather than occasional"
+  },
+  {
+    "source": "v2",
+    "line": 102,
+    "type": "clause",
+    "text": "CUI-EDITOR-101 — Shared floating menu contract. First-party File/Edit/Insert/Slide/Arrange/View/Help menus, + Insert menu, shape gallery, font dropdowns, colour popovers, toolbar overflow, right-click context menus and r"
+  },
+  {
+    "source": "v2",
+    "line": 105,
+    "type": "clause",
+    "text": "CUI-EDITOR-102 — Context-menu coverage. Right-click on a selected shape/text/image or other object MUST open a context-specific menu with applicable Cut, Copy, Paste, Duplicate, Delete, Arrange/z-order, Align, Group and "
+  },
+  {
+    "source": "v2",
+    "line": 108,
+    "type": "clause",
+    "text": "CUI-EDITOR-103 — Professional app theme. Use the supplied dark Unsloth Library reference for the overall restrained, modern, spacious professional aesthetic: cohesive dark palette, calm hierarchy, deliberately aligned ti"
+  },
+  {
+    "source": "v2",
+    "line": 111,
+    "type": "clause",
+    "text": "CUI-EDITOR-104 — Icons must be reliable. Icons SHOULD be coherent, moderately rounded, optically centred, consistent in stroke/weight and recognisable, optionally with restrained semantic colour accents. Prefer proven au"
+  },
+  {
+    "source": "v2",
+    "line": 114,
+    "type": "clause",
+    "text": "CUI-EDITOR-105 — Shared abstractions not forced layouts. Reusable CUI EditorShell/EditorToolbar, grouped commands, contextual inspector, menu/popover, insertion catalogue, selection-adorners and viewport contracts SHOULD"
+  },
+  {
+    "source": "v2",
+    "line": 118,
+    "type": "clause",
+    "text": "STARTUP-UX-101 — No prolonged blank refresh. The observed Present refresh shows a white 'Opening 9to1...' screen for approximately 5–10 seconds. MUST instrument and correct the underlying delay, not merely hide it. Recor"
+  },
+  {
+    "source": "v2",
+    "line": 121,
+    "type": "clause",
+    "text": "STARTUP-UX-102 — Theme-safe progressive startup. The earliest host/shell render MUST use the appropriate CUI theme with no avoidable white flash. Render the real navigation/editor shell promptly where feasible, then cont"
+  },
+  {
+    "source": "v2",
+    "line": 124,
+    "type": "clause",
+    "text": "STARTUP-UX-103 — Provisional performance budgets. Target initial visible shell under 1 second, typical warm/reopened document under 2 seconds and ordinary basic editor interactivity under 3 seconds on the specified test "
+  },
+  {
+    "source": "v2",
+    "line": 128,
+    "type": "clause",
+    "text": "PRESENT-AC-101 — Do not replace earlier assignments. The UI/theme/toolbar/menu worker and interaction/hit-testing/viewport worker are complementary lanes; any separate CUI/startup audit is another bounded lane. They MUST"
+  },
+  {
+    "source": "v2",
+    "line": 131,
+    "type": "clause",
+    "text": "PRESENT-AC-102 — Functional acceptance scenes. In an identified real running build, verify: (1) create/open/save/close/reopen and truthful save status; (2) text select -> drag -> resize at all eight handles -> double-cli"
+  },
+  {
+    "source": "v2",
+    "line": 134,
+    "type": "clause",
+    "text": "PRESENT-AC-103 — Visual and integration evidence. Capture evidence of actual build identity (source commit, branch/worktree, package/route, dependencies), default shell, selected/edited text, selected shape, hover outlin"
+  },
+  {
+    "source": "v2",
+    "line": 137,
+    "type": "clause",
+    "text": "PRESENT-AC-104 — Explicit fail conditions. Present FAILS usability/visual acceptance if it has a flat sparse toolbar with key format tools hidden in the inspector; insertion limited to a single default shape; no function"
+  },
+  {
+    "source": "v2",
+    "line": 140,
+    "type": "heading-candidate",
+    "text": "END OF 12 OCTOBER 2026 PRESENT/CUI UX AMENDMENT — ACTIVE FOUR-PART DIRECTIVE CONTINUES BELOW"
+  },
+  {
+    "source": "v2",
+    "line": 357,
+    "type": "clause",
+    "text": "APP-AC-001 — Exhaustive scoped manifest. Before implementation/acceptance, map every applicable requirement and donor capability to its app, Part, RCVP/Full stage, platform, real user entry point, owning engine/API, pers"
+  },
+  {
+    "source": "v2",
+    "line": 358,
+    "type": "clause",
+    "text": "APP-AC-002 — Seven mandatory gates. Each app and substantial user journey must pass Usability; Product fit; Functionality; Integration; Separation and authenticity; User fit; and Refinement. Significant failure of any ga"
+  },
+  {
+    "source": "v2",
+    "line": 359,
+    "type": "clause",
+    "text": "APP-AC-003 — Real product, real artifact. Acceptance launches the actual app/package/route built from the identified source and dependencies, with normal startup, Home/runtime integration and authentic providers. Exercis"
+  },
+  {
+    "source": "v2",
+    "line": 360,
+    "type": "clause",
+    "text": "APP-AC-004 — No scope laundering. A working vertical slice is a CHECKPOINT, not an RCVP-complete or Full-complete app. A declared RCVP requires all applicable donor baseline functionality through the real product; new en"
+  },
+  {
+    "source": "v2",
+    "line": 361,
+    "type": "clause",
+    "text": "APP-AC-005 — Fast prevention before repetition. Establish reusable CUI shell, navigation, toolbar, menu, dialog, inspector and state components. Before repeating a layout across apps, launch one complete representative j"
+  },
+  {
+    "source": "v2",
+    "line": 362,
+    "type": "clause",
+    "text": "APP-AC-006 — Independent evidence. A reviewer other than the implementing agent must inspect the exact runnable artifact and independently execute representative workflows, check the exhaustive manifest and challenge pro"
+  },
+  {
+    "source": "v2",
+    "line": 363,
+    "type": "clause",
+    "text": "APP-AC-007 — Truthful states and blockers. Distinguish engineering status, app RCVP acceptance, app Full acceptance and native/web platform acceptance. Record FAIL, BLOCKED and NOT RUN explicitly. A missing desktop/brows"
+  },
+  {
+    "source": "v2",
+    "line": 364,
+    "type": "clause",
+    "text": "APP-AC-008 — Home and shared-shell rejection cases. Home must present the specified useful dashboard/briefing and app navigation, not an administrator/test panel. Keep tile-management controls in the dedicated Customise "
+  },
+  {
+    "source": "v2",
+    "line": 365,
+    "type": "clause",
+    "text": "APP-AC-009 — Screen identity and transition integrity. Acceptance MUST verify that specification-defined distinct experiences exist as actual independently composed, correctly activated views, not just headings or stacke"
+  },
+  {
+    "source": "v2",
+    "line": 953,
+    "type": "heading-candidate",
+    "text": "24. Platform Compatibility"
+  },
+  {
+    "source": "v2",
+    "line": 959,
+    "type": "heading-candidate",
+    "text": "25. Delegation and Parallel Agents"
+  },
+  {
+    "source": "v2",
+    "line": 973,
+    "type": "heading-candidate",
+    "text": "26. Autonomous Operation"
+  },
+  {
+    "source": "v2",
+    "line": 988,
+    "type": "heading-candidate",
+    "text": "27. Loop and Failure Detection"
+  },
+  {
+    "source": "v2",
+    "line": 1002,
+    "type": "heading-candidate",
+    "text": "28. Scope Management"
+  },
+  {
+    "source": "v2",
+    "line": 1008,
+    "type": "heading-candidate",
+    "text": "29. Ambiguity"
+  },
+  {
+    "source": "v2",
+    "line": 1023,
+    "type": "heading-candidate",
+    "text": "30. Evidence-Based Completion"
+  },
+  {
+    "source": "v2",
+    "line": 1038,
+    "type": "heading-candidate",
+    "text": "31. Documentation"
+  },
+  {
+    "source": "v2",
+    "line": 1044,
+    "type": "heading-candidate",
+    "text": "32. No Placeholder Debt"
+  },
+  {
+    "source": "v2",
+    "line": 1061,
+    "type": "heading-candidate",
+    "text": "33. Integration Requirement"
+  },
+  {
+    "source": "v2",
+    "line": 1080,
+    "type": "heading-candidate",
+    "text": "34. Consistency Across Product Surfaces"
+  },
+  {
+    "source": "v2",
+    "line": 1098,
+    "type": "heading-candidate",
+    "text": "35. Realistic User Workflow Testing"
+  },
+  {
+    "source": "v2",
+    "line": 1113,
+    "type": "heading-candidate",
+    "text": "36. Completion Before Expansion"
+  },
+  {
+    "source": "v2",
+    "line": 1119,
+    "type": "heading-candidate",
+    "text": "37. Definition of Done"
+  },
+  {
+    "source": "v2",
+    "line": 1139,
+    "type": "heading-candidate",
+    "text": "9to1-specific agentic rules"
+  },
+  {
+    "source": "v2",
+    "line": 1168,
+    "type": "markdown",
+    "text": "## 1. Shared visual, input and state contracts"
+  },
+  {
+    "source": "v2",
+    "line": 1170,
+    "type": "clause",
+    "text": "### UX27-SHARED-001 — Complete command contract"
+  },
+  {
+    "source": "v2",
+    "line": 1176,
+    "type": "clause",
+    "text": "### UX27-SHARED-002 — Control-state matrix"
+  },
+  {
+    "source": "v2",
+    "line": 1182,
+    "type": "clause",
+    "text": "### UX27-SHARED-003 — Geometry and scale defaults"
+  },
+  {
+    "source": "v2",
+    "line": 1188,
+    "type": "clause",
+    "text": "### UX27-SHARED-004 — Icon identity and quality"
+  },
+  {
+    "source": "v2",
+    "line": 1194,
+    "type": "clause",
+    "text": "### UX27-SHARED-005 — Theme changes alter appearance, not topology"
+  },
+  {
+    "source": "v2",
+    "line": 1200,
+    "type": "clause",
+    "text": "### UX27-SHARED-006 — Contrast and readability"
+  },
+  {
+    "source": "v2",
+    "line": 1206,
+    "type": "clause",
+    "text": "### UX27-SHARED-007 — Motion token table"
+  },
+  {
+    "source": "v2",
+    "line": 1212,
+    "type": "clause",
+    "text": "### UX27-SHARED-008 — Reduced motion and truthful progress"
+  },
+  {
+    "source": "v2",
+    "line": 1218,
+    "type": "clause",
+    "text": "### UX27-SHARED-009 — Popover lifetime and outside dismissal"
+  },
+  {
+    "source": "v2",
+    "line": 1224,
+    "type": "clause",
+    "text": "### UX27-SHARED-010 — Popup placement, keyboard and scrolling"
+  },
+  {
+    "source": "v2",
+    "line": 1230,
+    "type": "clause",
+    "text": "### UX27-SHARED-011 — Focus and selection are preserved through tools"
+  },
+  {
+    "source": "v2",
+    "line": 1236,
+    "type": "clause",
+    "text": "### UX27-SHARED-012 — Scroll ownership and coordinate transforms"
+  },
+  {
+    "source": "v2",
+    "line": 1242,
+    "type": "clause",
+    "text": "### UX27-SHARED-013 — Undo transaction boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 1248,
+    "type": "clause",
+    "text": "### UX27-SHARED-014 — Error scope and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 1254,
+    "type": "clause",
+    "text": "### UX27-SHARED-015 — Save-state vocabulary"
+  },
+  {
+    "source": "v2",
+    "line": 1260,
+    "type": "clause",
+    "text": "### UX27-SHARED-016 — Rendering must reflect actual route and build"
+  },
+  {
+    "source": "v2",
+    "line": 1266,
+    "type": "clause",
+    "text": "### UX27-SHARED-017 — Loading, empty and offline states"
+  },
+  {
+    "source": "v2",
+    "line": 1272,
+    "type": "clause",
+    "text": "### UX27-SHARED-018 — Responsive layout and no control explosion"
+  },
+  {
+    "source": "v2",
+    "line": 1278,
+    "type": "clause",
+    "text": "### UX27-SHARED-019 — Accessibility and discoverability"
+  },
+  {
+    "source": "v2",
+    "line": 1284,
+    "type": "clause",
+    "text": "### UX27-SHARED-020 — Performance without content loss"
+  },
+  {
+    "source": "v2",
+    "line": 1295,
+    "type": "clause",
+    "text": "CUI-CONF-001 — Public language boundary. A .cui extension alone proves nothing. Shipping authoring registries, schemas, parser/runtime loaders, code generation, hot reload, samples, designer output and documentation MUST"
+  },
+  {
+    "source": "v2",
+    "line": 1296,
+    "type": "clause",
+    "text": "CUI-CONF-002 — No permanent legacy aliases. Reject Grid, StackPanel, WrapPanel, ScrollViewer, TextBlock and Border as built-in public element tags, including donor-namespace/reflection escape routes. Border remains a val"
+  },
+  {
+    "source": "v2",
+    "line": 1297,
+    "type": "clause",
+    "text": "CUI-CONF-003 — Internal donor boundary. Keep the pinned Avalonia fork, its provenance/licensing and required mature low-level capabilities. CUI compiles directly to its own typed representation and runtime binding, never"
+  },
+  {
+    "source": "v2",
+    "line": 1303,
+    "type": "clause",
+    "text": "CUI-CONF-004 — Authentic specialised surfaces. A registered Object Type may host an actual donor-backed document, canvas, browser or media engine; for example Object Type=\"WriteDocumentSurface\" is a valid integration sha"
+  },
+  {
+    "source": "v2",
+    "line": 1367,
+    "type": "clause",
+    "text": "CUI-THEME-001 — One presentation authority. CUI owns the effective styles, resources, control templates and state visuals of first-party application surfaces on every supported renderer. Do not install Avalonia FluentThe"
+  },
+  {
+    "source": "v2",
+    "line": 1368,
+    "type": "clause",
+    "text": "CUI-THEME-002 — Deterministic startup and fallback. Resolve Home's effective user_preference before presenting the normal shell, using the last valid authorised cache when offline. Missing/invalid custom themes fall back"
+  },
+  {
+    "source": "v2",
+    "line": 1369,
+    "type": "clause",
+    "text": "CUI-THEME-003 — Inspectable precedence. The CUI Style and property precedence section below is the sole cascade. Donor style priorities, resource load order, native selectors or framework theme variants are not additiona"
+  },
+  {
+    "source": "v2",
+    "line": 1370,
+    "type": "clause",
+    "text": "CUI-THEME-004 — Real conformance evidence. Test all five built-in Themes and a custom theme, nested overrides and return to inheritance, user_preference across at least two independently running apps, restart/offline fal"
+  },
+  {
+    "source": "v2",
+    "line": 1746,
+    "type": "heading-candidate",
+    "text": "Persistent contextual AI bar"
+  },
+  {
+    "source": "v2",
+    "line": 1799,
+    "type": "clause",
+    "text": "LAUNCH-001 — Distinguish screen purposes. An app’s launch/home screen is its functional starting place for choosing or creating work; it is not the platform Home dashboard. A temporary startup/loading splash, first-run o"
+  },
+  {
+    "source": "v2",
+    "line": 1800,
+    "type": "clause",
+    "text": "LAUNCH-002 — Independent composition and app identity. Each required launch screen MUST have its own purposeful layout, hierarchy, recognisable app identity and the real app-specific entry points listed below or in its p"
+  },
+  {
+    "source": "v2",
+    "line": 1801,
+    "type": "clause",
+    "text": "LAUNCH-003 — Explicit active-view ownership. Model launch/home and the active workspace as distinct CUI view states with explicit navigation and activation. They may reuse the same window, app shell, engine and canonical"
+  },
+  {
+    "source": "v2",
+    "line": 1802,
+    "type": "clause",
+    "text": "LAUNCH-004 — Real transitions without data loss. Create, Open, Import and applicable template/recent/shared actions MUST establish or resolve the real authorised canonical artifact/session and transition to its functioni"
+  },
+  {
+    "source": "v2",
+    "line": 1803,
+    "type": "clause",
+    "text": "LAUNCH-005 — Shared implementation, complete coverage. Implement reusable canonical CUI navigation, activation and launch composition through the existing shared runtime, with each app binding its own real storage/model,"
+  },
+  {
+    "source": "v2",
+    "line": 1804,
+    "type": "clause",
+    "text": "LAUNCH-006 — Runtime and transition acceptance. Independently inspect the exact launched app/artifact under APP-AC. Cover launch without a restorable artifact/session; real empty and populated start states; applicable Cr"
+  },
+  {
+    "source": "v2",
+    "line": 1914,
+    "type": "heading-candidate",
+    "text": "Price thresholds"
+  },
+  {
+    "source": "v2",
+    "line": 1940,
+    "type": "heading-candidate",
+    "text": "Preset configurations"
+  },
+  {
+    "source": "v2",
+    "line": 1958,
+    "type": "heading-candidate",
+    "text": "Canonical subscription state"
+  },
+  {
+    "source": "v2",
+    "line": 1975,
+    "type": "heading-candidate",
+    "text": "Free hosted-site inactivity"
+  },
+  {
+    "source": "v2",
+    "line": 1981,
+    "type": "heading-candidate",
+    "text": "Custom resource allocation"
+  },
+  {
+    "source": "v2",
+    "line": 2053,
+    "type": "clause",
+    "text": "BIZ-01 — Organisation boundary and shared state"
+  },
+  {
+    "source": "v2",
+    "line": 2056,
+    "type": "clause",
+    "text": "BIZ-02 — Team Space and organisation drive"
+  },
+  {
+    "source": "v2",
+    "line": 2060,
+    "type": "clause",
+    "text": "BIZ-03 — Organisation Connect"
+  },
+  {
+    "source": "v2",
+    "line": 2063,
+    "type": "clause",
+    "text": "BIZ-04 — Cross-account device Mesh"
+  },
+  {
+    "source": "v2",
+    "line": 2067,
+    "type": "clause",
+    "text": "BIZ-05 — Shared and individual usage pools"
+  },
+  {
+    "source": "v2",
+    "line": 2071,
+    "type": "clause",
+    "text": "BIZ-06 — Team-wide Agents"
+  },
+  {
+    "source": "v2",
+    "line": 2075,
+    "type": "clause",
+    "text": "BIZ-07 — Managed 9to1-OS accounts and device policy"
+  },
+  {
+    "source": "v2",
+    "line": 2079,
+    "type": "clause",
+    "text": "BIZ-08 — Cross-app enforcement and acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 2088,
+    "type": "markdown",
+    "text": "## 4. Haven/9to1 host, browser engines and application launching"
+  },
+  {
+    "source": "v2",
+    "line": 2090,
+    "type": "clause",
+    "text": "### UX27-HOST-001 — One real launch path per advertised surface"
+  },
+  {
+    "source": "v2",
+    "line": 2096,
+    "type": "clause",
+    "text": "### UX27-HOST-002 — Home and New Tab identity"
+  },
+  {
+    "source": "v2",
+    "line": 2102,
+    "type": "clause",
+    "text": "### UX27-HOST-003 — Tab selection, closing and overflow"
+  },
+  {
+    "source": "v2",
+    "line": 2108,
+    "type": "clause",
+    "text": "### UX27-HOST-004 — Browser viewport and DPI correctness"
+  },
+  {
+    "source": "v2",
+    "line": 2114,
+    "type": "clause",
+    "text": "### UX27-HOST-005 — Wheel, trackpad and browser navigation"
+  },
+  {
+    "source": "v2",
+    "line": 2120,
+    "type": "clause",
+    "text": "### UX27-HOST-006 — Engine switching and failure states"
+  },
+  {
+    "source": "v2",
+    "line": 2126,
+    "type": "clause",
+    "text": "### UX27-HOST-007 — Profile/account popup lifecycle"
+  },
+  {
+    "source": "v2",
+    "line": 2132,
+    "type": "clause",
+    "text": "### UX27-HOST-008 — Session restoration and stale artifacts"
+  },
+  {
+    "source": "v2",
+    "line": 2138,
+    "type": "clause",
+    "text": "### UX27-HOST-009 — Startup and dependency repair"
+  },
+  {
+    "source": "v2",
+    "line": 2157,
+    "type": "heading-candidate",
+    "text": "Home shell and navigation"
+  },
+  {
+    "source": "v2",
+    "line": 2166,
+    "type": "heading-candidate",
+    "text": "Dashboard"
+  },
+  {
+    "source": "v2",
+    "line": 2178,
+    "type": "heading-candidate",
+    "text": "Dashboard layout and customisation"
+  },
+  {
+    "source": "v2",
+    "line": 2190,
+    "type": "heading-candidate",
+    "text": "AI-generated tiles and AI layout control"
+  },
+  {
+    "source": "v2",
+    "line": 2208,
+    "type": "heading-candidate",
+    "text": "Dashboard tile provider contract"
+  },
+  {
+    "source": "v2",
+    "line": 2217,
+    "type": "heading-candidate",
+    "text": "Apps surface and package management"
+  },
+  {
+    "source": "v2",
+    "line": 2232,
+    "type": "heading-candidate",
+    "text": "Library"
+  },
+  {
+    "source": "v2",
+    "line": 2244,
+    "type": "heading-candidate",
+    "text": "Events"
+  },
+  {
+    "source": "v2",
+    "line": 2256,
+    "type": "heading-candidate",
+    "text": "Discover"
+  },
+  {
+    "source": "v2",
+    "line": 2286,
+    "type": "heading-candidate",
+    "text": "Universal Model Picker"
+  },
+  {
+    "source": "v2",
+    "line": 2351,
+    "type": "heading-candidate",
+    "text": "Permission and trust broker"
+  },
+  {
+    "source": "v2",
+    "line": 2360,
+    "type": "heading-candidate",
+    "text": "Mesh"
+  },
+  {
+    "source": "v2",
+    "line": 2378,
+    "type": "heading-candidate",
+    "text": "Action Graph renderer"
+  },
+  {
+    "source": "v2",
+    "line": 2390,
+    "type": "heading-candidate",
+    "text": "Persistent contextual AI bar"
+  },
+  {
+    "source": "v2",
+    "line": 2430,
+    "type": "heading-candidate",
+    "text": "Canonical object identity, schemas and style registry"
+  },
+  {
+    "source": "v2",
+    "line": 2442,
+    "type": "heading-candidate",
+    "text": "Cross-app copy, paste and embeds"
+  },
+  {
+    "source": "v2",
+    "line": 2454,
+    "type": "heading-candidate",
+    "text": "Rendering, editing, undo and actions"
+  },
+  {
+    "source": "v2",
+    "line": 2466,
+    "type": "heading-candidate",
+    "text": "Drawing engine"
+  },
+  {
+    "source": "v2",
+    "line": 2472,
+    "type": "heading-candidate",
+    "text": "Deployment boundary and compatibility"
+  },
+  {
+    "source": "v2",
+    "line": 2481,
+    "type": "heading-candidate",
+    "text": "Shared Productivity Engine API"
+  },
+  {
+    "source": "v2",
+    "line": 2500,
+    "type": "heading-candidate",
+    "text": "Settings"
+  },
+  {
+    "source": "v2",
+    "line": 2521,
+    "type": "heading-candidate",
+    "text": "Notifications"
+  },
+  {
+    "source": "v2",
+    "line": 2530,
+    "type": "heading-candidate",
+    "text": "Shared search and Go indexing"
+  },
+  {
+    "source": "v2",
+    "line": 2542,
+    "type": "heading-candidate",
+    "text": "Service registry and compatibility handshake"
+  },
+  {
+    "source": "v2",
+    "line": 2554,
+    "type": "heading-candidate",
+    "text": "Startup, background lifecycle and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 2566,
+    "type": "heading-candidate",
+    "text": "Home data/state model"
+  },
+  {
+    "source": "v2",
+    "line": 2575,
+    "type": "heading-candidate",
+    "text": "Home API"
+  },
+  {
+    "source": "v2",
+    "line": 2616,
+    "type": "heading-candidate",
+    "text": "Security boundary"
+  },
+  {
+    "source": "v2",
+    "line": 2628,
+    "type": "heading-candidate",
+    "text": "Platform behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 2640,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 2649,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 2675,
+    "type": "heading-candidate",
+    "text": "Node Graph Framework"
+  },
+  {
+    "source": "v2",
+    "line": 2709,
+    "type": "clause",
+    "text": "ADM-01 — Product role, access and platforms"
+  },
+  {
+    "source": "v2",
+    "line": 2713,
+    "type": "clause",
+    "text": "ADM-02 — Navigation and organisation lifecycle"
+  },
+  {
+    "source": "v2",
+    "line": 2717,
+    "type": "clause",
+    "text": "ADM-03 — People, roles and permissions"
+  },
+  {
+    "source": "v2",
+    "line": 2721,
+    "type": "clause",
+    "text": "ADM-04 — Enforced policy editor"
+  },
+  {
+    "source": "v2",
+    "line": 2725,
+    "type": "clause",
+    "text": "ADM-05 — Required Plugins, forced settings and default models"
+  },
+  {
+    "source": "v2",
+    "line": 2729,
+    "type": "clause",
+    "text": "ADM-06 — Subscription assignment, usage controls and rollover"
+  },
+  {
+    "source": "v2",
+    "line": 2733,
+    "type": "clause",
+    "text": "ADM-07 — Billing, invoices and reporting"
+  },
+  {
+    "source": "v2",
+    "line": 2737,
+    "type": "clause",
+    "text": "ADM-08 — Shared resources, devices and team Agents"
+  },
+  {
+    "source": "v2",
+    "line": 2741,
+    "type": "clause",
+    "text": "ADM-09 — Audit, failure and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 2744,
+    "type": "clause",
+    "text": "ADM-10 — Canonical data and API contract"
+  },
+  {
+    "source": "v2",
+    "line": 2748,
+    "type": "clause",
+    "text": "ADM-11 — Acceptance and release gates"
+  },
+  {
+    "source": "v2",
+    "line": 2752,
+    "type": "clause",
+    "text": "ADM-12 — Explicit open decisions"
+  },
+  {
+    "source": "v2",
+    "line": 2758,
+    "type": "markdown",
+    "text": "## 12. Files — optional integration, mature file-manager behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 2760,
+    "type": "clause",
+    "text": "### UX27-FILES-001 — Navigation and selection"
+  },
+  {
+    "source": "v2",
+    "line": 2766,
+    "type": "clause",
+    "text": "### UX27-FILES-002 — File operations and conflict dialogs"
+  },
+  {
+    "source": "v2",
+    "line": 2772,
+    "type": "clause",
+    "text": "### UX27-FILES-003 — Open with and owning-app semantics"
+  },
+  {
+    "source": "v2",
+    "line": 2778,
+    "type": "clause",
+    "text": "### UX27-FILES-004 — Sync, availability and offline status"
+  },
+  {
+    "source": "v2",
+    "line": 2797,
+    "type": "heading-candidate",
+    "text": "Authority and ownership boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 2809,
+    "type": "heading-candidate",
+    "text": "Canonical identity and item model"
+  },
+  {
+    "source": "v2",
+    "line": 2821,
+    "type": "heading-candidate",
+    "text": "Locations and provider abstraction"
+  },
+  {
+    "source": "v2",
+    "line": 2833,
+    "type": "heading-candidate",
+    "text": "Desktop shell, tabs and views"
+  },
+  {
+    "source": "v2",
+    "line": 2861,
+    "type": "heading-candidate",
+    "text": "9to1 Drive integration"
+  },
+  {
+    "source": "v2",
+    "line": 2873,
+    "type": "heading-candidate",
+    "text": "Rapid push-based sync architecture"
+  },
+  {
+    "source": "v2",
+    "line": 2888,
+    "type": "heading-candidate",
+    "text": "Optimistic local operations"
+  },
+  {
+    "source": "v2",
+    "line": 2897,
+    "type": "heading-candidate",
+    "text": "Sync and availability state"
+  },
+  {
+    "source": "v2",
+    "line": 2909,
+    "type": "heading-candidate",
+    "text": "Manual sync and sync-on-demand"
+  },
+  {
+    "source": "v2",
+    "line": 2918,
+    "type": "heading-candidate",
+    "text": "Offline-first behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 2930,
+    "type": "heading-candidate",
+    "text": "Real-time filesystem collaboration"
+  },
+  {
+    "source": "v2",
+    "line": 2945,
+    "type": "heading-candidate",
+    "text": "Transfers"
+  },
+  {
+    "source": "v2",
+    "line": 2960,
+    "type": "heading-candidate",
+    "text": "Version history and durable revisions"
+  },
+  {
+    "source": "v2",
+    "line": 2969,
+    "type": "heading-candidate",
+    "text": "Trash, delete and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 2978,
+    "type": "heading-candidate",
+    "text": "Sharing and ACLs"
+  },
+  {
+    "source": "v2",
+    "line": 2993,
+    "type": "heading-candidate",
+    "text": "Search, metadata and previews"
+  },
+  {
+    "source": "v2",
+    "line": 3005,
+    "type": "heading-candidate",
+    "text": "Open routing, context actions and drag/drop"
+  },
+  {
+    "source": "v2",
+    "line": 3017,
+    "type": "heading-candidate",
+    "text": "AI bar and privacy"
+  },
+  {
+    "source": "v2",
+    "line": 3029,
+    "type": "heading-candidate",
+    "text": "Operation journal, undo and change feed"
+  },
+  {
+    "source": "v2",
+    "line": 3041,
+    "type": "heading-candidate",
+    "text": "Properties and sync diagnostics"
+  },
+  {
+    "source": "v2",
+    "line": 3050,
+    "type": "heading-candidate",
+    "text": "Safety and filesystem edge cases"
+  },
+  {
+    "source": "v2",
+    "line": 3059,
+    "type": "heading-candidate",
+    "text": "Files API"
+  },
+  {
+    "source": "v2",
+    "line": 3105,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 3111,
+    "type": "heading-candidate",
+    "text": "Platform behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 3117,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 3261,
+    "type": "heading-candidate",
+    "text": "Modern CUI shell and responsive layout"
+  },
+  {
+    "source": "v2",
+    "line": 3279,
+    "type": "heading-candidate",
+    "text": "Sidebar and navigation"
+  },
+  {
+    "source": "v2",
+    "line": 3291,
+    "type": "heading-candidate",
+    "text": "Account and provider model"
+  },
+  {
+    "source": "v2",
+    "line": 3306,
+    "type": "heading-candidate",
+    "text": "Message, thread and folder identity"
+  },
+  {
+    "source": "v2",
+    "line": 3321,
+    "type": "heading-candidate",
+    "text": "Message rendering and privacy"
+  },
+  {
+    "source": "v2",
+    "line": 3333,
+    "type": "heading-candidate",
+    "text": "Compose and drafts"
+  },
+  {
+    "source": "v2",
+    "line": 3348,
+    "type": "heading-candidate",
+    "text": "Attachments and Files integration"
+  },
+  {
+    "source": "v2",
+    "line": 3360,
+    "type": "heading-candidate",
+    "text": "Sync, push and offline behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 3375,
+    "type": "heading-candidate",
+    "text": "Send pipeline, Outbox and Undo Send"
+  },
+  {
+    "source": "v2",
+    "line": 3387,
+    "type": "heading-candidate",
+    "text": "Scheduled send"
+  },
+  {
+    "source": "v2",
+    "line": 3396,
+    "type": "heading-candidate",
+    "text": "Search and smart views"
+  },
+  {
+    "source": "v2",
+    "line": 3405,
+    "type": "heading-candidate",
+    "text": "Rules and automation integration"
+  },
+  {
+    "source": "v2",
+    "line": 3414,
+    "type": "heading-candidate",
+    "text": "Snooze, archive and delete semantics"
+  },
+  {
+    "source": "v2",
+    "line": 3423,
+    "type": "heading-candidate",
+    "text": "Signatures, aliases and contacts"
+  },
+  {
+    "source": "v2",
+    "line": 3432,
+    "type": "heading-candidate",
+    "text": "Notifications"
+  },
+  {
+    "source": "v2",
+    "line": 3441,
+    "type": "heading-candidate",
+    "text": "Persistent AI bar and AI action boundary"
+  },
+  {
+    "source": "v2",
+    "line": 3456,
+    "type": "heading-candidate",
+    "text": "Security, phishing and remote-content safety"
+  },
+  {
+    "source": "v2",
+    "line": 3468,
+    "type": "heading-candidate",
+    "text": "OpenPGP, S/MIME and advanced mail features"
+  },
+  {
+    "source": "v2",
+    "line": 3477,
+    "type": "heading-candidate",
+    "text": "Print and export"
+  },
+  {
+    "source": "v2",
+    "line": 3483,
+    "type": "heading-candidate",
+    "text": "Mail API"
+  },
+  {
+    "source": "v2",
+    "line": 3519,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 3525,
+    "type": "heading-candidate",
+    "text": "Platform behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 3531,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 3689,
+    "type": "markdown",
+    "text": "## 5. Spaces, composer, models and agent visibility"
+  },
+  {
+    "source": "v2",
+    "line": 3691,
+    "type": "clause",
+    "text": "### UX27-SPACES-001 — Space entry and retained sidebars"
+  },
+  {
+    "source": "v2",
+    "line": 3697,
+    "type": "clause",
+    "text": "### UX27-SPACES-002 — Composer shelf layout and activation"
+  },
+  {
+    "source": "v2",
+    "line": 3703,
+    "type": "clause",
+    "text": "### UX27-SPACES-003 — Composer action-state table"
+  },
+  {
+    "source": "v2",
+    "line": 3719,
+    "type": "clause",
+    "text": "### UX27-SPACES-004 — Steer, Queue, Stop and Resume semantics"
+  },
+  {
+    "source": "v2",
+    "line": 3725,
+    "type": "clause",
+    "text": "### UX27-SPACES-005 — Drafts, attachments and input keys"
+  },
+  {
+    "source": "v2",
+    "line": 3731,
+    "type": "clause",
+    "text": "### UX27-SPACES-006 — Message rendering and actions"
+  },
+  {
+    "source": "v2",
+    "line": 3737,
+    "type": "clause",
+    "text": "### UX27-SPACES-007 — Summary, tasks and status truth"
+  },
+  {
+    "source": "v2",
+    "line": 3743,
+    "type": "clause",
+    "text": "### UX27-SPACES-008 — Custom sidebar targets and DEC-014"
+  },
+  {
+    "source": "v2",
+    "line": 3749,
+    "type": "clause",
+    "text": "### UX27-SPACES-009 — Model Groups and lazy selection"
+  },
+  {
+    "source": "v2",
+    "line": 3755,
+    "type": "clause",
+    "text": "### UX27-SPACES-010 — Reasoning effort is not confidence or quota"
+  },
+  {
+    "source": "v2",
+    "line": 3761,
+    "type": "clause",
+    "text": "### UX27-SPACES-011 — Usage display and unknown data"
+  },
+  {
+    "source": "v2",
+    "line": 3767,
+    "type": "clause",
+    "text": "### UX27-SPACES-012 — Research, Shopping and Study surfaces"
+  },
+  {
+    "source": "v2",
+    "line": 3773,
+    "type": "clause",
+    "text": "### UX27-SPACES-013 — Assistants, Main chats and teams"
+  },
+  {
+    "source": "v2",
+    "line": 3779,
+    "type": "clause",
+    "text": "### UX27-SPACES-014 — Voice & Vision and context indication"
+  },
+  {
+    "source": "v2",
+    "line": 3795,
+    "type": "heading-candidate",
+    "text": "Built-in Space types"
+  },
+  {
+    "source": "v2",
+    "line": 3843,
+    "type": "heading-candidate",
+    "text": "User-created Spaces and nesting"
+  },
+  {
+    "source": "v2",
+    "line": 3855,
+    "type": "heading-candidate",
+    "text": "Sidebar and navigation"
+  },
+  {
+    "source": "v2",
+    "line": 3883,
+    "type": "heading-candidate",
+    "text": "Canonical Space and conversation model"
+  },
+  {
+    "source": "v2",
+    "line": 3892,
+    "type": "heading-candidate",
+    "text": "Conversation branching and history"
+  },
+  {
+    "source": "v2",
+    "line": 3901,
+    "type": "heading-candidate",
+    "text": "Stop and resume"
+  },
+  {
+    "source": "v2",
+    "line": 3916,
+    "type": "heading-candidate",
+    "text": "Model selection"
+  },
+  {
+    "source": "v2",
+    "line": 3925,
+    "type": "heading-candidate",
+    "text": "Sources and context"
+  },
+  {
+    "source": "v2",
+    "line": 3940,
+    "type": "heading-candidate",
+    "text": "Context budgeting and retrieval"
+  },
+  {
+    "source": "v2",
+    "line": 3949,
+    "type": "heading-candidate",
+    "text": "Canonical artifact editing"
+  },
+  {
+    "source": "v2",
+    "line": 3958,
+    "type": "heading-candidate",
+    "text": "Shared Productivity Engine"
+  },
+  {
+    "source": "v2",
+    "line": 3967,
+    "type": "heading-candidate",
+    "text": "Plugins, Skills and Agents"
+  },
+  {
+    "source": "v2",
+    "line": 3979,
+    "type": "heading-candidate",
+    "text": "Shared node-editor framework"
+  },
+  {
+    "source": "v2",
+    "line": 3988,
+    "type": "heading-candidate",
+    "text": "Built-in Space Events & Extensions editor"
+  },
+  {
+    "source": "v2",
+    "line": 4006,
+    "type": "heading-candidate",
+    "text": "User-created Space full graph editor"
+  },
+  {
+    "source": "v2",
+    "line": 4021,
+    "type": "heading-candidate",
+    "text": "Graph-editor AI bar"
+  },
+  {
+    "source": "v2",
+    "line": 4033,
+    "type": "heading-candidate",
+    "text": "Custom sidebar surfaces"
+  },
+  {
+    "source": "v2",
+    "line": 4048,
+    "type": "heading-candidate",
+    "text": "Long-running work and Action Graph"
+  },
+  {
+    "source": "v2",
+    "line": 4060,
+    "type": "heading-candidate",
+    "text": "Agents and Subagents"
+  },
+  {
+    "source": "v2",
+    "line": 4069,
+    "type": "heading-candidate",
+    "text": "Memory and Dulche Den"
+  },
+  {
+    "source": "v2",
+    "line": 4078,
+    "type": "heading-candidate",
+    "text": "Web access and source provenance"
+  },
+  {
+    "source": "v2",
+    "line": 4087,
+    "type": "heading-candidate",
+    "text": "Search, organisation and sharing"
+  },
+  {
+    "source": "v2",
+    "line": 4099,
+    "type": "heading-candidate",
+    "text": "Study structured state"
+  },
+  {
+    "source": "v2",
+    "line": 4105,
+    "type": "heading-candidate",
+    "text": "Tasks structured state"
+  },
+  {
+    "source": "v2",
+    "line": 4114,
+    "type": "heading-candidate",
+    "text": "Spaces API"
+  },
+  {
+    "source": "v2",
+    "line": 4160,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 4166,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 4212,
+    "type": "heading-candidate",
+    "text": "Session-first modern interface"
+  },
+  {
+    "source": "v2",
+    "line": 4221,
+    "type": "heading-candidate",
+    "text": "Starting and continuing sessions"
+  },
+  {
+    "source": "v2",
+    "line": 4230,
+    "type": "heading-candidate",
+    "text": "Multimodal session model"
+  },
+  {
+    "source": "v2",
+    "line": 4239,
+    "type": "heading-candidate",
+    "text": "Voice modes"
+  },
+  {
+    "source": "v2",
+    "line": 4245,
+    "type": "heading-candidate",
+    "text": "Conversational mode"
+  },
+  {
+    "source": "v2",
+    "line": 4251,
+    "type": "heading-candidate",
+    "text": "Monologue mode"
+  },
+  {
+    "source": "v2",
+    "line": 4260,
+    "type": "heading-candidate",
+    "text": "Live Listener mode"
+  },
+  {
+    "source": "v2",
+    "line": 4272,
+    "type": "heading-candidate",
+    "text": "Live Listener ephemeral audio and privacy"
+  },
+  {
+    "source": "v2",
+    "line": 4287,
+    "type": "heading-candidate",
+    "text": "Live Listener notes and actions"
+  },
+  {
+    "source": "v2",
+    "line": 4299,
+    "type": "heading-candidate",
+    "text": "Live Translate mode"
+  },
+  {
+    "source": "v2",
+    "line": 4335,
+    "type": "heading-candidate",
+    "text": "Text input during Voice"
+  },
+  {
+    "source": "v2",
+    "line": 4344,
+    "type": "heading-candidate",
+    "text": "Interruption, stop and resume"
+  },
+  {
+    "source": "v2",
+    "line": 4353,
+    "type": "heading-candidate",
+    "text": "Floating voice pill"
+  },
+  {
+    "source": "v2",
+    "line": 4362,
+    "type": "heading-candidate",
+    "text": "Transcript and captions"
+  },
+  {
+    "source": "v2",
+    "line": 4371,
+    "type": "heading-candidate",
+    "text": "Audio devices and processing"
+  },
+  {
+    "source": "v2",
+    "line": 4380,
+    "type": "heading-candidate",
+    "text": "Universal Model Picker integration and named voices"
+  },
+  {
+    "source": "v2",
+    "line": 4392,
+    "type": "heading-candidate",
+    "text": "Vision sources"
+  },
+  {
+    "source": "v2",
+    "line": 4401,
+    "type": "heading-candidate",
+    "text": "Screenshots, screen sharing and camera"
+  },
+  {
+    "source": "v2",
+    "line": 4413,
+    "type": "heading-candidate",
+    "text": "Adaptive visual sampling"
+  },
+  {
+    "source": "v2",
+    "line": 4419,
+    "type": "heading-candidate",
+    "text": "Semantic context before pixels"
+  },
+  {
+    "source": "v2",
+    "line": 4428,
+    "type": "heading-candidate",
+    "text": "Privacy and local/cloud boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 4437,
+    "type": "heading-candidate",
+    "text": "AI Overlay"
+  },
+  {
+    "source": "v2",
+    "line": 4449,
+    "type": "heading-candidate",
+    "text": "Overlay automation execution"
+  },
+  {
+    "source": "v2",
+    "line": 4461,
+    "type": "heading-candidate",
+    "text": "Overlay continuity"
+  },
+  {
+    "source": "v2",
+    "line": 4470,
+    "type": "heading-candidate",
+    "text": "Voice tools and consequential actions"
+  },
+  {
+    "source": "v2",
+    "line": 4476,
+    "type": "heading-candidate",
+    "text": "AI-assisted dictation"
+  },
+  {
+    "source": "v2",
+    "line": 4491,
+    "type": "heading-candidate",
+    "text": "Background/session continuity"
+  },
+  {
+    "source": "v2",
+    "line": 4500,
+    "type": "heading-candidate",
+    "text": "Accessibility"
+  },
+  {
+    "source": "v2",
+    "line": 4506,
+    "type": "heading-candidate",
+    "text": "Platform capability behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 4512,
+    "type": "heading-candidate",
+    "text": "Vision & Voice API"
+  },
+  {
+    "source": "v2",
+    "line": 4546,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 4552,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 4598,
+    "type": "heading-candidate",
+    "text": "Navigation and landing page"
+  },
+  {
+    "source": "v2",
+    "line": 4613,
+    "type": "heading-candidate",
+    "text": "Project model"
+  },
+  {
+    "source": "v2",
+    "line": 4625,
+    "type": "heading-candidate",
+    "text": "Build — Harness Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4643,
+    "type": "heading-candidate",
+    "text": "Harness advanced graph"
+  },
+  {
+    "source": "v2",
+    "line": 4666,
+    "type": "heading-candidate",
+    "text": "Plugins / Connectors"
+  },
+  {
+    "source": "v2",
+    "line": 4672,
+    "type": "heading-candidate",
+    "text": "Skills"
+  },
+  {
+    "source": "v2",
+    "line": 4678,
+    "type": "heading-candidate",
+    "text": "Knowledge / Files"
+  },
+  {
+    "source": "v2",
+    "line": 4684,
+    "type": "heading-candidate",
+    "text": "More Options"
+  },
+  {
+    "source": "v2",
+    "line": 4699,
+    "type": "heading-candidate",
+    "text": "Instructions and assistant"
+  },
+  {
+    "source": "v2",
+    "line": 4708,
+    "type": "heading-candidate",
+    "text": "Agent advanced logic, preview and revisions"
+  },
+  {
+    "source": "v2",
+    "line": 4728,
+    "type": "heading-candidate",
+    "text": "Build — Tool Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4737,
+    "type": "heading-candidate",
+    "text": "Skill Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4746,
+    "type": "heading-candidate",
+    "text": "Plugin Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4755,
+    "type": "heading-candidate",
+    "text": "MCP Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4764,
+    "type": "heading-candidate",
+    "text": "Shared builder assistant"
+  },
+  {
+    "source": "v2",
+    "line": 4773,
+    "type": "heading-candidate",
+    "text": "Test & Debug — Playground"
+  },
+  {
+    "source": "v2",
+    "line": 4785,
+    "type": "heading-candidate",
+    "text": "Test & Debug — Evaluations"
+  },
+  {
+    "source": "v2",
+    "line": 4803,
+    "type": "heading-candidate",
+    "text": "Test & Debug — Test Suites"
+  },
+  {
+    "source": "v2",
+    "line": 4815,
+    "type": "heading-candidate",
+    "text": "Test & Debug — Replay & Debugger"
+  },
+  {
+    "source": "v2",
+    "line": 4827,
+    "type": "heading-candidate",
+    "text": "Resources — Schema Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4839,
+    "type": "heading-candidate",
+    "text": "Resources — Model Router Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4848,
+    "type": "heading-candidate",
+    "text": "Resources — Generative UI Builder"
+  },
+  {
+    "source": "v2",
+    "line": 4860,
+    "type": "heading-candidate",
+    "text": "Resources — Run Profiles"
+  },
+  {
+    "source": "v2",
+    "line": 4869,
+    "type": "heading-candidate",
+    "text": "Context Inspector"
+  },
+  {
+    "source": "v2",
+    "line": 4878,
+    "type": "heading-candidate",
+    "text": "Permission Simulator"
+  },
+  {
+    "source": "v2",
+    "line": 4887,
+    "type": "heading-candidate",
+    "text": "Dependency Inspector"
+  },
+  {
+    "source": "v2",
+    "line": 4896,
+    "type": "heading-candidate",
+    "text": "Comparison view"
+  },
+  {
+    "source": "v2",
+    "line": 4905,
+    "type": "heading-candidate",
+    "text": "Documentation Generator"
+  },
+  {
+    "source": "v2",
+    "line": 4914,
+    "type": "heading-candidate",
+    "text": "Templates"
+  },
+  {
+    "source": "v2",
+    "line": 4923,
+    "type": "heading-candidate",
+    "text": "Validation, install and deployment boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 4932,
+    "type": "heading-candidate",
+    "text": "AI Studio API"
+  },
+  {
+    "source": "v2",
+    "line": 4973,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 4979,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 5018,
+    "type": "heading-candidate",
+    "text": "Game definitions and matches"
+  },
+  {
+    "source": "v2",
+    "line": 5030,
+    "type": "heading-candidate",
+    "text": "Contestants"
+  },
+  {
+    "source": "v2",
+    "line": 5045,
+    "type": "heading-candidate",
+    "text": "Contestant selection and automatic filling"
+  },
+  {
+    "source": "v2",
+    "line": 5054,
+    "type": "heading-candidate",
+    "text": "Isolation, visibility and fairness"
+  },
+  {
+    "source": "v2",
+    "line": 5069,
+    "type": "heading-candidate",
+    "text": "Canonical game state and rules"
+  },
+  {
+    "source": "v2",
+    "line": 5081,
+    "type": "heading-candidate",
+    "text": "Typed game actions"
+  },
+  {
+    "source": "v2",
+    "line": 5093,
+    "type": "heading-candidate",
+    "text": "Rounds, turns and timing"
+  },
+  {
+    "source": "v2",
+    "line": 5105,
+    "type": "heading-candidate",
+    "text": "Judging and scoring"
+  },
+  {
+    "source": "v2",
+    "line": 5120,
+    "type": "heading-candidate",
+    "text": "Tools and capability profiles"
+  },
+  {
+    "source": "v2",
+    "line": 5132,
+    "type": "heading-candidate",
+    "text": "Teams and collaboration"
+  },
+  {
+    "source": "v2",
+    "line": 5141,
+    "type": "heading-candidate",
+    "text": "Spectator mode"
+  },
+  {
+    "source": "v2",
+    "line": 5150,
+    "type": "heading-candidate",
+    "text": "Game creation and quick starts"
+  },
+  {
+    "source": "v2",
+    "line": 5162,
+    "type": "heading-candidate",
+    "text": "UI and Generative UI"
+  },
+  {
+    "source": "v2",
+    "line": 5171,
+    "type": "heading-candidate",
+    "text": "Voice, images and multimodality"
+  },
+  {
+    "source": "v2",
+    "line": 5180,
+    "type": "heading-candidate",
+    "text": "Checkpoints, reconnect and replay"
+  },
+  {
+    "source": "v2",
+    "line": 5189,
+    "type": "heading-candidate",
+    "text": "Play and Experiences interoperability"
+  },
+  {
+    "source": "v2",
+    "line": 5195,
+    "type": "heading-candidate",
+    "text": "Canonical Play API"
+  },
+  {
+    "source": "v2",
+    "line": 5228,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 5234,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 5256,
+    "type": "markdown",
+    "text": "## 3. Shared persistence, interoperability and local service boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 5258,
+    "type": "clause",
+    "text": "### UX27-DATAFLOW-001 — Shared core is not compulsory cloud setup"
+  },
+  {
+    "source": "v2",
+    "line": 5264,
+    "type": "clause",
+    "text": "### UX27-DATAFLOW-002 — Artifact opening and ownership"
+  },
+  {
+    "source": "v2",
+    "line": 5270,
+    "type": "clause",
+    "text": "### UX27-DATAFLOW-003 — Save and sync are separate transactions"
+  },
+  {
+    "source": "v2",
+    "line": 5276,
+    "type": "clause",
+    "text": "### UX27-DATAFLOW-004 — Crash recovery and interrupted close"
+  },
+  {
+    "source": "v2",
+    "line": 5282,
+    "type": "clause",
+    "text": "### UX27-DATAFLOW-005 — Import/export completion and safety"
+  },
+  {
+    "source": "v2",
+    "line": 5288,
+    "type": "clause",
+    "text": "### UX27-DATAFLOW-006 — References and deletion"
+  },
+  {
+    "source": "v2",
+    "line": 5297,
+    "type": "markdown",
+    "text": "## 8. Write — mature document editing through the actual engine"
+  },
+  {
+    "source": "v2",
+    "line": 5299,
+    "type": "clause",
+    "text": "### UX27-WRITE-001 — Real document, page and caret"
+  },
+  {
+    "source": "v2",
+    "line": 5305,
+    "type": "clause",
+    "text": "### UX27-WRITE-002 — Contextual toolbar and persistent actions"
+  },
+  {
+    "source": "v2",
+    "line": 5311,
+    "type": "clause",
+    "text": "### UX27-WRITE-003 — Styles and paragraph formatting"
+  },
+  {
+    "source": "v2",
+    "line": 5317,
+    "type": "clause",
+    "text": "### UX27-WRITE-004 — Sections and navigation"
+  },
+  {
+    "source": "v2",
+    "line": 5323,
+    "type": "clause",
+    "text": "### UX27-WRITE-005 — Tables, images and anchored objects"
+  },
+  {
+    "source": "v2",
+    "line": 5329,
+    "type": "clause",
+    "text": "### UX27-WRITE-006 — Inspector, comments and review state"
+  },
+  {
+    "source": "v2",
+    "line": 5335,
+    "type": "clause",
+    "text": "### UX27-WRITE-007 — File formats, persistence and export"
+  },
+  {
+    "source": "v2",
+    "line": 5354,
+    "type": "heading-candidate",
+    "text": "Donor parity and objective word-processor behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 5363,
+    "type": "heading-candidate",
+    "text": "Launch and file entry"
+  },
+  {
+    "source": "v2",
+    "line": 5369,
+    "type": "heading-candidate",
+    "text": "Editor shell"
+  },
+  {
+    "source": "v2",
+    "line": 5378,
+    "type": "heading-candidate",
+    "text": "Floating contextual toolbar"
+  },
+  {
+    "source": "v2",
+    "line": 5393,
+    "type": "heading-candidate",
+    "text": "Pinned toolbar actions"
+  },
+  {
+    "source": "v2",
+    "line": 5402,
+    "type": "heading-candidate",
+    "text": "Universal Insert (+)"
+  },
+  {
+    "source": "v2",
+    "line": 5411,
+    "type": "heading-candidate",
+    "text": "Eye / visibility controls"
+  },
+  {
+    "source": "v2",
+    "line": 5420,
+    "type": "heading-candidate",
+    "text": "Floating document statistics"
+  },
+  {
+    "source": "v2",
+    "line": 5429,
+    "type": "heading-candidate",
+    "text": "Sections sidebar"
+  },
+  {
+    "source": "v2",
+    "line": 5450,
+    "type": "heading-candidate",
+    "text": "View modes"
+  },
+  {
+    "source": "v2",
+    "line": 5471,
+    "type": "heading-candidate",
+    "text": "Locked and Unlocked layout"
+  },
+  {
+    "source": "v2",
+    "line": 5489,
+    "type": "heading-candidate",
+    "text": "Styles and custom styles"
+  },
+  {
+    "source": "v2",
+    "line": 5504,
+    "type": "heading-candidate",
+    "text": "Tables"
+  },
+  {
+    "source": "v2",
+    "line": 5525,
+    "type": "heading-candidate",
+    "text": "Images, drawings and positioned objects"
+  },
+  {
+    "source": "v2",
+    "line": 5534,
+    "type": "heading-candidate",
+    "text": "References and document structure"
+  },
+  {
+    "source": "v2",
+    "line": 5543,
+    "type": "heading-candidate",
+    "text": "Review, comments and collaboration"
+  },
+  {
+    "source": "v2",
+    "line": 5552,
+    "type": "heading-candidate",
+    "text": "Native format and foreign document formats"
+  },
+  {
+    "source": "v2",
+    "line": 5561,
+    "type": "heading-candidate",
+    "text": "PDF opening and editing"
+  },
+  {
+    "source": "v2",
+    "line": 5582,
+    "type": "heading-candidate",
+    "text": "Persistent AI bar in Write"
+  },
+  {
+    "source": "v2",
+    "line": 5597,
+    "type": "heading-candidate",
+    "text": "Agents, sources and Translate integration"
+  },
+  {
+    "source": "v2",
+    "line": 5609,
+    "type": "heading-candidate",
+    "text": "Embedded 9to1 artifacts and interoperability"
+  },
+  {
+    "source": "v2",
+    "line": 5618,
+    "type": "heading-candidate",
+    "text": "Navigation, search and long-document performance"
+  },
+  {
+    "source": "v2",
+    "line": 5627,
+    "type": "heading-candidate",
+    "text": "Recovery, persistence and accessibility"
+  },
+  {
+    "source": "v2",
+    "line": 5636,
+    "type": "heading-candidate",
+    "text": "Canonical Write API"
+  },
+  {
+    "source": "v2",
+    "line": 5675,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 5681,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 5685,
+    "type": "clause",
+    "text": "WRITE-AC-001 — Non-substitutable word processor. For Part 1 RCVP, launch the real CUI Write app from normal entry points with the integrated LibreOffice Writer/LibreOfficeKit donor engine and canonical storage. A plain m"
+  },
+  {
+    "source": "v2",
+    "line": 5686,
+    "type": "clause",
+    "text": "WRITE-AC-002 — Authentic integrated workflow and artifact inspection. In the shipped editor, create/open a realistic multi-paragraph document; move the caret and select independent ranges; apply different inline formatti"
+  },
+  {
+    "source": "v2",
+    "line": 5687,
+    "type": "clause",
+    "text": "WRITE-AC-003 — Specified shell, stage boundaries and Full acceptance. The real editor uses the stated title/backstage entry, stable floating contextual toolbar, persistent +/Eye/overflow controls, context-relevant action"
+  },
+  {
+    "source": "v2",
+    "line": 5692,
+    "type": "clause",
+    "text": "WRITE-UX-101 — Deliberate document identity. Distinguish immediate Home/backstage entry, Write/document identity, editable document title, truthful save/autosave state and document actions. Home stays directly left of th"
+  },
+  {
+    "source": "v2",
+    "line": 5693,
+    "type": "clause",
+    "text": "WRITE-UX-102 — Rich, stable contextual floating toolbar. Keep the actual floating CUI toolbar directly below the title. At normal desktop width in text/paragraph context expose working, logically grouped Undo/Redo; activ"
+  },
+  {
+    "source": "v2",
+    "line": 5694,
+    "type": "clause",
+    "text": "WRITE-UX-103 — Context and persistent controls. Toolbar contents MUST follow actual semantic selection: text/heading, table, image, positioned object, references and review surface the right actions. Text must not show C"
+  },
+  {
+    "source": "v2",
+    "line": 5695,
+    "type": "clause",
+    "text": "WRITE-UX-104 — Accurate selection-aware state. Toolbar, contextual menus and inspector show the actual current style/font/size, inline formatting, alignment, list, text colour, highlight and other applicable paragraph/ob"
+  },
+  {
+    "source": "v2",
+    "line": 5696,
+    "type": "clause",
+    "text": "WRITE-UX-105 — Professional organisation and responsiveness. Use coherent rounded CUI controls, consistent icon size/weight, light-touch grouped backgrounds, deliberate spacers/separators, labels for ambiguous commands, "
+  },
+  {
+    "source": "v2",
+    "line": 5697,
+    "type": "clause",
+    "text": "WRITE-UX-106 — Authentic insertion and menus. + is the persistent, searchable, contextual universal Insert palette, with real stage-supported tables, images, links, equations, dividers, references, structure and embedded"
+  },
+  {
+    "source": "v2",
+    "line": 5698,
+    "type": "clause",
+    "text": "WRITE-UX-107 — Real floating menu quality. All CUI menu/dropdown/colour/context surfaces require professional alignment, typography, padding, semantic grouping, consistent icons, obvious hover/active/disabled/focus state"
+  },
+  {
+    "source": "v2",
+    "line": 5700,
+    "type": "clause",
+    "text": "WRITE-UX-108 — Retain, do not replace, Properties. The right-side Properties inspector is an approved concept, serving advanced contextual precision controls rather than holding all common formatting. Use grouped/collaps"
+  },
+  {
+    "source": "v2",
+    "line": 5701,
+    "type": "clause",
+    "text": "WRITE-UX-109 — Fix inspector numeric fields and colours. Font size, line spacing and indent have properly integrated +/− steppers, value validation and unit clarity without microscopic buttons, clipping or overlap near t"
+  },
+  {
+    "source": "v2",
+    "line": 5702,
+    "type": "clause",
+    "text": "WRITE-UX-110 — Correct inspector context and focus. With a caret/selection show relevant editable text/paragraph properties; with a table/image/object show its supported properties, not irrelevant controls. Mixed selecti"
+  },
+  {
+    "source": "v2",
+    "line": 5703,
+    "type": "clause",
+    "text": "WRITE-UX-111 — Real Sections and heading outline. Make Sections root nodes, nesting, selection, headings and navigation visibly distinct. Clarify the ambiguous “Documents / Sections” label; never leave “Headings” as a de"
+  },
+  {
+    "source": "v2",
+    "line": 5704,
+    "type": "clause",
+    "text": "WRITE-UX-112 — Genuine word-processing surface. Keep a clean contrast between dark surrounding workspace and white/page surface; page margins, readability and canvas positioning are deliberate, not a static white rectang"
+  },
+  {
+    "source": "v2",
+    "line": 5705,
+    "type": "clause",
+    "text": "WRITE-UX-113 — View, zoom and scrolling. Continuous, Pages and Book are real same-document presentation modes, not buttons that merely rename a single view; preserve DocumentID, structural identities, selection and revis"
+  },
+  {
+    "source": "v2",
+    "line": 5706,
+    "type": "clause",
+    "text": "WRITE-UX-114 — Mature, authentic launch/home screen. Follow LAUNCH-001–006 with genuinely separate start and editor compositions. Organise New/Blank, real Templates, Recent, Favourites, Shared, Search, Open and Import pa"
+  },
+  {
+    "source": "v2",
+    "line": 5707,
+    "type": "clause",
+    "text": "WRITE-UX-115 — Accurate status bar, optional statistics and save truth. Fix “1 pages” to “1 page”, keep word/page/character counts accurate where presented, and distinguish unsaved, saving, saved and failed states from r"
+  },
+  {
+    "source": "v2",
+    "line": 5708,
+    "type": "clause",
+    "text": "WRITE-UX-116 — Full CUI authority and design polish. Native controls may provide infrastructure but CUI alone owns public component composition, theme and style. Source-audit for CUI compliance rather than guessing from "
+  },
+  {
+    "source": "v2",
+    "line": 5709,
+    "type": "clause",
+    "text": "WRITE-UX-117 — Accessibility and responsive quality. Provide keyboard/screen-reader/IME coverage, meaningful accessible names, accessible toolbar/menu traversal, visible focus, readable selections, contrast, zoom/DPI sca"
+  },
+  {
+    "source": "v2",
+    "line": 5710,
+    "type": "clause",
+    "text": "WRITE-UX-118 — Performance and recovery. Measure actual typing, editor activation, opening files, menu activation, selection changes, panel opening, resize, long-document scroll, view and zoom changes. Prefer incremental"
+  },
+  {
+    "source": "v2",
+    "line": 5711,
+    "type": "clause",
+    "text": "WRITE-UX-119 — Protect all existing functionality. Before redesign inventory genuine existing editor commands, shortcuts, donor behaviours, APIs, navigation, view/layout/section/style/table/PDF/review/AI/storage features"
+  },
+  {
+    "source": "v2",
+    "line": 5712,
+    "type": "clause",
+    "text": "WRITE-UX-120 — Priority and staging. P0: unusable basic editing or credible content-loss/persistence defects. P1: fundamental selection/focus, disconnected commands, severely sparse toolbar, obstructive inspector/navigat"
+  },
+  {
+    "source": "v2",
+    "line": 5714,
+    "type": "clause",
+    "text": "WRITE-AC-101 — End-to-end writing. In the actual running, build-identified Write app create and rename a document, type realistic multi-paragraph content, move caret, select independent and cross-paragraph ranges, paste/"
+  },
+  {
+    "source": "v2",
+    "line": 5715,
+    "type": "clause",
+    "text": "WRITE-AC-102 — Toolbar and context test. At supported desktop width confirm real command integration and visible/discoverable font/style/size, Bold/Italic/Underline, colour/highlight, alignment, lists, indent, history, i"
+  },
+  {
+    "source": "v2",
+    "line": 5716,
+    "type": "clause",
+    "text": "WRITE-AC-103 — Inspector usability test. Type and select differently styled content; inspect accurate fields, update fonts, colours, size, spacing and indentation via controls and show real changed document. Verify swatc"
+  },
+  {
+    "source": "v2",
+    "line": 5717,
+    "type": "clause",
+    "text": "WRITE-AC-104 — Structure, object, view and zoom test. Exercise real Section/heading outline navigation/management, insert appropriate table/image/link/equation or other stage-supported structured objects through +, chang"
+  },
+  {
+    "source": "v2",
+    "line": 5718,
+    "type": "clause",
+    "text": "WRITE-AC-105 — Launch and persistence test. Verify empty and populated launch screens, genuine New/Open/Import/Recent/Template actions, truthful provider and save state, distinct active editor transition, backstage retur"
+  },
+  {
+    "source": "v2",
+    "line": 5719,
+    "type": "clause",
+    "text": "WRITE-AC-106 — Visual acceptance scenes. Capture authentic screenshots or interaction recordings from the precise source/build/runtime: home, editor with full text toolbar, selected formatted content, properties with col"
+  },
+  {
+    "source": "v2",
+    "line": 5720,
+    "type": "clause",
+    "text": "WRITE-AC-107 — Source/CUI/runtime authenticity. Verify CUI-owned public interface, canonical document and shared engine, API command parity, same style/document mutation across toolbar/keyboard/inspector/context menu, ac"
+  },
+  {
+    "source": "v2",
+    "line": 5721,
+    "type": "clause",
+    "text": "WRITE-AC-108 — State and evidence. Track REQUESTED → IMPLEMENTED → TESTED → VERIFIED separately; report source commit/build identifiers, actual execution results, representative real document artifacts, images/recordings"
+  },
+  {
+    "source": "v2",
+    "line": 5722,
+    "type": "clause",
+    "text": "WRITE-AC-109 — Corrective iteration gate. Every major pass follows INSPECT → IMPLEMENT → BUILD → RUN → INTERACT → VISUALLY INSPECT → TEST → CORRECT → REPEAT. Real P0/P1 flaws, broken donor parity, disabled fake commands,"
+  },
+  {
+    "source": "v2",
+    "line": 5757,
+    "type": "markdown",
+    "text": "## 9. Present — routed editor, direct manipulation and playback"
+  },
+  {
+    "source": "v2",
+    "line": 5759,
+    "type": "clause",
+    "text": "### UX27-PRESENT-001 — Correct route and one implementation"
+  },
+  {
+    "source": "v2",
+    "line": 5765,
+    "type": "clause",
+    "text": "### UX27-PRESENT-002 — Header, menu and editing toolbar"
+  },
+  {
+    "source": "v2",
+    "line": 5771,
+    "type": "clause",
+    "text": "### UX27-PRESENT-003 — Slide list, notes and canvas"
+  },
+  {
+    "source": "v2",
+    "line": 5777,
+    "type": "clause",
+    "text": "### UX27-PRESENT-004 — Selection versus text editing"
+  },
+  {
+    "source": "v2",
+    "line": 5783,
+    "type": "clause",
+    "text": "### UX27-PRESENT-005 — Handles, cursors and live transforms"
+  },
+  {
+    "source": "v2",
+    "line": 5789,
+    "type": "clause",
+    "text": "### UX27-PRESENT-006 — Insertion catalogue and shape gallery"
+  },
+  {
+    "source": "v2",
+    "line": 5795,
+    "type": "clause",
+    "text": "### UX27-PRESENT-007 — Formatting and shared state"
+  },
+  {
+    "source": "v2",
+    "line": 5801,
+    "type": "clause",
+    "text": "### UX27-PRESENT-008 — Present, presenter view and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 6158,
+    "type": "markdown",
+    "text": "## 10. Canvas — deliberate spatial editing, not an accidental embedded panel"
+  },
+  {
+    "source": "v2",
+    "line": 6160,
+    "type": "clause",
+    "text": "### UX27-CANVAS-001 — Canvas identity and tools"
+  },
+  {
+    "source": "v2",
+    "line": 6166,
+    "type": "clause",
+    "text": "### UX27-CANVAS-002 — Pointer capture, zoom and panning"
+  },
+  {
+    "source": "v2",
+    "line": 6172,
+    "type": "clause",
+    "text": "### UX27-CANVAS-003 — Selection, layers and object transforms"
+  },
+  {
+    "source": "v2",
+    "line": 6178,
+    "type": "clause",
+    "text": "### UX27-CANVAS-004 — Brush and eraser fidelity"
+  },
+  {
+    "source": "v2",
+    "line": 6184,
+    "type": "clause",
+    "text": "### UX27-CANVAS-005 — Bounds, export and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 6555,
+    "type": "markdown",
+    "text": "## 2. Boards — exact shell, navigation and local-first file behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 6557,
+    "type": "clause",
+    "text": "### UX27-BOARD-001 — The intended composition"
+  },
+  {
+    "source": "v2",
+    "line": 6563,
+    "type": "clause",
+    "text": "### UX27-BOARD-002 — Geometry defaults, not guessed screenshot measurements"
+  },
+  {
+    "source": "v2",
+    "line": 6569,
+    "type": "clause",
+    "text": "### UX27-BOARD-003 — New Board without setup prerequisites"
+  },
+  {
+    "source": "v2",
+    "line": 6575,
+    "type": "clause",
+    "text": "### UX27-BOARD-004 — Drafts before Save As"
+  },
+  {
+    "source": "v2",
+    "line": 6581,
+    "type": "clause",
+    "text": "### UX27-BOARD-005 — Optional editable .9to1board files"
+  },
+  {
+    "source": "v2",
+    "line": 6587,
+    "type": "clause",
+    "text": "### UX27-BOARD-006 — File contents and portability"
+  },
+  {
+    "source": "v2",
+    "line": 6593,
+    "type": "clause",
+    "text": "### UX27-BOARD-007 — Identity versus file location"
+  },
+  {
+    "source": "v2",
+    "line": 6599,
+    "type": "clause",
+    "text": "### UX27-BOARD-008 — Safe saves, failure and concurrency"
+  },
+  {
+    "source": "v2",
+    "line": 6605,
+    "type": "clause",
+    "text": "### UX27-BOARD-009 — Reopen without stale leases"
+  },
+  {
+    "source": "v2",
+    "line": 6611,
+    "type": "clause",
+    "text": "### UX27-BOARD-010 — Landing page and recent items"
+  },
+  {
+    "source": "v2",
+    "line": 6617,
+    "type": "clause",
+    "text": "### UX27-BOARD-011 — Board switcher"
+  },
+  {
+    "source": "v2",
+    "line": 6623,
+    "type": "clause",
+    "text": "### UX27-BOARD-012 — Nested page and section tree"
+  },
+  {
+    "source": "v2",
+    "line": 6629,
+    "type": "clause",
+    "text": "### UX27-BOARD-013 — Tree keyboard and rename behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 6635,
+    "type": "clause",
+    "text": "### UX27-BOARD-014 — Fixed bottom Add page/section popup"
+  },
+  {
+    "source": "v2",
+    "line": 6641,
+    "type": "clause",
+    "text": "### UX27-BOARD-015 — Page-tree drag, move and Trash"
+  },
+  {
+    "source": "v2",
+    "line": 6647,
+    "type": "clause",
+    "text": "### UX27-BOARD-016 — A block is a structured entity, not a tall text field"
+  },
+  {
+    "source": "v2",
+    "line": 6653,
+    "type": "clause",
+    "text": "### UX27-BOARD-017 — Enter in an ordinary paragraph"
+  },
+  {
+    "source": "v2",
+    "line": 6659,
+    "type": "clause",
+    "text": "### UX27-BOARD-018 — Shift+Enter, wrapping and IME"
+  },
+  {
+    "source": "v2",
+    "line": 6665,
+    "type": "clause",
+    "text": "### UX27-BOARD-019 — Enter behaviour by content type"
+  },
+  {
+    "source": "v2",
+    "line": 6683,
+    "type": "clause",
+    "text": "### UX27-BOARD-020 — Backspace/Delete at boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 6689,
+    "type": "clause",
+    "text": "### UX27-BOARD-021 — Lists, toggles and nesting"
+  },
+  {
+    "source": "v2",
+    "line": 6695,
+    "type": "clause",
+    "text": "### UX27-BOARD-022 — Slash insertion is a real contextual menu"
+  },
+  {
+    "source": "v2",
+    "line": 6701,
+    "type": "clause",
+    "text": "### UX27-BOARD-023 — Six-dot grip: click versus drag"
+  },
+  {
+    "source": "v2",
+    "line": 6707,
+    "type": "clause",
+    "text": "### UX27-BOARD-024 — Flow-block reordering and drop feedback"
+  },
+  {
+    "source": "v2",
+    "line": 6713,
+    "type": "clause",
+    "text": "### UX27-BOARD-025 — Nesting, columns and drag auto-scroll"
+  },
+  {
+    "source": "v2",
+    "line": 6719,
+    "type": "clause",
+    "text": "### UX27-BOARD-026 — Keyboard block movement and multi-selection"
+  },
+  {
+    "source": "v2",
+    "line": 6725,
+    "type": "clause",
+    "text": "### UX27-BOARD-027 — Block context menu"
+  },
+  {
+    "source": "v2",
+    "line": 6731,
+    "type": "clause",
+    "text": "### UX27-BOARD-028 — Text selection and floating formatting island"
+  },
+  {
+    "source": "v2",
+    "line": 6737,
+    "type": "clause",
+    "text": "### UX27-BOARD-029 — Native page, explicit Canvas page and drawing layer"
+  },
+  {
+    "source": "v2",
+    "line": 6743,
+    "type": "clause",
+    "text": "### UX27-BOARD-030 — Edit/View, layout locking and snap are separate"
+  },
+  {
+    "source": "v2",
+    "line": 6749,
+    "type": "clause",
+    "text": "### UX27-BOARD-031 — Absolute placement and snap semantics"
+  },
+  {
+    "source": "v2",
+    "line": 6755,
+    "type": "clause",
+    "text": "### UX27-BOARD-032 — Selecting the pen must actually enable drawing"
+  },
+  {
+    "source": "v2",
+    "line": 6761,
+    "type": "clause",
+    "text": "### UX27-BOARD-033 — Stroke coordinates, samples and capture"
+  },
+  {
+    "source": "v2",
+    "line": 6767,
+    "type": "clause",
+    "text": "### UX27-BOARD-034 — Pressure, palm rejection and non-stylus fallback"
+  },
+  {
+    "source": "v2",
+    "line": 6773,
+    "type": "clause",
+    "text": "### UX27-BOARD-035 — Pen controls, eraser and undo"
+  },
+  {
+    "source": "v2",
+    "line": 6779,
+    "type": "clause",
+    "text": "### UX27-BOARD-036 — Ink versus text interaction"
+  },
+  {
+    "source": "v2",
+    "line": 6785,
+    "type": "clause",
+    "text": "### UX27-BOARD-037 — Compact table interaction, not fifty buttons"
+  },
+  {
+    "source": "v2",
+    "line": 6791,
+    "type": "clause",
+    "text": "### UX27-BOARD-038 — Table cell editing and navigation"
+  },
+  {
+    "source": "v2",
+    "line": 6797,
+    "type": "clause",
+    "text": "### UX27-BOARD-039 — Table structure and formatting"
+  },
+  {
+    "source": "v2",
+    "line": 6803,
+    "type": "clause",
+    "text": "### UX27-BOARD-040 — Images and embedded media"
+  },
+  {
+    "source": "v2",
+    "line": 6809,
+    "type": "clause",
+    "text": "### UX27-BOARD-041 — Graph expressions and view-safe sliders"
+  },
+  {
+    "source": "v2",
+    "line": 6815,
+    "type": "clause",
+    "text": "### UX27-BOARD-042 — Write and Canvas PageTypes"
+  },
+  {
+    "source": "v2",
+    "line": 6821,
+    "type": "clause",
+    "text": "### UX27-BOARD-043 — Chat and Scoped Chat pages"
+  },
+  {
+    "source": "v2",
+    "line": 6827,
+    "type": "clause",
+    "text": "### UX27-BOARD-044 — Search, links and navigation restoration"
+  },
+  {
+    "source": "v2",
+    "line": 6833,
+    "type": "clause",
+    "text": "### UX27-BOARD-045 — No accidental mutation on open or render"
+  },
+  {
+    "source": "v2",
+    "line": 6839,
+    "type": "clause",
+    "text": "### UX27-BOARD-046 — Collaboration and external changes"
+  },
+  {
+    "source": "v2",
+    "line": 6845,
+    "type": "clause",
+    "text": "### UX27-BOARD-047 — Boards rejection checklist"
+  },
+  {
+    "source": "v2",
+    "line": 6864,
+    "type": "heading-candidate",
+    "text": "Visual shell"
+  },
+  {
+    "source": "v2",
+    "line": 6875,
+    "type": "heading-candidate",
+    "text": "Landing page"
+  },
+  {
+    "source": "v2",
+    "line": 6885,
+    "type": "heading-candidate",
+    "text": "Sidebar and board switching"
+  },
+  {
+    "source": "v2",
+    "line": 6899,
+    "type": "heading-candidate",
+    "text": "Canonical Board and Page model"
+  },
+  {
+    "source": "v2",
+    "line": 6914,
+    "type": "heading-candidate",
+    "text": "Shared Productivity Engine"
+  },
+  {
+    "source": "v2",
+    "line": 6923,
+    "type": "heading-candidate",
+    "text": "Edit and View modes"
+  },
+  {
+    "source": "v2",
+    "line": 6938,
+    "type": "heading-candidate",
+    "text": "Locked and Unlocked layout modes"
+  },
+  {
+    "source": "v2",
+    "line": 6956,
+    "type": "heading-candidate",
+    "text": "Free drawing and ink"
+  },
+  {
+    "source": "v2",
+    "line": 6968,
+    "type": "heading-candidate",
+    "text": "Floating contextual formatting island"
+  },
+  {
+    "source": "v2",
+    "line": 6986,
+    "type": "heading-candidate",
+    "text": "Persistent AI bar"
+  },
+  {
+    "source": "v2",
+    "line": 6995,
+    "type": "heading-candidate",
+    "text": "Block system and AppFlowy block parity"
+  },
+  {
+    "source": "v2",
+    "line": 7014,
+    "type": "heading-candidate",
+    "text": "Graph block"
+  },
+  {
+    "source": "v2",
+    "line": 7029,
+    "type": "heading-candidate",
+    "text": "Enhanced image formatting"
+  },
+  {
+    "source": "v2",
+    "line": 7035,
+    "type": "heading-candidate",
+    "text": "Enhanced table formatting"
+  },
+  {
+    "source": "v2",
+    "line": 7041,
+    "type": "heading-candidate",
+    "text": "Cross-app parity blocks"
+  },
+  {
+    "source": "v2",
+    "line": 7050,
+    "type": "heading-candidate",
+    "text": "Write and Canvas page types"
+  },
+  {
+    "source": "v2",
+    "line": 7062,
+    "type": "heading-candidate",
+    "text": "Chat page type"
+  },
+  {
+    "source": "v2",
+    "line": 7074,
+    "type": "heading-candidate",
+    "text": "Scoped Chat page type"
+  },
+  {
+    "source": "v2",
+    "line": 7088,
+    "type": "heading-candidate",
+    "text": "Chat source subpages"
+  },
+  {
+    "source": "v2",
+    "line": 7100,
+    "type": "heading-candidate",
+    "text": "Data-backed structured items"
+  },
+  {
+    "source": "v2",
+    "line": 7109,
+    "type": "heading-candidate",
+    "text": "Board document-space coordinates"
+  },
+  {
+    "source": "v2",
+    "line": 7118,
+    "type": "heading-candidate",
+    "text": "Embedded artifact ownership and lifecycle"
+  },
+  {
+    "source": "v2",
+    "line": 7127,
+    "type": "heading-candidate",
+    "text": "Collaboration and concurrency"
+  },
+  {
+    "source": "v2",
+    "line": 7136,
+    "type": "heading-candidate",
+    "text": "Platform capability behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 7145,
+    "type": "heading-candidate",
+    "text": "Performance and resource behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 7154,
+    "type": "heading-candidate",
+    "text": "Persistence, history and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 7167,
+    "type": "heading-candidate",
+    "text": "Boards API"
+  },
+  {
+    "source": "v2",
+    "line": 7207,
+    "type": "heading-candidate",
+    "text": "Permissions and risk"
+  },
+  {
+    "source": "v2",
+    "line": 7216,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 7225,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 7428,
+    "type": "markdown",
+    "text": "## 6. Automations and shared node editing"
+  },
+  {
+    "source": "v2",
+    "line": 7430,
+    "type": "clause",
+    "text": "### UX27-AUTO-001 — Home, Library and draft/active distinction"
+  },
+  {
+    "source": "v2",
+    "line": 7436,
+    "type": "clause",
+    "text": "### UX27-AUTO-002 — Node insertion and connector gestures"
+  },
+  {
+    "source": "v2",
+    "line": 7442,
+    "type": "clause",
+    "text": "### UX27-AUTO-003 — Run visibility and truthful execution"
+  },
+  {
+    "source": "v2",
+    "line": 7448,
+    "type": "clause",
+    "text": "### UX27-AUTO-004 — Durable Wait, approval and restart"
+  },
+  {
+    "source": "v2",
+    "line": 7454,
+    "type": "clause",
+    "text": "### UX27-AUTO-005 — Schedule and enable/disable controls"
+  },
+  {
+    "source": "v2",
+    "line": 7460,
+    "type": "clause",
+    "text": "### UX27-AUTO-006 — Retry, cancellation and idempotency"
+  },
+  {
+    "source": "v2",
+    "line": 8212,
+    "type": "markdown",
+    "text": "## 11. Data — tables, formulas, views and real state"
+  },
+  {
+    "source": "v2",
+    "line": 8214,
+    "type": "clause",
+    "text": "### UX27-DATA-001 — Cell selection versus editing"
+  },
+  {
+    "source": "v2",
+    "line": 8220,
+    "type": "clause",
+    "text": "### UX27-DATA-002 — Formulas and recalculation"
+  },
+  {
+    "source": "v2",
+    "line": 8226,
+    "type": "clause",
+    "text": "### UX27-DATA-003 — Database views and Boards embedding"
+  },
+  {
+    "source": "v2",
+    "line": 8232,
+    "type": "clause",
+    "text": "### UX27-DATA-004 — Import, large data and errors"
+  },
+  {
+    "source": "v2",
+    "line": 8728,
+    "type": "markdown",
+    "text": "## 7. Build/Dev, Sites and Stacks — explicit developer workflows"
+  },
+  {
+    "source": "v2",
+    "line": 8730,
+    "type": "clause",
+    "text": "### UX27-BUILD-001 — Adaptive product, retained domains"
+  },
+  {
+    "source": "v2",
+    "line": 8736,
+    "type": "clause",
+    "text": "### UX27-BUILD-002 — Editor input, tabs and diagnostics"
+  },
+  {
+    "source": "v2",
+    "line": 8742,
+    "type": "clause",
+    "text": "### UX27-BUILD-003 — Run/build/test/debug pipeline"
+  },
+  {
+    "source": "v2",
+    "line": 8748,
+    "type": "clause",
+    "text": "### UX27-BUILD-004 — Visual editor and CUI authoring"
+  },
+  {
+    "source": "v2",
+    "line": 8754,
+    "type": "clause",
+    "text": "### UX27-BUILD-005 — Source control and conflicts"
+  },
+  {
+    "source": "v2",
+    "line": 8760,
+    "type": "clause",
+    "text": "### UX27-BUILD-006 — Sites publishing and rollback"
+  },
+  {
+    "source": "v2",
+    "line": 8766,
+    "type": "clause",
+    "text": "### UX27-BUILD-007 — Agentic development and review"
+  },
+  {
+    "source": "v2",
+    "line": 9285,
+    "type": "heading-candidate",
+    "text": "Root means “important/authoritative; direct editing below this domain is not allowed.”"
+  },
+  {
+    "source": "v2",
+    "line": 9288,
+    "type": "heading-candidate",
+    "text": "Freeze means “out of scope for now.”"
+  },
+  {
+    "source": "v2",
+    "line": 10824,
+    "type": "heading-candidate",
+    "text": "Translation Sets and variants"
+  },
+  {
+    "source": "v2",
+    "line": 10836,
+    "type": "heading-candidate",
+    "text": "Conversational Translate Space rendering"
+  },
+  {
+    "source": "v2",
+    "line": 10848,
+    "type": "heading-candidate",
+    "text": "Conversational refinement and agentic actions"
+  },
+  {
+    "source": "v2",
+    "line": 10860,
+    "type": "heading-candidate",
+    "text": "Structured artifacts and semantic preservation"
+  },
+  {
+    "source": "v2",
+    "line": 10875,
+    "type": "heading-candidate",
+    "text": "Segments, provenance and incremental updates"
+  },
+  {
+    "source": "v2",
+    "line": 10887,
+    "type": "heading-candidate",
+    "text": "Glossaries and protected terminology"
+  },
+  {
+    "source": "v2",
+    "line": 10896,
+    "type": "heading-candidate",
+    "text": "Text, image, document and media translation"
+  },
+  {
+    "source": "v2",
+    "line": 10908,
+    "type": "heading-candidate",
+    "text": "Model routing and privacy"
+  },
+  {
+    "source": "v2",
+    "line": 10917,
+    "type": "heading-candidate",
+    "text": "Translation jobs and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 10926,
+    "type": "heading-candidate",
+    "text": "Canonical Dulche Translate API"
+  },
+  {
+    "source": "v2",
+    "line": 10957,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 10963,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 10983,
+    "type": "heading-candidate",
+    "text": "Agents"
+  },
+  {
+    "source": "v2",
+    "line": 10995,
+    "type": "heading-candidate",
+    "text": "Canonical Agent identity and Den persistence"
+  },
+  {
+    "source": "v2",
+    "line": 11007,
+    "type": "heading-candidate",
+    "text": "Availability scopes and cascading"
+  },
+  {
+    "source": "v2",
+    "line": 11022,
+    "type": "heading-candidate",
+    "text": "Availability versus permission"
+  },
+  {
+    "source": "v2",
+    "line": 11038,
+    "type": "heading-candidate",
+    "text": "Surface integration and Agent picker"
+  },
+  {
+    "source": "v2",
+    "line": 11050,
+    "type": "heading-candidate",
+    "text": "Scoped surface Agents"
+  },
+  {
+    "source": "v2",
+    "line": 11062,
+    "type": "heading-candidate",
+    "text": "Agent invocation interfaces"
+  },
+  {
+    "source": "v2",
+    "line": 11071,
+    "type": "heading-candidate",
+    "text": "Quick Actions"
+  },
+  {
+    "source": "v2",
+    "line": 11086,
+    "type": "heading-candidate",
+    "text": "Default model resolution"
+  },
+  {
+    "source": "v2",
+    "line": 11095,
+    "type": "heading-candidate",
+    "text": "Plugins, Connectors, Skills and Knowledge"
+  },
+  {
+    "source": "v2",
+    "line": 11104,
+    "type": "heading-candidate",
+    "text": "Agent memory"
+  },
+  {
+    "source": "v2",
+    "line": 11116,
+    "type": "heading-candidate",
+    "text": "Tasks, work queues and runs"
+  },
+  {
+    "source": "v2",
+    "line": 11128,
+    "type": "heading-candidate",
+    "text": "Run states and controls"
+  },
+  {
+    "source": "v2",
+    "line": 11140,
+    "type": "heading-candidate",
+    "text": "Blockers and approvals"
+  },
+  {
+    "source": "v2",
+    "line": 11149,
+    "type": "heading-candidate",
+    "text": "Agent-to-Agent delegation"
+  },
+  {
+    "source": "v2",
+    "line": 11161,
+    "type": "heading-candidate",
+    "text": "Action Graph, outputs and operational visibility"
+  },
+  {
+    "source": "v2",
+    "line": 11173,
+    "type": "heading-candidate",
+    "text": "Lifecycle, recovery and budgets"
+  },
+  {
+    "source": "v2",
+    "line": 11182,
+    "type": "heading-candidate",
+    "text": "Canonical Dulche Agent API"
+  },
+  {
+    "source": "v2",
+    "line": 11217,
+    "type": "heading-candidate",
+    "text": "Failure behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 11223,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 11366,
+    "type": "heading-candidate",
+    "text": "Terminology and boundary"
+  },
+  {
+    "source": "v2",
+    "line": 11375,
+    "type": "heading-candidate",
+    "text": "Subagent definition"
+  },
+  {
+    "source": "v2",
+    "line": 11405,
+    "type": "heading-candidate",
+    "text": "Canonical API"
+  },
+  {
+    "source": "v2",
+    "line": 11430,
+    "type": "heading-candidate",
+    "text": "Identity and state"
+  },
+  {
+    "source": "v2",
+    "line": 11439,
+    "type": "heading-candidate",
+    "text": "Scheduling and parallel execution"
+  },
+  {
+    "source": "v2",
+    "line": 11454,
+    "type": "heading-candidate",
+    "text": "Context inheritance"
+  },
+  {
+    "source": "v2",
+    "line": 11463,
+    "type": "heading-candidate",
+    "text": "Permission and tool inheritance"
+  },
+  {
+    "source": "v2",
+    "line": 11472,
+    "type": "heading-candidate",
+    "text": "Hierarchical budgets"
+  },
+  {
+    "source": "v2",
+    "line": 11484,
+    "type": "heading-candidate",
+    "text": "Depth, child and concurrency limits"
+  },
+  {
+    "source": "v2",
+    "line": 11493,
+    "type": "heading-candidate",
+    "text": "Failure aggregation and join policy"
+  },
+  {
+    "source": "v2",
+    "line": 11505,
+    "type": "heading-candidate",
+    "text": "Cancellation, pause and restart propagation"
+  },
+  {
+    "source": "v2",
+    "line": 11517,
+    "type": "heading-candidate",
+    "text": "Persistence and recovery of subagent trees"
+  },
+  {
+    "source": "v2",
+    "line": 11529,
+    "type": "heading-candidate",
+    "text": "Action Graph and telemetry"
+  },
+  {
+    "source": "v2",
+    "line": 11541,
+    "type": "heading-candidate",
+    "text": "Structured failures"
+  },
+  {
+    "source": "v2",
+    "line": 11547,
+    "type": "heading-candidate",
+    "text": "Acceptance requirements"
+  },
+  {
+    "source": "v2",
+    "line": 11570,
+    "type": "heading-candidate",
+    "text": "Dulche Den"
+  },
+  {
+    "source": "v2",
+    "line": 11582,
+    "type": "heading-candidate",
+    "text": "Models.toml"
+  },
+  {
+    "source": "v2",
+    "line": 11594,
+    "type": "heading-candidate",
+    "text": "Local directory"
+  },
+  {
+    "source": "v2",
+    "line": 11879,
+    "type": "clause",
+    "text": "DEN-PRIV-001 — Encryption: Den personal data, including memory, context, conversations, embeddings, indexes, journals, attachments, backups and snapshots, MUST use authenticated encryption at rest. Keys MUST be held in a"
+  },
+  {
+    "source": "v2",
+    "line": 11880,
+    "type": "clause",
+    "text": "DEN-PRIV-002 — Opt-in continuity: Cross-app, cross-Agent, cross-harness, cross-device and cross-provider access to Den personal context MUST be disabled by default. Each additional scope requires explicit, granular, info"
+  },
+  {
+    "source": "v2",
+    "line": 11881,
+    "type": "clause",
+    "text": "DEN-PRIV-003 — App permissions: Every consuming app, Agent, Assistant, Plugin, MCP, connector or tool MUST receive explicit, scoped user authorisation to request personal Den context. Grants MUST distinguish read, write,"
+  },
+  {
+    "source": "v2",
+    "line": 11882,
+    "type": "clause",
+    "text": "DEN-PRIV-004 — Model-only semantic access: Personal Den content may be disclosed only as minimum-necessary context directly to the explicitly authorised model inference request through the trusted Dulche broker, and NOT "
+  },
+  {
+    "source": "v2",
+    "line": 11883,
+    "type": "clause",
+    "text": "DEN-PRIV-005 — No onward disclosure: Models/Agents MUST be instructed not to quote, forward, paraphrase, embed in tool arguments or otherwise relay protected Den content to other app components, tools, APIs, third partie"
+  },
+  {
+    "source": "v2",
+    "line": 11884,
+    "type": "clause",
+    "text": "DEN-PRIV-006 — User control: Users MUST be able to see which apps/models can access which Den scopes, view why data was used, grant and revoke access, selectively forget/delete entries and disable cross-app continuity wi"
+  },
+  {
+    "source": "v2",
+    "line": 11885,
+    "type": "clause",
+    "text": "DEN-PRIV-007 — Lifecycle and security: Encrypt data in transit where applicable, minimise plaintext lifetime in memory, protect against prompt injection and confused-deputy privilege escalation, segregate personal/team/a"
+  },
+  {
+    "source": "v2",
+    "line": 11886,
+    "type": "clause",
+    "text": "DEN-PRIV-008 — Acceptance: Tests MUST verify default-deny cross-app isolation, per-app prompts and revocation, encrypted on-disk files/backups, prohibited tool/API exfiltration, prompt-injection resistance, cloud-provide"
+  },
+  {
+    "source": "v2",
+    "line": 12072,
+    "type": "heading-candidate",
+    "text": "Identity and lifecycle"
+  },
+  {
+    "source": "v2",
+    "line": 12081,
+    "type": "heading-candidate",
+    "text": "Capability discovery and schemas"
+  },
+  {
+    "source": "v2",
+    "line": 12090,
+    "type": "heading-candidate",
+    "text": "Permissions and execution"
+  },
+  {
+    "source": "v2",
+    "line": 12099,
+    "type": "heading-candidate",
+    "text": "Canonical MCP API"
+  },
+  {
+    "source": "v2",
+    "line": 12120,
+    "type": "heading-candidate",
+    "text": "Tool Builder integration and acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 12138,
+    "type": "heading-candidate",
+    "text": "Common package contract"
+  },
+  {
+    "source": "v2",
+    "line": 12147,
+    "type": "heading-candidate",
+    "text": "Lifecycle, trust and permissions"
+  },
+  {
+    "source": "v2",
+    "line": 12162,
+    "type": "heading-candidate",
+    "text": "Skill model"
+  },
+  {
+    "source": "v2",
+    "line": 12190,
+    "type": "heading-candidate",
+    "text": "Dependencies and persistence"
+  },
+  {
+    "source": "v2",
+    "line": 12199,
+    "type": "heading-candidate",
+    "text": "Canonical Skill API"
+  },
+  {
+    "source": "v2",
+    "line": 12212,
+    "type": "heading-candidate",
+    "text": "Canonical Plugin API"
+  },
+  {
+    "source": "v2",
+    "line": 12229,
+    "type": "heading-candidate",
+    "text": "Tool Builder integration and acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 12542,
+    "type": "heading-candidate",
+    "text": "Pass 2: Terra-form"
+  },
+  {
+    "source": "v2",
+    "line": 12575,
+    "type": "clause",
+    "text": "TF-01 — Scope, terminology and ownership"
+  },
+  {
+    "source": "v2",
+    "line": 12580,
+    "type": "clause",
+    "text": "TF-02 — Shared UI, navigation and authoring behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 12588,
+    "type": "clause",
+    "text": "TF-03 — Common data, source references and recovery"
+  },
+  {
+    "source": "v2",
+    "line": 12596,
+    "type": "clause",
+    "text": "TF-F01 — Shared Files organisation shell and operations"
+  },
+  {
+    "source": "v2",
+    "line": 12602,
+    "type": "clause",
+    "text": "TF-F02 — Folder"
+  },
+  {
+    "source": "v2",
+    "line": 12605,
+    "type": "clause",
+    "text": "TF-F03 — Project"
+  },
+  {
+    "source": "v2",
+    "line": 12610,
+    "type": "clause",
+    "text": "TF-F04 — Sheet"
+  },
+  {
+    "source": "v2",
+    "line": 12616,
+    "type": "clause",
+    "text": "TF-F05 — Tree"
+  },
+  {
+    "source": "v2",
+    "line": 12621,
+    "type": "clause",
+    "text": "TF-F06 — Smart"
+  },
+  {
+    "source": "v2",
+    "line": 12626,
+    "type": "clause",
+    "text": "TF-F07 — Timeline"
+  },
+  {
+    "source": "v2",
+    "line": 12631,
+    "type": "clause",
+    "text": "TF-F08 — Pipeline"
+  },
+  {
+    "source": "v2",
+    "line": 12636,
+    "type": "clause",
+    "text": "TF-F09 — Catalogue"
+  },
+  {
+    "source": "v2",
+    "line": 12641,
+    "type": "clause",
+    "text": "TF-F10 — Stash"
+  },
+  {
+    "source": "v2",
+    "line": 12646,
+    "type": "clause",
+    "text": "TF-F11 — Matrix"
+  },
+  {
+    "source": "v2",
+    "line": 12652,
+    "type": "clause",
+    "text": "TF-L01 — Link shell, documents and shared content"
+  },
+  {
+    "source": "v2",
+    "line": 12656,
+    "type": "clause",
+    "text": "TF-L02 — Flow reading and authoring UI"
+  },
+  {
+    "source": "v2",
+    "line": 12663,
+    "type": "clause",
+    "text": "TF-L03 — Binder overview, containers and navigation"
+  },
+  {
+    "source": "v2",
+    "line": 12671,
+    "type": "clause",
+    "text": "TF-P01 — Product boundary and editor layout"
+  },
+  {
+    "source": "v2",
+    "line": 12675,
+    "type": "clause",
+    "text": "TF-P02 — Typed model, logic and execution"
+  },
+  {
+    "source": "v2",
+    "line": 12680,
+    "type": "clause",
+    "text": "TF-P03 — Safety, reuse and acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 12686,
+    "type": "clause",
+    "text": "TF-H01 — Authoring, steps and route UI"
+  },
+  {
+    "source": "v2",
+    "line": 12691,
+    "type": "clause",
+    "text": "TF-H02 — Reader experience and durable progress"
+  },
+  {
+    "source": "v2",
+    "line": 12696,
+    "type": "clause",
+    "text": "TF-H03 — Integration and acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 12700,
+    "type": "clause",
+    "text": "TF-R01 — Explicit capture and source selection"
+  },
+  {
+    "source": "v2",
+    "line": 12704,
+    "type": "clause",
+    "text": "TF-R02 — Semantic timeline and playback UI"
+  },
+  {
+    "source": "v2",
+    "line": 12709,
+    "type": "clause",
+    "text": "TF-R03 — Review, sharing, failure and acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 12714,
+    "type": "clause",
+    "text": "TF-V01 — Integrated variant UI and branch identity"
+  },
+  {
+    "source": "v2",
+    "line": 12718,
+    "type": "clause",
+    "text": "TF-V02 — Comparison, selective merge and conflicts"
+  },
+  {
+    "source": "v2",
+    "line": 12722,
+    "type": "clause",
+    "text": "TF-V03 — Required owning-app comparison semantics"
+  },
+  {
+    "source": "v2",
+    "line": 12728,
+    "type": "clause",
+    "text": "TF-X01 — Embeds, Boards pages and conversational editing"
+  },
+  {
+    "source": "v2",
+    "line": 12732,
+    "type": "clause",
+    "text": "TF-X02 — Canonical API action catalogue"
+  },
+  {
+    "source": "v2",
+    "line": 12739,
+    "type": "clause",
+    "text": "TF-X03 — Platforms, responsive behaviour and resource limits"
+  },
+  {
+    "source": "v2",
+    "line": 12744,
+    "type": "clause",
+    "text": "TF-X04 — Acceptance matrix and release evidence"
+  },
+  {
+    "source": "v2",
+    "line": 12750,
+    "type": "clause",
+    "text": "TF-X05 — Open naming decision and implementation defaults"
+  },
+  {
+    "source": "v2",
+    "line": 12756,
+    "type": "clause",
+    "text": "SH-01 — Purpose and required outcome"
+  },
+  {
+    "source": "v2",
+    "line": 12763,
+    "type": "clause",
+    "text": "SH-02 — Baseline, authority and deployment permissions"
+  },
+  {
+    "source": "v2",
+    "line": 12771,
+    "type": "clause",
+    "text": "SH-03 — Production architecture and ownership"
+  },
+  {
+    "source": "v2",
+    "line": 12795,
+    "type": "clause",
+    "text": "SH-04 — WordPress-to-Cloudflare website migration"
+  },
+  {
+    "source": "v2",
+    "line": 12806,
+    "type": "clause",
+    "text": "SH-05 — CAKE ID and account services online"
+  },
+  {
+    "source": "v2",
+    "line": 12814,
+    "type": "clause",
+    "text": "SH-06 — Full browser versions of the applications"
+  },
+  {
+    "source": "v2",
+    "line": 12824,
+    "type": "clause",
+    "text": "SH-07 — Files and 9to1 Drive production hosting"
+  },
+  {
+    "source": "v2",
+    "line": 12833,
+    "type": "clause",
+    "text": "SH-08 — Sites publishing and customer hosting"
+  },
+  {
+    "source": "v2",
+    "line": 12842,
+    "type": "clause",
+    "text": "SH-09 — Real Stripe subscriptions and billing"
+  },
+  {
+    "source": "v2",
+    "line": 12863,
+    "type": "clause",
+    "text": "SH-10 — Cloud AI and connected application services"
+  },
+  {
+    "source": "v2",
+    "line": 12871,
+    "type": "clause",
+    "text": "SH-11 — Operations, security and release delivery"
+  },
+  {
+    "source": "v2",
+    "line": 12878,
+    "type": "clause",
+    "text": "SH-12 — End-to-end acceptance"
+  },
+  {
+    "source": "v2",
+    "line": 12908,
+    "type": "clause",
+    "text": "SH-13 — Decisions required before affected functionality goes live"
+  },
+  {
+    "source": "v2",
+    "line": 12926,
+    "type": "clause",
+    "text": "LE-01 — Scope, authority and execution"
+  },
+  {
+    "source": "v2",
+    "line": 12950,
+    "type": "clause",
+    "text": "LE-02 — Package contract and lifecycle"
+  },
+  {
+    "source": "v2",
+    "line": 12968,
+    "type": "clause",
+    "text": "LE-03 — Mini sidebar behaviour"
+  },
+  {
+    "source": "v2",
+    "line": 12984,
+    "type": "clause",
+    "text": "LE-04 — Tabs and embedded app lifecycle"
+  },
+  {
+    "source": "v2",
+    "line": 13039,
+    "type": "clause",
+    "text": "LE-05 — Custom sidebar editor and section rules"
+  },
+  {
+    "source": "v2",
+    "line": 13052,
+    "type": "clause",
+    "text": "LE-06 — Usage data contract"
+  },
+  {
+    "source": "v2",
+    "line": 13058,
+    "type": "heading-candidate",
+    "text": "Local/Cloud Chats"
+  },
+  {
+    "source": "v2",
+    "line": 13074,
+    "type": "clause",
+    "text": "LE-07 — Chat storage, transfer and privacy contract"
+  },
+  {
+    "source": "v2",
+    "line": 13108,
+    "type": "clause",
+    "text": "LE-08 — Study state and recommendations"
+  },
+  {
+    "source": "v2",
+    "line": 13155,
+    "type": "clause",
+    "text": "LE-09 — Revision Bank ownership and operations"
+  },
+  {
+    "source": "v2",
+    "line": 13176,
+    "type": "heading-candidate",
+    "text": "Card 1"
+  },
+  {
+    "source": "v2",
+    "line": 13182,
+    "type": "heading-candidate",
+    "text": "(shadow partially covering above)"
+  },
+  {
+    "source": "v2",
+    "line": 13188,
+    "type": "heading-candidate",
+    "text": "Card 2"
+  },
+  {
+    "source": "v2",
+    "line": 13198,
+    "type": "heading-candidate",
+    "text": "Card 3"
+  },
+  {
+    "source": "v2",
+    "line": 13219,
+    "type": "clause",
+    "text": "LE-10 — Cards canonical product contract"
+  },
+  {
+    "source": "v2",
+    "line": 13240,
+    "type": "clause",
+    "text": "LE-11 — Planner Burrows contract"
+  },
+  {
+    "source": "v2",
+    "line": 13247,
+    "type": "clause",
+    "text": "LE-12 — API, state and failure contracts"
+  },
+  {
+    "source": "v2",
+    "line": 13253,
+    "type": "clause",
+    "text": "LE-13 — Worker ownership and integration order"
+  },
+  {
+    "source": "v2",
+    "line": 13257,
+    "type": "clause",
+    "text": "LE-14 — Pass acceptance and release exit gate"
+  },
+  {
+    "source": "v2",
+    "line": 13264,
+    "type": "clause",
+    "text": "LE-15 — Explicit external decisions"
+  },
+  {
+    "source": "v2",
+    "line": 13349,
+    "type": "clause",
+    "text": "PARITY-001 — Complete donor functionality. Preserve and make accessible every feature of each version-pinned designated donor, except: (A) third-party paid/subscription/licensed functionality that cannot legally be provi"
+  },
+  {
+    "source": "v2",
+    "line": 13352,
+    "type": "clause",
+    "text": "CUI-001 — Exclusive markup and interface ownership. All 9to1 UI markup is canonical CUI. AXAML/XAML and Avalonia native markup MUST NOT parse as CUI, including aliases or silent conversion. CUI owns ALL visible UI: navig"
+  },
+  {
+    "source": "v2",
+    "line": 13355,
+    "type": "clause",
+    "text": "CUI-002 — Conformance gates. Build/CI MUST parse all public UI definitions using the CUI grammar and registry, reject native markup vocabulary and attached-property syntax, inspect runtime UI boundaries, and smoke-test r"
+  },
+  {
+    "source": "v2",
+    "line": 13358,
+    "type": "clause",
+    "text": "DESIGN-001 — Category-derived layout. Before implementing an app, document an evidence-based comparison of 3–5 established applications in its category, including their common workspace hierarchy, navigation, command gro"
+  },
+  {
+    "source": "v2",
+    "line": 13361,
+    "type": "clause",
+    "text": "STAGING-001 — RCVP versus Full. RCVP includes all non-exempt donor functionality and everything necessary for genuine everyday use: canonical CUI, launch/create/open/edit/save/close/reopen/export as applicable, accessibl"
+  },
+  {
+    "source": "v2",
+    "line": 13364,
+    "type": "clause",
+    "text": "ACCEPT-001 — Real-feature proof. A feature is VERIFIED only when a real user can perform its complete intended workflow in the actual packaged application using genuine engines/providers and persistent state where applic"
+  },
+  {
+    "source": "v2",
+    "line": 13367,
+    "type": "clause",
+    "text": "ACCEPT-002 — Cross-app integration. For each specified integration, test a real round trip between the two packaged applications or real deployed services, including permission prompts, data fidelity, error paths and per"
+  },
+  {
+    "source": "v2",
+    "line": 13370,
+    "type": "clause",
+    "text": "ACCEPT-003 — Security and Dulche privacy. Cross-app personal context is denied by default and shared only following granular, informed, revocable user permission. Encrypt sensitive stored context and protected transfers;"
+  },
+  {
+    "source": "v2",
+    "line": 13373,
+    "type": "clause",
+    "text": "ACCEPT-004 — Local/cloud behaviour. Define each app operation's local/cloud capability, data movement, user consent, fallback eligibility, offline behaviour, conflict resolution and user-visible status. Never silently se"
+  },
+  {
+    "source": "v2",
+    "line": 13376,
+    "type": "clause",
+    "text": "ACCEPT-005 — Accessibility and quality. Every app must document supported target platforms and accessibility standards, keyboard/focus navigation, screen-reader semantics, scaling, contrast and reduced-motion behaviour; "
+  },
+  {
+    "source": "v2",
+    "line": 13379,
+    "type": "clause",
+    "text": "ACCEPT-006 — Packaging and errors. The supported OS/version/architecture matrix, installation/upgrade/uninstall expectations, file associations and recovery expectations must be declared per release. For each significant"
+  },
+  {
+    "source": "v2",
+    "line": 13382,
+    "type": "clause",
+    "text": "GOV-001 — Precedence and ambiguity handling. Later explicit owner-approved normative directives override earlier conflicting instructions only in their stated scope; historical schedules do not supersede the active four-"
+  },
+  {
+    "source": "v2",
+    "line": 13385,
+    "type": "clause",
+    "text": "GOV-002 — Mandatory release gates. No RCVP or Full PASS unless (1) CUI static and runtime conformance, (2) donor inventory/approved exceptions, (3) category-layout review and screenshot inspection, (4) packaged end-to-en"
+  },
+  {
+    "source": "v2",
+    "line": 13399,
+    "type": "markdown",
+    "text": "## 13. Remaining V2 products — concrete interaction expansion without scope deletion"
+  },
+  {
+    "source": "v2",
+    "line": 13403,
+    "type": "clause",
+    "text": "### UX27-OTHER-001 — Planner calendar and task scheduling"
+  },
+  {
+    "source": "v2",
+    "line": 13409,
+    "type": "clause",
+    "text": "### UX27-OTHER-002 — Planner schedules, Burrows and reminders"
+  },
+  {
+    "source": "v2",
+    "line": 13415,
+    "type": "clause",
+    "text": "### UX27-OTHER-003 — Mail reading and conversation navigation"
+  },
+  {
+    "source": "v2",
+    "line": 13421,
+    "type": "clause",
+    "text": "### UX27-OTHER-004 — Mail compose, attachments and send"
+  },
+  {
+    "source": "v2",
+    "line": 13427,
+    "type": "clause",
+    "text": "### UX27-OTHER-005 — Forms authoring and respondent mode"
+  },
+  {
+    "source": "v2",
+    "line": 13433,
+    "type": "clause",
+    "text": "### UX27-OTHER-006 — Cards study and editing"
+  },
+  {
+    "source": "v2",
+    "line": 13439,
+    "type": "clause",
+    "text": "### UX27-OTHER-007 — Picture image editing"
+  },
+  {
+    "source": "v2",
+    "line": 13445,
+    "type": "clause",
+    "text": "### UX27-OTHER-008 — Wave audio timeline"
+  },
+  {
+    "source": "v2",
+    "line": 13451,
+    "type": "clause",
+    "text": "### UX27-OTHER-009 — Motion video editing"
+  },
+  {
+    "source": "v2",
+    "line": 13457,
+    "type": "clause",
+    "text": "### UX27-OTHER-010 — Maps search, pins and routes"
+  },
+  {
+    "source": "v2",
+    "line": 13463,
+    "type": "clause",
+    "text": "### UX27-OTHER-011 — Shelf collections and launching"
+  },
+  {
+    "source": "v2",
+    "line": 13469,
+    "type": "clause",
+    "text": "### UX27-OTHER-012 — Terminal sessions and process state"
+  },
+  {
+    "source": "v2",
+    "line": 13475,
+    "type": "clause",
+    "text": "### UX27-OTHER-013 — AI Studio builders and test boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 13481,
+    "type": "clause",
+    "text": "### UX27-OTHER-014 — Connect and account health"
+  },
+  {
+    "source": "v2",
+    "line": 13487,
+    "type": "clause",
+    "text": "### UX27-OTHER-015 — Games and creation workspaces"
+  },
+  {
+    "source": "v2",
+    "line": 13493,
+    "type": "clause",
+    "text": "### UX27-OTHER-016 — Play and Experiences"
+  },
+  {
+    "source": "v2",
+    "line": 13499,
+    "type": "clause",
+    "text": "### UX27-OTHER-017 — Mini Computer, Mesh and remote sessions"
+  },
+  {
+    "source": "v2",
+    "line": 13505,
+    "type": "clause",
+    "text": "### UX27-OTHER-018 — Links, Binders, Sheets and organisation surfaces"
+  },
+  {
+    "source": "v2",
+    "line": 13513,
+    "type": "markdown",
+    "text": "## 14. Acceptance protocol and executable scenario catalogue"
+  },
+  {
+    "source": "v2",
+    "line": 13515,
+    "type": "clause",
+    "text": "### UX27-ACCEPT-001 — Seven gates and exact-artifact review"
+  },
+  {
+    "source": "v2",
+    "line": 13521,
+    "type": "clause",
+    "text": "### UX27-ACCEPT-002 — Input-to-model-to-persistence proof"
+  },
+  {
+    "source": "v2",
+    "line": 13527,
+    "type": "clause",
+    "text": "### UX27-ACCEPT-003 — Fixtures and parameter coverage"
+  },
+  {
+    "source": "v2",
+    "line": 13533,
+    "type": "clause",
+    "text": "### UX27-ACCEPT-004 — Independence and visual evidence"
+  },
+  {
+    "source": "v2",
+    "line": 13539,
+    "type": "clause",
+    "text": "### UX27-ACCEPT-005 — Regression scope and large content"
+  },
+  {
+    "source": "v2",
+    "line": 13545,
+    "type": "clause",
+    "text": "### UX27-ACCEPT-006 — Scenario catalogue is a floor"
+  },
+  {
+    "source": "v2",
+    "line": 13553,
+    "type": "markdown",
+    "text": "## 15. Coverage, migration and explicit remaining source gaps"
+  },
+  {
+    "source": "v2",
+    "line": 13555,
+    "type": "clause",
+    "text": "### UX27-COVERAGE-001 — What this expansion covers"
+  },
+  {
+    "source": "v2",
+    "line": 13561,
+    "type": "clause",
+    "text": "### UX27-COVERAGE-002 — Topology recovered; exact historic images not invented"
+  },
+  {
+    "source": "v2",
+    "line": 13567,
+    "type": "clause",
+    "text": "### UX27-COVERAGE-003 — Adoption into the canonical specification"
+  },
+  {
+    "source": "v2",
+    "line": 13575,
+    "type": "clause",
+    "text": "### UX27-COVERAGE-004 — Implementation and defect provenance"
+  },
+  {
+    "source": "v2",
+    "line": 13583,
+    "type": "markdown",
+    "text": "## 16. Sources and provenance register"
+  },
+  {
+    "source": "v2",
+    "line": 13585,
+    "type": "clause",
+    "text": "### UX27-SOURCES-001 — Primary product authority"
+  },
+  {
+    "source": "v2",
+    "line": 13593,
+    "type": "clause",
+    "text": "### UX27-SOURCES-002 — Narrow external behaviour references"
+  },
+  {
+    "source": "v2",
+    "line": 13610,
+    "type": "markdown",
+    "text": "## 17. Development-source convergence and real-build identity"
+  },
+  {
+    "source": "v2",
+    "line": 13612,
+    "type": "clause",
+    "text": "### UX27-MAIN-001 — One authoritative integration line"
+  },
+  {
+    "source": "v2",
+    "line": 13618,
+    "type": "clause",
+    "text": "### UX27-MAIN-002 — Non-destructive integration and retirement"
+  },
+  {
+    "source": "v2",
+    "line": 13624,
+    "type": "clause",
+    "text": "### UX27-MAIN-003 — Verify what the user actually launches"
+  },
+  {
+    "source": "v2",
+    "line": 13632,
+    "type": "markdown",
+    "text": "# 9to1 V2 — Acceptance scenarios, 27 October 2026"
+  },
+  {
+    "source": "v2",
+    "line": 13636,
+    "type": "markdown",
+    "text": "## Boards"
+  },
+  {
+    "source": "v2",
+    "line": 13638,
+    "type": "clause",
+    "text": "### UX27-TEST-001 — Create without Files, account or cloud"
+  },
+  {
+    "source": "v2",
+    "line": 13654,
+    "type": "clause",
+    "text": "### UX27-TEST-002 — Cancel Save As retains the draft"
+  },
+  {
+    "source": "v2",
+    "line": 13670,
+    "type": "clause",
+    "text": "### UX27-TEST-003 — Save an editable file outside a Boards folder"
+  },
+  {
+    "source": "v2",
+    "line": 13686,
+    "type": "clause",
+    "text": "### UX27-TEST-004 — Moved-file identity and fresh access"
+  },
+  {
+    "source": "v2",
+    "line": 13702,
+    "type": "clause",
+    "text": "### UX27-TEST-005 — Save a Copy is an independent document"
+  },
+  {
+    "source": "v2",
+    "line": 13717,
+    "type": "clause",
+    "text": "### UX27-TEST-006 — Crash during save preserves a complete revision"
+  },
+  {
+    "source": "v2",
+    "line": 13733,
+    "type": "clause",
+    "text": "### UX27-TEST-007 — Disk-full, read-only and disconnected destination"
+  },
+  {
+    "source": "v2",
+    "line": 13749,
+    "type": "clause",
+    "text": "### UX27-TEST-008 — External edit conflict"
+  },
+  {
+    "source": "v2",
+    "line": 13764,
+    "type": "clause",
+    "text": "### UX27-TEST-009 — Portable content versus external references"
+  },
+  {
+    "source": "v2",
+    "line": 13780,
+    "type": "clause",
+    "text": "### UX27-TEST-010 — Landing, recents and real transitions"
+  },
+  {
+    "source": "v2",
+    "line": 13796,
+    "type": "clause",
+    "text": "### UX27-TEST-011 — Exact agreed shell topology"
+  },
+  {
+    "source": "v2",
+    "line": 13812,
+    "type": "clause",
+    "text": "### UX27-TEST-012 — Add page/section chooses the correct destination"
+  },
+  {
+    "source": "v2",
+    "line": 13828,
+    "type": "clause",
+    "text": "### UX27-TEST-013 — Tree focus, expansion and rename"
+  },
+  {
+    "source": "v2",
+    "line": 13844,
+    "type": "clause",
+    "text": "### UX27-TEST-014 — Move pages without cycles or orphaning"
+  },
+  {
+    "source": "v2",
+    "line": 13860,
+    "type": "clause",
+    "text": "### UX27-TEST-015 — Trash and restore descendants"
+  },
+  {
+    "source": "v2",
+    "line": 13875,
+    "type": "clause",
+    "text": "### UX27-TEST-016 — Board switching is atomic"
+  },
+  {
+    "source": "v2",
+    "line": 13891,
+    "type": "clause",
+    "text": "### UX27-TEST-017 — Enter splits in the middle of a paragraph"
+  },
+  {
+    "source": "v2",
+    "line": 13908,
+    "type": "clause",
+    "text": "### UX27-TEST-018 — Enter at start, end and with selected text"
+  },
+  {
+    "source": "v2",
+    "line": 13924,
+    "type": "clause",
+    "text": "### UX27-TEST-019 — Shift Enter and wrapping do not create blocks"
+  },
+  {
+    "source": "v2",
+    "line": 13940,
+    "type": "clause",
+    "text": "### UX27-TEST-020 — IME and grapheme-safe splitting"
+  },
+  {
+    "source": "v2",
+    "line": 13956,
+    "type": "clause",
+    "text": "### UX27-TEST-021 — Heading, list and checklist continuation"
+  },
+  {
+    "source": "v2",
+    "line": 13971,
+    "type": "clause",
+    "text": "### UX27-TEST-022 — Code, title and cell Enter stay contextual"
+  },
+  {
+    "source": "v2",
+    "line": 13986,
+    "type": "clause",
+    "text": "### UX27-TEST-023 — Backspace/Delete across structural boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 14002,
+    "type": "clause",
+    "text": "### UX27-TEST-024 — Slash menu inserts only on confirmation"
+  },
+  {
+    "source": "v2",
+    "line": 14018,
+    "type": "clause",
+    "text": "### UX27-TEST-025 — Six-dot click versus actual drag"
+  },
+  {
+    "source": "v2",
+    "line": 14033,
+    "type": "clause",
+    "text": "### UX27-TEST-026 — Cancel drag and preserve undo"
+  },
+  {
+    "source": "v2",
+    "line": 14048,
+    "type": "clause",
+    "text": "### UX27-TEST-027 — Nesting and columns have explicit targets"
+  },
+  {
+    "source": "v2",
+    "line": 14064,
+    "type": "clause",
+    "text": "### UX27-TEST-028 — Drag auto-scroll through virtualised content"
+  },
+  {
+    "source": "v2",
+    "line": 14080,
+    "type": "clause",
+    "text": "### UX27-TEST-029 — Keyboard and multi-block movement"
+  },
+  {
+    "source": "v2",
+    "line": 14096,
+    "type": "clause",
+    "text": "### UX27-TEST-030 — Block menu targets clicked identity"
+  },
+  {
+    "source": "v2",
+    "line": 14112,
+    "type": "clause",
+    "text": "### UX27-TEST-031 — Floating formatting preserves text selection"
+  },
+  {
+    "source": "v2",
+    "line": 14127,
+    "type": "clause",
+    "text": "### UX27-TEST-032 — No accidental embedded freeform app"
+  },
+  {
+    "source": "v2",
+    "line": 14142,
+    "type": "clause",
+    "text": "### UX27-TEST-033 — Edit View and Locked Unlocked are orthogonal"
+  },
+  {
+    "source": "v2",
+    "line": 14157,
+    "type": "clause",
+    "text": "### UX27-TEST-034 — Absolute coordinates and snapping"
+  },
+  {
+    "source": "v2",
+    "line": 14173,
+    "type": "clause",
+    "text": "### UX27-TEST-035 — Pen draws on the actual Native page"
+  },
+  {
+    "source": "v2",
+    "line": 14190,
+    "type": "clause",
+    "text": "### UX27-TEST-036 — Ink remains aligned through transforms"
+  },
+  {
+    "source": "v2",
+    "line": 14206,
+    "type": "clause",
+    "text": "### UX27-TEST-037 — Stroke capture and cancellation"
+  },
+  {
+    "source": "v2",
+    "line": 14222,
+    "type": "clause",
+    "text": "### UX27-TEST-038 — Pressure and non-pressure fallback"
+  },
+  {
+    "source": "v2",
+    "line": 14238,
+    "type": "clause",
+    "text": "### UX27-TEST-039 — Eraser, colour and brush width"
+  },
+  {
+    "source": "v2",
+    "line": 14254,
+    "type": "clause",
+    "text": "### UX27-TEST-040 — Pen versus selection and panning"
+  },
+  {
+    "source": "v2",
+    "line": 14270,
+    "type": "clause",
+    "text": "### UX27-TEST-041 — Table controls stay compact"
+  },
+  {
+    "source": "v2",
+    "line": 14285,
+    "type": "clause",
+    "text": "### UX27-TEST-042 — Table edit versus cell selection"
+  },
+  {
+    "source": "v2",
+    "line": 14300,
+    "type": "clause",
+    "text": "### UX27-TEST-043 — Merge split and undo without data loss"
+  },
+  {
+    "source": "v2",
+    "line": 14316,
+    "type": "clause",
+    "text": "### UX27-TEST-044 — Image resize crop and missing media"
+  },
+  {
+    "source": "v2",
+    "line": 14332,
+    "type": "clause",
+    "text": "### UX27-TEST-045 — Graph input and view-only sliders"
+  },
+  {
+    "source": "v2",
+    "line": 14348,
+    "type": "clause",
+    "text": "### UX27-TEST-046 — Intentional Write and Canvas pages"
+  },
+  {
+    "source": "v2",
+    "line": 14363,
+    "type": "clause",
+    "text": "### UX27-TEST-047 — Scoped Chat uses current authorised sources"
+  },
+  {
+    "source": "v2",
+    "line": 14377,
+    "type": "clause",
+    "text": "### UX27-TEST-048 — Search across collapsed and unloaded content"
+  },
+  {
+    "source": "v2",
+    "line": 14392,
+    "type": "clause",
+    "text": "### UX27-TEST-049 — Re-render never mutates the document"
+  },
+  {
+    "source": "v2",
+    "line": 14406,
+    "type": "markdown",
+    "text": "## Shared UI"
+  },
+  {
+    "source": "v2",
+    "line": 14408,
+    "type": "clause",
+    "text": "### UX27-TEST-050 — Consistent icons and control states"
+  },
+  {
+    "source": "v2",
+    "line": 14423,
+    "type": "clause",
+    "text": "### UX27-TEST-051 — Dark/light contrast without topology change"
+  },
+  {
+    "source": "v2",
+    "line": 14438,
+    "type": "clause",
+    "text": "### UX27-TEST-052 — Reduced motion preserves the result"
+  },
+  {
+    "source": "v2",
+    "line": 14454,
+    "type": "clause",
+    "text": "### UX27-TEST-053 — Outside click Escape and navigation dismiss popups"
+  },
+  {
+    "source": "v2",
+    "line": 14469,
+    "type": "clause",
+    "text": "### UX27-TEST-054 — Popup near viewport edges"
+  },
+  {
+    "source": "v2",
+    "line": 14484,
+    "type": "clause",
+    "text": "### UX27-TEST-055 — Scaling touch targets and overflow"
+  },
+  {
+    "source": "v2",
+    "line": 14499,
+    "type": "clause",
+    "text": "### UX27-TEST-056 — Scoped error and truthful retry"
+  },
+  {
+    "source": "v2",
+    "line": 14514,
+    "type": "clause",
+    "text": "### UX27-TEST-057 — Undo through menus and gesture previews"
+  },
+  {
+    "source": "v2",
+    "line": 14529,
+    "type": "markdown",
+    "text": "## Host"
+  },
+  {
+    "source": "v2",
+    "line": 14531,
+    "type": "clause",
+    "text": "### UX27-TEST-058 — Every advertised app has a real activation path"
+  },
+  {
+    "source": "v2",
+    "line": 14546,
+    "type": "clause",
+    "text": "### UX27-TEST-059 — Home and New Tab retain distinct identity"
+  },
+  {
+    "source": "v2",
+    "line": 14561,
+    "type": "clause",
+    "text": "### UX27-TEST-060 — Chromium viewport and scrolling"
+  },
+  {
+    "source": "v2",
+    "line": 14576,
+    "type": "clause",
+    "text": "### UX27-TEST-061 — Missing engine does not disable native apps"
+  },
+  {
+    "source": "v2",
+    "line": 14590,
+    "type": "clause",
+    "text": "### UX27-TEST-062 — Mixed session restore and failing target isolation"
+  },
+  {
+    "source": "v2",
+    "line": 14606,
+    "type": "markdown",
+    "text": "## Spaces"
+  },
+  {
+    "source": "v2",
+    "line": 14608,
+    "type": "clause",
+    "text": "### UX27-TEST-063 — Direct Space entry and retained draft"
+  },
+  {
+    "source": "v2",
+    "line": 14623,
+    "type": "clause",
+    "text": "### UX27-TEST-064 — Composer shelf state and browse versus activate"
+  },
+  {
+    "source": "v2",
+    "line": 14638,
+    "type": "clause",
+    "text": "### UX27-TEST-065 — Queue Stop and Resume are durable distinctions"
+  },
+  {
+    "source": "v2",
+    "line": 14654,
+    "type": "clause",
+    "text": "### UX27-TEST-066 — Rich message rendering and read position"
+  },
+  {
+    "source": "v2",
+    "line": 14669,
+    "type": "clause",
+    "text": "### UX27-TEST-067 — Summary and task filters use real state"
+  },
+  {
+    "source": "v2",
+    "line": 14684,
+    "type": "clause",
+    "text": "### UX27-TEST-068 — Sidebar activation rechecks permissions"
+  },
+  {
+    "source": "v2",
+    "line": 14699,
+    "type": "clause",
+    "text": "### UX27-TEST-069 — Model group selection loads only on Send"
+  },
+  {
+    "source": "v2",
+    "line": 14715,
+    "type": "clause",
+    "text": "### UX27-TEST-070 — Effort and allowance are not conflated"
+  },
+  {
+    "source": "v2",
+    "line": 14730,
+    "type": "clause",
+    "text": "### UX27-TEST-071 — Specialised Spaces retain their own workflows"
+  },
+  {
+    "source": "v2",
+    "line": 14744,
+    "type": "markdown",
+    "text": "## Automations"
+  },
+  {
+    "source": "v2",
+    "line": 14746,
+    "type": "clause",
+    "text": "### UX27-TEST-072 — Draft versus active graph and UI views"
+  },
+  {
+    "source": "v2",
+    "line": 14762,
+    "type": "clause",
+    "text": "### UX27-TEST-073 — Durable Wait across process restart"
+  },
+  {
+    "source": "v2",
+    "line": 14778,
+    "type": "clause",
+    "text": "### UX27-TEST-074 — Approval is not inferred from due time"
+  },
+  {
+    "source": "v2",
+    "line": 14793,
+    "type": "clause",
+    "text": "### UX27-TEST-075 — Timezone recurrence and missed admission"
+  },
+  {
+    "source": "v2",
+    "line": 14808,
+    "type": "markdown",
+    "text": "## Build"
+  },
+  {
+    "source": "v2",
+    "line": 14810,
+    "type": "clause",
+    "text": "### UX27-TEST-076 — One canonical project across editing surfaces"
+  },
+  {
+    "source": "v2",
+    "line": 14825,
+    "type": "clause",
+    "text": "### UX27-TEST-077 — Failed build cannot present a stale success"
+  },
+  {
+    "source": "v2",
+    "line": 14840,
+    "type": "clause",
+    "text": "### UX27-TEST-078 — Conflicts and publishing have distinct boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 14855,
+    "type": "markdown",
+    "text": "## Write"
+  },
+  {
+    "source": "v2",
+    "line": 14857,
+    "type": "clause",
+    "text": "### UX27-TEST-079 — Real document caret and multi-page editing"
+  },
+  {
+    "source": "v2",
+    "line": 14873,
+    "type": "clause",
+    "text": "### UX27-TEST-080 — Contextual commands and inspector remain synchronised"
+  },
+  {
+    "source": "v2",
+    "line": 14888,
+    "type": "clause",
+    "text": "### UX27-TEST-081 — Import export and recovery are real"
+  },
+  {
+    "source": "v2",
+    "line": 14904,
+    "type": "markdown",
+    "text": "## Present"
+  },
+  {
+    "source": "v2",
+    "line": 14906,
+    "type": "clause",
+    "text": "### UX27-TEST-082 — Host route renders the intended editor"
+  },
+  {
+    "source": "v2",
+    "line": 14921,
+    "type": "clause",
+    "text": "### UX27-TEST-083 — Slide list and notes retain content"
+  },
+  {
+    "source": "v2",
+    "line": 14936,
+    "type": "clause",
+    "text": "### UX27-TEST-084 — Text editing versus object transforms"
+  },
+  {
+    "source": "v2",
+    "line": 14952,
+    "type": "clause",
+    "text": "### UX27-TEST-085 — Real insertion gallery and shared formatting"
+  },
+  {
+    "source": "v2",
+    "line": 14968,
+    "type": "clause",
+    "text": "### UX27-TEST-086 — Playback and save/reopen"
+  },
+  {
+    "source": "v2",
+    "line": 14984,
+    "type": "markdown",
+    "text": "## Canvas"
+  },
+  {
+    "source": "v2",
+    "line": 14986,
+    "type": "clause",
+    "text": "### UX27-TEST-087 — Purposeful spatial input and exported content"
+  },
+  {
+    "source": "v2",
+    "line": 15001,
+    "type": "markdown",
+    "text": "## Data"
+  },
+  {
+    "source": "v2",
+    "line": 15003,
+    "type": "clause",
+    "text": "### UX27-TEST-088 — Cell modes formulas and canonical views"
+  },
+  {
+    "source": "v2",
+    "line": 15019,
+    "type": "markdown",
+    "text": "## Files"
+  },
+  {
+    "source": "v2",
+    "line": 15021,
+    "type": "clause",
+    "text": "### UX27-TEST-089 — Ordinary file handling without domain takeover"
+  },
+  {
+    "source": "v2",
+    "line": 15035,
+    "type": "markdown",
+    "text": "## Other apps"
+  },
+  {
+    "source": "v2",
+    "line": 15037,
+    "type": "clause",
+    "text": "### UX27-TEST-090 — Planner moves actual events and tasks"
+  },
+  {
+    "source": "v2",
+    "line": 15052,
+    "type": "clause",
+    "text": "### UX27-TEST-091 — Mail reply send and attachment state"
+  },
+  {
+    "source": "v2",
+    "line": 15067,
+    "type": "clause",
+    "text": "### UX27-TEST-092 — Forms published revision and responses"
+  },
+  {
+    "source": "v2",
+    "line": 15082,
+    "type": "clause",
+    "text": "### UX27-TEST-093 — Cards state and learning evidence"
+  },
+  {
+    "source": "v2",
+    "line": 15097,
+    "type": "clause",
+    "text": "### UX27-TEST-094 — Picture layers and pixel geometry"
+  },
+  {
+    "source": "v2",
+    "line": 15111,
+    "type": "clause",
+    "text": "### UX27-TEST-095 — Wave and Motion timeline editing"
+  },
+  {
+    "source": "v2",
+    "line": 15126,
+    "type": "clause",
+    "text": "### UX27-TEST-096 — Maps and Shelf use real objects"
+  },
+  {
+    "source": "v2",
+    "line": 15141,
+    "type": "clause",
+    "text": "### UX27-TEST-097 — Terminal and remote input ownership"
+  },
+  {
+    "source": "v2",
+    "line": 15156,
+    "type": "clause",
+    "text": "### UX27-TEST-098 — AI Studio and Connect permission boundaries"
+  },
+  {
+    "source": "v2",
+    "line": 15171,
+    "type": "clause",
+    "text": "### UX27-TEST-099 — Games Play and organisation artifacts"
+  },
+  {
+    "source": "v2",
+    "line": 15187,
+    "type": "markdown",
+    "text": "## Integration"
+  },
+  {
+    "source": "v2",
+    "line": 15189,
+    "type": "clause",
+    "text": "### UX27-TEST-100 — Large board keeps every block and stroke"
+  },
+  {
+    "source": "v2",
+    "line": 15204,
+    "type": "clause",
+    "text": "### UX27-TEST-101 — Independent review of actual main build"
+  },
+  {
+    "source": "v2",
+    "line": 15220,
+    "type": "clause",
+    "text": "### UX27-TEST-102 — Full manifest and honest unavailable coverage"
+  },
+  {
+    "source": "annex",
+    "line": 7,
+    "type": "heading-candidate",
+    "text": "A. CUI is the sole user-interface design authority"
+  },
+  {
+    "source": "annex",
+    "line": 10,
+    "type": "clause",
+    "text": "CUI-PRO-201 — Avalonia and Skia are retained as backend technology for rendering, input, layout, text shaping, windowing, composition and accessibility. They are NOT allowed to supply a visible FluentTheme, SimpleTheme, "
+  },
+  {
+    "source": "annex",
+    "line": 13,
+    "type": "clause",
+    "text": "CUI-PRO-202 — Professional reference. The owner's target image specifies a calm, neutral charcoal/superdark editor, darker inset stage, subtly brighter and softly elevated floating tools, white document title, muted grey"
+  },
+  {
+    "source": "annex",
+    "line": 16,
+    "type": "clause",
+    "text": "CUI-PRO-203 — Mica/backdrop material is exclusive to Professional for now. Apply subtle Gaussian/Mica-style blur and material finish only to the underlying workspace/backdrop and compatible chrome immediately above it. T"
+  },
+  {
+    "source": "annex",
+    "line": 19,
+    "type": "clause",
+    "text": "CUI-PRO-204 — Native-control-leakage regression checks. Prove at runtime and source boundary that Fluent/Simple cannot win against CUI for active UI, including subclassed controls and overlay/popups. Whole menu rows must"
+  },
+  {
+    "source": "annex",
+    "line": 22,
+    "type": "heading-candidate",
+    "text": "B. Themes, account-wide preferences and app-specific accents"
+  },
+  {
+    "source": "annex",
+    "line": 25,
+    "type": "clause",
+    "text": "CUI-PREF-201 — Current Home Appearance/CUI built-in choices are Professional, Glow, Playful, Frosted Glass, Bubble, Metallic, Retro and Western, plus Create Theme. This active picker supersedes earlier lists containing o"
+  },
+  {
+    "source": "annex",
+    "line": 28,
+    "type": "clause",
+    "text": "CUI-PREF-202 — Theme selection, custom-theme definitions, accent override modes and colours are account-wide when authenticated. Home's canonical revisioned, permission-checked settings owner is the source of truth, avai"
+  },
+  {
+    "source": "annex",
+    "line": 31,
+    "type": "clause",
+    "text": "CUI-PREF-203 — Override Accent Colours? modes: None [default], All Apps, Individual Apps. Under None, preserve original app accents: Write blue; Present red; Data green; Boards ultraviolet; Picture pink-red; Wave cyan; M"
+  },
+  {
+    "source": "annex",
+    "line": 34,
+    "type": "clause",
+    "text": "CUI-PREF-204 — Create Theme must offer Theme Name; independently authored Primary, Secondary and Tertiary Accent Type: Solid Colour, Gradient or Pattern. For solid expose a genuine colour chooser; for gradient expose a r"
+  },
+  {
+    "source": "annex",
+    "line": 37,
+    "type": "clause",
+    "text": "CUI-PREF-205 — On a custom theme, an app accent override recolours only the PRIMARY authored accent, preserving its original gradient topology/stop positions, pattern geometry, transparency and Gaussian blur. Secondary a"
+  },
+  {
+    "source": "annex",
+    "line": 40,
+    "type": "heading-candidate",
+    "text": "C. Present visual reference and workspace composition"
+  },
+  {
+    "source": "annex",
+    "line": 43,
+    "type": "clause",
+    "text": "PRESENT-DES-201 — Preserve the existing Present editor and its approved three-row shell; refine, don't restart. A working new feature must NOT replace a compliant CUI layout with older Fluent/native design. Carry its act"
+  },
+  {
+    "source": "annex",
+    "line": 46,
+    "type": "clause",
+    "text": "PRESENT-DES-202 — Row 1: rounded red Present identity, editable document title, compact accurate Saved/Saving/Unsaved/Error state, well-aligned genuinely working document-level controls. Row 2: sidebar toggle immediately"
+  },
+  {
+    "source": "annex",
+    "line": 49,
+    "type": "clause",
+    "text": "PRESENT-DES-203 — The target image's missing left slide rail is an intentional speed shortcut in the mockup, NOT a design instruction. Present MUST show a polished left scrollable rail with accurate actual slide previews"
+  },
+  {
+    "source": "annex",
+    "line": 52,
+    "type": "clause",
+    "text": "PRESENT-DES-204 — Central slide is the real editable, full, usable white slide, default 16:9 when the document is 16:9, horizontally and vertically centred inside the remaining stage, with slightly rounder frame corners."
+  },
+  {
+    "source": "annex",
+    "line": 55,
+    "type": "clause",
+    "text": "PRESENT-DES-205 — Keep speaker-notes semantics, data, Presenter View/export behaviour and storage contracts, but name their visible editing surface Slide Notes. When expanded it displays the selected slide's real saved n"
+  },
+  {
+    "source": "annex",
+    "line": 58,
+    "type": "clause",
+    "text": "PRESENT-DES-206 — The zoom graphic in the rushed target mockup is a pasted screenshot from the PREVIOUS interface; it must be replaced by genuine CUI Professional-styled controls: minus/zoom-out icon, real slider, live p"
+  },
+  {
+    "source": "annex",
+    "line": 61,
+    "type": "clause",
+    "text": "PRESENT-DES-207 — Remove 'Select an object to format or arrange' filler from the normal workspace. Keep real contextual Properties reachable, but do not fill it with unrelated file actions or enormous default panels. Mai"
+  },
+  {
+    "source": "annex",
+    "line": 64,
+    "type": "heading-candidate",
+    "text": "D. Direct manipulation, editor responsiveness and acceptance"
+  },
+  {
+    "source": "annex",
+    "line": 67,
+    "type": "clause",
+    "text": "PRESENT-INT-201 — Maintain separate hierarchical layers for selected slide ObjectID, a text object's genuinely editable child content and transient hover/selection/handle overlay. Single-click selection, double-click or "
+  },
+  {
+    "source": "annex",
+    "line": 70,
+    "type": "clause",
+    "text": "PRESENT-INT-202 — Reliable scroll/wheel/zoom; proper menu hit targets. The pointer's hovered rail/notes/inspector/stage scrolls correctly without mysterious input swallowing. Ctrl+wheel and pinch zoom use actual viewport"
+  },
+  {
+    "source": "annex",
+    "line": 73,
+    "type": "clause",
+    "text": "PRESENT-AC-201 — Visual check matrix. Inspect the exact running build and take unaltered screenshots at desktop ~1536/1280, tablet ~800 and narrow ~390 pixel widths, plus Properties and Slide Notes open/closed, selection"
+  },
+  {
+    "source": "annex",
+    "line": 76,
+    "type": "clause",
+    "text": "PRESENT-AC-202 — Functional and donor tests. Exercise real pointer/keyboard workflows: create/open/import slide deck; select/double-click-edit/drag/resize/rotate; thumbnail rename without touching authored text; notes pr"
+  },
+  {
+    "source": "annex",
+    "line": 79,
+    "type": "clause",
+    "text": "PRESENT-AC-203 — Startup and performance. The observed 5–10-second blank white 'Opening 9to1' refresh is a failure until investigated and corrected. Earliest rendered surfaces must respect selected CUI theme rather than "
+  },
+  {
+    "source": "annex",
+    "line": 82,
+    "type": "clause",
+    "text": "PRESENT-AC-204 — Private cloud browser gate. The existing Cloudflare-Access-protected Present preview is the authorised browser validation surface. It must be reachable independently of the developer's PC; obscurity of t"
+  },
+  {
+    "source": "annex",
+    "line": 85,
+    "type": "clause",
+    "text": "APP-VIS-201 — Shared nonregression. Integrating new features MUST preserve the strongest compatible existing functionality AND currently specified CUI layout, design, data identities and interactions; donor features are "
+  },
+  {
+    "source": "annex",
+    "line": 88,
+    "type": "heading-candidate",
+    "text": "End of normative 12 October 2026 Professional / Present / Theme Preferences annex"
+  },
+  {
+    "source": "companion",
+    "line": 95,
+    "type": "clause",
+    "text": "SPUI-133 — MODEL REASONING EFFORT DISPLAY"
+  },
+  {
+    "source": "companion",
+    "line": 105,
+    "type": "clause",
+    "text": "SPUI-134 — USAGE + CONTEXT PROGRESS CIRCLE"
+  },
+  {
+    "source": "companion",
+    "line": 114,
+    "type": "clause",
+    "text": "SPUI-135 — ACCEPTANCE"
+  },
+  {
+    "source": "companion",
+    "line": 123,
+    "type": "clause",
+    "text": "SPUI-136 — SEPARATION OF CONTEXT AND REMOTE USAGE DISPLAY"
+  },
+  {
+    "source": "companion",
+    "line": 132,
+    "type": "clause",
+    "text": "SPUI-137 — LIMIT SCOPE: PROVIDER AND INDIVIDUAL MODEL"
+  },
+  {
+    "source": "companion",
+    "line": 140,
+    "type": "clause",
+    "text": "SPUI-138 — HOME MODEL DETAILS UI (OWNER'S EXAMPLE)"
+  },
+  {
+    "source": "companion",
+    "line": 153,
+    "type": "clause",
+    "text": "SPUI-139 — REPEATING USAGE LIMIT EDITOR"
+  },
+  {
+    "source": "companion",
+    "line": 165,
+    "type": "clause",
+    "text": "SPUI-140 — COUNTING, ENFORCEMENT, FALLBACK, AND LIMIT TRANSPARENCY"
+  },
+  {
+    "source": "companion",
+    "line": 172,
+    "type": "clause",
+    "text": "SPUI-141 — CONTEXT AND USAGE PRESENTATION"
+  },
+  {
+    "source": "companion",
+    "line": 177,
+    "type": "clause",
+    "text": "SPUI-142 — MANDATORY ACCEPTANCE"
+  },
+  {
+    "source": "companion",
+    "line": 196,
+    "type": "clause",
+    "text": "SPUI-143 — DEFAULT LIMIT SELECTION (NO USER PIN)"
+  },
+  {
+    "source": "companion",
+    "line": 205,
+    "type": "clause",
+    "text": "SPUI-144 — USER-PINNED LIMIT SELECTION"
+  },
+  {
+    "source": "companion",
+    "line": 212,
+    "type": "clause",
+    "text": "SPUI-145 — TIME-TO-BLOCK EVIDENCE AND TOOLTIP"
+  },
+  {
+    "source": "companion",
+    "line": 217,
+    "type": "clause",
+    "text": "SPUI-146 — ACCEPTANCE"
+  },
+  {
+    "source": "companion",
+    "line": 232,
+    "type": "clause",
+    "text": "SPUI-147 — SHOWN TASKS SCOPE (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 237,
+    "type": "clause",
+    "text": "SPUI-148 — TASK TILES AND SIDEBAR STRUCTURE (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 241,
+    "type": "clause",
+    "text": "SPUI-149 — CANONICAL TASK TILE BADGES (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 253,
+    "type": "clause",
+    "text": "SPUI-150 — BADGE DETAIL AND ACCESSIBILITY (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 257,
+    "type": "clause",
+    "text": "SPUI-151 — QUICK QUESTIONS, APPROVALS AND PERMISSIONS (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 262,
+    "type": "clause",
+    "text": "SPUI-152 — TASK ORDER, PRIORITY AND SIDEBAR CUSTOMISATION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 266,
+    "type": "clause",
+    "text": "SPUI-153 — TASKS SIDEBAR ACCEPTANCE / UNRESOLVED DESIGN REGISTER"
+  },
+  {
+    "source": "companion",
+    "line": 287,
+    "type": "clause",
+    "text": "SPUI-154 — PERMANENT MAIN CONVERSATION PER ASSISTANT (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 292,
+    "type": "clause",
+    "text": "SPUI-155 — CONVERSATION-TO-CONVERSATION WORK HANDOFF (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 296,
+    "type": "clause",
+    "text": "SPUI-156 — PERSISTENT ASSISTANT TEAMS (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 300,
+    "type": "clause",
+    "text": "SPUI-157 — CONFIGURABLE TEAM COORDINATION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 307,
+    "type": "clause",
+    "text": "SPUI-158 — RELEVANCE-GATED SELECTIVE PARTICIPATION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 311,
+    "type": "clause",
+    "text": "SPUI-159 — SEPARATE USER-FACING ASSISTANT MESSAGES (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 315,
+    "type": "clause",
+    "text": "SPUI-160 — “SHOW ASSISTANT-ASSISTANT CHAT” SETTING (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 323,
+    "type": "clause",
+    "text": "SPUI-161 — ROLES, SHARED WORK, CONTEXT, SECURITY AND OWNER SERVICES (REQUIREMENT PRESERVATION)"
+  },
+  {
+    "source": "companion",
+    "line": 327,
+    "type": "clause",
+    "text": "SPUI-162 — INTERFACE HIERARCHY AND CUI INHERITANCE (OWNER-CONFIRMED SCOPE; VISUAL DETAILS OPEN)"
+  },
+  {
+    "source": "companion",
+    "line": 331,
+    "type": "clause",
+    "text": "SPUI-163 — ASSISTANTS/TEAMS ACCEPTANCE AND OPEN DECISIONS"
+  },
+  {
+    "source": "companion",
+    "line": 351,
+    "type": "clause",
+    "text": "SPUI-164 — RESEARCH CHAT-TO-WORKSPACE TRANSITION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 356,
+    "type": "clause",
+    "text": "SPUI-165 — MANDATORY REVIEW AND RESEARCH-TYPE SELECTION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 365,
+    "type": "clause",
+    "text": "SPUI-166 — CHOOSE DELIVERABLES AND START (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 372,
+    "type": "clause",
+    "text": "SPUI-167 — ACTIVE EXECUTION TIME, NOT WALL-CLOCK TIME (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 377,
+    "type": "clause",
+    "text": "SPUI-168 — RESEARCH EXECUTION AND RESEARCH FOLLOW-UP (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 382,
+    "type": "clause",
+    "text": "SPUI-169 — UNIVERSAL SPACES STEER / QUEUE WITH PER-SPACE DEFAULT (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 390,
+    "type": "clause",
+    "text": "SPUI-170 — ALT+ENTER INVERTS THE CURRENT SPACE'S SEND ACTION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 394,
+    "type": "clause",
+    "text": "SPUI-171 — REQUIRED ACCEPTANCE AND REMAINING VISUAL QUESTIONS"
+  },
+  {
+    "source": "companion",
+    "line": 407,
+    "type": "clause",
+    "text": "SPUI-172 — SHOPPING SPACE: CHAT TO SHOPPING WORKSPACE (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 411,
+    "type": "clause",
+    "text": "SPUI-173 — CONVENTIONAL SHOPPING FILTERS PLUS NATURAL-LANGUAGE CONTROL (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 415,
+    "type": "clause",
+    "text": "SPUI-174 — REQUIRED VERSUS PREFERRED CONSTRAINTS (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 419,
+    "type": "clause",
+    "text": "SPUI-175 — THREE PRIMARY RESULT CATEGORIES (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 427,
+    "type": "clause",
+    "text": "SPUI-176 — PHYSICAL, DIGITAL, APPS, GAMES AND NONTRADITIONAL SHOPPING (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 432,
+    "type": "clause",
+    "text": "SPUI-177 — HOME-OWNED CURRENCY AND PRICE PRESENTATION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 436,
+    "type": "clause",
+    "text": "SPUI-178 — PRODUCTS VERSUS MERCHANT OFFERS; CONTEXTUAL COMPARISON AND INTEGRATION"
+  },
+  {
+    "source": "companion",
+    "line": 441,
+    "type": "clause",
+    "text": "SPUI-179 — SHOPPING ACCEPTANCE AND OPEN QUESTIONS"
+  },
+  {
+    "source": "companion",
+    "line": 461,
+    "type": "clause",
+    "text": "SPUI-180 — CONFIGURABLE PER-MESSAGE ACTION TOOLBARS"
+  },
+  {
+    "source": "companion",
+    "line": 468,
+    "type": "clause",
+    "text": "SPUI-181 — DEFAULT AI RESPONSE ACTION SEMANTICS"
+  },
+  {
+    "source": "companion",
+    "line": 472,
+    "type": "clause",
+    "text": "SPUI-182 — RESPONSE REACTIONS, PREFERENCES AND REPORTING"
+  },
+  {
+    "source": "companion",
+    "line": 478,
+    "type": "clause",
+    "text": "SPUI-183 — USER MESSAGE ACTIONS AND NONDESTRUCTIVE HISTORY"
+  },
+  {
+    "source": "companion",
+    "line": 482,
+    "type": "clause",
+    "text": "SPUI-184 — USER-REORDERABLE AI DISPLAY NAME INHERITANCE"
+  },
+  {
+    "source": "companion",
+    "line": 486,
+    "type": "clause",
+    "text": "SPUI-185 — UNIVERSAL COMPOSER SLASH-COMMAND INVENTORY"
+  },
+  {
+    "source": "companion",
+    "line": 515,
+    "type": "clause",
+    "text": "SPUI-186 — SLASH COMMAND EXECUTION, CONTEXT AND SAFETY"
+  },
+  {
+    "source": "companion",
+    "line": 519,
+    "type": "clause",
+    "text": "SPUI-187 — CLICK-TO-CONFIGURE PLUGIN TILES; PERMISSION AND TIMEOUT"
+  },
+  {
+    "source": "companion",
+    "line": 523,
+    "type": "clause",
+    "text": "SPUI-188 — PEER REVIEW PLUGIN: MODES, MODEL CHOICE AND SCHEDULE"
+  },
+  {
+    "source": "companion",
+    "line": 530,
+    "type": "clause",
+    "text": "SPUI-189 — PEER REVIEW POWERS, APPROVAL AND INDEPENDENT ACCEPTANCE"
+  },
+  {
+    "source": "companion",
+    "line": 539,
+    "type": "clause",
+    "text": "SPUI-190 — MULTIPLE RESPONSES PLUGIN"
+  },
+  {
+    "source": "companion",
+    "line": 543,
+    "type": "clause",
+    "text": "SPUI-191 — PLAN PLUGIN"
+  },
+  {
+    "source": "companion",
+    "line": 547,
+    "type": "clause",
+    "text": "SPUI-192 — EXPANDED Aa FORMATTING IN THE SHARED COMPOSER"
+  },
+  {
+    "source": "companion",
+    "line": 551,
+    "type": "clause",
+    "text": "SPUI-193 — PER-MESSAGE CANVAS COMPOSER MODE"
+  },
+  {
+    "source": "companion",
+    "line": 555,
+    "type": "clause",
+    "text": "SPUI-194 — DULCHE SHARED CONTEXT RUNTIME (.UCML), TRUST BOUNDARY AND CRYPTO CORRECTION"
+  },
+  {
+    "source": "companion",
+    "line": 560,
+    "type": "clause",
+    "text": "SPUI-195 — UCML APP PERMISSIONS, OUTPUT CONTROL, AND PROMPT-INJECTION DEFENCE"
+  },
+  {
+    "source": "companion",
+    "line": 564,
+    "type": "clause",
+    "text": "SPUI-196 — DULCHE BUILT-IN SAFETY BLOCK: CONTEXTUAL LOW-OVERHEAD CHECKS"
+  },
+  {
+    "source": "companion",
+    "line": 568,
+    "type": "clause",
+    "text": "SPUI-197 — PROPORTIONATE SAFETY ENFORCEMENT, REVIEW AND MEMORY INTEGRITY"
+  },
+  {
+    "source": "companion",
+    "line": 572,
+    "type": "clause",
+    "text": "SPUI-198 — HOME USER CUSTOM BLACKLISTS AND OUTPUT-STYLE FILTERS"
+  },
+  {
+    "source": "companion",
+    "line": 581,
+    "type": "clause",
+    "text": "SPUI-199 — SHARED ACCEPTANCE, REQUIREMENT TRACEABILITY AND OPEN DECISIONS"
+  },
+  {
+    "source": "companion",
+    "line": 604,
+    "type": "clause",
+    "text": "SPUI-200 — PEER REVIEW MAX REVIEW TIME: PRECISE ACTIVE-TIME DENOMINATOR (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 609,
+    "type": "clause",
+    "text": "SPUI-201 — SINGLE CANONICAL SPACE, THREE FREELY SWITCHABLE BUILDER TABS (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 613,
+    "type": "clause",
+    "text": "SPUI-202 — BASIC TAB: BORDERLESS SINGLE-SCREEN DOCUMENT CONFIGURATION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 617,
+    "type": "clause",
+    "text": "SPUI-203 — ADVANCED TAB: SAME DOCUMENT, FULL POLICY/FEATURE DETAIL (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 629,
+    "type": "clause",
+    "text": "SPUI-204 — EXPERT TAB: BOARDS-STYLE MULTI-PAGE CUSTOMISATION (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 639,
+    "type": "clause",
+    "text": "SPUI-205 — EXPERT USES THE EXISTING 9TO1 AUTOMATIONS NODE SYSTEM (EXPLICIT OWNER CONFIRMATION)"
+  },
+  {
+    "source": "companion",
+    "line": 644,
+    "type": "clause",
+    "text": "SPUI-206 — HARNESS LOGIC: EDIT BEHAVIOUR AND REAL SPACE UI (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 648,
+    "type": "clause",
+    "text": "SPUI-207 — MODEL LOGIC: ROUTING, INSTRUCTIONS AND REAL MODEL PARAMETERS (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 652,
+    "type": "clause",
+    "text": "SPUI-208 — USER MESSAGE LOGIC: NONDESTRUCTIVE INPUT PIPELINE (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 656,
+    "type": "clause",
+    "text": "SPUI-209 — FILES PAGE: FULL FOLDER / RESOURCE SYSTEM AND OWNERSHIP (OWNER CONFIRMED)"
+  },
+  {
+    "source": "companion",
+    "line": 660,
+    "type": "clause",
+    "text": "SPUI-210 — CREATION, TEMPLATES, ASSISTED CONFIGURATION, PREVIEW AND PUBLISH"
+  },
+  {
+    "source": "companion",
+    "line": 665,
+    "type": "clause",
+    "text": "SPUI-211 — BUILDER REAL-RUNTIME ACCEPTANCE; OPEN VISUAL DETAILS"
+  },
+  {
+    "source": "study",
+    "line": 18,
+    "type": "clause",
+    "text": "STUDY-UI-201 — Study MUST support the connected learner workflow PLANNING → LEARNING → PRACTISING → REVIEWING, with feedback and recorded evidence flowing into consistent topic state and revision scheduling. Users should"
+  },
+  {
+    "source": "study",
+    "line": 19,
+    "type": "clause",
+    "text": "STUDY-UI-202 — Retain the shared Spaces architecture: far-left pinned Space rail, user-customisable/collapsible contextual sidebar, main Space workspace, optional Spaces tab view, top-right floating Summary, shared model"
+  },
+  {
+    "source": "study",
+    "line": 23,
+    "type": "clause",
+    "text": "STUDY-UI-203 — Study HOME is its purposeful start/overview surface when selecting Study without an active conversation/saved workspace to restore, or on explicit navigation Home inside Study. It is NOT platform Home, a t"
+  },
+  {
+    "source": "study",
+    "line": 24,
+    "type": "clause",
+    "text": "STUDY-UI-204 — SUBJECT WORKSPACE is a structured, navigable subject/course home showing the subject title and identity, course or exam specification/coverage where configured, hierarchical topics and concepts, actual per"
+  },
+  {
+    "source": "study",
+    "line": 25,
+    "type": "clause",
+    "text": "STUDY-UI-205 — STUDY SESSION is the familiar conversational Spaces working surface enhanced with explicit study mode, topic identity, permitted sources, subject-adapted response objects, feedback and evidenced progress. "
+  },
+  {
+    "source": "study",
+    "line": 29,
+    "type": "clause",
+    "text": "STUDY-UI-206 — Preserve V2's LE-08 default sidebar sequence: New Chat; Subjects; Study Tools (My Progress, Planner, Revision Bank); Revise These (up to THREE eligible topics TOTAL across all subjects, not per subject); R"
+  },
+  {
+    "source": "study",
+    "line": 30,
+    "type": "clause",
+    "text": "STUDY-UI-207 — Subjects must be substantive navigation, NOT merely a list of arbitrary folders. Opening Subjects gives a full subject/course selection surface and then the Subject Workspace. Keep subject browse, creation"
+  },
+  {
+    "source": "study",
+    "line": 31,
+    "type": "clause",
+    "text": "STUDY-UI-208 — Revise These displays at most THREE DISTINCT ranked topics across every subject combined, including fewer or empty when no eligible evidence exists. Preserve LE-08's deterministic weak-first, overdue/oldes"
+  },
+  {
+    "source": "study",
+    "line": 32,
+    "type": "clause",
+    "text": "STUDY-UI-209 — Sidebar grouping and default entry points must remain visually balanced: primary actions prominent, headings modest, independent scroll if needed, working region dominant. Any changes must follow CUI theme"
+  },
+  {
+    "source": "study",
+    "line": 36,
+    "type": "clause",
+    "text": "STUDY-UI-210 — Provide a compact contextual STUDY MODE selector, preferably just ABOVE the standard shared composer (or a demonstrably equivalent contextual location that preserves mockup hierarchy). The modes are LEARN,"
+  },
+  {
+    "source": "study",
+    "line": 37,
+    "type": "clause",
+    "text": "STUDY-UI-211 — LEARN: conversational guided teaching, source-backed explanations, meaningful worked examples, concepts illustrated through supported shared objects, optional step-by-step scaffolding and low-friction unde"
+  },
+  {
+    "source": "study",
+    "line": 38,
+    "type": "clause",
+    "text": "STUDY-UI-212 — PRACTISE: targeted individual or short-series exercises, applicable difficulty and topic selection, optional hints/partial step feedback, meaningful error diagnosis and next practice suggestions. Record ac"
+  },
+  {
+    "source": "study",
+    "line": 39,
+    "type": "clause",
+    "text": "STUDY-UI-213 — TEST: a more formal assessment experience, optionally timed, with an inspectable scoring/marking rubric, rules and supported marking policies. Use canonical 9to1 Forms Test/Quiz assessment engines and thei"
+  },
+  {
+    "source": "study",
+    "line": 40,
+    "type": "clause",
+    "text": "STUDY-UI-214 — REVIEW: recall/retrieval practice focused on previous learning, weak topics, earlier mistakes, due/overdue topics and existing Cards flashcard sets, drawing on the canonical Study review schedule and LE-08"
+  },
+  {
+    "source": "study",
+    "line": 41,
+    "type": "clause",
+    "text": "STUDY-UI-215 — Source-policy selector must be VISIBLE AND UNDERSTANDABLE in Study sessions: “My sources only” versus “Wider knowledge allowed”, building on the existing V2 source-only/closed corpus policy and Allowed/Ask"
+  },
+  {
+    "source": "study",
+    "line": 42,
+    "type": "clause",
+    "text": "STUDY-UI-216 — Four-mode selection, subject/topic, source policy and question interactions must remain compatible with the common Spaces model selector, reasoning effort, local/cloud context policy, user-created Group/Pr"
+  },
+  {
+    "source": "study",
+    "line": 46,
+    "type": "clause",
+    "text": "STUDY-UI-217 — My Progress retains the existing RED / AMBER / GREEN topic tracker while making a FOURTH explicit unassessed state visible: NOT ASSESSED (neutral/no reliable evidence); NEEDS WORK (red, demonstrated diffic"
+  },
+  {
+    "source": "study",
+    "line": 47,
+    "type": "clause",
+    "text": "STUDY-UI-218 — Track SELF-REPORTED CONFIDENCE independently of DEMONSTRATED PROFICIENCY. The learner's statement “I feel confident” is useful subjective information but does not by itself move a topic to objectively demo"
+  },
+  {
+    "source": "study",
+    "line": 48,
+    "type": "clause",
+    "text": "STUDY-UI-219 — Topic details should show the effective status, evidence supporting it, recent attempts, review history, last review, next suggested review, related resources and recommended actions. Support source-backed"
+  },
+  {
+    "source": "study",
+    "line": 49,
+    "type": "clause",
+    "text": "STUDY-UI-220 — A later successful assessment can improve evidence; errors, incorrect answers, stale review or contradictory evidence may change recommendations, but progression must use documented scoring/review policy a"
+  },
+  {
+    "source": "study",
+    "line": 53,
+    "type": "clause",
+    "text": "STUDY-UI-221 — Preserve existing LE-09 Revision Bank as the catalogue of canonical first-party artifacts, NOT a new file store. It contains owner-authorised created/enrolled sources including Cards flashcards, Forms quiz"
+  },
+  {
+    "source": "study",
+    "line": 54,
+    "type": "clause",
+    "text": "STUDY-UI-222 — Default navigation-category TABBER is Recommended | All | Flashcards | Notes | Papers | Quizzes; this is a category filter within Revision Bank, NOT the overarching Spaces horizontal Tab View. Provide cust"
+  },
+  {
+    "source": "study",
+    "line": 55,
+    "type": "clause",
+    "text": "STUDY-UI-223 — Improve resource discovery with clear search, filtering and sorting by appropriate subject, topic, type, date/status and associated source; scannable resource titles, icons, preview metadata, owner/locatio"
+  },
+  {
+    "source": "study",
+    "line": 56,
+    "type": "clause",
+    "text": "STUDY-UI-224 — Retain + Create New right-aligned on category-tabber row, with explicit actions Describe a Resource, Flashcard (Cards), Quiz (Forms), Document (Write), Presentation (Present), Canvas, Board (Boards), Other"
+  },
+  {
+    "source": "study",
+    "line": 57,
+    "type": "clause",
+    "text": "STUDY-UI-225 — Clicking resource opens its REAL owning-app viewer/interactor embedded in Spaces Tab View, normally in viewing/interacting mode first, with a visible permitted Edit transition; Open in App remains accessib"
+  },
+  {
+    "source": "study",
+    "line": 58,
+    "type": "clause",
+    "text": "STUDY-UI-226 — Make creating and reviewing Cards lightweight despite Cards' richer full editor; allow quick deck creation, clear front/back, next/flip/rate interactions and contextual focus on difficult items through the"
+  },
+  {
+    "source": "study",
+    "line": 62,
+    "type": "clause",
+    "text": "STUDY-UI-227 — Study's Planner sidebar item and relevant Home/topic actions open the ONE canonical Study Planner BURROW through actual Planner interface, embedded in a Spaces tab where appropriate, preserving BurrowID, e"
+  },
+  {
+    "source": "study",
+    "line": 63,
+    "type": "clause",
+    "text": "STUDY-UI-228 — Where evidence recommends a review date or task, offer a clear action to schedule/re-schedule it in the Study burrow, with the linked SubjectID/TopicID and relevant source references. Suggested review timi"
+  },
+  {
+    "source": "study",
+    "line": 64,
+    "type": "clause",
+    "text": "STUDY-UI-229 — Study Home should surface upcoming relevant work and review sessions via the same Planner records; changes in Planner or Study propagate to both. Mark overdue only when due dates are real and known; absent"
+  },
+  {
+    "source": "study",
+    "line": 68,
+    "type": "clause",
+    "text": "STUDY-UI-230 — While the shared conversation is the primary interaction, exercises should use subject-appropriate, editable and accessible real UI components: a maths problem may need structured equations, intermediate w"
+  },
+  {
+    "source": "study",
+    "line": 69,
+    "type": "clause",
+    "text": "STUDY-UI-231 — For objective/deterministic questions, prefer actual mathematical/structured validators when feasible; for qualitative LLM feedback, represent uncertainty, rubric/source basis and review/correction channel"
+  },
+  {
+    "source": "study",
+    "line": 70,
+    "type": "clause",
+    "text": "STUDY-UI-232 — Preserve human agency and normal questions: learner can ask “why?”, request an explanation, show own approach, ask for easier/harder practice or change source scope without losing the attempt or getting fo"
+  },
+  {
+    "source": "study",
+    "line": 74,
+    "type": "clause",
+    "text": "STUDY-UI-233 — Study Home, Subject Workspace and Study Session are separate active views within the same Spaces SpaceID/navigation scope; never render all three as long vertically stacked panels with inactive focusable e"
+  },
+  {
+    "source": "study",
+    "line": 75,
+    "type": "clause",
+    "text": "STUDY-UI-234 — All screens must have clear major headings/actions, generous spacing, consistent icons, readable Montserrat where supported, accurate hover/focus/pressed/selected/disabled/validation states, genuine cursor"
+  },
+  {
+    "source": "study",
+    "line": 76,
+    "type": "clause",
+    "text": "STUDY-UI-235 — Empty/first-use, no sources, source unavailable, offline local-only, provider unavailable, denied permission, failed quiz/marking, unavailable embedded app and missing Planner/Files state must all be truth"
+  },
+  {
+    "source": "study",
+    "line": 80,
+    "type": "clause",
+    "text": "STUDY-AC-201 — Enter Study without a previous session: see genuine Study Home, not an empty Chat or editor underneath a hero. Click Resume/New/Subject/Revise recommendations and reach correct canonical destinations."
+  },
+  {
+    "source": "study",
+    "line": 81,
+    "type": "clause",
+    "text": "STUDY-AC-202 — In the default sidebar, verify New Chat, Subjects, My Progress, Planner (Study burrow), Revision Bank, THREE total Revise These slots and Recent Chats; then customise/reorder/collapse and confirm precedenc"
+  },
+  {
+    "source": "study",
+    "line": 82,
+    "type": "clause",
+    "text": "STUDY-AC-203 — Create/open two distinct subjects with hierarchical topics; configure source/course metadata, link known specification where supplied, rename topic and verify stable TopicID/reference/attempts."
+  },
+  {
+    "source": "study",
+    "line": 83,
+    "type": "clause",
+    "text": "STUDY-AC-204 — Open a topic workspace and follow linked notes, cards, quiz/test, source, status and new topic-bound session; verify source permissions and no unrelated information leaks."
+  },
+  {
+    "source": "study",
+    "line": 84,
+    "type": "clause",
+    "text": "STUDY-AC-205 — Exercise all four Learn, Practise, Test, Review modes within the SAME canonical Study conversation; switch during session without dropping messages, drafts, progress, Voice or sources. Verify mode changes "
+  },
+  {
+    "source": "study",
+    "line": 85,
+    "type": "clause",
+    "text": "STUDY-AC-206 — In Learn, ask source-based follow-up and inspect a worked example + optional understanding check; ensure showing examples alone does not improve mastery."
+  },
+  {
+    "source": "study",
+    "line": 86,
+    "type": "clause",
+    "text": "STUDY-AC-207 — In Practise, submit correct, incorrect and partial step-by-step answers; receive meaningful feedback, show hints, adjust difficulty and verify stored attempt/proficiency evidence."
+  },
+  {
+    "source": "study",
+    "line": 87,
+    "type": "clause",
+    "text": "STUDY-AC-208 — In Test, start/submit/mark an actual Forms-backed assessment with rubric, timing policy, results and explicit uncertainties; reopen same canonical results/IDs and validate no duplicate records."
+  },
+  {
+    "source": "study",
+    "line": 88,
+    "type": "clause",
+    "text": "STUDY-AC-209 — In Review, practise an overdue and a recorded weak topic via real Cards or stored attempts, update review history appropriately; flip-only content must not produce false mastery."
+  },
+  {
+    "source": "study",
+    "line": 89,
+    "type": "clause",
+    "text": "STUDY-AC-210 — Toggle My sources only versus Wider knowledge allowed; ensure closed-corpus genuinely blocks disallowed outside retrieval, provenance distinguishes input materials/external sources, citations don't fabrica"
+  },
+  {
+    "source": "study",
+    "line": 90,
+    "type": "clause",
+    "text": "STUDY-AC-211 — My Progress shows Not assessed neutral, Needs work red, Developing amber, Confident green with actual evidence; self-reported confidence is separate. New learner with no answers must have no false green/RA"
+  },
+  {
+    "source": "study",
+    "line": 91,
+    "type": "clause",
+    "text": "STUDY-AC-212 — Across subjects show no more than three Revise These items, correctly ordered with explanatory reasons; revise a selected recommendation and verify change only after genuine attributed evidence."
+  },
+  {
+    "source": "study",
+    "line": 92,
+    "type": "clause",
+    "text": "STUDY-AC-213 — Revision Bank category tabs and search/filter/previews work; + Create New genuinely creates Cards, Forms, Write, Present, Canvas, Boards and Dev resource types through owning services; restart, reopen/edit"
+  },
+  {
+    "source": "study",
+    "line": 93,
+    "type": "clause",
+    "text": "STUDY-AC-214 — Enrol and remove a linked resource from Bank without deleting the owning document; follow rename/move/revocation and preserve authorised state/empty/unavailable behaviour."
+  },
+  {
+    "source": "study",
+    "line": 94,
+    "type": "clause",
+    "text": "STUDY-AC-215 — Use Planner Study burrow to schedule topic review; check the same item in standalone Planner, change date and see Study Home update without duplicate events/reminders."
+  },
+  {
+    "source": "study",
+    "line": 95,
+    "type": "clause",
+    "text": "STUDY-AC-216 — Exercise realistic subject-adapted maths working, code input and a written-response marking scenario where supported; confirm real parsers/evaluators and labelled uncertain feedback rather than fake gradin"
+  },
+  {
+    "source": "study",
+    "line": 96,
+    "type": "clause",
+    "text": "STUDY-AC-217 — Close/reopen and recover an interrupted attempt/conversation, switch Spaces/tab views/themes, collapse sidebar, open Summary and start/stop shared Voice Mode without losing canonical state."
+  },
+  {
+    "source": "study",
+    "line": 97,
+    "type": "clause",
+    "text": "STUDY-AC-218 — Verify keyboard/focus, screen-reader, touch, desktop/narrow layouts, contrast, reduced motion, and CUI/Professional/Glow inheritance. Validate actual packaged native and supported web product surfaces, not"
+  },
+  {
+    "source": "study",
+    "line": 98,
+    "type": "clause",
+    "text": "STUDY-AC-219 — Independently verify real Home/Dulche/Spaces/Cards/Forms/Planner/Files typed API paths, permission denial, local/cloud consent, provenance, model routing and safe failure/recovery. Run full seven APP accep"
+  },
+  {
+    "source": "study",
+    "line": 117,
+    "type": "heading-candidate",
+    "text": "END — OWNER-APPROVED STUDY UI ADDENDUM, 13 OCTOBER 2026"
+  },
+  {
+    "source": "scalability",
+    "line": 9,
+    "type": "clause",
+    "text": "SCALE-001 — NO ARBITRARY SIZE CEILINGS. First-party 9to1-native documents/projects MUST NOT impose fixed global character, word, page, slide, block, object or file-byte caps just to simplify UI rendering, opening or savi"
+  },
+  {
+    "source": "scalability",
+    "line": 12,
+    "type": "clause",
+    "text": "SCALE-002 — USER-FACING PRIORITY. Pointer/keyboard input, caret, selection, active-region edits, scroll, drag and undo/redo are highest-priority work. Near-viewport prefetched rendering and user-requested navigation are "
+  },
+  {
+    "source": "scalability",
+    "line": 15,
+    "type": "clause",
+    "text": "SCALE-003 — CANONICAL STATE SEPARATE FROM VIEW. The persisted editable model, identities, relationships, undo/operation history and search semantics MUST be independent of materialised UI nodes, caches, page thumbnails o"
+  },
+  {
+    "source": "scalability",
+    "line": 18,
+    "type": "clause",
+    "text": "SCALE-004 — VIRTUALISED / STREAMED RENDERING. Render the visible pages/slides/tiles/cells/blocks/nodes/tracks plus a bounded adaptive buffer. Use region-based culling, placeholder sizing, lazy hydration, thumbnail/previe"
+  },
+  {
+    "source": "scalability",
+    "line": 21,
+    "type": "clause",
+    "text": "SCALE-005 — INCREMENTAL CALCULATION. Edit the current region immediately and invalidate only affected dependent layout/index/cache ranges. Reflow, paginate, rebuild derived views and thumbnails progressively with chunk o"
+  },
+  {
+    "source": "scalability",
+    "line": 24,
+    "type": "clause",
+    "text": "SCALE-006 — INDEXED NAVIGATION. Deep jumps, headings/outline, bookmarks, slide navigator, find/replace and selection across distant or unloaded regions use stable content IDs and persisted/incremental indexes. Do not req"
+  },
+  {
+    "source": "scalability",
+    "line": 27,
+    "type": "clause",
+    "text": "SCALE-007 — CHUNKED PERSISTENCE. Prefer addressable chunks/objects, changed-range delta/operation saves, transactional/atomic commit, versioning, integrity checks, crash-safe recovery and bounded undo/snapshot retention."
+  },
+  {
+    "source": "scalability",
+    "line": 30,
+    "type": "clause",
+    "text": "SCALE-008 — STREAMING IMPORT, EXPORT AND MEDIA. Read/write/transfer large data incrementally; support resuming and cancelling long work with truthful job status and error recovery. Avoid full-file memory duplication wher"
+  },
+  {
+    "source": "scalability",
+    "line": 33,
+    "type": "clause",
+    "text": "SCALE-009 — FILES AND CLOUD. Files MUST support stable asset identity, metadata indexing, byte-range or chunk-aware operations, integrity-verified resumable uploads/downloads, revisions, permissions, transactional commit"
+  },
+  {
+    "source": "scalability",
+    "line": 36,
+    "type": "clause",
+    "text": "SCALE-010 — SAFETY / RELIABILITY. Preserve disk-space margins, bounded caches and memory/CPU/VRAM budgets. Implement backpressure, malicious-file and decompression-bomb protection, limits for untrusted parser operations "
+  },
+  {
+    "source": "scalability",
+    "line": 39,
+    "type": "clause",
+    "text": "SCALE-011 — CROSS-DEVICE / CROSS-APP. The native Windows/Linux and browser versions must share the same canonical scalable-content semantics, with truthful platform-specific limits. Embedded documents/slides/boards, shar"
+  },
+  {
+    "source": "scalability",
+    "line": 42,
+    "type": "clause",
+    "text": "WRITE-SCALE-201 — LONG DOCUMENTS. Write MUST support content well beyond conventional single-document character limits using visible/adjacent page rendering, section-based hydration, incremental line wrapping and paginat"
+  },
+  {
+    "source": "scalability",
+    "line": 45,
+    "type": "clause",
+    "text": "PRESENT-SCALE-201 — VERY LARGE DECKS. Present MUST lazily create selected-slide and near-slide surfaces, virtualise slide lists/thumbnails, incrementally update slide order/section indexes, retain persistent SlideIDs and"
+  },
+  {
+    "source": "scalability",
+    "line": 48,
+    "type": "clause",
+    "text": "OTHER-APPS-SCALE-201 — ANALOGOUS DOMAIN DESIGN. Boards and Canvas virtualise blocks/spatial regions. Data virtualises rows/cells/results and streams large data operations. Picture uses tiled or region-aware image process"
+  },
+  {
+    "source": "scalability",
+    "line": 51,
+    "type": "clause",
+    "text": "SCALE-AC-201 — TESTING AND MEASUREMENT. Independent acceptance MUST include representative small/medium/large and stress real-artifact tests across supported platforms. Example stress targets: >=1,000 pages in Write, >=1"
+  },
+  {
+    "source": "scalability",
+    "line": 54,
+    "type": "clause",
+    "text": "SCALE-AC-202 — MANDATORY FAILURES. FAIL when responsiveness is achieved by silently omitting content, nonfunctional editing/find/navigation, quietly disabled save/export, pretend background completion, runaway caching, d"
+  }
+]

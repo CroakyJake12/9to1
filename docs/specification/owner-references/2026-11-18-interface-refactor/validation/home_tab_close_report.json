@@ -1,0 +1,38 @@
+{
+  "sourceSha256": "ce8dac75c4a753a7f2336c5d53cb0c4fd36d33d2e5b5c6347a64557674776154",
+  "overrideModuleSha256": "84f5056465b89bc3f3b9758e15ce7b65c3c421843d3956a7807a03bbdda6afa0",
+  "routes": [
+    "host-newtab",
+    "host-newtab-customise",
+    "host-newtab-widgets",
+    "home-dashboard",
+    "home-apps",
+    "home-library",
+    "home-assistants",
+    "home-specialists",
+    "home-models",
+    "home-models-installed",
+    "home-model-details",
+    "home-mesh",
+    "settings-general",
+    "appearance",
+    "account"
+  ],
+  "savedSnapshots": 15,
+  "existingTabActionsInvoked": 15,
+  "nativeSiblingClose": true,
+  "idempotent": true,
+  "savedTitlesPreserved": true,
+  "focusRestored": true,
+  "authoringGuard": true,
+  "lastTabFallback": "host-newtab",
+  "preferencesPreserved": true,
+  "scopedThemedScrollbar": true,
+  "scrollingRuleUnchanged": true,
+  "closeTargetWidths": [
+    110,
+    180,
+    260
+  ],
+  "limitation": "Parser/event and source/width-budget checks only; no browser or computed layout validation."
+}

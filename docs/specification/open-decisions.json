@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "specification_sha256": "b6cd0617f48e832574003360f8003eab1de792cdce7997996ebe88098a2db1b8",
   "items": [
     {
       "id": "DEC-001",
@@ -141,7 +141,7 @@
           "Moving existing saved artefacts between locations."
         ],
         "measured_context_added": "Production composition measured at 22:44: BoardsBrowseAppContentFactory.CreateSession sends the generic 9to1://boards entry (no DocumentId, not a Files document) to the CURRENT Boards implementation with BoardsLocalDocuments, with no setup gate. The setup-gated BoardsBrowseAppContentSession is reached only for addresses carrying a legacy non-Files Notes DocumentId, and it throws UnauthorizedAccessException unless the original Notes/admission/approvals/setup composition is bound; when it does mount, the scene can be left mounted-but-unusable while _route.IsAlive goes false, which is how a stuck Boards tab ends up in the app-wide close preflight. This links reported A04/A05/A06/B05 to one code path.",
-        "state": "answered \u2014 implementation in progress"
+        "state": "answered — implementation in progress"
       },
       "note_29_october": "The setup gate the owner ordered removed is no longer required in order to save: the 9to1 workspace is created on demand and boards land in it. Files' own setup page still exists as the deliberate-choice path; removing that gate is queued with the three-root navigation work."
     },
@@ -241,7 +241,7 @@
     {
       "id": "OPEN-2026-10-30-BOARDS-LOSSLESS-DESIGN-CONVERSION",
       "at": "2026-10-30T00:47:00Z",
-      "status": "open \u2014 only the incompatible conversion mappings are held",
+      "status": "open — only the incompatible conversion mappings are held",
       "title": "Content and identity contract for the remaining Design conversions",
       "requirements": [
         "UX27-BOARD-027",
@@ -261,7 +261,7 @@
     {
       "id": "OPEN-2026-10-30-ENGINE-DONOR-FORK",
       "at": "2026-10-30T10:05:00Z",
-      "status": "answered by owner 30 October 2026 \u2014 embed unmodified engines, fork modified ones",
+      "status": "answered by owner 30 October 2026 — embed unmodified engines, fork modified ones",
       "title": "Browse must be built ON vendored engine donor sources, not against external binaries",
       "verbatim_owner_request": "Owner, 30 October 2026: 'I specifically told her to fork chromium and gecko and put the source directly inside of 9to1, and she said she did... The whole idea is that we take donor sources, put their source code into 9to1's repository, and then build upon those sources to save loads of time rebuilding from scratch.'",
       "requirement": "The durable principle already exists in AGENTS.md - donor engines may keep their implementation languages behind reviewed typed infrastructure boundaries, and donor licences and notices are preserved. What is missing is the requirement that the vendored source is actually FORKED and BUILT UPON. Today it is decoration.",
@@ -286,7 +286,7 @@
         "Rnote (Canvas)": "FORK (controlled fork exists; our one commit on astra/lossless-canvas-serialization-20261003 + Canvas/rnote-poc/patches)",
         "DuckDB": "EMBED (MIT, unmodified, tag v1.5.5)",
         "Chromium": "EMBED pinned official artefact + digest; the /usr/bin/chromium system lookup must go or be labelled dev-only (Browse currently has no engine on this PC)",
-        "AppFlowy Board": "NOT CONSUMED \u2014 currently first-party; elect MPL-2.0 only if donor code is linked"
+        "AppFlowy Board": "NOT CONSUMED — currently first-party; elect MPL-2.0 only if donor code is linked"
       },
       "corrections": "Chrome for Testing has no Linux ARM64 build (measured from the research pack); Gecko candidate builds publish linux-aarch64 with SHA-256/512 + signatures. DevTools on Gecko uses RDP/BiDi, not CDP (CDP removed Firefox 141)."
     },
@@ -445,7 +445,7 @@
       "at": "2026-10-31T13:17:46Z",
       "status": "owner answer needed; the count is measured, the choice is not mine to make",
       "title": "865 MUST requirements (22% of the specification's MUSTs) sit in apps your Shipmas scoping does not name",
-      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848\u2026, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
+      "measured_position": "Measured from the canonical specification (SHA-256 e1779d226848…, pin verified): 3,982 MUST statements in total; 2,659 in the scope you named, 66 provisional (Cards, Planner), 392 explicitly out (Games, Play, Picture, Wave, Motion, Mini Computer, 9to1 OS distribution), and 865 in apps your scoping list does not mention at all: Dulche 414, TF (spec names no product) 116, other apps 97, packaging 63, Admin 61, Forms 42, shared-settings 39, Study Space 33.",
       "why_it_matters": "The plan and every per-app percentage depend on this. The specification calls several of these mandatory - 'Dulche, nodes and agentic runtime' carries 414 MUSTs and the Spaces/Build/Boards workflows depend on it; the TF family (116 MUSTs) is called one mandatory shipping product at spec L947 while its own name is an OPEN decision at spec L1037; packaging (63) and Admin (61) sit under frameworks and the Business/Accounts surface. I have counted them, kept them in the register so nothing disappears, and marked them UNRESOLVED instead of choosing.",
       "question_for_owner": "For each of these buckets, in or out for the Shipmas delivery: Dulche runtime (414), TF (116, spec names no product), other independent apps such as Terminal/Maps/Launcher/Shelf (97), Voice & Vision is named but its requirements are split across sections, packaging/lifecycle (63), Admin (61), shared settings/models (39), Study Space (33), Forms (42). A one-line answer per bucket is enough; I will not infer it.",
       "what_would_make_it_false": "If a later owner instruction names these apps one way or the other, that answer supersedes this record; the register rows themselves do not change, only their scope class, which is derived from a recorded mapping table rather than embedded in the parse."
@@ -497,7 +497,7 @@
       "measured_facts": [
         "Two Boards entry points exist in source: the new CUI app (9to1 Workspace/Boards/app, now with per-OS targets so it runs on this Linux PC: commit 94fc2a3a) and the legacy host (9to1 Workspace/Boards/Host/HavenOS.Boards.Host.csproj, which defers all app resources and services to the Home process).",
         "The frozen installed package cannot serve as the legacy comparison on this PC: launching /usr/bin/haven (haven 0.1.0+test20261026.git59d66496) on 31 October renders a 'Shutdown not complete' page repeating '/usr/lib/haven/libcakes/canvas_motore_poc.so: cannot open shared object file: No such file or directory' many times. Its own diagnostic text states the shutdown did not complete and the native app initialisation did not finish.",
-        "The new CUI Boards landing was also measured broken before it was fixed: Recent stayed at 'Loading saved boards\u2026' forever so a draft could not be reopened, the splash title claimed 'Untitled board - Boards' while no board was open, and after a board was actually activated the splash stayed on screen with no editor surface (framework cause in commit 78122e51)."
+        "The new CUI Boards landing was also measured broken before it was fixed: Recent stayed at 'Loading saved boards…' forever so a draft could not be reopened, the splash title claimed 'Untitled board - Boards' while no board was open, and after a board was actually activated the splash stayed on screen with no editor surface (framework cause in commit 78122e51)."
       ],
       "proposed_retirement_condition": "For each pair: the legacy entry is removed when the current implementation demonstrably covers every behaviour the legacy surface had that the specification also requires, verified by the owner driving both, and the shared-implementation rule is then satisfied with one implementation per app. Until then the pair is a labelled testing scaffold and no app may be called consolidated.",
       "state": "open - implementation running on this PC as a pair; no legacy surface is currently launchable on this machine",
@@ -659,7 +659,7 @@
       "owner_words": [
         "BF-05: open the insert menu, type a filter, press Escape, verify nothing is inserted and the block is still editable (9to1 Boards First v3 ACCEPTANCE.md)"
       ],
-      "measured_basis": "Native, popup-repair build (App 793e395d\u2026, Embedding 8726c279\u2026), clean sandbox home30/profile30, window 0x01a0000f, run54 receipts AS04-AS05, frames 288-289: Escape closed the surface (10 759 changed pixels, all five menu bands gone) and left richNotes.version 1 with the block empty, but typing 'X' immediately afterwards put no character anywhere on the surface and did not change the file, because ToolbarBuilder.cs line 95 moves focus to the invisible trigger button. Headless, the requirement is pinned in the opposite direction: BoardsInsertionPreviewTests.cs line 84 asserts Assert.True(f.Insert.IsFocused) after Escape. A fix was authored (focus the anchored t_<blockId> editor, falling back to the trigger) and a mounted case in BoardsBlockClickFocusTests made that class pass 14/14; it was reverted because it broke the pinned assertion at 21/22 and because five BoardsCreationAndInsertionTests cases faulted with 'The calling thread cannot access this object because a different thread owns it' inside the test harness's dispatcher pump, and two repair attempts (CheckAccess/Post, then deferring to the next dispatcher pass) each failed.",
+      "measured_basis": "Native, popup-repair build (App 793e395d…, Embedding 8726c279…), clean sandbox home30/profile30, window 0x01a0000f, run54 receipts AS04-AS05, frames 288-289: Escape closed the surface (10 759 changed pixels, all five menu bands gone) and left richNotes.version 1 with the block empty, but typing 'X' immediately afterwards put no character anywhere on the surface and did not change the file, because ToolbarBuilder.cs line 95 moves focus to the invisible trigger button. Headless, the requirement is pinned in the opposite direction: BoardsInsertionPreviewTests.cs line 84 asserts Assert.True(f.Insert.IsFocused) after Escape. A fix was authored (focus the anchored t_<blockId> editor, falling back to the trigger) and a mounted case in BoardsBlockClickFocusTests made that class pass 14/14; it was reverted because it broke the pinned assertion at 21/22 and because five BoardsCreationAndInsertionTests cases faulted with 'The calling thread cannot access this object because a different thread owns it' inside the test harness's dispatcher pump, and two repair attempts (CheckAccess/Post, then deferring to the next dispatcher pass) each failed.",
       "options": [
         "Amend the pinned expectation so Escape returns focus to the block the '/' was typed from (keeps the trigger-button fallback for menus opened from the toolbar), and re-run the insert classes",
         "Keep focus on the trigger button as the tests require and instead make the trigger forward typing to the anchored block",
@@ -683,7 +683,7 @@
       "owner_words": [
         "Insert menus MUST cover applicable registered/donor-parity blocks rather than a shortened hard-coded demonstration list, and MUST support good search/category discovery, outside-click/Escape dismissal, keyboard focus and valid screen-edge placement (canonical v2, inline block controls and direct manipulation)"
       ],
-      "measured_basis": "Native, clean build (Embedding 298503c9\u2026, run69, private home43/profile43, window 0x01a0000f, receipts BP01-BP05, frames 349-350): with the destination stage open, typing 'qqzzxx' into 'Search blocks and styles\u2026' left exactly the same three destination rows and no indication of any search effect; after clicking a destination row to reach the grouped type list, the search field reverted to its placeholder and further typing (Ctrl+A then 'zzqqxx') produced no characters and no filtering. In code, ToolbarBuilder has no empty-state string at all (grep for 'No match'/'no results' returns nothing) and Fill() clears the item list, returns early while a destination stage is owed, and otherwise only adds groups that match, so a non-matching query yields a blank panel with no explanation.",
+      "measured_basis": "Native, clean build (Embedding 298503c9…, run69, private home43/profile43, window 0x01a0000f, receipts BP01-BP05, frames 349-350): with the destination stage open, typing 'qqzzxx' into 'Search blocks and styles…' left exactly the same three destination rows and no indication of any search effect; after clicking a destination row to reach the grouped type list, the search field reverted to its placeholder and further typing (Ctrl+A then 'zzqqxx') produced no characters and no filtering. In code, ToolbarBuilder has no empty-state string at all (grep for 'No match'/'no results' returns nothing) and Fill() clears the item list, returns early while a destination stage is owed, and otherwise only adds groups that match, so a non-matching query yields a blank panel with no explanation.",
       "options": [
         "Search filters only block types: keep the destination rows visible while a query is typed, and show a separate filtered type list below them",
         "Search replaces the destination step: a query hides the destination rows and shows matching types, with the destination chosen later or defaulted",
@@ -699,7 +699,7 @@
       ],
       "recommendation": "Third option for the empty-result feedback (it is unambiguous and does not change the destination flow), and hold the destination-versus-search question until the state machine is fixed, then review live with the owner. The keyboard-focus findings (rows 114, 117) must be repaired first: adding an empty state into a list that is being cleared under it would create a second defect."
     },
-{
+    {
       "id": "OPEN-2026-11-08-MESH-SYNC-WIRE-CONTRACT",
       "at": "2026-11-08T15:25:00Z",
       "status": "owner question raised; no source changed; MVP payload selected as the Boards document by owner choice on 8 Nov 2026",
@@ -731,7 +731,7 @@
       ],
       "recommendation": "Option 1 for the wire and authority shape, but keep the decision split: Mesh transports and records, the owning app decides. For the MVP payload the Boards document must be authoritative over its own merge - Mesh proposes a mutation, Boards accepts or raises a visible conflict, and nothing is auto-applied to a board. The new mesh.sync capability key must default to OFF to satisfy the no-automatic-sharing MUST. Hold only the public MeshSyncMutation shape change for the owner answer; the transport message, the adapter, the queue/ack states and the tests can proceed on main without pre-empting that answer."
     },
-{
+    {
       "id": "OPEN-2026-11-08-MESH-BOARD-SCOPE-PROFILE-AND-WRITER",
       "at": "2026-11-08T17:35:00Z",
       "status": "owner question raised; boards sync proven at adapter/service level only; nothing wired into the running composition",
@@ -761,6 +761,26 @@
         "Admin cross-account Business Mesh once team namespaces exist"
       ],
       "recommendation": "Option A for the MVP, because it keeps the existing personal pairing model and needs no cross-process protocol, with two conditions stated now: Mesh must never be registered over the Boards data root, only over one profile's drafts directory; and while a board is open in Boards on this device, Mesh must not write that file. If the reviewer wants a hard guarantee against concurrent writers, option C is the correct long-term shape, but it is a separate piece of work and should not be smuggled into tonight's MVP."
+    },
+    {
+      "id": "OPEN-2026-11-18-REVISION-INGEST-AND-SRC-OPEN-POLICIES",
+      "at": "2026-11-18T20:55:00Z",
+      "status": "recorded; no surface blocked — implement to the specified behaviour and keep these policies uninvented",
+      "title": "18 November specification revision ingested as sole authority; carried-forward unresolved product policies",
+      "owner_words": [
+        "Attached 9to1_Qwen_3_8_Handoff_2026-11-18.zip with START_HERE/QWEN_STARTER_PROMPT: refactor the entire codebase to the current spec and Atlas, preserving non-conflicting features."
+      ],
+      "notes": [
+        "Authority: docs/specification/owner-references/2026-11-18-interface-refactor/SPECIFICATION.md (sha b6cd0617…) + Interface Atlas v3.3 (75c0abad…) + SOURCE_PRECEDENCE.md. The 18 October v2 attachment (e1779d22…) is superseded history; the package's baseline/retained-pack and baseline/v31 carry its unsuperseded technical contracts.",
+        "Spec SRC-OPEN-001: Study evidence weights, proficiency thresholds and review intervals remain open policy — four statuses, private attributed evidence and deterministic ≤3 recommendations are fixed; do not invent constants.",
+        "SRC-OPEN-002: temporary-chat reading of durable memory unresolved; no implicit read authority from a temporary session.",
+        "SRC-OPEN-003: AI Studio Training Lab deferred/undefined; builder/schema/permission requirements remain active.",
+        "SRC-OPEN-004: runtime backend naming (Strata/Thunder/Lightning/Monstrosity) needs reconciliation against actual repository adapters; legacy or later names prove no shipped capability.",
+        "SRC-OPEN-005: Apply-and-reload context control required; exact runtime handshake pending confirmation against the actual runtime — a badge-only control is insufficient.",
+        "SRC-OPEN-006: newly specified context menus/shortcuts are Draft interactions under shared command/permission rules.",
+        "Older items in this queue remain evidence; where the 18 November spec settles the behaviour (e.g. persistent Dual control absent from the composer contract, HAV-TAB/HOME/MODEL/SET/BOARD/AI-BAR contracts), the spec governs and the item is historical.",
+        "Dual: the new composer thread-tool contract (plus, attachments, emoji, voice, round Send) omits a persistent Dual control, consistent with the 20 October owner note that Dual is a Plugin; keep the plugin capability registered where compatible."
+      ]
     }
   ]
 }

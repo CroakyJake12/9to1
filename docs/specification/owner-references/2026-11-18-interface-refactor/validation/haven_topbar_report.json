@@ -1,0 +1,58 @@
+{
+  "sourceSha256": "9e6c8eb8df1a79904db5b88b2479e8dae8f927d6b36f7fe0e9c2b0278e4afbd9",
+  "cssOnly": true,
+  "JavaScriptLogicUnchanged": true,
+  "sameDOM": true,
+  "originalActionsPreserved": true,
+  "professionalActionRadii": "shared button-radius token",
+  "hostControlHeight": 36,
+  "toolsFocusRestored": true,
+  "checkedScreens": [
+    {
+      "id": "present-editor",
+      "presentChrome": true,
+      "preservedControls": 60
+    },
+    {
+      "id": "present-selection",
+      "presentChrome": true,
+      "preservedControls": 62
+    },
+    {
+      "id": "present-insert",
+      "presentChrome": true,
+      "preservedControls": 80
+    },
+    {
+      "id": "present-transitions",
+      "presentChrome": true,
+      "preservedControls": 69
+    },
+    {
+      "id": "present-actions",
+      "presentChrome": true,
+      "preservedControls": 68
+    },
+    {
+      "id": "write-continuous",
+      "presentChrome": false,
+      "preservedControls": 61
+    },
+    {
+      "id": "settings-general",
+      "presentChrome": false,
+      "preservedControls": 107
+    },
+    {
+      "id": "home-apps",
+      "presentChrome": false,
+      "preservedControls": 72
+    },
+    {
+      "id": "host-browser",
+      "presentChrome": false,
+      "preservedControls": 21
+    }
+  ],
+  "limitations": "Parser-backed structure and source checks only; no browser or rendered layout validation."
+}

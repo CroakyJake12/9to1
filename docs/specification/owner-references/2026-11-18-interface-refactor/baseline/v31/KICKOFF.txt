@@ -1,0 +1,20 @@
+Continue 9to1 development in a fresh Qwen session using the attached/extracted 9to1_Qwen_Handoff_v3.1 pack. Read START_QWEN.md and follow it as the current work order. Implement and test; do not stop after a plan.
+
+FIRST: SAFELY INTEGRATE ASTRA
+Read AGENTS.md and repository integration rules, inspect the actual branch/upstream/remotes, local changes and active writers, then fetch and pull Astra's actual pushed changes before making application edits. Use a fast-forward-only pull only when the intended tree is clean and non-diverged. Preserve local work and follow the authorised integration procedure for conflicts; do not reset, clean, blindly stash, overwrite, force-push or race another worker. Identify the actual incoming commits and inspect their diff/handoff. If Astra has not pushed or integration is blocked, report the exact blocker instead of claiming success. Compile and test the inherited work and verify the real Boards launch route.
+
+THEN: USE THE REFRESHED SOURCES
+Read OWNER_DECISIONS_v3.1.md and BOARDS_ACCEPTANCE.md first. The full current references are 9to1_Development_Specification_v3.1.docx and 9to1_Interface_Atlas_v3.1.html. Load the repository's full Boards technical chapters as needed; the focused extracts do not replace them. Apply the new owner decisions narrowly and keep the repository's specification, atlas, modules and requirement ledger consistent. Do not infer missing source detail or repeat fixes Astra already completed.
+
+FINISH AND TEST BOARDS
+Retain the existing CUI frontend and working functionality; reuse suitable AppFlowy Rust capabilities rather than replacing the UI or inventing a second document model. Complete the remaining source-defined Boards work and actual usability repairs.
+
+The header is Board Icon | Board Name | Undo/Redo, with the name opening the file menu and no separate File button. Use one adaptive toolbar pill with dividers between Style/Font, Text Formatting, Paragraph and Properties, plus a separate fixed Add/Drawing/AI pill. Style, font family, size and Aa are separate visible controls within the first group; bold, colour, underline and related formatting belong to the next group. Use compact dropdowns for alignment, list variants and spacing. Toolbar Add inserts page content; sidebar footer Add creates pages/sections.
+
+Verify real editing, selection/focus, menus, undo, ink, nested pages, applicable embeds/AI, and durable save/reopen/recovery with disposable fixtures and the actual app. Passing compilation or unit tests alone is not completion. Follow BOARDS_ACCEPTANCE.md and retain every compatible baseline requirement.
+
+NEXT PASS: SHARED THEME DESIGN
+Only after the Boards acceptance gate passes, use THEME_REFERENCE_INDEX.md and all 27 supplied images in ThemeRefs/ to repair the themes' materials, typography, controls and states—not just colours. Preserve layout, actions and authored content. Do not silently rename themes or infer new built-ins from unmatched reference-folder names. Record unresolved mappings and continue unambiguous work. Re-test Boards after shared theme changes; do not claim visual approval from screenshots you cannot inspect.
+
+KEEP WORK SAFE AND CONTINUE
+Maintain short durable checkpoints before compaction and re-read them afterwards. Review diffs line by line, compile, test, commit coherent verified in-scope changes and push at safe milestones to the authorised tracked branch. Verify pushes and preserve local commits on failure. Do not blindly stage unrelated files or secrets. The old Astra 2% cloud-usage cutoff does not apply to this local Qwen run. Create no scheduled automation or self-restarting service, and honour explicit stop/pause instructions. Continue ordinary in-scope work without asking me to say continue.

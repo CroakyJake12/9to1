@@ -1,25 +1,64 @@
 {
-  "schema": 1,
-  "authority": "sole canonical product specification; later explicit owner decisions may amend it",
-  "source_path": "/home/jacob/Documents/Codex/2026-10-18/9to1-development-specification-v2-chatgpt-library-2/outputs/9to1_Development_Specification_v2_Consolidated_2026-10-18.md",
-  "repository_path": "docs/specification/9to1-development-specification-v2.md",
-  "sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
-  "bytes": 1705170,
-  "copied_at_utc": "2026-10-18T13:18:43.590091+00:00",
-  "owner_relay_thread": "01a14f11-e9af-75a1-8fb1-6974f5354bd6",
-  "web_source_used": false,
-  "copy_method": "exact bytes",
-  "read_scope_for_this_migration": "Opening authority, identities, dependency order, CUI authoring/theme mandate, completion/design, general engineering and APP-AC-001\u2013009; full attached file copied without alteration.",
-  "matching_word_copy": {
-    "source_path": "/home/jacob/Documents/Codex/2026-10-18/9to1-development-specification-v2-chatgpt-library-2/outputs/9to1_Development_Specification_v2_Consolidated_2026-10-18.docx",
-    "sha256": "a131310a6676f55335e731a2c6b337d8dded07ce920537c01470373a8b10f096",
-    "bytes": 622555,
-    "role": "matching supplied Word attachment; markdown copy is pinned in repository"
+  "schema": 2,
+  "authority": "sole canonical product specification; later explicit owner decisions may amend it; see SOURCE_PRECEDENCE.md of the current revision",
+  "current": {
+    "name": "9to1 specification 18 November 2026 native export with editable Interface Atlas v3.3",
+    "repository_paths": {
+      "specification_markdown": "docs/specification/owner-references/2026-11-18-interface-refactor/SPECIFICATION.md",
+      "specification_html": "docs/specification/owner-references/2026-11-18-interface-refactor/SPECIFICATION.html",
+      "structured_native_readback": "docs/specification/owner-references/2026-11-18-interface-refactor/source/doc-final.json",
+      "atlas": "docs/specification/owner-references/2026-11-18-interface-refactor/design/9to1_Interface_Atlas_v3.3_Editable.html",
+      "screen_manifest": "docs/specification/owner-references/2026-11-18-interface-refactor/design/screens-current.json",
+      "source_precedence": "docs/specification/owner-references/2026-11-18-interface-refactor/SOURCE_PRECEDENCE.md",
+      "retained_pack": "docs/specification/owner-references/2026-11-18-interface-refactor/baseline/retained-pack",
+      "v31_reference": "docs/specification/owner-references/2026-11-18-interface-refactor/baseline/v31"
+    },
+    "sha256": {
+      "specification_markdown": "b6cd0617f48e832574003360f8003eab1de792cdce7997996ebe88098a2db1b8",
+      "specification_html": "fa5329e2dd279af9e3e72d00330e53386febef1f1ef14f126e4e9c125aee5d83",
+      "atlas": "75c0abad2f971b430bf2b635f0cd9b2c911bc9e8aee552f35c1af33a421756d4"
+    },
+    "google_docs": {
+      "documentId": "1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0",
+      "revisionId": "AHj4eMRx4s8O1mVNjJXwKeQefmbpHlET81TP7V9gaBntoBWfvMw_8AXX0dZ635M4Fd1nH9ojmNPP5kDRl_z8h8pLOWVQwICobUioZZu_ePU",
+      "note": "SPECIFICATION.md/html are generated exclusively from source/doc-final.json (exact native readback); package assembledAt 2026-11-18T20:07:41Z."
+    },
+    "owner_attachment": {
+      "zip_path_at_receipt": "/home/jacob/Downloads/9to1_Qwen_3_8_Handoff_2026-11-18.zip",
+      "zip_sha256": "19a47c3f485d384674d44ae4ffaf121d8f09374b3701cb31143b39b1bd7e8ed7",
+      "bytes": 50464519,
+      "verified_at_utc": "2026-11-18T20:40:00+00:00",
+      "verification": "all 518 CHECKSUMS.json entries verified after extraction; Atlas hash matches PACKAGE_MANIFEST.json; export report 0 warnings",
+      "web_source_used": false
+    },
+    "assignment": "Refactor the entire existing 9to1 codebase and application to this specification and Atlas while preserving non-conflicting existing features (QWEN_STARTER_PROMPT.md, START_HERE.md, HANDOFF-001-007)."
   },
-  "design_reference_pack": {
-    "source_path": "/home/jacob/Documents/Codex/2026-10-18/9to1-development-specification-v2-chatgpt-library-2/outputs/9to1_Spaces_UI_Reference_Pack_2026-10-12.zip",
-    "sha256": "8cdd4da5c1fb6b6d4dde39057e33a254aa4ed2054417e95b36863515edda0b1f",
-    "bytes": 977670,
-    "role": "reference attachment, not additional product authority"
-  }
+  "history": [
+    {
+      "name": "9to1 Development Specification v2 (superseded 18 November 2026; retained unchanged as history)",
+      "authority": "sole canonical product specification; later explicit owner decisions may amend it",
+      "source_path": "/home/jacob/Documents/Codex/2026-10-18/9to1-development-specification-v2-chatgpt-library-2/outputs/9to1_Development_Specification_v2_Consolidated_2026-10-18.md",
+      "repository_path": "docs/specification/9to1-development-specification-v2.md",
+      "sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+      "amended_sha256": "e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81",
+      "bytes": 1705170,
+      "copied_at_utc": "2026-10-18T13:18:43.590091+00:00",
+      "owner_relay_thread": "01a14f11-e9af-75a1-8fb1-6974f5354bd6",
+      "web_source_used": false,
+      "copy_method": "exact bytes",
+      "read_scope_for_this_migration": "Opening authority, identities, dependency order, CUI authoring/theme mandate, completion/design, general engineering and APP-AC-001\u2013009; full attached file copied without alteration.",
+      "matching_word_copy": {
+        "source_path": "/home/jacob/Documents/Codex/2026-10-18/9to1-development-specification-v2-chatgpt-library-2/outputs/9to1_Development_Specification_v2_Consolidated_2026-10-18.docx",
+        "sha256": "a131310a6676f55335e731a2c6b337d8dded07ce920537c01470373a8b10f096",
+        "bytes": 622555,
+        "role": "matching supplied Word attachment; markdown copy is pinned in repository"
+      },
+      "design_reference_pack": {
+        "source_path": "/home/jacob/Documents/Codex/2026-10-18/9to1-development-specification-v2-chatgpt-library-2/outputs/9to1_Spaces_UI_Reference_Pack_2026-10-12.zip",
+        "sha256": "8cdd4da5c1fb6b6d4dde39057e33a254aa4ed2054417e95b36863515edda0b1f",
+        "bytes": 977670,
+        "role": "reference attachment, not additional product authority"
+      }
+    }
+  ]
 }

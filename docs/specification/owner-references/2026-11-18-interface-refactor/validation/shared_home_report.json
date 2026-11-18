@@ -1,0 +1,33 @@
+{
+  "sourceSha256": "8a1ceef799125b2e359bde04f4657b1bc0d8ec1da0f5d2b4e3cc2fe581fa4b1c",
+  "embeddedScriptsExecuted": 23,
+  "routesChecked": [
+    "host-newtab",
+    "home-dashboard",
+    "host-newtab-customise",
+    "host-newtab-widgets",
+    "home-apps",
+    "home-models",
+    "home-assistants",
+    "home-specialists",
+    "home-library",
+    "present-editor",
+    "host-browser"
+  ],
+  "inlineEditing": true,
+  "keyboardReordering": true,
+  "dragReordering": true,
+  "visibleDropTarget": true,
+  "addRemoveWidgets": true,
+  "addAppShortcut": true,
+  "widgetSizing": true,
+  "savedPreferencesRestored": true,
+  "undoFirstPreference": true,
+  "emptyImageAndSizeRestoration": true,
+  "unknownPreferencesPreserved": true,
+  "settingsProjectionsPreserved": true,
+  "authoredWidgetBodyPreserved": true,
+  "searchUsesHavenAPI": true,
+  "commits": 10,
+  "limitation": "Structural and functional event execution only; no browser or computed layout checks."
+}

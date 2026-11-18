@@ -1,0 +1,11 @@
+{
+  "sections": 14,
+  "markdownWords": 4349,
+  "requirements": 61,
+  "uniqueRequirementIds": 61,
+  "missingScreenIds": [],
+  "missingSourceFiles": [],
+  "corrections": 4,
+  "decisionAndReadinessItems": 5,
+  "sha256": "573c2d9fae3c9407e3162f276383c7925225310667a2e7e2c9a1fbdc57e8a390"
+}

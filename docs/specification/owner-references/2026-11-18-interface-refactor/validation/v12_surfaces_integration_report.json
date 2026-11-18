@@ -1,0 +1,121 @@
+{
+  "currentSHA256": "0fc5758139085de661729afe824aa5f415d619d07562a91a09db1611f6abda14",
+  "baselineSHA256": "ce8dac75c4a753a7f2336c5d53cb0c4fd36d33d2e5b5c6347a64557674776154",
+  "productScriptsExecuted": 27,
+  "registeredRoutes": 251,
+  "assistants": [
+    {
+      "id": "spaces-assistant-alex",
+      "messageMarkup": "exact",
+      "portraits": "exact",
+      "routes": "exact",
+      "compactHeader": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "spaces-assistant-maya",
+      "messageMarkup": "exact",
+      "portraits": "exact",
+      "routes": "exact",
+      "compactHeader": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "spaces-assistant-rowan",
+      "messageMarkup": "exact",
+      "portraits": "exact",
+      "routes": "exact",
+      "compactHeader": 1,
+      "specificationSections": 1
+    }
+  ],
+  "boards": [
+    {
+      "id": "boards-ink",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-add",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-typing",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-insert",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-editor",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-context",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-recovery",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-file-menu",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-alignment",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-list-options",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    },
+    {
+      "id": "boards-properties",
+      "boardBodyMarkup": "exact",
+      "routes": "exact",
+      "compactToolbars": 1,
+      "specificationSections": 1
+    }
+  ],
+  "interactions": [
+    "Assistant workspace state and undo with complete product script order",
+    "Assistant options keyboard and original permission/configuration routes",
+    "Assistant review routes remain connected after all wrappers",
+    "Boards Format/Page handlers override original action triggers correctly",
+    "Boards Add, Drawing, Properties and collaboration route continuity",
+    "Saved innerHTML restores owned roots without duplicate chrome or changed bodies",
+    "No cross-module menu capture while editor selection is active"
+  ],
+  "limitations": "Executed all embedded atlas-* product scripts in their assembled order, with parser-backed DOM and an editor bridge contract stub. Editor CSSOM and live layout rendering were not executed."
+}

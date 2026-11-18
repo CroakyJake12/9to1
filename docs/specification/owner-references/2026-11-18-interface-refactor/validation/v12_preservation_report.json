@@ -1,0 +1,16 @@
+{
+  "sourceSHA256": "ce8dac75c4a753a7f2336c5d53cb0c4fd36d33d2e5b5c6347a64557674776154",
+  "outputSHA256": "0fc5758139085de661729afe824aa5f415d619d07562a91a09db1611f6abda14",
+  "replacedModules": [
+    "atlas-newtab-refresh-code"
+  ],
+  "addedModules": [
+    "atlas-assistant-space-code",
+    "atlas-boards-refinement-code",
+    "atlas-specification-links-code",
+    "atlas-reference-startup-code"
+  ],
+  "unownedBytes": "identical",
+  "scriptCount": 32,
+  "bytes": 4433659
+}

@@ -1,0 +1,24 @@
+{
+  "screenCount": 247,
+  "catalogDestinations": 73,
+  "structure": {
+    "scrollViewports": 1,
+    "sectionSnapTargets": 45,
+    "stickySections": 9,
+    "subsections": 28,
+    "arrowheadElements": 0
+  },
+  "pinGeometry": "unscrolled / pinned / pushed out / next section / bottom overflow passed",
+  "scaleCases": [
+    0.5,
+    1,
+    2
+  ],
+  "focus": "child revealed below parent; already-visible child does not jump",
+  "scrollContinuity": "80px and300px survive related-route remounts",
+  "searchRestoration": "380px preserved across140px filtered list then1200px full list",
+  "manualSnap": "proximity restored on manual scroll; programmatic/focus moves do not snap",
+  "cleanup": "scroll/gesture listeners and ResizeObserver removed outsideSettings",
+  "connectors": "one segmented continuous rail, last segment ends at50% of actual row;6px gap before child surface at both breakpoints; no arrowheads",
+  "validationBoundary": "Actual module with structural DOM and controlled geometry fixtures; native browser rendering was not attempted"
+}

@@ -1,0 +1,228 @@
+# Games — scene and runtime development
+
+Module ID: `games` · 9to1 Development Specification v3
+
+## Prerequisites
+
+- **CUI, themes and shared interaction system** — Typed UI components, theme tokens/materials, layout, focus, motion, accessibility and shared control states.
+- **Artifacts, local persistence and recovery** — Canonical artifacts, revisions, typed edits, local saves, derived exports, sync and recovery.
+- **Permissions, approvals and execution scope** — Effective scoped grants, action approvals, policy intersections, revocation and audit.
+- **Shared AI controls and artifact collaboration** — Contextual AI bars, shared model/permission controls, global collaborators and typed artifact proposals.
+
+## Overview
+
+Games provides the source-defined game-development environment, with scene, asset, component, animation and runtime tooling over one canonical project. Runtime play state is distinct from authored source.
+
+## Layouts & visible states
+
+- **V3-GAMES-LAY-01** — Use scene hierarchy, viewport, component inspector, assets and timeline/animation context. Development, Creation and Rendering workspaces are coordinated views of the same project.
+- **V3-GAMES-LAY-02** — Show edit/play/runtime and debug/build/export states clearly, including selected object and active component properties.
+
+## Features & behaviour
+
+- **V3-GAMES-FEA-01** — Retain full scene/entity/component, asset, scripting, physics/interaction, animation, debugging and build/export capabilities from the technical contract.
+- **V3-GAMES-FEA-02** — Editing controls modify source; runtime simulation changes do not automatically save back into the authored scene. Explicit apply/copy-from-runtime semantics require review where supported.
+- **V3-GAMES-FEA-03** — AI work produces typed project changes and real validation/build receipts, not an invented playable preview.
+
+## Canonical entities & persistence
+
+- **V3-GAMES-ENT-01** — Persist ProjectID, scene/entity/component/asset IDs, source revisions, animation data and runtime/build session references.
+- **V3-GAMES-ENT-02** — Generated assets and build artifacts retain provenance and selected source revision.
+
+## Permissions & recovery
+
+- **V3-GAMES-PER-01** — Respect project/resource and execution permissions. Unavailable engine/plugin/runtime capabilities must be reported rather than hidden.
+- **V3-GAMES-PER-02** — Recover compile/runtime failures and unsaved authoring state while keeping the last valid source/build distinct.
+
+## Acceptance checks
+
+- **V3-GAMES-ACC-01** — Test scene selection/component edit, animation, play/stop, runtime/source separation and actual build failure/success receipts.
+- **V3-GAMES-ACC-02** — Verify workspace switching preserves project identity and no runtime changes silently overwrite authoring.
+
+## Exact mock-up and state map
+
+- **Games · Scene and components** — screen `games`. Scene editor.
+
+## Source clause IDs
+
+UX27-OTHER-015
+
+## Technical reading map
+
+- Games — scene and runtime development — Games; Product role and ambition (part 01) — `technical/games-01.md` (3,708 words; V2-B0748).
+- Games — scene and runtime development — Games and creation workspaces (part 02) — `technical/games-02.md` (107 words; V2-B2327, V2-B2328, V2-B2329).
+
+Technical clauses retain APIs, data models, platform, recovery, donor and acceptance details. The technical files are part of this module, not optional background reading. Shared prerequisites mean stable service/interface contracts must be available; they do not require every dependent app UI to be complete. Use the named chunk for the relevant subtask or the complete module file for its full retained contract.
+
+
+# Retained technical requirements
+
+# Games — scene and runtime development — Games; Product role and ambition (part 01)
+
+Reading status: active retained clauses, subject to the v3 owner overrides listed in the primary module. Historical process instructions and replaced original wording are stored separately.
+
+### V2-B0748 · v2 lines 3557–3686
+
+Games
+Product role and ambition
+9to1 Games is the native CUI game-development, real-time 3D creation, modelling and rendering environment. It is not merely a launcher and it is not the same product as Play. Games is where users build games, interactive worlds, real-time experiences, 2D/3D scenes, models, materials, animations and rendered content. Play remains the structured human/Agent game framework.
+Games MUST be based on a maintained fork of Godot as its primary game-engine donor and MUST preserve mature applicable engine functionality unless this specification explicitly replaces it with a 9to1-native equivalent. Donor parity is a floor rather than a ceiling: the purpose of the fork is to produce a materially more capable, more intuitive and more integrated creation environment rather than only re-skinning Godot.
+Games MUST also integrate a maintained Blender-derived modelling/rendering toolset deeply enough that modelling feels like part of the same product rather than an external export/import workflow. Because 9to1 is substantially open source, implementation MAY integrate Blender-derived code as deeply as is technically useful while preserving all applicable licence/source-distribution obligations. The donor-parity/source manifest MUST identify the exact Godot and Blender revisions, licences, modified components and redistribution obligations used by a release.
+Games MUST expose at least two first-class workspaces over the same canonical project/assets: Development and Creation/Rendering. Development prioritises scene graph, gameplay, scripts, debugging, profiling, networking, UI and build/export. Creation/Rendering prioritises modelling, sculpting, UV, materials, texture work, rigging, animation, simulations, lighting, cameras, high-quality rendering and related asset workflows. A user MUST be able to use Creation/Rendering without building a game.
+CUI-native editor
+The user-facing editor MUST be rebuilt as a coherent 9to1 CUI experience rather than exposing donor-native editor chrome as the final interface. Existing mature donor capability MAY remain behind the shell, but navigation, inspector, asset browser, scene graph, editors, dialogs, settings, errors and workflows MUST follow 9to1 interaction conventions.
+Games MUST host the normal persistent floating Dulche AI bar. The AI bar receives only authorised project/editor state and MUST be able to reason over semantic scene, script, component, material, animation, profiler and error data through typed Games APIs. It MUST NOT rely on generic Computer Use to manipulate the Games editor when a typed Games action exists.
+The Godot UI authoring workflow MUST be upgraded/rebuilt around the canonical CUI Visual Builder. Game HUDs, menus, overlays, dialogue, inventories, maps, settings, responsive layouts and other game UI MUST use the same high-quality visual layout concepts and reusable components as CUI while compiling/running efficiently inside Games. Game UI remains part of the canonical game scene/component model and MUST NOT become a disconnected design-only artifact.
+Canonical scene graph and purposeful components
+Games MUST preserve a powerful scene/node graph foundation while providing higher-level purposeful components for common game concepts. Stable SceneID, EntityID, NodeID, ComponentID, ResourceID, AssetID and ProjectID identities MUST be used; mutable names/paths are not canonical identity.
+The scene graph MUST support ordinary low-level engine nodes for expert use and high-level purpose-built entities/components for rapid development. Examples include Player Character, Vehicle, Camera Rig, Door, Interactive Object, Collectible, Spawn Point, Checkpoint, Trigger Volume, Dialogue Actor, NPC, Enemy, Weapon, Inventory, Quest, Save Point, Water Body, Landscape, Foliage, Destructible Object, Audio Zone, Lighting Rig, UI Screen/HUD, Multiplayer Spawn and Navigation Area.
+Purposeful components MUST have real runtime semantics, typed APIs, inspectors, events, extension points and Dulche understanding. They MUST NOT be decorative prefab labels over unrelated scripts.
+Games MUST favour composition. Complex built-ins such as Player Character or Car SHOULD be composed from inspectable native primitives plus first-party C# gameplay components rather than implemented as one opaque monolithic class.
+Shared graph infrastructure with Automations
+Games and Automations MUST share the same canonical node-graph editor/data infrastructure and backend concepts for GraphID, NodeID, typed ports, typed connections, groups, comments, subgraphs, search, selection, snapping, minimap, copy/paste, undo/redo, versioning, validation, keyboard accessibility, semantic API access and execution/debug visualisation.
+Sharing the graph infrastructure MUST NOT force all graphs through one execution runtime. Each GraphType registers its own legal node families, compiler/runtime adapter and semantics. Automation graphs execute through the automation runtime; gameplay visual scripts through the Games runtime; material/shader graphs through the rendering compiler; animation/state graphs through the animation runtime; procedural world graphs through the generation runtime.
+Games MUST expose only context-relevant nodes by default. A shader graph MUST NOT show Send Email merely because Automations uses the same graph infrastructure. Cross-domain nodes require an explicit compatible bridge.
+Visual gameplay graphs MUST interoperate with C# and C++. Eligible C# or C++ functions/events explicitly exposed to Games SHOULD be callable/observable as graph nodes/events without requiring hand-written graph wrappers.
+C# first-class language and mixed-language projects
+C# is the canonical first-class scripting/gameplay language for Games. Documentation, templates, autocomplete, refactoring, debugging, profiler integration, hot-reload support where safe, generated APIs, examples and Dulche coding assistance MUST default to C#.
+GDScript MUST NOT be exposed as a supported public Games development language. Donor language infrastructure MAY remain internally where unavoidable during migration, but user projects and canonical Games documentation MUST NOT require or promote GDScript.
+C++ MUST remain available for low-level, engine-extension, rendering, platform, performance-critical, unusual memory/layout or other systems work where C# is inappropriate. The engine SHOULD continually minimise the amount of low-level work developers need to write themselves.
+A Games project MUST support C# and C++ simultaneously. The user MUST NOT have to choose one project language. C# and C++ MUST operate over the same canonical scene/entity/component/resource model and may call deliberately exposed functionality across the language boundary.
+Games SHOULD generate routine interop/binding glue. Normal developers MUST NOT be expected to hand-write P/Invoke declarations, ABI wrappers, pointer-marshalling layers, lifetime glue or duplicated type conversions merely to call a supported exposed C++ component from C#.
+Common engine types such as vectors, transforms, entities, components, assets, materials, textures and scenes MUST have canonical interoperable representations. Native/managed ownership and lifetime rules MUST be explicit at the runtime level while remaining safely automatic for ordinary high-level use.
+Intuitive API design contract
+The public Games API MUST describe game intent rather than mirror internal engine plumbing. Where an operation has a clear domain action, the high-level API MUST expose that action directly.
+For example, a user-facing API such as Object.SetX(value) is preferred over requiring a developer to traverse a chain such as Object.X.Position.Persistent(). Similar simple verbs SHOULD include SetPosition, MoveTo, Rotate, Show, Hide, Enable, Disable, Open, Close, Play, Stop, Spawn, Destroy, Give, Take, Attach and Detach where semantically appropriate.
+Public APIs MUST use consistent names, strong typing, sensible defaults, concise parameters and direct discoverability. Internally complex operations such as replication, authority resolution, component traversal or persistence SHOULD be handled by Games when the desired intent is unambiguous.
+Advanced low-level APIs MAY expose explicit replication, authority, memory, rendering and engine primitives for expert use. Their existence MUST NOT make low-level plumbing the normal or documented path for ordinary game logic.
+API design quality MUST include human and AI interpretability: a competent developer or model SHOULD normally be able to infer the purpose of a high-level operation from its name, target type and typed parameters without reading engine implementation details.
+Shared and individual state semantics
+Games MUST use shared and individual as the canonical high-level state/replication qualifiers. The aliases shar and indiv MUST be accepted as equivalent shorthand where the Games language/parser supports these declarations.
+shared/shar means one canonical state is shared across the relevant game/session audience and replicated according to the object's authority policy. individual/indiv means the state is resolved independently for the relevant player/entity.
+The shared/individual model applies consistently where meaningful, including UI state, gameplay variables, progression, objectives, settings and keybind definitions. It MUST replace the earlier public/private naming for Games state scope.
+Example intent: GetEntity(Player) { UI.Show(ui, individual); } updates only that player's corresponding UI state. GetEntity(Player) { UI.Show(ui, shared); } updates the shared state seen by the applicable audience. The runtime handles the required identity, replication and join/reconciliation plumbing.
+The API SHOULD infer natural scope when it is unambiguous so developers do not repeatedly specify individual for obviously per-player state. Explicit qualifiers remain available when the developer needs to override/default the behaviour.
+The high-level model MUST avoid forcing developers to maintain maps keyed by PlayerID merely to represent ordinary per-player state. Games retains stable internal identities and advanced maps/collections remain available for genuinely custom logic.
+Multiplayer/replication intent
+For ordinary gameplay, developers SHOULD specify desired state, ownership and visibility rather than manually implement RPC direction, player-ID dictionaries, replication callbacks, joining-player reconstruction, local/server copies and reconciliation.
+High-level operations such as Door.Open(shared), UI.Show(LevelComplete, individual), Inventory.Give(Key, individual) or a shared world-state update SHOULD compile/route into the appropriate authoritative replication mechanism.
+Games MUST still expose advanced networking primitives for specialised games, but high-level APIs are authoritative for common development and MUST remain deterministic, inspectable and debuggable.
+Declarative keybind system
+Games MUST provide a canonical human-readable keybinding definition file, provisionally named keybinds.csmap, that is understood by the editor, runtime, C# APIs, visual graphs, Dulche and generated settings UI.
+Keybind definitions MUST be semantic rather than hard-wired gameplay code. A developer defines an action such as Jump, Crouch or Movement and then maps supported keyboard/controller/touch inputs to it.
+shared Keybind means the declared binding is common for the applicable game/profile scope. individual Keybind means each player may have a separately resolved/remappable binding. shar and indiv are accepted shorthand.
+Games SHOULD support readable controller-layout names rather than forcing numeric button indices, including semantic/positional forms such as Controller.Letters.Down, Controller.Letters.Left, bumpers, triggers, D-pad, LeftStick and RightStick. Platform-specific glyph/display mapping is handled by the engine.
+Composite input shorthand MUST be supported. A declaration equivalent to shared Keybind Movement { Keyboard(WASD); Controller(LeftStick); } MUST produce one typed movement input rather than four unrelated actions. Digital WASD and analogue stick values resolve through one semantic Movement binding.
+Keybind consumption MUST be simple. Event.KeyPress(BindingName) { ... } is the canonical intent for listening to a binding press. Corresponding release/hold/value-change/input events SHOULD follow the same readable event family.
+The input subsystem MUST resolve device hot-swap, keyboard/controller/touch source, player ownership, remapping, persistence and appropriate input value types without requiring ordinary gameplay code to poll physical devices.
+Individual/remappable bindings MUST have ready-made CUI settings components for rebinding, conflict detection, reset-to-default, clearing, device-specific display and per-player persistence. Duplicate bindings MAY be legal; conflicts in the same active context should warn rather than be silently rejected.
+The system SHOULD support input contexts, chords/combinations and typed analogue/gesture inputs without requiring developers to build timing/device-selection infrastructure from scratch.
+Prebuilt object and gameplay library
+Games MUST ship an optional, substantial first-party library of production-usable drag-and-drop entities, components and complete gameplay systems so creators can begin with working mechanics rather than blank scenes.
+The library MUST include at least a configurable basic/stick-man-style player character with full movement, crouch, jump, sprint and swimming support; starter vehicles including a car, plane, boat and submarine; environmental systems including water and lava; and common interactive/world primitives.
+Starter content MUST be fully usable without opening its implementation, while remaining inspectable, extensible and replaceable. It MUST NOT be a set of disconnected demos or opaque sample projects.
+The standard Player Character inspector MUST expose substantial high-level configuration rather than only speed/jump toggles. It SHOULD expose at least Movement Speed, Acceleration, Sprint Speed, Limited Stamina, Stamina Level/Maximum, per-action stamina consumption for walking/sprinting/jumping/crouching/swimming where applicable, Stamina Replenish Delay, Stamina Replenish rate, Crouch Speed, Jump Height, Air Control, Can Sprint, Can Crouch, Can Jump and Can Swim, plus appropriate advanced movement/collision settings.
+Inspector sections MUST progressively reveal dependent settings. Disabling Limited Stamina SHOULD hide/de-emphasise irrelevant stamina controls; disabling Crouch SHOULD collapse crouch-only parameters. An Advanced disclosure SHOULD expose expert parameters without turning the default inspector into an unstructured wall of fields.
+Starter vehicles MUST similarly expose meaningful tuning such as acceleration, maximum speed, braking, steering response, traction, suspension/buoyancy/aerodynamic values and feature toggles appropriate to the vehicle type.
+Water SHOULD expose working swimming/buoyancy/current/wave/underwater behaviour and integrate automatically with compatible Player/vehicle components. Lava SHOULD expose fluid-like behaviour where desired plus damage/ignition/heat/visual properties. Built-in environment systems MUST interoperate through shared typed contracts rather than custom one-off scripts.
+The library SHOULD also include reusable systems such as health/damage, inventory, interaction, quests, dialogue, checkpoints, save/load, respawning, teams, rounds, scoring, racing, pickups, simple AI/navigation and common multiplayer/lobby/spectator features.
+Optional first-party C# feature components
+Each applicable built-in entity MUST expose a contextual catalogue of optional first-party C# feature components that the creator can enable through simple checkboxes/toggles. These are normal editable C# components built on the same public Games component API, not privileged hidden native features.
+For Player Character, examples MUST include optional components such as Double Jump and Ragdoll Properties/behaviour, and SHOULD include other appropriate features such as Fall Damage, Mantling, Climbing, Sliding, Wall Running, Dash, Stamina, Oxygen, Footsteps, Head Bob, Camera Shake, Interaction, Inventory, Health, Regeneration, Knockback, Swimming and other mature starter behaviours.
+Enabling an optional component MUST add/activate the corresponding C# component and reveal its configurable properties. Double Jump, for example, SHOULD be able to expose maximum jumps, second-jump height, reset rules, stamina cost and contextual restrictions without requiring the creator to open code.
+Ragdoll SHOULD be able to expose activation conditions, body/joint behaviour, collision, recovery and replication-related settings while relying on native skeleton/physics primitives underneath.
+Native engine components SHOULD be reserved for fundamental high-performance primitives and engine facilities such as transforms, identity, core rendering, low-level physics/collision, audio primitives, input routing, replication primitives, navigation and animation/runtime infrastructure. Higher-level gameplay behaviours SHOULD prefer editable C# when performance/architecture permits.
+First-party C# components MUST expose source code to the project/user according to the 9to1 open-source distribution model and MUST be usable unchanged, parameter-tuned, extended, duplicated/forked or replaced by developer code.
+Custom developer C# components MUST participate in the same inspector and discovery model as first-party components. A developer-defined component compatible with Player SHOULD be able to appear in the same contextual component picker with automatically generated CUI settings for eligible exposed properties.
+Component metadata MUST support dependencies, compatibility, stable identity/version, display name/category, exposed settings, events/actions and migration information. When enabling a component requires another component, Games SHOULD offer to enable the dependency rather than leave a silently broken configuration.
+Disabling an optional component SHOULD preserve its configuration by default so re-enabling restores it. Removing/deleting the component is a separate explicit operation.
+Component inspector generation
+C# components MUST be able to declare user-editable settings through concise metadata/attributes. Games MUST generate a polished CUI inspector automatically for standard supported property types rather than requiring every component author to build a bespoke editor panel.
+Metadata SHOULD support user-facing name, description/help, units, numeric ranges/steps, enum choices, grouping, advanced disclosure, conditional visibility, asset/entity pickers, validation and safe defaults.
+Auto-generated inspectors MUST remain overrideable/extensible when a component genuinely requires a specialised editor.
+Component events and state
+Reusable components MUST publish semantic typed events and inspectable state. For example, a character component SHOULD be able to expose events such as Jump, SprintStart, SprintEnd, StaminaEmpty, EnterWater and LeaveWater plus readable state such as IsSprinting, IsCrouching, IsSwimming and Stamina.
+Consumers MUST be able to subscribe through C#, visual graphs and Dulche-compatible typed actions without inspecting private implementation fields.
+Component versioning and project safety
+First-party library components MUST be versioned. Existing projects MUST NOT silently change behaviour merely because the globally installed library was updated. Projects MAY pin component versions and receive explicit migration/upgrade flows with change previews where practical.
+Creators MUST be able to fork a first-party component into project-owned code. Once forked, it becomes project-owned and MUST NOT be overwritten by later library updates.
+Rendering and graphics engine
+Games MUST invest in a high-end modern rendering stack capable of producing visually exceptional games and rendered scenes rather than treating rendering as donor parity only.
+The engine SHOULD independently implement capabilities comparable in outcome to modern virtualised-geometry and dynamic-global-illumination systems without copying proprietary source code, algorithms that are not legally available, trademarks as product features or confidential implementation detail.
+Rendering goals SHOULD include highly scalable detailed geometry, automated/low-touch LOD handling, GPU-driven rendering where beneficial, visibility/occlusion systems, geometry streaming/clustering as appropriate, dynamic global illumination, indirect lighting, reflections, modern shadows, temporal reconstruction/upscaling, large-world rendering, physically based materials and predictable profiling/quality controls.
+Creators SHOULD be able to achieve high geometric detail with much less manual LOD authoring than conventional pipelines while retaining explicit expert control when needed.
+Every advanced renderer feature MUST expose truthful hardware/platform capability detection, quality fallbacks, performance diagnostics and deterministic project settings. Unsupported hardware MUST degrade gracefully rather than silently producing broken scenes.
+Landscape, world and procedural tools
+Games MUST provide first-class landscape/world creation rather than requiring an external terrain package for normal use.
+Landscape tooling SHOULD include sculpting, smoothing, erosion-style operations, heightmaps, layers, splines, roads, rivers, lakes/oceans, biome painting, foliage, procedural scattering, world/region streaming, large-world coordinates, landscape collision/navigation generation and runtime deformation where supported.
+Procedural world generation MUST be able to use the shared graph editor infrastructure through a dedicated generation GraphType with terrain/foliage/geometry/scatter/environment nodes and a specialised generation runtime.
+World tools MUST integrate with the canonical scene graph, materials, physics, navigation, Files/assets, Dulche and build/export pipeline.
+Material and shader tools
+Games MUST provide a strong native material/shader authoring environment using the shared graph infrastructure with a dedicated material/shader GraphType and renderer/compiler backend.
+The material system SHOULD support reusable functions/subgraphs, instances, parameters, layers, procedural inputs, normal/displacement workflows, physically based shading, transparency, subsurface/clearcoat/anisotropy where the renderer supports them, decals, terrain materials, preview scenes and performance/complexity diagnostics.
+The beginner path MUST support high-quality materials without requiring shader source code. Experts MUST retain access to lower-level shader code and advanced render hooks where supported.
+Integrated Blender-derived modelling
+Games MUST provide built-in professional modelling tools derived from Blender and redesigned/integrated for the Games workflow rather than behaving as a loosely launched external application.
+The modelling environment SHOULD cover mesh modelling, selection modes, transform/extrude/bevel/inset workflows, modifiers, sculpting, retopology, UV editing, texture/vertex painting, rigging, weight painting, animation, procedural/geometry workflows, simulations and high-quality rendering/compositing capabilities where appropriate.
+CUI interaction and contextual tooling SHOULD make common modelling tasks substantially easier to discover and perform than raw donor workflows while preserving advanced depth for expert users.
+A selected scene asset SHOULD be editable in the modelling workspace and returned to the same canonical asset/scene relationship without manual export/import round trips. Changes MUST flow through the normal asset revision/undo/source-control model.
+Creation/Rendering mode MUST be useful as a standalone modelling/rendering application. A user MUST be able to create, model, light, animate and render an asset/scene even when the project contains no playable game logic.
+Asset pipeline and cross-app integration
+Games MUST integrate with Files as the canonical 9to1 file/project substrate where applicable and SHOULD integrate cleanly with Picture, Wave and other media/creation apps for textures, images, audio/video and generated assets without unnecessary duplicate exports.
+Assets MUST have stable identity, source/import settings, derived/cache state and dependency tracking. Reimport MUST preserve intentional scene/component references wherever possible.
+Stack/Dev integration SHOULD provide source-control-aware project workflows, diffs where semantically possible, branches and code review without corrupting binary/derived asset state. Terminal MUST expose supported Godot/Games CLI/build/export workflows.
+Dulche in Games
+Dulche MUST operate semantically through Games APIs and project data. It SHOULD be able to answer questions such as why a character falls through a floor, create or modify typed scene components, tune exposed parameters, create scripts, diagnose errors, analyse profiler output, modify materials/graphs, assemble starter systems and perform authorised project edits.
+Dulche MUST prefer existing first-party/native components over generating redundant custom implementations when they satisfy the user's request. If a user asks for a third-person character that can sprint, crouch and swim, Dulche SHOULD assemble/configure the applicable existing components rather than reinventing those systems in new code.
+AI-generated Games changes MUST remain inspectable through normal scene/script/graph diffs and undo/revision mechanisms. AI assistance MUST NOT create hidden state that cannot be reproduced through supported project structures.
+Build, run, debug and export
+Games MUST preserve mature Godot-derived project run/debug/export capability and improve it where required for the 9to1 workflow. Running a game, running the current scene, attaching a debugger, breakpoints, errors, remote scene inspection, profiler data and platform export MUST remain first-class.
+The editor MUST clearly separate editor state from running-game state while allowing safe live inspection and supported hot-edit/hot-reload behaviour.
+Export targets SHOULD preserve applicable mature donor platform coverage subject to the selected donor revision, platform SDK/licence availability and 9to1 release support. Unsupported export targets MUST be reported truthfully rather than exposed as fake buttons.
+Relationship with Play
+Games and Play are separate. Games builds and runs normal games/interactive content. Play governs structured human/Dulche-Agent matches, contestants, scoring, judging, visibility and game actions.
+A Games project MAY explicitly expose a typed Play-compatible interface so Dulche Agents can participate through purpose-built game actions/state. Generic Computer Use MUST NOT be used as a hidden fallback for controlling arbitrary game executables, anti-cheat surfaces or unsupported games.
+Games API families
+Games MUST expose typed API families for projects, scenes/entities/nodes/components, resources/assets, transforms, gameplay state, input/keybinds, graphs, UI/CUI Visual Builder, materials, animation, physics, navigation, audio, rendering, landscapes/worlds, modelling integration, build/run/debug/export and component-library discovery/installation/configuration.
+High-level APIs and advanced APIs MUST remain clearly layered. The existence of a low-level API MUST NOT allow implementation agents to omit the intuitive high-level operation required by this specification.
+Every mutation MUST use stable identities, structured results, revision/conflict semantics and the global Home permission/audit model where actions cross normal trust boundaries.
+Failure and recovery
+Games MUST preserve project integrity across editor crashes, failed imports, failed builds, hot-reload errors, graph compilation errors, component upgrade failures and interrupted modelling/render operations. Autosave/recovery MUST NOT silently overwrite a newer valid source revision.
+Errors MUST identify the relevant ProjectID/SceneID/EntityID/ComponentID/GraphID/AssetID and provide actionable context. High-level APIs MUST return structured errors rather than swallowing engine exceptions.
+Component/library upgrades, donor migrations and project format migrations MUST be transactional or recoverable. A failed migration MUST leave the previous valid project state recoverable.
+Acceptance requirements
+Games is implementation-complete only when acceptance coverage proves at least: a real maintained Godot-derived engine/editor; native CUI rebuild; Development and standalone Creation/Rendering workflows; deeply integrated Blender-derived modelling; CUI Visual Builder game UI; canonical scene graph and purposeful components; shared node infrastructure with Automations plus specialised graph runtimes; first-class C#; absence of public GDScript dependency; simultaneous C#/C++ interoperability; intuitive high-level APIs; shared/individual plus shar/indiv semantics; declarative keybinds and Event.KeyPress-style semantic input; robust per-player remapping; configurable starter Player with detailed movement/stamina/swim controls; contextual optional C# components including Double Jump and Ragdoll; custom C# component inspector integration; starter car/plane/boat/submarine; water/lava environment systems; reusable gameplay systems; high-end rendering; strong landscape/procedural tools; strong materials/shaders; semantic Dulche operation; safe project/version migration; mature run/debug/export; and explicit separation from Play.
+AI Apps
+
+
+# Games — scene and runtime development — Games and creation workspaces (part 02)
+
+Reading status: active retained clauses, subject to the v3 owner overrides listed in the primary module. Historical process instructions and replaced original wording are stored separately.
+
+### V2-B2327 · v2 lines 13487–13487
+
+### UX27-OTHER-015 — Games and creation workspaces
+
+### V2-B2328 · v2 lines 13489–13489
+
+**B/D.** Development and Creation/Rendering are workspaces over the same canonical project/assets. Scene hierarchy, viewport selection, inspector, asset browser and timeline/animation tools share stable object identities. Selecting in the viewport highlights the corresponding hierarchy node; changing a property updates the real scene and is undoable. Play/test mode is explicitly distinct from authoring and does not silently save runtime state over the source scene.
+
+### V2-B2329 · v2 lines 13491–13491
+
+Build/export, debugging, modelling, materials and animation retain their donor/baseline scope. Preview rendering settings and final output settings are distinct. This UI expansion introduces no new gameplay content or special permissions; it preserves ordinary safe creation and testing boundaries.
+
+
+# Exact designs and implementation rules
+
+These figures are the exact current atlas compositions. Their stable screen IDs match the Word specification and editable source. Open the atlas for full-size theme and interaction inspection.
+
+## Games · Scene and components
+
+![Games · Scene and components](../designs/games.png)
+
+Screen ID: `games`. Source: Games: CUI-native editor, scene graph, purposeful components; UX27-OTHER-015.
+
+- Scene hierarchy, viewport, components and assets select the same stable object identity.
+- Development and Creation/Rendering share one project. Play/test is explicit and does not overwrite authored scene state.
+- The CUI Visual Builder owns game UI authoring; gameplay, material and animation graphs use appropriate registered nodes.
+- The persistent AI bar receives semantic scene/project context rather than falling back to generic computer use.

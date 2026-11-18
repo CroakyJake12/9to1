@@ -1,0 +1,178 @@
+[
+  {
+    "id": "V3-OWNER-001",
+    "title": "Visual authority and implementation scope",
+    "modules": [
+      "authority",
+      "cui",
+      "spaces",
+      "present"
+    ],
+    "rule": "Latest owner directions and this v3 module pack control. Presentation slides 1–16 are authoritative. Later slides are historical inspiration; the older Study concept remains an approved rough layout/behaviour reference with the current wrapper. Mock-ups define design intent, not product-verification status."
+  },
+  {
+    "id": "V3-OWNER-002",
+    "title": "Global Assistants and Specialists",
+    "modules": [
+      "assistants",
+      "home",
+      "spaces",
+      "shared-ai"
+    ],
+    "rule": "Assistants and Specialists are global systems accessible from Home and editors. Editor collaborator avatars/pickers expose them in the current artifact context. Spaces retains their conversation views. Persistent identity, Main threads, memory, tools, permissions and durable Task/Runs are shared canonical entities."
+  },
+  {
+    "id": "V3-OWNER-003",
+    "title": "Notifications owns ecosystem activity",
+    "modules": [
+      "notifications",
+      "home",
+      "settings"
+    ],
+    "rule": "Remove Events as a user-facing navigation destination. Notifications owns notification history and typed ecosystem activity. Existing EventID, provenance, audit and deep-link contracts remain valid backend contracts and are not deleted."
+  },
+  {
+    "id": "V3-OWNER-004",
+    "title": "New Tab icon rail",
+    "modules": [
+      "browse",
+      "home"
+    ],
+    "rule": "New Tab uses the compact icon rail shown in the current mock-up. Apps, Dashboard, Models and New Tab remain discoverable semantic destinations. This changes navigation presentation, not the canonical Home services or tab identities."
+  },
+  {
+    "id": "V3-OWNER-005",
+    "title": "Eight current themes and specified material treatments",
+    "modules": [
+      "cui",
+      "settings"
+    ],
+    "rule": "The current themes are Professional, Glow, Playful, Frosted Glass, Bubble, Metallic, Retro and Western, plus Create Theme. Cinematic is legacy compatibility. Bubble uses watery dimensional surfaces and wobble with reduced-motion alternatives; Western uses wood/sepia treatment; Retro uses a monospace treatment. The Professional annex remains normative. Layout topology and authored content do not change with theme."
+  },
+  {
+    "id": "V3-OWNER-006",
+    "title": "Spaces conversation permissions",
+    "modules": [
+      "spaces",
+      "permissions",
+      "shared-ai",
+      "settings"
+    ],
+    "rule": "Spaces uses an icon labelled Conversation permissions. It controls current-conversation context/action scope and cannot widen durable grants. It is distinct from editor AI Read-only/Write and from document Edit/Suggest/View."
+  },
+  {
+    "id": "V3-OWNER-007",
+    "title": "Model discovery alongside local management",
+    "modules": [
+      "models",
+      "home",
+      "settings"
+    ],
+    "rule": "Models is a discovery and comparison experience with local installed-model management available as a distinct useful view. Provider identity, capabilities, hardware fit and unknown metadata remain truthful."
+  },
+  {
+    "id": "V3-OWNER-008",
+    "title": "Spaces generative output and execution visibility",
+    "modules": [
+      "spaces",
+      "generative-ui",
+      "subagents",
+      "shared-ai"
+    ],
+    "rule": "Provide typed interactive Generative UI, visible subagent progress/detail, high-level thinking/work summaries, live semantic work in Present and Canvas, and durable generated-file output cards. Open resolves the canonical artifact; Download appears only when verified durable bytes exist. Failed export preserves saved native artifacts. Never expose private internal chain-of-thought."
+  },
+  {
+    "id": "V3-OWNER-009",
+    "title": "Copyable app modules",
+    "modules": [
+      "authority"
+    ],
+    "rule": "Each app module is organised as Prerequisites, Overview, Layouts & visible states, Features & behaviour, Canonical entities & persistence, Permissions & recovery, Acceptance checks and Source clause IDs. Modules include the exact current mock-up mapping and named retained technical subchunks."
+  },
+  {
+    "id": "V3-OWNER-010",
+    "title": "Consistent Home identity",
+    "modules": [
+      "cui",
+      "platform",
+      "home"
+    ],
+    "rule": "Use the house Home icon consistently in app/host navigation; preserve semantic Home targets and current app-specific identity."
+  },
+  {
+    "id": "V3-OWNER-011",
+    "title": "Boards meaningful editing states",
+    "modules": [
+      "boards"
+    ],
+    "rule": "Represent page Add/type, page options, insertion-between-blocks, typing/caret, selected blocks, dragging and ink/tool options. Preserve local native editing without a required Files account and independent Edit/View, Locked and Snap semantics."
+  },
+  {
+    "id": "V3-OWNER-012",
+    "title": "Write document layouts",
+    "modules": [
+      "write"
+    ],
+    "rule": "Show Continuous and actual paginated Pages/Book layouts of the same canonical document with correct selection and contextual controls; changing view never creates a duplicate document."
+  },
+  {
+    "id": "V3-OWNER-013",
+    "title": "Present Actions and custom shapes",
+    "modules": [
+      "present"
+    ],
+    "rule": "Provide explicit meaningful Actions and custom-shape creation/editing states within the approved three-tier Present shell, preserving canonical object/action semantics, notes and manipulation."
+  },
+  {
+    "id": "V3-OWNER-014",
+    "title": "Files selection and content padding",
+    "modules": [
+      "files"
+    ],
+    "rule": "Provide comfortable content and selected-row padding so icons, names and metadata do not collide with selection backgrounds or table edges; preserve real file-management density and operations."
+  },
+  {
+    "id": "V3-OWNER-015",
+    "title": "Planner event nib",
+    "modules": [
+      "planner"
+    ],
+    "rule": "Planner event cards use a clear colour nib and readable interior padding, while event identity, time/recurrence and state remain authoritative."
+  },
+  {
+    "id": "V3-OWNER-016",
+    "title": "Cards neighbouring offsets",
+    "modules": [
+      "cards"
+    ],
+    "rule": "Focused Cards show visibly offset neighbouring cards with clear front/back and Edit versus View semantics; vertical stack is the default and supported horizontal orientation remains available."
+  },
+  {
+    "id": "V3-OWNER-017",
+    "title": "Native emoji",
+    "modules": [
+      "cui",
+      "spaces"
+    ],
+    "rule": "Emoji characters use native platform emoji rendering. Do not substitute text-glyph boxes or custom application icons for emoji; keep coherent app/control icon assets separate."
+  },
+  {
+    "id": "V3-RECON-001",
+    "title": "Confirmed discrete effort mapping supersedes ambiguous percentage mapping",
+    "modules": [
+      "models",
+      "dulche"
+    ],
+    "rule": "SPUI-133 explicitly supersedes application of the older arbitrary-percentage floor formula to the visible effort presets. Visible choices map bijectively to actual provider LevelIDs/ordinals. Any retained arbitrary-percent legacy API must be separately versioned and cannot shift or duplicate the displayed tier choices."
+  },
+  {
+    "id": "V3-RECON-002",
+    "title": "Expired delivery schedules and worker assignments",
+    "modules": [
+      "authority",
+      "delivery",
+      "assistants"
+    ],
+    "rule": "Historical dated schedules and named worker/session assignments are provenance, not current product requirements or execution authorisation. Compatible product/runtime, packaging, platform, security and acceptance requirements remain active; original process wording is retained in the history ledger."
+  }
+]

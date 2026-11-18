@@ -1,0 +1,20 @@
+{
+  "input": "/workspace/scratch/e5502f31f344/9to1_Interface_Atlas_v3.3_Editable.html",
+  "output": "/workspace/scratch/e5502f31f344/spec-work/finish/9to1_Interface_Atlas_v3.3_Editable_v13_Linked.html",
+  "nativeDocument": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0",
+  "inputSha256": "0fc5758139085de661729afe824aa5f415d619d07562a91a09db1611f6abda14",
+  "knownV12": true,
+  "outputSha256": "3eff4a6982513a47b521ba62c9c67b2d946520b04deb5fe48c3eb92d807759fc",
+  "nonReferenceBytesPreserved": true,
+  "publicApiPreserved": true,
+  "originalSections": 22,
+  "expandedSections": 40,
+  "totalSections": 62,
+  "nativeHeadings": 80,
+  "screens": 251,
+  "screensWithExpandedLinks": 251,
+  "unexpandedScreenIds": [],
+  "validation": "Syntax and isolated VM checks passed; no browser rendering.",
+  "executableScriptsParsed": 31,
+  "syntaxStatus": "passed"
+}

@@ -1,0 +1,1 @@
+Authoring source for the specification. Input sources are preserved under ../source and the canonical atlas source is in the separate implementation pack. Adjust the workspace input paths before rebuilding in another environment.

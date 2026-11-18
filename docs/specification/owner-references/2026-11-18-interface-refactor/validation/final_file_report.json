@@ -1,0 +1,22 @@
+{
+  "originalExecutableScriptsPreserved": 18,
+  "newScripts": [
+    "atlas-newtab-refresh-code",
+    "atlas-suite-refresh-code",
+    "atlas-system-refresh-code",
+    "atlas-settings-catalog-code",
+    "atlas-settings-rows-code",
+    "atlas-settings-navigation-code",
+    "atlas-haven-shell-code",
+    "atlas-chat-position-code"
+  ],
+  "executableScripts": 26,
+  "originalStylesPreserved": true,
+  "moduleFileParity": "passed",
+  "editorOrdering": "passed",
+  "htmlStructure": "passed",
+  "defaultScreen": "settings-general",
+  "syntax": "passed",
+  "bytes": 4213132,
+  "sha256": "f6a85699f3b1729a7b0fc5ef18f5bb9b9fa474c861f7b87bca2873870b01b32b"
+}

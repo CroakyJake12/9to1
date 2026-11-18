@@ -1,0 +1,30 @@
+{
+  "module": "/workspace/scratch/e5502f31f344/updates/atlas-reference-startup-code.js",
+  "sha256": "58301ca9689155e551d41b820c984336d0279346830289d47497fd4fbb8f2410",
+  "sourceHtmlSha256": "ce8dac75c4a753a7f2336c5d53cb0c4fd36d33d2e5b5c6347a64557674776154",
+  "checks": 21,
+  "passed": [
+    "Hash waits for editor restoration, DOM ready and RAF",
+    "Query takes precedence over hash",
+    "Alias uses existing canonical route",
+    "Hash alias resolves",
+    "Percent-encoded hash resolves",
+    "Percent-encoded query resolves",
+    "Empty query permits hash",
+    "No route preserves saved view",
+    "Unknown query preserves saved view and established query precedence",
+    "Unknown hash preserves saved view",
+    "Malformed hash is harmless",
+    "Inherited alias property cannot resolve",
+    "Route registered after module load is available at startup",
+    "Already selected target does not render again",
+    "No forcing after later navigation, recovery or repeated ready events",
+    "A ready document still waits for following editor restoration",
+    "Duplicate module evaluation has one startup callback",
+    "Actual Browser tools startup owns host-devtools-html without duplicate rendering",
+    "Actual Browser tools startup owns host-devtools-cui without duplicate rendering",
+    "Actual Browser tools startup owns host-browser-history without duplicate rendering",
+    "Actual Browser tools startup owns host-browser-bookmarks without duplicate rendering"
+  ],
+  "boundary": "Node VM lifecycle and actual browser-tools startup branch; no rendered/browser validation."
+}

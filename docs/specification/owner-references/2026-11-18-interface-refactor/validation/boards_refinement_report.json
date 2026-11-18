@@ -1,0 +1,188 @@
+{
+  "sourceSHA256": "ce8dac75c4a753a7f2336c5d53cb0c4fd36d33d2e5b5c6347a64557674776154",
+  "moduleSHA256": "726a56029608714c16431122bcaa66b475aaa80fc0d6b3027115c56fe5299467",
+  "checks": 10,
+  "passed": [
+    "all 11 desktop editor states retain original controls and authored page markup",
+    "normalisation is idempotent and rehydrates a saved innerHTML snapshot",
+    "owner-edited content and unknown action nodes survive the chrome transformation",
+    "Launch, standalone mobile and other editors stay outside the refinement",
+    "Format and Page open real controls, exclude one another and close with Escape",
+    "keyboard opening, outside click and leaving popup focus dismiss predictably",
+    "existing Alignment and List state routes keep their choices accessible",
+    "original Add, Drawing, Properties and collaboration handlers remain reachable",
+    "editor pick mode does not open or consume the new toolbar controls",
+    "notes replace only stale chrome descriptions and preserve scope invariants"
+  ],
+  "screens": [
+    {
+      "id": "boards-ink",
+      "originalControls": 57,
+      "preservedOriginalControls": 56,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-add",
+      "originalControls": 73,
+      "preservedOriginalControls": 72,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-typing",
+      "originalControls": 65,
+      "preservedOriginalControls": 64,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-insert",
+      "originalControls": 74,
+      "preservedOriginalControls": 73,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-editor",
+      "originalControls": 65,
+      "preservedOriginalControls": 64,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-context",
+      "originalControls": 73,
+      "preservedOriginalControls": 72,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-recovery",
+      "originalControls": 67,
+      "preservedOriginalControls": 66,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-file-menu",
+      "originalControls": 73,
+      "preservedOriginalControls": 72,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-alignment",
+      "originalControls": 69,
+      "preservedOriginalControls": 68,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-list-options",
+      "originalControls": 69,
+      "preservedOriginalControls": 68,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    },
+    {
+      "id": "boards-properties",
+      "originalControls": 66,
+      "preservedOriginalControls": 65,
+      "removed": [
+        {
+          "data-action": "board-ai"
+        }
+      ],
+      "authoredContentUnchanged": true
+    }
+  ],
+  "originalControls": 751,
+  "preservedOriginalControls": 740,
+  "interactionInventory": {
+    "direct": [
+      "Add content",
+      "Drawing",
+      "Format",
+      "Edit / View",
+      "Collaborate",
+      "Page"
+    ],
+    "format": [
+      "Style and font",
+      "Font size",
+      "Text casing",
+      "Text formatting",
+      "Alignment",
+      "Lists",
+      "Indentation",
+      "Paragraph spacing",
+      "Drawing tools and stroke settings when drawing"
+    ],
+    "page": [
+      "Properties",
+      "Layout lock",
+      "Snapping"
+    ],
+    "sidebar": [
+      "Board icon",
+      "Board file menu",
+      "Undo",
+      "Redo",
+      "Page tree",
+      "New page / section",
+      "Account"
+    ],
+    "preservedOverlays": [
+      "Block actions",
+      "Insert",
+      "Add page",
+      "Board file menu",
+      "Alignment",
+      "List options",
+      "Properties",
+      "Save recovery"
+    ]
+  },
+  "limitation": "Source execution, parsed DOM and event-handler checks only; browser layout, rendering and a production authoring engine were not tested."
+}

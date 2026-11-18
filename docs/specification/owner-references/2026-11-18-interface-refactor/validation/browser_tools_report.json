@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "inputHash": "8a1ceef799125b2e359bde04f4657b1bc0d8ec1da0f5d2b4e3cc2fe581fa4b1c",
+  "embeddedScriptsOnly": true,
+  "newRoutes": [
+    "host-devtools-html",
+    "host-devtools-cui",
+    "host-browser-history",
+    "host-browser-bookmarks"
+  ],
+  "registeredScreens": 251,
+  "checks": [
+    "direct inspector deep-link mounts",
+    "real host account trigger and capture ownership",
+    "persistent anchor after menu-row removal",
+    "keyboard closure and focus",
+    "AI dropdown / Browser tools mutual exclusion",
+    "late bridge subscription",
+    "origin-scoped permission state and restore",
+    "preference merge",
+    "bookmarks and history routes",
+    "safe local navigation",
+    "HTML/CUI tree and inspector",
+    "filtered tree focus fallback",
+    "query console and escaping",
+    "editor-authored source refresh",
+    "snapshot/assets excluded from preferences",
+    "saved popup cleanup",
+    "pick-mode guard",
+    "route and ID integrity"
+  ],
+  "limitations": "Parser-backed structural execution and synthetic geometry; no rendered browser validation."
+}

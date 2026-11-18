@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "actualCoreStartup": true,
+  "actualEditorCleanRestore": true,
+  "browserModule": "pending source only",
+  "cases": [
+    {
+      "route": "host-devtools-html",
+      "afterCore": "home-apps",
+      "afterDOMContentLoaded": "host-devtools-html",
+      "authoredStatePreserved": true,
+      "oneShot": true
+    },
+    {
+      "route": "host-devtools-cui",
+      "afterCore": "home-apps",
+      "afterDOMContentLoaded": "host-devtools-cui",
+      "authoredStatePreserved": false,
+      "oneShot": true
+    },
+    {
+      "route": "host-browser-history",
+      "afterCore": "home-apps",
+      "afterDOMContentLoaded": "host-browser-history",
+      "authoredStatePreserved": false,
+      "oneShot": true
+    },
+    {
+      "route": "host-browser-bookmarks",
+      "afterCore": "home-apps",
+      "afterDOMContentLoaded": "host-browser-bookmarks",
+      "authoredStatePreserved": false,
+      "oneShot": true
+    },
+    {
+      "route": "host-newtab",
+      "afterCore": "home-apps",
+      "afterDOMContentLoaded": "host-newtab",
+      "authoredStatePreserved": false,
+      "oneShot": true
+    }
+  ],
+  "limitation": "Structural DOM, no native browser rendering."
+}

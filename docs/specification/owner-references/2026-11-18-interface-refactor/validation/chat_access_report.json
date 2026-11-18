@@ -1,0 +1,18 @@
+{
+  "checks": "passed",
+  "coverage": [
+    "anchored dropdown",
+    "legacy handler isolation",
+    "menu keyboard navigation",
+    "selection and focus",
+    "per-screen state",
+    "original bar node identity",
+    "Floating / Sidebar / Off",
+    "scaled geometry",
+    "saved popup cleanup",
+    "legacy Write fixture",
+    "editor preference merge and undo",
+    "pick-mode guard"
+  ],
+  "limitation": "Structural DOM and synthetic geometry only; no rendered layout."
+}

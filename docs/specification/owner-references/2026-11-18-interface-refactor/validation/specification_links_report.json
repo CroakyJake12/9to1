@@ -1,0 +1,11 @@
+{
+  "assembledArtifact": true,
+  "registeredScreens": 251,
+  "verifiedSpecificationSections": 22,
+  "screenSearch": "passed",
+  "requirementSearch": "passed",
+  "linkedHeadings": "verified native IDs",
+  "singleNotesSection": "passed",
+  "productUI": "unchanged by reference module",
+  "limitations": "DOM/VM checks only; no browser rendering."
+}

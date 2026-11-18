@@ -1,0 +1,37 @@
+{
+  "screens": 236,
+  "destinations": 62,
+  "validatedRoutes": 62,
+  "groups": [
+    "Global",
+    "Local",
+    "9to1 Haven",
+    "Apps"
+  ],
+  "levels": {
+    "groups": 4,
+    "sections": 45,
+    "subsections": 17
+  },
+  "defaultGroups": {
+    "global": "open",
+    "local": "open",
+    "haven": "closed",
+    "apps": "closed"
+  },
+  "aliases": {
+    "account": "settings-account",
+    "settings-models": "settings-ai",
+    "settings-provider": "settings-providers",
+    "settings-storage": "settings-local-general",
+    "settings-advanced": "settings-local-general",
+    "appearance-palette": "appearance",
+    "custom-theme": "appearance",
+    "theme-bubble": "appearance"
+  },
+  "search": "ancestry, zero results, reset passed",
+  "keyboard": "arrows, Home/End, Enter, typeahead, CtrlK scope, Escape passed",
+  "rehydration": "brand/footer/content identity preserved; stale tree/search reset",
+  "themeReferences": "excluded",
+  "limitations": "Structural DOM and static CSS checks; no browser layout verification"
+}

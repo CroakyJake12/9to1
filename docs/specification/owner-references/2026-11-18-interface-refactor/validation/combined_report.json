@@ -1,0 +1,29 @@
+{
+  "registered": 182,
+  "unchangedRendererFunctions": 182,
+  "renderStringsBefore": 173,
+  "renderStringsAfter": 173,
+  "unchangedRenderStrings": 170,
+  "changedExpected": [
+    "host-newtab",
+    "host-newtab-customise",
+    "host-newtab-widgets"
+  ],
+  "newRenderErrors": [],
+  "coveredSystem": 39,
+  "coveredSuite": 129,
+  "bothCovered": 1,
+  "coveredMounts": 167,
+  "generatedCSSBytes": 329747,
+  "templateDOMLimits": [
+    "spaces-generative-ui",
+    "spaces-thinking",
+    "spaces-subagents",
+    "spaces-subagent-detail",
+    "spaces-present-working",
+    "spaces-canvas-working",
+    "spaces-generated-files",
+    "spaces-export-recovery",
+    "spaces-experiences"
+  ]
+}

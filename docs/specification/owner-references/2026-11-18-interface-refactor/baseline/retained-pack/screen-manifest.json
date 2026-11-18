@@ -1,0 +1,2384 @@
+[
+  {
+    "id": "home-apps",
+    "title": "Home · Apps",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "App catalogue",
+    "source": "UX27-HOST-001–003; Home Apps; UX27-SHARED-004–006; current screenshot as installed-layout evidence only",
+    "notes": [
+      "Browse is the primary 9to1 host. App and web tabs share one tab strip. Standalone apps retain the same inner shell.",
+      "Selected tabs are light grey with dark text. Distinct filled app icons remain recognisable across themes.",
+      "Home Apps manages real packages. Launch, installation, update and repair are different states. Uninstalling does not delete documents.",
+      "The sample catalogue previews the suite. Build owns Code, Sites and Stacks; Assistants and Specialists are shared systems accessible from Home, editors and Spaces; Mail is inside Connect."
+    ]
+  },
+  {
+    "id": "home-dashboard",
+    "title": "Home · Dashboard",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Briefing",
+    "source": "Home Dashboard; UX27-HOST-002; shared Dashboard tile model",
+    "notes": [
+      "Dashboard contains sourced widgets and briefing tiles. Chat remains a Spaces destination.",
+      "Reordering, resizing, pinning and locking widgets have separate affordances. Generative content and generative layout are independent preferences.",
+      "Each live tile keeps source and freshness metadata. A failed source gets an inline error, not a fictional updated value."
+    ]
+  },
+  {
+    "id": "home-models",
+    "title": "Models · Discover",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Model discovery",
+    "source": "Owner revision 28 October; Home Discover / Universal Model Picker; UX27-SPACES-009–011",
+    "notes": [
+      "Models opens on discovery: search, capabilities, local/cloud choices and model requirements are first-class. Installed models and provider management remain one step away.",
+      "Model metadata, context capacity, thinking effort and provider allowance remain distinct. Entries shown here are illustrative fixtures, not live recommendations.",
+      "Selecting, saving, downloading, loading and granting tool permissions are separate actions."
+    ]
+  },
+  {
+    "id": "home-library",
+    "title": "Home · Library",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Artifact index",
+    "source": "Home Library; canonical artifact identity / owner routing",
+    "notes": [
+      "Library indexes artifacts across apps. It does not create a second storage authority.",
+      "Opening an item routes to its owning app and exact canonical identity. Availability and last saved state remain distinct."
+    ]
+  },
+  {
+    "id": "home-mesh",
+    "title": "Home · Mesh & devices",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Devices",
+    "source": "Home Mesh; UX27-OTHER-017",
+    "notes": [
+      "Connection, capability and granted scopes belong to the selected device identity.",
+      "View-only and input control are separate modes. Closing a viewer does not shut down its remote machine.",
+      "Pairing, clipboard, file and device forwarding each have explicit permission boundaries."
+    ]
+  },
+  {
+    "id": "host-newtab",
+    "title": "9to1 · New Tab",
+    "app": "Browse",
+    "group": "Host & Home",
+    "tag": "Customisable start page",
+    "source": "Owner revision 28 October supersedes full-width New Tab sidebar; UX27-HOST-002",
+    "notes": [
+      "New Tab uses an icon-only rail with accessible names and hover labels.",
+      "Search remains the default; AI is an explicit separate destination.",
+      "Layout, background, shortcuts and individual widgets are customisable independently of Home Dashboard.",
+      "Source freshness and unavailable widget data must remain visible in the implementation."
+    ]
+  },
+  {
+    "id": "host-browser",
+    "title": "9to1 · Browser",
+    "app": "Browse",
+    "group": "Host & Home",
+    "tag": "Web + native tabs",
+    "source": "UX27-HOST-001–009; Browse browser surfaces",
+    "notes": [
+      "Web and native-app tabs coexist. The visible web address, engine and browser profile belong to the selected tab.",
+      "The page shown is an authored example site, not a retrieved live page. Page content remains outside the CUI theme boundary.",
+      "Back/forward, address search and tab overflow remain usable. Engine failure should affect only dependent web content."
+    ]
+  },
+  {
+    "id": "account",
+    "title": "Home · Account & permissions",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Settings",
+    "source": "Home Settings; CUI-PREF-202; account scope / trust boundaries",
+    "notes": [
+      "Home owns revisioned preferences. An authenticated account is authoritative; offline cache remains account-scoped.",
+      "Changing a theme does not wipe unrelated settings. Local mode continues to support ordinary document editing.",
+      "Permission visibility follows selected personal/organisation scope. App entitlement and role privilege are separate."
+    ]
+  },
+  {
+    "id": "onboarding",
+    "title": "9to1 · Welcome",
+    "host": false,
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "First run",
+    "source": "Accounts & Subscription first run; UX27-AUTH-005; LAUNCH-001–006",
+    "notes": [
+      "Initial setup is a standalone pre-host window. Tabs, browser address controls and the loaded app shell are absent.",
+      "First run offers Welcome, optional sign-in and model discovery as separate steps.",
+      "Ordinary local editing must work without an account, model, browser renderer or Files connection.",
+      "Choosing local mode is a first-class path, not a concealed or disabled link."
+    ]
+  },
+  {
+    "id": "home-models-installed",
+    "title": "Models · Installed and saved",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Model management",
+    "source": "Owner revision 28 October; Home model manager; UX27-SPACES-009–011",
+    "notes": [
+      "Discovery and management share one model catalogue and canonical model identity.",
+      "Installed, loaded, downloading and available are distinct states. Selecting a model does not load it until Send.",
+      "Storage, model updates, removal and provider account access have independent controls. Model files can be removed without deleting conversations."
+    ]
+  },
+  {
+    "id": "home-model-details",
+    "title": "Models · Capability and requirements",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Model details",
+    "source": "Owner revision 28 October; Universal Model Picker / model capability metadata",
+    "notes": [
+      "Model details retain the selected canonical model identity from Discover and My models. Capability, local resource needs, source metadata and install state appear before selection.",
+      "The numbers and model identities in this mock-up are fixtures; production values come from the actual model manifest and device checks.",
+      "Context capacity, conversation usage, thinking effort and provider allowance are different fields. An unknown check stays unverified.",
+      "Use model selects an installed model without loading it; saving and downloading are separate actions."
+    ]
+  },
+  {
+    "id": "host-newtab-customise",
+    "title": "New Tab · Customisation",
+    "app": "Browse",
+    "group": "Host & Home",
+    "tag": "Layout and widgets",
+    "source": "Owner revision 28 October; New Tab widget preference model",
+    "notes": [
+      "New Tab uses an icon-only navigation rail with accessible names and hover labels.",
+      "Layout, background, shortcuts and individual widgets are separately configurable. These choices never edit Home Dashboard.",
+      "New Tab controls update this local design preview immediately. Production persists them as user preferences and restores keyboard focus.",
+      "Widget sources are explicit. A pinned note references its canonical Boards content rather than copying it."
+    ]
+  },
+  {
+    "id": "host-newtab-widgets",
+    "title": "New Tab · Add a widget",
+    "app": "Browse",
+    "group": "Host & Home",
+    "tag": "Widget picker",
+    "source": "Owner revision 28 October; Browse New Tab widget catalogue",
+    "notes": [
+      "Adding a widget is an explicit action. Search filters the widget catalogue.",
+      "Each widget identifies its data owner and asks for only its required source access.",
+      "Move, resize, hide and remove are separate editing affordances. Removing a widget does not delete its source object."
+    ]
+  },
+  {
+    "id": "host-model-picker",
+    "title": "9to1 · Model picker",
+    "app": "Spaces",
+    "group": "Host & Home",
+    "tag": "Anchored dropdown",
+    "overlay": "model-picker",
+    "source": "Owner revision 28 October; Universal Model Picker; UX27-SPACES-009–011",
+    "notes": [
+      "The host model control opens an anchored picker, rather than navigating to the model manager.",
+      "Local models, cloud providers and model groups are searchable in the same control. Selecting a member stays lazy until Send.",
+      "Thinking effort, context usage and provider allowance remain distinct. Cloud connection is an explicit account action.",
+      "The Discover models link opens the catalogue without losing the current conversation."
+    ]
+  },
+  {
+    "id": "host-notifications",
+    "title": "9to1 · Notifications",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Anchored dropdown",
+    "overlay": "notifications",
+    "source": "Owner revision 28 October supersedes separate Home Events destination; canonical run / permission / package feeds",
+    "notes": [
+      "Notifications is the single owner-facing entry for these activity updates. The redundant Events destination is removed.",
+      "Each notification retains its origin, timestamp, state and a link to the actual object or run.",
+      "Marking a notification as read never approves an action, completes a task or hides a pending permission request.",
+      "Notification preferences open the dedicated settings page."
+    ]
+  },
+  {
+    "id": "boards-launch",
+    "title": "Boards · Start",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Launch",
+    "source": "LAUNCH-001–006; Boards Home/start; UX27-AUTH-005 for Boards",
+    "notes": [
+      "Start is a separate active view. The editor is not mounted under a welcome banner.",
+      "New, Open, Import, Templates and Recent resolve actual artifact identities. Missing or failed imports receive their own recovery states.",
+      "Direct-open and session restore bypass Start. Returning here preserves the existing document session."
+    ]
+  },
+  {
+    "id": "write-launch",
+    "title": "Write · Start",
+    "app": "Write",
+    "group": "Productivity",
+    "tag": "Launch",
+    "source": "LAUNCH-001–006; Write Home/start; UX27-AUTH-005 for Boards",
+    "notes": [
+      "Start is a separate active view. The editor is not mounted under a welcome banner.",
+      "New, Open, Import, Templates and Recent resolve actual artifact identities. Missing or failed imports receive their own recovery states.",
+      "Direct-open and session restore bypass Start. Returning here preserves the existing document session."
+    ]
+  },
+  {
+    "id": "present-launch",
+    "title": "Present · Start",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Launch",
+    "source": "LAUNCH-001–006; Present Home/start; UX27-AUTH-005 for Boards",
+    "notes": [
+      "Start is a separate active view. The editor is not mounted under a welcome banner.",
+      "New, Open, Import, Templates and Recent resolve actual artifact identities. Missing or failed imports receive their own recovery states.",
+      "Direct-open and session restore bypass Start. Returning here preserves the existing document session."
+    ]
+  },
+  {
+    "id": "canvas-launch",
+    "title": "Canvas · Start",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "Launch",
+    "source": "LAUNCH-001–006; Canvas Home/start; UX27-AUTH-005 for Boards",
+    "notes": [
+      "Start is a separate active view. The editor is not mounted under a welcome banner.",
+      "New, Open, Import, Templates and Recent resolve actual artifact identities. Missing or failed imports receive their own recovery states.",
+      "Direct-open and session restore bypass Start. Returning here preserves the existing document session."
+    ]
+  },
+  {
+    "id": "boards-ink",
+    "title": "Boards · Draw on the page",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Page ink",
+    "source": "Owner revision: preserve the Boards base and add drawing; UX27-BOARD-029–036",
+    "notes": [
+      "This is the same Native page and document-space viewport as the text/block editor. Ink is not a second Canvas panel or a raster background.",
+      "Edit + Locked still permits page ink. Layout locking, snap, user Edit/View and AI Read-only/Write remain independent.",
+      "Pen, highlighter, eraser and ink selection occupy the same contextual toolbar. Width, colour and opacity affect new strokes unless existing strokes are selected.",
+      "Pointer capture, pressure fallback, zoom/scroll transforms and one-stroke undo must use the shared editable ink model. Page-level ink retains its coordinates when flow text reflows.",
+      "The orange annotations are authored content. Theme changes restyle the controls and preserve their stored stroke colours."
+    ]
+  },
+  {
+    "id": "boards-add",
+    "title": "Boards · Add page or section",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Footer Add menu",
+    "source": "Owner revision: preserve Boards and show Add; UX27-BOARD-014; Native/Write/Canvas/Chat/Scoped Chat page types",
+    "notes": [
+      "The Add popup anchors above the fixed sidebar footer. It creates pages or sections, independently from toolbar Insert and inline block +.",
+      "Destination is explicitly Product here. The canonical page types are Native, Write, Canvas, Chat and Scoped Chat; New section is a separate operation.",
+      "Opening the popup allocates no page. A successful choice creates exactly one entity, reveals it in the tree and focuses its title/editor.",
+      "Escape or an outside click restores focus to Add without modifying the page. At narrow widths this becomes a navigable sheet while retaining the footer entry point."
+    ]
+  },
+  {
+    "id": "boards-typing",
+    "title": "Boards · Typing within a block",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Text editing",
+    "source": "Owner revision: preserve Boards and show typing; UX27-BOARD-016–021 / 028 / 036",
+    "notes": [
+      "The caret belongs to one paragraph BlockID. Text selection and keyboard input do not drag the block, paint ink or create a page-sized input frame.",
+      "Enter splits a paragraph into two siblings; Shift+Enter is a soft break within the same block. IME commit is handled before structural Enter.",
+      "The following empty paragraph has its own grip and insertion location. Formatting reflects the current caret/range and preserves valid inline marks.",
+      "Saving… is distinct from Saved locally. A production editor must update that label from actual persistence state and preserve focus during autosave."
+    ]
+  },
+  {
+    "id": "boards-insert",
+    "title": "Boards · Insert a block",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Insertion catalogue",
+    "source": "Owner revision: block insertion/options; UX27-BOARD-022–028 / 037–040",
+    "notes": [
+      "The visible insertion line is a boundary in the current page BlockTree. Inline +, slash and toolbar Insert share the same registered catalogue and target semantics.",
+      "The highlighted result is a keyboard focus state, not a committed insertion. Search, arrows, Enter and Escape preserve the original text/range.",
+      "Selecting a type replaces only the eligible slash token/empty block or inserts at this boundary; unrelated paragraph content remains intact.",
+      "Content insertion is distinct from footer Add page/section. Tables and embedded artifacts retain shared object semantics and ownership."
+    ]
+  },
+  {
+    "id": "boards-editor",
+    "title": "Boards · Native page",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Editor",
+    "source": "UX27-BOARD-001–047; UX27-AUTH-005; later owner Boards topology; reference screenshot as defect evidence",
+    "notes": [
+      "Use a single seamless native page. Flow blocks, explicitly positioned content and page ink share one surface. No sheet frame or accidental Freeform canvas.",
+      "Sidebar is 256 logical units by default, with 32-unit rows and 16-unit nesting. Board switcher stays above the tree; Add and avatar stay in the fixed footer.",
+      "Edit/View, Locked/Unlocked and AI Read-only/Write are separate dimensions. Locked layout still permits page ink.",
+      "This mock-up defines a 760-unit readable content column, typography and exact spacing. Save As writes an editable .9to1board anywhere permitted."
+    ]
+  },
+  {
+    "id": "boards-context",
+    "title": "Boards · Block actions",
+    "app": "Boards",
+    "group": "Productivity",
+    "tag": "Selection & menu",
+    "source": "UX27-BOARD grip / block popup / nested navigation contracts; UX27-SHARED popup lifecycle",
+    "notes": [
+      "A grip hover reveals a specific block target. Click selects; drag moves only after the pointer threshold.",
+      "The full-row block menu anchors to its target. Escape restores focus and selection; an outside click dismisses the menu.",
+      "The persistent footer Add creates pages/sections. Toolbar Insert and block + add content to the current page."
+    ]
+  },
+  {
+    "id": "boards-recovery",
+    "title": "Boards · Save recovery",
+    "app": "Boards",
+    "group": "States & accessibility",
+    "tag": "Failure state",
+    "source": "UX27-BOARD-009–014; shared canonical save/recovery state vocabulary",
+    "notes": [
+      "Save failure is not an empty page. Preserve edits, last durable revision and the recovery draft.",
+      "Saving locally, saved locally and cloud sync are separate states. This example reports the failed destination without claiming successful file output.",
+      "Retry re-attempts the same save; Save a copy chooses a new destination. Neither silently discards the live document."
+    ]
+  },
+  {
+    "id": "write-editor",
+    "title": "Write · Page View",
+    "app": "Write",
+    "group": "Productivity",
+    "tag": "Pages & properties",
+    "source": "Owner revision: retain the former editor as Page View; WRITE-UX-101–120; UX27-WRITE-001–007; Pages/Continuous/Book",
+    "notes": [
+      "This screen is Pages view: the opaque white page has authored margins, page geometry and restrained elevation. It must not be labelled Continuous.",
+      "Pages, Continuous and Book are views of the same DocumentID, sections, comments, selection and revision. Switching views does not reformat the canonical document.",
+      "New native documents open in the separate Continuous view unless a template explicitly requires pagination. Existing direct-open documents preserve their view state.",
+      "The selected range, toolbar and Properties share one editing state. Document Edit/Suggest/View, Locked/Unlocked layout and AI Read-only/Write remain independent.",
+      "The AI area reserves its own bottom space, leaving the document viewport and status controls reachable without text painting behind it."
+    ]
+  },
+  {
+    "id": "write-continuous",
+    "title": "Write · Continuous View",
+    "app": "Write",
+    "group": "Productivity",
+    "tag": "Pageless writing",
+    "source": "Owner revision: true notepad-like Continuous view; WRITE-UX-113; Write View modes / Sections / Locked layout",
+    "notes": [
+      "Continuous is one unpaginated flowing surface, with no paper card, page shadow or artificial inter-sheet gap. The readable text column sits within the continuous document area.",
+      "The document retains page-aware semantics underneath: page/section breaks, margins, headers, footnotes and pagination are not discarded. A real break uses a quiet marker rather than a forced paper sheet.",
+      "Authored fonts, sizes, colours and object content remain document values. A UI theme change affects the app controls, not the stored writing.",
+      "Sections are authored structural nodes; the indented headings derive from heading styles. Collapse/resize is per-user view state and must preserve selection and scroll position.",
+      "The caret and paragraph toolbar are one text editing state. Pages/Book, Locked/Unlocked, Edit/Suggest/View and AI permission remain independent controls."
+    ]
+  },
+  {
+    "id": "write-review",
+    "title": "Write · Selection & review",
+    "app": "Write",
+    "group": "Productivity",
+    "tag": "Suggested change",
+    "source": "Owner revision: selected text, sections and review; WRITE-UX-101–120; Write review/comments and same-document view contracts",
+    "notes": [
+      "Suggest mode shows the precise changed range and its anchored review card. The replacement is pending until accepted; an open comment is not itself a text mutation.",
+      "Accept and Dismiss operate on the selected revision/change, preserve document identity and support undo. Comments retain stable anchors if the surrounding section moves.",
+      "The Review panel has its own scrolling; it does not cover the selected text. A link from the card reveals the exact range in the current view.",
+      "This uses the same seamless Continuous layout. The authored text, inline change marks and app-theme controls remain distinguishable.",
+      "AI stays Read-only here; opening a suggestion does not grant AI Write permission or alter user Edit/Suggest/View mode."
+    ]
+  },
+  {
+    "id": "present-editor",
+    "title": "Present · Editor",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Editor",
+    "source": "Owner revision: correct selected-object/notes layout and add Actions; authoritative PPT slide 16; PRESENT-UX-101–106; PRESENT-DES-201–207; PRESENT-INT-101–107 / 201–202",
+    "notes": [
+      "Keep the three tiers in order: identity/save/actions, conventional menu row, exactly one floating contextual toolbar. Actions is a visible toolbar entry alongside Insert.",
+      "Fit derives from the actual remaining central viewport, including Notes and Properties. The 16:9 slide must never overflow vertically into the toolbar, notes or status area.",
+      "Single click selects the object; double click/Enter edits text. The eight handles and rotation handle follow the title geometry; the selection overlay is not authored content.",
+      "Slide Notes has its own pane, resize edge and scroll area. It remains separate from the audience slide and is excluded from ordinary audience output.",
+      "Insert opens a catalogue; Shapes opens its gallery without creating an object. Custom shape opens the shared editable-path builder and returns a canonical shape only when committed.",
+      "Bottom-right zoom keeps minus, slider, actual percentage, plus and icon-only Fit. The numeric value is derived from the displayed transform, not fixed to the previous panel layout."
+    ]
+  },
+  {
+    "id": "present-selection",
+    "title": "Present · Selected object & notes",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Selection",
+    "source": "Owner revision: correct selected-object/notes layout and add Actions; authoritative PPT slide 16; PRESENT-UX-101–106; PRESENT-DES-201–207; PRESENT-INT-101–107 / 201–202",
+    "notes": [
+      "Keep the three tiers in order: identity/save/actions, conventional menu row, exactly one floating contextual toolbar. Actions is a visible toolbar entry alongside Insert.",
+      "Fit derives from the actual remaining central viewport, including Notes and Properties. The 16:9 slide must never overflow vertically into the toolbar, notes or status area.",
+      "Single click selects the object; double click/Enter edits text. The eight handles and rotation handle follow the title geometry; the selection overlay is not authored content.",
+      "Slide Notes has its own pane, resize edge and scroll area. It remains separate from the audience slide and is excluded from ordinary audience output.",
+      "Insert opens a catalogue; Shapes opens its gallery without creating an object. Custom shape opens the shared editable-path builder and returns a canonical shape only when committed.",
+      "Bottom-right zoom keeps minus, slider, actual percentage, plus and icon-only Fit. The numeric value is derived from the displayed transform, not fixed to the previous panel layout."
+    ]
+  },
+  {
+    "id": "present-insert",
+    "title": "Present · Insert gallery",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Insertion",
+    "source": "Owner revision: correct selected-object/notes layout and add Actions; authoritative PPT slide 16; PRESENT-UX-101–106; PRESENT-DES-201–207; PRESENT-INT-101–107 / 201–202",
+    "notes": [
+      "Keep the three tiers in order: identity/save/actions, conventional menu row, exactly one floating contextual toolbar. Actions is a visible toolbar entry alongside Insert.",
+      "Fit derives from the actual remaining central viewport, including Notes and Properties. The 16:9 slide must never overflow vertically into the toolbar, notes or status area.",
+      "Single click selects the object; double click/Enter edits text. The eight handles and rotation handle follow the title geometry; the selection overlay is not authored content.",
+      "Slide Notes has its own pane, resize edge and scroll area. It remains separate from the audience slide and is excluded from ordinary audience output.",
+      "Insert opens a catalogue; Shapes opens its gallery without creating an object. Custom shape opens the shared editable-path builder and returns a canonical shape only when committed.",
+      "Bottom-right zoom keeps minus, slider, actual percentage, plus and icon-only Fit. The numeric value is derived from the displayed transform, not fixed to the previous panel layout."
+    ]
+  },
+  {
+    "id": "present-transitions",
+    "title": "Present · Transitions",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Simple Actions editor",
+    "source": "Owner revision: visible Actions/Transitions; Present canonical Actions runtime and Transitions builder",
+    "notes": [
+      "The Transitions sidebar is a simple editor for the same canonical Actions graph. It must not create a second animation or transition engine.",
+      "Choosing Fade updates only the marked transition-owned subgraph. Duration, easing and advance conditions map to its stored properties.",
+      "Open in Actions reveals the exact generated graph. User-authored extension nodes outside the owned region survive subsequent simple-editor changes.",
+      "If an advanced edit is no longer representable here, show Custom/Advanced instead of deleting or approximating it.",
+      "The slide remains aspect-correct in the viewport left after the sidebar opens. Preview is a deliberate runtime mode; authoring gestures do not accidentally trigger slide Actions."
+    ]
+  },
+  {
+    "id": "present-actions",
+    "title": "Present · Actions graph",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Transition graph",
+    "source": "Owner revision: Actions in the editor toolbar; Present ActionGraph / PresentationRuntimeState / Transitions builder",
+    "notes": [
+      "This graph is the same Fade transition shown in the simple sidebar: navigation request, crossfade, one navigation commit and explicit completion.",
+      "Targets resolve by stable slide/object IDs, not display position or simulated mouse input. A navigation request commits exactly once.",
+      "The selected node and its properties share one graph revision. Graph preview is explicit and its transient runtime state stays separate from authored content.",
+      "Transition-owned nodes are visually grouped; extensions connect outside that region. The simple editor preserves those extensions or shows Custom/Advanced when needed.",
+      "Event budgets, typed failures and deterministic scheduling belong to the shared runtime. These mock-ups illustrate authoring state and do not claim a functioning playback engine."
+    ]
+  },
+  {
+    "id": "present-presenter",
+    "title": "Present · Presenter view",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Playback",
+    "source": "Present Presenter View; UX27-PRESENT-008; notes/export privacy",
+    "notes": [
+      "This is the private presenter surface. The audience receives only the current slide.",
+      "Notes, next slide and elapsed time do not enter the audience output by default. Slide Notes remains canonical editable content.",
+      "Leaving playback returns to the same authoring state. Session ink is separate from permanent document content."
+    ]
+  },
+  {
+    "id": "present-shape-builder",
+    "title": "Present · Custom shape builder",
+    "app": "Present",
+    "group": "Productivity",
+    "tag": "Editable path",
+    "source": "Owner revision: detailed custom-shape builder; shared shape catalogue, vector path/anchor/Bézier capabilities; Present Insert and Canvas insertion parity",
+    "notes": [
+      "Custom shape is a focused draft authoring mode reached from Insert → Shapes. Opening it allocates no document object; Insert shape commits one editable canonical shared shape.",
+      "The path has six stable anchor points, explicit cubic segments, a closed state and a non-zero fill rule. The selected point exposes coordinates, point type and linked Bézier handles.",
+      "Corner, Smooth and Symmetric change tangent constraints. Add/remove/split, keyboard nudge and Boolean operations retain editable geometry and use logical undo transactions.",
+      "The preview omits selection adorners. Fill #A8D3C3 and outline #2E6453 are authored values and remain unchanged across all eight UI themes.",
+      "Save to My shapes creates a reusable definition; inserting an instance keeps its geometry editable. Cancel discards this uncommitted builder draft and restores the calling app’s insertion context.",
+      "Present and Canvas use the same path and shape model. The two screens illustrate different callers, not app-specific incompatible editors."
+    ]
+  },
+  {
+    "id": "canvas-shape-builder",
+    "title": "Canvas · Custom shape builder",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "Editable path",
+    "source": "Owner revision: detailed custom-shape builder; shared shape catalogue, vector path/anchor/Bézier capabilities; Present Insert and Canvas insertion parity",
+    "notes": [
+      "Custom shape is a focused draft authoring mode reached from Insert → Shapes. Opening it allocates no document object; Insert shape commits one editable canonical shared shape.",
+      "The path has six stable anchor points, explicit cubic segments, a closed state and a non-zero fill rule. The selected point exposes coordinates, point type and linked Bézier handles.",
+      "Corner, Smooth and Symmetric change tangent constraints. Add/remove/split, keyboard nudge and Boolean operations retain editable geometry and use logical undo transactions.",
+      "The preview omits selection adorners. Fill #A8D3C3 and outline #2E6453 are authored values and remain unchanged across all eight UI themes.",
+      "Save to My shapes creates a reusable definition; inserting an instance keeps its geometry editable. Cancel discards this uncommitted builder draft and restores the calling app’s insertion context.",
+      "Present and Canvas use the same path and shape model. The two screens illustrate different callers, not app-specific incompatible editors."
+    ]
+  },
+  {
+    "id": "canvas-editor",
+    "title": "Canvas · Drawing workspace",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "Pen",
+    "source": "Owner revision: expand Canvas drawing/shape/insert contexts; UX27-CANVAS-001–005; Canvas primary tools / options host / Insert catalogue parity",
+    "notes": [
+      "Primary tools stay bottom-centre in order: Select, Pan, Pen, Eraser, Insert, Tools, AI. Only the selected tool shows its label; reselecting Pen exposes its deeper preset options.",
+      "Infinite mode fills the viewport without an artificial paper edge or page shadow. Authored background, artwork and ink colours remain fixed when UI themes change.",
+      "One options host sits above the bottom toolbar. AI replaces that host; it does not add a second permanently expanded composer. The Layers popup is an explicit selected-object state, not a reserved drawing rail.",
+      "Insert first-level categories are exactly Text, Shapes, Media, Table and Other. Selecting Shapes opens the shared catalogue; it inserts nothing until the user chooses and commits a shape. Custom shape enters the shared path builder.",
+      "Selection and layer operations preserve canonical object, layer and stroke identities. Coordinates, hit testing, undo and saved colours survive zoom, pan, save/reopen and cross-app use.",
+      "Pen presets retain resolved properties on existing strokes. Device pressure/tilt controls are capability-aware; fixed-width mouse fallback remains usable."
+    ]
+  },
+  {
+    "id": "canvas-ai",
+    "title": "Canvas · Contextual AI",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "AI",
+    "source": "Owner revision: expand Canvas drawing/shape/insert contexts; UX27-CANVAS-001–005; Canvas primary tools / options host / Insert catalogue parity",
+    "notes": [
+      "Primary tools stay bottom-centre in order: Select, Pan, Pen, Eraser, Insert, Tools, AI. Only the selected tool shows its label; reselecting Pen exposes its deeper preset options.",
+      "Infinite mode fills the viewport without an artificial paper edge or page shadow. Authored background, artwork and ink colours remain fixed when UI themes change.",
+      "One options host sits above the bottom toolbar. AI replaces that host; it does not add a second permanently expanded composer. The Layers popup is an explicit selected-object state, not a reserved drawing rail.",
+      "Insert first-level categories are exactly Text, Shapes, Media, Table and Other. Selecting Shapes opens the shared catalogue; it inserts nothing until the user chooses and commits a shape. Custom shape enters the shared path builder.",
+      "Selection and layer operations preserve canonical object, layer and stroke identities. Coordinates, hit testing, undo and saved colours survive zoom, pan, save/reopen and cross-app use.",
+      "Pen presets retain resolved properties on existing strokes. Device pressure/tilt controls are capability-aware; fixed-width mouse fallback remains usable."
+    ]
+  },
+  {
+    "id": "canvas-pen-presets",
+    "title": "Canvas · Pen presets",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "Drawing options",
+    "source": "Owner revision: expand Canvas drawing/shape/insert contexts; UX27-CANVAS-001–005; Canvas primary tools / options host / Insert catalogue parity",
+    "notes": [
+      "Primary tools stay bottom-centre in order: Select, Pan, Pen, Eraser, Insert, Tools, AI. Only the selected tool shows its label; reselecting Pen exposes its deeper preset options.",
+      "Infinite mode fills the viewport without an artificial paper edge or page shadow. Authored background, artwork and ink colours remain fixed when UI themes change.",
+      "One options host sits above the bottom toolbar. AI replaces that host; it does not add a second permanently expanded composer. The Layers popup is an explicit selected-object state, not a reserved drawing rail.",
+      "Insert first-level categories are exactly Text, Shapes, Media, Table and Other. Selecting Shapes opens the shared catalogue; it inserts nothing until the user chooses and commits a shape. Custom shape enters the shared path builder.",
+      "Selection and layer operations preserve canonical object, layer and stroke identities. Coordinates, hit testing, undo and saved colours survive zoom, pan, save/reopen and cross-app use.",
+      "Pen presets retain resolved properties on existing strokes. Device pressure/tilt controls are capability-aware; fixed-width mouse fallback remains usable."
+    ]
+  },
+  {
+    "id": "canvas-selection",
+    "title": "Canvas · Shape selection & layers",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "Selection",
+    "source": "Owner revision: expand Canvas drawing/shape/insert contexts; UX27-CANVAS-001–005; Canvas primary tools / options host / Insert catalogue parity",
+    "notes": [
+      "Primary tools stay bottom-centre in order: Select, Pan, Pen, Eraser, Insert, Tools, AI. Only the selected tool shows its label; reselecting Pen exposes its deeper preset options.",
+      "Infinite mode fills the viewport without an artificial paper edge or page shadow. Authored background, artwork and ink colours remain fixed when UI themes change.",
+      "One options host sits above the bottom toolbar. AI replaces that host; it does not add a second permanently expanded composer. The Layers popup is an explicit selected-object state, not a reserved drawing rail.",
+      "Insert first-level categories are exactly Text, Shapes, Media, Table and Other. Selecting Shapes opens the shared catalogue; it inserts nothing until the user chooses and commits a shape. Custom shape enters the shared path builder.",
+      "Selection and layer operations preserve canonical object, layer and stroke identities. Coordinates, hit testing, undo and saved colours survive zoom, pan, save/reopen and cross-app use.",
+      "Pen presets retain resolved properties on existing strokes. Device pressure/tilt controls are capability-aware; fixed-width mouse fallback remains usable."
+    ]
+  },
+  {
+    "id": "canvas-insert",
+    "title": "Canvas · Insert shapes",
+    "app": "Canvas",
+    "group": "Productivity",
+    "tag": "Insertion",
+    "source": "Owner revision: expand Canvas drawing/shape/insert contexts; UX27-CANVAS-001–005; Canvas primary tools / options host / Insert catalogue parity",
+    "notes": [
+      "Primary tools stay bottom-centre in order: Select, Pan, Pen, Eraser, Insert, Tools, AI. Only the selected tool shows its label; reselecting Pen exposes its deeper preset options.",
+      "Infinite mode fills the viewport without an artificial paper edge or page shadow. Authored background, artwork and ink colours remain fixed when UI themes change.",
+      "One options host sits above the bottom toolbar. AI replaces that host; it does not add a second permanently expanded composer. The Layers popup is an explicit selected-object state, not a reserved drawing rail.",
+      "Insert first-level categories are exactly Text, Shapes, Media, Table and Other. Selecting Shapes opens the shared catalogue; it inserts nothing until the user chooses and commits a shape. Custom shape enters the shared path builder.",
+      "Selection and layer operations preserve canonical object, layer and stroke identities. Coordinates, hit testing, undo and saved colours survive zoom, pan, save/reopen and cross-app use.",
+      "Pen presets retain resolved properties on existing strokes. Device pressure/tilt controls are capability-aware; fixed-width mouse fallback remains usable."
+    ]
+  },
+  {
+    "id": "spaces-permissions",
+    "title": "Spaces · Conversation permissions",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Scoped permissions drawer",
+    "source": "Owner revision: switch-style permissions icon; Home App API permission broker; UX27-SPACES-005–007; LE-06 approval policy",
+    "notes": [
+      "The separate SlidersHorizontal icon opens this drawer. Spaces does not show the editor Read-only/Write segmented control; the action stack remains separate and icon-only.",
+      "These controls apply to the current conversation and can narrow inherited account/tool grants. They cannot widen blocked account grants, source ACLs, delegated roles or device policy.",
+      "Each tool exposes its effective allowed scope. Read access, proposal generation and mutation permission remain distinct; a model’s prose or attachment cannot authorise an action.",
+      "Consequential work still uses exact per-action approval and Home’s permission broker. Existing scoped caller trust is managed in Settings, not silently created here.",
+      "Cancel leaves scope unchanged. Save applies only to future requests in this conversation. Focus is contained in the drawer; Escape or Close restores focus to the permission icon."
+    ]
+  },
+  {
+    "id": "spaces-emoji",
+    "title": "Spaces · Native emoji picker",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Composer edit state",
+    "source": "Owner revision: native device emoji; PPT slides 11–13 focused composer; UX27-SPACES-005",
+    "notes": [
+      "Emoji are Unicode text rendered by the device font stack: Apple Color Emoji, Segoe UI Emoji and Noto Color Emoji. No custom-drawn glyphs, sprite sheets or embedded emoji artwork are used.",
+      "The emoji button appears only while the composer is focused and expanded. Insertion edits the retained draft at its selection; it does not send a message.",
+      "Search, category controls and emoji cells have accessible names. Native OS emoji-picker integration may be offered without changing the stored Unicode sequence.",
+      "The separate permissions icon and rounded icon-only action stack remain in fixed positions. Emoji selection must not shift or activate Send.",
+      "Escape dismisses the picker and restores the draft selection; native variation selectors and skin-tone sequences round-trip unchanged."
+    ]
+  },
+  {
+    "id": "spaces-chat",
+    "title": "Spaces · Conversation",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Core conversation",
+    "source": "PPT slides 8, 10–14; UX27-SPACES-001, 005–006; LE-03–06",
+    "notes": [
+      "The mini-rail selects a Space directly and preserves its contextual sidebar and draft. The permanent chat area follows current slide 10, not the older blue-gradient shell.",
+      "Normal messages, completed work, source links and per-message actions have distinct hierarchy. A deliberate scroll-up must survive streaming.",
+      "The compact composer has a separate switch-style Conversation permissions icon. Aa and native device emoji appear only while focused and expanded. The rounded action stack is icon-only, labelled accessibly, and browses without executing.",
+      "Selected model effort is distinct from allowance. A local model has no provider allowance meter.",
+      "All documents and progress figures here are illustrative mock-up content."
+    ]
+  },
+  {
+    "id": "spaces-compose",
+    "title": "Spaces · Draft and contextual shelf",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Composer",
+    "source": "PPT slides 11–13; UX27-SPACES-002–005; UX27-SPACES-010; structured inline command amendment",
+    "notes": [
+      "A nonempty draft expands upward and retains the same editable text across Space changes. Attachments have readiness and remove controls.",
+      "Only the bounded app mention and its instruction use the inline command treatment. Surrounding prose remains ordinary text. A mention alone does not execute.",
+      "Idle nonempty shelf contains Send and Voice. The visible item, peeking next item and position dots describe browsing, not queued work.",
+      "Conversation permissions expose effective tools and scope. They cannot widen account grants or replace explicit approval for a consequential action.",
+      "This screen shows the focused, expanded state. Aa and emoji appear only in that state; attachments and the separate permissions icon remain available when compact. Emoji use the device font, not an image pack."
+    ]
+  },
+  {
+    "id": "spaces-attachments",
+    "title": "Spaces · Attach menu",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Popover",
+    "source": "PPT slide 14; UX27-SPACES-005; UX27-SHARED-009–010",
+    "notes": [
+      "The popover is anchored above the focused, expanded composer. Aa and emoji are shown for that state, and current draft and attachment context are retained.",
+      "Files, Skills, Plugins & Apps, Specialists and Assistants are distinct categories, matching current slide 14.",
+      "Search supports capability discovery. Browsing and attaching are separate from execution; choosing a capability does not activate it.",
+      "Escape, outside click and Space navigation dismiss the popover and return focus appropriately.",
+      "On narrow screens the menu stays within the viewport, with vertical internal scrolling and reachable Close."
+    ]
+  },
+  {
+    "id": "spaces-running",
+    "title": "Tasks · Run summary and approval",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Run state",
+    "source": "UX27-SPACES-002–004, 007; Tasks built-in Space contract; canonical Action Graph and approval rules",
+    "notes": [
+      "Tasks is a structured Space, distinct from recurring Automations. Summary stays at the top right and accesses the same canonical Action Graph.",
+      "The three sessions are proposed changes. The run is held pending the exact Planner approval; no task is marked committed yet.",
+      "Approval is confined to this request and preview. Decline, inspect and stop remain visible. A composer shelf control cannot implicitly approve.",
+      "Working, completed preparation, permission hold and saved output use distinct labels. A completed research step is not accepted output.",
+      "The queue count is admission state, distinct from the visible action shelf."
+    ]
+  },
+  {
+    "id": "spaces-specialists",
+    "title": "Spaces · Specialists",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Configured expertise",
+    "source": "PPT slide 15 selected state; Specialists scope amendment; UX27-SPACES-005, 008, 013",
+    "notes": [
+      "Specialists are job-defined reusable configured expertise, separate from persistent Assistants and generic delegated workers.",
+      "This screen completes the content area left blank by slide 15 while preserving its selected local-sidebar row.",
+      "Each Specialist exposes intended use, scope and permission policy before attaching. Attachment alone does not run a job.",
+      "Configuration is owned by the corresponding AI Studio definition; do not manufacture a parallel agent runtime.",
+      "Search and capability chips remain useful at narrow widths."
+    ]
+  },
+  {
+    "id": "spaces-assistants",
+    "title": "Assistants · Persistent collaborators",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Assistant Space",
+    "source": "Owner revision: persistent illustrated identity; UX27-AUTH-002; UX27-SPACES-013; Assistant thread and team contracts",
+    "notes": [
+      "This Space is a conversation view of the global Assistants system. Each sidebar row, roster card and Main conversation repeats the same persistent Assistant portrait, name and identity. These three illustrated portraits are original mock-up identities.",
+      "Main is visually distinct from secondary threads. Spaces and Assistant views open the same canonical conversation; renaming never replaces the identity.",
+      "Team chat visibility offers All, Relevant and None. This filters presentation, not consequential audit records or permissions.",
+      "Tools, sources and memory belong to the selected Assistant and authorised scope. Membership grants no blanket context access.",
+      "Build/configuration actions route to AI Studio. The separate composer permissions icon opens conversation scope; it is not an editor Read-only/Write control."
+    ]
+  },
+  {
+    "id": "spaces-assistant-alex",
+    "title": "Assistants · Alex Main",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Persistent Main thread",
+    "source": "Owner revision: distinct Assistant avatars; UX27-SPACES-013; canonical AgentID and Main conversation contract",
+    "notes": [
+      "The selected Assistant has the same authored portrait in pinned navigation, header, response attribution and team roster. The avatar is an identity asset, not the app icon or a generic chat symbol.",
+      "Main is permanent; secondary threads retain independent conversations under the same Agent identity. Names and artwork can change without replacing canonical IDs.",
+      "The scope inspector exposes this Assistant’s sources, tool access and memory boundary. Conversation membership does not expose other Assistants’ private memory.",
+      "Proposals, saved checkpoints and approvals remain distinct. Opening a review does not approve the proposed changes.",
+      "Composer permissions are conversation-scoped; lasting Assistant configuration opens in AI Studio."
+    ]
+  },
+  {
+    "id": "spaces-assistant-maya",
+    "title": "Assistants · Maya Main",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Persistent Main thread",
+    "source": "Owner revision: distinct Assistant avatars; UX27-SPACES-013; canonical AgentID and Main conversation contract",
+    "notes": [
+      "The selected Assistant has the same authored portrait in pinned navigation, header, response attribution and team roster. The avatar is an identity asset, not the app icon or a generic chat symbol.",
+      "Main is permanent; secondary threads retain independent conversations under the same Agent identity. Names and artwork can change without replacing canonical IDs.",
+      "The scope inspector exposes this Assistant’s sources, tool access and memory boundary. Conversation membership does not expose other Assistants’ private memory.",
+      "Proposals, saved checkpoints and approvals remain distinct. Opening a review does not approve the proposed changes.",
+      "Composer permissions are conversation-scoped; lasting Assistant configuration opens in AI Studio."
+    ]
+  },
+  {
+    "id": "spaces-assistant-rowan",
+    "title": "Assistants · Rowan Main",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Persistent Main thread",
+    "source": "Owner revision: distinct Assistant avatars; UX27-SPACES-013; canonical AgentID and Main conversation contract",
+    "notes": [
+      "The selected Assistant has the same authored portrait in pinned navigation, header, response attribution and team roster. The avatar is an identity asset, not the app icon or a generic chat symbol.",
+      "Main is permanent; secondary threads retain independent conversations under the same Agent identity. Names and artwork can change without replacing canonical IDs.",
+      "The scope inspector exposes this Assistant’s sources, tool access and memory boundary. Conversation membership does not expose other Assistants’ private memory.",
+      "Proposals, saved checkpoints and approvals remain distinct. Opening a review does not approve the proposed changes.",
+      "Composer permissions are conversation-scoped; lasting Assistant configuration opens in AI Studio."
+    ]
+  },
+  {
+    "id": "spaces-study",
+    "title": "Study · Learning dashboard",
+    "app": "Spaces",
+    "group": "Study",
+    "tag": "Study overview",
+    "source": "UX27-SPACES-012; LE-08–09; older PPT slides 24–28 authorised for Study concepts only",
+    "notes": [
+      "The default Study sidebar has New Chat, Subjects, My Progress, Planner, Revision Bank, three shared Revise These slots and recent chats.",
+      "Weekly time and streak-like engagement measures are not mastery. Proficiency comes from attributed answers and card ratings.",
+      "Revise These contains at most three topics across all subjects, ranked from recorded difficulty and review dates with reasons.",
+      "Planner opens the canonical Study burrow. Revision materials reference owning-app artifacts and open in their real viewer.",
+      "The older Study dashboard contributes information architecture only; all chrome and treatments use the current theme."
+    ]
+  },
+  {
+    "id": "study-subject",
+    "title": "Study · Maths topic tracker",
+    "app": "Spaces",
+    "group": "Study",
+    "tag": "Topics and evidence",
+    "source": "STUDY-UI-217–220; UX27-SPACES-012; LE-08; older PPT slides 26–27 authorised for Study concepts only",
+    "notes": [
+      "RAG values describe recorded review evidence. Never label an unassessed topic weak or mastered.",
+      "Subject, topic and paper/specification links remain stable when labels change. The row opens a topic-bound chat.",
+      "Progress and review dates remain separate columns. Evidence is accessible rather than implied by a coloured dot alone.",
+      "The subject dashboard retains topic navigation, practice and paper-builder access without creating a second content store.",
+      "Topic scores shown are illustrative attributed practice results."
+    ]
+  },
+  {
+    "id": "study-topic",
+    "title": "Study · Lesson and Revision Bank",
+    "app": "Spaces",
+    "group": "Study",
+    "tag": "Practice and resources",
+    "source": "UX27-SPACES-012; LE-08–10; Revision Bank; older PPT slide 28 conceptual reference",
+    "notes": [
+      "The Revision Bank category row has Recommended, All, Flashcards, Notes, Papers, Quizzes and right-aligned + Create New.",
+      "Resource cards reference canonical Cards, Forms and Write artifacts. View/interact is the default; editing and Open in App are explicit.",
+      "Recommended resources state the evidence-based reason and do not reveal unrelated private artifacts.",
+      "Practice feedback only changes progress after the user submits an actual answer. Displaying a lesson does not record mastery.",
+      "Source-linked topic context is carried into chat and the AI composer."
+    ]
+  },
+  {
+    "id": "study-session",
+    "title": "Study · Session modes and source policy",
+    "app": "Spaces",
+    "group": "Study",
+    "tag": "Learn / Practise / Test / Review",
+    "source": "Study Space detailed interface specification, effective 13 October 2026: STUDY-UI-202, 205, 210–220; LE-08–10; UX27-SPACES-005–007",
+    "notes": [
+      "The contextual Learn / Practise / Test / Review selector changes the next request in this same Study session. Preserve ConversationID, message history, TopicID, selected sources, answer draft and meaningful mode-transition provenance.",
+      "Practise records a real submitted attempt with question/source reference, working, feedback, marking provenance and hint conditions. This displayed question is unanswered; no new proficiency or completed review is implied. Learn worked examples and Review page opens or card flips are not assessed evidence.",
+      "Test uses the canonical Forms Test/Quiz assessment engine with inspectable rules, rubric and supported marking policy. Choosing Test alone does not start a timer, fabricate a grade or copy the assessment into a private Study database.",
+      "My sources only applies the configured closed-corpus policy. Wider knowledge allowed distinguishes authorised supplied material, external research and general explanation; citations cannot be fabricated and higher-priority web/account permissions still apply. Switching cannot rewrite the provenance of earlier answers.",
+      "Topic proficiency uses Not assessed, Needs work, Developing and Confident. It derives from attributed evidence and review rules. The separate self-reported confidence control never silently changes demonstrated proficiency or another learner’s private records.",
+      "The current Study wrapper, shared model/effort route, conversation-permissions icon and rounded icon-only Send/Voice shelf remain in place. Voice and multimodal capture use the shared Vision & Voice APIs. Local selectors in this reference preserve the draft and do not execute or mark an answer."
+    ]
+  },
+  {
+    "id": "cards-study",
+    "title": "Cards · Study overview",
+    "app": "Cards",
+    "group": "Study",
+    "tag": "Sets and private review",
+    "source": "Owner revision: expanded Cards study view; LE-08; LE-10 canonical CardSet and ReviewRecord; UX27-OTHER-006",
+    "notes": [
+      "This is the Cards study overview. Set/topic/custom grouping changes the view over canonical CardIDs and SetIDs without duplicating card content.",
+      "Due counts, recorded reviews and total card counts describe different things. The four reviews today are personal evidence, not mastery inferred from time spent.",
+      "Rating segments show personal red/amber/green review evidence, labelled in text and separate from shared set content. A valid topic link sends attributed evidence to Study.",
+      "Review opens the focused stack; Edit is an explicit alternative and preserves the same set identity. Import, add and grouping are owning-app operations.",
+      "New and unassessed cards retain that status; an unlinked card offers topic linking instead of inventing a Study mapping."
+    ]
+  },
+  {
+    "id": "cards-review",
+    "title": "Cards · Focused review",
+    "app": "Cards",
+    "group": "Study",
+    "tag": "Card review",
+    "source": "Owner revision: lower review workspace with progress; LE-08, LE-10; UX27-OTHER-006",
+    "notes": [
+      "The review stack starts below a useful session header and floating search, creating a dedicated study workspace. Partially visible, shadowed neighbours preserve orientation; vertical navigation is the default.",
+      "The header separates this session’s two recorded reviews from the current card position, remaining cards and due count. It does not infer mastery from flips or time.",
+      "View mode flips on card activation and cannot edit content. Edit opens the same canonical CardSet with click-to-edit and an explicit Flip control.",
+      "Red/amber/green ratings persist private ReviewRecords and update linked Study topics. Flipping or browsing alone records no mastery.",
+      "The AI bar remains the Cards editor contract: Read-only/Write is separate from View/Edit and cannot override View mode. The new Spaces permission icon does not replace this editor control."
+    ]
+  },
+  {
+    "id": "cards-edit",
+    "title": "Cards · Rich card editor",
+    "app": "Cards",
+    "group": "Study",
+    "tag": "Front and back authoring",
+    "source": "Owner revision: useful Cards edit states; LE-10 rich front/back contract; UX27-OTHER-006",
+    "notes": [
+      "Edit uses click-to-edit structured card content, with an explicit Flip button. Clicking the canvas must never flip while Edit is active; View mode cannot mutate it.",
+      "Front and Back remain independently editable structured content. Font choice, authored background, image/graph objects and freehand ink persist through native save/export rather than flattening into plain text.",
+      "The card strip preserves stable ordering and CardIDs. Add, duplicate, reorder, remove/restore and bulk edits act on the canonical set; undo and interrupted-save recovery preserve the prior valid revision.",
+      "The set’s topic link and the selected card’s metadata are editable separately from private review evidence. Editing content does not overwrite another learner’s rating history.",
+      "The displayed draft is unsaved. Save, shared-edit conflict handling and partial bulk-change results must be explicit; no mock-up button performs external writes."
+    ]
+  },
+  {
+    "id": "spaces-research",
+    "title": "Research · Plan, sources and outputs",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Research workflow",
+    "source": "UX27-SPACES-012; Research built-in Space contract; canonical source and artifact model",
+    "notes": [
+      "Research is a typed environment with plan, source scope, run status and outputs alongside conversation.",
+      "Quick, Extended, Deep and Custom are supported budget choices. Duration is a budget, not an execution-time promise.",
+      "Outside-web access is explicit and separate from attached sources. Research cannot silently broaden permission scope.",
+      "A report is a canonical Write artifact, not a private copy of its content. Source citations and missing evidence survive export.",
+      "Plan steps and status reflect the actual run; no decorative fake progress."
+    ]
+  },
+  {
+    "id": "spaces-shopping",
+    "title": "Shopping · Requirements and comparison",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Product comparison",
+    "source": "UX27-SPACES-012; Shopping built-in Space contract; source/provenance rules",
+    "notes": [
+      "Strict matches, partial/similar matches and contextual suggestions are separate categories with explicit reasons.",
+      "Each candidate retains currency, source and last-check state. Fictional products and example prices here are mock-up content, not live recommendations.",
+      "Constraint mismatches remain visible. An adjacent or promoted product cannot silently replace a strict match.",
+      "Saving, comparing and purchasing have separate actions. No selection or AI response authorises a purchase.",
+      "The Shopping Space has requirements, shortlists and comparison workflows, not a copied Study dashboard."
+    ]
+  },
+  {
+    "id": "spaces-manage",
+    "title": "Spaces · Settings and permission scope",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Space management",
+    "source": "UX27-SPACES-001, 008; LE-03, LE-05; Space override and permission precedence",
+    "notes": [
+      "Space configuration is reached deliberately. Selecting a Space still opens its actual conversation directly.",
+      "Configuration precedence is Space Override, User Preference, Default; policy limits every level. Locked values show their source.",
+      "The sidebar editor references stable sections and targets. Removing organisation never deletes chats or source documents.",
+      "Source visibility and actual permission remain separate. Scope editing does not grant arbitrary action execution.",
+      "Preview and edit address the same SpaceID; changing names or rail position preserves identity."
+    ]
+  },
+  {
+    "id": "spaces-translate",
+    "title": "Translate · Conversational localisation",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Translation Space",
+    "source": "Translate built-in Space contract; TranslationSet and variants; Dulche Translate amendment",
+    "notes": [
+      "Translate uses the normal Space conversation. It is not a two-box translator app.",
+      "The persistent target-language set sits immediately above the standard composer. Do not add a separate Translate context row.",
+      "Each target language has a separate assistant bubble labelled directly above it. Variants remain siblings of one canonical TranslationSet.",
+      "A refinement targets a language variant without discarding the others. Publishing or replacing a source is a separate authorised owning-app action.",
+      "Target-language changes persist with the conversation and draft."
+    ]
+  },
+  {
+    "id": "spaces-generative-ui",
+    "title": "Spaces · Generated interactive planner",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Generative UI",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "An interactive generated result stays inline with its conversation and exposes its current data source and unsaved draft state. Monday and Tuesday are existing past sessions, read-only in this proposal; only Thursday, Friday and Sunday are additions.",
+      "Changing a slider or selecting a session edits a local proposal. Save to Planner opens the exact change review and does not imply approval.",
+      "Generated controls have accessible labels, keyboard focus, empty/loading/failure states and a stable UI schema for restoration.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-thinking",
+    "title": "Spaces · Thinking and visible activity",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Thinking state",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "Thinking has a clear active state, elapsed time and interrupt controls. It never displays a fabricated answer or completed artifact while work is pending.",
+      "The expandable activity area shows a concise task summary and tool/status events. Private internal reasoning is not part of the UI contract.",
+      "A retained composer supports steer, queue and stop; stopping preserves committed work and a resumable record where supported.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-subagents",
+    "title": "Spaces · Coordinated subagents",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Delegation",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "The coordinator and each subagent have visible identity, responsibility, scope, state and owned output. A subagent is a real run with a stable parent relationship.",
+      "Delegated permissions are the intersection of the parent grant, agent capability and current app policy. Delegation cannot widen access.",
+      "Independent work can progress in parallel. Cancel, retry and review are scoped to the selected agent; completed sibling work remains intact.",
+      "Visible activity summaries report work and tool events rather than private reasoning traces.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-subagent-detail",
+    "title": "Spaces · Subagent scope and activity",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Agent detail",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "Agent detail exposes the delegated brief, granted inputs, allowed outputs, budget and public activity events.",
+      "The user can stop this agent without stopping unrelated sibling work. Retry is attached to the same task with an explicit new run record.",
+      "Artifacts and source references use canonical IDs; the agent may not acquire another agent’s write scope silently.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-present-working",
+    "title": "Spaces · Presentation work in progress",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Live artifact",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "Spaces displays the actual Present scene as a live canonical artifact preview, including slide count, revision, selection and responsible collaborator.",
+      "Preview updates stream committed draft revisions; an in-progress frame is not a claim that the entire presentation is complete.",
+      "Open in Present retains the same document and work session. Steer/Stop affects the current run while preserving durable edits.",
+      "Pending slides remain visibly pending. Reviewer activity and completed output are distinct stages.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-canvas-working",
+    "title": "Spaces · Canvas work in progress",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Live artifact",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "Canvas work uses the same scene, object IDs, coordinates and undo history as the canonical Canvas artifact.",
+      "The preview shows the specialist’s active object and cursor identity, as well as partial connections and object counts.",
+      "Other users can observe and steer without taking over the same object implicitly. Concurrent edits require clear ownership and conflict handling.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-generated-files",
+    "title": "Spaces · Generated files and outputs",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Output state",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "A completed file result appears only after the owning app returns a durable artifact and a verified output receipt.",
+      "Each result includes identity, type, revision, local/sync state and Open/Download actions. Exported files and editable native artifacts remain distinct.",
+      "Open delegates to the owning app; Download addresses the existing bytes. Neither action generates a new artifact silently.",
+      "If export is pending or fails, its card keeps that state and recovery action rather than claiming Ready.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "spaces-export-recovery",
+    "title": "Spaces · Export failure and recovery",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Output recovery",
+    "source": "Owner revision 28 October; Dulche generative UI and delegation; UX27-SPACES-001–014; CUI typed components and artifact ownership",
+    "notes": [
+      "An export failure is scoped to the export. The successfully saved native artifacts remain available and unchanged.",
+      "The failed result retains format, target path, error and retry/save-copy actions. Retry operates on the same chosen document revision.",
+      "An action receipt reports real status. The interface must never show Download ready for missing or incomplete bytes.",
+      "Generated interfaces use the CUI typed component and command model. The model cannot inject arbitrary executable UI or bypass app permissions.",
+      "Generated views bind to canonical owning-app entities. A chart, form, calendar or artifact preview never becomes an independent hidden copy.",
+      "State transitions, elapsed time, completed work and created file results are supplied by the real runtime. The values here are fixtures."
+    ]
+  },
+  {
+    "id": "data",
+    "title": "Data · Spreadsheet",
+    "app": "Data",
+    "group": "Productivity",
+    "tag": "Editor",
+    "source": "UX27-DATA-001–004; Data spreadsheet/SQL baseline; CUI-PREF-203",
+    "notes": [
+      "Active cell, selected range and cell editing have different visual states. The formula bar exposes the active expression.",
+      "Spreadsheet, database and SQL views share canonical data where an explicit projection exists. A view never silently duplicates records.",
+      "Data keeps its green app accent and teal icon. Every AI mutation requires a separate action approval.",
+      "Selected sample revenue range demonstrates selection geometry; production values must come from the real calculation engine."
+    ]
+  },
+  {
+    "id": "data-approval",
+    "title": "Data · Review an AI mutation",
+    "app": "Data",
+    "group": "Productivity",
+    "tag": "Approval",
+    "source": "Shared persistent AI bar, Data per-action exception; UX27-DATA-002–004; UX27-SHARED-014",
+    "notes": [
+      "The underlying AI bar is in Write mode, which never removes Data’s per-action approval. Rejecting leaves the source unchanged.",
+      "Live database review identifies target, affected records, validation and a recoverable backup before execution.",
+      "The proposed diff and execution results use separate states. An approval button does not claim execution succeeded.",
+      "If the backup fails, the approval action becomes unavailable with a reason."
+    ]
+  },
+  {
+    "id": "files",
+    "title": "Files · Local files and details",
+    "app": "Files",
+    "group": "Productivity",
+    "tag": "File manager",
+    "source": "UX27-FILES-001–004; Files donor-first baseline; UX27-BOARD-003–006",
+    "notes": [
+      "Selected rows retain 16 px leading padding around the app icon and comfortable padding around every cell.",
+      "Keep mature address, breadcrumb, history, selection, sort, list/grid and details interactions.",
+      "Local availability and provider sync are separate statuses. A cloud outage does not block local folders.",
+      "Open with Boards resolves the same editable .9to1board file. Files is an optional storage/navigation integration for Boards.",
+      "Moving a file preserves canonical identity; a name collision opens explicit Replace, Keep both or Skip review."
+    ]
+  },
+  {
+    "id": "planner",
+    "title": "Planner · Week and unscheduled tasks",
+    "app": "Planner",
+    "group": "Productivity",
+    "tag": "Calendar",
+    "source": "UX27-OTHER-001–002; Planner calendar/schedule/task baseline",
+    "notes": [
+      "Event category colour is an inset vertical nib with its own radius; it is not the event container border.",
+      "Calendar and task views project the same Events and PlannerTasks. Dragging an unscheduled task schedules that task rather than duplicating it.",
+      "Show date, timezone and exact start/end during move or resize. Recurrence changes need occurrence/following/series scope.",
+      "Task completion and notification dismissal remain separate actions.",
+      "Panels collapse before the week grid becomes unusable; agenda is a supported narrow-layout alternative."
+    ]
+  },
+  {
+    "id": "automations",
+    "title": "Automations · Draft graph and activation",
+    "app": "Automations",
+    "group": "Build & systems",
+    "tag": "Node editor",
+    "source": "UX27-AUTO-001–006; shared Node Graph Framework",
+    "notes": [
+      "Draft and Active revisions remain visibly distinct. Saving/testing a draft does not enable or replace the live schedule.",
+      "Ports show types and compatible targets; selection, panning and editing a field are separate gestures.",
+      "Test uses explicit sample inputs and permissions. A test that performs an external action retains its approval boundary.",
+      "Runs remain pinned to their starting revision. Durable waits survive restart without replaying committed effects."
+    ]
+  },
+  {
+    "id": "forms",
+    "title": "Forms · Assessment builder",
+    "app": "Forms",
+    "group": "Productivity",
+    "tag": "Builder",
+    "source": "UX27-OTHER-005; Forms structured questions, maths, publishing and responses",
+    "notes": [
+      "Question outline, form canvas and inspector use stable QuestionIDs; reordering preserves branching and validation.",
+      "Draft editing never silently changes the published form. Preview runs the selected draft revision.",
+      "Assessment mode retains mathematical inputs and marking rules, beyond ordinary survey fields.",
+      "Publish and response export are separate actions; a response is accepted only after a durable write."
+    ]
+  },
+  {
+    "id": "picture",
+    "title": "Picture · Layered composition",
+    "app": "Picture",
+    "group": "Creative",
+    "tag": "Editor",
+    "source": "UX27-OTHER-007; Picture non-destructive layers/text/masks baseline; CUI-PREF-203",
+    "notes": [
+      "The poster is original geometric fixture content. Its colours remain unchanged when the app theme switches.",
+      "Layers, masks, text and original sources remain separate editable objects; export composes actual content, not a screenshot of the editor.",
+      "Selection geometry uses image coordinates and the same transform as pointer hit testing.",
+      "Adjustment and transformation previews are nondestructive and undoable. Export is distinct from local project save."
+    ]
+  },
+  {
+    "id": "wave",
+    "title": "Wave · Audio timeline and mixer",
+    "app": "Wave",
+    "group": "Creative",
+    "tag": "Timeline",
+    "source": "UX27-OTHER-008–009; Wave multitrack, stem separation and source preservation baseline",
+    "notes": [
+      "Waveform and transport share one timebase. The display is an illustrative audio fixture, not a rendered source file.",
+      "Trims, fades, gain and effects remain nondestructive and preserve original media.",
+      "Split Stems is a first-class tool with supported backend modes, not only a chat command.",
+      "Export uses the selected actual range; missing source media remains visible with a recoverable relink action."
+    ]
+  },
+  {
+    "id": "motion",
+    "title": "Motion · Video editing workspace",
+    "app": "Motion",
+    "group": "Creative",
+    "tag": "Timeline",
+    "source": "UX27-OTHER-008–009; Motion media/viewer/inspector/timeline baseline; CUI-PREF-203",
+    "notes": [
+      "Media bin, program viewer, contextual inspector and multitrack timeline form the default workspace.",
+      "Source frame is original geometric illustration, not a photograph or real video preview. Production frame and audio must align with the current playhead.",
+      "Sequence source, trim and effects stay nondestructive. Authored titles remain editable text objects.",
+      "Export range, resolution and missing-media validation are explicit before rendering."
+    ]
+  },
+  {
+    "id": "connect-mail",
+    "title": "Connect · Mail and a reply draft",
+    "app": "Connect",
+    "group": "Communication",
+    "tag": "Mail",
+    "source": "Connect parent product; UX27-OTHER-003–004; Mail compose/provider semantics",
+    "notes": [
+      "Mail remains a complete child mode of Connect with its own protocol and canonical entities.",
+      "Folder navigation, message list and reading/compose pane remain distinct. The actual sender and recipient are visible.",
+      "AI drafting does not send. The shown reply is a retained draft with attachment readiness and an explicit Send action.",
+      "Provider submission, outbox, sent confirmation, scheduled send and Undo Send require distinct truthful states."
+    ]
+  },
+  {
+    "id": "connect-messages",
+    "title": "Connect · Team conversation",
+    "app": "Connect",
+    "group": "Communication",
+    "tag": "Messages",
+    "source": "Connect messages/rooms/threading/encryption baseline; UX27-OTHER-014",
+    "notes": [
+      "Native messaging keeps its own Message/Room/Thread identities, separate from Mail entities.",
+      "The encryption badge describes the actual transport. SMS must never inherit a native encrypted-chat badge.",
+      "Room membership does not grant access to every linked file; each canonical attachment rechecks permission.",
+      "Typing a draft, sending a message and an AI suggestion are distinct states."
+    ]
+  },
+  {
+    "id": "maps",
+    "title": "Maps · Route and place details",
+    "app": "Maps",
+    "group": "Everyday",
+    "tag": "Map",
+    "source": "UX27-OTHER-010; Maps source/provenance/search/route baseline",
+    "notes": [
+      "This is an explicitly illustrative map fixture; it is not a navigation result or a real geographic route.",
+      "Real search resolves canonical places and shows source/freshness. Uncertain geocoding must remain visible.",
+      "Route choice, stops and travel mode edit the same canonical route. Source outages have scoped unavailable states.",
+      "Search and AI operate the same map entities; model prose alone cannot create a verified route."
+    ]
+  },
+  {
+    "id": "shelf",
+    "title": "Shelf · Curated launch collection",
+    "app": "Shelf",
+    "group": "Everyday",
+    "tag": "Library",
+    "source": "Shelf canonical LaunchItems/collections baseline; UX27-OTHER-010–011",
+    "notes": [
+      "Shelf is a quick-access product, distinct from the Android Launcher and Files storage.",
+      "A LaunchItem can appear in multiple collections without copying the target artifact.",
+      "Missing targets remain recoverable and explicitly unavailable; never silently substitute another application.",
+      "Search uses real typed targets. Opening delegates to the canonical owning app, website or platform launcher."
+    ]
+  },
+  {
+    "id": "vision-voice",
+    "title": "Vision & Voice · Live session",
+    "app": "Vision & Voice",
+    "group": "Communication",
+    "tag": "Session",
+    "source": "UX27-SPACES-014; Vision & Voice/Live Listener ephemeral audio baseline",
+    "notes": [
+      "Listening, audio recording, camera and screen sharing are separate visibly controlled states.",
+      "Source and processing location are explicit. This session shows microphone only, local audio processing and recording off.",
+      "Typed input remains available without ending the voice session. Captions do not become commands automatically.",
+      "Ambient audio uses ephemeral buffering by default. Saving audio/transcript is an explicit retention choice."
+    ]
+  },
+  {
+    "id": "play",
+    "title": "Play · Human and Agent quiz match",
+    "app": "Play",
+    "group": "Everyday",
+    "tag": "Match",
+    "source": "UX27-OTHER-016; Play reference maths quiz and contestant visibility",
+    "notes": [
+      "One human competes with ten Agents; opponent answers stay hidden until reveal.",
+      "The selected answer remains a draft until Submit. Scoring reflects completed rounds only.",
+      "Legal actions depend on the current round. No outside AI assistance is exposed during this no-tools match.",
+      "Recorded replay restores the match without replaying consequential external actions."
+    ]
+  },
+  {
+    "id": "files-grid",
+    "title": "Files · Grid and selected board",
+    "app": "Files",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-FILES-001–004",
+    "notes": [
+      "Grid and List are two views of the same folder and selection; changing view never duplicates files.",
+      "The selection tint surrounds the complete tile with comfortable padding on every edge. File icon, name and availability remain within the selected surface.",
+      "Details refer to the selected canonical board; Open in Boards opens its editable document."
+    ]
+  },
+  {
+    "id": "files-context",
+    "title": "Files · Selected file actions",
+    "app": "Files",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Files selection and canonical operations",
+    "notes": [
+      "The context menu is anchored beside the selected file and uses the same command model as toolbar actions.",
+      "Open, Open with, Rename, Move, Copy and Trash have distinct outcomes. Moving preserves identity; Trash remains recoverable.",
+      "Menu focus returns to the selected row when closed. File properties remain visible without changing the selection."
+    ]
+  },
+  {
+    "id": "planner-event",
+    "title": "Planner · Edit an event",
+    "app": "Planner",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Planner Events and occurrence semantics",
+    "notes": [
+      "The event opens beside its originating week and retains its start/end, calendar, timezone and reminder.",
+      "The category colour is a separate inset nib, independent of the rounded event background.",
+      "Saving edits the same EventID. Recurring events require an explicit occurrence/following/series choice; the current fixture does not repeat."
+    ]
+  },
+  {
+    "id": "planner-agenda",
+    "title": "Planner · Agenda view",
+    "app": "Planner",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Planner shared calendar/task projections",
+    "notes": [
+      "Agenda is a date-ordered projection of the same events as the Week view.",
+      "The inset category nib has its own rounded ends and does not follow the event container corners.",
+      "Event selection opens the same edit panel. Completed tasks and dismissed reminders remain separate from calendar events."
+    ]
+  },
+  {
+    "id": "data-formula",
+    "title": "Data · Editing a formula",
+    "app": "Data",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-DATA-001–004; formula authoring and selected ranges",
+    "notes": [
+      "Cell editing is a separate state from range selection. Function help remains anchored to the active expression and never obscures the whole sheet.",
+      "Reference tokens map to coloured selection ranges. Commit and Cancel remain explicit; Enter commits to the same cell.",
+      "This is a manual formula-edit state. Any AI-generated mutation still needs its own per-action approval."
+    ]
+  },
+  {
+    "id": "data-chart",
+    "title": "Data · Chart insertion and preview",
+    "app": "Data",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Data charts and canonical range binding",
+    "notes": [
+      "The chart retains a live binding to its source range and series, rather than a copied screenshot.",
+      "Preview and Insert are separate. Source headers, category axis and series selection remain editable.",
+      "Chart colours belong to the chart document. Theme changes affect chrome without recolouring the authored chart."
+    ]
+  },
+  {
+    "id": "forms-preview",
+    "title": "Forms · Respondent preview",
+    "app": "Forms",
+    "group": "Productivity",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-OTHER-005; draft/published revision isolation",
+    "notes": [
+      "Respondent preview uses the selected draft revision without publishing it or creating a real submitted response.",
+      "Question input, required validation, mathematical expression input and progress remain visible in the same form.",
+      "Returning to Build preserves the draft; the preview never silently switches the published revision."
+    ]
+  },
+  {
+    "id": "picture-mask",
+    "title": "Picture · Layer mask editing",
+    "app": "Picture",
+    "group": "Creative",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-OTHER-007; nondestructive masks and editable layers",
+    "notes": [
+      "A layer mask is a separate selected object linked to the source layer. Painting the mask never erases original pixels.",
+      "Brush size, softness, opacity, mask visibility and inversion remain explicit. The selected mask thumbnail stays distinct from its layer thumbnail.",
+      "The visible mask outline uses image coordinates and the same viewport transform as pointer hit testing."
+    ]
+  },
+  {
+    "id": "picture-export",
+    "title": "Picture · Export image",
+    "app": "Picture",
+    "group": "Creative",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Picture export versus editable project save",
+    "notes": [
+      "Export renders a chosen image format from the canonical layer composition; it does not flatten the editable project file.",
+      "Size, colour profile, alpha and destination are visible before rendering.",
+      "Missing linked images or font failures block export with a clear explanation; they do not produce a false success state."
+    ]
+  },
+  {
+    "id": "wave-clip",
+    "title": "Wave · Selected clip and fades",
+    "app": "Wave",
+    "group": "Creative",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-OTHER-008–009; nondestructive clip edits",
+    "notes": [
+      "The selected clip retains source offset, timeline start, duration and gain as separate values.",
+      "Fade handles and numeric fade fields operate on the same clip envelope. Split and trim preserve the source media.",
+      "Level metering and effects use the same playback timebase. The waveform shown is an illustrative fixture."
+    ]
+  },
+  {
+    "id": "wave-stems",
+    "title": "Wave · Split stems",
+    "app": "Wave",
+    "group": "Creative",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Wave first-class stem separation",
+    "notes": [
+      "Split Stems is a tool with selected source, backend, output tracks and resource state. It is not only an AI chat instruction.",
+      "The original source remains on its track. Outputs become separate clips with provenance and shared alignment.",
+      "A separation job has Pending, Running, Failed and Complete states; no generated tracks appear before successful completion."
+    ]
+  },
+  {
+    "id": "motion-transition",
+    "title": "Motion · Transition at an edit",
+    "app": "Motion",
+    "group": "Creative",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Motion sequence edits and nondestructive effects",
+    "notes": [
+      "A transition belongs to a specific cut between clips and exposes its handles, duration and alignment.",
+      "The selected cut remains visible on the sequence while the full-height properties panel keeps effect, duration, alignment and source-handle availability together.",
+      "Preview uses the same sequence timebase and source media. Missing handles produce a scoped warning before the edit is applied.",
+      "The effect is editable and undoable; it never rewrites the original clips."
+    ]
+  },
+  {
+    "id": "motion-export",
+    "title": "Motion · Render range and destination",
+    "app": "Motion",
+    "group": "Creative",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Motion render and missing-media validation",
+    "notes": [
+      "The render sheet distinguishes sequence range, format, resolution, frame rate and audio settings.",
+      "Validation checks the chosen revision and media dependencies before the render starts.",
+      "Render queue status is separate from project save state. A completed job reports its actual output path."
+    ]
+  },
+  {
+    "id": "automation-trigger",
+    "title": "Automations · Schedule trigger",
+    "app": "Automations",
+    "group": "Build & systems",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-AUTO-001–006; trigger and draft activation rules",
+    "notes": [
+      "Editing a trigger changes the draft revision only. The current active schedule is shown separately until validation and activation.",
+      "Time, timezone, days and missed-run policy are explicit. Daylight-saving transitions resolve using the selected timezone.",
+      "Saving the trigger never activates the automation or performs its downstream external actions."
+    ]
+  },
+  {
+    "id": "connect-compose",
+    "title": "Connect · Compose a message",
+    "app": "Connect",
+    "group": "Communication",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-OTHER-003–004; Mail identity, draft and send boundaries",
+    "notes": [
+      "From identity, recipients, subject, attachments and retained draft status are visible in the same compose surface.",
+      "Adding recipients resolves the selected contact explicitly; drafting does not send or grant tool access.",
+      "The send menu opens scheduling as a separate review. Attachment upload status is visible before sending."
+    ]
+  },
+  {
+    "id": "connect-schedule",
+    "title": "Connect · Schedule send review",
+    "app": "Connect",
+    "group": "Communication",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Mail scheduled send and durable outbox semantics",
+    "notes": [
+      "A scheduled message retains the original draft, actual sender, recipients, selected timezone and attachment state.",
+      "Scheduling is distinct from provider submission and sent confirmation. The user can edit or cancel before dispatch.",
+      "A failure at dispatch leaves the message recoverable with a visible outbox error."
+    ]
+  },
+  {
+    "id": "maps-route-options",
+    "title": "Maps · Route options and stops",
+    "app": "Maps",
+    "group": "Everyday",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Maps canonical routes, mode and source metadata",
+    "notes": [
+      "The options panel edits the same route, including travel mode, stops and preferences.",
+      "Estimated route data retains its map/provider source and freshness; this fixture is illustrative rather than navigation guidance.",
+      "A failed or unavailable route remains visibly unresolved instead of substituting a generated route."
+    ]
+  },
+  {
+    "id": "shelf-add",
+    "title": "Shelf · Add an item",
+    "app": "Shelf",
+    "group": "Everyday",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; Shelf canonical LaunchItems and collection references",
+    "notes": [
+      "A Shelf item references the original app, document, website or platform target. It does not move or duplicate the original.",
+      "The picker shows the target identity and destination collection before adding it.",
+      "Unavailable targets can remain as recoverable entries and must not silently resolve to another item."
+    ]
+  },
+  {
+    "id": "vision-session-sources",
+    "title": "Vision & Voice · Sources and capture",
+    "app": "Vision & Voice",
+    "group": "Communication",
+    "tag": "Interaction state",
+    "source": "Owner revision 28 October; UX27-SPACES-014; explicit capture and retention",
+    "notes": [
+      "The source sheet separates camera, screen, microphone and retained transcript permissions.",
+      "A source must be explicitly selected before it becomes live context. Disabled capture is never inferred from an active microphone.",
+      "Stopping capture removes that live source; transcript retention remains a separate choice."
+    ]
+  },
+  {
+    "id": "build-code",
+    "title": "Build · Code workspace",
+    "app": "Build",
+    "group": "Build & developer",
+    "tag": "Code",
+    "source": "UX27-BUILD-001–007; Dev: Editor and navigation, Visual CUI Builder, AI ChangeSet model",
+    "notes": [
+      "Dev, Sites and Stacks remain domains of one Build project. Switching surfaces retains the project and revision.",
+      "Preview identifies its source and environment; a failed build must label the last valid preview as stale.",
+      "The explorer, editor, tests and typed AI changes address canonical files. Review AI edits as a diff before applying them.",
+      "Code and diagnostics use monospace. Ordinary chrome inherits the shared CUI theme."
+    ]
+  },
+  {
+    "id": "build-sites",
+    "title": "Build · Sites editor",
+    "app": "Build",
+    "group": "Build & developer",
+    "tag": "Sites",
+    "source": "UX27-BUILD-001,004,006; Sites: Visual Page Editor, Responsive design, Preview fidelity, Deployment safeguards",
+    "notes": [
+      "Sites editing and Code operate on the same project, components and source revision.",
+      "The public page appears inside an isolated preview. Its fonts, colours and styles never become editor chrome.",
+      "Responsive preview and selected-component properties represent the same source model.",
+      "Preview, staging and production are separate states. Publish must show its environment and changes before committing."
+    ]
+  },
+  {
+    "id": "build-stacks",
+    "title": "Build · Stacks conflict review",
+    "app": "Build",
+    "group": "Build & developer",
+    "tag": "Stacks",
+    "source": "UX27-BUILD-005; Stacks: Branch/Twig/Leaf, active domain, conflicts, Roots and Freeze",
+    "notes": [
+      "Branch, Twig and Leaf are nested development domains. Their active selection must be explicit.",
+      "Review identifies base, local and incoming revisions and the exact conflicting file.",
+      "Accept without Merging, Accept and Merge and Reject are distinct operations. Reject preserves the original work.",
+      "Root and Freeze restrictions remain enforceable outside the UI. Commit, push, merge and deployment are different states."
+    ]
+  },
+  {
+    "id": "ai-studio",
+    "title": "AI Studio · Agent builder and test",
+    "app": "AI Studio",
+    "group": "Build & developer",
+    "tag": "Builder",
+    "source": "AI Studio: navigation, Agent Builder, advanced logic, Playground; UX27-OTHER-013",
+    "notes": [
+      "The Agent resolves its stable Den identity. Editing configuration does not create a replacement Agent.",
+      "Model, tools, instructions, knowledge and permissions are typed definitions, shared between form and graph views.",
+      "Testing runs the draft under an explicit profile. Test success does not activate or install it.",
+      "Build, Test & Debug and Resources expose distinct destinations. The consumer conversation remains in Spaces."
+    ]
+  },
+  {
+    "id": "terminal",
+    "title": "Terminal · Command workspace",
+    "app": "Terminal",
+    "group": "Utilities",
+    "tag": "Command",
+    "source": "Terminal: AI / Command mode switcher, PTY sessions, tabs and panes; UX27-OTHER-012",
+    "notes": [
+      "Command mode executes in the visible selected shell. AI mode is a separate input route; ordinary commands are not sent to a model.",
+      "Every pane shows its actual session, working directory and process state. Switching panes must not silently retarget pending input.",
+      "A disconnected remote session retains its transcript and explains reconnect semantics.",
+      "Closing a tab must make its effect on the owned process clear. Text selection is distinct from command input."
+    ]
+  },
+  {
+    "id": "mini-computer",
+    "title": "Mini Computer · Virtual machine",
+    "app": "Mini Computer",
+    "group": "Utilities",
+    "tag": "Session",
+    "source": "Mini Computer: viewer, lifecycle, snapshots, clipboard trust; UX27-OTHER-017",
+    "notes": [
+      "The viewer identifies the machine, provider, connection and input owner. View-only and control are distinct.",
+      "Closing the viewer leaves the VM running. Pause, save state, stop and shutdown are explicit lifecycle operations.",
+      "Clipboard, folders and device sharing have visible independent permissions.",
+      "Snapshots and runtime changes retain canonical VM identity; reconnect never invents a replacement session."
+    ]
+  },
+  {
+    "id": "games",
+    "title": "Games · Scene and components",
+    "app": "Games",
+    "group": "Build & developer",
+    "tag": "Scene editor",
+    "source": "Games: CUI-native editor, scene graph, purposeful components; UX27-OTHER-015",
+    "notes": [
+      "Scene hierarchy, viewport, components and assets select the same stable object identity.",
+      "Development and Creation/Rendering share one project. Play/test is explicit and does not overwrite authored scene state.",
+      "The CUI Visual Builder owns game UI authoring; gameplay, material and animation graphs use appropriate registered nodes.",
+      "The persistent AI bar receives semantic scene/project context rather than falling back to generic computer use."
+    ]
+  },
+  {
+    "id": "link-flow",
+    "title": "Link · Continuous Flow document",
+    "app": "Link",
+    "group": "Connected work",
+    "tag": "Flow",
+    "source": "TF-L01–02: Link shell and Flow; TF-X01",
+    "notes": [
+      "Flow combines inline content in one primary vertical scroll. Do not turn sources into independent scrolling panels or file cards.",
+      "The mandatory report composition can include Data, Write, an image, another section of the same Data source and a scoped report assistant.",
+      "References retain source identity and visible live/pinned policies. Edit original and authored Flow edits are different actions.",
+      "Returning from an original editor restores the reader to the same Flow position. Source permission is checked independently of Flow access."
+    ]
+  },
+  {
+    "id": "link-binder",
+    "title": "Link · Binder overview and detail",
+    "app": "Link",
+    "group": "Connected work",
+    "tag": "Binder",
+    "source": "TF-L01, TF-L03: Binder overview, authored containers and nonlinear navigation",
+    "notes": [
+      "Binder is one authored interconnected document. Its notes, folders, tabs and stacks contain real nested content.",
+      "File references preserve their originals. Rearranging a Binder never moves the source file.",
+      "Reader mode retains nonlinear open/close, breadcrumbs, Back and outline while hiding layout handles.",
+      "Opening and closing a container restores the surrounding viewport and focus. Source editing requires separate source permission."
+    ]
+  },
+  {
+    "id": "prototype",
+    "title": "Prototype · Interactive spring explorer",
+    "app": "Prototype",
+    "group": "Connected work",
+    "tag": "Design / Run",
+    "source": "TF-P01–03: typed model, Design / Logic / Run and session-local inputs",
+    "notes": [
+      "Prototype models interactive systems, calculations and simulations; it is not limited to UI or 3D mock-ups.",
+      "Design, Logic and Run operate on one typed model with stable object/property IDs.",
+      "Runtime input changes are session-local. Applying them as saved defaults is a separate author action.",
+      "Formulas, units, assumptions and derived outputs remain inspectable. Invalid dependencies must show errors rather than plausible invented values."
+    ]
+  },
+  {
+    "id": "paths",
+    "title": "Paths · Branching learning route",
+    "app": "Paths",
+    "group": "Connected work",
+    "tag": "Authoring",
+    "source": "TF-H01–03: step outline, route graph, preview and durable reader progress",
+    "notes": [
+      "Path authoring combines the step outline, route graph, content and conditions over stable step IDs.",
+      "Each choice names its destination. Conditions, fallback routes and invalid routes remain inspectable.",
+      "Preview has disposable test progress and identifies its draft revision; it never changes a reader attempt.",
+      "Reader progress is durable and separate from authoring. A branching path must not invent a fixed completion percentage."
+    ]
+  },
+  {
+    "id": "replay",
+    "title": "Replay · Historical checkpoint",
+    "app": "Replay",
+    "group": "Connected work",
+    "tag": "Playback",
+    "source": "TF-R01–03: semantic capture, historical viewer, timeline and sharing review",
+    "notes": [
+      "Replay records selected semantic revisions, events and checkpoints. Optional media is supplementary.",
+      "The historical viewer identifies the captured revision and stays read-only even when the source has advanced.",
+      "Missing intervals and dependencies remain visible as incomplete capture, never invented reconstruction.",
+      "Continue from here makes an independent copy through the owning app. It must never overwrite the current original."
+    ]
+  },
+  {
+    "id": "variants",
+    "title": "Present · Compare Variants",
+    "app": "Present",
+    "group": "Connected work",
+    "tag": "Variants",
+    "source": "TF-V01–03: integrated Variants; Present canonical slide/object comparison",
+    "notes": [
+      "Variants is integrated into Present, not a separate app. The active branch appears beside document identity.",
+      "Compare names the source, base and target; additions, edits and conflicts use more than colour alone.",
+      "Selected changes are previewed before a semantic merge against explicit revisions. A stale preview must be refreshed.",
+      "Switching or merging variants preserves both branches and does not publish or present the artifact."
+    ]
+  },
+  {
+    "id": "admin",
+    "title": "9to1 Admin · People and policy scope",
+    "app": "Admin",
+    "group": "Organisation & system",
+    "tag": "Organisation",
+    "source": "ADM-01–12: organisation identity, people, roles, policies and deployment state",
+    "notes": [
+      "Every administrative screen displays the current organisation. Product entitlement does not confer admin privileges.",
+      "People states distinguish invited, active, suspended and removed. Effective permissions include role, policy and object scope.",
+      "Policy changes move through Draft, Validated and Published, then show per-target enforcement. An offline endpoint is not silently compliant.",
+      "Bulk changes preview their scope and report per-item outcomes. Personal accounts and unrelated organisations remain separate."
+    ]
+  },
+  {
+    "id": "os-go",
+    "title": "9to1OS · Desktop and Go",
+    "app": "9to1OS",
+    "group": "Organisation & system",
+    "tag": "Desktop",
+    "host": false,
+    "source": "9to1-OS: desktop shell, Taskbar Layers, Desktop Spaces, Quick Settings; Go: search and typed actions",
+    "notes": [
+      "The default shell uses conventional window controls and a taskbar with Go at the start.",
+      "Taskbar Layers are discrete, with one to five layers and a visible position indicator. They are separate from virtual desktops and Desktop Spaces.",
+      "Go is a shared Search / AI and typed-action surface. Results retain canonical source and permission checks.",
+      "Go is the active shell popup; opening Quick Settings dismisses unrelated transient surfaces. This mock-up is intended layout, not OS implementation evidence."
+    ]
+  },
+  {
+    "id": "launcher",
+    "title": "Launcher · Mobile home",
+    "app": "Launcher",
+    "group": "Organisation & system",
+    "tag": "Mobile",
+    "host": false,
+    "size": {
+      "w": 390,
+      "h": 844
+    },
+    "source": "Launcher: home pages, app drawer, dock, widgets and extreme customisation",
+    "notes": [
+      "Launcher owns Android-style home pages, folders, widgets, app drawer and dock. It is distinct from Shelf and Home package management.",
+      "Grid, icon size, dock, folders, gestures and wallpaper are configurable while retaining canonical app identities.",
+      "Touch targets remain usable. Widgets use their owning app data and declared permissions.",
+      "Search / Go and Dulche are first-class entry points. The screen shows a saved home layout, not a fixed product-wide arrangement."
+    ]
+  },
+  {
+    "id": "build-code-diagnostics",
+    "title": "Build · Completion and diagnostics",
+    "app": "Build",
+    "group": "Development states",
+    "tag": "Editor · invalid draft",
+    "source": "UX27-BUILD-002–004; Dev / Language intelligence, diagnostics and Visual CUI Builder; CUI / Hot reload and error boundaries",
+    "notes": [
+      "Completion, signature information, diagnostics and quick fixes resolve semantic symbols in the current source revision. Accepting completion is one undoable text edit.",
+      "The invalid in-progress member name produces a navigable diagnostic at the actual file and line. The preview retains the last valid tree and is labelled Last valid.",
+      "Draft text is preserved on validation failure. The current preview is not evidence that an invalid draft built successfully.",
+      "Keyboard acceptance, dismissal and focus return belong to the editor; navigation to a diagnostic preserves the current file identity and selection."
+    ]
+  },
+  {
+    "id": "build-sites-responsive",
+    "title": "Build Sites · Mobile breakpoint",
+    "app": "Build",
+    "group": "Development states",
+    "tag": "Responsive · inspector",
+    "source": "UX27-BUILD-004,006; Sites / Responsive design, Visual Page Editor and Preview fidelity",
+    "notes": [
+      "The mobile preview is the same canonical Home page and Hero component at a 390px viewport; it is not a copied mobile page.",
+      "Inspector controls distinguish inherited Desktop values from explicit Mobile overrides, with reset-to-inherited actions and clear breakpoint scope.",
+      "Responsive properties update the supported site model and remain undoable. Visual preview and authored breakpoint rules must stay consistent.",
+      "Changing a breakpoint or preview width never publishes the site. Production deployment remains a separate reviewed action."
+    ]
+  },
+  {
+    "id": "build-stacks-freeze",
+    "title": "Build Stacks · Freeze scope",
+    "app": "Build",
+    "group": "Development states",
+    "tag": "Boundary · queued changes",
+    "source": "Stacks / Roots, Freeze and Freeze lifecycle and permissions; UX27-BUILD-005",
+    "notes": [
+      "Freeze marks a specific resource or domain out of scope for a selected descendant scope. Root authority and Freeze state are separate concepts.",
+      "The details view identifies the frozen target, scope, creator, reason, creation revision, optional expiry condition and affected descendants.",
+      "Editing or thawing a Freeze requires the configured management permission. Descendant editing or an AI instruction cannot bypass an active Freeze.",
+      "Expiry or thaw rechecks in-progress work and reconciles queued upstream changes. A thaw request does not silently apply those changes or report completion."
+    ]
+  },
+  {
+    "id": "ai-studio-permissions",
+    "title": "AI Studio · Agent tool permissions",
+    "app": "AI Studio",
+    "group": "Development states",
+    "tag": "Agent draft · policy",
+    "source": "AI Studio / Agent Builder and Tool Builder; UX27-OTHER-013; Home / Permission and trust broker",
+    "notes": [
+      "Tool policy is part of the versioned Agent draft and uses the same definition as its graph. Draft, active revision and test profile remain distinct.",
+      "The selected source scope and action policy are explicit. A source-reading grant does not authorise Forms creation or access to unrelated private sources.",
+      "Simulation and a successful test cannot grant live permission. Activating a definition remains separate from account-level authorisation.",
+      "Every protected action is checked by its owning app and Home broker. Mandatory action approvals cannot be disabled by this builder."
+    ]
+  },
+  {
+    "id": "terminal-command-review",
+    "title": "Terminal · Review an AI command",
+    "app": "Terminal",
+    "group": "Development states",
+    "tag": "AI proposal · local target",
+    "source": "Terminal / AI and Command modes, approval and PTY sessions; UX27-OTHER-012",
+    "notes": [
+      "The proposed command is shown before execution with the actual shell, session, working directory and privilege context. This example is configured to review AI-generated commands.",
+      "Command and AI modes remain visible and distinct. Copying a suggestion to the command field does not execute it; Run once is an explicit separate action.",
+      "The transcript is previous terminal output. The new command is clearly Not executed and has no fabricated exit code or result.",
+      "The terminal adapter receives the approved command for the selected session only. Closing the review leaves unrelated processes and the other pane running."
+    ]
+  },
+  {
+    "id": "link-binder-insert",
+    "title": "Link Binder · Add content",
+    "app": "Link",
+    "group": "Development states",
+    "tag": "Authored objects · references",
+    "source": "TF-L01, TF-L03; TF-X01–02",
+    "notes": [
+      "Binder’s palette adds real authored notes, cards, folders, tabbed binders, stacks, sections, connections and shared content objects.",
+      "The destination is the selected Research container, identified independently from its title. Adding a source creates a reference without moving or duplicating the original file.",
+      "Directly authored content stays within Binder. Referenced source editing is separately permissioned and uses the owning app.",
+      "Insert, remove, reorder and nested navigation preserve stable container/item identities. Closing the palette restores the same overview and focus."
+    ]
+  },
+  {
+    "id": "link-flow-block-edit",
+    "title": "Link Flow · Source section and placement",
+    "app": "Link",
+    "group": "Development states",
+    "tag": "Selected block · live source",
+    "source": "TF-L01–02; TF-X01–02",
+    "notes": [
+      "The selected Flow block retains a canonical source and stable section identity. Live or pinned revision policy is explicit and separate from arrangement.",
+      "Move, duplicate placement and remove operate on the Flow sequence without copying or deleting the source file.",
+      "Flow layout permission and source-edit permission are independent. This state permits arranging the block but presents the source as view-only.",
+      "Continuous reading and one primary scroll remain intact. A source editor opens through its own registered capability and returns to the same Flow position."
+    ]
+  },
+  {
+    "id": "prototype-parameters",
+    "title": "Prototype · Edit a typed input",
+    "app": "Prototype",
+    "group": "Development states",
+    "tag": "Property draft · constraints",
+    "source": "TF-P01–03; TF-X02",
+    "notes": [
+      "The selected slider binds to the stable typed mass property. Name, type, units, default, limits and step are editable model data rather than an isolated visual control.",
+      "The proposed default 2.5 kg is pending; the current preview still uses its existing 2.0 kg input. Applying defaults is a separate authoring action.",
+      "Validation enforces constraints and previews dependent outputs. Renaming or adjusting a property must preserve bindings and undo history.",
+      "Session-local Run inputs remain separate from saved defaults; Reset uses the declared initial state and cannot repeat external effects."
+    ]
+  },
+  {
+    "id": "paths-branch-rule",
+    "title": "Paths · Edit a route condition",
+    "app": "Paths",
+    "group": "Development states",
+    "tag": "Route rule · test input",
+    "source": "TF-H01–03; TF-X02",
+    "notes": [
+      "Each choice has a stable target, human-readable label, explicit condition and defined missing-value behaviour. Graph position does not identify a route.",
+      "This draft condition reads the authored Welcome confidence response. Required type, comparison and threshold are visible, with an always-available alternative route.",
+      "Preview uses disposable test inputs bound to the draft revision. It must not change real reader progress or publish a new authored revision.",
+      "A false condition does not randomly choose another route. Missing values produce the configured recoverable state; validation detects missing targets, unreachable outcomes and uncontrolled loops."
+    ]
+  },
+  {
+    "id": "replay-event-detail",
+    "title": "Replay · Inspect a recorded change",
+    "app": "Replay",
+    "group": "Development states",
+    "tag": "Historical event · source revision",
+    "source": "TF-R01–03; TF-X01–02",
+    "notes": [
+      "The event identifies the captured source, actor, timestamp and historical revision. The rendered checkpoint is read-only and separate from the current source.",
+      "Before/after content belongs to the recorded semantic event and source revision. Seeking or playback reconstructs history; it does not execute the original mutation again.",
+      "Sharing review can exclude or redact captured material without deleting the current original. Access and capture completeness remain explicit.",
+      "Continue from here requests an independent copy through the owning app, preserving the source. Open current file uses the current source’s actual permissions."
+    ]
+  },
+  {
+    "id": "files-organisation",
+    "title": "Files · Sheet and organisation types",
+    "app": "Files",
+    "group": "Organise",
+    "tag": "Sheet · references",
+    "source": "TF-F01–TF-F11; TF-F04 (Sheet); UX27-FILES-001–004",
+    "notes": [
+      "Files owns Folder, Project, Sheet, Tree, Smart, Timeline, Pipeline, Catalogue, Stash and Matrix. The New menu exposes all ten; each keeps the standard Files shell and compatible nesting.",
+      "Every specialised organisation offers an ordinary Contents view without erasing coordinates, sections, membership or metadata. Tree additionally requires editor rights for its visual Tree view.",
+      "A Sheet arranges references, notes, drawings and shapes. Add existing defaults to Add reference; removing an appearance does not delete or move its original.",
+      "The Sheet default File opening setting is Pop-up. In authoring, click selects and the explicit Open action opens; a safe owning editor must disclose that it edits the original. Source permissions remain independent.",
+      "Selection, viewport and view choice belong to the current user. Authored geometry, connector endpoints, shared layout and opening policy persist as Sheet state."
+    ]
+  },
+  {
+    "id": "spaces-experiences",
+    "title": "Spaces · Experiences",
+    "app": "Spaces",
+    "group": "Spaces",
+    "tag": "Story · state",
+    "source": "Spaces / First-party Spaces / Experiences (canonical experience state, checkpoints and branching); UX27-SPACES-001–014; UX27-OTHER-016; PPT slides 8–15 (conversation shell)",
+    "notes": [
+      "The normal Space conversation remains the primary interaction surface. Inventory, evidence and scene panels represent canonical Experience state rather than a separate hidden game runtime.",
+      "Narrated state changes become usable only after the corresponding structured transition commits. The evidence-added event and State revision 18 indicate the same committed transition.",
+      "Checkpoint branching preserves both conversation history and matching Experience-state revision; the original timeline remains intact. Rewind cannot undo already completed external actions.",
+      "Visible state follows the experience and character visibility policy. Private clues, unknown character knowledge and hidden outcomes must not leak through side panels or generated UI.",
+      "Experiences supports open-ended stories, roleplay, simulations and mysteries. Formal contestant, round and scoring state belongs to Play; age-appropriate controls and normal Space permissions remain in force.",
+      "The shared Spaces composer uses the separate conversation-permissions switch and rounded icon-only action stack. It retains the same draft and current experience context."
+    ]
+  },
+  {
+    "id": "appearance",
+    "title": "Appearance · Theme and accent preferences",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "Theme picker",
+    "source": "CUI-PREF-201–205; CUI-THEME-001–004; UX27-SHARED-005; authoritative PPT 1–6",
+    "notes": [
+      "Current picker contains eight built-ins plus Create Theme. Cinematic is handled as a legacy preference, never silently relabelled.",
+      "Authenticated settings are account-wide through Home. Device cache supports offline use without becoming a competing authority.",
+      "Accent modes are None, All Apps and Individual Apps. None retains each app’s specified accent; per-app choices still belong to Home settings.",
+      "Bubble uses watery dimensional controls and an optional click wobble; Western uses an original wood texture with sepia limited to chrome icons; Retro uses terminal-style monochrome panels, monospace chrome and restrained effects. These follow the latest owner refinement. Frosted Glass has no Gaussian/Mica; that material remains reserved for Professional.",
+      "Theme changes preserve active document, selection, scroll position, topology and authored colours. Reduced Motion removes Bubble wobble and Retro active effects; no content or action depends on an animation."
+    ]
+  },
+  {
+    "id": "custom-theme",
+    "title": "Create Theme · Authoring and preview",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "Theme builder",
+    "source": "CUI-PREF-204–205; CUI-PRO-203; CUI inherited themes and typed fallback",
+    "notes": [
+      "Primary, Secondary and Tertiary each independently choose Solid Colour, Gradient or Pattern, with authored transparency and supported blur.",
+      "All seven font roles expose family, weight and size. Button Roundness accepts the full 0–100% range.",
+      "This custom theme inherits Professional, so supported backdrop blur can be authored. Preview does not modify the saved preference until Save.",
+      "An app override recolours only Primary, preserving gradient stops, pattern geometry, transparency and blur; Secondary/Tertiary remain authored.",
+      "Hover Effects and Custom Cursors are later enhancements and are not presented as enabled controls."
+    ]
+  },
+  {
+    "id": "components",
+    "title": "Components · Buttons, inputs and control states",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "Component sheet",
+    "source": "Authoritative PPT slides 1–6; UX27-SHARED-002–008/019; CUI-THEME-004",
+    "notes": [
+      "Primary, Secondary, Tertiary, Negative and Text buttons retain their semantic hierarchy in Professional and Glow. Accent-dependent colours resolve through the selected theme.",
+      "Hover morphs, pressed feedback and focus are distinct. The slide’s bounce becomes a restrained interruptible press response; reduced motion removes movement.",
+      "Five-second destructive hold is one optional pointer path. A keyboard/single-activation review dialog provides an equally explicit accessible confirmation route.",
+      "Input focus, invalid and disabled states remain distinct. Active controls never inherit disabled parent opacity.",
+      "Shared Feedback/Reveal/Reflow/Panel durations are 100/140/180/220 ms draft defaults; input, caret, save truth and permissions do not wait for animation.",
+      "Professional/Glow component examples preserve the deck’s blue/orange palette. Dark labels on bright Glow/red hover fills retain contrast. The six other themes are new design definitions; Professional material always has an opaque fallback."
+    ]
+  },
+  {
+    "id": "states",
+    "title": "States · Recovery and persistence reference",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "State library",
+    "source": "UX27-SHARED-014–019; UX27-BOARD-003–009; TF-02; Files sync/availability rules",
+    "notes": [
+      "Loading, empty, failure, offline, denied and conflict each have distinct copy, icon and meaningful next action.",
+      "Local durability and cloud sync are independent. A pending upload never erases a Saved locally state.",
+      "Recovery retains the existing document and unsaved draft. Retry reconciles the same operation when duplicate effects are possible.",
+      "Permission denial never invents content or switches to another account automatically. Conflict review preserves both versions until resolved."
+    ]
+  },
+  {
+    "id": "theme-bubble",
+    "title": "Bubble · Material and controls",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "Theme showcase",
+    "previewTheme": "bubble",
+    "source": "Owner theme refinement, 28 October 2026; CUI-PREF-201–205; CUI-THEME-001–004; Retro category reference: https://opencode.ai/docs/themes/",
+    "notes": [
+      "Water-like highlights and refracted edge light give controls depth. Gloss is restricted to control surfaces; text retains stable contrast and authored paper colours stay unchanged.",
+      "A click applies one 520 ms damped wobble to the activated control. State and action feedback occur immediately; animation never delays execution, save or permission changes.",
+      "Reduced Motion and the operating-system preference both remove movement. There is no ambient loop, floating layout or full-screen blur.",
+      "Light mode uses pale water surfaces and dark teal text. High contrast omits material decoration; focus and selected states remain separately visible.",
+      "The sample document is authored content: its cream paper, type and ink remain identical under every theme. Theme selection does not edit the document or grant any tool permission."
+    ]
+  },
+  {
+    "id": "theme-western",
+    "title": "Western · Material and controls",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "Theme showcase",
+    "previewTheme": "western",
+    "source": "Owner theme refinement, 28 October 2026; CUI-PREF-201–205; CUI-THEME-001–004; Retro category reference: https://opencode.ai/docs/themes/",
+    "notes": [
+      "The build embeds one original photographic wood texture in --western-wood-image. Host, address and selected chrome use that same asset at preserved aspect ratio with strong readability overlays.",
+      "Sepia applies to chrome icons only. App symbols remain recognisable; source images, authored slide/document content, graphs, ink and Assistant portraits are never filtered.",
+      "Dark mode uses an inlaid dark address bar; light mode uses a pale waxed-wood treatment. Subtle inset edges and grain create material detail without obscuring labels.",
+      "No layout, toolbar tier, control location or navigation topology changes. Reduced Motion remains honoured; wood and the slight vignette are static.",
+      "The sample document is authored content: its cream paper, type and ink remain identical under every theme. Theme selection does not edit the document or grant any tool permission."
+    ]
+  },
+  {
+    "id": "theme-retro",
+    "title": "Retro · Material and controls",
+    "app": "Home",
+    "group": "Design system",
+    "tag": "Theme showcase",
+    "previewTheme": "retro",
+    "source": "Owner theme refinement, 28 October 2026; CUI-PREF-201–205; CUI-THEME-001–004; Retro category reference: https://opencode.ai/docs/themes/",
+    "notes": [
+      "Modern terminal conventions inform the charcoal panels, monochrome hierarchy, monospace chrome, sharp control cells and hard offset shadows. OpenCode’s public theme documentation is a category reference, not a product or branding copy.",
+      "Static scanlines and dither are limited to chrome at low opacity. They do not cover document pixels, charts, authored colour, video frames, images or ink.",
+      "The optional 160 ms active response is a single small text-shadow displacement, without flashing content. Reduced Motion removes it; there is no continuous scan animation.",
+      "App accents and semantic status colours remain distinct. Light mode uses a legible paper-terminal palette; themes retain the same toolbar/container geometry.",
+      "The sample document is authored content: its cream paper, type and ink remain identical under every theme. Theme selection does not edit the document or grant any tool permission."
+    ]
+  },
+  {
+    "id": "settings-account",
+    "title": "Settings · Account & subscription",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Profile · resources",
+    "source": "Home / Settings and Account and subscription surface; Accounts & Subscription / Profile customisation — required and optional fields; Canonical subscription state; Custom resource allocation",
+    "notes": [
+      "Name and Username are the only required profile fields; Icon, Pronouns and Job are optional and clearable. Profile changes preserve CAKE ID, ownership, permissions and entitlements.",
+      "The illustrated custom Balanced configuration uses the specification’s £10 allocation example: 35,000 AI Dust and 250 GB. A tier label does not compute entitlements or resource balances.",
+      "Dust, storage, prices, entitlement thresholds and sessions come from the authoritative account service. Missing site-limit data remains unavailable rather than a fabricated allocation.",
+      "Manage plan, checkout and sensitive billing changes open the trusted authenticated CAKEMODS flow. Session revocation or sign-out does not silently delete local artifacts."
+    ]
+  },
+  {
+    "id": "settings-models",
+    "title": "Settings · AI & models",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Routes · discovery",
+    "source": "Home / Discover; Universal Model Picker / Compact picker and full manager, Ordered Model Routes, Local model lifecycle; Dulche Den / Persistent Memory and Memory Frequency; Background Learning",
+    "notes": [
+      "Discovery, routes and local management share the canonical Dulche model catalogue. Chat, Image and Voice are primary categories; Advanced includes Audio and Video. Discovery links retain provider identity and unknown capability metadata.",
+      "Active and Background routes are distinct. Candidate ordering is considered only after capability, privacy, availability, entitlement and policy filtering; adding a cloud fallback does not authorise remote disclosure.",
+      "Memory Frequency has exactly Never, Sometimes, Often and Always. It affects future autonomous memory creation and does not delete existing memories; Temporary Chats cannot write memories.",
+      "Background Learning is separately opt-in and does not substitute for Persistent Memory or grant cloud access. Local runtime, residency and resource settings remain device scoped.",
+      "Providers and MCP servers expose authentication, capability, permission and health state; a missing or untested connection is never shown as ready."
+    ]
+  },
+  {
+    "id": "settings-permissions",
+    "title": "Settings · Permissions & trust",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Grants · scope",
+    "source": "Home / Permission and trust broker; App APIs and automation permissions; UX27-SHARED-001; platform shared AI-bar access-mode contract; current owner revision (Spaces Conversation permissions)",
+    "notes": [
+      "Show stable caller identity/origin, target apps/actions/scopes, trust level, creation, expiry and last use. Trust can be temporary, 30-day or always, but never bypasses a target’s protected action rules.",
+      "Narrow, revoke, block and unblock operate through the Home broker. Revocation governs future protected actions, with truthful handling of any operation already in flight.",
+      "Spaces exposes Conversation permissions as a scoped control for the current conversation. It cannot broaden the account’s grants or the current Space’s policy.",
+      "Conversation permissions are separate from an editor’s AI Read-only/Write access mode and from document Edit/Suggest/View. Data still requires explicit approval for every AI mutation.",
+      "A changed caller identity or signing/content identity requires re-evaluation; an old friendly name does not silently retain trust."
+    ]
+  },
+  {
+    "id": "settings-apps",
+    "title": "Settings · Apps & updates",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Packages · policy",
+    "source": "Home / Apps surface and package management; UX27-HOST-001, UX27-HOST-009; Home / Service registry and compatibility handshake",
+    "notes": [
+      "Home Apps, Settings and Launcher consume the same package/update service and database. Installed, available, dependency, compatibility and repair states retain stable package identity.",
+      "Install and update use staged signature/integrity checks, dependency resolution and compatible atomic activation. A failed activation preserves the last validated package when rollback is available.",
+      "Download, review and activation are distinct states. Controls show the actual package/version/channel and do not claim an update has completed merely because it was requested.",
+      "Uninstall does not delete user-created documents. Artifact retention or deletion is a separate, explicitly scoped operation."
+    ]
+  },
+  {
+    "id": "settings-storage",
+    "title": "Settings · Storage",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Local · account",
+    "source": "Home / Settings; Accounts & Subscription / Storage usage and Custom resource allocation; Dulche Den / Storage structure and portability; LE-07 / Chat storage, transfer and privacy contract",
+    "notes": [
+      "Local disk usage and account storage are separate measurements and authorities. Installed model files, caches and original documents are distinct categories; model RAM/VRAM is not disk storage.",
+      "Conversation placement Local, Mesh and Cloud is separate from AI/tool execution locality. A new chat defaults to Local unless an eligible alternative was explicitly chosen.",
+      "Moving managed data or changing placement requires an explicit destination and capability checks. Preview affected items; pending replica cleanup must remain visibly pending.",
+      "Caches and search indexes are rebuildable. Cleanup must not remove the only canonical document, Den record, source file or unreadable offline replica.",
+      "Account storage allocation shown here is the specification’s custom Balanced example; usage is illustrative account data. Device paths remain device-local."
+    ]
+  },
+  {
+    "id": "settings-mesh",
+    "title": "Settings · Mesh & devices",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Pairing · sharing",
+    "source": "Home / Mesh; UX27-OTHER-017; Accounts & Subscription / organisation Mesh; Dulche Den / Synchronisation and conflicts",
+    "notes": [
+      "Mesh is a Home feature. Devices use stable authenticated DeviceIDs and explicit pairing; friendly names do not establish identity or authority.",
+      "Sharing is scoped by namespace and selected objects. Pairing does not expose every file, secret, conversation or Assistant; personal and organisation namespaces remain distinct.",
+      "Remote invocation uses advertised typed capabilities and both caller and target permissions. Mesh is not implicit remote desktop, input control or arbitrary execution.",
+      "Offline devices show queued/unavailable state. Revocation blocks future authentication, sync and remote calls without claiming to erase offline replicas or undo completed actions.",
+      "Conflicting revisions are preserved for review; reconnecting does not replay historical requests or completed external effects."
+    ]
+  },
+  {
+    "id": "settings-privacy",
+    "title": "Settings · Privacy",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Processing · data",
+    "source": "Privacy and data-protection baseline / Privacy Ceiling; Home / Universal Model Picker / Fallback privacy and control; Dulche Den / DEN-PRIV-001–008; LE-07 / Chat storage, transfer and privacy contract",
+    "notes": [
+      "Show storage locality separately from AI/tool execution. Local conversation storage does not itself authorise or forbid a separately permissioned remote model request.",
+      "A configured cloud provider or fallback is not consent to transmit private content. Provider, purpose, context categories and permitted route remain inspectable.",
+      "Optional telemetry, diagnostics, personalisation and disclosure have explicit controls with privacy-protective defaults. Credentials and recovery material use secure storage; diagnostic exports redact sensitive content.",
+      "Export, deletion and consent withdrawal have visible scope and lifecycle. Replica/index/cache cleanup is reported truthfully rather than merely hiding the primary record.",
+      "Persistent Memory, Background Learning and permission to disclose their contents are independent controls; temporary-chat memory write suppression cannot be bypassed."
+    ]
+  },
+  {
+    "id": "settings-accessibility",
+    "title": "Settings · Accessibility",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Scale · motion · input",
+    "source": "CUI / Accessibility, focus and keyboard semantics; UX27-SHARED-006–008, UX27-SHARED-019; CUI-PRO-201–204; CUI-PREF-202",
+    "notes": [
+      "Reduced motion, high contrast, scale/zoom and non-colour-only states are framework capabilities shared across compatible apps. Theme changes preserve these preferences.",
+      "Reduced motion replaces unnecessary movement and preserves truthful progress. Focus remains visible through popovers, tool use and theme changes.",
+      "Semantic labels, focus order and keyboard operation follow the shared CUI accessibility tree; inactive controls do not remain hidden keyboard targets.",
+      "The preview demonstrates scale, focus and redundant status communication without changing saved document font sizes or authored content.",
+      "Account-level accessibility preferences and device input/display adjustments keep explicit scopes; unsupported host facilities must remain unavailable with a reason."
+    ]
+  },
+  {
+    "id": "settings-notifications",
+    "title": "Settings · Notifications",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Delivery · activity",
+    "source": "Home / Notifications; Home / Events typed activity contract (owned by Notifications under current owner revision); UX27-SHARED-001, UX27-SHARED-019",
+    "notes": [
+      "Notifications owns the notification centre, history and typed ecosystem activity; the superseded separate Events destination is not shown.",
+      "Each notification/activity item retains stable identity, timestamp, source, category, related entity and typed deep link. Generated digests cannot replace or invent the underlying record.",
+      "Read/unread, dismiss, clear and retention policies operate on canonical records. Desktop delivery is a bridge and does not create a competing notification database.",
+      "Source/category preferences, previews and delivery channels remain separate controls. A notification action cannot bypass target-app permissions or approval requirements.",
+      "Quiet-hours and source controls display effective policy, including any managed restrictions; they cannot silently suppress required security or approval state."
+    ]
+  },
+  {
+    "id": "settings-advanced",
+    "title": "Settings · Advanced",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Services · diagnostics",
+    "source": "Home / Service registry and compatibility handshake; Startup, background lifecycle and recovery; Dulche runtime control; 9to1OS / System Log and crash diagnostics; UX27-HOST-009; Privacy baseline",
+    "notes": [
+      "Shared Home Core services expose real version, compatibility and health states. Required service failure gets a scoped repair path; apps preserve their documents instead of launching competing private services.",
+      "Dulche lifecycle states include Starting, Ready, Degraded, Restarting and Stopped. Closing the visible Home window does not implicitly terminate dependent background work.",
+      "Diagnostics identify component, severity and request/session correlation where available, while redacting secrets and unnecessary personal content. Export is a reviewed local operation; upload is separate.",
+      "Rebuildable indexes/caches may be repaired without discarding canonical files, grants, package identities or Den state. Recovery never silently resets durable settings to regain startup.",
+      "OS-specific resource reclamation and system-log capabilities must be advertised by the actual host. Desktop UI must not pretend unsupported privileged OS controls are available."
+    ]
+  },
+  {
+    "id": "settings-provider",
+    "title": "Settings · Provider access detail",
+    "app": "Home",
+    "group": "Settings",
+    "tag": "Connection draft",
+    "source": "Home / Universal Model Picker / Provider support, Fallback privacy and control; Privacy and data-protection baseline; Dulche MCP / connection, authentication and permission contracts",
+    "notes": [
+      "A provider draft has no verified connectivity, model catalogue or capability state. Test and model discovery use the configured provider adapter and show truthful results.",
+      "Authentication references secure credential storage; UI, logs and exports never expose raw tokens. Endpoint and provider identity are distinct from a friendly connection name.",
+      "Provider availability and permission to disclose context are separate decisions. Optional memory, learning and background-use grants remain off until explicitly authorised.",
+      "Only authorised routes may invoke a provider. Unavailable or denied providers are filtered before route ordering; connection success alone cannot override privacy policy.",
+      "MCP server management additionally exposes transport, declared tools/capabilities and Agent/app assignment. It must not share an endpoint’s credentials or authority merely because names match."
+    ]
+  },
+  {
+    "id": "mobile-chat",
+    "title": "Mobile · Spaces conversation",
+    "app": "Spaces",
+    "group": "Mobile",
+    "tag": "390 × 844",
+    "host": false,
+    "size": {
+      "w": 390,
+      "h": 844
+    },
+    "source": "PPT slides 10–14 adapted to narrow viewport; UX27-SPACES-001–006, 010; UX27-SHARED-003, 010",
+    "notes": [
+      "This is a narrow layout, not a scaled desktop canvas. Space navigation moves to a named drawer while the conversation uses the full width.",
+      "Header shows a model and explicitly labelled effort. Provider allowance remains separate; this local route has no allowance meter.",
+      "This composer is focused and expanded, so Aa and emoji are visible. The separate Conversation permissions icon opens tool scope. The rounded Send/Voice stack is icon-only and labelled accessibly; browsing never activates it. Emoji use the device font.",
+      "Touch controls have a 44-pixel effective target. Composer docking respects the visual viewport, on-screen keyboard and safe area; it must not cover the active caret or send control.",
+      "Opening navigation retains the draft and selected context. Closing it returns focus to the initiating control."
+    ]
+  },
+  {
+    "id": "mobile-study",
+    "title": "Mobile · Study dashboard",
+    "app": "Spaces",
+    "group": "Mobile",
+    "tag": "390 × 844",
+    "host": false,
+    "size": {
+      "w": 390,
+      "h": 844
+    },
+    "source": "LE-08–09; UX27-SPACES-012; older Study slides 24–28 authorised as conceptual inspiration only",
+    "notes": [
+      "Narrow navigation exposes Overview, Subjects, Progress and Bank as touch targets; Planner and the full context sidebar remain available through the menu.",
+      "Subject cards open their subject tracker, whose topic rows open topic-bound practice. These links preserve canonical SubjectID and TopicID.",
+      "Study time is separate from recorded progress. Recommendations retain their evidence and there are at most three across all subjects.",
+      "The composer opens above the on-screen keyboard with a resizable scroll area and safe-area padding. The bottom navigation must not overlap the composer.",
+      "Assignments open the canonical Study Planner burrow; Revision Bank resources open in their owning app."
+    ]
+  },
+  {
+    "id": "mobile-boards",
+    "title": "Mobile · Boards page drawer",
+    "app": "Boards",
+    "group": "Mobile",
+    "tag": "390 × 844",
+    "host": false,
+    "size": {
+      "w": 390,
+      "h": 844
+    },
+    "source": "UX27-BOARD-001–047 topology and nested pages; UX27-SHARED-005, 009–010; UX27-TEST-011–014, 033",
+    "notes": [
+      "The narrow layout collapses the nested page sidebar into a named drawer while preserving sections, hierarchy and stable page identities.",
+      "Boards identity remains top-left. The top toolbar retains Edit/View separately from Locked/Unlocked; they describe different constraints.",
+      "The drawer keeps Add and the user area at the bottom. Add opens page/section choices with a destination preview and never moves into a generic header action.",
+      "Drawer navigation uses 44-pixel effective targets, independent internal scrolling and focus containment. Escape, Close or the scrim restores the previous page and initiating focus.",
+      "Opening the drawer preserves page selection, scroll and any AI draft. Themes change appearance without rearranging this topology."
+    ]
+  },
+  {
+    "id": "mobile-permissions",
+    "title": "Mobile · Conversation permissions",
+    "app": "Spaces",
+    "group": "Mobile",
+    "tag": "390 × 844",
+    "host": false,
+    "size": {
+      "w": 390,
+      "h": 844
+    },
+    "source": "Owner revision: Spaces permissions icon; Home App API permissions; UX27-SPACES-005–007; UX27-SHARED-010",
+    "notes": [
+      "The separate switch-style composer icon opens a bottom sheet on narrow screens. Spaces has no Read-only/Write segmented control; editor AI modes are unaffected.",
+      "The sheet exposes per-tool effective scope and only narrows inherited account grants. Blocked external-send and private-memory access cannot be silently enabled by a conversation override.",
+      "Changes still require exact action approval before execution. Save applies conversation preferences to future requests; it is separate from granting a lasting caller trust level.",
+      "Touch controls and selects have at least 44-pixel targets. The body scrolls independently while Close, Cancel and Save remain reachable; safe-area padding applies at the bottom.",
+      "Dismiss restores the same draft, context and focus. This phone state and the desktop drawer represent the same permission model."
+    ]
+  },
+  {
+    "id": "home-assistants",
+    "title": "Home · Assistants",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Global identities",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "Home is an independent entry point to persistent Assistants. Editors and Spaces reuse the same canonical Assistant identity, portrait, configuration and permanent Main thread.",
+      "Alex, Maya and Rowan repeat the exact authored portraits already used in Spaces. Their identities do not change when a document, conversation, app or task changes.",
+      "The Working with you list is a cross-app view of canonical tasks and document references, not a second task database. Opening a row returns to the owning app and current revision.",
+      "Assistant configuration, memory and tools remain explicit and scoped. An invitation to collaborate does not expose another Assistant’s private memory or unrelated files.",
+      "This current owner decision supersedes any older statement that access must be confined to an Assistants Space; the existing Space conversations remain valid entry points."
+    ]
+  },
+  {
+    "id": "home-specialists",
+    "title": "Home · Specialists",
+    "app": "Home",
+    "group": "Host & Home",
+    "tag": "Configured expertise",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "Specialists are reusable configured expertise with stable definition identities. They remain distinct from persistent Assistants and temporary subagents.",
+      "The same six definitions are available from the current Spaces catalogue and from every editor’s collaborator picker. Scope and capabilities are visible before invitation.",
+      "Invoking a Specialist creates a scoped run/participant under its definition. It does not create a duplicate personal Assistant or a second document.",
+      "Choosing Invite opens a staged context/permission dialog. Merely opening a catalogue, searching or selecting an identity does not run work.",
+      "The identity tile stays recognisable across UI themes. Actual tools, source ACLs, account grants and current document permissions still constrain the effective invitation."
+    ]
+  },
+  {
+    "id": "collaborators-picker",
+    "title": "Present · Invite collaborators",
+    "app": "Present",
+    "group": "Collaboration",
+    "tag": "Assistant & Specialist picker",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "The editor header always exposes the same collaborator entry point. The picker opens over the current app and retains document identity, revision, selection and scroll.",
+      "Assistants and Specialists are searchable in one picker but labelled as different types. The same named portrait/identity appears in Home, the picker, presence and work attribution.",
+      "The invitation explicitly scopes document context, permitted operation mode and optional notes/comments. Other files and private memory are not included by membership.",
+      "Suggest edits is staged here. Work begins only after Invite; applying a proposed change remains a separate review/commit against the current document revision.",
+      "The modal traps focus, supports search/filter and Escape/Cancel, and restores focus to the invoking header control. On narrow screens it becomes one navigable sheet with reachable scope and invite controls."
+    ]
+  },
+  {
+    "id": "write-collaborators-picker",
+    "title": "Write · Invite collaborators",
+    "app": "Write",
+    "group": "Collaboration",
+    "tag": "Assistant & Specialist picker",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "The editor header always exposes the same collaborator entry point. The picker opens over the current app and retains document identity, revision, selection and scroll.",
+      "Assistants and Specialists are searchable in one picker but labelled as different types. The same named portrait/identity appears in Home, the picker, presence and work attribution.",
+      "The invitation explicitly scopes document context, permitted operation mode and optional notes/comments. Other files and private memory are not included by membership.",
+      "Suggest edits is staged here. Work begins only after Invite; applying a proposed change remains a separate review/commit against the current document revision.",
+      "The modal traps focus, supports search/filter and Escape/Cancel, and restores focus to the invoking header control. On narrow screens it becomes one navigable sheet with reachable scope and invite controls."
+    ]
+  },
+  {
+    "id": "present-collaborators",
+    "title": "Present · Working with collaborators",
+    "app": "Present",
+    "group": "Collaboration",
+    "tag": "Presence & scoped work",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "Assistant and Specialist avatars join the document header as actual collaborators, with the same stable identities shown in Home and Spaces. Presence is session UI, not authored document content.",
+      "The work panel attributes each active task, target and proposed change to its participant. Working, paused, stopped, review-ready and committed states remain distinct.",
+      "The owning app keeps the canonical document, object/range identities, revision history and undo. Collaboration does not copy the document into a private Spaces artifact.",
+      "Suggest edits is the granted scope here. Write in the contextual AI bar does not waive range limits, current ACLs or review; a proposal remains unapplied until the user accepts the exact change.",
+      "Pause and Stop are visible for the run and individual workers. Stop cancels future work, retains checkpoints/proposals and never silently reverts already committed edits.",
+      "Remote selections, transient previews and presence overlays do not enter exports. Revision conflicts require revalidation of the exact change and cannot be resolved by unconditional last-writer-wins."
+    ]
+  },
+  {
+    "id": "write-collaborators",
+    "title": "Write · Working with collaborators",
+    "app": "Write",
+    "group": "Collaboration",
+    "tag": "Presence & scoped work",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "Assistant and Specialist avatars join the document header as actual collaborators, with the same stable identities shown in Home and Spaces. Presence is session UI, not authored document content.",
+      "The work panel attributes each active task, target and proposed change to its participant. Working, paused, stopped, review-ready and committed states remain distinct.",
+      "The owning app keeps the canonical document, object/range identities, revision history and undo. Collaboration does not copy the document into a private Spaces artifact.",
+      "Suggest edits is the granted scope here. Write in the contextual AI bar does not waive range limits, current ACLs or review; a proposal remains unapplied until the user accepts the exact change.",
+      "Pause and Stop are visible for the run and individual workers. Stop cancels future work, retains checkpoints/proposals and never silently reverts already committed edits.",
+      "Remote selections, transient previews and presence overlays do not enter exports. Revision conflicts require revalidation of the exact change and cannot be resolved by unconditional last-writer-wins."
+    ]
+  },
+  {
+    "id": "collaboration-review",
+    "title": "Present · Review an AI change",
+    "app": "Present",
+    "group": "Collaboration",
+    "tag": "Scoped review",
+    "source": "Owner revision 28 October: Assistants and Specialists are global identities available from Home and every editor; later steering supersedes Space-only placement; canonical identity, document ownership, Task/Run and permission contracts",
+    "notes": [
+      "The proposal identifies its author, exact slide/object range, current value and proposed value. Opening review does not apply or authorise it.",
+      "Apply this change commits only the displayed operation to the owning document after revision/scope validation, as one undoable transaction.",
+      "Keep original rejects this proposal without stopping unrelated authorised work or discarding the participant’s durable task record.",
+      "Formatting and surrounding content remain unchanged unless the reviewed operation explicitly includes them. A conflict must refresh the proposal instead of silently overwriting another collaborator.",
+      "The local prototype can demonstrate the accepted visual state; it does not claim to implement live provider execution, shared persistence or document-engine acceptance."
+    ]
+  }
+]

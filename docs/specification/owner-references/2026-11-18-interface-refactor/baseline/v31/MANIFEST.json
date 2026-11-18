@@ -1,0 +1,231 @@
+{
+  "package": "9to1_Qwen_Handoff_v3.1",
+  "version": "3.1",
+  "prepared_date": "2026-11-01",
+  "source_files": [
+    {
+      "name": "9to1_Development_Specification_v3(2).docx",
+      "size_bytes": 21185246,
+      "sha256": "88d1956e889fcda63cb457468e0059efa0a6306be37e94a8dbbcaa13842a0d46"
+    },
+    {
+      "name": "9to1_Interface_Atlas(2).html",
+      "size_bytes": 1560225,
+      "sha256": "93f0cddd50a7bde109168611878bb951021724037f29926519ef50d5858239ec"
+    },
+    {
+      "name": "ThemeRefs.zip",
+      "size_bytes": 18974123,
+      "sha256": "e88fb828620217dfa0401703c6ea6643585468cd45bc56ae33a408adcd40d024"
+    }
+  ],
+  "files": [
+    {
+      "path": "9to1_Development_Specification_v3.1.docx",
+      "size_bytes": 21522855,
+      "sha256": "32468a9822162ff5bd84dd2f4f4ca462ec73fdad79444b600a0e75a5bf16838f"
+    },
+    {
+      "path": "9to1_Interface_Atlas_v3.1.html",
+      "size_bytes": 3510075,
+      "sha256": "eb99b9d4ea87eedbcd6d189bccef13c0b7748d4d72156212bb5416d655aea708"
+    },
+    {
+      "path": "BOARDS_ACCEPTANCE.md",
+      "size_bytes": 3565,
+      "sha256": "dcb34d08c6a3024d92e070b507fb04ff7af99114234895dcd1fdc12fdcf5285a"
+    },
+    {
+      "path": "KICKOFF.txt",
+      "size_bytes": 3762,
+      "sha256": "bc3da7edf6cb0b8326191fc876988699242d611d688153c66d3179c92513c619"
+    },
+    {
+      "path": "OWNER_DECISIONS_v3.1.md",
+      "size_bytes": 8346,
+      "sha256": "40cede375b7e1c804414415084e0d38378ae96fc7f60ab966dbae9a22d6bc4b9"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 1894,
+      "sha256": "1d8bf8e47c94c0b9bf8f081b20e85aef88c5dae0b3dcf9708c3cad7c714fd88b"
+    },
+    {
+      "path": "START_QWEN.md",
+      "size_bytes": 9786,
+      "sha256": "6e443d7518bb6a5462488b30aeb094741d3de6de0e2297d003bdfbb878e48f76"
+    },
+    {
+      "path": "THEME_REFERENCE_INDEX.md",
+      "size_bytes": 4731,
+      "sha256": "dfe79dbbe9d57df6c551af2fb8e3e653fa26ab2ad47950daab38bca4aeb51128"
+    },
+    {
+      "path": "ThemeRefs/Bubble/Pasted image (2).png",
+      "size_bytes": 808172,
+      "sha256": "2835dea1442f2c1cfb5ce97d90c979b7a3727cf02bdd5ca4284ba8931511de1c"
+    },
+    {
+      "path": "ThemeRefs/Bubble/Pasted image (3).png",
+      "size_bytes": 183560,
+      "sha256": "0cf23ec68c7ce1db81cf1eee69b36882f6e996dacc7d3d09314b1d023fe042d8"
+    },
+    {
+      "path": "ThemeRefs/Bubble/Pasted image (4).png",
+      "size_bytes": 379795,
+      "sha256": "6a6ca43b9b4e7e84ec865f7d2af4f6b13e97438340fc326d7e62d204b84fac14"
+    },
+    {
+      "path": "ThemeRefs/Bubble/Pasted image.png",
+      "size_bytes": 2117997,
+      "sha256": "a07c303c27b7eaa7f94ba8b44a534ee5d2b4f73b1fd99c27b76b976ec554d4ba"
+    },
+    {
+      "path": "ThemeRefs/Frost/Pasted image (2).png",
+      "size_bytes": 331056,
+      "sha256": "62f35c3005cf7423f8fc2c2d5b1ed384a2d738681313724c2f5876f97d4cfc28"
+    },
+    {
+      "path": "ThemeRefs/Frost/Pasted image.png",
+      "size_bytes": 3570406,
+      "sha256": "9b81cef3ea74c994dafdbf1b4f2e630d3df3fbbe3b50ffaae00bc861de90ecb4"
+    },
+    {
+      "path": "ThemeRefs/Glow/Pasted image (2).png",
+      "size_bytes": 242500,
+      "sha256": "37795283ea67a1037be5e80e9680761cb9fc3ff2840fded66046264692c2c81f"
+    },
+    {
+      "path": "ThemeRefs/Glow/Pasted image.png",
+      "size_bytes": 461123,
+      "sha256": "cb9e7fecc7e1dd09bb27b0a94ddd9be074d2c407fe1c4fc6451d2041258f20a3"
+    },
+    {
+      "path": "ThemeRefs/Industrial/Pasted image (2).png",
+      "size_bytes": 603460,
+      "sha256": "b2a37ef965ff054670556f107d62bc4068906d7f9e064625651a3c67b3efde6a"
+    },
+    {
+      "path": "ThemeRefs/Industrial/Pasted image (3).png",
+      "size_bytes": 280336,
+      "sha256": "aa9238b612844d2a5674bd78a0ff27ed15bc6079c874f9f4b1f71ea7236dac65"
+    },
+    {
+      "path": "ThemeRefs/Industrial/Pasted image.png",
+      "size_bytes": 197327,
+      "sha256": "77d3b269a2e8f314b67f435c5518a7183a4dbd0966d40b8b6f5c64f4e05b60ec"
+    },
+    {
+      "path": "ThemeRefs/Playful/Pasted image (2).png",
+      "size_bytes": 2027731,
+      "sha256": "125d96cfbb747f1a7c0d5626b2fbcdf4e5578f65a9b7d50e5558509dcf4c5c68"
+    },
+    {
+      "path": "ThemeRefs/Playful/Pasted image (3).png",
+      "size_bytes": 796840,
+      "sha256": "cd1d060c25cfdd3be474d74b2c2897e8e7004b3b94bd4528ff46e6dd275347af"
+    },
+    {
+      "path": "ThemeRefs/Playful/Pasted image (4).png",
+      "size_bytes": 187905,
+      "sha256": "b7fedff6c4ee5cc7a2c24311418d7eb0b14cbb29a3082bb1fbed1830f24b2f23"
+    },
+    {
+      "path": "ThemeRefs/Playful/Pasted image.png",
+      "size_bytes": 623683,
+      "sha256": "28017f4c3fdb1cec5679b13b9deefc56b3bba5ba52f5832b731e7845db745825"
+    },
+    {
+      "path": "ThemeRefs/Professional/Pasted image (2).png",
+      "size_bytes": 193507,
+      "sha256": "c973509a482eac07214b7d8a6827d314faf4cb96c077b172ca497fd1513fd26c"
+    },
+    {
+      "path": "ThemeRefs/Professional/Pasted image (3).png",
+      "size_bytes": 231496,
+      "sha256": "4d2dd0ed0e64851a4f6cdcdd9aa053ec52dd07e4eb1eb4b5cdc1cc1ed883a298"
+    },
+    {
+      "path": "ThemeRefs/Professional/Pasted image.png",
+      "size_bytes": 108113,
+      "sha256": "75290dd8aec7328a06f5f53d71fb618a31db7826e2008f323f23862fa0e4ff9c"
+    },
+    {
+      "path": "ThemeRefs/Retro/Pasted image (2).png",
+      "size_bytes": 71420,
+      "sha256": "fd0a35ee7015560bd30ac1cb256372302a1b7bb2f9dd7333b269a121c9efe0df"
+    },
+    {
+      "path": "ThemeRefs/Retro/Pasted image.png",
+      "size_bytes": 879178,
+      "sha256": "1c024e4df46b136174c2a9141c25cd2d890f397cfc28db2bb5a6b5ecd419e1dd"
+    },
+    {
+      "path": "ThemeRefs/Snug/Pasted image.png",
+      "size_bytes": 321287,
+      "sha256": "d47a4542950bf03097c500cfe925aecadad1207ff8f1ade78fa096dcd6413bb2"
+    },
+    {
+      "path": "ThemeRefs/Synthwave/Pasted image (2).png",
+      "size_bytes": 285366,
+      "sha256": "bc6663b7cf660dae5bd10fba8ce12e10d9b72b46f19611d8701c05a6bd909c0c"
+    },
+    {
+      "path": "ThemeRefs/Synthwave/Pasted image (3).png",
+      "size_bytes": 2534672,
+      "sha256": "ce001d78b7ec32b52d5a2bc0e18370bff9d4312227d105482ac1465a3a4b0140"
+    },
+    {
+      "path": "ThemeRefs/Synthwave/Pasted image (4).png",
+      "size_bytes": 600785,
+      "sha256": "7b712e2a9866cb62f26688371a1e08bf37e8f9c8ea90c89147b83ab5252599dc"
+    },
+    {
+      "path": "ThemeRefs/Synthwave/Pasted image.png",
+      "size_bytes": 412356,
+      "sha256": "bfcde035a9146ea463a724a57ac0ece370e03979bbf0a2f7179a64b3431649b2"
+    },
+    {
+      "path": "ThemeRefs/Western/Pasted image (2).png",
+      "size_bytes": 240835,
+      "sha256": "596c11ffe2197716a9179a25c6ae6d56b03f83952a451821843d9cca4d9d21aa"
+    },
+    {
+      "path": "ThemeRefs/Western/Pasted image.png",
+      "size_bytes": 514242,
+      "sha256": "8363b5618b67fb67708a83fc84ca69ebb430229133f36904db8f376aea22ca4a"
+    },
+    {
+      "path": "reference/atlas_checks.json",
+      "size_bytes": 1053,
+      "sha256": "98ac2739e330a05fcf27cada40c309f731acf5b8776fb2061f9e092cebcd36e7"
+    },
+    {
+      "path": "reference/boards_baseline_excerpt.md",
+      "size_bytes": 12841,
+      "sha256": "57eb1e5a0bda2c7c9b4efafb4f0cdc5625227963bb7ecadc314e91bc89c686f9"
+    },
+    {
+      "path": "reference/cui_baseline_excerpt.md",
+      "size_bytes": 16452,
+      "sha256": "397e10632d19ddc5110ca7a9d1480a4453d3efa6b4e3a8f5275d2e543e112f45"
+    },
+    {
+      "path": "reference/spec_amendment_history.json",
+      "size_bytes": 4041,
+      "sha256": "ca1db6b0e1460957d97c57d4968d5fa71603f4c0690b30192a8d3145dd1806eb"
+    },
+    {
+      "path": "reference/theme_index.json",
+      "size_bytes": 3899,
+      "sha256": "0474796621fade84d71cbf9d8ee76bf225a5157d6cf36e7ad10a77541ac0d791"
+    },
+    {
+      "path": "reference/validation_scope.json",
+      "size_bytes": 492,
+      "sha256": "b51828e7058f9a29e583fb1b4c7100ec3127676ffe14aaafc107f5b8a5706bf2"
+    }
+  ],
+  "theme_pngs_verified_byte_identical": 27,
+  "scope": "Reference artifacts and worker instructions only. No native repository pull, build, acceptance, commit or push was performed. Hashes attest file identity, not product correctness."
+}

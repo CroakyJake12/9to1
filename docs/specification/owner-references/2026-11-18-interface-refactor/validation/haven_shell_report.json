@@ -1,0 +1,1289 @@
+{
+  "screens": 182,
+  "consolidated": 109,
+  "settings": 19,
+  "checkedControls": 402,
+  "mountErrors": [],
+  "guards": 6,
+  "savedCustomContent": true,
+  "savedInnerHTMLRehydrated": true,
+  "idempotent": true,
+  "hostAddressModelTabRoutesAndIconsPreserved": true,
+  "detailsClose": true,
+  "screensDetail": [
+    {
+      "id": "home-apps",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-dashboard",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-models",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-library",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-mesh",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "host-newtab",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "host-browser",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "account",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "onboarding",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-models-installed",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-model-details",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "host-newtab-customise",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "host-newtab-widgets",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "host-model-picker",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "host-notifications",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-launch",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "write-launch",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "present-launch",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "canvas-launch",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-ink",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-add",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-typing",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-insert",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-editor",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-context",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-recovery",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "write-editor",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 6
+    },
+    {
+      "id": "write-continuous",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 6
+    },
+    {
+      "id": "write-review",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 6
+    },
+    {
+      "id": "present-editor",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "present-selection",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "present-insert",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "present-transitions",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "present-actions",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "present-presenter",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "present-shape-builder",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "canvas-shape-builder",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "canvas-editor",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "canvas-ai",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "canvas-pen-presets",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "canvas-selection",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "canvas-insert",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-permissions",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-emoji",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-chat",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-compose",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-attachments",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-running",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-specialists",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-assistants",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-assistant-alex",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-assistant-maya",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-assistant-rowan",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-study",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "study-subject",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "study-topic",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "study-session",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "cards-study",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "cards-review",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 5
+    },
+    {
+      "id": "cards-edit",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 5
+    },
+    {
+      "id": "spaces-research",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-shopping",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-manage",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-translate",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-generative-ui",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-thinking",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-subagents",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-subagent-detail",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-present-working",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-canvas-working",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-generated-files",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "spaces-export-recovery",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "data",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "data-approval",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "files",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "planner",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "automations",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "forms",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "picture",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "wave",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "motion",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "connect-mail",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "connect-messages",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 5
+    },
+    {
+      "id": "maps",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "shelf",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "vision-voice",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "play",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "files-grid",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "files-context",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "planner-event",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "planner-agenda",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "data-formula",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "data-chart",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "forms-preview",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "picture-mask",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "picture-export",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "wave-clip",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "wave-stems",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "motion-transition",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "motion-export",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "automation-trigger",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "connect-compose",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "connect-schedule",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "maps-route-options",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "shelf-add",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "vision-session-sources",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "build-code",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "build-sites",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "build-stacks",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "ai-studio",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "terminal",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "mini-computer",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "games",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "link-flow",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "link-binder",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "prototype",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "paths",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "replay",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "variants",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "admin",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "os-go",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "launcher",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "build-code-diagnostics",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "build-sites-responsive",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "build-stacks-freeze",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "ai-studio-permissions",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "terminal-command-review",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "link-binder-insert",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "link-flow-block-edit",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "prototype-parameters",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "paths-branch-rule",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "replay-event-detail",
+      "consolidated": true,
+      "controls": 7,
+      "settings": false,
+      "tools": 4
+    },
+    {
+      "id": "files-organisation",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "spaces-experiences",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "appearance",
+      "consolidated": true,
+      "controls": 5,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "custom-theme",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "components",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "states",
+      "consolidated": true,
+      "controls": 4,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-bubble",
+      "consolidated": true,
+      "controls": 6,
+      "settings": true,
+      "tools": 1
+    },
+    {
+      "id": "theme-western",
+      "consolidated": true,
+      "controls": 6,
+      "settings": true,
+      "tools": 1
+    },
+    {
+      "id": "theme-retro",
+      "consolidated": true,
+      "controls": 6,
+      "settings": true,
+      "tools": 1
+    },
+    {
+      "id": "settings-account",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-models",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-permissions",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-apps",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-storage",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-mesh",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-privacy",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-accessibility",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-notifications",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-advanced",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "settings-provider",
+      "consolidated": true,
+      "controls": 4,
+      "settings": true,
+      "tools": 0
+    },
+    {
+      "id": "mobile-chat",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "mobile-study",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "mobile-boards",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "mobile-permissions",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-assistants",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "home-specialists",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "collaborators-picker",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "write-collaborators-picker",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 6
+    },
+    {
+      "id": "present-collaborators",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "write-collaborators",
+      "consolidated": true,
+      "controls": 8,
+      "settings": false,
+      "tools": 6
+    },
+    {
+      "id": "collaboration-review",
+      "consolidated": true,
+      "controls": 6,
+      "settings": false,
+      "tools": 3
+    },
+    {
+      "id": "boards-file-menu",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-alignment",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-list-options",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "boards-properties",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "theme-reference-professional",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-glow",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-playful",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-frost",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-bubble",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-industrial",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-retro",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-western",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-synthwave",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-reference-snug",
+      "consolidated": true,
+      "controls": 5,
+      "settings": false,
+      "tools": 2
+    },
+    {
+      "id": "theme-glow",
+      "consolidated": true,
+      "controls": 6,
+      "settings": true,
+      "tools": 1
+    },
+    {
+      "id": "theme-playful",
+      "consolidated": true,
+      "controls": 6,
+      "settings": true,
+      "tools": 1
+    },
+    {
+      "id": "theme-frosted",
+      "consolidated": true,
+      "controls": 6,
+      "settings": true,
+      "tools": 1
+    },
+    {
+      "id": "home-explore",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    },
+    {
+      "id": "appearance-palette",
+      "consolidated": false,
+      "controls": 0,
+      "settings": false,
+      "tools": 0
+    }
+  ]
+}

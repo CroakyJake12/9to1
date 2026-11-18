@@ -1,0 +1,14 @@
+{
+  "nativeRevision": "AHj4eMRx4s8O1mVNjJXwKeQefmbpHlET81TP7V9gaBntoBWfvMw_8AXX0dZ635M4Fd1nH9ojmNPP5kDRl_z8h8pLOWVQwICobUioZZu_ePU",
+  "onlyAuthorizedInstructionEdits": true,
+  "starterPromptMatchesNativeDoc": true,
+  "requirementDefinitions": 332,
+  "newRequirements": [
+    "HANDOFF-007",
+    "HANDOFF-008",
+    "HANDOFF-009"
+  ],
+  "atlasChanged": false,
+  "unmentionedCompatibleFeaturesPreserved": true,
+  "liveRuntimeVerification": false
+}

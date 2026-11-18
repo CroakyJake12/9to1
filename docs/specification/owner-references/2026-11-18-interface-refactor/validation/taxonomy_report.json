@@ -1,0 +1,659 @@
+{
+  "canonicalDestinations": 62,
+  "successful": 62,
+  "errors": [],
+  "badRoutes": [],
+  "duplicateIds": [],
+  "missingSources": [],
+  "reports": [
+    {
+      "route": "settings-general",
+      "label": "General",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "General"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-appearance",
+      "label": "Appearance",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Appearance"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "appearance",
+      "label": "Theme",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Theme"
+      ],
+      "settingControls": 0
+    },
+    {
+      "route": "settings-theme-options",
+      "label": "Theme Options",
+      "scope": "Global",
+      "sources": [
+        "appearance",
+        "appearance"
+      ],
+      "headings": [
+        "Theme Options"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-layout",
+      "label": "Layout",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Layout"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-accessibility",
+      "label": "Accessibility",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Accessibility"
+      ],
+      "settingControls": 9
+    },
+    {
+      "route": "settings-ai",
+      "label": "AI",
+      "scope": "Global",
+      "sources": [
+        "settings-models",
+        "settings-models",
+        "settings-models"
+      ],
+      "headings": [
+        "AI"
+      ],
+      "settingControls": 12
+    },
+    {
+      "route": "settings-personalisation",
+      "label": "Personalisation",
+      "scope": "Global",
+      "sources": [
+        "settings-models"
+      ],
+      "headings": [
+        "Personalisation"
+      ],
+      "settingControls": 7
+    },
+    {
+      "route": "settings-plugins",
+      "label": "Plugins/MCPs",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Plugins/MCPs"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-skills",
+      "label": "Skills",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Skills"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-providers",
+      "label": "Providers",
+      "scope": "Global",
+      "sources": [
+        "settings-models"
+      ],
+      "headings": [
+        "Providers"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-voice",
+      "label": "Voice",
+      "scope": "Global",
+      "sources": [
+        "settings-models"
+      ],
+      "headings": [
+        "Voice"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-security",
+      "label": "Security & Privacy",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Security & Privacy"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-security-general",
+      "label": "General",
+      "scope": "Global",
+      "sources": [
+        "settings-account"
+      ],
+      "headings": [
+        "General"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-permissions",
+      "label": "Permissions",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Permissions"
+      ],
+      "settingControls": 10
+    },
+    {
+      "route": "settings-sandbox",
+      "label": "Sandbox",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Sandbox"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-privacy",
+      "label": "Privacy",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Privacy"
+      ],
+      "settingControls": 11
+    },
+    {
+      "route": "settings-account",
+      "label": "Account",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Account"
+      ],
+      "settingControls": 10
+    },
+    {
+      "route": "settings-profile",
+      "label": "Profile",
+      "scope": "Global",
+      "sources": [
+        "settings-account"
+      ],
+      "headings": [
+        "Profile"
+      ],
+      "settingControls": 7
+    },
+    {
+      "route": "settings-subscriptions",
+      "label": "Subscriptions",
+      "scope": "Global",
+      "sources": [
+        "settings-account",
+        "settings-account"
+      ],
+      "headings": [
+        "Subscriptions"
+      ],
+      "settingControls": 1
+    },
+    {
+      "route": "settings-account-storage",
+      "label": "Storage",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Storage"
+      ],
+      "settingControls": 1
+    },
+    {
+      "route": "settings-mesh",
+      "label": "Mesh",
+      "scope": "Global",
+      "sources": [],
+      "headings": [
+        "Mesh"
+      ],
+      "settingControls": 7
+    },
+    {
+      "route": "settings-local-general",
+      "label": "General",
+      "scope": "This device",
+      "sources": [
+        "settings-advanced"
+      ],
+      "headings": [
+        "General"
+      ],
+      "settingControls": 8
+    },
+    {
+      "route": "settings-apps",
+      "label": "Installed Apps",
+      "scope": "This device",
+      "sources": [],
+      "headings": [
+        "Installed Apps"
+      ],
+      "settingControls": 13
+    },
+    {
+      "route": "settings-installed-models",
+      "label": "Installed Models",
+      "scope": "This device",
+      "sources": [
+        "settings-models",
+        "settings-advanced"
+      ],
+      "headings": [
+        "Installed Models"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-notifications",
+      "label": "Notifications",
+      "scope": "This device",
+      "sources": [],
+      "headings": [
+        "Notifications"
+      ],
+      "settingControls": 22
+    },
+    {
+      "route": "settings-haven-general",
+      "label": "General",
+      "scope": "Haven",
+      "sources": [],
+      "headings": [
+        "General"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-haven-bookmarks",
+      "label": "Bookmarks",
+      "scope": "Haven",
+      "sources": [],
+      "headings": [
+        "Bookmarks"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-haven-history",
+      "label": "History",
+      "scope": "Haven",
+      "sources": [],
+      "headings": [
+        "History"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-haven-shortcuts",
+      "label": "Keyboard Shortcuts",
+      "scope": "Haven",
+      "sources": [
+        "settings-accessibility"
+      ],
+      "headings": [
+        "Keyboard Shortcuts"
+      ],
+      "settingControls": 1
+    },
+    {
+      "route": "settings-haven-performance",
+      "label": "Performance",
+      "scope": "Haven",
+      "sources": [],
+      "headings": [
+        "Performance"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-apps-shared",
+      "label": "Shared settings",
+      "scope": "App",
+      "sources": [
+        "settings-permissions"
+      ],
+      "headings": [
+        "Shared settings"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-spaces",
+      "label": "Spaces",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Spaces"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-boards",
+      "label": "Boards",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Boards"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-write",
+      "label": "Write",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Write"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-present",
+      "label": "Present",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Present"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-canvas",
+      "label": "Canvas",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Canvas"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-build",
+      "label": "Build",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Build"
+      ],
+      "settingControls": 6
+    },
+    {
+      "route": "settings-app-data",
+      "label": "Data",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Data"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-files",
+      "label": "Files",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Files"
+      ],
+      "settingControls": 6
+    },
+    {
+      "route": "settings-app-forms",
+      "label": "Forms",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Forms"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-planner",
+      "label": "Planner",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Planner"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-automations",
+      "label": "Automations",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Automations"
+      ],
+      "settingControls": 5
+    },
+    {
+      "route": "settings-app-picture",
+      "label": "Picture",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Picture"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-wave",
+      "label": "Wave",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Wave"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-motion",
+      "label": "Motion",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Motion"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-connect",
+      "label": "Connect",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Connect"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-maps",
+      "label": "Maps",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Maps"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-shelf",
+      "label": "Shelf",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Shelf"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-ai-studio",
+      "label": "AI Studio",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "AI Studio"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-terminal",
+      "label": "Terminal",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Terminal"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-vision-and-voice",
+      "label": "Vision & Voice",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Vision & Voice"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-cards",
+      "label": "Cards",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Cards"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-play",
+      "label": "Play",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Play"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-app-games",
+      "label": "Games",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Games"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-app-link",
+      "label": "Link",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Link"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-prototype",
+      "label": "Prototype",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Prototype"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-paths",
+      "label": "Paths",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Paths"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-replay",
+      "label": "Replay",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Replay"
+      ],
+      "settingControls": 4
+    },
+    {
+      "route": "settings-app-mini-computer",
+      "label": "Mini Computer",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Mini Computer"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-app-admin",
+      "label": "Admin",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Admin"
+      ],
+      "settingControls": 3
+    },
+    {
+      "route": "settings-app-launcher",
+      "label": "Launcher",
+      "scope": "App",
+      "sources": [],
+      "headings": [
+        "Launcher"
+      ],
+      "settingControls": 3
+    }
+  ]
+}

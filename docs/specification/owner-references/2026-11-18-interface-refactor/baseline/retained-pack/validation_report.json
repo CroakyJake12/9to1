@@ -1,0 +1,1402 @@
+{
+  "passed": true,
+  "checks": 347,
+  "failed_checks": [],
+  "source_words": 249790,
+  "source_blocks": 3082,
+  "modules": 62,
+  "screens": 163,
+  "unique_current_requirement_ids": 781,
+  "technical_chunks": 133,
+  "source_accounting_is_not_runtime_acceptance": true,
+  "details": [
+    {
+      "check": "Module identities are unique and match the authored roster",
+      "pass": true
+    },
+    {
+      "check": "Source block identities are unique",
+      "pass": true
+    },
+    {
+      "check": "v2: archive digest matches manifest",
+      "pass": true
+    },
+    {
+      "check": "v2: every nonblank source line is covered exactly once",
+      "pass": true
+    },
+    {
+      "check": "v2: every original source block matches its archived source lines",
+      "pass": true
+    },
+    {
+      "check": "v2: source/block/manifest word counts agree",
+      "pass": true
+    },
+    {
+      "check": "annex: archive digest matches manifest",
+      "pass": true
+    },
+    {
+      "check": "annex: every nonblank source line is covered exactly once",
+      "pass": true
+    },
+    {
+      "check": "annex: every original source block matches its archived source lines",
+      "pass": true
+    },
+    {
+      "check": "annex: source/block/manifest word counts agree",
+      "pass": true
+    },
+    {
+      "check": "companion: archive digest matches manifest",
+      "pass": true
+    },
+    {
+      "check": "companion: every nonblank source line is covered exactly once",
+      "pass": true
+    },
+    {
+      "check": "companion: every original source block matches its archived source lines",
+      "pass": true
+    },
+    {
+      "check": "companion: source/block/manifest word counts agree",
+      "pass": true
+    },
+    {
+      "check": "study: archive digest matches manifest",
+      "pass": true
+    },
+    {
+      "check": "study: every nonblank source line is covered exactly once",
+      "pass": true
+    },
+    {
+      "check": "study: every original source block matches its archived source lines",
+      "pass": true
+    },
+    {
+      "check": "study: source/block/manifest word counts agree",
+      "pass": true
+    },
+    {
+      "check": "scalability: archive digest matches manifest",
+      "pass": true
+    },
+    {
+      "check": "scalability: every nonblank source line is covered exactly once",
+      "pass": true
+    },
+    {
+      "check": "scalability: every original source block matches its archived source lines",
+      "pass": true
+    },
+    {
+      "check": "scalability: source/block/manifest word counts agree",
+      "pass": true
+    },
+    {
+      "check": "authority: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "authority: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "authority: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "authority-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "authority-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "authority-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "authority-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "platform: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "platform: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "platform: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "platform-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "platform-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "platform-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "platform-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cui: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "cui: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "cui: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "cui-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cui-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cui-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cui-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "identity: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "identity: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "identity: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "identity-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "identity-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "privacy: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "privacy: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "privacy: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "privacy-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "permissions: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "permissions: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "permissions: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "permissions-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "persistence: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "persistence: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "persistence: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "persistence-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "productivity-engine: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "productivity-engine: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "productivity-engine: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "productivity-engine-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "node-editor: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "node-editor: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "node-editor: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "node-editor-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "shared-ai: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "shared-ai: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "shared-ai: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "shared-ai-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "dulche: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "dulche: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "dulche: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "dulche-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "dulche-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "dulche-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "dulche-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "models: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "models: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "models: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "models-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "models-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "models-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "den-memory: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "den-memory: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "den-memory: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "den-memory-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "den-memory-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "subagents: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "subagents: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "subagents: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "subagents-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "assistants: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "assistants: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "assistants: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "assistants-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "assistants-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "assistants-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "generative-ui: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "generative-ui: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "generative-ui: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "generative-ui-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "plugins-mcp: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "plugins-mcp: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "plugins-mcp: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "plugins-mcp-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "integrations: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "integrations: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "integrations: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "integrations-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "go-search: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "go-search: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "go-search: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "go-search-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cloud-services: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "cloud-services: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "cloud-services: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "cloud-services-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cloud-services-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cloud-services-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "home: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "home: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "home: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "home-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "home-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "settings: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "settings: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "settings: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "settings-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "notifications: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "notifications: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "notifications: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "notifications-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "mesh: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "mesh: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "mesh: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "mesh-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "browse: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "browse: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "browse: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "browse-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "browse-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "browse-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "admin: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "admin: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "admin: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "admin-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "files: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "files: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "files: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "files-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "files-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "files-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "files-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "connect: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "connect: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "connect: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "connect-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "connect-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "connect-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "spaces: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "spaces: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "spaces-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-05: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-06: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-07: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-08: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-09: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-10: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "spaces-11: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "write: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "write: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "write: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "write-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "write-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "write-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "write-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "present: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "present: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "present: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "present-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "present-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "present-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "boards: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "boards: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "boards-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards-04: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards-05: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards-06: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "boards-07: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "canvas: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "canvas: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "canvas: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "canvas-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "canvas-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "canvas-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "data: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "data: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "data: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "data-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "data-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "data-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "planner: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "planner: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "planner: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "planner-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "planner-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "automations: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "automations: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "automations: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "automations-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "automations-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "automations-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "forms: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "forms: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "forms: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "forms-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "forms-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "cards: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "cards: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "cards: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "cards-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "picture: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "picture: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "picture: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "picture-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "picture-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "wave: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "wave: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "wave: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "wave-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "wave-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "motion: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "motion: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "motion: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "motion-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "motion-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-code: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "build-code: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "build-code: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "build-code-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-code-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-code-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-sites: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "build-sites: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "build-sites: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "build-sites-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-stacks: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "build-stacks: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "build-stacks: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "build-stacks-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-stacks-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "build-stacks-03: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "ai-studio: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "ai-studio: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "ai-studio: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "ai-studio-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "ai-studio-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "terminal: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "terminal: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "terminal: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "terminal-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "terminal-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "mini-computer: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "mini-computer: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "mini-computer: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "mini-computer-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "games: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "games: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "games: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "games-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "games-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "play: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "play: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "play: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "play-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "vision-voice: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "vision-voice: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "vision-voice: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "vision-voice-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "vision-voice-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "dulche-translate: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "dulche-translate: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "dulche-translate: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "dulche-translate-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "maps: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "maps: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "maps: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "maps-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "maps-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "shelf: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "shelf: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "shelf: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "shelf-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "launcher: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "launcher: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "launcher: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "launcher-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "os: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "os: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "os: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "os-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "os-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "link: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "link: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "link: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "link-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "prototype: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "prototype: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "prototype: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "prototype-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "paths: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "paths: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "paths: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "paths-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "replay: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "replay: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "replay: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "replay-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "variants: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "variants: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "variants: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "variants-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "delivery: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "delivery: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "delivery: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "delivery-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "delivery-02: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "acceptance: primary and complete module files exist",
+      "pass": true
+    },
+    {
+      "check": "acceptance: all assigned source blocks appear in module ledger",
+      "pass": true
+    },
+    {
+      "check": "acceptance: all active technical text is retained in complete module",
+      "pass": true
+    },
+    {
+      "check": "acceptance-01: named chunk, subjects and load guidance exist",
+      "pass": true
+    },
+    {
+      "check": "Each registered screen has exactly one primary module",
+      "pass": true
+    },
+    {
+      "check": "Current requirement IDs are unique",
+      "pass": true
+    },
+    {
+      "check": "No source block is assigned to an undefined module",
+      "pass": true
+    },
+    {
+      "check": "No malformed app/application editorial substitutions remain",
+      "pass": true
+    },
+    {
+      "check": "Prerequisite contracts form an acyclic graph",
+      "pass": true
+    },
+    {
+      "check": "No stale unreferenced generated technical chunks remain",
+      "pass": true
+    }
+  ]
+}

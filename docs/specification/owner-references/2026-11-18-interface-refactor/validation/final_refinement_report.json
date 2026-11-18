@@ -1,0 +1,13 @@
+{
+  "embeddedScriptsExecuted": 27,
+  "registeredScreens": 251,
+  "settingsDestinations": 73,
+  "havenSubsections": 11,
+  "allRoutes": "passed",
+  "singleScrollContainer": "passed",
+  "selectedAccentConsistency": "passed",
+  "sourceControls": "passed",
+  "searchAncestry": "passed",
+  "customAccent": "passed",
+  "limitations": "Structural execution only; no rendered layout verification."
+}

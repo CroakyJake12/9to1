@@ -1,0 +1,26 @@
+{
+  "originalHavenSections": 5,
+  "newChildren": 11,
+  "otherGroupsUnchanged": true,
+  "allLevel3ChildrenActiveAndRegistered": true,
+  "newTabControls": "same layout, background and widget state",
+  "shortcutOrder": "same reorder state used by New Tab",
+  "hostCommands": "forward original tab/mode controls and focus original address",
+  "recentFiles": "six existing records",
+  "keyboardKeys": "existing source instructions",
+  "performance": "links to Local settings; no duplicated device flags",
+  "missingSources": [],
+  "routes": [
+    "settings-haven-newtab",
+    "settings-haven-tabs-address",
+    "settings-haven-pinned",
+    "settings-haven-shortcut-order",
+    "settings-haven-tab-history",
+    "settings-haven-recent-files",
+    "settings-haven-key-navigation",
+    "settings-haven-key-menus",
+    "settings-haven-services",
+    "settings-haven-model-memory",
+    "settings-haven-storage-cache"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "artifact_scope": "Handoff/reference artifacts only; no native application testing.",
+  "spec_pages": 312,
+  "spec_rendered_pages": 312,
+  "original_pages": 306,
+  "amendment_pages": 6,
+  "refreshed_existing_boards_figures": 8,
+  "out_of_page_text_blocks": [],
+  "atlas_screens": 177,
+  "atlas_javascript_errors": 0,
+  "native_application_tested": false,
+  "repository_inspected": false,
+  "astra_commits_verified": false,
+  "theme_reference_folders": 10,
+  "theme_reference_images": 27
+}

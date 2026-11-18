@@ -1,0 +1,5072 @@
+[
+  {
+    "line": 1,
+    "style": "Title",
+    "text": "9to1 Development Specification"
+  },
+  {
+    "line": 2,
+    "style": "Subtitle",
+    "text": "Current layouts and implementation contracts"
+  },
+  {
+    "line": 9,
+    "style": "Heading2",
+    "text": "Using the module pack"
+  },
+  {
+    "line": 14,
+    "style": "Heading1",
+    "text": "Contents"
+  },
+  {
+    "line": 79,
+    "style": "Heading1",
+    "text": "Current decisions"
+  },
+  {
+    "line": 119,
+    "style": "Heading1",
+    "text": "Source contract"
+  },
+  {
+    "line": 121,
+    "style": "Heading2",
+    "text": "Presentation authority"
+  },
+  {
+    "line": 123,
+    "style": "Heading2",
+    "text": "Retained specification sources"
+  },
+  {
+    "line": 138,
+    "style": "Heading2",
+    "text": "Source accounting and focused reading"
+  },
+  {
+    "line": 141,
+    "style": "Heading1",
+    "text": "Authority scope and implementation reading map"
+  },
+  {
+    "line": 143,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 145,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 148,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 151,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 156,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 159,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 162,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 166,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 168,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 174,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 176,
+    "style": "Heading1",
+    "text": "Platform app registry and host integration"
+  },
+  {
+    "line": 178,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 180,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 183,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 187,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 195,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 198,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 201,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 204,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 206,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 212,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 214,
+    "style": "Heading1",
+    "text": "CUI themes and shared interaction system"
+  },
+  {
+    "line": 216,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 218,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 221,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 227,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 233,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 236,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 239,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 243,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 250,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 256,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 258,
+    "style": "Heading2",
+    "text": "Create Theme Authoring and preview"
+  },
+  {
+    "line": 261,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 268,
+    "style": "Heading2",
+    "text": "Components Buttons inputs and control states"
+  },
+  {
+    "line": 271,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 279,
+    "style": "Heading2",
+    "text": "Bubble Material and controls"
+  },
+  {
+    "line": 282,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 289,
+    "style": "Heading2",
+    "text": "Western Material and controls"
+  },
+  {
+    "line": 292,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 299,
+    "style": "Heading2",
+    "text": "Retro Material and controls"
+  },
+  {
+    "line": 302,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 309,
+    "style": "Heading2",
+    "text": "Professional theme across the editor"
+  },
+  {
+    "line": 314,
+    "style": "Heading2",
+    "text": "Glow theme across the editor"
+  },
+  {
+    "line": 319,
+    "style": "Heading2",
+    "text": "Playful theme across the editor"
+  },
+  {
+    "line": 324,
+    "style": "Heading2",
+    "text": "Frosted Glass theme across the editor"
+  },
+  {
+    "line": 329,
+    "style": "Heading2",
+    "text": "Bubble theme across the editor"
+  },
+  {
+    "line": 334,
+    "style": "Heading2",
+    "text": "Metallic theme across the editor"
+  },
+  {
+    "line": 339,
+    "style": "Heading2",
+    "text": "Retro theme across the editor"
+  },
+  {
+    "line": 344,
+    "style": "Heading2",
+    "text": "Western theme across the editor"
+  },
+  {
+    "line": 349,
+    "style": "Heading1",
+    "text": "Account identity and resource entitlements"
+  },
+  {
+    "line": 351,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 355,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 357,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 360,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 365,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 368,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 371,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 374,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 378,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 382,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 384,
+    "style": "Heading2",
+    "text": "Home Account permissions"
+  },
+  {
+    "line": 387,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 392,
+    "style": "Heading2",
+    "text": "9to1 Welcome"
+  },
+  {
+    "line": 395,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 401,
+    "style": "Heading1",
+    "text": "Privacy data boundaries and context isolation"
+  },
+  {
+    "line": 403,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 405,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 407,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 410,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 415,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 418,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 421,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 424,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 426,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 429,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 431,
+    "style": "Heading1",
+    "text": "Permissions approvals and execution scope"
+  },
+  {
+    "line": 433,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 436,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 439,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 442,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 447,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 450,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 453,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 456,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 458,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 461,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 463,
+    "style": "Heading1",
+    "text": "Artifacts local persistence and recovery"
+  },
+  {
+    "line": 465,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 468,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 470,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 473,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 477,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 480,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 483,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 486,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 488,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 491,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 493,
+    "style": "Heading1",
+    "text": "Shared productivity engine and canonical embeds"
+  },
+  {
+    "line": 495,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 498,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 500,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 503,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 507,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 510,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 513,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 516,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 518,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 521,
+    "style": "Heading1",
+    "text": "Node Editor shared graph framework"
+  },
+  {
+    "line": 523,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 527,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 529,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 532,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 536,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 539,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 542,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 545,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 547,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 550,
+    "style": "Heading1",
+    "text": "Shared AI controls and artifact collaboration"
+  },
+  {
+    "line": 552,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 557,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 560,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 564,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 569,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 572,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 575,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 578,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 580,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 583,
+    "style": "Heading1",
+    "text": "Dulche runtime requests and execution services"
+  },
+  {
+    "line": 585,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 589,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 592,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 595,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 600,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 603,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 606,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 609,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 611,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 617,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 619,
+    "style": "Heading1",
+    "text": "Models discovery and universal model routing"
+  },
+  {
+    "line": 621,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 626,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 629,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 633,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 638,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 641,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 644,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 647,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 653,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 658,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 660,
+    "style": "Heading2",
+    "text": "Models Discover"
+  },
+  {
+    "line": 663,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 668,
+    "style": "Heading2",
+    "text": "Models Installed and saved"
+  },
+  {
+    "line": 671,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 676,
+    "style": "Heading2",
+    "text": "Models Capability and requirements"
+  },
+  {
+    "line": 679,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 685,
+    "style": "Heading2",
+    "text": "9to1 Model picker"
+  },
+  {
+    "line": 688,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 694,
+    "style": "Heading1",
+    "text": "Den memory and knowledge banks"
+  },
+  {
+    "line": 696,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 700,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 702,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 705,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 710,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 713,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 716,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 719,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 721,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 725,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 727,
+    "style": "Heading1",
+    "text": "Subagents delegation and task trees"
+  },
+  {
+    "line": 729,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 733,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 736,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 739,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 743,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 746,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 749,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 752,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 754,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 757,
+    "style": "Heading1",
+    "text": "Global Assistants Specialists and collaborators"
+  },
+  {
+    "line": 759,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 764,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 767,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 771,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 777,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 780,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 783,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 786,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 792,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 797,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 799,
+    "style": "Heading2",
+    "text": "Home Assistants"
+  },
+  {
+    "line": 802,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 809,
+    "style": "Heading2",
+    "text": "Home Specialists"
+  },
+  {
+    "line": 812,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 819,
+    "style": "Heading2",
+    "text": "Present Invite collaborators"
+  },
+  {
+    "line": 822,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 829,
+    "style": "Heading2",
+    "text": "Present Review an AI change"
+  },
+  {
+    "line": 832,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 839,
+    "style": "Heading1",
+    "text": "Generative UI and live artifact output"
+  },
+  {
+    "line": 841,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 846,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 849,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 852,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 857,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 860,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 863,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 866,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 868,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 871,
+    "style": "Heading1",
+    "text": "Skills Plugins MCP and capability packages"
+  },
+  {
+    "line": 873,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 877,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 879,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 882,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 886,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 889,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 892,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 895,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 897,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 900,
+    "style": "Heading1",
+    "text": "External integrations and provider connections"
+  },
+  {
+    "line": 902,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 906,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 908,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 911,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 915,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 918,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 921,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 924,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 926,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 929,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 931,
+    "style": "Heading1",
+    "text": "Go universal search and entity navigation"
+  },
+  {
+    "line": 933,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 937,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 939,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 942,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 946,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 949,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 952,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 955,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 957,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 960,
+    "style": "Heading1",
+    "text": "Cloud services infrastructure and billing contracts"
+  },
+  {
+    "line": 962,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 967,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 969,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 972,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 976,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 979,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 982,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 985,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 987,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 992,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 994,
+    "style": "Heading1",
+    "text": "Home Apps Dashboard and global systems"
+  },
+  {
+    "line": 996,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1002,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1005,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1009,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1013,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1016,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1019,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1022,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1028,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1032,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1034,
+    "style": "Heading2",
+    "text": "Home Apps"
+  },
+  {
+    "line": 1037,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1043,
+    "style": "Heading2",
+    "text": "Home Dashboard"
+  },
+  {
+    "line": 1046,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1051,
+    "style": "Heading2",
+    "text": "Home Library"
+  },
+  {
+    "line": 1054,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1058,
+    "style": "Heading2",
+    "text": "States Recovery and persistence reference"
+  },
+  {
+    "line": 1061,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1067,
+    "style": "Heading1",
+    "text": "Settings complete page family"
+  },
+  {
+    "line": 1069,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1075,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1078,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1083,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1088,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1091,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1094,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1097,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1111,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1114,
+    "style": "Heading2",
+    "text": "Appearance Theme and accent preferences"
+  },
+  {
+    "line": 1117,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1124,
+    "style": "Heading2",
+    "text": "Settings Account subscription"
+  },
+  {
+    "line": 1127,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1133,
+    "style": "Heading2",
+    "text": "Settings AI models"
+  },
+  {
+    "line": 1136,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1143,
+    "style": "Heading2",
+    "text": "Settings Permissions trust"
+  },
+  {
+    "line": 1146,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1153,
+    "style": "Heading2",
+    "text": "Settings Apps updates"
+  },
+  {
+    "line": 1156,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1162,
+    "style": "Heading2",
+    "text": "Settings Storage"
+  },
+  {
+    "line": 1165,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1172,
+    "style": "Heading2",
+    "text": "Settings Mesh devices"
+  },
+  {
+    "line": 1175,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1182,
+    "style": "Heading2",
+    "text": "Settings Privacy"
+  },
+  {
+    "line": 1185,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1192,
+    "style": "Heading2",
+    "text": "Settings Accessibility"
+  },
+  {
+    "line": 1195,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1202,
+    "style": "Heading2",
+    "text": "Settings Notifications"
+  },
+  {
+    "line": 1205,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1212,
+    "style": "Heading2",
+    "text": "Settings Advanced"
+  },
+  {
+    "line": 1215,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1222,
+    "style": "Heading2",
+    "text": "Settings Provider access detail"
+  },
+  {
+    "line": 1225,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1232,
+    "style": "Heading1",
+    "text": "Notifications and ecosystem activity"
+  },
+  {
+    "line": 1234,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1239,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1242,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1245,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1249,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1252,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1255,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1258,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1261,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1264,
+    "style": "Heading2",
+    "text": "9to1 Notifications"
+  },
+  {
+    "line": 1267,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1273,
+    "style": "Heading1",
+    "text": "Mesh devices replication and remote capabilities"
+  },
+  {
+    "line": 1275,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1280,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1282,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1285,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1289,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1292,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1295,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1298,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1301,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1304,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1306,
+    "style": "Heading2",
+    "text": "Home Mesh devices"
+  },
+  {
+    "line": 1309,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1314,
+    "style": "Heading1",
+    "text": "Browse and the native browser tab host"
+  },
+  {
+    "line": 1316,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1320,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1323,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1327,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1331,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1334,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1337,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1340,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1346,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1351,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1353,
+    "style": "Heading2",
+    "text": "9to1 New Tab"
+  },
+  {
+    "line": 1356,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1362,
+    "style": "Heading2",
+    "text": "9to1 Browser"
+  },
+  {
+    "line": 1365,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1370,
+    "style": "Heading2",
+    "text": "New Tab Customisation"
+  },
+  {
+    "line": 1373,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1379,
+    "style": "Heading2",
+    "text": "New Tab Add a widget"
+  },
+  {
+    "line": 1382,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1387,
+    "style": "Heading1",
+    "text": "Admin organisation scope and policy"
+  },
+  {
+    "line": 1389,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1394,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1396,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1399,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1403,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1406,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1409,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1412,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1415,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1418,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1420,
+    "style": "Heading2",
+    "text": "9to1 Admin People and policy scope"
+  },
+  {
+    "line": 1423,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1429,
+    "style": "Heading1",
+    "text": "Files and ten organisational folder views"
+  },
+  {
+    "line": 1431,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1436,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1439,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1443,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1449,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1452,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1455,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1458,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1464,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1470,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1472,
+    "style": "Heading2",
+    "text": "Files Local files and details"
+  },
+  {
+    "line": 1475,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1482,
+    "style": "Heading2",
+    "text": "Files Grid and selected board"
+  },
+  {
+    "line": 1485,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1490,
+    "style": "Heading2",
+    "text": "Files Selected file actions"
+  },
+  {
+    "line": 1493,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1498,
+    "style": "Heading2",
+    "text": "Files Sheet and organisation types"
+  },
+  {
+    "line": 1501,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1508,
+    "style": "Heading1",
+    "text": "Connect conversations contacts and Mail"
+  },
+  {
+    "line": 1510,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1516,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1518,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1521,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1526,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1529,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1532,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1535,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1541,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1546,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1548,
+    "style": "Heading2",
+    "text": "Connect Mail and a reply draft"
+  },
+  {
+    "line": 1551,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1557,
+    "style": "Heading2",
+    "text": "Connect Team conversation"
+  },
+  {
+    "line": 1560,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1566,
+    "style": "Heading2",
+    "text": "Connect Compose a message"
+  },
+  {
+    "line": 1569,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1574,
+    "style": "Heading2",
+    "text": "Connect Schedule send review"
+  },
+  {
+    "line": 1577,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1582,
+    "style": "Heading1",
+    "text": "Spaces conversations workspaces and custom Space Builder"
+  },
+  {
+    "line": 1584,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 1595,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 1598,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 1615,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 1638,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 1646,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 1654,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 1665,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 1698,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 1711,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 1713,
+    "style": "Heading2",
+    "text": "Spaces Conversation permissions"
+  },
+  {
+    "line": 1716,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1723,
+    "style": "Heading2",
+    "text": "Spaces Native emoji picker"
+  },
+  {
+    "line": 1726,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1733,
+    "style": "Heading2",
+    "text": "Spaces Conversation"
+  },
+  {
+    "line": 1736,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1743,
+    "style": "Heading2",
+    "text": "Spaces Draft and contextual shelf"
+  },
+  {
+    "line": 1746,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1753,
+    "style": "Heading2",
+    "text": "Spaces Attach menu"
+  },
+  {
+    "line": 1756,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1763,
+    "style": "Heading2",
+    "text": "Tasks Run summary and approval"
+  },
+  {
+    "line": 1766,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1773,
+    "style": "Heading2",
+    "text": "Spaces Specialists"
+  },
+  {
+    "line": 1776,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1783,
+    "style": "Heading2",
+    "text": "Assistants Persistent collaborators"
+  },
+  {
+    "line": 1786,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1793,
+    "style": "Heading2",
+    "text": "Assistants Alex Main"
+  },
+  {
+    "line": 1796,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1803,
+    "style": "Heading2",
+    "text": "Assistants Maya Main"
+  },
+  {
+    "line": 1806,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1813,
+    "style": "Heading2",
+    "text": "Assistants Rowan Main"
+  },
+  {
+    "line": 1816,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1823,
+    "style": "Heading2",
+    "text": "Study Learning dashboard"
+  },
+  {
+    "line": 1826,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1833,
+    "style": "Heading2",
+    "text": "Study Maths topic tracker"
+  },
+  {
+    "line": 1836,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1843,
+    "style": "Heading2",
+    "text": "Study Lesson and Revision Bank"
+  },
+  {
+    "line": 1846,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1853,
+    "style": "Heading2",
+    "text": "Study Session modes and source policy"
+  },
+  {
+    "line": 1856,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1864,
+    "style": "Heading2",
+    "text": "Research Plan sources and outputs"
+  },
+  {
+    "line": 1867,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1874,
+    "style": "Heading2",
+    "text": "Shopping Requirements and comparison"
+  },
+  {
+    "line": 1877,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1884,
+    "style": "Heading2",
+    "text": "Spaces Settings and permission scope"
+  },
+  {
+    "line": 1887,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1894,
+    "style": "Heading2",
+    "text": "Translate Conversational localisation"
+  },
+  {
+    "line": 1897,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1904,
+    "style": "Heading2",
+    "text": "Spaces Generated interactive planner"
+  },
+  {
+    "line": 1907,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1915,
+    "style": "Heading2",
+    "text": "Spaces Thinking and visible activity"
+  },
+  {
+    "line": 1918,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1926,
+    "style": "Heading2",
+    "text": "Spaces Coordinated subagents"
+  },
+  {
+    "line": 1929,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1938,
+    "style": "Heading2",
+    "text": "Spaces Subagent scope and activity"
+  },
+  {
+    "line": 1941,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1949,
+    "style": "Heading2",
+    "text": "Spaces Presentation work in progress"
+  },
+  {
+    "line": 1952,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1961,
+    "style": "Heading2",
+    "text": "Spaces Canvas work in progress"
+  },
+  {
+    "line": 1964,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1972,
+    "style": "Heading2",
+    "text": "Spaces Generated files and outputs"
+  },
+  {
+    "line": 1975,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1984,
+    "style": "Heading2",
+    "text": "Spaces Export failure and recovery"
+  },
+  {
+    "line": 1987,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 1995,
+    "style": "Heading2",
+    "text": "Spaces Experiences"
+  },
+  {
+    "line": 1998,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2006,
+    "style": "Heading2",
+    "text": "Mobile Spaces conversation"
+  },
+  {
+    "line": 2009,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2016,
+    "style": "Heading2",
+    "text": "Mobile Study dashboard"
+  },
+  {
+    "line": 2019,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2026,
+    "style": "Heading2",
+    "text": "Mobile Conversation permissions"
+  },
+  {
+    "line": 2029,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2036,
+    "style": "Heading1",
+    "text": "Write document authoring"
+  },
+  {
+    "line": 2038,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2043,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2046,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2050,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2055,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2058,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2061,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2064,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2072,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2078,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2080,
+    "style": "Heading2",
+    "text": "Write Start"
+  },
+  {
+    "line": 2083,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2088,
+    "style": "Heading2",
+    "text": "Write Page View"
+  },
+  {
+    "line": 2091,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2098,
+    "style": "Heading2",
+    "text": "Write Continuous View"
+  },
+  {
+    "line": 2101,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2108,
+    "style": "Heading2",
+    "text": "Write Selection review"
+  },
+  {
+    "line": 2111,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2118,
+    "style": "Heading2",
+    "text": "Write Invite collaborators"
+  },
+  {
+    "line": 2121,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2128,
+    "style": "Heading2",
+    "text": "Write Working with collaborators"
+  },
+  {
+    "line": 2131,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2139,
+    "style": "Heading1",
+    "text": "Present slide authoring and presentation"
+  },
+  {
+    "line": 2141,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2147,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2150,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2155,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2160,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2163,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2166,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2169,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2180,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2185,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2187,
+    "style": "Heading2",
+    "text": "Present Start"
+  },
+  {
+    "line": 2190,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2195,
+    "style": "Heading2",
+    "text": "Present Editor"
+  },
+  {
+    "line": 2198,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2206,
+    "style": "Heading2",
+    "text": "Present Selected object notes"
+  },
+  {
+    "line": 2209,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2217,
+    "style": "Heading2",
+    "text": "Present Insert gallery"
+  },
+  {
+    "line": 2220,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2228,
+    "style": "Heading2",
+    "text": "Present Transitions"
+  },
+  {
+    "line": 2231,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2238,
+    "style": "Heading2",
+    "text": "Present Actions graph"
+  },
+  {
+    "line": 2241,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2248,
+    "style": "Heading2",
+    "text": "Present Presenter view"
+  },
+  {
+    "line": 2251,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2256,
+    "style": "Heading2",
+    "text": "Present Custom shape builder"
+  },
+  {
+    "line": 2259,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2267,
+    "style": "Heading2",
+    "text": "Present Working with collaborators"
+  },
+  {
+    "line": 2270,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2278,
+    "style": "Heading1",
+    "text": "Boards seamless pages blocks and ink"
+  },
+  {
+    "line": 2280,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2285,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2288,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2292,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2298,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2301,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2304,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2307,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2318,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2328,
+    "style": "Heading2",
+    "text": "Boards Start"
+  },
+  {
+    "line": 2331,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2336,
+    "style": "Heading2",
+    "text": "Boards Draw on the page"
+  },
+  {
+    "line": 2339,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2346,
+    "style": "Heading2",
+    "text": "Boards Add page or section"
+  },
+  {
+    "line": 2349,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2355,
+    "style": "Heading2",
+    "text": "Boards Typing within a block"
+  },
+  {
+    "line": 2358,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2364,
+    "style": "Heading2",
+    "text": "Boards Insert a block"
+  },
+  {
+    "line": 2367,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2373,
+    "style": "Heading2",
+    "text": "Boards Native page"
+  },
+  {
+    "line": 2376,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2382,
+    "style": "Heading2",
+    "text": "Boards Block actions"
+  },
+  {
+    "line": 2385,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2390,
+    "style": "Heading2",
+    "text": "Boards Save recovery"
+  },
+  {
+    "line": 2393,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2398,
+    "style": "Heading2",
+    "text": "Mobile Boards page drawer"
+  },
+  {
+    "line": 2401,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2408,
+    "style": "Heading1",
+    "text": "Canvas drawing objects and semantic composition"
+  },
+  {
+    "line": 2410,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2415,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2417,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2421,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2425,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2428,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2431,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2434,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2443,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2448,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2450,
+    "style": "Heading2",
+    "text": "Canvas Start"
+  },
+  {
+    "line": 2453,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2458,
+    "style": "Heading2",
+    "text": "Canvas Custom shape builder"
+  },
+  {
+    "line": 2461,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2469,
+    "style": "Heading2",
+    "text": "Canvas Drawing workspace"
+  },
+  {
+    "line": 2472,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2480,
+    "style": "Heading2",
+    "text": "Canvas Contextual AI"
+  },
+  {
+    "line": 2483,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2491,
+    "style": "Heading2",
+    "text": "Canvas Pen presets"
+  },
+  {
+    "line": 2494,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2502,
+    "style": "Heading2",
+    "text": "Canvas Shape selection layers"
+  },
+  {
+    "line": 2505,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2513,
+    "style": "Heading2",
+    "text": "Canvas Insert shapes"
+  },
+  {
+    "line": 2516,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2524,
+    "style": "Heading1",
+    "text": "Data worksheets tables and explicit AI approval"
+  },
+  {
+    "line": 2526,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2531,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2533,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2536,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2541,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2544,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2547,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2550,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2556,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2561,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2563,
+    "style": "Heading2",
+    "text": "Data Spreadsheet"
+  },
+  {
+    "line": 2566,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2572,
+    "style": "Heading2",
+    "text": "Data Review an AI mutation"
+  },
+  {
+    "line": 2575,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2581,
+    "style": "Heading2",
+    "text": "Data Editing a formula"
+  },
+  {
+    "line": 2584,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2589,
+    "style": "Heading2",
+    "text": "Data Chart insertion and preview"
+  },
+  {
+    "line": 2592,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2597,
+    "style": "Heading1",
+    "text": "Planner calendars burrows and tasks"
+  },
+  {
+    "line": 2599,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2604,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2607,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2610,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2614,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2617,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2620,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2623,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2628,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2632,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2634,
+    "style": "Heading2",
+    "text": "Planner Week and unscheduled tasks"
+  },
+  {
+    "line": 2637,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2644,
+    "style": "Heading2",
+    "text": "Planner Edit an event"
+  },
+  {
+    "line": 2647,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2652,
+    "style": "Heading2",
+    "text": "Planner Agenda view"
+  },
+  {
+    "line": 2655,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2660,
+    "style": "Heading1",
+    "text": "Automations graph authoring and durable runs"
+  },
+  {
+    "line": 2662,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2668,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2670,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2673,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2678,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2681,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2684,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2687,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2691,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2696,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2698,
+    "style": "Heading2",
+    "text": "Automations Draft graph and activation"
+  },
+  {
+    "line": 2701,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2707,
+    "style": "Heading2",
+    "text": "Automations Schedule trigger"
+  },
+  {
+    "line": 2710,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2715,
+    "style": "Heading1",
+    "text": "Forms builder logic and responses"
+  },
+  {
+    "line": 2717,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2722,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2724,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2727,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2731,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2734,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2737,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2740,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2744,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2748,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2750,
+    "style": "Heading2",
+    "text": "Forms Assessment builder"
+  },
+  {
+    "line": 2753,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2759,
+    "style": "Heading2",
+    "text": "Forms Respondent preview"
+  },
+  {
+    "line": 2762,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2767,
+    "style": "Heading1",
+    "text": "Cards sets editing and study review"
+  },
+  {
+    "line": 2769,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2773,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2776,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2779,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2783,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2786,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2789,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2792,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2797,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2800,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2802,
+    "style": "Heading2",
+    "text": "Cards Study overview"
+  },
+  {
+    "line": 2805,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2812,
+    "style": "Heading2",
+    "text": "Cards Focused review"
+  },
+  {
+    "line": 2815,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2822,
+    "style": "Heading2",
+    "text": "Cards Rich card editor"
+  },
+  {
+    "line": 2825,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2832,
+    "style": "Heading1",
+    "text": "Picture image and layer editing"
+  },
+  {
+    "line": 2834,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2839,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2841,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2844,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2848,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2851,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2854,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2857,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2862,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2866,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2868,
+    "style": "Heading2",
+    "text": "Picture Layered composition"
+  },
+  {
+    "line": 2871,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2877,
+    "style": "Heading2",
+    "text": "Picture Layer mask editing"
+  },
+  {
+    "line": 2880,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2885,
+    "style": "Heading2",
+    "text": "Picture Export image"
+  },
+  {
+    "line": 2888,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2893,
+    "style": "Heading1",
+    "text": "Wave multitrack audio production"
+  },
+  {
+    "line": 2895,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2900,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2902,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2905,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2909,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2912,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2915,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2918,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2923,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2927,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2929,
+    "style": "Heading2",
+    "text": "Wave Audio timeline and mixer"
+  },
+  {
+    "line": 2932,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2938,
+    "style": "Heading2",
+    "text": "Wave Selected clip and fades"
+  },
+  {
+    "line": 2941,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2946,
+    "style": "Heading2",
+    "text": "Wave Split stems"
+  },
+  {
+    "line": 2949,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2954,
+    "style": "Heading1",
+    "text": "Motion video composition and animation"
+  },
+  {
+    "line": 2956,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 2961,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 2963,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 2966,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 2970,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 2973,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 2976,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 2979,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 2984,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 2988,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 2990,
+    "style": "Heading2",
+    "text": "Motion Video editing workspace"
+  },
+  {
+    "line": 2993,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 2999,
+    "style": "Heading2",
+    "text": "Motion Transition at an edit"
+  },
+  {
+    "line": 3002,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3008,
+    "style": "Heading2",
+    "text": "Motion Render range and destination"
+  },
+  {
+    "line": 3011,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3016,
+    "style": "Heading1",
+    "text": "Build Code development environment"
+  },
+  {
+    "line": 3018,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3023,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3025,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3028,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3032,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3035,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3038,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3041,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3045,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3050,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3052,
+    "style": "Heading2",
+    "text": "Build Code workspace"
+  },
+  {
+    "line": 3055,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3061,
+    "style": "Heading2",
+    "text": "Build Completion and diagnostics"
+  },
+  {
+    "line": 3064,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3070,
+    "style": "Heading1",
+    "text": "Build Sites responsive site authoring"
+  },
+  {
+    "line": 3072,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3077,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3079,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3082,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3087,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3090,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3093,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3096,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3100,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3103,
+    "style": "Heading2",
+    "text": "Build Sites editor"
+  },
+  {
+    "line": 3106,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3112,
+    "style": "Heading2",
+    "text": "Build Sites Mobile breakpoint"
+  },
+  {
+    "line": 3115,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3121,
+    "style": "Heading1",
+    "text": "Build Stacks Branch Twig and Leaf source control"
+  },
+  {
+    "line": 3123,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3127,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3129,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3132,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3136,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3139,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3142,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3145,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3149,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3154,
+    "style": "Heading2",
+    "text": "Build Stacks conflict review"
+  },
+  {
+    "line": 3157,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3163,
+    "style": "Heading2",
+    "text": "Build Stacks Freeze scope"
+  },
+  {
+    "line": 3166,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3172,
+    "style": "Heading1",
+    "text": "AI Studio harnesses agents and evaluations"
+  },
+  {
+    "line": 3174,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3180,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3182,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3185,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3190,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3193,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3196,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3199,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3203,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3207,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3209,
+    "style": "Heading2",
+    "text": "AI Studio Agent builder and test"
+  },
+  {
+    "line": 3212,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3218,
+    "style": "Heading2",
+    "text": "AI Studio Agent tool permissions"
+  },
+  {
+    "line": 3221,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3227,
+    "style": "Heading1",
+    "text": "Terminal Command and AI modes"
+  },
+  {
+    "line": 3229,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3234,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3236,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3239,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3243,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3246,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3249,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3252,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3256,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3260,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3262,
+    "style": "Heading2",
+    "text": "Terminal Command workspace"
+  },
+  {
+    "line": 3265,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3271,
+    "style": "Heading2",
+    "text": "Terminal Review an AI command"
+  },
+  {
+    "line": 3274,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3280,
+    "style": "Heading1",
+    "text": "Mini Computer VM and remote desktop control"
+  },
+  {
+    "line": 3282,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3286,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3288,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3291,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3295,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3298,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3301,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3304,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3307,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3310,
+    "style": "Heading2",
+    "text": "Mini Computer Virtual machine"
+  },
+  {
+    "line": 3313,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3319,
+    "style": "Heading1",
+    "text": "Games scene and runtime development"
+  },
+  {
+    "line": 3321,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3326,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3328,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3331,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3335,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3338,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3341,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3344,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3347,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3351,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3353,
+    "style": "Heading2",
+    "text": "Games Scene and components"
+  },
+  {
+    "line": 3356,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3362,
+    "style": "Heading1",
+    "text": "Play structured games and competitions"
+  },
+  {
+    "line": 3364,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3369,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3371,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3374,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3378,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3381,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3384,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3387,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3390,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3393,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3395,
+    "style": "Heading2",
+    "text": "Play Human and Agent quiz match"
+  },
+  {
+    "line": 3398,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3404,
+    "style": "Heading1",
+    "text": "Vision Voice shared live session system"
+  },
+  {
+    "line": 3406,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3412,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3414,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3418,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3422,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3425,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3428,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3431,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3435,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3439,
+    "style": "Heading2",
+    "text": "Vision Voice Live session"
+  },
+  {
+    "line": 3442,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3448,
+    "style": "Heading2",
+    "text": "Vision Voice Sources and capture"
+  },
+  {
+    "line": 3451,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3456,
+    "style": "Heading1",
+    "text": "Dulche Translate service"
+  },
+  {
+    "line": 3458,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3463,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3465,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3468,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3472,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3475,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3478,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3481,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3483,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3486,
+    "style": "Heading1",
+    "text": "Maps search places and routes"
+  },
+  {
+    "line": 3488,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3493,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3495,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3498,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3502,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3505,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3508,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3511,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3515,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3519,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3521,
+    "style": "Heading2",
+    "text": "Maps Route and place details"
+  },
+  {
+    "line": 3524,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3530,
+    "style": "Heading2",
+    "text": "Maps Route options and stops"
+  },
+  {
+    "line": 3533,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3538,
+    "style": "Heading1",
+    "text": "Shelf cross app library and collections"
+  },
+  {
+    "line": 3540,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3545,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3547,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3550,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3553,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3556,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3559,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3562,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3566,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3569,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3571,
+    "style": "Heading2",
+    "text": "Shelf Curated launch collection"
+  },
+  {
+    "line": 3574,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3580,
+    "style": "Heading2",
+    "text": "Shelf Add an item"
+  },
+  {
+    "line": 3583,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3588,
+    "style": "Heading1",
+    "text": "Launcher mobile and OS home surface"
+  },
+  {
+    "line": 3590,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3594,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3596,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3599,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3602,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3605,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3608,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3611,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3614,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3617,
+    "style": "Heading2",
+    "text": "Launcher Mobile home"
+  },
+  {
+    "line": 3620,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3626,
+    "style": "Heading1",
+    "text": "9to1OS desktop Go and native system surfaces"
+  },
+  {
+    "line": 3628,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3634,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3636,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3640,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3644,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3647,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3650,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3653,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3656,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3660,
+    "style": "Heading2",
+    "text": "9to1OS Desktop and Go"
+  },
+  {
+    "line": 3663,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3669,
+    "style": "Heading1",
+    "text": "Link Flow and Binder"
+  },
+  {
+    "line": 3671,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3676,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3678,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3681,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3685,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3688,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3691,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3694,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3700,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3703,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3705,
+    "style": "Heading2",
+    "text": "Link Continuous Flow document"
+  },
+  {
+    "line": 3708,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3714,
+    "style": "Heading2",
+    "text": "Link Binder overview and detail"
+  },
+  {
+    "line": 3717,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3723,
+    "style": "Heading2",
+    "text": "Link Binder Add content"
+  },
+  {
+    "line": 3726,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3732,
+    "style": "Heading2",
+    "text": "Link Flow Source section and placement"
+  },
+  {
+    "line": 3735,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3741,
+    "style": "Heading1",
+    "text": "Prototype Design Logic and Run"
+  },
+  {
+    "line": 3743,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3748,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3750,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3753,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3757,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3760,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3763,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3766,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3770,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3773,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3775,
+    "style": "Heading2",
+    "text": "Prototype Interactive spring explorer"
+  },
+  {
+    "line": 3778,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3784,
+    "style": "Heading2",
+    "text": "Prototype Edit a typed input"
+  },
+  {
+    "line": 3787,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3793,
+    "style": "Heading1",
+    "text": "Paths branching guided experiences"
+  },
+  {
+    "line": 3795,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3800,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3802,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3805,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3809,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3812,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3815,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3818,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3822,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3825,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3827,
+    "style": "Heading2",
+    "text": "Paths Branching learning route"
+  },
+  {
+    "line": 3830,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3836,
+    "style": "Heading2",
+    "text": "Paths Edit a route condition"
+  },
+  {
+    "line": 3839,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3845,
+    "style": "Heading1",
+    "text": "Replay semantic history and inspection"
+  },
+  {
+    "line": 3847,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3851,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3853,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3856,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3860,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3863,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3866,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3869,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3873,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3876,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3878,
+    "style": "Heading2",
+    "text": "Replay Historical checkpoint"
+  },
+  {
+    "line": 3881,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3887,
+    "style": "Heading2",
+    "text": "Replay Inspect a recorded change"
+  },
+  {
+    "line": 3890,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3896,
+    "style": "Heading1",
+    "text": "Variants integrated comparison and merge"
+  },
+  {
+    "line": 3898,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3903,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3905,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3908,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3912,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3915,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3918,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3921,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3924,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3927,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3929,
+    "style": "Heading2",
+    "text": "Present Compare Variants"
+  },
+  {
+    "line": 3932,
+    "style": "Heading3",
+    "text": "Implementation rules"
+  },
+  {
+    "line": 3938,
+    "style": "Heading1",
+    "text": "Delivery governance and historical process"
+  },
+  {
+    "line": 3940,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3942,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3945,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3948,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3952,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3955,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3958,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3961,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3963,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 3967,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 3969,
+    "style": "Heading1",
+    "text": "Cross app acceptance and evidence"
+  },
+  {
+    "line": 3971,
+    "style": "Heading2",
+    "text": "Prerequisites"
+  },
+  {
+    "line": 3977,
+    "style": "Heading2",
+    "text": "Overview"
+  },
+  {
+    "line": 3979,
+    "style": "Heading2",
+    "text": "Layouts and visible states"
+  },
+  {
+    "line": 3982,
+    "style": "Heading2",
+    "text": "Features and behaviour"
+  },
+  {
+    "line": 3986,
+    "style": "Heading2",
+    "text": "Canonical entities and persistence"
+  },
+  {
+    "line": 3989,
+    "style": "Heading2",
+    "text": "Permissions and recovery"
+  },
+  {
+    "line": 3992,
+    "style": "Heading2",
+    "text": "Acceptance checks"
+  },
+  {
+    "line": 3995,
+    "style": "Heading2",
+    "text": "Exact design states"
+  },
+  {
+    "line": 3997,
+    "style": "Heading2",
+    "text": "Technical reading map"
+  },
+  {
+    "line": 4000,
+    "style": "Heading2",
+    "text": "Source clause IDs"
+  },
+  {
+    "line": 4002,
+    "style": "Heading1",
+    "text": "v3.1 amendment — Boards and theme references"
+  },
+  {
+    "line": 4011,
+    "style": "Heading1",
+    "text": "Boards continuation and acceptance"
+  },
+  {
+    "line": 4020,
+    "style": "Heading1",
+    "text": "Boards — name opens the file menu"
+  },
+  {
+    "line": 4026,
+    "style": "Heading1",
+    "text": "Boards — grouped controls and compact options"
+  },
+  {
+    "line": 4032,
+    "style": "Heading1",
+    "text": "Theme-design pass — reference index"
+  },
+  {
+    "line": 4046,
+    "style": "Heading1",
+    "text": "Theme-design pass — implementation and verification"
+  }
+]

@@ -1,0 +1,3712 @@
+{
+  "sections": [
+    {
+      "key": "source_precedence",
+      "title": "10.1 - Source precedence and incorporation",
+      "markdown": "# 10.1 - Source precedence and incorporation\nSRC-001 — Read this handoff as one specification: current owner directions, the new narrative/interaction chapters, the exact current Atlas states, and the retained complete modules/technical chapters. The short app chapters are a navigation and current-design layer; they do not replace substantive engine, platform, API, permission, persistence or donor-compatibility requirements with screenshots.\nSRC-002 — Resolve a conflict in this order, within the conflicting clause's actual scope: (1) latest explicit owner instruction; (2) explicit current-spec amendment and current Atlas UI contract; (3) v3.1 amendments and incorporated normative addenda; (4) unsuperseded baseline. A recent screenshot can settle presentation without silently changing storage ownership or granting a new capability. When the current text and picture conflict, record the exact requirement and Screen ID, preserve the latest explicit direction, and correct the stale reference.\nSRC-003 — Omission is not repeal. A cleaner toolbar, closed inspector, simpler selector or missing screenshot does not remove the underlying supported feature. Preserve canonical identities, permissions, authored content, recovery, interoperability and unpictured technical workflows unless an explicit scoped amendment changes them. Do not restore an old duplicate header merely because its historic source paragraph remains in the package. This preservation rule also covers additional functioning features found in the existing codebase that are absent from the written sources. Inventory them, adapt them to the current design and architecture, keep them accessible, and verify their behaviour unless an explicit current requirement or owner decision establishes a conflict; see HANDOFF-007 to HANDOFF-009.\nSRC-004 — Use three independent labels: Established contract, Draft interaction, and Preview/implementation evidence. Owner directions and retained active clauses establish requirements. Newly proposed menu entries, unresolved defaults or runtime handshakes stay labelled Draft. A mockup, parser check, compilation or source-accounting pass is not a production runtime acceptance result.\nSRC-005 — Stable requirement IDs and Screen IDs survive renames. Link each feature to the precise relevant states and retained source module; link Atlas Build notes back to the native specification section. A library-file link opens the file, not a hosted application route. Within the local Atlas, the stable screen identifier resolves through its supported hash/query navigation. Legacy aliases resolve to canonical IDs; for example mail resolves to connect-mail.\nSRC-006 — Historical prompts, agent conversations, operating instructions and old deadlines are source provenance, not fresh execution authority. They cannot authorise deployment, messages, purchases, credential use or destructive actions. The history ledger preserves replaced wording; it is not an alternative active specification.\nAcceptance: a receiving implementer can trace any screen to its current contract, owning module and relevant historical source without choosing behaviour from file modification time. A conflict record identifies exactly what changed and what adjacent requirements remain active.\n",
+      "screenIds": [],
+      "sourceRefs": [
+        "current owner instructions, 18 November 2026",
+        "retained-pack/modules/authority.complete.md",
+        "retained-pack/catalog/source_ledger.json",
+        "retained-pack/history/superseded-and-process.md"
+      ]
+    },
+    {
+      "key": "nov18_override_ledger",
+      "title": "10.2 - 18 November UI override ledger",
+      "markdown": "# 10.2 - 18 November UI override ledger\nSRC-UI-001 — These entries capture the owner's current interface direction. They supersede conflicting older presentation only; all unaffected functional and safety contracts remain incorporated. “Current reference” identifies the relevant Atlas state, not proof that every production interaction is implemented.\n\n| Area | Current direction | Current references |\n|---|---|---|\n| Shared accents | One primary/secondary/tertiary/ghost system derives from the selected palette. Use bright colours like the sidebar blue; secondary must not turn purple merely because an older component hard-coded it. Preserve the user's current selection and allow palette choice. | appearance-palette, components, settings-theme-options |\n| Typography and controls | Strengthen message, tab and contextual AI-bar text. Haven tab contents remain left aligned. Use the Professional theme's rounded controls; replace the incongruous Light/Dark swatch treatment. Authored document fonts/colours remain independent. | appearance, components, host-newtab, spaces-chat |\n| Quiet surfaces | Apply the design throughout Dashboard, models, Assistants, Specialists and new-tab surfaces; group the app catalogue with headers. Remove ornamental taglines and repeated explanations while keeping text needed for consequences or recovery. This does not authorise unrelated Explore feature changes. | home-dashboard, home-apps, home-models, home-assistants, home-specialists |\n| Composer | Remove the visible native HTML resizer/artifact and retain usable resizing/scrolling behaviour. Message text must use the stronger shared weight. | spaces-chat, spaces-compose |\n| Embedded headers | When running in Haven, consolidate duplicate top rows and utilities into the host bar. Settings and corresponding titles use the Home title treatment. Preserve app-specific editing commands without repeating identity or host options. | settings-general, present-editor, write-continuous |\n| Contextual AI | Replace the old AI visibility button with Settings → Chat bar position: Off, Floating, Sidebar. The editor Read-only/Take actions control is a dropdown; font weight matches the stronger bar. Spaces retains its separate conversation-permission contract. | settings-layout, boards-editor, present-editor, spaces-permissions |\n| Settings rows | One option per row, with restrained grouping and clear label/control alignment. The supplied Unsloth image is a layout reference, not a new data/permission model. | settings-profile, settings-appearance, settings-general |\n| Settings hierarchy | Collapsible text group → existing-style section → indented secondary-accent subsection. Groups are Global, Local, 9to1 Haven and Apps. Global follows the user; Local stays on this device. Avoid awkward repeated arrow branches. | settings-general, settings-appearance, settings-ai, settings-haven-general |\n| Settings subsection navigation | Subsections scroll vertically, snap by section and use a shadow to clarify the scroll/sticky boundary. Include Haven subsections; active navigation follows the visible section. Preserve accessible focus/scroll alternatives. | settings-theme-options, settings-haven-newtab, settings-haven-key-navigation |\n| Model picker | Centre Main/Voice/Vision tab labels only within the model picker. Reasoning stays directly exposed; Context, Model and Assistant/Specialist use collapsible headings. Simplify the model rows. Context changes expose Apply and reload; pending selection is not claimed active early. | host-model-picker |\n| Browser Tools | Expose actual browser options including engine, developer tools, history, bookmarks and reload. Manage page contains page/site permissions and protocol-security information. Include both CUI and HTML inspector reference states. | host-browser, host-devtools-html, host-devtools-cui, host-browser-history, host-browser-bookmarks |\n| Home/New tab | Merge Home and New tab, remove the fixed Home tab, and add New tab below Explore in Home navigation. Make customisation visual with drag/drop plus accessible move alternatives. Preserve one canonical layout state. | home-dashboard, host-newtab, host-newtab-customise, host-newtab-widgets, home-explore |\n| Tab/edge defects | Sidebar navigation must not remove a normal tab's close affordance. Remove the unexplained white edge/overflow line from New tab; do not conceal useful scrollbars as a blanket fix. | host-newtab, home-dashboard |\n| Assistants and Boards | Reduce permanent competing panels and redundant controls. Preserve conversation/document identity and the useful secondary actions through deliberate drawers, menus or contextual surfaces. | spaces-assistant-alex, spaces-assistant-maya, spaces-assistant-rowan, boards-editor, boards-context |\n| Specification links | Expand the new specification in 9to1 with strong links to the mockups and explicit right-click/overflow behaviour, state transitions, permissions, persistence, failure and keyboard access. | Every current Screen ID in the index |\n\nSRC-UI-002 — Exact layout values and theme tokens come from the current design system/reference. Do not invent a new default palette, chat position, source policy or runtime merely to fill an implementation gap. Existing valid saved choices remain intact. The user's request for a finished handoff also does not transform an incomplete native backend into a verified one.\n",
+      "screenIds": [
+        "appearance-palette",
+        "host-model-picker",
+        "settings-layout",
+        "host-newtab",
+        "host-devtools-html",
+        "host-devtools-cui",
+        "spaces-assistant-alex",
+        "boards-editor"
+      ],
+      "sourceRefs": [
+        "current owner instructions and supplied visual references, 18 November 2026",
+        "spec-work/screens-current.json",
+        "9to1_Interface_Atlas_v3.3_Editable.html"
+      ]
+    },
+    {
+      "key": "source_inventory",
+      "title": "10.3 - Incorporated source inventory",
+      "markdown": "# 10.3 - Incorporated source inventory\nSRC-INV-001 — The retained modular source pack contains 62 complete modules and 133 technical chapters. Its source ledger accounts for 3,082 source blocks and records retained, amended, historical-process, structural, deferred and proposed material. These are source-retention counts, not implementation completion percentages.\n\n| Source | Preserved text | Manifest word count | Recorded retrieval |\n|---|---|---:|---|\n| v2 | `retained-pack/source/original_v2.md` | 223,194 | 2026-10-28 |\n| annex | `retained-pack/source/professional_annex.md` | 2,304 | 2026-10-28 |\n| companion | `retained-pack/source/spaces_companion.md` | 19,629 | 2026-10-28 |\n| study | `retained-pack/source/study_annex.md` | 3,601 | 2026-10-28 |\n| scalability | `retained-pack/source/scalability_annex.md` | 1,062 | 2026-10-28 |\n\nThe five source texts total 249,790 manifest words. `retained-pack/catalog/source_manifest.json` stores their original SHA-256 values and acquisition records. `source_blocks.json` and `source_ledger.json` preserve original wording, placement and status; `heading_catalog.json` supports navigation. `owner_overrides.json` and `history/superseded-and-process.md` make replaced wording traceable.\nSRC-INV-002 — `source-v31.txt` contains the recovered 55,336-word v3.1 document text; its heading outline is `source-v31-outline.json`, and the original DOCX is retained with the supplied source archives. The modular pack carries the more detailed underlying technical clauses. Read the relevant complete module plus its prerequisites before implementing a domain; a module's concise current text is not its entire technical source.\nSRC-INV-003 — Current interface authority is the saved editable Atlas used to produce `screens-current.json`: 251 unique registered Screen IDs. The older modular pack's `catalog/screen_mapping.json` maps 163 historical screens, and its bundled Atlas/screenshots are historical design evidence. The 88 newer registered states are assigned in this index; older screenshot titles do not overwrite the current manifest's titles.\nSRC-INV-004 — The original modular ZIP was extracted as 454 files, 38,253,332 uncompressed bytes, and verified byte-for-byte against the archive; the archive SHA-256 is recorded in `retained-source-verification.json`. That check establishes extraction integrity. It does not demonstrate that every requirement has been implemented, every source claim independently verified, or every old screenshot updated.\nSRC-INV-005 — The receiving package should include the current specification, current linked Atlas, this route index, complete retained modules, technical chapters, the five original texts, ledgers and source checksums. Preserve relative source paths or update every affected link together. Record final package checksums after link/content integration rather than reusing an input-file checksum for modified output.\n",
+      "screenIds": [],
+      "sourceRefs": [
+        "retained-pack/catalog/source_manifest.json",
+        "retained-pack/coverage_report.json",
+        "retained-source-verification.json",
+        "source-v31.txt",
+        "source-v31-outline.json",
+        "spec-work/screens-current.json"
+      ]
+    },
+    {
+      "key": "remaining_decisions",
+      "title": "10.4 - Remaining decisions and verification boundaries",
+      "markdown": "# 10.4 - Remaining decisions and verification boundaries\nSRC-OPEN-001 — Study's evidence weighting, numerical proficiency thresholds and review intervals remain explicitly open in the incorporated Study material. The four statuses, private attributed evidence, canonical app reuse and deterministic recommendation ordering are established. Do not present invented constants as owner-approved policy.\nSRC-OPEN-002 — Temporary-chat reading of existing durable memory is an unresolved optional capability. No durable writes/reinforcement or automatic Mesh/cloud transfer follows from a temporary session. Preserve the applicable established policy; do not add implicit read authority. Detailed multi-agent turn-taking/human-participation policy also cannot be inferred from a conversation-type label.\nSRC-OPEN-003 — AI Studio Training Lab remains deferred/undefined. Current builder, schema, test, evaluation and permission-simulation requirements remain active; the unimplemented training area does not invalidate them and must not be filled with fictional backend claims.\nSRC-OPEN-004 — Later runtime-backend naming changes reported in the recovered handoff context need reconciliation against the actual repository/adapters. Neither a legacy Strata requirement nor later Thunder/Lightning/Monstrosity names proves shipped capability. Preserve established public runtime ownership and compatibility while resolving exact identities, migration and supported routes.\nSRC-OPEN-005 — Apply and reload is required. The pending/active configuration, cancellation and failure handshake proposed in the runtime chapter needs confirmation against the actual runtime. A control that merely changes a badge is insufficient. Similarly, HTML/CUI inspector reference states do not prove native engine integration or permission/security observations.\nSRC-OPEN-006 — Newly specified context-menu/shortcut details are concrete Draft interactions where the retained sources do not already settle them. Check command IDs, native editing conventions, focus, permissions and target revision during implementation. Do not reinterpret every unspecified pixel or routine engineering choice as a product blocker.\nSRC-VERIFY-001 — Parser/VM checks and screen accounting have bounded meaning. Live visual geometry, narrow layouts, keyboard/screen-reader use, native services, real provider operations and durable recovery require their corresponding implementation evidence. Tab-close coverage verified for Home/New tab must not be advertised as proof of every legacy work-tab close/unsaved-work path.\nSRC-VERIFY-002 — CUI/Dulche ownership, canonical artifacts, scoped permissions, source-backed persistence and Mesh recovery are established in the retained material. Remove earlier blanket “undefined framework/storage” placeholders rather than reopening recovered decisions. Document only genuine conflicts or missing implementation particulars.\n",
+      "screenIds": [
+        "study-session",
+        "cards-review",
+        "spaces-permissions",
+        "ai-studio",
+        "host-model-picker",
+        "host-devtools-html",
+        "host-devtools-cui"
+      ],
+      "sourceRefs": [
+        "retained-pack/technical/spaces-11.md",
+        "retained-pack/modules/den-memory.complete.md",
+        "retained-pack/modules/spaces.complete.md",
+        "retained-pack/modules/ai-studio.complete.md",
+        "architecture-additions.json",
+        "interaction-handoff-additions.json",
+        "apps-additions.json"
+      ]
+    },
+    {
+      "key": "full_screen_coverage",
+      "title": "10.5 - Complete current Atlas coverage",
+      "markdown": "# 10.5 - Complete current Atlas coverage\nSRC-IDX-001 — The following index contains every current registered Screen ID exactly once, grouped by product family. Titles come from the current 251-screen manifest. Section keys point to the new owning chapter or an existing native-spec heading alias; retained module paths supply the incorporated functional contract. A screen can be cited elsewhere without acquiring another canonical identity.\nSRC-IDX-002 — Settings app pages belong to Settings for navigation and preference scope, with the corresponding app module additionally referenced. Theme references belong to the shared CUI design contract. Study routes point to the learning chapter, while Spaces retains admission, conversation and orchestration ownership. Build's Code, Sites and Stacks keep their separate retained modules within one project contract.\nSRC-IDX-003 — A row means “specified and linked”, not “backend finished”. Read acceptance and missing-state coverage alongside it. Existing aliases remain compatibility routes and are not duplicated as new screens. The historical 163-row mapping is preserved as provenance; new assignments are explicit extensions, not fabricated historical entries.\n",
+      "screenIds": [],
+      "sourceRefs": [
+        "spec-work/screens-current.json",
+        "retained-pack/catalog/screen_mapping.json",
+        "apps-additions.json",
+        "architecture-additions.json",
+        "interaction-handoff-additions.json"
+      ]
+    }
+  ],
+  "screenRows": [
+    {
+      "screenId": "os-go",
+      "title": "9to1OS · Desktop and Go",
+      "family": "9to1OS",
+      "sectionKey": "system_surfaces",
+      "modulePaths": [
+        "retained-pack/modules/os.complete.md"
+      ],
+      "sectionNumber": "8.13",
+      "specTitle": "8.13 - Terminal, Mini Computer, Admin, 9to1OS and Launcher",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.t596isruul3c",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.t596isruul3c"
+    },
+    {
+      "screenId": "admin",
+      "title": "9to1 Admin · People and policy scope",
+      "family": "Admin",
+      "sectionKey": "system_surfaces",
+      "modulePaths": [
+        "retained-pack/modules/admin.complete.md"
+      ],
+      "sectionNumber": "8.13",
+      "specTitle": "8.13 - Terminal, Mini Computer, Admin, 9to1OS and Launcher",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.t596isruul3c",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.t596isruul3c"
+    },
+    {
+      "screenId": "ai-studio",
+      "title": "AI Studio · Agent builder and test",
+      "family": "AI Studio",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/ai-studio.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "ai-studio-permissions",
+      "title": "AI Studio · Agent tool permissions",
+      "family": "AI Studio",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/ai-studio.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "automation-trigger",
+      "title": "Automations · Schedule trigger",
+      "family": "Automations",
+      "sectionKey": "planner_automations",
+      "modulePaths": [
+        "retained-pack/modules/automations.complete.md"
+      ],
+      "sectionNumber": "8.8",
+      "specTitle": "8.8 - Planner and Automations",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.z0pj1m8svz8t",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.z0pj1m8svz8t"
+    },
+    {
+      "screenId": "automations",
+      "title": "Automations · Draft graph and activation",
+      "family": "Automations",
+      "sectionKey": "planner_automations",
+      "modulePaths": [
+        "retained-pack/modules/automations.complete.md"
+      ],
+      "sectionNumber": "8.8",
+      "specTitle": "8.8 - Planner and Automations",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.z0pj1m8svz8t",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.z0pj1m8svz8t"
+    },
+    {
+      "screenId": "boards-add",
+      "title": "Boards · Add page or section",
+      "family": "Boards",
+      "sectionKey": "boards_controls",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.2",
+      "specTitle": "4.2 - Toolbar and secondary controls",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.obx9zkn0r4f2",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.obx9zkn0r4f2"
+    },
+    {
+      "screenId": "boards-alignment",
+      "title": "Boards · Alignment dropdown",
+      "family": "Boards",
+      "sectionKey": "boards_controls",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.2",
+      "specTitle": "4.2 - Toolbar and secondary controls",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.obx9zkn0r4f2",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.obx9zkn0r4f2"
+    },
+    {
+      "screenId": "boards-context",
+      "title": "Boards · Block actions",
+      "family": "Boards",
+      "sectionKey": "boards_interaction",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.3",
+      "specTitle": "4.3 - Selection, modes and context menus",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.v9jjd4cfi3uz",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.v9jjd4cfi3uz"
+    },
+    {
+      "screenId": "boards-editor",
+      "title": "Boards · Native page",
+      "family": "Boards",
+      "sectionKey": "boards_structure",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.1",
+      "specTitle": "4.1 - Boards structure and reading surface",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.7e3tttoi2joo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.7e3tttoi2joo"
+    },
+    {
+      "screenId": "boards-file-menu",
+      "title": "Boards · Board-name file menu",
+      "family": "Boards",
+      "sectionKey": "boards_controls",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.2",
+      "specTitle": "4.2 - Toolbar and secondary controls",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.obx9zkn0r4f2",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.obx9zkn0r4f2"
+    },
+    {
+      "screenId": "boards-ink",
+      "title": "Boards · Draw on the page",
+      "family": "Boards",
+      "sectionKey": "boards_interaction",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.3",
+      "specTitle": "4.3 - Selection, modes and context menus",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.v9jjd4cfi3uz",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.v9jjd4cfi3uz"
+    },
+    {
+      "screenId": "boards-insert",
+      "title": "Boards · Insert a block",
+      "family": "Boards",
+      "sectionKey": "boards_controls",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.2",
+      "specTitle": "4.2 - Toolbar and secondary controls",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.obx9zkn0r4f2",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.obx9zkn0r4f2"
+    },
+    {
+      "screenId": "boards-launch",
+      "title": "Boards · Start",
+      "family": "Boards",
+      "sectionKey": "boards_structure",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.1",
+      "specTitle": "4.1 - Boards structure and reading surface",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.7e3tttoi2joo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.7e3tttoi2joo"
+    },
+    {
+      "screenId": "boards-list-options",
+      "title": "Boards · List options",
+      "family": "Boards",
+      "sectionKey": "boards_controls",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.2",
+      "specTitle": "4.2 - Toolbar and secondary controls",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.obx9zkn0r4f2",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.obx9zkn0r4f2"
+    },
+    {
+      "screenId": "boards-properties",
+      "title": "Boards · Contextual properties",
+      "family": "Boards",
+      "sectionKey": "boards_controls",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.2",
+      "specTitle": "4.2 - Toolbar and secondary controls",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.obx9zkn0r4f2",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.obx9zkn0r4f2"
+    },
+    {
+      "screenId": "boards-recovery",
+      "title": "Boards · Save recovery",
+      "family": "Boards",
+      "sectionKey": "boards_recovery",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.4",
+      "specTitle": "4.4 - Saving, recovery and acceptance",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.efj52r5nvftr",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.efj52r5nvftr"
+    },
+    {
+      "screenId": "boards-typing",
+      "title": "Boards · Typing within a block",
+      "family": "Boards",
+      "sectionKey": "boards_interaction",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.3",
+      "specTitle": "4.3 - Selection, modes and context menus",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.v9jjd4cfi3uz",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.v9jjd4cfi3uz"
+    },
+    {
+      "screenId": "mobile-boards",
+      "title": "Mobile · Boards page drawer",
+      "family": "Boards",
+      "sectionKey": "boards_structure",
+      "modulePaths": [
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "4.1",
+      "specTitle": "4.1 - Boards structure and reading surface",
+      "specTabId": "t.rd64lp4djv5h",
+      "specHeadingId": "h.7e3tttoi2joo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.rd64lp4djv5h#heading=h.7e3tttoi2joo"
+    },
+    {
+      "screenId": "build-code",
+      "title": "Build · Code workspace",
+      "family": "Build",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/build-code.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "build-code-diagnostics",
+      "title": "Build · Completion and diagnostics",
+      "family": "Build",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/build-code.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "build-sites",
+      "title": "Build · Sites editor",
+      "family": "Build",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/build-sites.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "build-sites-responsive",
+      "title": "Build Sites · Mobile breakpoint",
+      "family": "Build",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/build-sites.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "build-stacks",
+      "title": "Build · Stacks conflict review",
+      "family": "Build",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/build-stacks.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "build-stacks-freeze",
+      "title": "Build Stacks · Freeze scope",
+      "family": "Build",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/build-stacks.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "canvas-ai",
+      "title": "Canvas · Contextual AI",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "canvas-editor",
+      "title": "Canvas · Drawing workspace",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "canvas-insert",
+      "title": "Canvas · Insert shapes",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "canvas-launch",
+      "title": "Canvas · Start",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "canvas-pen-presets",
+      "title": "Canvas · Pen presets",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "canvas-selection",
+      "title": "Canvas · Shape selection & layers",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "canvas-shape-builder",
+      "title": "Canvas · Custom shape builder",
+      "family": "Canvas",
+      "sectionKey": "canvas",
+      "modulePaths": [
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "8.4",
+      "specTitle": "8.4 - Canvas and shared shapes",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.zhah9zypzpqi",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.zhah9zypzpqi"
+    },
+    {
+      "screenId": "cards-edit",
+      "title": "Cards · Rich card editor",
+      "family": "Cards",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/cards.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "cards-review",
+      "title": "Cards · Focused review",
+      "family": "Cards",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/cards.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "cards-study",
+      "title": "Cards · Study overview",
+      "family": "Cards",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/cards.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "connect-compose",
+      "title": "Connect · Compose a message",
+      "family": "Connect",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/connect.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "connect-mail",
+      "title": "Connect · Mail and a reply draft",
+      "family": "Connect",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/connect.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "connect-messages",
+      "title": "Connect · Team conversation",
+      "family": "Connect",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/connect.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "connect-schedule",
+      "title": "Connect · Schedule send review",
+      "family": "Connect",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/connect.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "data",
+      "title": "Data · Spreadsheet",
+      "family": "Data",
+      "sectionKey": "data_forms",
+      "modulePaths": [
+        "retained-pack/modules/data.complete.md"
+      ],
+      "sectionNumber": "8.6",
+      "specTitle": "8.6 - Data and Forms",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.x06anm3e9h0j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.x06anm3e9h0j"
+    },
+    {
+      "screenId": "data-approval",
+      "title": "Data · Review an AI mutation",
+      "family": "Data",
+      "sectionKey": "data_forms",
+      "modulePaths": [
+        "retained-pack/modules/data.complete.md"
+      ],
+      "sectionNumber": "8.6",
+      "specTitle": "8.6 - Data and Forms",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.x06anm3e9h0j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.x06anm3e9h0j"
+    },
+    {
+      "screenId": "data-chart",
+      "title": "Data · Chart insertion and preview",
+      "family": "Data",
+      "sectionKey": "data_forms",
+      "modulePaths": [
+        "retained-pack/modules/data.complete.md"
+      ],
+      "sectionNumber": "8.6",
+      "specTitle": "8.6 - Data and Forms",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.x06anm3e9h0j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.x06anm3e9h0j"
+    },
+    {
+      "screenId": "data-formula",
+      "title": "Data · Editing a formula",
+      "family": "Data",
+      "sectionKey": "data_forms",
+      "modulePaths": [
+        "retained-pack/modules/data.complete.md"
+      ],
+      "sectionNumber": "8.6",
+      "specTitle": "8.6 - Data and Forms",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.x06anm3e9h0j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.x06anm3e9h0j"
+    },
+    {
+      "screenId": "appearance",
+      "title": "Appearance · Theme and accent preferences",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "appearance-palette",
+      "title": "Appearance · Accent palette",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "components",
+      "title": "Components · Buttons, inputs and control states",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "custom-theme",
+      "title": "Create Theme · Authoring and preview",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "states",
+      "title": "States · Recovery and persistence reference",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/home.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-bubble",
+      "title": "Bubble · Material and controls",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-frosted",
+      "title": "Frosted Glass · Corrected material and controls",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-glow",
+      "title": "Glow · Corrected material and controls",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-playful",
+      "title": "Playful · Corrected material and controls",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-bubble",
+      "title": "Theme refs · Bubble",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-frost",
+      "title": "Theme refs · Frost",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-glow",
+      "title": "Theme refs · Glow",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-industrial",
+      "title": "Theme refs · Industrial",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-playful",
+      "title": "Theme refs · Playful",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-professional",
+      "title": "Theme refs · Professional",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-retro",
+      "title": "Theme refs · Retro",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-snug",
+      "title": "Theme refs · Snug",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-synthwave",
+      "title": "Theme refs · Synthwave",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-reference-western",
+      "title": "Theme refs · Western",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-retro",
+      "title": "Retro · Material and controls",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "theme-western",
+      "title": "Western · Material and controls",
+      "family": "Design system",
+      "sectionKey": "base_design",
+      "modulePaths": [
+        "retained-pack/modules/cui.complete.md"
+      ],
+      "sectionNumber": "1.3",
+      "specTitle": "1.3 - Shared product rules",
+      "specTabId": "t.0",
+      "specHeadingId": "h.87c0ypc2w1q6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.0#heading=h.87c0ypc2w1q6"
+    },
+    {
+      "screenId": "files",
+      "title": "Files · Local files and details",
+      "family": "Files",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/files.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "files-context",
+      "title": "Files · Selected file actions",
+      "family": "Files",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/files.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "files-grid",
+      "title": "Files · Grid and selected board",
+      "family": "Files",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/files.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "files-organisation",
+      "title": "Files · Sheet and organisation types",
+      "family": "Files",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/files.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "forms",
+      "title": "Forms · Assessment builder",
+      "family": "Forms",
+      "sectionKey": "data_forms",
+      "modulePaths": [
+        "retained-pack/modules/forms.complete.md"
+      ],
+      "sectionNumber": "8.6",
+      "specTitle": "8.6 - Data and Forms",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.x06anm3e9h0j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.x06anm3e9h0j"
+    },
+    {
+      "screenId": "forms-preview",
+      "title": "Forms · Respondent preview",
+      "family": "Forms",
+      "sectionKey": "data_forms",
+      "modulePaths": [
+        "retained-pack/modules/forms.complete.md"
+      ],
+      "sectionNumber": "8.6",
+      "specTitle": "8.6 - Data and Forms",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.x06anm3e9h0j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.x06anm3e9h0j"
+    },
+    {
+      "screenId": "games",
+      "title": "Games · Scene and components",
+      "family": "Games",
+      "sectionKey": "build_creation",
+      "modulePaths": [
+        "retained-pack/modules/games.complete.md"
+      ],
+      "sectionNumber": "8.10",
+      "specTitle": "8.10 - Build, AI Studio and Games",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.tu49h9cciub6",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.tu49h9cciub6"
+    },
+    {
+      "screenId": "host-browser",
+      "title": "9to1 · Browser",
+      "family": "Haven",
+      "sectionKey": "browser_tools",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "2.3.4",
+      "specTitle": "2.3.4 - Browser tools, Manage page and inspectors",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.cx3hialkcypo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.cx3hialkcypo"
+    },
+    {
+      "screenId": "host-browser-bookmarks",
+      "title": "Haven · Bookmarks",
+      "family": "Haven",
+      "sectionKey": "browser_tools",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "2.3.4",
+      "specTitle": "2.3.4 - Browser tools, Manage page and inspectors",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.cx3hialkcypo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.cx3hialkcypo"
+    },
+    {
+      "screenId": "host-browser-history",
+      "title": "Haven · History",
+      "family": "Haven",
+      "sectionKey": "browser_tools",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "2.3.4",
+      "specTitle": "2.3.4 - Browser tools, Manage page and inspectors",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.cx3hialkcypo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.cx3hialkcypo"
+    },
+    {
+      "screenId": "host-devtools-cui",
+      "title": "Haven · CUI inspector",
+      "family": "Haven",
+      "sectionKey": "browser_tools",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md",
+        "retained-pack/modules/cui.complete.md",
+        "retained-pack/modules/platform.complete.md"
+      ],
+      "sectionNumber": "2.3.4",
+      "specTitle": "2.3.4 - Browser tools, Manage page and inspectors",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.cx3hialkcypo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.cx3hialkcypo"
+    },
+    {
+      "screenId": "host-devtools-html",
+      "title": "Haven · HTML inspector",
+      "family": "Haven",
+      "sectionKey": "browser_tools",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md",
+        "retained-pack/modules/platform.complete.md"
+      ],
+      "sectionNumber": "2.3.4",
+      "specTitle": "2.3.4 - Browser tools, Manage page and inspectors",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.cx3hialkcypo",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.cx3hialkcypo"
+    },
+    {
+      "screenId": "host-model-picker",
+      "title": "9to1 · Model picker",
+      "family": "Haven",
+      "sectionKey": "model_picker",
+      "modulePaths": [
+        "retained-pack/modules/models.complete.md"
+      ],
+      "sectionNumber": "2.3.3",
+      "specTitle": "2.3.3 - Model picker",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.xrco6lv5bzqg",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.xrco6lv5bzqg"
+    },
+    {
+      "screenId": "host-newtab",
+      "title": "9to1 · New Tab",
+      "family": "Haven",
+      "sectionKey": "home_newtab",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "2.3.2",
+      "specTitle": "2.3.2 - Home and New tab",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.mz808bphuj0r",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.mz808bphuj0r"
+    },
+    {
+      "screenId": "host-newtab-customise",
+      "title": "New Tab · Customisation",
+      "family": "Haven",
+      "sectionKey": "home_newtab",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "2.3.2",
+      "specTitle": "2.3.2 - Home and New tab",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.mz808bphuj0r",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.mz808bphuj0r"
+    },
+    {
+      "screenId": "host-newtab-widgets",
+      "title": "New Tab · Add a widget",
+      "family": "Haven",
+      "sectionKey": "home_newtab",
+      "modulePaths": [
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "2.3.2",
+      "specTitle": "2.3.2 - Home and New tab",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.mz808bphuj0r",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.mz808bphuj0r"
+    },
+    {
+      "screenId": "host-notifications",
+      "title": "9to1 · Notifications",
+      "family": "Haven",
+      "sectionKey": "interaction_lifecycle",
+      "modulePaths": [
+        "retained-pack/modules/notifications.complete.md"
+      ],
+      "sectionNumber": "9.1",
+      "specTitle": "9.1 - Targeting, menus and keyboard lifecycle",
+      "specTabId": "t.usni9fu0ls33",
+      "specHeadingId": "h.9ao1yopveqs1",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.usni9fu0ls33#heading=h.9ao1yopveqs1"
+    },
+    {
+      "screenId": "home-apps",
+      "title": "Home · Apps",
+      "family": "Home",
+      "sectionKey": "app_contracts",
+      "modulePaths": [
+        "retained-pack/modules/home.complete.md"
+      ],
+      "sectionNumber": "8.1",
+      "specTitle": "8.1 - Shared app behaviour",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.xbw5wig84iiy",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.xbw5wig84iiy"
+    },
+    {
+      "screenId": "home-assistants",
+      "title": "Home · Assistants",
+      "family": "Home",
+      "sectionKey": "den-memory-identity",
+      "modulePaths": [
+        "retained-pack/modules/assistants.complete.md"
+      ],
+      "sectionNumber": "7.11",
+      "specTitle": "7.11 - Den, Assistant identity and memory",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.rzxe6ixb0y4j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.rzxe6ixb0y4j"
+    },
+    {
+      "screenId": "home-dashboard",
+      "title": "Home · New tab",
+      "family": "Home",
+      "sectionKey": "home_newtab",
+      "modulePaths": [
+        "retained-pack/modules/home.complete.md"
+      ],
+      "sectionNumber": "2.3.2",
+      "specTitle": "2.3.2 - Home and New tab",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.mz808bphuj0r",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.mz808bphuj0r"
+    },
+    {
+      "screenId": "home-explore",
+      "title": "Home · Explore",
+      "family": "Home",
+      "sectionKey": "home_newtab",
+      "modulePaths": [
+        "retained-pack/modules/home.complete.md"
+      ],
+      "sectionNumber": "2.3.2",
+      "specTitle": "2.3.2 - Home and New tab",
+      "specTabId": "t.8lnv8r5vlfea",
+      "specHeadingId": "h.mz808bphuj0r",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.8lnv8r5vlfea#heading=h.mz808bphuj0r"
+    },
+    {
+      "screenId": "home-library",
+      "title": "Home · Library",
+      "family": "Home",
+      "sectionKey": "files-library",
+      "modulePaths": [
+        "retained-pack/modules/home.complete.md"
+      ],
+      "sectionNumber": "7.7",
+      "specTitle": "7.7 - Files, Library and organisational views",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.f3jjjlqsl0qs",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.f3jjjlqsl0qs"
+    },
+    {
+      "screenId": "home-mesh",
+      "title": "Home · Mesh & devices",
+      "family": "Home",
+      "sectionKey": "mesh-sync",
+      "modulePaths": [
+        "retained-pack/modules/mesh.complete.md"
+      ],
+      "sectionNumber": "7.8",
+      "specTitle": "7.8 - Mesh, replication and remote execution",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.8sb8vkcpiy4v",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.8sb8vkcpiy4v"
+    },
+    {
+      "screenId": "home-model-details",
+      "title": "Models · Capability and requirements",
+      "family": "Home",
+      "sectionKey": "model-provider-lifecycle",
+      "modulePaths": [
+        "retained-pack/modules/models.complete.md"
+      ],
+      "sectionNumber": "7.10",
+      "specTitle": "7.10 - Models, providers and route lifecycle",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.s3dg4saz9mjr",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.s3dg4saz9mjr"
+    },
+    {
+      "screenId": "home-models",
+      "title": "Models · Discover",
+      "family": "Home",
+      "sectionKey": "model-provider-lifecycle",
+      "modulePaths": [
+        "retained-pack/modules/models.complete.md"
+      ],
+      "sectionNumber": "7.10",
+      "specTitle": "7.10 - Models, providers and route lifecycle",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.s3dg4saz9mjr",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.s3dg4saz9mjr"
+    },
+    {
+      "screenId": "home-models-installed",
+      "title": "Models · Installed and saved",
+      "family": "Home",
+      "sectionKey": "model-provider-lifecycle",
+      "modulePaths": [
+        "retained-pack/modules/models.complete.md"
+      ],
+      "sectionNumber": "7.10",
+      "specTitle": "7.10 - Models, providers and route lifecycle",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.s3dg4saz9mjr",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.s3dg4saz9mjr"
+    },
+    {
+      "screenId": "home-specialists",
+      "title": "Home · Specialists",
+      "family": "Home",
+      "sectionKey": "den-memory-identity",
+      "modulePaths": [
+        "retained-pack/modules/assistants.complete.md"
+      ],
+      "sectionNumber": "7.11",
+      "specTitle": "7.11 - Den, Assistant identity and memory",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.rzxe6ixb0y4j",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.rzxe6ixb0y4j"
+    },
+    {
+      "screenId": "onboarding",
+      "title": "9to1 · Welcome",
+      "family": "Home",
+      "sectionKey": "identity-resources",
+      "modulePaths": [
+        "retained-pack/modules/identity.complete.md"
+      ],
+      "sectionNumber": "7.5",
+      "specTitle": "7.5 - Identity, account and resource authority",
+      "specTabId": "t.pa5ml7516cye",
+      "specHeadingId": "h.jh44mj4ez0pc",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.pa5ml7516cye#heading=h.jh44mj4ez0pc"
+    },
+    {
+      "screenId": "launcher",
+      "title": "Launcher · Mobile home",
+      "family": "Launcher",
+      "sectionKey": "system_surfaces",
+      "modulePaths": [
+        "retained-pack/modules/launcher.complete.md"
+      ],
+      "sectionNumber": "8.13",
+      "specTitle": "8.13 - Terminal, Mini Computer, Admin, 9to1OS and Launcher",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.t596isruul3c",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.t596isruul3c"
+    },
+    {
+      "screenId": "link-binder",
+      "title": "Link · Binder overview and detail",
+      "family": "Link",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/link.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "link-binder-insert",
+      "title": "Link Binder · Add content",
+      "family": "Link",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/link.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "link-flow",
+      "title": "Link · Continuous Flow document",
+      "family": "Link",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/link.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "link-flow-block-edit",
+      "title": "Link Flow · Source section and placement",
+      "family": "Link",
+      "sectionKey": "files_link",
+      "modulePaths": [
+        "retained-pack/modules/link.complete.md"
+      ],
+      "sectionNumber": "8.7",
+      "specTitle": "8.7 - Files and Link",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.il23drmnilho",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.il23drmnilho"
+    },
+    {
+      "screenId": "maps",
+      "title": "Maps · Route and place details",
+      "family": "Maps",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/maps.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "maps-route-options",
+      "title": "Maps · Route options and stops",
+      "family": "Maps",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/maps.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "mini-computer",
+      "title": "Mini Computer · Virtual machine",
+      "family": "Mini Computer",
+      "sectionKey": "system_surfaces",
+      "modulePaths": [
+        "retained-pack/modules/mini-computer.complete.md"
+      ],
+      "sectionNumber": "8.13",
+      "specTitle": "8.13 - Terminal, Mini Computer, Admin, 9to1OS and Launcher",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.t596isruul3c",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.t596isruul3c"
+    },
+    {
+      "screenId": "motion",
+      "title": "Motion · Video editing workspace",
+      "family": "Motion",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/motion.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "motion-export",
+      "title": "Motion · Render range and destination",
+      "family": "Motion",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/motion.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "motion-transition",
+      "title": "Motion · Transition at an edit",
+      "family": "Motion",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/motion.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "paths",
+      "title": "Paths · Branching learning route",
+      "family": "Paths",
+      "sectionKey": "interactive_artifacts",
+      "modulePaths": [
+        "retained-pack/modules/paths.complete.md"
+      ],
+      "sectionNumber": "8.12",
+      "specTitle": "8.12 - Prototype, Paths and Replay",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.fct8yarsvzvu",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.fct8yarsvzvu"
+    },
+    {
+      "screenId": "paths-branch-rule",
+      "title": "Paths · Edit a route condition",
+      "family": "Paths",
+      "sectionKey": "interactive_artifacts",
+      "modulePaths": [
+        "retained-pack/modules/paths.complete.md"
+      ],
+      "sectionNumber": "8.12",
+      "specTitle": "8.12 - Prototype, Paths and Replay",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.fct8yarsvzvu",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.fct8yarsvzvu"
+    },
+    {
+      "screenId": "picture",
+      "title": "Picture · Layered composition",
+      "family": "Picture",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/picture.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "picture-export",
+      "title": "Picture · Export image",
+      "family": "Picture",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/picture.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "picture-mask",
+      "title": "Picture · Layer mask editing",
+      "family": "Picture",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/picture.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "planner",
+      "title": "Planner · Week and unscheduled tasks",
+      "family": "Planner",
+      "sectionKey": "planner_automations",
+      "modulePaths": [
+        "retained-pack/modules/planner.complete.md"
+      ],
+      "sectionNumber": "8.8",
+      "specTitle": "8.8 - Planner and Automations",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.z0pj1m8svz8t",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.z0pj1m8svz8t"
+    },
+    {
+      "screenId": "planner-agenda",
+      "title": "Planner · Agenda view",
+      "family": "Planner",
+      "sectionKey": "planner_automations",
+      "modulePaths": [
+        "retained-pack/modules/planner.complete.md"
+      ],
+      "sectionNumber": "8.8",
+      "specTitle": "8.8 - Planner and Automations",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.z0pj1m8svz8t",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.z0pj1m8svz8t"
+    },
+    {
+      "screenId": "planner-event",
+      "title": "Planner · Edit an event",
+      "family": "Planner",
+      "sectionKey": "planner_automations",
+      "modulePaths": [
+        "retained-pack/modules/planner.complete.md"
+      ],
+      "sectionNumber": "8.8",
+      "specTitle": "8.8 - Planner and Automations",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.z0pj1m8svz8t",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.z0pj1m8svz8t"
+    },
+    {
+      "screenId": "play",
+      "title": "Play · Human and Agent quiz match",
+      "family": "Play",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/play.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "collaboration-review",
+      "title": "Present · Review an AI change",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/assistants.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "collaborators-picker",
+      "title": "Present · Invite collaborators",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/assistants.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-actions",
+      "title": "Present · Actions graph",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-collaborators",
+      "title": "Present · Working with collaborators",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-editor",
+      "title": "Present · Editor",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-insert",
+      "title": "Present · Insert gallery",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-launch",
+      "title": "Present · Start",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-presenter",
+      "title": "Present · Presenter view",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-selection",
+      "title": "Present · Selected object & notes",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-shape-builder",
+      "title": "Present · Custom shape builder",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "present-transitions",
+      "title": "Present · Transitions",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "variants",
+      "title": "Present · Compare Variants",
+      "family": "Present",
+      "sectionKey": "present",
+      "modulePaths": [
+        "retained-pack/modules/variants.complete.md"
+      ],
+      "sectionNumber": "8.3",
+      "specTitle": "8.3 - Present",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.h0ppxfr4ay3a",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.h0ppxfr4ay3a"
+    },
+    {
+      "screenId": "prototype",
+      "title": "Prototype · Interactive spring explorer",
+      "family": "Prototype",
+      "sectionKey": "interactive_artifacts",
+      "modulePaths": [
+        "retained-pack/modules/prototype.complete.md"
+      ],
+      "sectionNumber": "8.12",
+      "specTitle": "8.12 - Prototype, Paths and Replay",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.fct8yarsvzvu",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.fct8yarsvzvu"
+    },
+    {
+      "screenId": "prototype-parameters",
+      "title": "Prototype · Edit a typed input",
+      "family": "Prototype",
+      "sectionKey": "interactive_artifacts",
+      "modulePaths": [
+        "retained-pack/modules/prototype.complete.md"
+      ],
+      "sectionNumber": "8.12",
+      "specTitle": "8.12 - Prototype, Paths and Replay",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.fct8yarsvzvu",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.fct8yarsvzvu"
+    },
+    {
+      "screenId": "replay",
+      "title": "Replay · Historical checkpoint",
+      "family": "Replay",
+      "sectionKey": "interactive_artifacts",
+      "modulePaths": [
+        "retained-pack/modules/replay.complete.md"
+      ],
+      "sectionNumber": "8.12",
+      "specTitle": "8.12 - Prototype, Paths and Replay",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.fct8yarsvzvu",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.fct8yarsvzvu"
+    },
+    {
+      "screenId": "replay-event-detail",
+      "title": "Replay · Inspect a recorded change",
+      "family": "Replay",
+      "sectionKey": "interactive_artifacts",
+      "modulePaths": [
+        "retained-pack/modules/replay.complete.md"
+      ],
+      "sectionNumber": "8.12",
+      "specTitle": "8.12 - Prototype, Paths and Replay",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.fct8yarsvzvu",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.fct8yarsvzvu"
+    },
+    {
+      "screenId": "account",
+      "title": "Settings · Account & subscription",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/identity.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-accessibility",
+      "title": "Settings · Accessibility",
+      "family": "Settings",
+      "sectionKey": "settings_appearance",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.3",
+      "specTitle": "5.3 - Appearance and contextual AI",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.5612xasawprh",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.5612xasawprh"
+    },
+    {
+      "screenId": "settings-account",
+      "title": "Settings · Account & subscription",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-account-storage",
+      "title": "Settings · Storage",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-advanced",
+      "title": "Settings · Advanced",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-ai",
+      "title": "Settings · AI",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-admin",
+      "title": "Settings · Admin",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/admin.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-ai-studio",
+      "title": "Settings · AI Studio",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/ai-studio.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-automations",
+      "title": "Settings · Automations",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/automations.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-boards",
+      "title": "Settings · Boards",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/boards.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-build",
+      "title": "Settings · Build",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/build-code.complete.md",
+        "retained-pack/modules/build-sites.complete.md",
+        "retained-pack/modules/build-stacks.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-canvas",
+      "title": "Settings · Canvas",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/canvas.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-cards",
+      "title": "Settings · Cards",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/cards.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-connect",
+      "title": "Settings · Connect",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/connect.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-data",
+      "title": "Settings · Data",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/data.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-files",
+      "title": "Settings · Files",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/files.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-forms",
+      "title": "Settings · Forms",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/forms.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-games",
+      "title": "Settings · Games",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/games.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-launcher",
+      "title": "Settings · Launcher",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/launcher.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-link",
+      "title": "Settings · Link",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/link.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-maps",
+      "title": "Settings · Maps",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/maps.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-mini-computer",
+      "title": "Settings · Mini Computer",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/mini-computer.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-motion",
+      "title": "Settings · Motion",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/motion.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-paths",
+      "title": "Settings · Paths",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/paths.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-picture",
+      "title": "Settings · Picture",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/picture.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-planner",
+      "title": "Settings · Planner",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/planner.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-play",
+      "title": "Settings · Play",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/play.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-present",
+      "title": "Settings · Present",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/present.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-prototype",
+      "title": "Settings · Prototype",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/prototype.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-replay",
+      "title": "Settings · Replay",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/replay.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-shelf",
+      "title": "Settings · Shelf",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/shelf.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-spaces",
+      "title": "Settings · Spaces",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-terminal",
+      "title": "Settings · Terminal",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/terminal.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-vision-and-voice",
+      "title": "Settings · Vision & Voice",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/vision-voice.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-wave",
+      "title": "Settings · Wave",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/wave.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-app-write",
+      "title": "Settings · Write",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-appearance",
+      "title": "Settings · Appearance",
+      "family": "Settings",
+      "sectionKey": "settings_appearance",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.3",
+      "specTitle": "5.3 - Appearance and contextual AI",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.5612xasawprh",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.5612xasawprh"
+    },
+    {
+      "screenId": "settings-apps",
+      "title": "Settings · Apps & updates",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-apps-shared",
+      "title": "Settings · Shared settings",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-general",
+      "title": "Settings · General",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-bookmarks",
+      "title": "Settings · Bookmarks",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-general",
+      "title": "Settings · General",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-history",
+      "title": "Settings · History",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-key-menus",
+      "title": "Settings · Menus & focus",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-key-navigation",
+      "title": "Settings · Navigation",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-model-memory",
+      "title": "Settings · Models & memory",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-newtab",
+      "title": "Settings · New Tab",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-performance",
+      "title": "Settings · Performance",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-pinned",
+      "title": "Settings · Pinned destinations",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-recent-files",
+      "title": "Settings · Recent files",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-services",
+      "title": "Settings · Services",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-shortcut-order",
+      "title": "Settings · Shortcut order",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-shortcuts",
+      "title": "Settings · Keyboard Shortcuts",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-storage-cache",
+      "title": "Settings · Storage & cache",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-tab-history",
+      "title": "Settings · Back & forward",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-haven-tabs-address",
+      "title": "Settings · Tabs & address",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md",
+        "retained-pack/modules/browse.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-installed-models",
+      "title": "Settings · Installed Models",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-layout",
+      "title": "Settings · Layout",
+      "family": "Settings",
+      "sectionKey": "settings_appearance",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.3",
+      "specTitle": "5.3 - Appearance and contextual AI",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.5612xasawprh",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.5612xasawprh"
+    },
+    {
+      "screenId": "settings-local-general",
+      "title": "Settings · General",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-mesh",
+      "title": "Settings · Mesh & devices",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-models",
+      "title": "Settings · AI & models",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-notifications",
+      "title": "Settings · Notifications",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-permissions",
+      "title": "Settings · Permissions & trust",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-personalisation",
+      "title": "Settings · Personalisation",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-plugins",
+      "title": "Settings · Plugins/MCPs",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-privacy",
+      "title": "Settings · Privacy",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-profile",
+      "title": "Settings · Profile",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-provider",
+      "title": "Settings · Provider access detail",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-providers",
+      "title": "Settings · Providers",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-sandbox",
+      "title": "Settings · Sandbox",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-security",
+      "title": "Settings · Security & Privacy",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-security-general",
+      "title": "Settings · General",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-skills",
+      "title": "Settings · Skills",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-storage",
+      "title": "Settings · Storage",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-subscriptions",
+      "title": "Settings · Subscriptions",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "settings-theme-options",
+      "title": "Settings · Theme Options",
+      "family": "Settings",
+      "sectionKey": "settings_appearance",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.3",
+      "specTitle": "5.3 - Appearance and contextual AI",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.5612xasawprh",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.5612xasawprh"
+    },
+    {
+      "screenId": "settings-voice",
+      "title": "Settings · Voice",
+      "family": "Settings",
+      "sectionKey": "settings_navigation",
+      "modulePaths": [
+        "retained-pack/modules/settings.complete.md"
+      ],
+      "sectionNumber": "5.1",
+      "specTitle": "5.1 - Settings navigation and scopes",
+      "specTabId": "t.m73tfqsiwjxb",
+      "specHeadingId": "h.56uyf3qhxnd4",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.m73tfqsiwjxb#heading=h.56uyf3qhxnd4"
+    },
+    {
+      "screenId": "shelf",
+      "title": "Shelf · Curated launch collection",
+      "family": "Shelf",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/shelf.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "shelf-add",
+      "title": "Shelf · Add an item",
+      "family": "Shelf",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/shelf.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "mobile-chat",
+      "title": "Mobile · Spaces conversation",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "mobile-permissions",
+      "title": "Mobile · Conversation permissions",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-assistant-alex",
+      "title": "Assistants · Alex Main",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-assistant-maya",
+      "title": "Assistants · Maya Main",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-assistant-rowan",
+      "title": "Assistants · Rowan Main",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-assistants",
+      "title": "Assistants · Persistent collaborators",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-attachments",
+      "title": "Spaces · Attach menu",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-canvas-working",
+      "title": "Spaces · Canvas work in progress",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-chat",
+      "title": "Spaces · Conversation",
+      "family": "Spaces",
+      "sectionKey": "spaces_configuration",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.5",
+      "specTitle": "3.5 - Conversation types, organisation and Space configuration",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.4mky232lqwbj",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.4mky232lqwbj"
+    },
+    {
+      "screenId": "spaces-compose",
+      "title": "Spaces · Draft and contextual shelf",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-emoji",
+      "title": "Spaces · Native emoji picker",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-experiences",
+      "title": "Spaces · Experiences",
+      "family": "Spaces",
+      "sectionKey": "spaces_specialised_workflows",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.6",
+      "specTitle": "3.6 - Task-specific Spaces and learning entry points",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.ueir6qjn74g",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.ueir6qjn74g"
+    },
+    {
+      "screenId": "spaces-export-recovery",
+      "title": "Spaces · Export failure and recovery",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-generated-files",
+      "title": "Spaces · Generated files and outputs",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-generative-ui",
+      "title": "Spaces · Generated interactive planner",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-manage",
+      "title": "Spaces · Settings and permission scope",
+      "family": "Spaces",
+      "sectionKey": "spaces_configuration",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.5",
+      "specTitle": "3.5 - Conversation types, organisation and Space configuration",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.4mky232lqwbj",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.4mky232lqwbj"
+    },
+    {
+      "screenId": "spaces-permissions",
+      "title": "Spaces · Conversation permissions",
+      "family": "Spaces",
+      "sectionKey": "spaces_configuration",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.5",
+      "specTitle": "3.5 - Conversation types, organisation and Space configuration",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.4mky232lqwbj",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.4mky232lqwbj"
+    },
+    {
+      "screenId": "spaces-present-working",
+      "title": "Spaces · Presentation work in progress",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-research",
+      "title": "Research · Plan, sources and outputs",
+      "family": "Spaces",
+      "sectionKey": "spaces_specialised_workflows",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.6",
+      "specTitle": "3.6 - Task-specific Spaces and learning entry points",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.ueir6qjn74g",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.ueir6qjn74g"
+    },
+    {
+      "screenId": "spaces-running",
+      "title": "Tasks · Run summary and approval",
+      "family": "Spaces",
+      "sectionKey": "spaces_specialised_workflows",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.6",
+      "specTitle": "3.6 - Task-specific Spaces and learning entry points",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.ueir6qjn74g",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.ueir6qjn74g"
+    },
+    {
+      "screenId": "spaces-shopping",
+      "title": "Shopping · Requirements and comparison",
+      "family": "Spaces",
+      "sectionKey": "spaces_specialised_workflows",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.6",
+      "specTitle": "3.6 - Task-specific Spaces and learning entry points",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.ueir6qjn74g",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.ueir6qjn74g"
+    },
+    {
+      "screenId": "spaces-specialists",
+      "title": "Spaces · Specialists",
+      "family": "Spaces",
+      "sectionKey": "spaces_configuration",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.5",
+      "specTitle": "3.5 - Conversation types, organisation and Space configuration",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.4mky232lqwbj",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.4mky232lqwbj"
+    },
+    {
+      "screenId": "spaces-subagent-detail",
+      "title": "Spaces · Subagent scope and activity",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-subagents",
+      "title": "Spaces · Coordinated subagents",
+      "family": "Spaces",
+      "sectionKey": "spaces_live_outputs",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.7",
+      "specTitle": "3.7 - Subagents, generated UI and durable outputs",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.e5y9rooz8xbx",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.e5y9rooz8xbx"
+    },
+    {
+      "screenId": "spaces-thinking",
+      "title": "Spaces · Thinking and visible activity",
+      "family": "Spaces",
+      "sectionKey": "spaces_admission",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.4",
+      "specTitle": "3.4 - Composer, admission and running work",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.9ep550j3d1do",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.9ep550j3d1do"
+    },
+    {
+      "screenId": "spaces-translate",
+      "title": "Translate · Conversational localisation",
+      "family": "Spaces",
+      "sectionKey": "spaces_specialised_workflows",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "3.6",
+      "specTitle": "3.6 - Task-specific Spaces and learning entry points",
+      "specTabId": "t.snkmezredh0m",
+      "specHeadingId": "h.ueir6qjn74g",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.snkmezredh0m#heading=h.ueir6qjn74g"
+    },
+    {
+      "screenId": "mobile-study",
+      "title": "Mobile · Study dashboard",
+      "family": "Study",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "spaces-study",
+      "title": "Study · Learning dashboard",
+      "family": "Study",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "study-session",
+      "title": "Study · Session modes and source policy",
+      "family": "Study",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "study-subject",
+      "title": "Study · Maths topic tracker",
+      "family": "Study",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "study-topic",
+      "title": "Study · Lesson and Revision Bank",
+      "family": "Study",
+      "sectionKey": "learning",
+      "modulePaths": [
+        "retained-pack/modules/spaces.complete.md"
+      ],
+      "sectionNumber": "8.5",
+      "specTitle": "8.5 - Study and Cards",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.n4c00hofq37q",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.n4c00hofq37q"
+    },
+    {
+      "screenId": "terminal",
+      "title": "Terminal · Command workspace",
+      "family": "Terminal",
+      "sectionKey": "system_surfaces",
+      "modulePaths": [
+        "retained-pack/modules/terminal.complete.md"
+      ],
+      "sectionNumber": "8.13",
+      "specTitle": "8.13 - Terminal, Mini Computer, Admin, 9to1OS and Launcher",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.t596isruul3c",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.t596isruul3c"
+    },
+    {
+      "screenId": "terminal-command-review",
+      "title": "Terminal · Review an AI command",
+      "family": "Terminal",
+      "sectionKey": "system_surfaces",
+      "modulePaths": [
+        "retained-pack/modules/terminal.complete.md"
+      ],
+      "sectionNumber": "8.13",
+      "specTitle": "8.13 - Terminal, Mini Computer, Admin, 9to1OS and Launcher",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.t596isruul3c",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.t596isruul3c"
+    },
+    {
+      "screenId": "vision-session-sources",
+      "title": "Vision & Voice · Sources and capture",
+      "family": "Vision & Voice",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/vision-voice.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "vision-voice",
+      "title": "Vision & Voice · Live session",
+      "family": "Vision & Voice",
+      "sectionKey": "communication_live",
+      "modulePaths": [
+        "retained-pack/modules/vision-voice.complete.md"
+      ],
+      "sectionNumber": "8.11",
+      "specTitle": "8.11 - Connect, Vision & Voice, Maps, Shelf and Play",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.ic10k7u4zffb",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.ic10k7u4zffb"
+    },
+    {
+      "screenId": "wave",
+      "title": "Wave · Audio timeline and mixer",
+      "family": "Wave",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/wave.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "wave-clip",
+      "title": "Wave · Selected clip and fades",
+      "family": "Wave",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/wave.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "wave-stems",
+      "title": "Wave · Split stems",
+      "family": "Wave",
+      "sectionKey": "media",
+      "modulePaths": [
+        "retained-pack/modules/wave.complete.md"
+      ],
+      "sectionNumber": "8.9",
+      "specTitle": "8.9 - Picture, Wave and Motion",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.jkq97rwo95g9",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.jkq97rwo95g9"
+    },
+    {
+      "screenId": "write-collaborators",
+      "title": "Write · Working with collaborators",
+      "family": "Write",
+      "sectionKey": "write",
+      "modulePaths": [
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "8.2",
+      "specTitle": "8.2 - Write",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.igvu38mz15e3",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.igvu38mz15e3"
+    },
+    {
+      "screenId": "write-collaborators-picker",
+      "title": "Write · Invite collaborators",
+      "family": "Write",
+      "sectionKey": "write",
+      "modulePaths": [
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "8.2",
+      "specTitle": "8.2 - Write",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.igvu38mz15e3",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.igvu38mz15e3"
+    },
+    {
+      "screenId": "write-continuous",
+      "title": "Write · Continuous View",
+      "family": "Write",
+      "sectionKey": "write",
+      "modulePaths": [
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "8.2",
+      "specTitle": "8.2 - Write",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.igvu38mz15e3",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.igvu38mz15e3"
+    },
+    {
+      "screenId": "write-editor",
+      "title": "Write · Page View",
+      "family": "Write",
+      "sectionKey": "write",
+      "modulePaths": [
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "8.2",
+      "specTitle": "8.2 - Write",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.igvu38mz15e3",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.igvu38mz15e3"
+    },
+    {
+      "screenId": "write-launch",
+      "title": "Write · Start",
+      "family": "Write",
+      "sectionKey": "write",
+      "modulePaths": [
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "8.2",
+      "specTitle": "8.2 - Write",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.igvu38mz15e3",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.igvu38mz15e3"
+    },
+    {
+      "screenId": "write-review",
+      "title": "Write · Selection & review",
+      "family": "Write",
+      "sectionKey": "write",
+      "modulePaths": [
+        "retained-pack/modules/write.complete.md"
+      ],
+      "sectionNumber": "8.2",
+      "specTitle": "8.2 - Write",
+      "specTabId": "t.kixgfsrptana",
+      "specHeadingId": "h.igvu38mz15e3",
+      "specUrl": "https://docs.google.com/document/d/1lAEef93WzzRjnymL5jYJYwvauqnVkmhgDvBgEiFNMW0/edit?tab=t.kixgfsrptana#heading=h.igvu38mz15e3"
+    }
+  ],
+  "sectionAliases": {
+    "base_design": "1.3 - Shared product rules",
+    "haven_tabs": "2.3.1 - Shell and tabs",
+    "home_newtab": "2.3.2 - Home and New tab",
+    "model_picker": "2.3.3 - Model picker",
+    "browser_tools": "2.3.4 - Browser tools, Manage page and inspectors",
+    "boards_structure": "4.1 - Boards structure and reading surface",
+    "boards_controls": "4.2 - Toolbar and secondary controls",
+    "boards_interaction": "4.3 - Selection, modes and context menus",
+    "boards_recovery": "4.4 - Saving, recovery and acceptance",
+    "settings_navigation": "5.1 - Settings navigation and scopes",
+    "settings_controls": "5.2 - Content rows and controls",
+    "settings_appearance": "5.3 - Appearance and contextual AI",
+    "interaction_matrix": "6.2 - Right-click and overflow matrix"
+  },
+  "coverageSummary": {
+    "currentScreens": 251,
+    "historicalMappedScreens": 163,
+    "laterScreenAssignments": 88,
+    "familyCounts": {
+      "9to1OS": 1,
+      "Admin": 1,
+      "AI Studio": 2,
+      "Automations": 2,
+      "Boards": 13,
+      "Build": 6,
+      "Canvas": 7,
+      "Cards": 3,
+      "Connect": 4,
+      "Data": 4,
+      "Design system": 21,
+      "Files": 4,
+      "Forms": 2,
+      "Games": 1,
+      "Haven": 10,
+      "Home": 11,
+      "Launcher": 1,
+      "Link": 4,
+      "Maps": 2,
+      "Mini Computer": 1,
+      "Motion": 3,
+      "Paths": 2,
+      "Picture": 3,
+      "Planner": 3,
+      "Play": 1,
+      "Present": 12,
+      "Prototype": 2,
+      "Replay": 2,
+      "Settings": 77,
+      "Shelf": 2,
+      "Spaces": 26,
+      "Study": 5,
+      "Terminal": 2,
+      "Vision & Voice": 2,
+      "Wave": 3,
+      "Write": 6
+    },
+    "indexMeaning": "Specified and source-linked; runtime acceptance is not asserted."
+  }
+}
