@@ -615,8 +615,10 @@ public sealed partial class MainView
                 }
                 else if (saved.AppKey.Equals("home", StringComparison.OrdinalIgnoreCase))
                 {
-                    var page = CreateHomePage();
-                    AddOrSelectTab(state.Key ?? "home-" + Guid.NewGuid().ToString("N")[..8], saved.Title, page, true, HavenSurface.Home, forceNewTab: true);
+                    // HOME-001: the retired home-dashboard reference restores onto the one
+                    // canonical start surface; the saved title and tab identity are preserved.
+                    var page = CreateNewDashboardPage();
+                    AddOrSelectTab(state.Key ?? "home-" + Guid.NewGuid().ToString("N")[..8], saved.Title, page, true, HavenSurface.Dashboard, forceNewTab: true);
                     restored = SelectedTab;
                 }
                 else if (saved.AppKey.Equals("terminal", StringComparison.OrdinalIgnoreCase))

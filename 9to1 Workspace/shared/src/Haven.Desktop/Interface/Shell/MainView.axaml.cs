@@ -1999,10 +1999,12 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             return SelectedTab!;
         }
 
-        var home = CreateHomePage();
-        var key = "home-" + Guid.NewGuid().ToString("N")[..8];
-        AddOrSelectTab(key, "Home", home, true, HavenSurface.Home, forceNewTab: true);
-        _ = home.ActivateAsync(CancellationToken.None);
+        // HAV-TAB-001/HOME-001: Home and New tab are ONE customisable start surface and the
+        // legacy home-dashboard references resolve to it, so the fallback new tab opens the
+        // canonical unified dashboard (NewDashboardPage) rather than the retired tile page.
+        var start = CreateNewDashboardPage();
+        var key = "new-tab-" + Guid.NewGuid().ToString("N")[..8];
+        AddOrSelectTab(key, "New tab", start, true, HavenSurface.Dashboard, forceNewTab: true);
         return SelectedTab!;
     }
 
