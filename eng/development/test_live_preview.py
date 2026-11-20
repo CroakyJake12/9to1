@@ -600,5 +600,72 @@ int main(void) {
         self.assertEqual(["fixture launch-receipt write failure"], errors)
 
 
+    def lost_guardian_setup(self):
+        first = preview.start(self.state, self.manifest)
+        directory = preview.run_directory(self.state, preview.current(self.state))
+        launch = preview.read_json(directory / "launch.json")
+        guardian = preview._guardians[0]
+        guardian.kill()
+        guardian.wait(timeout=5)
+        (self.data / "close.request").write_text("0")
+        deadline = time.monotonic() + 5
+        while os.path.exists("/proc/" + str(launch["process"]["pid"])) and time.monotonic() < deadline:
+            time.sleep(0.02)
+        self.assertFalse((directory / "exit.json").exists(), "fixture must end with no exit receipt")
+        return first, directory, launch
+
+    def lost_guardian_review(self, first, directory, launch, **over):
+        review = self.root / "lost-guardian-review.json"
+        value = {"schema": "9to1.live-preview-lost-guardian-review/v1", "result": "RECONCILE_SAFE",
+                 "failed_run_id": first["run_id"],
+                 "failed_launch": {"path": str(directory / "launch.json"), "sha256": preview.hashed(directory / "launch.json")},
+                 "failed_process": launch["process"], "failed_guardian": launch["guardian"],
+                 "data_directory": str(self.data),
+                 "diagnosis": "Fixture: guardian killed before the fixture child exited, so no exit receipt exists.",
+                 "reviewer": "local fixture reviewer",
+                 "reason": "Explicit fixture-only reconciliation; no native Haven evidence"}
+        value.update(over)
+        atomic(review, value)
+        return review
+
+    def test_lost_guardian_reconciles_without_exit_receipt_and_permits_fresh_start(self):
+        first, directory, launch = self.lost_guardian_setup()
+        with self.assertRaises(preview.Refusal):
+            preview.status(self.state)
+        review = self.lost_guardian_review(first, directory, launch)
+        state = preview.reconcile_lost_guardian(self.state, review, preview.hashed(review))
+        self.assertEqual("RECONCILED_LOST_GUARDIAN", state["state"])
+        self.assertFalse((directory / "exit.json").exists(), "reconciliation must never fabricate an exit receipt")
+        with self.assertRaises(preview.Refusal):
+            self.lost_guardian_setup_reviewed = preview.reconcile_lost_guardian(self.state, review, preview.hashed(review))
+        following = self.runtime("b" * 40)
+        second = preview.start(self.state, following)
+        self.assertNotEqual(first["run_id"], second["run_id"])
+        self.assertTrue((directory / "launch.json").exists(), "lost run state must be retained")
+        self.assertEqual("preserve me", (self.data / "user-document.txt").read_text())
+
+    def test_lost_guardian_reconciliation_refuses_wrong_hash_and_misbound_review(self):
+        first, directory, launch = self.lost_guardian_setup()
+        review = self.lost_guardian_review(first, directory, launch)
+        with self.assertRaises(preview.Refusal):
+            preview.reconcile_lost_guardian(self.state, review, "0" * 64)
+        bad = self.lost_guardian_review(first, directory, launch, failed_guardian={"pid": 1})
+        with self.assertRaises(preview.Refusal):
+            preview.reconcile_lost_guardian(self.state, bad, preview.hashed(bad))
+        self.assertNotIn('"reconciliation"', (self.state / "current.json").read_text())
+        self.assertEqual([], list((self.state / "recoveries").glob("*reconciled*")))
+
+    def test_lost_guardian_reconciliation_refuses_a_live_owned_run(self):
+        first = preview.start(self.state, self.manifest)
+        directory = preview.run_directory(self.state, preview.current(self.state))
+        launch = preview.read_json(directory / "launch.json")
+        review = self.lost_guardian_review(first, directory, launch)
+        with self.assertRaises(preview.Refusal):
+            preview.reconcile_lost_guardian(self.state, review, preview.hashed(review))
+        self.assertEqual("RUNNING", preview.status(self.state)["state"])
+
+
+
+
 if __name__ == "__main__":
     unittest.main()

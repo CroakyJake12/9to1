@@ -256,6 +256,30 @@ def owned_process(launch):
     return actual
 
 
+def reconciled_lost_guardian(root, value, directory, launch, result):
+    """Terminal custody state recorded by reconcile_lost_guardian(); reverified on every read so a
+    PID reuse or a process-group survivor after reconciliation fails closed."""
+    pin = value.get("reconciliation") or {}
+    require(re.fullmatch(r"[0-9a-f]{64}", pin.get("sha256", "") or ""), "Reconciliation pin invalid")
+    audit_path = absolute(pin.get("path", "") or "")
+    require(audit_path.parent == root / "recoveries" and regular(audit_path) and hashed(audit_path) == pin["sha256"],
+            "Reconciliation audit changed")
+    audit = read_json(audit_path)
+    launch_path = directory / "launch.json"
+    require(audit.get("schema") == "9to1.live-preview-lost-guardian-reconciliation/v1"
+            and audit.get("failed_run_id") == value["run_id"]
+            and audit.get("failed_launch") == {"path": str(launch_path), "sha256": hashed(launch_path)}
+            and audit.get("data_directory") == config(root)["data_directory"],
+            "Reconciliation audit does not bind this run")
+    for role in ("process", "guardian"):
+        ident = launch.get(role) or {}
+        actual = process_identity(ident.get("pid"))
+        require(not actual or (actual["state"] == "Z" and actual["start_ticks"] == ident.get("start_ticks")),
+                "Reconciled run's " + role + " identity became live or reused")
+        require(not remaining_group(ident), "Reconciled run retains " + role + " process-group members")
+    return {"state": "RECONCILED_LOST_GUARDIAN", **result, "reconciliation": pin}
+
+
 def status(root_value):
     root = private_root(root_value)
     value = current(root)
@@ -283,6 +307,8 @@ def status(root_value):
         guardian = process_identity(launch["guardian"]["pid"])
         if (directory / "exit.json").exists():
             return status(root)
+        if value.get("reconciliation"):
+            return reconciled_lost_guardian(root, value, directory, launch, result)
         require(guardian and guardian["start_ticks"] == launch["guardian"]["start_ticks"] and guardian["state"] != "Z",
                 "Application ended without its original guardian exit receipt; manual review required")
         return {"state": "EXIT_RECEIPT_PENDING", **result}
@@ -327,7 +353,9 @@ def start_locked(root, manifest_path, reviewed_failure=None, profile_reset=None)
     previous = current(root)
     if previous:
         state = status(root)
-        if state["state"] != "EXITED_CLEANLY":
+        if state["state"] == "RECONCILED_LOST_GUARDIAN":
+            pass  # reviewed terminal custody (reconcile_lost_guardian); a fresh guarded start replaces it
+        elif state["state"] != "EXITED_CLEANLY":
             require(state["state"] == "EXIT_FAILED" and reviewed_failure
                     and reviewed_failure["failed_run_id"] == previous["run_id"]
                     and hashed(run_directory(root, previous) / "exit.json") == reviewed_failure["failed_exit_sha256"],
@@ -437,6 +465,70 @@ def recover_failed(root_value, manifest_path, review_value, review_hash):
         result = start_locked(root, manifest_path, reviewed_failure={**audit,
             "audit_pin": {"path": str(audit_path), "sha256": hashed(audit_path)}})
         return {**result, "activation": audit["operation"], "recovery_receipt": str(audit_path)}
+
+
+def reconcile_lost_guardian(root_value, review_value, review_hash):
+    """Reviewed reconciliation for the state where the owned application and its original guardian both
+    ended before an exit receipt could be recorded (for example an X session teardown taking the guardian
+    with it). Freshly verifies both pinned identities are dead or terminal with no process-group survivors,
+    binds a review receipt to the retained launch and profile, and records one audit. Never fabricates an
+    exit receipt, never deletes retained state, and launches nothing: activation is a separate normal
+    `start`, which then treats RECONCILED_LOST_GUARDIAN as a reviewed terminal previous state."""
+    root, review_path = private_root(root_value), absolute(review_value)
+    with operation(root):
+        run = current(root)
+        require(run, "No retained run to reconcile")
+        require(not run.get("reconciliation"), "This lost-guardian run is already reconciled; use the normal lifecycle")
+        directory = run_directory(root, run)
+        launch_path = directory / "launch.json"
+        require(launch_path.exists() and not (directory / "exit.json").exists(),
+                "Reconciliation is only for a retained launch whose guardian left no exit receipt; use recover-failed for recorded failed exits")
+        launch = read_json(launch_path)
+        profile = config(root)["data_directory"]
+        require(launch["data_directory"] == profile, "Configured profile changed since the lost launch")
+        for role in ("process", "guardian"):
+            ident = launch.get(role) or {}
+            actual = process_identity(ident.get("pid"))
+            require(not actual or (actual["state"] == "Z" and actual["start_ticks"] == ident.get("start_ticks")),
+                    "Lost-guardian reconciliation refuses a live or reused " + role + " identity")
+            require(not remaining_group(ident), "Run retains " + role + " process-group members; true manual custody review required")
+        require(re.fullmatch(r"[0-9a-f]{64}", review_hash or ""), "Exact local review receipt SHA-256 required")
+        require(regular(review_path).st_size <= 4 * 1024 * 1024, "Review receipt exceeds its size bound")
+        raw = review_path.read_bytes()
+        require(hashlib.sha256(raw).hexdigest() == review_hash, "Local lost-guardian review receipt changed")
+        review = json.loads(raw)
+        require(isinstance(review, dict)
+                and review.get("schema") == "9to1.live-preview-lost-guardian-review/v1"
+                and review.get("result") == "RECONCILE_SAFE"
+                and review.get("failed_run_id") == run["run_id"]
+                and review.get("failed_launch") == {"path": str(launch_path), "sha256": hashed(launch_path)}
+                and review.get("failed_process") == launch["process"]
+                and review.get("failed_guardian") == launch["guardian"]
+                and review.get("data_directory") == profile
+                and isinstance(review.get("reviewer"), str) and bool(review["reviewer"].strip())
+                and isinstance(review.get("diagnosis"), str) and 0 < len(review["diagnosis"].strip()) <= 2000
+                and isinstance(review.get("reason"), str) and 0 < len(review["reason"].strip()) <= 2000,
+                "Reconciliation review must bind this run's launch, both original identities and the profile with a reviewer, diagnosis and reason")
+        audit_path = root / "recoveries" / (run["run_id"] + "-reconciled-" + review_hash + ".json")
+        require(not audit_path.exists(), "This review was already recorded")
+        audit = {"schema": "9to1.live-preview-lost-guardian-reconciliation/v1", "at": now(),
+                 "operation": "REVIEWED_LOST_GUARDIAN_RECONCILIATION",
+                 "failed_run_id": run["run_id"],
+                 "failed_launch": {"path": str(launch_path), "sha256": hashed(launch_path)},
+                 "failed_process": launch["process"], "failed_guardian": launch["guardian"],
+                 "data_directory": profile,
+                 "review_receipt": {"path": str(review_path), "sha256": review_hash},
+                 "reviewer": review["reviewer"], "reason": review["reason"], "diagnosis": review["diagnosis"],
+                 "exit_receipt_fabricated": False, "normal_close_verified": False,
+                 "activation": "NOT_STARTED_REQUIRES_SEPARATE_START"}
+        create_json(audit_path, audit)
+        require(hashed(review_path) == review_hash, "Review receipt changed before reconciliation was recorded")
+        value = current(root)
+        require(value and value["run_id"] == run["run_id"] and not value.get("reconciliation"),
+                "Retained run changed concurrently")
+        value["reconciliation"] = {"path": str(audit_path), "sha256": hashed(audit_path)}
+        atomic(root / "current.json", value)
+        return {**status(root), "reconciliation_receipt": str(audit_path)}
 
 
 def supervise(root_value, run_id):
@@ -691,6 +783,9 @@ def main():
     recovery = commands.add_parser("recover-failed")
     for name in ("state-root", "manifest", "review-receipt", "review-sha256"):
         recovery.add_argument("--" + name, required=True)
+    reconcile = commands.add_parser("reconcile-lost-guardian")
+    for name in ("state-root", "review-receipt", "review-sha256"):
+        reconcile.add_argument("--" + name, required=True)
     profiles = commands.add_parser("configure-test-profiles")
     profiles.add_argument("--state-root", required=True)
     profiles.add_argument("--test-profile-parent", required=True)
@@ -713,6 +808,8 @@ def main():
             result = reload(args.state_root, args.manifest, args.timeout)
         elif args.command == "recover-failed":
             result = recover_failed(args.state_root, args.manifest, args.review_receipt, args.review_sha256)
+        elif args.command == "reconcile-lost-guardian":
+            result = reconcile_lost_guardian(args.state_root, args.review_receipt, args.review_sha256)
         elif args.command == "configure-test-profiles":
             result = configure_test_profiles(args.state_root, args.test_profile_parent)
         elif args.command == "reset-profile":
