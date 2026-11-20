@@ -69,3 +69,13 @@ Parallel start surfaces found in `Haven.Desktop/Views/Pages/Home/` (one-implemen
 - `UnifiedHomePage.cs` + `UnifiedHomeContentFactory.cs:129` (CUI) — **Additional twin** created by a factory consumer not yet identified; classify after callers audited; no deletion authority from a mockup omission.
 - `9to1 Workspace/Home` (`HavenOS.Home`, its own Linux test lane) — the Home service/app library behind these surfaces (model picker metadata, dashboard stores, theme prefs per its tests); **retained foundation**, not a competing shell page.
 Remaining HOME rows: 002 visual Customise mode parity, 003 widget layout metadata incl. compact/wide + Reset undo, 004 Search vs Ask AI resolution honesty, 005 scroll/overflow no bright side line, 006 shortcut/widget context menus (CTX-02) — each to be verified against `NewDashboardPage` next; "New tab appears below Explore in the Home sidebar" (HAV-TAB-001) to check with the rail work.
+
+## Native retest — 20 November 2026 (ATLAS window, coordinator, build atlas-g01sc-010be319d)
+
+Actual self-contained dev copy started via live-preview custody at `010be319d` (profile `~/.local/share/9to1-development/profile`, guarded receipt retained). Observed on screen (evidence `docs/development/evidence/atlas-20261120/`, captures g01-01..g01-08):
+
+* Start, render and **session restore are real**: seven tabs including previous Boards document and Files, reddit/Mesh pages, and restored titles **New tab** and **Home** (the S3 route commit's restore path exercised on actual user data). Files lists the user's eight actual Drive folders — preserved.
+* **New observation (Adaptation):** tab labels render centered inside wide tabs; S1/HAV-TAB-001-era requirement is stable left-aligned icon/title with trailing close X (only the model picker's role-tab labels are centered). Recorded before fixing; fix requires native recheck afterward.
+* **Blocked (recorded, not hidden):** interactive activation checks (click New tab / + button / Home restore surface content) could not be driven: the restored window frame sits at negative root coordinates; mutter refuses programmatic moves from this session, WM_DELETE_WINDOW is ignored by the app, and wmctrl is not installed (no sudo available). Synthetic XTEST input therefore cannot reach the widgets. The copy is left RUNNING for owner interaction. `native-outcome` remains NOT RUN for interactive claims.
+* Tooling added this window: reviewed `reconcile-lost-guardian` custody lane in `eng/development/live_preview.py` (34/34 tests, commits 76259b2c1/010be319d) after the 18-Nov X-teardown left a lost-guardian state with no documented recovery; native capture helper `eng/development/native_capture.py`.
+

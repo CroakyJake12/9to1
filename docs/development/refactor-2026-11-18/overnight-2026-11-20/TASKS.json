@@ -58,7 +58,7 @@
    "id": "G00-T03",
    "parent_goal_id": "G00",
    "title": "Register or reuse the parent goal and child records, resolve runtime goal IDs, establish narrow shared interface contracts and allocate the first disjoint tasks.",
-   "status": "running",
+   "status": "done",
    "priority": 0,
    "preferred_owner_role": "coordinator",
    "runtime_worker_id": "coordinator",
@@ -80,17 +80,18 @@
     "existing-guarded-build-custody-and-command-plan"
    ],
    "evidence": [
-    "this ledger + .goal/CURRENT link + commit (receipt = commit hash this checkpoint cites)"
+    "this ledger + .goal/CURRENT link + commit (receipt = commit hash this checkpoint cites)",
+    "commit 9117169b3 (pushed), checkpoint-0001"
    ],
    "next_action": "commit then next task",
    "kind": "bootstrap_packet",
-   "updated": "2026-11-20T20:36:36Z"
+   "updated": "2026-11-20T21:13:27Z"
   },
   {
    "id": "G01-T01",
    "parent_goal_id": "G01",
    "title": "Verify the already-published S1 tab and S3 Home route changes in the current dev copy; fix observed gaps without rebuilding working features.",
-   "status": "ready",
+   "status": "running",
    "priority": 1,
    "preferred_owner_role": "coordinator",
    "runtime_worker_id": "coordinator",
@@ -124,9 +125,17 @@
     "native-outcome-where-applicable",
     "preserved-compatible-features"
    ],
-   "evidence": [],
-   "next_action": "guarded Haven.Desktop build at HEAD -> focused Haven.UI.Tests -> launch dev copy via live_preview normal lifecycle -> observe New tab + restored-home tab on canonical surface; record gaps; verify MainView:883 legacy reference decision",
-   "kind": "implementation_packet"
+   "evidence": [
+    "guarded builds: framework-dependent 115.5s PASS (atlas-g01) then self-contained publish 82.9s PASS (atlas-g01sc, receipts atlas-g01-010be319d/atlas-g01sc-010be319d; guard JSONs under ~/.local/state/atlas-builds)",
+    "Haven.UI.Tests 177/177 PASS at 010be319d (guarded serial lane, haven-ui-tests.log)",
+    "live-preview custody chain re-opened honestly: reconcile-lost-guardian for the 18-Nov lost-guardian state (audit in recoveries/), recover-failed for the exit-150 framework-mismatch start, self-contained candidate now RUNNING with real profile",
+    "native observations (docs/development/evidence/atlas-20261120/): app starts at HEAD; window renders; session restore works (7 tabs incl. previous Boards/Files + restored titles 'New tab' and 'Home'); Files shows user's 8 real Drive folders preserved; embedded Files shows its own inner tab row (existing behavior, browser-frame chrome separate)",
+    "OBSERVED GAP (native, g01-02/06/07): tab labels render CENTERED in the strip; current spec/Atlas require stable LEFT-aligned icon/title/close with trailing X (only model-picker role-tab labels are centred). Classification pending inventory write.",
+    "BLOCKED sub-check: interactive tab switch / plus-button new tab / start-surface activation. Window restored to a position whose frame is off-screen (client root origin negative); WM refuses moves, WM_DELETE ignored, no wmctrl, XTEST input unreachable while off-screen. Evidence captures g01-01..08 retained. NOT claiming interactive verification."
+   ],
+   "next_action": "resolve window-placement input lane (next attempt: quit app via app-internal path or place-reset in app settings while it is closed, then relaunch), then finish interactive G01-T01 checks; meanwhile implement the observed tab-alignment adaptation with tests",
+   "kind": "implementation_packet",
+   "updated": "2026-11-20T21:13:27Z"
   },
   {
    "id": "G01-T02",
