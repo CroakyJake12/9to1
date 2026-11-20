@@ -8,8 +8,9 @@ status: RUNNING
 owner: existing coordinator (OpenCode desktop, homepc/3.8-pro); V100 parallel worker BLOCKED (see RUN.json receipts); prior 31-Oct Boards sprint state preserved at revisions/2026-11-20-atlas-start/
 window: no new large work after 2026-11-21 23:00 London; checkpoint by 00:00 Sun 22 Nov
 schedule: none; inference services (official engine + V100 lane) stay up; Sunday multi-GPU engine work excluded
-next: unblock interactive native lane (window placed off-screen: try mutter Alt+F7 move-mode via XTEST,
-  or locate persisted window bounds; product fix queued: clamp restored window to workspace), then
-  G01 tab-alignment adaptation with tests; continue queue (G03/G04/G05 dependencies) around the blocker.
+next: read docs/development/refactor-2026-11-18/overnight-2026-11-20/MORNING-2026-11-21.md
+  (owner overnight instruction: download Qwen 3.8 27B for the V100 parallel worker, third probe,
+  then scoped packets). Also try the on-screen relaunch path: clamp fix committed, so a normal close
+  + start restores the window reachable and unblocks all native interactive G01 checks.
 progress: G00 done (9117169b3); reconcile-lost-guardian tooling (76259b2c1+010be319d); G01-T01 partial
   with real native start/render/session-restore evidence (e15f698d3, CHECKPOINT-0002)
