@@ -91,7 +91,7 @@
    "id": "G01-T01",
    "parent_goal_id": "G01",
    "title": "Verify the already-published S1 tab and S3 Home route changes in the current dev copy; fix observed gaps without rebuilding working features.",
-   "status": "running",
+   "status": "implemented_pending_native",
    "priority": 1,
    "preferred_owner_role": "coordinator",
    "runtime_worker_id": "coordinator",
@@ -131,11 +131,11 @@
     "live-preview custody chain re-opened honestly: reconcile-lost-guardian for the 18-Nov lost-guardian state (audit in recoveries/), recover-failed for the exit-150 framework-mismatch start, self-contained candidate now RUNNING with real profile",
     "native observations (docs/development/evidence/atlas-20261120/): app starts at HEAD; window renders; session restore works (7 tabs incl. previous Boards/Files + restored titles 'New tab' and 'Home'); Files shows user's 8 real Drive folders preserved; embedded Files shows its own inner tab row (existing behavior, browser-frame chrome separate)",
     "OBSERVED GAP (native, g01-02/06/07): tab labels render CENTERED in the strip; current spec/Atlas require stable LEFT-aligned icon/title/close with trailing X (only model-picker role-tab labels are centred). Classification pending inventory write.",
-    "BLOCKED sub-check: interactive tab switch / plus-button new tab / start-surface activation. Window restored to a position whose frame is off-screen (client root origin negative); WM refuses moves, WM_DELETE ignored, no wmctrl, XTEST input unreachable while off-screen. Evidence captures g01-01..08 retained. NOT claiming interactive verification."
+    "BLOCKED sub-check: interactive click/keyboard lane DEAD ENDED - dev-profile startup-recovery.json is session-only (no window bounds); bounds live in mutter's seat file (root-owned, no sudo). App left RUNNING; owner has been asked to drag it once. Captures g01-01..12 retained."
    ],
-   "next_action": "resolve window-placement input lane (next attempt: quit app via app-internal path or place-reset in app settings while it is closed, then relaunch), then finish interactive G01-T01 checks; meanwhile implement the observed tab-alignment adaptation with tests",
+   "next_action": "after owner drag: capture click New-tab + plus-button + Home surface; then root-cause tab centring (TopRail source conformant - template-layer suspect) with regression test",
    "kind": "implementation_packet",
-   "updated": "2026-11-20T21:13:27Z"
+   "updated": "2026-11-20T23:22:00Z"
   },
   {
    "id": "G01-T02",
