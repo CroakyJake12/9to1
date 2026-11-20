@@ -1,14 +1,11 @@
-goal: 9to1 Boards usability and continuation
-contract: contract.md revision 2
-checkpoint: checkpoint.md
+goal: 9to1 Atlas refactor - bounded execution window (ATLAS-20261120)
+contract: docs/development/refactor-2026-11-18/overnight-2026-11-20/RUN.json
+checkpoint: docs/development/refactor-2026-11-18/overnight-2026-11-20/CHECKPOINT-0001.md
+ledger: docs/development/refactor-2026-11-18/overnight-2026-11-20/TASKS.json
 branch: main
-base: d748bbf9dd7770717496c77a487a3615551e0831
-verified_pushed_implementation: 221510f1a817366f813cbbfe557bf7f6f5b7b8a1
-status: PAUSED_OWNER_WRAP
-owner: root coordinator; all Astra workers stopped
-usage_remaining_percent: 13 (owner-reported during wrap request; not live-metered)
-stop_boundary: immediate wrap, commit and push per latest owner instruction
-schedule: none; prior midnight continuation superseded
-handoff: docs/development/boards-spaces-sprint-handoff-2026-10-31.md
-next: Native retest final Boards and actual Desktop Spaces route, then Spaces archive-selection persistence and responsive navigation; see handoff
-completion: overall Goal unfinished; verified milestone pushed
+base: e8a07c9f872213b6a247f212e040e96d50aa9ef0
+status: RUNNING
+owner: existing coordinator (OpenCode desktop, homepc/3.8-pro); V100 parallel worker BLOCKED (see RUN.json receipts); prior 31-Oct Boards sprint state preserved at revisions/2026-11-20-atlas-start/
+window: no new large work after 2026-11-21 23:00 London; checkpoint by 00:00 Sun 22 Nov
+schedule: none; inference services (official engine + V100 lane) stay up; Sunday multi-GPU engine work excluded
+next: G01-T01 native verification of S1/S3 shell+Home in the current dev copy, then continue the queue

@@ -1,0 +1,71 @@
+{
+ "id": "ATLAS-20261120",
+ "runtime_goal_id": "file-ledger:docs/development/refactor-2026-11-18/overnight-2026-11-20/TASKS.json (no server goal API assumed, per handoff \u00a78)",
+ "package": {
+  "dir": "/tmp/atlas9to1/9to1-Atlas-Parallel-Workflow-2026-11-20",
+  "spec_sha256_verified": "b6cd0617f48e832574003360f8003eab1de792cdce7997996ebe88098a2db1b8",
+  "atlas_sha256_verified": "75c0abad2f971b430bf2b63f0cd9b2c911bc9e8aee552f35c1af33a421756d4",
+  "note": "repo copies match package hashes exactly"
+ },
+ "window": {
+  "timezone": "Europe/London",
+  "activated_utc": "2026-11-20T20:30Z",
+  "no_new_large_work_after": "2026-11-21T23:00+00:00",
+  "checkpoint_deadline": "2026-11-22T00:00+00:00"
+ },
+ "repo": {
+  "path": "/home/jacob/Documents/GitHub/9to1",
+  "branch": "main",
+  "head": "e8a07c9f872213b6a247f212e040e96d50aa9ef0",
+  "dirty_preserved": [
+   "cloud/files-drive/dev/live-attach.mjs (untracked)",
+   "cloud/files-drive/dev/live-firefox.mjs (untracked)"
+  ],
+  "newer_than_pin": [],
+  "note": "HEAD == handoff remote pin e8a07c9f872213b6a247f212e040e96d50aa9ef0 (2026-11-18 21:43:05 UTC)"
+ },
+ "policy": {
+  "same_main_only": true,
+  "branches_worktrees": "prohibited (AGENTS.md 18 Nov section)",
+  "sdk": "serial, guarded via eng/development/guarded_lowmem_build.py; SDK /home/jacob/.dotnet/dotnet 10.0.301 (PATH dotnet 8.0.134 never)",
+  "acceptance": "full independent acceptance remains paused; increment evidence only",
+  "sunday_boundary": "shared single-model multi-GPU engine work NOT started here"
+ },
+ "workers": {
+  "coordinator": {
+   "runtime": "OpenCode desktop session (this worker), model homepc/3.8-pro (Strata engine :47831->:18500)",
+   "cli_service_pid_observed": 5251
+  },
+  "v100_parallel": {
+   "status": "BLOCKED",
+   "attempted": "registered provider v100 -> http://127.0.0.1:18640/v1 (model qwen2.5-coder-14b-instruct-q4_k_m.gguf) as supported OpenCode config interface; config backup ~/.config/opencode/opencode.json.bak-20261120-atlas",
+   "receipts": [
+    "probe1 ses_e05564381ffeTE1E4etT7weONo: HALLUCINATED tool output (fabricated hex string, no execution)",
+    "probe2 same session after --jinja lane restart: echoed tool JSON, side-effect file /tmp/v100-probe2.txt ABSENT - tool loop not executing",
+    "conclusion: 14B-Q4 lane cannot drive agent tool loops; per handoff: no silent substitution, no third inference process; record blocked, continue independent work"
+   ]
+  }
+ },
+ "inference_services_preserved": {
+  "official_engine": "healthy at reconciliation (curl :18500/:47831 ok)",
+  "v100_lane": "live :18640 (ctx16384 np2 jinja, 165W cap guard-active); now also user's parallel coding lane - coordinate before restarts",
+  "never_unload_models_for_ui_checks": true
+ },
+ "goal_state_reconciliation": {
+  "canonical": ".goal/ (extended, not replaced)",
+  "previous_current_preserved": ".goal/revisions/2026-11-20-atlas-start/CURRENT.before",
+  "prior_state": "31 Oct Boards sprint, PAUSED_OWNER_WRAP, all Astra workers stopped; contract/checkpoint/queue retained untouched as history",
+  "nov18_newer_work": [
+   "64b48baa7 canonical start surface (S3 first increment, code+compile, native retest NOT RUN)",
+   "cf659b903 inventory: legacy home as Classic compat path",
+   "e8a07c9f8 inventory HOME-002-006 classification"
+  ]
+ },
+ "environment_at_reconciliation": {
+  "mem_available_gib": 7,
+  "display": ":1",
+  "haven_running": false,
+  "dev_copy_profile": "~/.local/share/9to1-development/profile exists; live-preview state ~/.local/state/9to1-live-preview initialized (config.json present)",
+  "open_decisions": "46 records; unresolved DEC-001..DEC-013+ -> do not invent policy for them"
+ }
+}

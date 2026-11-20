@@ -1,0 +1,1200 @@
+{
+ "ledger": "ATLAS-20261120 runtime task ledger",
+ "updated": "2026-11-20T20:36:36Z",
+ "tasks": [
+  {
+   "id": "G00-T01",
+   "parent_goal_id": "G00",
+   "title": "Reconcile live checkout/dirty files, existing coordinator, active workers, inference endpoints and running native profile with the dated source snapshot.",
+   "status": "done",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": "coordinator",
+   "path_leases": [],
+   "depends_on_tasks": [],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "live-checkout-head-and-dirty-state",
+    "existing-coordinator-and-real-worker-receipts",
+    "native-instance-profile-and-resource-observations"
+   ],
+   "evidence": [
+    "RUN.json repo/workers/services/environment blocks; git+proc+config receipts 2026-11-20 20:27-20:50Z"
+   ],
+   "next_action": "complete",
+   "kind": "bootstrap_packet",
+   "updated": "2026-11-20T20:36:36Z"
+  },
+  {
+   "id": "G00-T02",
+   "parent_goal_id": "G00",
+   "title": "Read the current operating instructions, source precedence, relevant retained modules and existing goal/coordination state. Preserve newer work and all compatible capabilities.",
+   "status": "done",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": "coordinator",
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T01"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "current-owner-instruction-and-source-reconciliation",
+    "dated-baseline-distinguished-from-live-results",
+    "existing-capabilities-and-current-scope-inventory"
+   ],
+   "evidence": [
+    "read AGENTS.md(324L), SOURCE_PRECEDENCE, feature-inventory, build-baseline, open-decisions, live-preview, GOALS/coverage; hashes verified vs repo"
+   ],
+   "next_action": "complete",
+   "kind": "bootstrap_packet",
+   "updated": "2026-11-20T20:36:36Z"
+  },
+  {
+   "id": "G00-T03",
+   "parent_goal_id": "G00",
+   "title": "Register or reuse the parent goal and child records, resolve runtime goal IDs, establish narrow shared interface contracts and allocate the first disjoint tasks.",
+   "status": "running",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": "coordinator",
+   "path_leases": [
+    "docs/development/refactor-2026-11-18/overnight-2026-11-20/**",
+    ".goal/CURRENT",
+    ".goal/revisions/2026-11-20-atlas-start/**"
+   ],
+   "depends_on_tasks": [
+    "G00-T02"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "actual-parent-child-goal-id-mapping",
+    "exclusive-path-leases-and-input-hashes",
+    "versioned-shared-interface-contract",
+    "existing-guarded-build-custody-and-command-plan"
+   ],
+   "evidence": [
+    "this ledger + .goal/CURRENT link + commit (receipt = commit hash this checkpoint cites)"
+   ],
+   "next_action": "commit then next task",
+   "kind": "bootstrap_packet",
+   "updated": "2026-11-20T20:36:36Z"
+  },
+  {
+   "id": "G01-T01",
+   "parent_goal_id": "G01",
+   "title": "Verify the already-published S1 tab and S3 Home route changes in the current dev copy; fix observed gaps without rebuilding working features.",
+   "status": "ready",
+   "priority": 1,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": "coordinator",
+   "path_leases": [
+    "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.TabSessions.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml.cs",
+    "9to1 Workspace/Home/** (NewDashboardPage surface verification only; edits need lease expansion)"
+   ],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [
+    "HAV-TAB-001",
+    "HOME-001",
+    "HOME-002",
+    "HOME-003",
+    "HOME-006",
+    "REF-001"
+   ],
+   "screen_ids": [
+    "host-newtab",
+    "host-newtab-customise",
+    "home-dashboard(compat)"
+   ],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "guarded Haven.Desktop build at HEAD -> focused Haven.UI.Tests -> launch dev copy via live_preview normal lifecycle -> observe New tab + restored-home tab on canonical surface; record gaps; verify MainView:883 legacy reference decision",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G01-T02",
+   "parent_goal_id": "G01",
+   "title": "Complete the shared component focus/hover/selected/disabled parity, accent treatments, typography and themed scrolling using existing CUI foundations.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G01-T03",
+   "parent_goal_id": "G01",
+   "title": "Complete Home customisation, reversible layout edits, Apps catalogue grouping and shared navigation; preserve approved icons and the search/filter/manage order.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G02-T01",
+   "parent_goal_id": "G02",
+   "title": "Implement/verify the Main/Voice/Vision picker, visible Reasoning, separate Context/Model/Assistant sections and real Apply and reload semantics.",
+   "status": "planned",
+   "priority": 2,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G02-T02",
+   "parent_goal_id": "G02",
+   "title": "Implement the Settings Group/Section/Sub-section hierarchy, one scroll region, ancestry-aware search and one setting per row.",
+   "status": "planned",
+   "priority": 2,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G02-T03",
+   "parent_goal_id": "G02",
+   "title": "Apply the approved account entry/dropdown behavior and preserve shared setting scopes, selected identities and failure recovery.",
+   "status": "planned",
+   "priority": 2,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G03-T01",
+   "parent_goal_id": "G03",
+   "title": "Adapt the existing CUI Boards chrome to the compact Add/Drawing/Edit-View/Collaborate toolbar and Format/Page disclosures.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "V100 worker, scoped by coordinator",
+   "runtime_worker_id": "v100-parallel-BLOCKED",
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "held pending worker capability; boards chrome/save-reopen is coordinator fallback if queue reaches it",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G03-T02",
+   "parent_goal_id": "G03",
+   "title": "Verify create/edit/local-save/reopen/recovery without an account, Files connection or model; integrate optional Files/Haven opening after local behavior works.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "V100 worker, scoped by coordinator",
+   "runtime_worker_id": "v100-parallel-BLOCKED",
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "held pending worker capability; boards chrome/save-reopen is coordinator fallback if queue reaches it",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G03-T03",
+   "parent_goal_id": "G03",
+   "title": "Unify block/page/context/keyboard command targeting and focus, including undo, read-only behavior and failure preservation.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "V100 worker, scoped by coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G03-T04",
+   "parent_goal_id": "G03",
+   "title": "After basic local authoring works, complete the canonical integration flow: edit, scoped AI proposal, review/commit, save, restart/reopen and export; include denied permission and failed export through the existing permitted broker.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "V100 worker, scoped by coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G03-T02"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [
+    "HANDOFF-003",
+    "HANDOFF-004",
+    "RECOVER-007"
+   ],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet",
+   "source_sections": [
+    "9.4: One canonical artifact workflow gate"
+   ],
+   "supporting_goal_ids": [
+    "G04",
+    "G08",
+    "G09"
+   ],
+   "additional_gate": "Basic local authoring is already usable; verify the existing permitted broker/proposal/export routes without unloading the protected agent runtimes. An unavailable integration keeps this task open without blocking local Boards use."
+  },
+  {
+   "id": "G04-T01",
+   "parent_goal_id": "G04",
+   "title": "Repair the composer, admission/running/queued/cancelled/failure states and resize artifact against the existing broker.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "next available worker with disjoint scope",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G04-T02",
+   "parent_goal_id": "G04",
+   "title": "Apply compact Assistant identity and optional Workspace presentation while preserving Main/thread/Space identity and recoverable drafts.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "next available worker with disjoint scope",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G04-T03",
+   "parent_goal_id": "G04",
+   "title": "Integrate Off/Floating/Sidebar contextual AI placement and editor action access through shared contracts; retain Spaces-specific permissions.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "next available worker with disjoint scope",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G05-T01",
+   "parent_goal_id": "G05",
+   "title": "Reconcile the recorded template/project-creation WIP and verify nonempty-target preflight without overwriting user content.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "next available worker with disjoint scope",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G05-T02",
+   "parent_goal_id": "G05",
+   "title": "Apply the design to Code, Sites and Stacks within one canonical project contract, preserving existing tools and outputs.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "next available worker with disjoint scope",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G05-T03",
+   "parent_goal_id": "G05",
+   "title": "Continue the specified AI Studio builder/evaluation and Games integration increments where supported; preserve the explicitly deferred Training Lab boundary.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "next available worker with disjoint scope",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G06-T01",
+   "parent_goal_id": "G06",
+   "title": "Implement/verify Files selection/location/capability state, empty/loading/error/denied/offline behavior, stale-response protection and readable metadata.",
+   "status": "planned",
+   "priority": 2,
+   "preferred_owner_role": "next available worker; host interfaces owned by coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G06-T02",
+   "parent_goal_id": "G06",
+   "title": "Reconcile and implement source-backed host address-mode/history/scoped-search behavior without duplicate Files headers or a second tab strip; establish which audit proposals are adopted before treating their details as requirements.",
+   "status": "planned",
+   "priority": 2,
+   "preferred_owner_role": "next available worker; host interfaces owned by coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G06-T03",
+   "parent_goal_id": "G06",
+   "title": "Wire browser Tools, Manage page, history/bookmarks and HTML/CUI inspectors to real supported operations and permission observations.",
+   "status": "planned",
+   "priority": 2,
+   "preferred_owner_role": "next available worker; host interfaces owned by coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07A-T01",
+   "parent_goal_id": "G07A",
+   "title": "Deliver a Write increment against its current chapter and retained module.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07A-T02",
+   "parent_goal_id": "G07A",
+   "title": "Deliver a Present increment against its current chapter and retained module.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07A-T03",
+   "parent_goal_id": "G07A",
+   "title": "Deliver a Canvas increment, including its single options host and shared shape behavior.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07B-T01",
+   "parent_goal_id": "G07B",
+   "title": "Implement the current Study/Cards interface using canonical app reuse and established evidence/status rules.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07B-T02",
+   "parent_goal_id": "G07B",
+   "title": "Implement Data/Forms increments with concrete per-action approvals and preserved source/data identity.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07C-T01",
+   "parent_goal_id": "G07C",
+   "title": "Implement scoped Planner/Automations increments without creating real external schedules or messages merely to prove a UI.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07C-T02",
+   "parent_goal_id": "G07C",
+   "title": "Implement Picture/Wave/Motion increments against the retained domain contracts.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07D-T01",
+   "parent_goal_id": "G07D",
+   "title": "Implement Connect, Voice/Vision, Maps, Shelf and Play increments in their existing product boundaries.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07D-T02",
+   "parent_goal_id": "G07D",
+   "title": "Implement Prototype, Paths and Replay increments with real canonical outputs and replay/source fidelity.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07E-T01",
+   "parent_goal_id": "G07E",
+   "title": "Adapt existing Terminal/Mini Computer interfaces with truthful session and execution targets.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G07E-T02",
+   "parent_goal_id": "G07E",
+   "title": "Adapt Admin/OS/Launcher UI in the existing platform lanes; preserve real capability and policy boundaries.",
+   "status": "planned",
+   "priority": 3,
+   "preferred_owner_role": "next available scoped worker",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G08-T01",
+   "parent_goal_id": "G08",
+   "title": "Verify affected canonical identity, revision, save/reopen and schema compatibility; use a tested migration only where required.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "coordinator for interfaces; app owners for narrow adapters",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G08-T02",
+   "parent_goal_id": "G08",
+   "title": "Verify concrete permission/action boundaries and unchanged compatible integrations for each touched flow.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "coordinator for interfaces; app owners for narrow adapters",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G08-T03",
+   "parent_goal_id": "G08",
+   "title": "Repair only the existing broker/adapter seams required by the UI refactor; preserve Mesh and model-route contracts without Sunday engine development.",
+   "status": "planned",
+   "priority": 1,
+   "preferred_owner_role": "coordinator for interfaces; app owners for narrow adapters",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "requirement-and-flow",
+    "changed-code-review",
+    "guarded-relevant-build",
+    "focused-behavior-checks",
+    "native-outcome-where-applicable",
+    "preserved-compatible-features"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "implementation_packet"
+  },
+  {
+   "id": "G09-T01",
+   "parent_goal_id": "G09",
+   "title": "Run line-by-line changed-file and integration review; execute the relevant guarded compile and focused behavioral checks.",
+   "status": "template_not_queued",
+   "priority": 1,
+   "preferred_owner_role": "coordinator; other worker reviews disjoint changes",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "changed-code-and-integration-review",
+    "stable-input-guarded-build-result",
+    "relevant-focused-test-results"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "verification_template",
+   "dispatch_policy": "Never dispatch this template directly. Instantiate for each concrete implementation change unit and its exact candidate.",
+   "instantiation": {
+    "required_parameters": [
+     "implementation_task_id",
+     "candidate_source_fingerprint",
+     "changed_paths",
+     "relevant_check_plan",
+     "verification_instance_prefix"
+    ],
+    "instance_id": "${verification_instance_prefix}-T01",
+    "instance_depends_on": [
+     "${implementation_task_id}"
+    ],
+    "candidate_identity_must_match_all_steps": true,
+    "advance_rule": "The previous required stage has a successful receipt for this exact candidate; unavailable native/backend stages remain explicitly open, not passed."
+   }
+  },
+  {
+   "id": "G09-T02",
+   "parent_goal_id": "G09",
+   "title": "Reload the same development instance through the normal lifecycle and capture exact build/profile identity plus the changed user flow.",
+   "status": "template_not_queued",
+   "priority": 1,
+   "preferred_owner_role": "coordinator; other worker reviews disjoint changes",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "matching-successful-build-receipt",
+    "normal-native-reload-and-profile-receipt",
+    "changed-native-flow-observation-or-explicit-unavailable-status"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "verification_template",
+   "dispatch_policy": "Never dispatch this template directly. Instantiate for each concrete implementation change unit and its exact candidate.",
+   "instantiation": {
+    "required_parameters": [
+     "implementation_task_id",
+     "candidate_source_fingerprint",
+     "changed_paths",
+     "relevant_check_plan",
+     "verification_instance_prefix"
+    ],
+    "instance_id": "${verification_instance_prefix}-T02",
+    "instance_depends_on": [
+     "${verification_instance_prefix}-T01"
+    ],
+    "candidate_identity_must_match_all_steps": true,
+    "advance_rule": "The previous required stage has a successful receipt for this exact candidate; unavailable native/backend stages remain explicitly open, not passed."
+   }
+  },
+  {
+   "id": "G09-T03",
+   "parent_goal_id": "G09",
+   "title": "Check affected keyboard, responsive/theme, failure and compatible-feature regressions; retain truthful evidence levels.",
+   "status": "template_not_queued",
+   "priority": 1,
+   "preferred_owner_role": "coordinator; other worker reviews disjoint changes",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T03"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "affected-keyboard-responsive-failure-and-preservation-results",
+    "native-and-backend-evidence-levels",
+    "candidate-bound-task-checkpoint-and-remaining-gaps"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "verification_template",
+   "dispatch_policy": "Never dispatch this template directly. Instantiate for each concrete implementation change unit and its exact candidate.",
+   "instantiation": {
+    "required_parameters": [
+     "implementation_task_id",
+     "candidate_source_fingerprint",
+     "changed_paths",
+     "relevant_check_plan",
+     "verification_instance_prefix"
+    ],
+    "instance_id": "${verification_instance_prefix}-T03",
+    "instance_depends_on": [
+     "${verification_instance_prefix}-T02"
+    ],
+    "candidate_identity_must_match_all_steps": true,
+    "advance_rule": "The previous required stage has a successful receipt for this exact candidate; unavailable native/backend stages remain explicitly open, not passed."
+   }
+  },
+  {
+   "id": "G10-T01",
+   "parent_goal_id": "G10",
+   "title": "Reserve the final hour for finishing/validating in-flight work, preserving WIP, updating goal records and preparing the normal development-copy handoff.",
+   "status": "planned",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G00-T01"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "in-flight-work-checkpoint-receipts",
+    "source-and-last-known-good-candidate-identity",
+    "all-results-failures-and-remaining-queue",
+    "only-outstanding-relevant-checks-no-automatic-rebuild"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "closeout_packet",
+   "activation_gate": {
+    "not_before": "2026-11-21T23:00:00+00:00",
+    "timezone": "Europe/London",
+    "early_override_only": [
+     "explicit owner stop",
+     "fatal admission/resource block with no safe independent work",
+     "all in-scope work verified and ready for an early final handoff"
+    ],
+    "note": "Priority zero applies only after this gate; do not dispatch closeout immediately after bootstrap."
+   }
+  },
+  {
+   "id": "G10-T02",
+   "parent_goal_id": "G10",
+   "title": "Save final results, source/commit identity, failed checks, deferred queue and next actions; stop this Atlas work queue by the stated cutoff.",
+   "status": "planned",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "path_leases": [],
+   "depends_on_tasks": [
+    "G10-T01"
+   ],
+   "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
+   "requirement_ids": [],
+   "screen_ids": [],
+   "required_evidence": [
+    "in-flight-work-checkpoint-receipts",
+    "source-and-last-known-good-candidate-identity",
+    "all-results-failures-and-remaining-queue",
+    "only-outstanding-relevant-checks-no-automatic-rebuild"
+   ],
+   "evidence": [],
+   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
+   "kind": "closeout_packet",
+   "activation_gate": {
+    "not_before": "2026-11-21T23:00:00+00:00",
+    "timezone": "Europe/London",
+    "early_override_only": [
+     "explicit owner stop",
+     "fatal admission/resource block with no safe independent work",
+     "all in-scope work verified and ready for an early final handoff"
+    ],
+    "note": "Priority zero applies only after this gate; do not dispatch closeout immediately after bootstrap."
+   },
+   "additional_gate": "All claimed tasks are completed or safely checkpointed; SDK/native operations are quiescent; stopping this Atlas queue does not stop model services."
+  }
+ ]
+}
