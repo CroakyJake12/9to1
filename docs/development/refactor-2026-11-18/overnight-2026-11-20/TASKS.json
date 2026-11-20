@@ -141,16 +141,27 @@
    "id": "G01-T02",
    "parent_goal_id": "G01",
    "title": "Complete the shared component focus/hover/selected/disabled parity, accent treatments, typography and themed scrolling using existing CUI foundations.",
-   "status": "planned",
+   "status": "running",
    "priority": 1,
    "preferred_owner_role": "coordinator",
-   "runtime_worker_id": null,
-   "path_leases": [],
+   "runtime_worker_id": "coordinator",
+   "path_leases": [
+    "9to1 Workspace/shared/src/Haven.Desktop/Styles/DefaultTheme.axaml",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/WorkspaceWindowService.cs",
+    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/**"
+   ],
    "depends_on_tasks": [
     "G00-T03"
    ],
    "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
-   "requirement_ids": [],
+   "requirement_ids": [
+    "CUI-001",
+    "CUI-002",
+    "CUI-NEW-002",
+    "THEME-001",
+    "THEME-002",
+    "HAV-SHELL-001"
+   ],
    "screen_ids": [],
    "required_evidence": [
     "requirement-and-flow",
@@ -160,9 +171,15 @@
     "native-outcome-where-applicable",
     "preserved-compatible-features"
    ],
-   "evidence": [],
-   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
-   "kind": "implementation_packet"
+   "evidence": [
+    "parity audit of DefaultTheme.axaml: hover present for 5/10 shared classes; disabled+focus covered globally (Button:disabled opacity .42; Button:focus-visible 2px HavenFocusBrush); destructive = HavenButton.danger/.stop + .negative",
+    "hover parity added for havenTab/havenHeaderPill/havenHeaderIcon/havenChip/havenModelPicker using the existing runtime-injected Cui*HoverEffect resources (filled accents use Primary glow per hui|HavenButton.primary:pointerover precedent)",
+    "SharedControlStateParityContractTests (5 contract facts) pins hover/disabled/focus/selected/destructive parity; WorkspaceWindowPersistenceTests + parity class = 9/9 PASS guarded (winbounds final lane; -f net10.0 pattern from ci_cui_owned strata-desktop-test)",
+    "HAV-SHELL product fix from native evidence: ApplyWindowBounds now clamps restored positions to the union of screen working areas (EdgeReach 200/TitleReach 64 physical px; null screens fail open) - the exact off-screen-tab-strip defect of 20 Nov; tests cover negative/oob/in-area/no-screen"
+   ],
+   "next_action": "THEME-005 scrollbar parity + per-class disabled accent depth need native verification; pending 27B worker (MORNING-2026-11-21.md) and/or on-screen relaunch via the clamp fix",
+   "kind": "implementation_packet",
+   "updated": "2026-11-21T00:40:00Z"
   },
   {
    "id": "G01-T03",

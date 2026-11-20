@@ -74,6 +74,10 @@
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
     <Compile Include="NotificationServiceStorageStartupTests.cs" />
     <Compile Include="BrowserTabHoverContractTests.cs" />
+    <!-- Window-position custody (HAV-SHELL): restored bounds must stay reachable; and the shared
+         haven* interactive-state parity contract (CUI-NEW-002) over the same DefaultTheme. -->
+    <Compile Include="WorkspaceWindowPersistenceTests.cs" />
+    <Compile Include="SharedControlStateParityContractTests.cs" />
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
     <Compile Include="UnifiedHomeContentTests.cs;DesktopOriginalShutdownSequenceTests.cs" />
     <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />

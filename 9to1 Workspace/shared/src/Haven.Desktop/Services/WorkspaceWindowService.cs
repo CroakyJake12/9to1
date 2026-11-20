@@ -214,7 +214,17 @@ public sealed partial class WorkspaceWindowService(
         window.Show();
     }
 
-    internal static void ApplyWindowBounds(Window window, string? json)
+    internal static void ApplyWindowBounds(Window window, string? json) =>
+        ApplyWindowBounds(window, json, CurrentScreenWorkingArea(window));
+
+    /// <summary>
+    /// HAV-SHELL: a restored position must never strand the window's title/tab strip outside every
+    /// connected screen (observed natively 20 November 2026 after a display re-arrangement: the frame
+    /// landed above the top edge and the whole tab strip became unreachable). Size sanity clamps alone
+    /// are not enough; the position is additionally clamped so the window remains reachable. A null
+    /// working area (screens unreadable, e.g. headless or a pre-layout race) restores the saved value.
+    /// </summary>
+    internal static void ApplyWindowBounds(Window window, string? json, PixelRect? workingArea)
     {
         ArgumentNullException.ThrowIfNull(window);
         if (string.IsNullOrWhiteSpace(json)) return;
@@ -233,12 +243,43 @@ public sealed partial class WorkspaceWindowService(
             window.Width = Math.Clamp(bounds.Width, minimumWidth, 7680d);
             window.Height = Math.Clamp(bounds.Height, minimumHeight, 4320d);
 
-            if (Math.Abs(bounds.X) <= 32768 && Math.Abs(bounds.Y) <= 32768)
-                window.Position = new PixelPoint(bounds.X, bounds.Y);
+            var x = bounds.X;
+            var y = bounds.Y;
+            if (Math.Abs(x) <= 32768 && Math.Abs(y) <= 32768)
+            {
+                if (workingArea is { } area && area.Width > 0 && area.Height > 0)
+                {
+                    // Physical pixels throughout: leave at least a title-strip-width of window inside
+                    // the combined working area, so the frame is always draggable back.
+                    const int EdgeReach = 200, TitleReach = 64;
+                    x = Math.Clamp(x, area.X, area.X + Math.Max(0, area.Width - EdgeReach));
+                    y = Math.Clamp(y, area.Y, area.Y + Math.Max(0, area.Height - TitleReach));
+                }
+                window.Position = new PixelPoint(x, y);
+            }
         }
         catch (JsonException)
         {
             // Old or corrupt geometry falls back to normal startup sizing.
+        }
+    }
+
+    /// <summary>Union of every connected screen's working area in physical pixels, or null when the
+    /// screen device cannot be read yet (headless tests, pre-layout race).</summary>
+    private static PixelRect? CurrentScreenWorkingArea(Window window)
+    {
+        try
+        {
+            var screens = window.Screens;
+            if (screens is null) return null;
+            PixelRect? union = null;
+            foreach (var screen in screens.All)
+                union = union is null ? screen.WorkingArea : union.Value.Union(screen.WorkingArea);
+            return union is { } value && value.Width > 0 && value.Height > 0 ? value : null;
+        }
+        catch (InvalidOperationException)
+        {
+            return null; // Screen device not ready; restore the saved value.
         }
     }
     private Task InitializeSecondaryShellAsync(MainView shell) => OriginalWindowWork.RunAsync(async original =>
