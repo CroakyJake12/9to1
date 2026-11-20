@@ -213,6 +213,32 @@ each activation, and stop/report refusals rather than retrying around them. The
 timer performs no builds, model requests, engine startup, failed-run recovery or
 programme coordination; this helper does not install or start any timer.
 
+### Reconciliation when the guardian itself was lost
+
+If the owned application AND its original guardian both ended before any exit
+receipt could be written (for example an X session teardown taking the guardian
+with it), `recover-failed` cannot apply because there is no `exit.json` to bind.
+That documented state previously had no supported way to record its required
+local review. `reconcile-lost-guardian` is that lane: it freshly verifies both
+pinned identities are dead or terminal with no process-group survivors (a live
+or reused PID refuses), requires a hash-pinned review receipt using schema
+`9to1.live-preview-lost-guardian-review/v1`, `result: RECONCILE_SAFE`, binding
+the exact `failed_run_id`, `failed_launch` (`path` + actual `sha256`), retained
+`failed_process` and `failed_guardian`, and the unchanged `data_directory`,
+with nonempty `reviewer`, `diagnosis` and `reason`. It records one consumed-once
+audit under `recoveries/`, marks the retained run `RECONCILED_LOST_GUARDIAN`
+(re-verified on every later read; PID reuse or a surviving group member fails
+closed) and never fabricates an exit receipt, never deletes retained state and
+launches nothing. Activation is a separate ordinary `start`, which accepts the
+reconciled state as reviewed terminal custody.
+
+```bash
+python3 -B eng/development/live_preview.py reconcile-lost-guardian \
+  --state-root "$HOME/.local/state/9to1-live-preview" \
+  --review-receipt /absolute/local-lost-guardian-review.json \
+  --review-sha256 ACTUAL_REVIEW_SHA256
+```
+
 ### Explicit recovery after a failed process exit
 
 Ordinary `start` and `reload` still refuse a nonzero exit. If a local coordinator
