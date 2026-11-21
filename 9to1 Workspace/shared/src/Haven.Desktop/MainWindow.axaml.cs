@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Services;
@@ -37,11 +38,47 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
         Title = DesktopProductIdentity.DisplayName;
         DataContextChanged += OnOriginalDataContextChanged;
         // HAV-SHELL: fractional-scale startup can strand the title strip above every screen
-        // (observed at exactly minus the centring delta). mutter re-shapes windows asynchronously
-        // after Opened, so re-validate on every position change; EnsureReachablePlacement is a
-        // verified no-op whenever the strip is already reachable, including mid user-drag.
-        Opened += (_, _) => WorkspaceWindowService.EnsureReachablePlacement(this);
-        PositionChanged += (_, _) => WorkspaceWindowService.EnsureReachablePlacement(this);
+        // (observed at exactly minus the centring delta), and on X11 the windowing layer never
+        // learns of WM-driven moves - reading Position back is blind to the strand (both live
+        // facts, 21 Nov). The reliable lever is an explicit app-side move: unless session
+        // restore already placed this window deliberately, re-seat it inside the working area
+        // while the WM is still honouring the request. Later checks are verified no-ops.
+        Opened += (_, _) =>
+        {
+            WorkspaceWindowService.EnsureReachablePlacement(this);
+            SchedulePlacementSelfHeal();
+        };
+        PositionChanged += (_, _) =>
+        {
+            WorkspaceWindowService.NoteExplicitPlacement(this);
+            WorkspaceWindowService.EnsureReachablePlacement(this);
+        };
+        Closed += (_, _) => _placementWindowClosed = true;
+    }
+
+    private bool _placementWindowClosed;
+
+    private void SchedulePlacementSelfHeal()
+    {
+        foreach (var delay in new[] { 350, 1200 })
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(delay) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                if (_placementWindowClosed) return;
+                WorkspaceWindowService.EnsureReachablePlacement(this);
+            };
+            timer.Start();
+        }
+        var settle = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(6000) };
+        settle.Tick += (_, _) =>
+        {
+            settle.Stop();
+            if (_placementWindowClosed) return;
+            WorkspaceWindowService.SeatMainWindowOnScreenIfImplicit(this);
+        };
+        settle.Start();
     }
 
     private void SetupBackground()

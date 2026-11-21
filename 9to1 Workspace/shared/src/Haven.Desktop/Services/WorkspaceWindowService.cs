@@ -1,7 +1,9 @@
 using System.Text.Json;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.ViewModels;
@@ -256,12 +258,50 @@ public sealed partial class WorkspaceWindowService(
                     y = Math.Clamp(y, area.Y, area.Y + Math.Max(0, area.Height - TitleReach));
                 }
                 window.Position = new PixelPoint(x, y);
+                NoteExplicitPlacement(window);
             }
         }
         catch (JsonException)
         {
             // Old or corrupt geometry falls back to normal startup sizing.
         }
+    }
+
+    // On X11 the position property only tracks APP-driven moves (a WM-driven move is invisible to
+    // it, both as event and as value). This table is how the code distinguishes "the app chose this
+    // placement" from "the window manager made it up".
+    private static readonly ConditionalWeakTable<Window, object> ExplicitPlacements = new();
+
+    internal static void NoteExplicitPlacement(Window window) => ExplicitPlacements.GetValue(window, _ => new object());
+
+    internal static bool HasExplicitPlacement(Window window) => ExplicitPlacements.TryGetValue(window, out _);
+
+    /// <summary>One settled post-startup action: when nothing has deliberately placed the window,
+    /// an explicit app-side move re-seats it centred on the primary working area (mutter honours
+    /// app moves; reading the X11 position back cannot see its own strand). When something has,
+    /// the explicit value is trusted and only re-validated.</summary>
+    internal static void SeatMainWindowOnScreenIfImplicit(Window window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+        if (window.WindowState != WindowState.Normal) return;
+        if (HasExplicitPlacement(window))
+        {
+            EnsureReachablePlacement(window);
+            return;
+        }
+        var screens = window.Screens;
+        if (screens is null) return;
+        var areas = screens.All.Select(screen => screen.WorkingArea).ToArray();
+        if (areas.Length == 0) return;
+        var primary = screens.Primary?.WorkingArea ?? areas[0];
+        if (primary.Width <= 0 || primary.Height <= 0) return;
+        var scale = window.RenderScaling > 0 ? window.RenderScaling : 1d;
+        var frameDip = window.FrameSize ?? new global::Avalonia.Size(window.Width, window.Height);
+        var size = new PixelSize(Math.Max(1, (int)(frameDip.Width * scale)), Math.Max(1, (int)(frameDip.Height * scale)));
+        window.Position = new PixelPoint(
+            primary.X + Math.Max(0, (primary.Width - size.Width) / 2),
+            primary.Y + Math.Max(0, (primary.Height - size.Height) / 2));
+        NoteExplicitPlacement(window);
     }
 
     /// <summary>Union of every connected screen's working area in physical pixels, or null when the
