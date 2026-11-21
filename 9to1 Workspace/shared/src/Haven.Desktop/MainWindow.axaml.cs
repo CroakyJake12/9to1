@@ -37,8 +37,11 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
         Title = DesktopProductIdentity.DisplayName;
         DataContextChanged += OnOriginalDataContextChanged;
         // HAV-SHELL: fractional-scale startup can strand the title strip above every screen
-        // (observed at exactly minus the centring delta); re-seat it once the real geometry is known.
+        // (observed at exactly minus the centring delta). mutter re-shapes windows asynchronously
+        // after Opened, so re-validate on every position change; EnsureReachablePlacement is a
+        // verified no-op whenever the strip is already reachable, including mid user-drag.
         Opened += (_, _) => WorkspaceWindowService.EnsureReachablePlacement(this);
+        PositionChanged += (_, _) => WorkspaceWindowService.EnsureReachablePlacement(this);
     }
 
     private void SetupBackground()
