@@ -190,7 +190,10 @@ public sealed partial class BrowseChrome
             {
                 ReportCloseRefusal("settle-retry", "tab " + tab.Address +
                     " went stale mid-preparation; re-asking with a fresh snapshot (" + (remaining - 1) + " re-ask(s) remain)");
-                await Task.Delay(5, token).ConfigureAwait(false);
+                // 50ms: the live Write document re-creates its preparation lease during its own
+                // save (named causes measured 20:15/20:16); a tight 5ms re-ask just re-observed the
+                // same churn. One save interval of slack settles it without stretching the close.
+                await Task.Delay(50, token).ConfigureAwait(false);
             }
         }
     }

@@ -1287,7 +1287,10 @@ public sealed partial class App
                                 AccessibleName="Return to the app - nothing was lost, the window stays open" />
                         <Button ID="ShutdownRecoveryRetry" action="shutdown-recovery-retry" Content="Try closing again"
                                 AccessibleName="Try closing the app again" />
+                        <Button ID="ShutdownRecoveryForce" action="shutdown-recovery-force" Content="Force quit"
+                                AccessibleName="Force quit - closes now but unsaved changes may be lost" />
                       </Container>
+                      <Text Text="Force quit ends the app immediately, like ending a frozen program: databases stay consistent, but anything the content still wanted to save is lost. The next start reports the unclean exit." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" />
                       <Text Text="The refusal and every recovery action are recorded in the application close diagnostic log." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                     </Container>
                   </Theme>
@@ -1310,6 +1313,14 @@ public sealed partial class App
                 _shutdownRecoveryPrevious = null;
             });
             actions.Retry = RequestOriginalDocumentClosePreflight;
+            // Owner directive 21 Nov, on the live refusal screen: "should be a force quit option".
+            // Deliberately not a drain: it is the documented escape hatch for a refusal loop. The
+            // unclean-start ledger (startup-recovery.json) will see and honestly report it.
+            actions.Force = () =>
+            {
+                WriteOriginalCloseDiagnostic("shutdown recovery: owner elected FORCE QUIT; terminating without owner drain - unsaved content may be lost");
+                Environment.Exit(1);
+            };
             Dispatcher.UIThread.Invoke(() => { window.Content = recoveryRoot; });
         }
         catch (Exception diagnosticFailure)
@@ -1324,13 +1335,19 @@ public sealed partial class App
     /// never retries a faulted original automatically, and never relabels a retained failure.</summary>
     private sealed class ShutdownRecoveryActions : CakeOS.Cui.ICuiActionDispatcher
     {
-        internal Action? Return, Retry;
+        internal Action? Return, Retry, Force;
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
         {
             switch (command)
             {
                 case "shutdown-recovery-return": Return?.Invoke(); return ValueTask.CompletedTask;
                 case "shutdown-recovery-retry": Retry?.Invoke(); return ValueTask.CompletedTask;
+                // The owner's escape hatch when every graceful refusal fails: end the process exactly
+                // like ending a frozen program. It carries no close authority and performs no owner
+                // drain - that is the whole point - and it is elected by an explicit human click on a
+                // button labelled with its cost. SQLite WAL keeps stored data consistent; the app's
+                // own unclean-start recovery records the exit on the next launch.
+                case "shutdown-recovery-force": Force?.Invoke(); return ValueTask.CompletedTask;
                 default: return ValueTask.FromException(new InvalidOperationException($"Unknown shutdown-recovery action '{command}'."));
             }
         }
