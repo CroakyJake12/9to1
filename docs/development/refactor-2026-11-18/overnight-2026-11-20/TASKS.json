@@ -217,10 +217,10 @@
    "id": "G02-T01",
    "parent_goal_id": "G02",
    "title": "Implement/verify the Main/Voice/Vision picker, visible Reasoning, separate Context/Model/Assistant sections and real Apply and reload semantics.",
-   "status": "planned",
+   "status": "investigated",
    "priority": 2,
    "preferred_owner_role": "coordinator",
-   "runtime_worker_id": null,
+   "runtime_worker_id": "v100-27b (ses_e02635729ffelMsexm87p5lGa1)",
    "path_leases": [],
    "depends_on_tasks": [
     "G00-T03"
@@ -236,9 +236,12 @@
     "native-outcome-where-applicable",
     "preserved-compatible-features"
    ],
-   "evidence": [],
-   "next_action": "Reconcile with current source and decompose further if this is larger than a coherent edit unit.",
-   "kind": "implementation_packet"
+   "evidence": [
+    "27B worker inventory archived: docs/development/evidence/atlas-20261120/g02-t01-report.md (picker = MainView.ShowModelSelectorAsync flyout; MODEL-001..006 require role tabs + collapsible sections + Apply/reload context; reasoning slider uses non-canonical 20/60/80/100 bands vs ReasoningScale 25/50/75/100; ModelConfigurationControl is a fully-built unrevived asset; identity-safety confirmed)"
+   ],
+   "next_action": "coordinator implementation starts with the small correctness slice (canonical ReasoningScale mapping + tests), then role-tab chrome per inventory sequence",
+   "kind": "implementation_packet",
+   "updated": "2026-11-21T11:55:00Z"
   },
   {
    "id": "G02-T02",
@@ -298,10 +301,10 @@
    "id": "G03-T01",
    "parent_goal_id": "G03",
    "title": "Adapt the existing CUI Boards chrome to the compact Add/Drawing/Edit-View/Collaborate toolbar and Format/Page disclosures.",
-   "status": "planned",
+   "status": "implemented",
    "priority": 1,
    "preferred_owner_role": "V100 worker, scoped by coordinator",
-   "runtime_worker_id": "v100-parallel-BLOCKED",
+   "runtime_worker_id": "v100-27b (ses_e02605c2bffe7NVQr08oAPf1WZ)",
    "path_leases": [],
    "depends_on_tasks": [
     "G00-T03"
@@ -317,9 +320,13 @@
     "native-outcome-where-applicable",
     "preserved-compatible-features"
    ],
-   "evidence": [],
-   "next_action": "held pending worker capability; boards chrome/save-reopen is coordinator fallback if queue reaches it",
-   "kind": "implementation_packet"
+   "evidence": [
+    "27B worker inventory archived: docs/development/evidence/atlas-20261120/g03-t01-report.md (real surface = Boards CUI app BoardsAdaptiveToolbar.cui; Add+Drawing already in the pill, AI pill entry to be removed per BOARD-UI-003; Edit/View in TopBar must move; Page controls scattered; Collaborate missing; commands exist: SetEditModeOn/Off ToggleLayoutMode ToggleSnap; pinned tests identified incl. BoardsUndoOwnershipAndModeChromeTests)",
+    "Headless landing (Sat 12:46): compact toolbar re-shape per BOARD-UI-001/003 - Add|Drawing|Edit/View segment|Collaborate|Page fixed cluster, decorative AI entry deleted, named Format disclosure via new framework OverflowHost=\"always\" (loader+CuiOverflowHosts+CuiToolbarPanel reservation+compiler CUIC015 extension, pinned by CuiToolbarOverflowAndSeparatorTests). Tests found two real defects during landing: (1) the toolbar row was gated on ShowNativeAuthoring (edit-only), hiding the route back from View - replaced by ShowCompactToolbar (native pages, both modes); (2) the view-mode command allowlist and the pill's own guard refused SetEditModeOn/Off, so View could never switch back - both now permit mode selection (no mutation). Evidence: Boards suite 652/653 with the ONLY failure BoardsBlockClickFocusTests.PressingDownOnceThenEnterAppliesTheRowTheMenuIsShowingAsChosen CONFIRMED pre-existing by stashed full-suite run at the same commit; CUI Runtime.Tests 777/782 with all 5 failures reproduced on stashed baseline (4 appearance-brush + 1 recorded-surface, pre-existing); CUI Compiler.Tests 204/204."
+   ],
+   "next_action": "native battery round 2 (needs ~40s owner hands-off): open a real Board, verify the compact toolbar cluster visually matches the mockup at two widths, Format popup opens the original controls, View->Edit round trip live",
+   "kind": "implementation_packet",
+   "updated": "2026-11-21T12:46:00Z"
   },
   {
    "id": "G03-T02",
