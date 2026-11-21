@@ -36,6 +36,9 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
         Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Haven/Assets/haven.ico")));
         Title = DesktopProductIdentity.DisplayName;
         DataContextChanged += OnOriginalDataContextChanged;
+        // HAV-SHELL: fractional-scale startup can strand the title strip above every screen
+        // (observed at exactly minus the centring delta); re-seat it once the real geometry is known.
+        Opened += (_, _) => WorkspaceWindowService.EnsureReachablePlacement(this);
     }
 
     private void SetupBackground()

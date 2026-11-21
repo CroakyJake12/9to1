@@ -66,4 +66,25 @@ public sealed class WorkspaceWindowPersistenceTests
         Assert.Equal(-500, blind.Position.X);
         Assert.Equal(-200, blind.Position.Y);
     }
+
+    [AvaloniaFact]
+    public void ResolveReachablePosition_fixes_the_observed_fractional_scale_startup_strand()
+    {
+        // 21 Nov native evidence: a 2850x1820 physical frame at exactly minus the centring delta,
+        // tab strip above the display; single working area 4384x2466.
+        var areas = new[] { new PixelRect(0, 0, 4384, 2466) };
+        var fixedTo = WorkspaceWindowService.ResolveReachablePosition(new PixelSize(2850, 1820), new PixelPoint(-767, -348), areas);
+        Assert.NotNull(fixedTo);
+        Assert.Equal(new PixelPoint(767, 323), fixedTo!.Value); // centred; strip reachable and draggable
+
+        // A normal reachable window is left alone.
+        Assert.Null(WorkspaceWindowService.ResolveReachablePosition(new PixelSize(1600, 1000), new PixelPoint(200, 120), areas));
+
+        // Stranded past the right edge returns to the nearest area.
+        var east = WorkspaceWindowService.ResolveReachablePosition(new PixelSize(1600, 1000), new PixelPoint(4200, 100), areas);
+        Assert.Equal(new PixelPoint(1392, 733), east!.Value);
+
+        // No screens: fail open, change nothing.
+        Assert.Null(WorkspaceWindowService.ResolveReachablePosition(new PixelSize(1600, 1000), new PixelPoint(-767, -348), Array.Empty<PixelRect>()));
+    }
 }

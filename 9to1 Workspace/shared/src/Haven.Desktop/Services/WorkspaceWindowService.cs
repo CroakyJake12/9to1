@@ -282,6 +282,49 @@ public sealed partial class WorkspaceWindowService(
             return null; // Screen device not ready; restore the saved value.
         }
     }
+
+    /// <summary>HAV-SHELL: corrects a STARTUP placement that left the title strip beyond every screen.
+    /// Observed 20/21 November 2026: MainWindow requests CenterScreen at 1440x920 DIP; under this
+    /// desktop's fractional scale the initial X11 placement landed at exactly minus the centring
+    /// delta ((-767,-348)), putting the whole tab strip above the display on every fresh start.</summary>
+    internal static void EnsureReachablePlacement(Window window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+        if (window.WindowState != WindowState.Normal) return;
+        var screens = window.Screens;
+        if (screens is null) return;
+        var scale = window.RenderScaling > 0 ? window.RenderScaling : 1d;
+        var frameDip = window.FrameSize ?? new global::Avalonia.Size(window.Width, window.Height);
+        var size = new PixelSize(Math.Max(1, (int)(frameDip.Width * scale)),
+                                 Math.Max(1, (int)(frameDip.Height * scale)));
+        var areas = screens.All.Select(screen => screen.WorkingArea).ToArray();
+        if (ResolveReachablePosition(size, window.Position, areas) is { } corrected)
+            window.Position = corrected;
+    }
+
+    /// <summary>Returns a corrected physical position when the draggable title strip (a horizontal
+    /// band inside the frame's top edge) lies beyond every working area, otherwise null. The window
+    /// is re-centred on the area nearest its current centre; windows larger than the area keep their
+    /// top-left at the area's corner so the strip always remains reachable and draggable.</summary>
+    internal static PixelPoint? ResolveReachablePosition(PixelSize size, PixelPoint position, IReadOnlyList<PixelRect> workingAreas)
+    {
+        if (workingAreas.Count == 0 || size.Width <= 0 || size.Height <= 0) return null;
+        var frame = new PixelRect(position, size);
+        PixelRect ReachableStrip(PixelRect f) => new(
+            f.X + Math.Min(100, Math.Max(0, f.Width / 4)), f.Y,
+            Math.Max(1, Math.Min(200, f.Width / 2)), Math.Min(24, Math.Max(1, f.Height / 4)));
+        var strip = ReachableStrip(frame);
+        if (workingAreas.Any(area => area.Contains(strip))) return null;
+        var area = workingAreas.OrderBy(candidate =>
+            DistanceSquared(new PixelPoint(candidate.X + candidate.Width / 2, candidate.Y + candidate.Height / 2),
+                            new PixelPoint(frame.X + frame.Width / 2, frame.Y + frame.Height / 2))).First();
+        return new PixelPoint(
+            Math.Max(area.X, area.X + (area.Width - size.Width) / 2),
+            Math.Max(area.Y, area.Y + (area.Height - size.Height) / 2));
+    }
+
+    private static double DistanceSquared(PixelPoint a, PixelPoint b) =>
+        (double)(a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y);
     private Task InitializeSecondaryShellAsync(MainView shell) => OriginalWindowWork.RunAsync(async original =>
     {
         try
