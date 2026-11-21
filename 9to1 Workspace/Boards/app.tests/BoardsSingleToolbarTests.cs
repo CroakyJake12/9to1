@@ -46,7 +46,7 @@ public sealed class BoardsSingleToolbarTests
             {
                 TestUiThread.Run(() =>
                 {
-                    window = new Window { Width = 1180, Height = 900, Content = presentation.Content }; window.Show();
+                    window = new Window { Width = 2400, Height = 900, Content = presentation.Content }; window.Show(); // BOARD-UI-001's wider fixed cluster collapses sections below this; collapse is pinned elsewhere
                     var vm = presentation.ViewModel; var adapter = Assert.IsType<ContractSessionAdapter>(vm.Session);
                     TextBox Editor(string text) => window.GetVisualDescendants().OfType<TextBox>().Single(box => box.Text == text);
                     RichBoardBlock Block(string page) => adapter.Document.Sections[0].Pages.Single(item => item.Id == page).Blocks[0];

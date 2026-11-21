@@ -102,24 +102,22 @@ public sealed class BoardsTopologyTests
     public async Task TheLayoutControlNamesItsModeTheWayTheReferenceChromeDoes() =>
         await OnMountedSurfaceAsync(1200, (surface, _, viewModel) =>
         {
-            var layout = BoardsCuiControlFinder.FindByAutomationId<Button>(surface, "LayoutModeButton");
-            Assert.NotNull(layout);
+            // BOARD-UI-001 (18 November): the layout lock and snapping live behind the compact toolbar's
+            // Page disclosure; their closed-menu items are lazily materialised, so this test pins the
+            // reference naming contract at the view-model the menu items bind to, plus the presence of
+            // the disclosure itself. Mounted presence/visibility of the trigger is also asserted by
+            // BoardsUndoOwnershipAndModeChromeTests.
+            var page = BoardsCuiControlFinder.FindByAutomationId<Avalonia.Controls.MenuItem>(surface, "AdaptivePage");
+            Assert.NotNull(page);
+            Assert.True(page!.IsEffectivelyVisible);
             // A label that only describes the arrangement ("Vertical Stacking") is both longer than the
             // pill and confusable with View mode; the reference states the mode instead.
-            Assert.Equal("Locked layout", layout!.Content);
-            Assert.Contains("Switch to free placement",
-                Avalonia.Automation.AutomationProperties.GetName(layout) ?? string.Empty);
-
+            Assert.Equal("Locked layout", viewModel!.Get("LayoutModeLabel"));
             viewModel.DispatchAsync("ToggleLayoutMode", null).AsTask().GetAwaiter().GetResult();
             Dispatcher.UIThread.RunJobs();
-            Assert.Equal("Free placement", layout.Content);
-            Assert.Contains("Switch to locked layout",
-                Avalonia.Automation.AutomationProperties.GetName(layout) ?? string.Empty);
-            // The chrome keeps its own state truthful: the same control is what changes it, and nothing
-            // else in the row moved.
-            var snap = BoardsCuiControlFinder.FindByAutomationId<Button>(surface, "SnapButton");
-            Assert.NotNull(snap);
-            Assert.Equal("Snap off", snap!.Content);
+            Assert.Equal("Free placement", viewModel.Get("LayoutModeLabel"));
+            // The chrome keeps its own state truthful: the same toggle is what changes it.
+            Assert.Equal("Snap off", viewModel.Get("SnapLabel"));
         });
 
     [Fact]
@@ -212,6 +210,11 @@ public sealed class BoardsTopologyTests
                 var rootControl = Assert.IsAssignableFrom<Control>(loaded.Root);
                 loader.WireBindings(rootControl);
                 viewModel.Attach(rootControl);
+                // BOARD-UI-001 (18 November): the layout lock/snapping live behind the compact toolbar's
+                // Page disclosure, so the harness must mount that toolbar exactly as production's
+                // BoardsWritablePresentation.RefreshToolbar does (ToolbarBuilder.Rebuild into ToolbarHost).
+                if (BoardsCuiControlFinder.FindByAutomationId<Avalonia.Controls.Panel>(rootControl, "ToolbarHost") is { } toolbarHost)
+                    ToolbarBuilder.Rebuild(toolbarHost, viewModel);
                 window = new Window { Content = rootControl, Width = windowWidth, Height = 800 };
                 window.Show();
                 window.UpdateLayout();

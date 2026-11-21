@@ -64,43 +64,19 @@
             <Button ID="RedoButton" Column="3" Width="32" Height="32" MinWidth="32" MinHeight="32" Padding="0" Action="Redo" Interactive="{Binding CanRedo}" AccessibleName="Redo" Tooltip="Redo (Ctrl+Y)" ><Image Source="icon:redo" Width="18" Height="18" AccessibleName="Redo" /></Button>
           </Container>
           <Container Type="Horizontal Stack" ID="TopBarRight" Column="1" CellGap="8" VerticalAlignment="Center">
-            <!-- Persistent Edit/View switch in the page chrome (V3-BOARDS-LAY-01, V3-BOARDS-ACC-02 and
-                 the retained MUST requirement that every Board page surface expose it in the top-right
-                 chrome). It was reachable only inside the "…" overflow, which the on-screen review on
-                 1 November 2026 showed the owner could not see at all. Edit/View, Locked and the layout
-                 mode stay three independent controls; none of them is a read-only master switch. -->
-            <Container Type="Horizontal Stack" ID="EditViewToggle" CellGap="2" Padding="4 3"
-                       CornerRadius="14" Background="{Resource CuiPanel2Brush}"
-                       AccessibleName="Page edit or view mode" Active="{Binding ShowEditor}">
-              <Button ID="EditModeButton" Content="Edit" Action="SetEditModeOn" Selected="{Binding IsEditingMode}"
-                      Interactive="{Binding CanToggleEditMode}" Height="28" Padding="10 0" CornerRadius="11"
-                      AccessibleName="Editing mode" ToolTip="Edit this page" />
-              <Button ID="ViewModeButton" Content="View" Action="SetEditModeOff" Selected="{Binding IsViewingMode}"
-                      Interactive="{Binding CanToggleEditMode}" Height="28" Padding="10 0" CornerRadius="11"
-                      AccessibleName="Viewing mode" ToolTip="View this page without changing it" />
-            </Container>
-            <Button ID="LayoutModeButton" Content="{Binding LayoutModeLabel}" Action="ToggleLayoutMode"
-                    Interactive="{Binding CanChangeLayoutMode}" Height="28" Padding="10 0" CornerRadius="11"
-                    Background="{Resource CuiPanel2Brush}" AccessibleName="{Binding LayoutModeAccessibleName}"
-                    Active="{Binding ShowEditor}"
-                    ToolTip="Constrains block placement only. Page ink and text editing stay available." />
-            <!-- Snap is the third independent control in the reference identity/mode row: it decides
-                 where a spatial edit commits, not whether editing or placement is allowed. -->
-            <Button ID="SnapButton" Content="{Binding SnapLabel}" Action="ToggleSnap"
-                    Interactive="{Binding CanChangeSnap}" Selected="{Binding IsSnapEnabled}" Height="28"
-                    Padding="10 0" CornerRadius="11" Background="{Resource CuiPanel2Brush}"
-                    AccessibleName="{Binding SnapAccessibleName}" Active="{Binding ShowEditor}"
-                    ToolTip="Snap: spatial edits commit on the placement grid. Independent of Edit/View and of the layout lock." />
+            <!-- BOARD-UI-001 (18 November specification): Edit/View, the layout lock and snapping are
+                 direct controls of the ONE compact toolbar now (BoardsAdaptiveToolbar.cui:
+                 AdaptiveFixedActions with EditViewToggle, plus the Page disclosure for layout lock,
+                 snapping and properties). They stay persistently visible - the 1 November review
+                 finding is preserved, just relocated to the compact toolbar. -->
             <Container Type="Menu" ID="MoreMenu" VerticalAlignment="Center">
             <Button Type="Menu Item" ID="OverflowButton" IconSource="icon:more" IconOnly="True" IconSize="18" Width="32" Height="32" Padding="0" AccessibleName="More board actions" Tooltip="Board options">
-              <!-- The page-mode and layout-mode commands are no longer listed inside the overflow: they
-                   are persistent controls in the top-right chrome, where the specification requires them
-                   to be visible instead of hidden behind the overflow button. -->
+              <!-- Page-scoped actions (properties, styles, layout lock, snapping) live behind the
+                   compact toolbar's Page disclosure; this menu keeps only the remaining board
+                   utilities. -->
               <Button Type="Menu Item" Content="{Binding TabViewMenuLabel}" Action="ToggleTabView" />
-              <Button Type="Menu Item" Content="Styles…" Action="ManageStyles" />
               <Button Type="Menu Item" Content="Toggle light or dark appearance" Action="ToggleTheme" />
               <Button Type="Menu Item" ID="CanvasLockToggle" Content="{Binding CanvasLockLabel}" Action="ToggleCanvasLock" Interactive="{Binding IsEditMode}" AccessibleName="{Binding CanvasLockAccessibleName}" />
-              <Button Type="Menu Item" ID="MoreBoardProperties" Content="Board properties…" Action="BoardProperties" />
             </Button>
             </Container>
           </Container>
@@ -169,7 +145,10 @@
           <Button Column="3" ID="TabNewPageButton" Content="+" Action="AddPage" Width="34" Height="34" FontSize="16"
                   AccessibleName="New page" ToolTip="Add a page" IsEnabled="{Binding CanEdit}" />
         </Container>
-        <Container Type="Grid" Row="1" Active="{Binding ShowNativeAuthoring}" ID="FormattingToolbar" Margin="16 4 14 4" Background="Transparent">
+        <!-- BOARD-UI-001 (18 November): the compact toolbar row stays presented in BOTH modes on native
+             pages - Edit/View lives in it and is the route back from View. ShowNativeAuthoring (edit-mode
+             only) still drives the native editing surface itself, but must not hide this row. -->
+        <Container Type="Grid" Row="1" Active="{Binding ShowCompactToolbar}" ID="FormattingToolbar" Margin="16 4 14 4" Background="Transparent">
           <Container Type="Overlay" ID="ToolbarHost" HorizontalAlignment="Stretch" />
         </Container>
         <Container Type="Vertical Stack" ID="ContextHost" Row="2" Active="{Binding AdaptivePropertiesVisible}" MaxHeight="220" VerticalScrolling="True" Padding="12 6" Background="Transparent">

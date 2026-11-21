@@ -42,7 +42,7 @@ public sealed class BoardsToolbarCapabilitiesTests
                 TestUiThread.Run(() =>
                 {
                     var vm = presentation.ViewModel;
-                    window = new Window { Content = presentation.Content, Width = 1500, Height = 700 };
+                    window = new Window { Content = presentation.Content, Width = 2400, Height = 700 };
                     window.Show(); window.UpdateLayout();
                     var row = vm.PageBlocks.Single(block => block.Kind == projectedKind);
                     vm.FocusBlock(row.Id); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
@@ -130,7 +130,7 @@ public sealed class BoardsToolbarCapabilitiesTests
                 TestUiThread.Run(() =>
                 {
                     var vm = presentation.ViewModel;
-                    window = new Window { Content = presentation.Content, Width = 1500, Height = 700 };
+                    window = new Window { Content = presentation.Content, Width = 2400, Height = 700 };
                     window.Show(); window.UpdateLayout();
                     var row = vm.PageBlocks.Single(block => block.Kind == "bulleted");
                     vm.FocusBlock(row.Id); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
@@ -194,7 +194,7 @@ public sealed class BoardsToolbarCapabilitiesTests
                 TestUiThread.Run(() =>
                 {
                     var vm = presentation.ViewModel;
-                    window = new Window { Content = presentation.Content, Width = 1500, Height = 700 };
+                    window = new Window { Content = presentation.Content, Width = 2400, Height = 700 };
                     window.Show(); window.UpdateLayout();
                     var block = vm.PageBlocks.First(item => item.Kind == "paragraph");
                     vm.FocusBlock(block.Id); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();

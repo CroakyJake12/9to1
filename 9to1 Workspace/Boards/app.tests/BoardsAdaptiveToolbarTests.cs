@@ -37,11 +37,19 @@ public sealed class BoardsAdaptiveToolbarTests
                     window.UpdateLayout();
                     if (width < 700) Assert.True(layout.HiddenItemCount > 0);
                     else Assert.Equal(0, layout.HiddenItemCount);
-                    foreach (var id in new[] { "AdaptiveAdd", "AdaptiveDrawing", "AdaptiveAI" })
+                    // BOARD-UI-001: the compact toolbar's direct controls survive every collapse
+                    // width. Page/Collaborate are disclosure triggers, authored as menu items, so
+                    // their runtime control is a MenuItem (like OverflowButton elsewhere).
+                    foreach (var (id, isMenuItem) in new (string, bool)[]
+                             { ("AdaptiveAdd", false), ("AdaptiveDrawing", false), ("EditModeButton", false), ("ViewModeButton", false),
+                               ("AdaptivePage", true), ("AdaptiveCollaborate", true) })
                     {
-                        var action = BoardsCuiControlFinder.FindByAutomationId<Button>(root, id)!;
-                        Assert.True(action.IsEffectivelyVisible);
-                        Assert.True(action.Bounds.Width > 20);
+                        var action = isMenuItem
+                            ? (Control?)BoardsCuiControlFinder.FindByAutomationId<MenuItem>(root, id)
+                            : BoardsCuiControlFinder.FindByAutomationId<Button>(root, id);
+                        Assert.True(action is not null, $"{id} missing from the compact toolbar");
+                        Assert.True(action!.IsEffectivelyVisible);
+                        Assert.True(action.Bounds.Width > 20, $"{id} measured {action.Bounds.Width} wide");
                         var position = action.TranslatePoint(default, root);
                         Assert.NotNull(position);
                         Assert.True(position!.Value.X + action.Bounds.Width <= root.Bounds.Width + 1);
@@ -70,7 +78,9 @@ public sealed class BoardsAdaptiveToolbarTests
                 Assert.All(vm.FindBlock(vm.SelectedBlockId)!.Runs, run => Assert.Equal(20, run.FontSize));
                 Assert.Equal(Avalonia.Layout.VerticalAlignment.Center,
                     BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "AdaptiveFont")!.VerticalContentAlignment);
-                Assert.False(BoardsCuiControlFinder.FindByAutomationId<Button>(root, "AdaptiveAI")!.IsEffectivelyEnabled);
+                // BOARD-UI-003: the decorative disabled AI entry is gone (the contextual AI bar owns
+                // that surface); its removal must stay true as the toolbar evolves.
+                Assert.Null(BoardsCuiControlFinder.FindByAutomationId<Button>(root, "AdaptiveAI"));
                 Assert.NotNull(BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "AdaptiveFont"));
                 Assert.NotNull(BoardsCuiControlFinder.FindByAutomationId<TextBox>(root, "AdaptiveSize"));
             }
@@ -232,7 +242,10 @@ public sealed class BoardsAdaptiveToolbarTests
                 TestUiThread.Run(() =>
                 {
                     var vm = presentation.ViewModel;
-                    window = new Window { Content = presentation.Content, Width = 1500, Height = 700 };
+                    // BOARD-UI-001's fixed cluster (Add/Drawing/Edit-View/Collaborate/Page) is wider than
+                    // the pre-refactor one, so the inline list-row controls need a wider window to stay
+                    // presented; collapse itself is pinned by Mounted_strip_collapses_....
+                    window = new Window { Content = presentation.Content, Width = 2400, Height = 700 };
                     window.Show(); window.UpdateLayout();
                     var row = vm.PageBlocks.Single(block => block.Kind == "bulleted");
                     vm.FocusBlock(row.Id); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();

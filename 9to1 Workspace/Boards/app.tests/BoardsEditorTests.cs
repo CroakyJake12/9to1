@@ -319,6 +319,10 @@ public sealed class BoardsEditorTests
             Assert.DoesNotContain(diagnostics, item => item.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             var control = Assert.IsAssignableFrom<Control>(root);
             loader.WireBindings(control); viewModel.Attach(control);
+            // BOARD-UI-001 (18 November): Edit/View live in the compact toolbar, which production mounts
+            // into ToolbarHost via ToolbarBuilder.Rebuild (BoardsWritablePresentation.RefreshToolbar).
+            if (BoardsCuiControlFinder.FindByAutomationId<Avalonia.Controls.Panel>(control, "ToolbarHost") is { } toolbarHost)
+                ToolbarBuilder.Rebuild(toolbarHost, viewModel);
             var window = new Window { Content = control, Width = 1200, Height = 800 }; window.Show(); window.UpdateLayout();
             try
             {
@@ -611,8 +615,10 @@ public sealed class BoardsEditorTests
         var adaptivePill = components.Single(component => component.Name == "AdaptivePill");
         Assert.True(adaptivePill.Properties.TryGetValue("Type", out var adaptiveType)
             && adaptiveType is CuiLiteralValue { Value: "Toolbar" });
+        // BOARD-UI-001 (18 November): the disclosure is the NAMED "Format" control and stays presented
+        // at every width, so the authored contract is OverflowHost="always", not merely "True".
         Assert.Contains(adaptivePill.DescendantsAndSelf(), component =>
-            component.Properties.TryGetValue("OverflowHost", out var overflowValue) && overflowValue is CuiLiteralValue { Value: "True" });
+            component.Properties.TryGetValue("OverflowHost", out var overflowValue) && overflowValue is CuiLiteralValue { Value: "always" });
         var boardSwitcher = components.Single(component => component.Name == "BoardSwitcher");
         Assert.True(boardSwitcher.Properties.TryGetValue("Content", out var boardName)
             && boardName is CuiBindingValue { Path: "BoardMenuTitle" });

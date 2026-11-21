@@ -128,6 +128,13 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
                 content = Assert.IsAssignableFrom<Control>(loaded.Root);
                 loader.WireBindings(content);
                 viewModel.Attach(content);
+                // BOARD-UI-001 (18 November): Edit/View and the Page/Collaborate disclosures now live in
+                // the compact toolbar, which production mounts into ToolbarHost via
+                // BoardsWritablePresentation.RefreshToolbar -> ToolbarBuilder.Rebuild. This harness
+                // mounts Boards.cui raw, so it must perform the same production step for the chrome
+                // this test pins to exist.
+                if (BoardsCuiControlFinder.FindByAutomationId<Avalonia.Controls.Panel>(content, "ToolbarHost") is { } toolbarHost)
+                    ToolbarBuilder.Rebuild(toolbarHost, viewModel);
                 window = new Window { Content = content, Width = 1200, Height = 800 };
                 window.Show();
                 window.UpdateLayout();
@@ -140,7 +147,11 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
                 var topLevel = window!;
                 var edit = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "EditModeButton");
                 var view = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "ViewModeButton");
-                var layout = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "LayoutModeButton");
+                // BOARD-UI-001 (18 November): the compact toolbar owns Edit/View directly, and the
+                // layout lock + snapping live behind its Page disclosure trigger (their command
+                // behaviour is pinned by BoardsModeMatrixTests; inside the closed menu the items are
+                // lazily materialised, so the trigger - not the items - is what this chrome test sees).
+                var page = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(ui, "AdaptivePage");
                 var before = adapter.Snapshot;
                 var startedEditing = (bool?)viewModel!.Get("IsEditingMode");
                 var startedViewing = (bool?)viewModel.Get("IsViewingMode");
@@ -164,32 +175,32 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
                 {
                     EditFound = edit is not null,
                     ViewFound = view is not null,
-                    LayoutFound = layout is not null,
+                    PageFound = page is not null,
                     EditContent = edit?.Content?.ToString(),
                     ViewContent = view?.Content?.ToString(),
-                    LayoutContent = layout?.Content?.ToString(),
+                    PageContent = page?.Header?.ToString(),
                     Enabled = edit?.IsEffectivelyEnabled == true && view?.IsEffectivelyEnabled == true &&
-                              layout?.IsEffectivelyEnabled == true,
+                              page?.IsEffectivelyEnabled == true,
                     // A control that exists in the compiled document can still measure to nothing on
                     // the mounted surface, which is exactly what the 1 November native review caught.
                     Visible = edit?.IsEffectivelyVisible == true && view?.IsEffectivelyVisible == true &&
-                              layout?.IsEffectivelyVisible == true,
-                    Measured = edit?.Bounds.Width > 40 && view?.Bounds.Width > 40 && layout?.Bounds.Width > 40,
-                    Heights = edit?.Bounds.Height > 16 && view?.Bounds.Height > 16 && layout?.Bounds.Height > 16,
+                              page?.IsEffectivelyVisible == true,
+                    Measured = edit?.Bounds.Width > 40 && view?.Bounds.Width > 40 && page?.Bounds.Width > 30,
+                    Heights = edit?.Bounds.Height > 16 && view?.Bounds.Height > 16 && page?.Bounds.Height > 16,
                     EditTop = edit?.Bounds.Top ?? -1,
+                    PageTop = page?.Bounds.Top ?? -1,
                     // The overflow is authored as a menu item, so its runtime control is a MenuItem.
-                    // Bounds are parent-relative, so the left-of-overflow order is compared in window
-                    // coordinates rather than between two different parents.
                     OverflowTop = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(ui, "OverflowButton")?.Bounds.Top ?? -1,
                     EditWindowX = edit?.TranslatePoint(new Avalonia.Point(0, 0), topLevel)?.X ?? -1,
                     OverflowWindowX = BoardsCuiControlFinder.FindByAutomationId<MenuItem>(ui, "OverflowButton")
                         ?.TranslatePoint(new Avalonia.Point(0, 0), topLevel)?.X ?? -1,
                     EditWidth = edit?.Bounds.Width ?? -1,
                     ViewWidth = view?.Bounds.Width ?? -1,
-                    LayoutWidth = layout?.Bounds.Width ?? -1,
-                    SnapFound = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton") is not null,
-                    SnapVisible = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton")?.IsEffectivelyVisible == true,
-                    SnapWidth = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton")?.Bounds.Width ?? -1,
+                    PageWidth = page?.Bounds.Width ?? -1,
+                    // The layout lock and snapping are behind the closed Page disclosure: their
+                    // menu items are lazily materialised and must not occupy the visible chrome.
+                    SnapDeferred = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "SnapButton") is null,
+                    LayoutDeferred = BoardsCuiControlFinder.FindByAutomationId<Button>(ui, "LayoutModeButton") is null,
                     StartedEditing = startedEditing,
                     StartedViewing = startedViewing,
                     StillEditing = stillEditing,
@@ -207,26 +218,25 @@ public sealed class BoardsUndoOwnershipAndModeChromeTests
                 };
             });
 
-            Assert.True(observations.EditFound, "the mounted page chrome must expose an Edit control");
-            Assert.True(observations.ViewFound, "the mounted page chrome must expose a View control");
-            Assert.True(observations.LayoutFound, "the mounted page chrome must expose the layout-mode control");
+            Assert.True(observations.EditFound, "the compact toolbar must expose an Edit control");
+            Assert.True(observations.ViewFound, "the compact toolbar must expose a View control");
+            Assert.True(observations.PageFound, "the compact toolbar must expose the Page disclosure");
             Assert.Equal("Edit", observations.EditContent);
             Assert.Equal("View", observations.ViewContent);
-            Assert.False(string.IsNullOrWhiteSpace(observations.LayoutContent));
+            Assert.Equal("Page", observations.PageContent);
             Assert.True(observations.Enabled);
             Assert.True(observations.Visible, "the mode controls are not effectively visible on the mounted surface");
             Assert.True(observations.Measured,
-                $"the mode controls measured too small: Edit={observations.EditWidth} View={observations.ViewWidth} Layout={observations.LayoutWidth}");
+                $"the mode controls measured too small: Edit={observations.EditWidth} View={observations.ViewWidth} Page={observations.PageWidth}");
             Assert.True(observations.Heights);
-            Assert.True(observations.SnapFound, "the mounted chrome must expose the Snap control");
-            Assert.True(observations.SnapVisible, "the Snap control is not effectively visible");
-            Assert.True(observations.SnapWidth > 40, $"the Snap control measured {observations.SnapWidth} wide");
-            Assert.True(observations.EditTop >= 0 && observations.EditTop < 120,
-                $"the mode switch sits at y={observations.EditTop}, outside the identity band");
+            Assert.True(observations.SnapDeferred && observations.LayoutDeferred,
+                "layout lock and snapping belong behind the Page disclosure, not in the visible chrome (BOARD-UI-001)");
+            Assert.True(observations.EditTop >= 0 && observations.EditTop < 160,
+                $"the mode switch sits at y={observations.EditTop}, outside the top chrome band");
             Assert.True(observations.OverflowTop >= 0 && observations.OverflowTop < 120,
                 $"the overflow sits at y={observations.OverflowTop}, outside the identity band");
-            Assert.True(observations.EditWindowX >= 0 && observations.OverflowWindowX > observations.EditWindowX,
-                $"the mode switch (x={observations.EditWindowX}) must sit to the left of the overflow (x={observations.OverflowWindowX})");
+            Assert.True(observations.EditTop >= observations.OverflowTop,
+                "the compact toolbar's Edit/View control sits at or below the identity band it replaced");
 
             Assert.Equal(true, observations.StartedEditing);
             Assert.Equal(false, observations.StartedViewing);

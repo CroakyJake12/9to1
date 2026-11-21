@@ -502,6 +502,16 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public Haven.Application.BoardEmbeddedArtifactReference? SelectedEmbeddedArtifact => CurrentPage().EmbeddedArtifact;
     public bool ShowNativeAuthoring => _isEditMode &&
         string.Equals(CurrentPage().PageType, HavenRichPageTypes.Native, StringComparison.Ordinal);
+
+    /// <summary>BOARD-UI-001 (18 November specification): the ONE compact toolbar (Add, Drawing, Format,
+    /// Edit/View, Collaborate, Page) stays presented on native pages in BOTH modes - its Edit/View
+    /// control is the route back from View mode, which is exactly what the 1 November 2026 native review
+    /// demanded be persistently visible. It deliberately differs from <see cref="ShowNativeAuthoring"/>,
+    /// which additionally requires edit mode because it drives the native editing surface itself. The
+    /// toolbar's formatting controls keep disabling themselves through their own CanEditToolbar-derived
+    /// bindings while viewing.</summary>
+    public bool ShowCompactToolbar =>
+        string.Equals(CurrentPage().PageType, HavenRichPageTypes.Native, StringComparison.Ordinal);
     public bool IsLanding => Get("IsLanding") as bool? ?? false;
 
     /// <summary>False while the surface is a Boards splash with no board behind it. The splash used
@@ -1198,7 +1208,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         "OpenRecentBoard" or "OpenRecentPage" or
         "NewBoard" or "RetryOpenCreatedBoard" or "RetryBoardCreationSettlement" or "CheckSavedBoard" or "OpenRecordedBoard" or "NewMenu" or "OpenBoard" or "SaveBoard" or "SaveAsBoard" or
         "FileMenu" or "ShowStageOneSurface" or "OverflowMenu" or "BoardProperties" or "CloseWindow" or "ToggleTheme" or
-        "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView";
+        "SelectSection1" or "SelectSection2" or "SelectPage1" or "SelectPage2" or "ToggleEditView" or
+        // BOARD-UI-001 (18 November): selecting a mode is not a board mutation. The Edit/View switch is
+        // the route BACK from View mode; refusing it strands the owner on the viewing page - the exact
+        // "owner could not see Edit/View at all" defect the 1 November 2026 native review recorded.
+        // The handler itself still no-ops when the requested mode is already active.
+        "SetEditModeOn" or "SetEditModeOff";
 
     private void SetEditMode(bool enabled)
     {
@@ -1231,6 +1246,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         RefreshSnapState();
         RefreshEmbeddedPageLinkState();
         Set("ShowNativeAuthoring", ShowNativeAuthoring);
+        Set("ShowCompactToolbar", ShowCompactToolbar);
         Set("ModeLabel", enabled ? "Editing" : "Viewing");
         Set("ModeToggleAccessibleName", enabled ? "Switch to Viewing mode" : "Switch to Editing mode");
         if (!enabled) InvalidateTextRange();
@@ -4690,6 +4706,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             Set("IsWritePage", string.Equals(page.PageType, HavenRichPageTypes.Write, StringComparison.Ordinal));
             Set("IsEmbeddedArtifactPage", page.PageType is HavenRichPageTypes.Write or HavenRichPageTypes.Canvas);
             Set("ShowNativeAuthoring", ShowNativeAuthoring);
+            Set("ShowCompactToolbar", ShowCompactToolbar);
             RefreshPageBreadcrumb();
             Set("CanvasLockLabel", page.IsCanvasLocked ? "Unlock freeform objects" : "Lock freeform objects");
             Set("CanvasLockStatus", page.IsCanvasLocked ? "Freeform objects are locked; drawing remains available." : "Freeform objects can be moved.");

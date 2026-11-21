@@ -272,7 +272,13 @@ internal static class AdaptiveToolbar
         {
             if (_disposed) return;
             var target = Target;
-            if (!target.CanEdit || !target.IsEditMode || RefuseUnsupportedCommand(command)) return;
+            // BOARD-UI-001 (18 November specification): the compact toolbar owns the Edit/View switch,
+            // so the mode commands must survive this toolbar's own view-mode guard - they are how the
+            // owner gets OUT of View mode (the 1 November 2026 native review recorded exactly this
+            // stranding). Selecting a mode is not a board mutation; the view-model allowlist permits
+            // them and the handler no-ops when the requested mode is already active.
+            var modeSwitch = command is "SetEditModeOn" or "SetEditModeOff";
+            if (!target.CanEdit || (!target.IsEditMode && !modeSwitch) || (!modeSwitch && RefuseUnsupportedCommand(command))) return;
             SynchronizeDraftIdentity(target);
             var block = target.FindBlock(target.SelectedBlockId);
             switch (command)

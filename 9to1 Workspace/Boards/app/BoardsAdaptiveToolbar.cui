@@ -222,8 +222,12 @@
             <Button Content="Manage styles…" Action="ManageStyles" Type="Menu Item" AccessibleName="Manage styles…" ID="AdaptiveProperties_ManageStyles" />
           </Button>
         </Container>
-        <Container Type="Menu" OverflowHost="True" ID="AdaptivePill_Menu_2">
-          <Button Type="Menu Item" Content="…" Height="32" Padding="0" AccessibleName="More formatting tools" ID="OverflowAdaptiveOverflow" Width="32">
+        <!-- BOARD-UI-001 (18 November specification): the disclosure is NAMED "Format" and stays
+             presented at every width (OverflowHost="always"), opening the original text/paragraph/
+             font/list/alignment controls, rather than appearing only as an anonymous "…" under
+             collapse pressure. -->
+        <Container Type="Menu" OverflowHost="always" ID="AdaptivePill_Menu_2">
+          <Button Type="Menu Item" Content="Format" Height="32" Padding="10 0" AccessibleName="Format" ID="OverflowAdaptiveOverflow" Tooltip="Text, paragraph, font, list and alignment controls">
             <Button Active="{Binding TextMode}" Type="Menu Item" Content="Font and style" ID="OverflowAdaptiveOverflow_Font_and_style">
               <Container Type="Vertical Stack" ID="OverflowAdaptiveOverflow_Font_and_style_Vertical_Stack" Tooltip="{Binding TypographyGroupHint}">
                 <Input ID="OverflowAdaptiveStyle" Type="Select" Width="124" Height="32" ItemsSource="{Binding StyleNames}" SelectedIndex="{Binding StyleIndex, mode=TwoWay}" AccessibleName="Paragraph style" MinHeight="32" VerticalAlignment="Center" IsEnabled="{Binding CanUseParagraphStyle}" Tooltip="{Binding StyleControlHint}" />
@@ -396,6 +400,12 @@
            CellGap 4, so one toolbar row carried two different control scales and uneven gaps (8 logical
            then 6). Same row, same optical size and rhythm; "+ Add" and "Drawing" stay distinct by their
            label and icon, not by being taller. -->
+      <!-- BOARD-UI-001 (18 November specification): one compact toolbar with direct Add, Drawing,
+           Edit/View and Collaborate controls. Edit/View moved here from the identity row and stays
+           persistently visible (the 1 November finding survives); layout lock, snapping, properties
+           and page options moved behind the Page disclosure (BOARD-UI-001 sentence two); the
+           decorative disabled AI entry is removed because the contextual AI bar owns that surface
+           (BOARD-UI-003). -->
       <Container ID="AdaptiveFixedActions" Type="Horizontal Stack" Column="1" CellGap="2" VerticalAlignment="Center" Background="{Resource CuiFloatingSurfaceMaterial}" Padding="4" CornerRadius="15">
         <Button ID="AdaptiveAdd" Content="+ Add" AccessibleName="Insert" Tooltip="Insert a block" Height="32" Padding="10 0" CornerRadius="8" Interactive="{Binding CanEditToolbar}" />
         <Button ID="AdaptiveDrawing" Action="ToggleDrawing" Selected="{Binding DrawingMode}" AccessibleName="Drawing" Height="32" Padding="10 0" CornerRadius="8" Interactive="{Binding CanEditToolbar}">
@@ -404,12 +414,37 @@
             <Text Text="Drawing" VerticalAlignment="Center" ID="AdaptiveDrawing_Horizontal_Stack_Drawing" />
           </Container>
         </Button>
-        <Button ID="AdaptiveAI" AccessibleName="AI unavailable" Tooltip="AI is not connected to this Boards editor" Interactive="False" Height="32" Padding="10 0" CornerRadius="8">
-          <Container ID="AdaptiveAIContent" Type="Horizontal Stack" CellGap="4" VerticalAlignment="Center">
-            <Image ID="AdaptiveAIIcon" Source="icon:sparkles" Width="16" Height="16" />
-            <Text ID="AdaptiveAILabel" Text="AI" VerticalAlignment="Center" />
-          </Container>
-        </Button>
+        <Container Type="Horizontal Stack" ID="EditViewToggle" CellGap="2" Padding="3 2"
+                   CornerRadius="11" Background="{Resource CuiPanel2Brush}"
+                   AccessibleName="Page edit or view mode">
+          <Button ID="EditModeButton" Content="Edit" Action="SetEditModeOn" Selected="{Binding IsEditingMode}"
+                  Interactive="{Binding CanToggleEditMode}" Height="28" Padding="10 0" CornerRadius="11"
+                  AccessibleName="Editing mode" ToolTip="Edit this page" />
+          <Button ID="ViewModeButton" Content="View" Action="SetEditModeOff" Selected="{Binding IsViewingMode}"
+                  Interactive="{Binding CanToggleEditMode}" Height="28" Padding="10 0" CornerRadius="11"
+                  AccessibleName="Viewing mode" ToolTip="View this page without changing it" />
+        </Container>
+        <Container Type="Menu" ID="AdaptiveCollaborateMenu">
+          <Button Type="Menu Item" ID="AdaptiveCollaborate" Content="Collaborate" AccessibleName="Collaborate"
+                  Tooltip="Sharing and presence" Height="32" Padding="10 0" CornerRadius="8">
+            <Button Type="Menu Item" ID="CollaborateLocalNotice" Content="Sign in to 9to1 to invite people" Interactive="False"
+                    AccessibleName="Collaboration unavailable - this board is stored locally on this device" />
+          </Button>
+        </Container>
+        <Container Type="Menu" ID="AdaptivePageMenu">
+          <Button Type="Menu Item" ID="AdaptivePage" Content="Page" AccessibleName="Page options"
+                  Tooltip="Properties, layout lock, snapping and the original page options" Height="32" Padding="10 0" CornerRadius="8">
+            <Button Type="Menu Item" ID="LayoutModeButton" Content="{Binding LayoutModeLabel}" Action="ToggleLayoutMode"
+                    Interactive="{Binding CanChangeLayoutMode}" AccessibleName="{Binding LayoutModeAccessibleName}"
+                    ToolTip="Constrains block placement only. Page ink and text editing stay available." />
+            <Button Type="Menu Item" ID="SnapButton" Content="{Binding SnapLabel}" Action="ToggleSnap"
+                    Selected="{Binding IsSnapEnabled}" Interactive="{Binding CanChangeSnap}"
+                    AccessibleName="{Binding SnapAccessibleName}"
+                    ToolTip="Snap: spatial edits commit on the placement grid. Independent of Edit/View and of the layout lock." />
+            <Button Type="Menu Item" ID="MoreBoardProperties" Content="Board properties…" Action="BoardProperties" />
+            <Button Type="Menu Item" ID="AdaptivePageStyles" Content="Styles…" Action="ManageStyles" />
+          </Button>
+        </Container>
       </Container>
     </Container>
   </Page>
