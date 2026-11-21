@@ -237,11 +237,12 @@
     "preserved-compatible-features"
    ],
    "evidence": [
-    "27B worker inventory archived: docs/development/evidence/atlas-20261120/g02-t01-report.md (picker = MainView.ShowModelSelectorAsync flyout; MODEL-001..006 require role tabs + collapsible sections + Apply/reload context; reasoning slider uses non-canonical 20/60/80/100 bands vs ReasoningScale 25/50/75/100; ModelConfigurationControl is a fully-built unrevived asset; identity-safety confirmed)"
+    "27B worker inventory archived: docs/development/evidence/atlas-20261120/g02-t01-report.md (picker = MainView.ShowModelSelectorAsync flyout; MODEL-001..006 require role tabs + collapsible sections + Apply/reload context; reasoning slider uses non-canonical 20/60/80/100 bands vs ReasoningScale 25/50/75/100; ModelConfigurationControl is a fully-built unrevived asset; identity-safety confirmed)",
+    "Correctness slice landed (Sat 13:0x): the model-picker flyout (MainView.ShowModelSelectorAsync) now speaks the canonical ReasoningScale - slider bounds/tick from Minimum/Maximum/Step, snapping via SnapPercentage, and the private 20/60/80/100 effort map deleted in favour of ReasoningScale.ToPercentage/FromPercentage, so the pill, the flyout and persistence agree on 25/50/75/100 (the same scale ModelConfigurationControl and HomeModelPickerCuiProjection already use). Evidence: Haven.Desktop Release build 0 errors; Haven.Core.Tests 1094/1108 with ALL 14 failures CONFIRMED pre-existing by a full stashed run at the same commit (identical 14 - ModeIdentity/Catalog/TaskRun/ComputerTool lanes unrelated to this change; that lane does not compile Haven.Desktop). Inventory (archived this commit): docs/development/evidence/atlas-20261120/g02-t01-report.md."
    ],
-   "next_action": "coordinator implementation starts with the small correctness slice (canonical ReasoningScale mapping + tests), then role-tab chrome per inventory sequence",
+   "next_action": "remaining G02-T01 scope: Main/Voice/Vision role tabs + collapsible Context/Model/Assistant sections + Apply-and-reload context (per inventory sequence); commit the slice first, then the chrome increment",
    "kind": "implementation_packet",
-   "updated": "2026-11-21T11:55:00Z"
+   "updated": "2026-11-21T13:05:00Z"
   },
   {
    "id": "G02-T02",

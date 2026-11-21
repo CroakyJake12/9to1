@@ -3575,16 +3575,17 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
                 var reasoning = new HavenSlider
                 {
-                    Minimum = 20,
-                    Maximum = 100,
+                    // Canonical four-step scale (ReasoningScale): 25/50/75/100.
+                    Minimum = ReasoningScale.MinimumPercentage,
+                    Maximum = ReasoningScale.MaximumPercentage,
                     Value = EffortPercentage(_preferences.DefaultEffort),
-                    TickFrequency = 20,
+                    TickFrequency = ReasoningScale.StepSize,
                     IsSnapToTickEnabled = true,
                     Margin = new Avalonia.Thickness(8, 0, 8, 2)
                 };
                 reasoning.ValueChanged += (_, args) =>
                 {
-                    var percent = Math.Clamp((int)Math.Round(args.NewValue / 20d) * 20, 20, 100);
+                    var percent = ReasoningScale.SnapPercentage(args.NewValue);
                     var effort = EffortForPercentage(percent);
                     reasoningValue.Text = $"{percent}%";
                     TopRail.SetModelSummary(
@@ -3637,22 +3638,14 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
     }
 
-    private static int EffortPercentage(EffortLevel effort) => effort switch
-    {
-        EffortLevel.Low => 20,
-        EffortLevel.Medium => 60,
-        EffortLevel.High => 80,
-        EffortLevel.Max => 100,
-        _ => 60
-    };
+    // MODEL-001 family (18 November specification): the reasoning control speaks the ONE canonical
+    // product scale - ReasoningScale's four steps 25/50/75/100 (Haven.Core.DomainLogic.ReasoningScale),
+    // the same scale ModelConfigurationControl and the Home picker projection already use. The flyout
+    // used to keep a private 20/60/80/100 map here, which made the same setting display and persist
+    // different numbers depending on the route the owner took to it.
+    private static int EffortPercentage(EffortLevel effort) => ReasoningScale.ToPercentage(effort);
 
-    private static EffortLevel EffortForPercentage(int percentage) => percentage switch
-    {
-        <= 20 => EffortLevel.Low,
-        <= 60 => EffortLevel.Medium,
-        <= 80 => EffortLevel.High,
-        _ => EffortLevel.Max
-    };
+    private static EffortLevel EffortForPercentage(int percentage) => ReasoningScale.FromPercentage(percentage);
 
     private async Task RefreshActiveModelsAsync()
     {
