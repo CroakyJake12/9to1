@@ -3416,145 +3416,337 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                     Margin = new Avalonia.Thickness(8, 3, 8, 8)
                 });
 
-                var selectedName = CurrentPage switch
+                // G02-T01 (Atlas MODEL-001/002/003, 21 November increment): centred Main/Voice/Vision
+                // role tabs (scoped to this picker; Haven's own tabs stay left aligned), collapsible
+                // Context/Model/Assistant headings that show the current value while closed, ONE
+                // compact searchable list of model rows with name, short source label and selected
+                // state, and a Browse models route to the real catalogue. Reasoning stays visible in
+                // every role. Changing Context with pending/Apply (MODEL-004/005) is deliberately the
+                // NEXT increment; this chrome displays the applied value only.
+                var openSections = new HashSet<string>(StringComparer.Ordinal);
+                var roleHost = new StackPanel { Spacing = 8 };
+                var tabRow = new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    Spacing = 4
+                };
+                var role = "Main";
+                string CurrentModelName() => ((CurrentPage switch
                 {
                     NewChatPage newChatPage => newChatPage.SelectedModelName,
                     TrainingPageViewModel training => training.SelectedModel,
                     _ => CurrentChat?.SelectedModel?.Name
-                };
-                var modelNames = models.Select(model => model.Name).ToArray();
-                var selectedModelIndex = Array.FindIndex(modelNames, name =>
-                    name.Equals(selectedName ?? _preferences.DefaultModel, StringComparison.OrdinalIgnoreCase));
-                var modelPicker = new HavenSelect
+                }) ?? _preferences.DefaultModel) ?? "Model";
+                static string ModelSourceLabel(ModelDescriptor model)
                 {
-                    ItemsSource = modelNames,
-                    SelectedIndex = selectedModelIndex,
-                    MinWidth = 178,
-                    MaxWidth = 210,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                    IsEnabled = models.Count > 0
-                };
-                modelPicker.SelectionChanged += (_, _) =>
+                    var head = model.Name.Split(':', 2)[0].ToLowerInvariant();
+                    return head switch
+                    {
+                        "openrouter" or "anthropic" or "openai" or "gemini" => "Cloud",
+                        "openai-compatible" => "Remote app",
+                        _ => "Local"
+                    };
+                }
+                IReadOnlyList<ModelDescriptor> RoleModels() => role switch
                 {
-                    if (modelPicker.SelectedIndex < 0 || modelPicker.SelectedIndex >= models.Count) return;
-                    var model = models[modelPicker.SelectedIndex];
+                    "Voice" => models.Where(item => item.Supports(ToolCapability.AudioInput) || item.Supports(ToolCapability.AudioOutput)).ToArray(),
+                    "Vision" => models.Where(item => item.Supports(ToolCapability.Vision)).ToArray(),
+                    _ => models
+                };
+                void ApplyModel(ModelDescriptor model)
+                {
                     if (CurrentPage is NewChatPage newChat) newChat.SelectModel(model);
                     else if (CurrentPage is TrainingPageViewModel training) training.SelectedModel = model.Name;
                     else if (CurrentChat is { } currentChat) currentChat.SelectedModel = model;
                     _preferences.SetModelDefaults(model.Name, _preferences.DefaultEffort);
                     TopRail.SetModelSummary(model.Name, EffortPercentage(_preferences.DefaultEffort));
-                };
-                var modelRow = new Grid
-                {
-                    ColumnDefinitions = new ColumnDefinitions("*,Auto"),
-                    ColumnSpacing = 12,
-                    Margin = new Avalonia.Thickness(8, 2)
-                };
-                modelRow.Children.Add(new TextBlock
-                {
-                    Text = "Model",
-                    FontWeight = FontWeight.Bold,
-                    FontSize = 13,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-                });
-                Grid.SetColumn(modelPicker, 1);
-                modelRow.Children.Add(modelPicker);
-                rows.Children.Add(modelRow);
-                if (models.Count == 0)
-                {
-                    rows.Children.Add(new TextBlock
-                    {
-                        Text = "No local models are available.",
-                        Classes = { "muted" },
-                        Margin = new Avalonia.Thickness(8, -6, 8, 0)
-                    });
+                    RenderRole();
                 }
-                rows.Children.Add(new Separator { Margin = new Avalonia.Thickness(4, 8) });
-
-                var permissionsMatch = _preferences.FilePermission == _preferences.CommandPermission
-                                       && _preferences.CommandPermission == _preferences.BrowserPermission
-                                       && _preferences.BrowserPermission == _preferences.ComputerPermission;
-                var permissionOptions = new[] { "Custom", "Ask Every Time", "Risk-Free Only", "Full Access" };
-                var permissionPicker = new HavenSelect
+                StackPanel Section(string heading, Func<string> valueWhileClosed, Func<Control> body)
                 {
-                    ItemsSource = permissionOptions,
-                    SelectedIndex = permissionsMatch
-                        ? _preferences.FilePermission switch
-                        {
-                            PermissionMode.Ask => 1,
-                            PermissionMode.AutoSafe => 2,
-                            PermissionMode.FullAccess => 3,
-                            _ => 0
-                        }
-                        : 0,
-                    MinWidth = 145,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right
-                };
-                permissionPicker.SelectionChanged += (_, _) =>
-                {
-                    var mode = permissionPicker.SelectedIndex switch
+                    var section = new StackPanel { Spacing = 2 };
+                    var open = openSections.Contains(heading);
+                    var header = new ToggleButton
                     {
-                        1 => PermissionMode.Ask,
-                        2 => PermissionMode.AutoSafe,
-                        3 => PermissionMode.FullAccess,
-                        _ => (PermissionMode?)null
+                        Content = (open ? "▾ " : "▸ ") + heading,
+                        IsChecked = open,
+                        FontSize = 13,
+                        FontWeight = FontWeight.Bold,
+                        Padding = new Avalonia.Thickness(8, 3),
+                        HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                        Background = null,
+                        BorderThickness = new Avalonia.Thickness(0)
                     };
-                    if (mode is { } selectedMode)
-                        _preferences.SetToolPermissions(selectedMode, selectedMode, selectedMode, selectedMode);
+                    var valueLabel = new TextBlock
+                    {
+                        FontSize = 11,
+                        Classes = { "muted" },
+                        TextWrapping = TextWrapping.Wrap,
+                        IsVisible = !open,
+                        Text = valueWhileClosed(),
+                        Margin = new Avalonia.Thickness(10, 0, 8, 0)
+                    };
+                    var bodyHost = new StackPanel { Spacing = 6, IsVisible = open, Margin = new Avalonia.Thickness(8, 2, 8, 4) };
+                    if (open) bodyHost.Children.Add(body());
+                    header.IsCheckedChanged += (_, _) =>
+                    {
+                        if (header.IsChecked == true)
+                        {
+                            openSections.Add(heading);
+                            if (bodyHost.Children.Count == 0) bodyHost.Children.Add(body());
+                            bodyHost.IsVisible = true;
+                            valueLabel.IsVisible = false;
+                            header.Content = "▾ " + heading;
+                        }
+                        else
+                        {
+                            openSections.Remove(heading);
+                            bodyHost.IsVisible = false;
+                            valueLabel.Text = valueWhileClosed();
+                            valueLabel.IsVisible = true;
+                            header.Content = "▸ " + heading;
+                        }
+                    };
+                    section.Children.Add(header);
+                    section.Children.Add(valueLabel);
+                    section.Children.Add(bodyHost);
+                    return section;
+                }
+                Control ModelListBody()
+                {
+                    var panel = new StackPanel { Spacing = 6 };
+                    var search = new HavenTextInput { PlaceholderText = "Search models", Margin = new Avalonia.Thickness(0, 0, 0, 2) };
+                    var list = new StackPanel { Spacing = 2 };
+                    void RebuildRows()
+                    {
+                        list.Children.Clear();
+                        var query = (search.Text ?? string.Empty).Trim();
+                        var applied = CurrentModelName();
+                        foreach (var model in RoleModels())
+                        {
+                            if (query.Length > 0 && !model.Name.Contains(query, StringComparison.OrdinalIgnoreCase)) continue;
+                            var isSelected = model.Name.Equals(applied, StringComparison.OrdinalIgnoreCase);
+                            var rowGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
+                            rowGrid.Children.Add(new TextBlock
+                            {
+                                Text = model.Name,
+                                FontSize = 13,
+                                FontWeight = isSelected ? FontWeight.Bold : FontWeight.Normal,
+                                TextWrapping = TextWrapping.Wrap
+                            });
+                            var sourceBlock = new TextBlock
+                            {
+                                Text = (isSelected ? "selected \u00B7 " : "") + ModelSourceLabel(model),
+                                FontSize = 11,
+                                Classes = { "muted" },
+                                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                            };
+                            Grid.SetColumn(sourceBlock, 1);
+                            rowGrid.Children.Add(sourceBlock);
+                            var row = new Button
+                            {
+                                Content = rowGrid,
+                                Padding = new Avalonia.Thickness(8, 4),
+                                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                                Background = null,
+                                BorderThickness = new Avalonia.Thickness(0)
+                            };
+                            var captured = model;
+                            row.Click += (_, _) => ApplyModel(captured);
+                            list.Children.Add(row);
+                        }
+                        if (list.Children.Count == 0)
+                            list.Children.Add(new TextBlock
+                            {
+                                Text = models.Count == 0 ? "No local models are available." : "No models match.",
+                                Classes = { "muted" },
+                                FontSize = 12,
+                                Margin = new Avalonia.Thickness(8, 2)
+                            });
+                    }
+                    search.TextChanged += (_, _) => RebuildRows();
+                    RebuildRows();
+                    panel.Children.Add(search);
+                    panel.Children.Add(list);
+                    var browse = new Button
+                    {
+                        Content = "Browse models",
+                        FontSize = 12,
+                        Padding = new Avalonia.Thickness(8, 4),
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                        Background = null,
+                        BorderThickness = new Avalonia.Thickness(0)
+                    };
+                    browse.Click += (_, _) => { _ = OpenHomeDiscoverAsync(); };
+                    panel.Children.Add(browse);
+                    return panel;
+                }
+                string ContextValue()
+                {
+                    var limit = _preferences.GenerationOptions.ContextLimit.ToString("N0");
+                    return CurrentChat is { } chat
+                        ? $"{limit} tokens \u00B7 {chat.ContextTokens:N0} used"
+                        : $"{limit} tokens";
+                }
+                Control ContextBody() => new TextBlock
+                {
+                    Text = "Applied context window: " + _preferences.GenerationOptions.ContextLimit.ToString("N0") +
+                           " tokens. Editing it here arrives with its own apply-and-reload control.",
+                    FontSize = 12,
+                    TextWrapping = TextWrapping.Wrap,
+                    Classes = { "muted" }
                 };
-
-                var permissionRow = new Grid
+                string PermissionValue()
                 {
-                    ColumnDefinitions = new ColumnDefinitions("*,Auto"),
-                    ColumnSpacing = 12,
-                    Margin = new Avalonia.Thickness(8, 2)
-                };
-                permissionRow.Children.Add(new TextBlock
+                    var match = _preferences.FilePermission == _preferences.CommandPermission
+                                && _preferences.CommandPermission == _preferences.BrowserPermission
+                                && _preferences.BrowserPermission == _preferences.ComputerPermission;
+                    return !match ? "Custom" : _preferences.FilePermission switch
+                    {
+                        PermissionMode.Ask => "Ask Every Time",
+                        PermissionMode.AutoSafe => "Risk-Free Only",
+                        PermissionMode.FullAccess => "Full Access",
+                        _ => "Custom"
+                    };
+                }
+                Control AssistantBody()
                 {
-                    Text = "Allow Actions",
-                    FontWeight = FontWeight.Bold,
-                    FontSize = 13,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-                });
-                Grid.SetColumn(permissionPicker, 1);
-                permissionRow.Children.Add(permissionPicker);
-                rows.Children.Add(permissionRow);
-
-                var voices = _globalCallViewModel?.Voices ?? _callCoordinator.Capabilities.Voices;
-                var selectedVoice = _globalCallViewModel?.SelectedVoice
-                                    ?? voices.FirstOrDefault(item => item.IsDefault)
-                                    ?? voices.FirstOrDefault();
-                var voicePicker = new HavenSelect
+                    var panel = new StackPanel { Spacing = 4 };
+                    panel.Children.Add(new TextBlock
+                    {
+                        Text = "Assistant mode: " + CurrentMode,
+                        FontSize = 12,
+                        TextWrapping = TextWrapping.Wrap
+                    });
+                    var permissionsMatch = _preferences.FilePermission == _preferences.CommandPermission
+                                           && _preferences.CommandPermission == _preferences.BrowserPermission
+                                           && _preferences.BrowserPermission == _preferences.ComputerPermission;
+                    var permissionOptions = new[] { "Custom", "Ask Every Time", "Risk-Free Only", "Full Access" };
+                    var permissionPicker = new HavenSelect
+                    {
+                        ItemsSource = permissionOptions,
+                        SelectedIndex = permissionsMatch
+                            ? _preferences.FilePermission switch
+                            {
+                                PermissionMode.Ask => 1,
+                                PermissionMode.AutoSafe => 2,
+                                PermissionMode.FullAccess => 3,
+                                _ => 0
+                            }
+                            : 0,
+                        MinWidth = 145,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right
+                    };
+                    permissionPicker.SelectionChanged += (_, _) =>
+                    {
+                        var mode = permissionPicker.SelectedIndex switch
+                        {
+                            1 => PermissionMode.Ask,
+                            2 => PermissionMode.AutoSafe,
+                            3 => PermissionMode.FullAccess,
+                            _ => (PermissionMode?)null
+                        };
+                        if (mode is { } selectedMode)
+                            _preferences.SetToolPermissions(selectedMode, selectedMode, selectedMode, selectedMode);
+                    };
+                    var permissionRow = new Grid
+                    {
+                        ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+                        ColumnSpacing = 12,
+                        Margin = new Avalonia.Thickness(8, 2)
+                    };
+                    permissionRow.Children.Add(new TextBlock
+                    {
+                        Text = "Allow Actions",
+                        FontWeight = FontWeight.Bold,
+                        FontSize = 13,
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                    });
+                    Grid.SetColumn(permissionPicker, 1);
+                    permissionRow.Children.Add(permissionPicker);
+                    panel.Children.Add(permissionRow);
+                    return panel;
+                }
+                string VoiceValue()
                 {
-                    ItemsSource = voices.Select(item => item.Name).ToArray(),
-                    SelectedIndex = selectedVoice is null ? -1 : voices.ToList().IndexOf(selectedVoice),
-                    MinWidth = 145,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                    IsEnabled = voices.Count > 0
-                };
-                voicePicker.SelectionChanged += (_, _) =>
+                    var voices = _globalCallViewModel?.Voices ?? _callCoordinator.Capabilities.Voices;
+                    var selected = _globalCallViewModel?.SelectedVoice ?? voices.FirstOrDefault(item => item.IsDefault) ?? voices.FirstOrDefault();
+                    return selected?.Name ?? "None";
+                }
+                Control VoiceBody()
                 {
-                    if (_globalCallViewModel is not null
-                        && voicePicker.SelectedIndex >= 0
-                        && voicePicker.SelectedIndex < voices.Count)
-                        _globalCallViewModel.SelectedVoice = voices[voicePicker.SelectedIndex];
-                };
-                var voiceRow = new Grid
+                    var voices = _globalCallViewModel?.Voices ?? _callCoordinator.Capabilities.Voices;
+                    var selectedVoice = _globalCallViewModel?.SelectedVoice
+                                        ?? voices.FirstOrDefault(item => item.IsDefault)
+                                        ?? voices.FirstOrDefault();
+                    var voicePicker = new HavenSelect
+                    {
+                        ItemsSource = voices.Select(item => item.Name).ToArray(),
+                        SelectedIndex = selectedVoice is null ? -1 : voices.ToList().IndexOf(selectedVoice),
+                        MinWidth = 145,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        IsEnabled = voices.Count > 0
+                    };
+                    voicePicker.SelectionChanged += (_, _) =>
+                    {
+                        if (_globalCallViewModel is not null
+                            && voicePicker.SelectedIndex >= 0
+                            && voicePicker.SelectedIndex < voices.Count)
+                            _globalCallViewModel.SelectedVoice = voices[voicePicker.SelectedIndex];
+                    };
+                    var voiceRow = new Grid
+                    {
+                        ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+                        ColumnSpacing = 12,
+                        Margin = new Avalonia.Thickness(8, 2)
+                    };
+                    voiceRow.Children.Add(new TextBlock
+                    {
+                        Text = "Voice",
+                        FontWeight = FontWeight.Bold,
+                        FontSize = 13,
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                    });
+                    Grid.SetColumn(voicePicker, 1);
+                    voiceRow.Children.Add(voicePicker);
+                    return voiceRow;
+                }
+                void RenderRole()
                 {
-                    ColumnDefinitions = new ColumnDefinitions("*,Auto"),
-                    ColumnSpacing = 12,
-                    Margin = new Avalonia.Thickness(8, 2)
-                };
-                voiceRow.Children.Add(new TextBlock
-                {
-                    Text = "Voice",
-                    FontWeight = FontWeight.Bold,
-                    FontSize = 13,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-                });
-                Grid.SetColumn(voicePicker, 1);
-                voiceRow.Children.Add(voicePicker);
-                rows.Children.Add(voiceRow);
+                    tabRow.Children.Clear();
+                    foreach (var label in new[] { "Main", "Voice", "Vision" })
+                    {
+                        var captured = label;
+                        var tab = new ToggleButton
+                        {
+                            Content = label,
+                            IsChecked = label == role,
+                            FontSize = 13,
+                            Padding = new Avalonia.Thickness(14, 4),
+                            FontWeight = label == role ? FontWeight.Bold : FontWeight.Normal
+                        };
+                        tab.IsCheckedChanged += (_, _) =>
+                        {
+                            if (tab.IsChecked == true)
+                            {
+                                if (role == captured) return;
+                                role = captured;
+                                RenderRole();
+                            }
+                            else if (role == captured) tab.IsChecked = true;
+                        };
+                        tabRow.Children.Add(tab);
+                    }
+                    roleHost.Children.Clear();
+                    roleHost.Children.Add(Section("Model", CurrentModelName, ModelListBody));
+                    roleHost.Children.Add(Section("Context", ContextValue, ContextBody));
+                    if (role == "Voice") roleHost.Children.Add(Section("Voice", VoiceValue, VoiceBody));
+                    roleHost.Children.Add(Section("Assistant", PermissionValue, AssistantBody));
+                }
+                rows.Children.Add(tabRow);
+                rows.Children.Add(roleHost);
+                RenderRole();
 
                 var reasoningValue = new TextBlock
                 {

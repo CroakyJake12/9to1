@@ -1,6 +1,6 @@
 {
  "ledger": "ATLAS-20261120 runtime task ledger",
- "updated": "2026-11-20T20:36:36Z",
+ "updated": "2026-11-21T18:44:42+00:00",
  "tasks": [
   {
    "id": "G00-T01",
@@ -1243,6 +1243,50 @@
     "note": "Priority zero applies only after this gate; do not dispatch closeout immediately after bootstrap."
    },
    "additional_gate": "All claimed tasks are completed or safely checkpointed; SDK/native operations are quiescent; stopping this Atlas queue does not stop model services."
+  },
+  {
+   "id": "DEF-T01",
+   "parent_goal_id": "ATLAS-20261120",
+   "title": "Owner directive 21 Nov: Haven failing to close + tabs failing to close. Root cause: acquire-not-current veto of self-refreshing browse://home during its own close preparation; veto detail was in-memory only and the recovery screen was a dead end. Fix: named veto causes in BrowseCloseVetoException message, bounded 3x settle re-ask (AcquireContentCloseSettledAsync) at both window-cohort and single-tab acquisition, recovery screen gains Return to app / Try closing again.",
+   "status": "verified_awaiting_shutdown_lane",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "evidence": "Haven.Desktop build 0 errors; Browse close-prep tests 4/4 pass incl 2 new churn tests (Strong_content_that_churns_once_mid_preparation_settles_and_the_window_closes, Strong_perpetually_churning_content_refuses_with_a_named_cause_after_the_bound); lane baseline kept (same pre-existing 9 web-guard failures stashed vs unstashed). Haven.Desktop Shutdown|Close lane still running at write time - verdict gates commit. | 2026-11-21T18:24:15+00:00: 27B worker (ses_e00bc761fffe) root-caused and patched the 9th defect: ReloadAsync routed non-web tabs through ReloadSelectedAppContentAsync BEFORE the EnsureWebAddress guard (BrowseChrome.cs:577), so web-command refusals never fired and native owners were poisoned (this was the OTHER half of 'tabs failing to close'). Coordinator verified patch context, applied (git apply), full Browse lane 188 passed / 1 failed. The one failure (Page_commit_observers_can_read_original_sources_from_another_thread_before_returning) is PROVEN pre-existing: fails identically isolated with the whole Browse tree stashed (baseline) and reproduced 3x; it was inside the original 9 (earlier head-truncated greps had hidden its name). Remaining pre-existing failure queued as DEF-T03.",
+   "updated": "2026-11-21T18:00:43+00:00"
+  },
+  {
+   "id": "DEF-T02",
+   "parent_goal_id": "ATLAS-20261120",
+   "title": "Owner directive 21 Nov: long startup load. Measurement-first: startup-stage telemetry (chain-begin through mesh-warmup + per-tab restore lines) written into InitialiseOriginalHavenAsync and RestoreWorkspaceWindowAsync; serial chain confirmed (window presents, then begin->startup-complete 5.7-13.7s with no phase markers before this change).",
+   "status": "wired_awaiting_compile_and_live_measurement",
+   "priority": 0,
+   "preferred_owner_role": "coordinator; V100 worker attempts failed 3x (lane transient), coordinator implemented",
+   "runtime_worker_id": null,
+   "evidence": "App.axaml.cs 17 stage stamps + TabSessions restore-tab lines compile inside Haven.Desktop guarded build (log /tmp/picker-chrome-build*.log covers both); live measurement arrives with g08 startup.",
+   "updated": "2026-11-21T18:00:43+00:00"
+  },
+  {
+   "id": "G02-T01b",
+   "parent_goal_id": "G02",
+   "title": "Atlas picker chrome (MODEL-001/002/003): centred Main/Voice/Vision role tabs scoped to the picker, collapsible Model/Context/Assistant headings showing current value while closed, one compact searchable model-row list with short source label (Local/Remote app/Cloud) and selected state, Browse models opens the catalogue; Reasoning stays visible every role; existing selection/permission/voice wiring preserved verbatim inside sections. Context pending/Apply (MODEL-004/005) deliberately NOT in this increment.",
+   "status": "implementation_compile_iterating",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "evidence": "Guarded build iteration 1: 5 errors (removed Avalonia ToggleButton Checked/Unchecked events -> IsCheckedChanged rewired, nullable CurrentModelName fixed). Build 2 queued behind shutdown lane at write time.",
+   "updated": "2026-11-21T18:00:43+00:00"
+  },
+  {
+   "id": "DEF-T03",
+   "parent_goal_id": "ATLAS-20261120",
+   "title": "Pre-existing deterministic failure: Browse Page_commit_observers_can_read_original_sources_from_another_thread_before_returning - cross-thread lifetime observation does not complete during page-commit notification (readerStarted yes, completedDuringNotification no, 5s bound). Fails identically on pristine stashed baseline today; earlier same-day full lanes had it among the 9 failures. RESOLVED: 27B worker root-caused lock inversion (Publish raised StateChanged while holding _nativeSourceGate; OriginalClose/OriginalNativeSources getters take the same gate, blocking observer threads deterministically). Fix: publish moved outside the lock in BrowseChrome.NativeObservation.cs (driver capture stays inside); coordinator reviewed the diff and independently reran the lane.",
+   "status": "fixed_verified",
+   "priority": 1,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": null,
+   "evidence": "/tmp/browse-baseline-pagecommit.log (baseline FAIL), /tmp/browse-flake-1/2.log (2x FAIL current tree), /tmp/browse-after-guard.log (only failure at 188/1). | 2026-11-21T18:44:42+00:00: coordinator rerun full Browse lane Passed 189 / Failed 0 / Skipped 0 (/tmp/browse-final-verify.log) - lane now fully green for the first time tonight (178/9 -> 189/0 across the two worker fixes plus the 2 added close-prep tests).",
+   "updated": "2026-11-21T18:24:15+00:00"
   }
  ]
 }
