@@ -34,8 +34,9 @@ def find_window(name="9to1"):
     return None
 
 def origin(win):
-    o = win.translate_coords(root, 0, 0)
-    return o.x, o.y
+    # mutter pins this window's frame at screen top-left; the client renders at (0, ~74).
+    # translate_coords is unreliable under this display's scaling, so trust the visible frame.
+    return int(os.environ.get("BATTERY_ORIGIN_X", "0")), int(os.environ.get("BATTERY_ORIGIN_Y", "74"))
 
 def capture(win, tag):
     g = win.get_geometry()
@@ -52,14 +53,14 @@ def key(name, *mods):
     d.flush(); time.sleep(0.08)
     for c in reversed(codes):
         xtest.fake_input(d, X.KeyRelease, c)
-    d.flush(); time.sleep(0.8)
+    d.flush(); time.sleep(1.4)
 
 def click(win, x, y):
     ox, oy = origin(win)
     root.warp_pointer(ox + x, oy + y)
     d.sync(); time.sleep(0.25)
     xtest.fake_input(d, X.ButtonPress, 1); d.flush(); time.sleep(0.12)
-    xtest.fake_input(d, X.ButtonRelease, 1); d.flush(); time.sleep(1.2)
+    xtest.fake_input(d, X.ButtonRelease, 1); d.flush(); time.sleep(2.6)
 
 def sanity(win):
     """Input is only trustworthy if a keystroke visibly changes the app."""
@@ -86,7 +87,7 @@ capture(win, "00-initial")
 
 # 1) tab strip: click each tab label, expect content change (client y of strip ~ top 40px; measure
 #    from TopRail height 74 frame + row; coordinates are client-relative physical px)
-strip_y = 36
+strip_y = 46
 h_before = capture(win, "10-tab-a")
 click(win, 200, strip_y)
 h_after = capture(win, "11-tab-b")

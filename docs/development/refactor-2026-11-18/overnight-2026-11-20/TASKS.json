@@ -91,7 +91,7 @@
    "id": "G01-T01",
    "parent_goal_id": "G01",
    "title": "Verify the already-published S1 tab and S3 Home route changes in the current dev copy; fix observed gaps without rebuilding working features.",
-   "status": "implemented_pending_native",
+   "status": "verified_native_partial",
    "priority": 1,
    "preferred_owner_role": "coordinator",
    "runtime_worker_id": "coordinator",
@@ -133,11 +133,14 @@
     "OBSERVED GAP (native, g01-02/06/07): tab labels render CENTERED in the strip; current spec/Atlas require stable LEFT-aligned icon/title/close with trailing X (only model-picker role-tab labels are centred). Classification pending inventory write.",
     "BLOCKED sub-check: interactive click/keyboard lane DEAD ENDED - dev-profile startup-recovery.json is session-only (no window bounds); bounds live in mutter's seat file (root-owned, no sudo). App left RUNNING; owner has been asked to drag it once. Captures g01-01..12 retained.",
     "Sat AM: dev copy died 22:25Z Fri (exit -11 SIGSEGV, X server restart; guardian recorded the receipt this time); reviewed recover-failed onto the clamp build e24a58fd1, now RUNNING. KEY FINDING: workspace_session.boundsJson is NULL for the main window - the app does not persist/restore main-window placement at all. The off-screen frame is the STARTUP placement defect: mutter centres the initially-huge client (2850x1820 = DIP size under ~1.5 scale) at exactly -(screen-window)/2 = (-767,-348), i.e. the same coordinates on every fresh start. The ApplyWindowBounds clamp covers session-restore only; a startup clamp (initial window must fit/centre sanely on the current screen) is the actual product fix. WM move lanes all exhausted (configure/_NET_MOVERESIZE/frame-move ignored; XTEST alt-drag and Alt+F7 no-ops in this mutter; app itself DOES receive synthetic keys/clicks). Owner asked for one Super+drag to unblock the interactive battery.",
-    "Sat: stranded copy closed by owner (SIGTERM, reviewed recover-failed), g03 self-centring build started but mutter re-positioned AFTER the Opened check (race); race fix PositionChanged committed cc4a6e338, 10/10 tests, g04 runtime+manifest prepared. Ctrl+Q/_NET_CLOSE/WM_DELETE all vetoed - owner asked to close/kill once more or Super-drag."
+    "Sat: stranded copy closed by owner (SIGTERM, reviewed recover-failed), g03 self-centring build started but mutter re-positioned AFTER the Opened check (race); race fix PositionChanged committed cc4a6e338, 10/10 tests, g04 runtime+manifest prepared. Ctrl+Q/_NET_CLOSE/WM_DELETE all vetoed - owner asked to close/kill once more or Super-drag.",
+    "SAT NATIVE BREAKTHROUGH (after owner restarted session + hands-off protocol): eng/development/native_battery_g01.py PASS - plus-button opens the canonical start surface ('Where would you like to go?', Search control+Go+Apps/Library/Dashboard; g01b-13), Ctrl+T new tab, tab selection with tooltips ('Files \u00b7 files \u00b7 selected tab', 'New tab (Ctrl+T)'), 8 user Drive folders preserved (g01b-17). Evidence docs/development/evidence/atlas-20261120/g01b-*.",
+    "Root cause of the morning's false FAILs: (1) X session input/server broken pre-restart (issue #40 - now fixed by logout/in); (2) pointer races with the owner's own mouse; (3) Avalonia repaint slower than capture timing (relaxed).",
+    "Environment law recorded for future coordinates: this session negates window placement (actual=(-req, -(req+74))) and clamps large windows; mutter pins the frame at (0,0) so client (0,74) is the visible top-left. App behaviour verified correct under it."
    ],
-   "next_action": "startup-placement clamp in the main-window show path (fit to Screen.WorkingArea) with headless test; then interactive G01 battery once the window is reachable",
+   "next_action": "remaining G01-T01 checks: Home restored tab (needs a non-ghost layout: click second tab), Boards document reopen, customise mode; tab-centring audit continues from g01b-20-tabstrip-crop",
    "kind": "implementation_packet",
-   "updated": "2026-11-21T09:25:00Z"
+   "updated": "2026-11-21T11:30:00Z"
   },
   {
    "id": "G01-T02",
@@ -347,7 +350,8 @@
    "evidence": [
     "27B worker investigation (read-only, session ses_e02a0d676ffe6NTWw3VSCWYq3A) archived: docs/development/evidence/atlas-20261120/worker-g03-t02-boards-localfirst.md + worker-local-account-offline-model.md (G04-T02 label was self-chosen; content = G03-T02 appendix on account/offline behaviour)",
     "coordinator source-verification: 'no connect step, no account, no gate' verbatim at Services/BoardsWorkspaceFolders.cs:16-17; drafts at Boards/app/BoardsLocalDocuments.cs:103 (profiles/<key>/drafts); onboarding 'Not Now'/accessible-name 'Continue in local-only mode' verbatim at Home/UI/Onboarding.cui:115; local profile identity 'unix-euid' principal confirmed in Home sources; no central IsOffline switch - offline by per-feature construction",
-    "verdict: source-level CONFIRMED (local-first authoring never requires account/Files/model); NOT covered: live kill/reopen e2e (worker gap; planned in the native battery)"
+    "verdict: source-level CONFIRMED (local-first authoring never requires account/Files/model); NOT covered: live kill/reopen e2e (worker gap; planned in the native battery)",
+    "native (Sat): Files app reachable with real Drive folders; Boards folder present in user workspace (g01b-17) - create/edit/kill/reopen half of the packet still to run in the battery next iteration"
    ],
    "next_action": "native: create a board, edit, kill -9 the app mid-edit, reopen, prove draft recovery on the on-screen dev copy; then integrate optional Files/Haven opening only after local passes",
    "kind": "implementation_packet",
