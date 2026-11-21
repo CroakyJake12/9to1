@@ -44,11 +44,22 @@
     "probe2 same session after --jinja lane restart: echoed tool JSON, side-effect file /tmp/v100-probe2.txt ABSENT - tool loop not executing",
     "conclusion: 14B-Q4 lane cannot drive agent tool loops; per handoff: no silent substitution, no third inference process; record blocked, continue independent work"
    ]
+  },
+  "v100_parallel_27b": {
+   "status": "ACTIVE",
+   "model": "Qwen3.8-27B-UD-IQ4_XS (GGUF) on V100 lane :18640, ctx 8192 q8-KV -np 1, --jinja",
+   "attempted": "owner directed Qwen 3.8 27B after 14B-Q4 failed twice; unsloth GGUF 14.4GB downloaded; ladder re-run after reboot (owner ran scope-locked root hotplugd; VM up, guard CHECK_OK, smoke pass; serve READY 29s)",
+   "receipts": [
+    "probe3 ses_e02a4ddb5ffeZspuP95YTnItBX PASS: ran `echo PROBE27B-<epoch> > /tmp/27b-probe.txt && cat`, reply byte-identical, file mtime 09:09:01Z predates reply at 09:10:18Z (verified independently by coordinator)",
+    "first attempt failed on my misconfiguration, not the model: -np literal 2 split ctx 8192 into 4096/slot (fixed _oneshot_serve.sh wiring NP; relaunched n_slots=1 n_ctx_slot=8192; provider limit lowered to 7000 so the harness compacts before llama errors)",
+    "first scoped packet issued: G03-T02 read-only Boards local-first investigation in NEW session ses_e02a0d676ffe6NTWw3VSCWYq3A (boundaries: repo read-only, no builds/git-writes, report to /tmp/g03-t02-report.md)"
+   ],
+   "config": "provider v100 gained model qwen38-27b (modelID = server-reported path id); coder14b kept as fallback"
   }
  },
  "inference_services_preserved": {
   "official_engine": "healthy at reconciliation (curl :18500/:47831 ok)",
-  "v100_lane": "live :18640 (ctx16384 np2 jinja, 165W cap guard-active); now also user's parallel coding lane - coordinate before restarts",
+  "v100_lane": "now serving Qwen3.8-27B-UD-IQ4_XS (was 14B-Q4; owner directive 21 Nov morning); _oneshot_serve.sh takes MODEL/CTX/NP, defaults unchanged",
   "never_unload_models_for_ui_checks": true
  },
  "goal_state_reconciliation": {

@@ -132,11 +132,12 @@
     "native observations (docs/development/evidence/atlas-20261120/): app starts at HEAD; window renders; session restore works (7 tabs incl. previous Boards/Files + restored titles 'New tab' and 'Home'); Files shows user's 8 real Drive folders preserved; embedded Files shows its own inner tab row (existing behavior, browser-frame chrome separate)",
     "OBSERVED GAP (native, g01-02/06/07): tab labels render CENTERED in the strip; current spec/Atlas require stable LEFT-aligned icon/title/close with trailing X (only model-picker role-tab labels are centred). Classification pending inventory write.",
     "BLOCKED sub-check: interactive click/keyboard lane DEAD ENDED - dev-profile startup-recovery.json is session-only (no window bounds); bounds live in mutter's seat file (root-owned, no sudo). App left RUNNING; owner has been asked to drag it once. Captures g01-01..12 retained.",
-    "Sat AM: dev copy died 22:25Z Fri (exit -11 SIGSEGV, X server restart; guardian recorded the receipt this time); reviewed recover-failed onto the clamp build e24a58fd1, now RUNNING. KEY FINDING: workspace_session.boundsJson is NULL for the main window - the app does not persist/restore main-window placement at all. The off-screen frame is the STARTUP placement defect: mutter centres the initially-huge client (2850x1820 = DIP size under ~1.5 scale) at exactly -(screen-window)/2 = (-767,-348), i.e. the same coordinates on every fresh start. The ApplyWindowBounds clamp covers session-restore only; a startup clamp (initial window must fit/centre sanely on the current screen) is the actual product fix. WM move lanes all exhausted (configure/_NET_MOVERESIZE/frame-move ignored; XTEST alt-drag and Alt+F7 no-ops in this mutter; app itself DOES receive synthetic keys/clicks). Owner asked for one Super+drag to unblock the interactive battery."
+    "Sat AM: dev copy died 22:25Z Fri (exit -11 SIGSEGV, X server restart; guardian recorded the receipt this time); reviewed recover-failed onto the clamp build e24a58fd1, now RUNNING. KEY FINDING: workspace_session.boundsJson is NULL for the main window - the app does not persist/restore main-window placement at all. The off-screen frame is the STARTUP placement defect: mutter centres the initially-huge client (2850x1820 = DIP size under ~1.5 scale) at exactly -(screen-window)/2 = (-767,-348), i.e. the same coordinates on every fresh start. The ApplyWindowBounds clamp covers session-restore only; a startup clamp (initial window must fit/centre sanely on the current screen) is the actual product fix. WM move lanes all exhausted (configure/_NET_MOVERESIZE/frame-move ignored; XTEST alt-drag and Alt+F7 no-ops in this mutter; app itself DOES receive synthetic keys/clicks). Owner asked for one Super+drag to unblock the interactive battery.",
+    "Sat: stranded copy closed by owner (SIGTERM, reviewed recover-failed), g03 self-centring build started but mutter re-positioned AFTER the Opened check (race); race fix PositionChanged committed cc4a6e338, 10/10 tests, g04 runtime+manifest prepared. Ctrl+Q/_NET_CLOSE/WM_DELETE all vetoed - owner asked to close/kill once more or Super-drag."
    ],
    "next_action": "startup-placement clamp in the main-window show path (fit to Screen.WorkingArea) with headless test; then interactive G01 battery once the window is reachable",
    "kind": "implementation_packet",
-   "updated": "2026-11-20T23:22:00Z"
+   "updated": "2026-11-21T09:25:00Z"
   },
   {
    "id": "G01-T02",
@@ -321,10 +322,10 @@
    "id": "G03-T02",
    "parent_goal_id": "G03",
    "title": "Verify create/edit/local-save/reopen/recovery without an account, Files connection or model; integrate optional Files/Haven opening after local behavior works.",
-   "status": "planned",
+   "status": "running",
    "priority": 1,
    "preferred_owner_role": "V100 worker, scoped by coordinator",
-   "runtime_worker_id": "v100-parallel-BLOCKED",
+   "runtime_worker_id": "v100-27b (ses_e02a0d676ffe6NTWw3VSCWYq3A)",
    "path_leases": [],
    "depends_on_tasks": [
     "G00-T03"
@@ -341,8 +342,9 @@
     "preserved-compatible-features"
    ],
    "evidence": [],
-   "next_action": "held pending worker capability; boards chrome/save-reopen is coordinator fallback if queue reaches it",
-   "kind": "implementation_packet"
+   "next_action": "await /tmp/g03-t02-report.md; coordinator verifies claims against source before integrating",
+   "kind": "implementation_packet",
+   "updated": "2026-11-21T09:25:00Z"
   },
   {
    "id": "G03-T03",
