@@ -298,9 +298,10 @@ public sealed partial class WorkspaceWindowService(
         var scale = window.RenderScaling > 0 ? window.RenderScaling : 1d;
         var frameDip = window.FrameSize ?? new global::Avalonia.Size(window.Width, window.Height);
         var size = new PixelSize(Math.Max(1, (int)(frameDip.Width * scale)), Math.Max(1, (int)(frameDip.Height * scale)));
-        window.Position = new PixelPoint(
+        var target = new PixelPoint(
             primary.X + Math.Max(0, (primary.Width - size.Width) / 2),
             primary.Y + Math.Max(0, (primary.Height - size.Height) / 2));
+        window.Position = target;
         NoteExplicitPlacement(window);
     }
 
@@ -338,8 +339,12 @@ public sealed partial class WorkspaceWindowService(
         var size = new PixelSize(Math.Max(1, (int)(frameDip.Width * scale)),
                                  Math.Max(1, (int)(frameDip.Height * scale)));
         var areas = screens.All.Select(screen => screen.WorkingArea).ToArray();
-        if (ResolveReachablePosition(size, window.Position, areas) is { } corrected)
-            window.Position = corrected;
+        var corrected = ResolveReachablePosition(size, window.Position, areas);
+        if (corrected is { } p)
+        {
+            window.Position = p;
+            NoteExplicitPlacement(window);
+        }
     }
 
     /// <summary>Returns a corrected physical position when the draggable title strip (a horizontal

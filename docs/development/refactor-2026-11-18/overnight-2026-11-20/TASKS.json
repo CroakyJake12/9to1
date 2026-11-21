@@ -322,7 +322,7 @@
    "id": "G03-T02",
    "parent_goal_id": "G03",
    "title": "Verify create/edit/local-save/reopen/recovery without an account, Files connection or model; integrate optional Files/Haven opening after local behavior works.",
-   "status": "running",
+   "status": "investigated_pending_native",
    "priority": 1,
    "preferred_owner_role": "V100 worker, scoped by coordinator",
    "runtime_worker_id": "v100-27b (ses_e02a0d676ffe6NTWw3VSCWYq3A)",
@@ -331,7 +331,10 @@
     "G00-T03"
    ],
    "requirement_binding": "Select exact relevant IDs from the parent goal plus cross-cutting contracts before claiming this task; do not claim the entire parent is satisfied.",
-   "requirement_ids": [],
+   "requirement_ids": [
+    "BOARD-SAVE-001",
+    "BOARD-SAVE-002"
+   ],
    "screen_ids": [],
    "required_evidence": [
     "requirement-and-flow",
@@ -341,10 +344,14 @@
     "native-outcome-where-applicable",
     "preserved-compatible-features"
    ],
-   "evidence": [],
-   "next_action": "await /tmp/g03-t02-report.md; coordinator verifies claims against source before integrating",
+   "evidence": [
+    "27B worker investigation (read-only, session ses_e02a0d676ffe6NTWw3VSCWYq3A) archived: docs/development/evidence/atlas-20261120/worker-g03-t02-boards-localfirst.md + worker-local-account-offline-model.md (G04-T02 label was self-chosen; content = G03-T02 appendix on account/offline behaviour)",
+    "coordinator source-verification: 'no connect step, no account, no gate' verbatim at Services/BoardsWorkspaceFolders.cs:16-17; drafts at Boards/app/BoardsLocalDocuments.cs:103 (profiles/<key>/drafts); onboarding 'Not Now'/accessible-name 'Continue in local-only mode' verbatim at Home/UI/Onboarding.cui:115; local profile identity 'unix-euid' principal confirmed in Home sources; no central IsOffline switch - offline by per-feature construction",
+    "verdict: source-level CONFIRMED (local-first authoring never requires account/Files/model); NOT covered: live kill/reopen e2e (worker gap; planned in the native battery)"
+   ],
+   "next_action": "native: create a board, edit, kill -9 the app mid-edit, reopen, prove draft recovery on the on-screen dev copy; then integrate optional Files/Haven opening only after local passes",
    "kind": "implementation_packet",
-   "updated": "2026-11-21T09:25:00Z"
+   "updated": "2026-11-21T10:20:00Z"
   },
   {
    "id": "G03-T03",
