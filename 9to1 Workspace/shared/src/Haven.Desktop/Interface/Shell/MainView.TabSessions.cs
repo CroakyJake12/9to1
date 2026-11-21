@@ -588,6 +588,10 @@ public sealed partial class MainView
     {
         var ordered = window.OrderedTabIds.Select(id => snapshot.Tabs.FirstOrDefault(tab => tab.Id == id)).Where(tab => tab is not null).Cast<TabSessionSnapshot>().ToArray();
         if (ordered.Length == 0) return;
+        // Owner report 21 November ("a long startup load"): this restore is fully serial, so one line
+        // per tab names which restore is slow. Measurement only.
+        var restoreClock = System.Diagnostics.Stopwatch.StartNew();
+        var restoreIndex = 0;
 
         RemoveSplitView();
         PageContent.Content = null;
@@ -678,6 +682,7 @@ public sealed partial class MainView
                 restored.GroupName = group.Name;
                 restored.IsGroupCollapsed = group.IsCollapsed;
             }
+            Haven.Desktop.App.WriteStartupStageDiagnostic("restore-tab[" + restoreIndex++ + "] " + saved.AppKey + " +" + restoreClock.ElapsedMilliseconds + "ms");
         }
 
         if (window.SelectedTabId is { } selectedId && OpenTabs.FirstOrDefault(tab => tab.SessionId == selectedId) is { } selected)
@@ -692,6 +697,7 @@ public sealed partial class MainView
         }
         if (TopLevel.GetTopLevel(this) is Window hostWindow)
             WorkspaceWindowService.ApplyWindowBounds(hostWindow, window.BoundsJson);
+        Haven.Desktop.App.WriteStartupStageDiagnostic("restore-total " + ordered.Length + " tabs +" + restoreClock.ElapsedMilliseconds + "ms");
         RefreshTopRailTabs();
     }
 

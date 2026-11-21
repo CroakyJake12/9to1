@@ -250,12 +250,19 @@ public sealed partial class App : Avalonia.Application
     private async Task InitialiseOriginalHavenAsync(DesktopOriginalWorkLifetime.Original original, MainView? shell)
     {
         var correlationId = Guid.NewGuid().ToString("N");
+        // Owner report 21 November: "a long startup load". Only begin and end were ever timed, so no
+        // phase could be blamed. These stamps name every awaited stage of this original with its
+        // distance from chain start (startup-stages diagnostic file). Measurement only.
+        var stageClock = System.Diagnostics.Stopwatch.StartNew();
+        void Stage(string name) => WriteStartupStageDiagnostic(name + ": +" + stageClock.ElapsedMilliseconds + "ms");
         try
         {
+            Stage("chain-begin");
             var services = _services ?? throw new InvalidOperationException("9to1 services have not been initialized.");
             var recovery = _startupRecovery ?? services.GetRequiredService<IStartupRecoveryCoordinator>();
             var recoveryState = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => recovery.BeginStartupAsync(CancellationToken.None)));
+            Stage("recovery-begin");
             AcquireOriginalAppSynchronous(original, () =>
             {
                 BrowserAutomationRegistry.Register(
@@ -263,18 +270,24 @@ public sealed partial class App : Avalonia.Application
                     services.GetRequiredService<IBrowserAutomationService>());
                 return true;
             });
+            Stage("automation-registry");
 
             var lifecycle = services.GetRequiredService<IApplicationLifecycle>();
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.CrashRecoveryAsync(CancellationToken.None)));
+            Stage("crash-recovery");
             var storageStartup = AcquireOriginalAppSynchronous(original, () => lifecycle.StartupAsync(CancellationToken.None));
             if (!await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => services.GetRequiredService<NotificationService>().RefreshAfterStorageStartupAsync(original, storageStartup)))) return;
+            Stage("storage-notifications");
 #if !ANDROID
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, StartOriginalWindowsHomeAsync));
+            Stage("windows-home");
 #endif
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None)));
+            Stage("mode-seed");
             var migration = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None)));
+            Stage("legacy-migration");
             // The verified local preview child bootstrap/readiness runs under an OWNED TRACKED
             // background original (BeginPreviewModelBootstrapBackground), NOT on the App startup
             // critical path: normal Home/browser navigation and unrelated local app use are not
@@ -284,6 +297,7 @@ public sealed partial class App : Avalonia.Application
             // stays usable. The routed provider still observes the genuine verified/configured
             // endpoint state when the verified provider becomes available later.
             BeginPreviewModelBootstrapBackground(services);
+            Stage("model-bootstrap-dispatched");
             // Cooperative close may cancel the App owner while startup is still progressing. Stop
             // sourcing further shell/host/UI work once the owner token is canceled or the App is
             // retiring, so the startup original joins cleanly instead of continuing past close.
@@ -291,10 +305,13 @@ public sealed partial class App : Avalonia.Application
             if (shell is not null)
             {
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
+                Stage("shell-initialize");
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.RestoreWorkspaceSessionAsync(CancellationToken.None)));
+                Stage("workspace-restore");
 #if !ANDROID
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                     () => OpenOriginalInitialProductRouteAsync(shell, original.Token)));
+                Stage("initial-route");
 #endif
             }
 #if !ANDROID
@@ -310,17 +327,20 @@ public sealed partial class App : Avalonia.Application
                 var initialization = AcquireOriginalAppSynchronous(original, () => workspace.TryAcquireInitialization(original.Token));
                 if (initialization is null) return;
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => initialization!));
+                Stage("unified-host-init");
                 if (original.Token.IsCancellationRequested || _originalAppWork.IsRetiring) return;
                 var initialRoute = AcquireOriginalAppSynchronous(original,
                     () => OpenOriginalInitialUnifiedProductRouteAsync(workspace, original.Token));
                 if (initialRoute is null) return;
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => initialRoute));
+                Stage("unified-initial-route");
             }
 #endif
 
 #if !ANDROID
             if (!await TryAwaitOriginalStartupContinuationAsync(original,
                 () => services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>().InitializeAsync(CancellationToken.None))) return;
+            Stage("overlay-workspace");
 #endif
             // Scheduled Tasks have no parallel automation delivery loop.
 
@@ -337,6 +357,7 @@ public sealed partial class App : Avalonia.Application
 
             if (!await TryAwaitOriginalStartupContinuationAsync(original,
                 () => recovery.MarkStartupCompletedAsync(CancellationToken.None))) return;
+            Stage("startup-completed");
 
             // Optional Mesh warmup must not delay interactive readiness; data-safety
             // work above stays on the critical path, Mesh does not.
@@ -346,6 +367,7 @@ public sealed partial class App : Avalonia.Application
                 {
                     if (!await TryAwaitOriginalStartupContinuationAsync(original,
                         () => services.GetRequiredService<MeshCoordinator>().WarmupTrustedPeersAsync(original.Token))) return;
+                    Stage("mesh-warmup");
                 }
                 catch (Exception meshException)
                 {
@@ -369,6 +391,7 @@ public sealed partial class App : Avalonia.Application
         }
         catch (Exception ex)
         {
+            Stage("startup-faulted");
             // A cooperative early close cancels the owner token while startup is still progressing. That
             // is a benign stop: settle without treating the cancellation as a startup fault and without
             // presenting recovery UI. Genuine faults keep their exact identity and stay retained below.
