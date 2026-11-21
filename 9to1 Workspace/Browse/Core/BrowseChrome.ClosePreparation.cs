@@ -16,7 +16,7 @@ public sealed partial class BrowseChrome
     private BrowseCloseVetoException Veto(string site, string detail)
     {
         ReportCloseRefusal("veto@" + site, detail);
-        return new BrowseCloseVetoException();
+        return new BrowseCloseVetoException(detail, staleAcquisition: site == "acquire-not-current");
     }
 
     private void ReportCloseRefusal(string kind, string detail)
@@ -165,6 +165,35 @@ public sealed partial class BrowseChrome
     private sealed class ContentAdmissionCanceledException(CancellationToken token) : OperationCanceledException(token);
     private static void DemandContentAdmission(CancellationToken token)
     { if (token.IsCancellationRequested) throw new ContentAdmissionCanceledException(token); }
+
+    /// <summary>Bounded settle retry around a single tab's close acquisition (owner directive 21
+    /// November: "Investigate and fix haven failing to close ... and some tabs failing to close").
+    /// A self-refreshing page - measured live on the owner's copy, where three close attempts each
+    /// faulted inside ~100 ms while the only participants were a Boards document (whose own save
+    /// joined in 6 ms) and the Browse home Session - can move the tab's address or navigation
+    /// generation WHILE its own preparation is in flight. The old code vetoed the whole close on the
+    /// first stale observation, and because the refresh keeps happening every later attempt vetoed
+    /// too: deterministically, forever, with only the generic sentence. A veto whose sole cause is
+    /// that mid-preparation churn is therefore re-asked against a fresh snapshot a bounded number of
+    /// times (three). Genuine refusals, faults and cancellations pass through unchanged; nothing is
+    /// skipped, retried endlessly, or relabelled, and the previous attempt's lease was already
+    /// aborted and cleared by the existing catch path before the retry begins.</summary>
+    private async Task<ContentCloseAttempt?> AcquireContentCloseSettledAsync(TabRuntime tab, CancellationToken token)
+    {
+        for (var remaining = 3; ; remaining--)
+        {
+            try
+            {
+                return await AcquireContentCloseAsync(tab, token).ConfigureAwait(false);
+            }
+            catch (BrowseCloseVetoException veto) when (veto.StaleAcquisition && remaining > 1)
+            {
+                ReportCloseRefusal("settle-retry", "tab " + tab.Address +
+                    " went stale mid-preparation; re-asking with a fresh snapshot (" + (remaining - 1) + " re-ask(s) remain)");
+                await Task.Delay(5, token).ConfigureAwait(false);
+            }
+        }
+    }
 
     private async Task<ContentCloseAttempt?> AcquireContentCloseAsync(TabRuntime tab, CancellationToken token)
     {
@@ -509,7 +538,7 @@ public sealed partial class BrowseChrome
         {
             foreach (var tab in StateOf(cohort).Tabs)
             {
-                var acquired = await AcquireContentCloseAsync(tab, token).ConfigureAwait(false);
+                var acquired = await AcquireContentCloseSettledAsync(tab, token).ConfigureAwait(false);
                 if (acquired is null) return null;
                 StateOf(cohort).Entries.Add(acquired);
             }

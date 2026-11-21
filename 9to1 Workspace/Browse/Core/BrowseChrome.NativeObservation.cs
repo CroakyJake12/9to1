@@ -81,23 +81,28 @@ public sealed partial class BrowseChrome
             snapshot.IsLoading || snapshot.Address is not { Scheme: "http" or "https" }) return;
         var originalTabState = CaptureStandardTabs();
         var originalClosedTabState = CaptureClosedTabs(originalTabState.Select(item => item.Id).ToHashSet());
+        TaskCompletionSource start;
         lock (_nativeSourceGate)
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
             _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully && !_contractSources.Contains(source));
             PruneAdmissionRefusalsLocked(_originalNativeSources);
             if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved native history sources.");
-            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             tab.HasOriginalCommittedPage = true;
             tab.ZoomPercent = 100;
             var driver = PersistOriginalCommitAsync(start.Task, _lastOriginalPageCommit, snapshot, tab.Privacy,
                 originalTabState, originalClosedTabState, PersistedSelectedTabId());
             _lastOriginalPageCommit = driver;
             _originalNativeSources.Add(driver);
-            try { Publish(); }
-            catch (Exception failure) { start.SetException(failure); throw; }
-            finally { start.TrySetResult(); }
         }
+        // Publish outside the gate: StateChanged observers may read OriginalClose /
+        // OriginalNativeSources from another thread, and those getters take this
+        // gate. Publishing while holding it inverted the lock order and blocked
+        // cross-thread lifetime observation until the observer returned.
+        try { Publish(); }
+        catch (Exception failure) { start.SetException(failure); throw; }
+        finally { start.TrySetResult(); }
     }
     private async Task PersistOriginalCommitAsync(Task start, Task? previousOriginalCommit, BrowserSnapshot snapshot, Haven.Core.BrowserTabPrivacy privacy,
         BrowserTabState[] originalTabState, IReadOnlyList<BrowseClosedTabProjection> originalClosedTabState, Guid? selectedTabId)

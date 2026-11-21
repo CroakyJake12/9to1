@@ -30,6 +30,11 @@ public sealed partial class App
     private MainView? _actualDocumentClosePrimaryShell;
     private Task? _actualWindowClosure;
     private Exception? _actualShutdownFailure;
+    // The shutdown-recovery surface must always return to the workspace captured before the FIRST
+    // veto, never to a superseded recovery screen (21 November: repeated vetoes stranded the owner
+    // on the error surface with no way back; the content to restore is held here across attempts).
+    private object? _shutdownRecoveryPrevious;
+    private Avalonia.Controls.Control? _shutdownRecoveryRoot;
     private IClassicDesktopStyleApplicationLifetime? _actualDesktop;
     private MainWindow? _actualPrimaryWindow;
     private IReadOnlyList<object> _actualDesktopBorrowers = [];
@@ -352,6 +357,25 @@ public sealed partial class App
         // append-only, bounded, and never replaces the cancelled close itself.
         WriteOriginalCloseDiagnostic("window-close requested; preflight starts");
         RequestOriginalDocumentClosePreflight();
+    }
+    /// <summary>Owner report 21 November: "a long startup load". The startup chain is long and
+    /// fully serial, but the durable telemetry only named its first and last instant, so no phase
+    /// could be blamed. This append-only, bounded writer stamps every awaited stage of the App
+    /// startup original with its distance from chain start (and, from the shell's restore, one
+    /// line per restored tab). It changes no startup decision - measurement only.</summary>
+    internal static void WriteStartupStageDiagnostic(string message)
+    {
+        try
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var directory = Path.Combine(appData, "Haven", "Logs");
+            Directory.CreateDirectory(directory);
+            var line = $"[{DateTimeOffset.Now:O}] startup-stages: {message}{Environment.NewLine}";
+            var path = Path.Combine(directory, "startup-stage-diagnostic.log");
+            if (File.Exists(path) && new FileInfo(path).Length > 256 * 1024) File.Delete(path);
+            File.AppendAllText(path, line, new UTF8Encoding(false));
+        }
+        catch { /* A diagnostic writer must never block or throw into the startup path. */ }
     }
     internal static void WriteOriginalCloseDiagnostic(string message)
     {
@@ -1237,6 +1261,13 @@ public sealed partial class App
             status.Set("RecoveryMessage", presentation.Summary);
             status.Set("RecoveryDetails", presentation.Details);
             loader.SetBindingContext(status);
+            // A veto is an ordinary refusal the owner must be able to walk back out of: the host is
+            // explicitly still usable ("may attempt close again" is the exception's own contract).
+            // Measured on 21 November this surface was a dead end - it replaced the whole window with
+            // no control returning to the app, so the owner could neither continue working nor retry,
+            // and the copy had to be signal-killed. These two actions restore both.
+            var actions = new ShutdownRecoveryActions();
+            loader.SetActionDispatcher(actions);
             var document = new CakeOS.Cui.Language.CuiRichParser().Parse("""
                 <Cui>
                   <Variable Type="bool" ID="ShowDetails">false</Variable>
@@ -1251,7 +1282,13 @@ public sealed partial class App
                           <Text Text="{Binding RecoveryDetails}" TextWrapping="Wrap" />
                         </Container>
                       </If>
-                      <Text Text="Diagnostic details are retained in the application log." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                      <Container Type="Horizontal Stack" CellGap="8" HorizontalAlignment="Left">
+                        <Button ID="ShutdownRecoveryReturn" action="shutdown-recovery-return" Content="Return to app"
+                                AccessibleName="Return to the app - nothing was lost, the window stays open" />
+                        <Button ID="ShutdownRecoveryRetry" action="shutdown-recovery-retry" Content="Try closing again"
+                                AccessibleName="Try closing the app again" />
+                      </Container>
+                      <Text Text="The refusal and every recovery action are recorded in the application close diagnostic log." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                     </Container>
                   </Theme>
                 </Cui>
@@ -1259,13 +1296,43 @@ public sealed partial class App
             var loaded = loader.TryLoad(document);
             if (loaded.Root is null) { loader.Dispose(); return; }
             loader.WireBindings(loaded.Root);
-            Dispatcher.UIThread.Invoke(() => { window.Content = loaded.Root; });
+            // A second refusal replaces this surface again; the content to return to must be the
+            // workspace captured BEFORE the first one, never the previous recovery root itself.
+            var previous = ReferenceEquals(window.Content, _shutdownRecoveryRoot) ? _shutdownRecoveryPrevious : window.Content;
+            var recoveryRoot = loaded.Root;
+            _shutdownRecoveryPrevious = previous;
+            _shutdownRecoveryRoot = recoveryRoot;
+            actions.Return = () => Dispatcher.UIThread.Post(() =>
+            {
+                if (!ReferenceEquals(window.Content, _shutdownRecoveryRoot)) return;
+                window.Content = _shutdownRecoveryPrevious;
+                _shutdownRecoveryRoot = null;
+                _shutdownRecoveryPrevious = null;
+            });
+            actions.Retry = RequestOriginalDocumentClosePreflight;
+            Dispatcher.UIThread.Invoke(() => { window.Content = recoveryRoot; });
         }
         catch (Exception diagnosticFailure)
         {
             System.Diagnostics.Debug.WriteLine("[9to1 original shutdown recovery] " + diagnosticFailure);
             try { Console.Error.WriteLine("[9to1 original shutdown recovery] " + diagnosticFailure); }
             catch { }
+        }
+    }
+    /// <summary>Host dispatch for the two shutdown-recovery controls. It only returns the owner to
+    /// the still-running app or re-issues the ordinary close request; it carries no close authority,
+    /// never retries a faulted original automatically, and never relabels a retained failure.</summary>
+    private sealed class ShutdownRecoveryActions : CakeOS.Cui.ICuiActionDispatcher
+    {
+        internal Action? Return, Retry;
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        {
+            switch (command)
+            {
+                case "shutdown-recovery-return": Return?.Invoke(); return ValueTask.CompletedTask;
+                case "shutdown-recovery-retry": Retry?.Invoke(); return ValueTask.CompletedTask;
+                default: return ValueTask.FromException(new InvalidOperationException($"Unknown shutdown-recovery action '{command}'."));
+            }
         }
     }
     private void DemandOriginalDesktopBorrowerJoins(IReadOnlyList<object> actualOwners)

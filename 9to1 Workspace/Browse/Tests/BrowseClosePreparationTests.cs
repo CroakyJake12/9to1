@@ -263,14 +263,71 @@ public sealed partial class BrowseNativeOwnershipTests
         else owner.ForceStale = true;
         try
         {
-            await Assert.ThrowsAnyAsync<Exception>(() => chrome.PrepareCloseAsync().WaitAsync(PreparationBound));
+            var refusal = await Assert.ThrowsAnyAsync<Exception>(() => chrome.PrepareCloseAsync().WaitAsync(PreparationBound));
             Assert.Null(owner.OriginalClose); Assert.Null(chrome.OriginalClose);
-            Assert.Equal(1, owner.Aborts); Assert.False(owner.Frozen); Assert.True(owner.Edit());
+            // A lease that is merely stale is now re-asked a bounded three times before the refusal
+            // (21 November: a self-refreshing home tab staled every single attempt and the whole
+            // window became permanently unclosable). Each re-ask aborts its own lease, so three
+            // aborts are the pinned bound - never a loop. A foreign session is a different fault
+            // and is refused on the first ask, unchanged.
+            Assert.Equal(foreign ? 1 : 3, owner.Aborts);
+            if (!foreign) Assert.Contains("lease is no longer current", refusal.Message);
+            Assert.False(owner.Frozen); Assert.True(owner.Edit());
         }
         finally
         {
             owner.ForceStale = false; owner.ClaimedSession = null;
             await Assert.ThrowsAnyAsync<Exception>(() => chrome.DisposeAsync().AsTask().WaitAsync(PreparationBound));
+        }
+    }
+
+    [Fact]
+    public async Task Strong_content_that_churns_once_mid_preparation_settles_and_the_window_closes()
+    {
+        // The exact live shape from the owner's copy on 21 November: the address moves while the
+        // participant's own preparation is in flight. Acquisition re-asks with a fresh snapshot,
+        // the second ask is quiet, and the close proceeds instead of vetoing forever.
+        var apps = new PreparedFactory(); var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps);
+        await chrome.NavigateAsync("9to1://write/a"); var owner = apps.Sessions[0];
+        var churned = false;
+        owner.Preparing = () =>
+        {
+            if (!churned) { churned = true; owner.ChangeAddress(AppContentAddress.Parse("9to1://write/churned")); }
+            return true;
+        };
+        try
+        {
+            var cohort = Assert.IsType<BrowseChrome.ClosePreparation>(await chrome.PrepareCloseAsync().WaitAsync(PreparationBound));
+            Assert.True(cohort.IsCurrent); Assert.True(owner.Frozen);
+            await cohort.AbortAsync().WaitAsync(PreparationBound);
+            Assert.True(churned);
+        }
+        finally
+        {
+            owner.Preparing = null;
+            await chrome.DisposeAsync().AsTask().WaitAsync(PreparationBound);
+        }
+    }
+
+    [Fact]
+    public async Task Strong_perpetually_churning_content_refuses_with_a_named_cause_after_the_bound()
+    {
+        var apps = new PreparedFactory(); var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps);
+        await chrome.NavigateAsync("9to1://write/a"); var owner = apps.Sessions[0];
+        owner.Preparing = () => { owner.ChangeAddress(AppContentAddress.Parse("9to1://write/churn" + Environment.TickCount64 + apps.Sessions.Count)); return true; };
+        try
+        {
+            var refusal = await Assert.ThrowsAnyAsync<Exception>(() => chrome.PrepareCloseAsync().WaitAsync(PreparationBound));
+            // Three asks (the bound), then refusal - and the refusal names the tab and condition
+            // instead of only the generic sentence that made the 21 November strand undebuggable.
+            Assert.Contains("write/churn", refusal.Message);
+            Assert.Contains("address changed", refusal.Message);
+            Assert.Null(chrome.OriginalClose); Assert.False(owner.Frozen);
+        }
+        finally
+        {
+            owner.Preparing = null;
+            try { await chrome.DisposeAsync().AsTask().WaitAsync(PreparationBound); } catch { }
         }
     }
 

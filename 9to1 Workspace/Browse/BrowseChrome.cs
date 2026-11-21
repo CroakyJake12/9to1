@@ -418,7 +418,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
         if (tab.IsHome) { _status = "Home stays available in this window."; return Publish(); }
-        var preparation = await AcquireContentCloseAsync(tab, cancellationToken).ConfigureAwait(false);
+        var preparation = await AcquireContentCloseSettledAsync(tab, cancellationToken).ConfigureAwait(false);
         if (preparation is null)
         { _status = "Finish or save the app's pending work before closing this tab."; return Publish(); }
         Exception? preparationFailure = null;
@@ -575,7 +575,6 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     public Task<BrowseChromeSnapshot> ReloadAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
-        if (!SelectedRuntime().Address.IsWeb) return ReloadSelectedAppContentAsync(cancellationToken);
         return RunWebNavigationAsync(async (tab, token) =>
         {
             if (!EngineAvailable || tab.Host is null)
