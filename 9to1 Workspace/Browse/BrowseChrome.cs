@@ -418,14 +418,41 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
         if (tab.IsHome) { _status = "Home stays available in this window."; return Publish(); }
-        var preparation = await AcquireContentCloseSettledAsync(tab, cancellationToken).ConfigureAwait(false);
-        if (preparation is null)
-        { _status = "Finish or save the app's pending work before closing this tab."; return Publish(); }
+        // Owner report 21 Nov, second shape: content (measured live: the Write document) can
+        // re-create its preparation lease BETWEEN acquisition and begin, and the begin-side
+        // churn vetoed the tab with no retry at all - surfacing only the shell's generic
+        // action-failure banner. Acquire and begin are therefore re-asked together, bounded.
+        ContentCloseAttempt preparation;
+        for (var settle = 3; ; settle--)
+        {
+            var acquired = await AcquireContentCloseSettledAsync(tab, cancellationToken).ConfigureAwait(false);
+            if (acquired is null)
+            { _status = "Finish or save the app's pending work before closing this tab."; return Publish(); }
+            preparation = acquired;
+            try { BeginContentClose(preparation); break; }
+            catch (BrowseCloseVetoException veto) when (veto.StaleAcquisition && settle > 1)
+            {
+                ReportCloseRefusal("begin-settle", "tab " + tab.Address +
+                    " went stale before its close began; re-asking (" + (settle - 1) + " re-ask(s) remain)");
+                // Nothing began, so this is the plain release path - the same Finish the
+                // refusal and abort flows use (abort + no-op join + cause aggregation).
+                await FinishContentAttemptAsync(preparation).ConfigureAwait(false);
+                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception error)
+            {
+                // Any other begin outcome unwinds EXACTLY as the pre-fix inline begin did:
+                // FinishContentAttemptAsync aborts what never began AND joins the accepted/
+                // reported originals (pinned by Strong_throwing_begin_unsubscribe_still_
+                // observes_and_joins_reported_original_close), then raises the exact cause.
+                await FinishContentAttemptAsync(preparation, error).ConfigureAwait(false);
+                throw;
+            }
+        }
         Exception? preparationFailure = null;
         try
         {
         cancellationToken.ThrowIfCancellationRequested();
-        BeginContentClose(preparation);
         var index = _tabs.IndexOf(tab);
         var wasSelected = tab.Id == _selectedTabId;
         BrowseEngineKind? engineOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var explicitEngine) ? explicitEngine : null;

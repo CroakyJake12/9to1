@@ -49,6 +49,11 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     private CuiControlLoader? _loader;
     private CuiControlLoader? _failureLoader;
     private CuiViewModel? _failureModel;
+    // Transient action-failure notice state (owner directive 21 November).
+    private Grid? _actionBannerLayout;
+    private Control? _actionBannerOriginal;
+    private DispatcherTimer? _actionBannerTimer;
+    private int _actionBannerGeneration;
     public CuiActionFailure? LastActionFailure { get; private set; }
     private Avalonia.Controls.ResourceDictionary? _visualResources;
     private CuiSceneThemeBinding? _themeBinding;
@@ -487,21 +492,46 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         LastActionFailure = failure;
         Diagnostics = Diagnostics.Append(new CuiDiagnostic(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error,
             failure.Message, default)).ToArray();
-        if (_failureModel is null)
+        // Owner directive 21 November: an action failure is a NOTIFICATION, not a persistent
+        // banner. The scene used to keep the status row mounted forever (a stale "could not
+        // complete" sentence outliving its cause by hours). It now shows briefly and removes
+        // itself; a newer failure restarts the notice. Diagnostics and LastActionFailure are
+        // untouched, so tests, tooling and the retained-cause chain keep the full record.
+        var bannerLayout = _actionBannerLayout;
+        if (bannerLayout is null || !ReferenceEquals(Content, bannerLayout))
         {
-            _failureModel = new CuiViewModel();
-            _failureLoader = new CuiControlLoader(_registry);
-            if (_currentScene is { } currentScene) ConfigureSceneLoader(_failureLoader, currentScene);
-            _failureLoader.SetBindingContext(_failureModel);
-            var banner = _failureLoader.Load(new CuiRichParser().Parse(
+            if (_failureModel is null)
+            {
+                _failureModel = new CuiViewModel();
+                _failureLoader = new CuiControlLoader(_registry);
+                if (_currentScene is { } currentScene) ConfigureSceneLoader(_failureLoader, currentScene);
+                _failureLoader.SetBindingContext(_failureModel);
+            }
+            var banner = _failureLoader!.Load(new CuiRichParser().Parse(
                 "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>")) ?? throw new InvalidDataException("The action status CUI did not produce a control.");
-            var original = Content as Control; Content = null;
+            var original = Content as Control;
+            Content = null;
             var layout = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
             layout.Children.Add(banner);
             if (original is not null) { Grid.SetRow(original, 1); layout.Children.Add(original); }
-            Content = layout;
+            Content = bannerLayout = layout;
+            _actionBannerLayout = layout;
+            _actionBannerOriginal = original;
         }
-        _failureModel.Set("ActionStatus", failure.Message);
+        _failureModel!.Set("ActionStatus", failure.Message);
+        _actionBannerTimer?.Stop();
+        _actionBannerTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
+        var generation = ++_actionBannerGeneration;
+        _actionBannerTimer.Tick += (_, _) =>
+        {
+            _actionBannerTimer!.Stop();
+            if (_disposed || generation != _actionBannerGeneration) return;
+            _failureModel?.Set("ActionStatus", string.Empty);
+            if (ReferenceEquals(Content, _actionBannerLayout) && _actionBannerOriginal is not null)
+                Content = _actionBannerOriginal;
+            _actionBannerLayout = null;
+        };
+        _actionBannerTimer.Start();
     }
 
 

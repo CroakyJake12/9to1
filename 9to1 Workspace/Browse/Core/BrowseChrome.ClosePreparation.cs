@@ -16,7 +16,8 @@ public sealed partial class BrowseChrome
     private BrowseCloseVetoException Veto(string site, string detail)
     {
         ReportCloseRefusal("veto@" + site, detail);
-        return new BrowseCloseVetoException(detail, staleAcquisition: site == "acquire-not-current");
+        return new BrowseCloseVetoException(detail,
+            staleAcquisition: site is "acquire-not-current" or "begin-not-current" or "navigation-not-current");
     }
 
     private void ReportCloseRefusal(string kind, string detail)
