@@ -3709,8 +3709,11 @@ public sealed partial class CuiControlLoader : IDisposable
                     break;
                 case "overflowhost":
                 case "overflow-host":
-                    CuiOverflowHosts.Set(control, string.Equals(resolved, "true", StringComparison.OrdinalIgnoreCase)
-                                            || resolved == "1");
+                    if (string.Equals(resolved, "always", StringComparison.OrdinalIgnoreCase))
+                        CuiOverflowHosts.SetAlways(control);
+                    else
+                        CuiOverflowHosts.Set(control, string.Equals(resolved, "true", StringComparison.OrdinalIgnoreCase)
+                                                || resolved == "1");
                     break;
                 case "grid.column":
                 case "grid-column":

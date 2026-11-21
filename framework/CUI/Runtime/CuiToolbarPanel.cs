@@ -58,6 +58,7 @@ public sealed class CuiToolbarPanel : Panel
 
         Control? host = null;
         var hostDesired = default(Size);
+        var hostAlways = false;
         var order = new List<(Control Child, Size Desired)>(Children.Count);
         foreach (var child in Children)
         {
@@ -70,6 +71,7 @@ public sealed class CuiToolbarPanel : Panel
             {
                 host = child;
                 hostDesired = child.DesiredSize;
+                hostAlways = IsAlwaysHost(child);
                 continue;
             }
             order.Add((child, child.DesiredSize));
@@ -78,9 +80,11 @@ public sealed class CuiToolbarPanel : Panel
         var gaps = order.Count > 1 ? _spacing * (order.Count - 1) : 0;
         var totalAll = order.Sum(item => item.Desired.Width) + gaps;
 
-        // Everything fits: nothing collapses and the author's overflow control is not presented.
+        // Everything fits: nothing collapses and the author's overflow control is not presented -
+        // unless the author declared a named disclosure (OverflowHost="always", BOARD-UI-001's Format
+        // control), which is reserved and presented whether or not items collapse under pressure.
         var mustCollapse = constrained && totalAll > budget;
-        var fitBudget = mustCollapse && host is not null
+        var fitBudget = host is not null && (mustCollapse || hostAlways)
             ? Math.Max(0, budget - hostDesired.Width - _spacing)   // reserve the host first
             : budget;
 
@@ -109,10 +113,10 @@ public sealed class CuiToolbarPanel : Panel
 
         if (host is not null)
         {
-            // The overflow control is shown only because items were actually collapsed, so an "advanced"
-            // chevron never sits in a toolbar that had room for everything.
-            host.IsVisible = HiddenItemCount > 0;
-            if (HiddenItemCount > 0)
+            // The overflow control is shown because items were actually collapsed, or because the author
+            // declared it as an always-presented named disclosure (OverflowHost="always").
+            host.IsVisible = HiddenItemCount > 0 || hostAlways;
+            if (host.IsVisible)
             {
                 used += _spacing + hostDesired.Width;
                 heights = Math.Max(heights, hostDesired.Height);
@@ -155,5 +159,11 @@ public sealed class CuiToolbarPanel : Panel
         // inside it is what carries authored properties.
         var authored = cell is Border bordered ? bordered.Child ?? cell : cell;
         return CuiOverflowHosts.IsHost(authored) || CuiOverflowHosts.IsHost(cell);
+    }
+
+    private static bool IsAlwaysHost(Control cell)
+    {
+        var authored = cell is Border bordered ? bordered.Child ?? cell : cell;
+        return CuiOverflowHosts.IsAlways(authored) || CuiOverflowHosts.IsAlways(cell);
     }
 }

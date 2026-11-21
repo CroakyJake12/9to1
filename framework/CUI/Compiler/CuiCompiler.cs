@@ -725,7 +725,8 @@ public sealed class CuiCompiler
             if (property.Name.Equals("TextSelection", StringComparison.OrdinalIgnoreCase) &&
                 (value is CuiLiteralValue || value is CuiBindingValue { Mode: CuiBindingMode.TwoWay }))
                 diagnostics.Error("CUIC015", "TextSelection requires a one-way typed selection request, never a literal or two-way text binding.", value.Span);
-            else if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
+            else if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value)
+                     && !IsOverflowHostDisclosure(property.Name, literal.Value))
                 diagnostics.Error("CUIC015", $"Value '{literal.Value}' is not valid for {property.LanguageType} property '{property.Name}'.", value.Span);
             else if (IsStaticDirective(property.Name) && value is not CuiLiteralValue)
                 diagnostics.Error("CUIC015", $"Property '{property.Name}' is a static boolean contract and requires a declared literal true/false.", value.Span);
@@ -742,6 +743,14 @@ public sealed class CuiCompiler
 
     private static bool IsStaticDirective(string propertyName) =>
         propertyName is "CompoundFocus" or "OwnsBackdrop" or "EmbeddedInput";
+
+    /// <summary>OverflowHost's authored contract is boolean PLUS the named-disclosure word
+    /// "always" (BOARD-UI-001's Format control on the Boards compact toolbar): the loader consumes
+    /// the literal directly (CuiOverflowHosts.SetAlways), so the type check gets one documented
+    /// extension rather than a new language type that would dilute every other boolean property.</summary>
+    private static bool IsOverflowHostDisclosure(string propertyName, string value) =>
+        propertyName.Equals("OverflowHost", StringComparison.OrdinalIgnoreCase)
+        && value.Equals("always", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsValidLiteral(string languageType, string value) => languageType switch
     {

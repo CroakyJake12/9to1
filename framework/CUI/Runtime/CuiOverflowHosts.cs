@@ -17,6 +17,7 @@ public static class CuiOverflowHosts
     private sealed class Marker
     {
         public bool Value;
+        public bool Always;
     }
 
     private static readonly ConditionalWeakTable<Control, Marker> Marks = new();
@@ -30,7 +31,24 @@ public static class CuiOverflowHosts
             Marks.Remove(control);
     }
 
+    /// <summary>
+    /// The overflow surface of a BOARD-UI-001 disclosure toolbar: authored as OverflowHost="always",
+    /// it is presented even when nothing was collapsed, so a named disclosure (Format) reaches the
+    /// toolbar's complete authored content at every width instead of only appearing under pressure.
+    /// </summary>
+    public static void SetAlways(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        var marker = Marks.GetValue(control, static _ => new Marker());
+        marker.Value = true;
+        marker.Always = true;
+    }
+
     /// <summary>True when this authored control was declared as its container's overflow surface.</summary>
     public static bool IsHost(Control? control) =>
         control is not null && Marks.TryGetValue(control, out var marker) && marker.Value;
+
+    /// <summary>True when the overflow surface must stay presented even with zero collapsed items.</summary>
+    public static bool IsAlways(Control? control) =>
+        control is not null && Marks.TryGetValue(control, out var marker) && marker.Value && marker.Always;
 }

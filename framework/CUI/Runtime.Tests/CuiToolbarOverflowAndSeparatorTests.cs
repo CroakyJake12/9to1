@@ -32,6 +32,23 @@ public sealed class CuiToolbarOverflowAndSeparatorTests
         </Cui>
         """;
 
+    /// <summary>BOARD-UI-001 (18 November specification): a NAMED disclosure - "Format" on the Boards
+    /// compact toolbar - is authored <c>OverflowHost="always"</c> so it is presented even when nothing
+    /// collapsed, opening the toolbar's complete authored content at every width.</summary>
+    private const string AlwaysDisclosureMarkup = """
+        <Cui>
+          <Container id="toolbar" Type="Toolbar" Width="260" CellGap="4">
+            <Button id="one" Content="1" Width="50" Height="24" />
+            <Button id="two" Content="2" Width="50" Height="24" />
+            <Button id="three" Content="3" Width="50" Height="24" />
+            <Button id="four" Content="4" Width="50" Height="24" />
+            <Container id="format" Type="Menu" OverflowHost="always" Width="30" Height="24">
+              <Button id="disclosed-item" Content="F" Width="50" Height="24" />
+            </Container>
+          </Container>
+        </Cui>
+        """;
+
     private const string SeparatorMarkup = """
         <Cui>
           <Container id="column" Type="Vertical Stack" Width="200">
@@ -194,6 +211,50 @@ public sealed class CuiToolbarOverflowAndSeparatorTests
                     }
                 }
                 window.Close();
+            }
+        }, lifetime.Token);
+    }
+
+    [Fact]
+    public async Task An_always_disclosure_is_presented_even_when_everything_fits_and_survives_collapse()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            // Wide enough for every item AND the reserved disclosure: unlike OverflowHost="true", the
+            // named disclosure (BOARD-UI-001's Format control) must still be presented, so the toolbar
+            // never loses the route to its authored overflow content.
+            var window = new Window { Width = 600, Height = 200 };
+            var (root, loader) = Load(AlwaysDisclosureMarkup, window);
+            using (loader)
+            {
+                var toolbar = (CuiContainerControl)Find(root, "toolbar")!;
+                var panel = (CuiToolbarPanel)toolbar.Layout;
+                Assert.Equal(4, panel.VisibleItemCount);
+                Assert.Equal(0, panel.HiddenItemCount);
+                Assert.True(Find(root, "format")!.IsEffectivelyVisible,
+                            "OverflowHost=\"always\" presents the disclosure even with nothing collapsed");
+                Assert.True(CuiOverflowHosts.IsAlways(Find(root, "format")!));
+                Assert.True(CuiOverflowHosts.IsHost(Find(root, "format")!));
+                // The reservation happened even at the wide width: the four items plus the disclosure
+                // fit, but the disclosure consumed its own 30-wide slot.
+                Assert.True(Pos(Find(root, "format")!, toolbar).X > Pos(Find(root, "four")!, toolbar).X,
+                            "the disclosure sits after the surviving items");
+            }
+        }, lifetime.Token);
+        await session.Dispatch(() =>
+        {
+            // Narrow: items collapse into the disclosure and it stays presented, exactly as the plain
+            // overflow host does.
+            var window = new Window { Width = 160, Height = 200 };
+            var (root, loader) = Load(AlwaysDisclosureMarkup.Replace("Width=\"260\"", "Width=\"140\""), window);
+            using (loader)
+            {
+                var panel = (CuiToolbarPanel)((CuiContainerControl)Find(root, "toolbar")!).Layout;
+                Assert.True(panel.HiddenItemCount > 0, "the narrow width must collapse items");
+                Assert.True(Find(root, "format")!.IsEffectivelyVisible,
+                            "the disclosure stays presented under collapse");
             }
         }, lifetime.Token);
     }
