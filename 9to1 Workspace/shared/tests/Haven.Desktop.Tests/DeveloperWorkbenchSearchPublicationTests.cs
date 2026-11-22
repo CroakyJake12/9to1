@@ -1,6 +1,10 @@
 using System.Reflection;
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Threading;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -908,6 +912,62 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Admitted_manual_document_renders_a_selectable_tab_and_separate_trailing_pin()
+    {
+        Assert.SkipWhen(!OperatingSystem.IsLinux(), "The Home/Files read-admission fixture requires Linux.");
+        var fixture = await Fixture.CreateAsync();
+        var reader = await ActualOptionalReaderFixture(canonicalSavedProject: true);
+        DeveloperProjectWorkbenchPage? page = null;
+        Window? window = null;
+        try
+        {
+            page = await ManualFileNavigationPage(fixture, reader, componentReadiness: new PreviewComponentReadiness());
+            window = new Window { Width = 1000, Height = 760, Content = page };
+            window.Show();
+            await page.ActivateAsync(OriginalTestBodyToken);
+            Assert.True(page.TrySetValue("SourcePath", "seed.txt"));
+            var open = page.DispatchAsync("dev.open-source", null, OriginalTestBodyToken).AsTask();
+            await reader.AcceptRead(open);
+            await open;
+
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            var row = page.GetVisualDescendants().OfType<CuiContainerControl>().Single(control =>
+                AutomationProperties.GetName(control) == "Open source documents");
+            row.BringIntoView();
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            var view = row.GetVisualAncestors().OfType<ScrollViewer>().First(scroll => scroll.Extent.Height > scroll.Viewport.Height);
+            Assert.True(view.Offset.Y > 0);
+            var visible = new Rect(row.Bounds.Size).TransformToAABB(row.TransformToVisual(window)!.Value);
+            Assert.InRange(visible.Top, -1, window.ClientSize.Height);
+            Assert.InRange(visible.Bottom, 0, window.ClientSize.Height + 1);
+            var buttons = row.GetVisualDescendants().OfType<Button>().Where(button => button.IsEffectivelyVisible).ToArray();
+            var select = Assert.Single(buttons, button => button.Content is string label && label.Contains("seed.txt"));
+            var close = Assert.Single(buttons, button => Equals(button.Content, "×"));
+            var pin = Assert.Single(buttons, button => AutomationProperties.GetAutomationId(button) == "dev-pin-source-tab");
+            Assert.True(select.IsEffectivelyEnabled);
+            Assert.True(pin.IsEffectivelyEnabled);
+            Assert.True(select.Focus(NavigationMethod.Tab));
+            Assert.True(pin.Focus(NavigationMethod.Tab));
+            Rect InRow(Control control) => new Rect(control.Bounds.Size).TransformToAABB(control.TransformToVisual(row)!.Value);
+            var first = InRow(select);
+            var last = InRow(close);
+            var trailing = InRow(pin);
+            Assert.True(first.Width > 0 && last.Width > 0 && trailing.Width > 0);
+            Assert.True(first.Right <= last.Left + 1 && last.Right < trailing.Left);
+            // The authored grid leaves a 6-DIP gap before its trailing action.
+            Assert.InRange(Math.Abs((first.Left + last.Right) / 2 - (trailing.Left - 6) / 2), 0, 2);
+        }
+        finally
+        {
+            if (window is not null) { window.Content = null; window.Close(); }
+            try { if (page is not null) await page.CloseAndDrainAsync(); }
+            finally { try { await fixture.Dev.CloseAndDrainAsync(); } finally { await reader.Lifetime.DisposeAsync(); } }
+        }
+    }
+
     private static object[] NativeSourceTabs(DeveloperProjectWorkbenchPage page) =>
         ((System.Collections.IEnumerable)SearchPublicationField("_sourceTabs").GetValue(page)!).Cast<object>().ToArray();
     private static bool NativeTabFlag(object tab, string name) => Assert.IsType<bool>(tab.GetType().GetField(name)!.GetValue(tab));
@@ -1271,7 +1331,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         }
     }
 
-    private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader, bool configureMetadata = false)
+    private static async Task<DeveloperProjectWorkbenchPage> ManualFileNavigationPage(Fixture fixture, ActualReaderFixture reader,
+        bool configureMetadata = false, ICuiSceneReadiness? componentReadiness = null)
     {
         await fixture.Dev.CloseAndDrainAsync();
         fixture.Dev = new(reader.SavedStore!, new(fixture.ConversationSource, fixture.Containers), fixture.Tasks, fixture.Owner, new(fixture.Tools));
@@ -1279,10 +1340,11 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             (_, _, _) => throw new InvalidOperationException("Manual navigation must use the genuine Home/Files reader, not Task document identity.");
         var constructor = typeof(DeveloperProjectWorkbenchPage).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
             .Single(value => value.GetParameters().Length == 16 && value.GetParameters()[9].ParameterType == typeof(DeveloperManualSourceReadOwner));
-        var page = (DeveloperProjectWorkbenchPage)constructor.Invoke([fixture.Dev, fixture.Tasks, reader.Saved!, new SearchPublicationNoReadiness(), unused,
+        var page = (DeveloperProjectWorkbenchPage)constructor.Invoke([fixture.Dev, fixture.Tasks, reader.Saved!, componentReadiness ?? new SearchPublicationNoReadiness(), unused,
             (Action)(() => { }), OriginalTestBodyToken, null, null, reader.Owner, null, configureMetadata ? reader.SavedStore : null, null,
             configureMetadata ? reader.Keys : null, configureMetadata ? reader.Paths : null, reader.ProcessOwner]);
-        SearchPublicationField("_active").SetValue(page, true); // Command component only; no native frame witness.
+        if (componentReadiness is null)
+            SearchPublicationField("_active").SetValue(page, true); // Command component only; no native frame witness.
         return page;
     }
 

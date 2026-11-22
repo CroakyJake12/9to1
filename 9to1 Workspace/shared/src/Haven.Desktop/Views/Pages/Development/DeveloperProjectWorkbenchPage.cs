@@ -74,7 +74,23 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
     private sealed record ManualTabState(string Draft, string Baseline, string Before, string After,
         string BeforeSha256, string AfterSha256, long DraftRevision, long ReviewRevision, bool Reviewed);
     private sealed record SourceTabItem(string SelectionKey, string Label, string AccessibleName,
-        string CloseAccessibleName, bool CanSelect, bool CanClose);
+        string CloseAccessibleName, bool CanSelect, bool CanClose) : ICuiBindingContext
+    {
+        public bool TryGetValue(string path, out object? value)
+        {
+            value = path switch
+            {
+                nameof(SelectionKey) => SelectionKey,
+                nameof(Label) => Label,
+                nameof(AccessibleName) => AccessibleName,
+                nameof(CloseAccessibleName) => CloseAccessibleName,
+                nameof(CanSelect) => CanSelect,
+                nameof(CanClose) => CanClose,
+                _ => null
+            };
+            return value is not null;
+        }
+    }
     private readonly List<SourceTab> _sourceTabs = [];
     private Guid? _selectedSourceTab;
     private const int ProjectExplorerPageSize = 100;

@@ -11,7 +11,7 @@
     <Action name="dev.select-run-target" command="dev.select-run-target" parameter="{Binding target.SelectionKey}" />
   </Actions>
   <Page>
-    <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
+    <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
       <Text id="dev-project-title" text="{Binding ProjectTitle}" font-size="24" text-wrapping="Wrap" />
       <Text text="{Binding ProjectSummary}" text-wrapping="Wrap" accessible-name="Existing project and task" />
       <Container Type="Wrap">
