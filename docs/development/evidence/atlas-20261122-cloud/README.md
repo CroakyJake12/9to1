@@ -59,6 +59,12 @@ The final X11 build exercised the picker on Spaces at 1180 × 760 and 720 × 520
 
 ## Spaces Options and final desktop regression
 
-Chat Options now uses its conversation viewport to size the existing scrollable popup. On the native Haven app, opening Options left the shared tab and address bars pixel-identical at 720 × 520 and 1180 × 760. Wheel scrolling reached Allow actions, Cancel and Save permissions at 720 pixels. Resizing with the popup open fit its new bounds. Escape kept the unsent draft and restored Options focus. The native app closed normally with exit 0.
+Chat Options now uses its conversation viewport to size the existing scrollable popup. On native Haven, opening Options left the shared tab and address bars pixel-identical at 720 × 520 and 1180 × 760. Wheel scrolling reached Allowed actions, Cancel and Save permissions at 720 pixels. Resizing with the popup open fit its new bounds. Escape kept the unsent draft and restored Options focus. The native app closed normally with exit 0. [Narrow Options](chat-options/native/02-chat-options-open-narrow.png) · [Narrow footer](chat-options/native/03-chat-options-bottom-narrow.png) · [Wide after resizing](chat-options/native/06-chat-options-resize-open-wide.png) · [Native receipt](chat-options/native/receipt.json)
 
 The final Linux Release build passed with zero warnings and errors, and all 19 focused Desktop regressions passed. Four legacy `ChatSpacePageAcceptanceTests` failed during initial scene loading with `CUIR053` for an invalid `CellGap`. The preceding model build reproduced the same four failures. The native check above followed the current Spaces Chat route.
+
+## Continuation checkpoint
+
+The tested application revision is `67fcebaaabe8bf7b915d965453fafb9ac6f21285`. The cloud continuation branch carries that revision and the evidence in this directory. The checked release target is Linux `net10.0` with SDK `10.0.401`. Both native and headless runs use isolated data and configuration paths. The original local pass and handoff archive remain available through their original records.
+
+Remaining Atlas gaps include the Settings taxonomy and palette, New Tab clock and widgets, and native Main, Voice and Vision runtime selection and context Apply. The current implementation keeps the ordinary route and preference owners. The Files New Tab fixture and the four legacy Chat fixtures reproduced their baseline failures on this host. Codex allowance telemetry was unavailable during the pass. Each reviewed batch was pushed and its branch SHA read back from GitHub.
