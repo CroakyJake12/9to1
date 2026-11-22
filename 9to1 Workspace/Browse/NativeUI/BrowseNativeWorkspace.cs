@@ -73,8 +73,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public IReadOnlyList<Task> OriginalOperations { get { lock (_sourceGate) return _originalOperations.ToArray(); } }
     public IReadOnlyList<Task> OriginalNotifications { get { lock (_sourceGate) return _originalNotifications.Concat(_originalUiOperations).ToArray(); } }
 
-    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null,
-        Func<AppContentAddress, string?>? tabIconSource = null)
+    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability,
+        IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null)
+        : this(originalChrome, originalActionAvailability, originalDownloadFilesService, sharedContext, null) { }
+
+    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability,
+        IBrowserOriginalDownloadFilesService? originalDownloadFilesService, IHavenHostContext? sharedContext,
+        Func<AppContentAddress, string?>? tabIconSource)
     {
         _tabIconSource = tabIconSource;
         _originalDownloadFilesService = originalDownloadFilesService;

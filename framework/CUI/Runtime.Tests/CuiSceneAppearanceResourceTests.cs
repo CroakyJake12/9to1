@@ -67,7 +67,8 @@ public sealed class CuiSceneAppearanceResourceTests
                 Assert.True(CuiContrast.Ratio(ink.Color, fill) >= 4.5d,
                     $"{surface}/{appearance}/{surfaceKey} must retain readable text on its actual opaque fill.");
             }
-            Assert.Equal(palette.Button, Assert.IsType<SolidColorBrush>(resources["CuiButtonBrush"]).Color);
+            // Ordinary Glow controls use the quiet panel role; accent fills belong to primary actions.
+            Assert.Equal(palette.Panel, Assert.IsType<SolidColorBrush>(resources["CuiButtonBrush"]).Color);
             Assert.Equal(palette.Text, Assert.IsType<SolidColorBrush>(resources["CuiTextBrush"]).Color);
             Assert.Equal(palette.AccentInk, Assert.IsType<SolidColorBrush>(resources["CuiAccentInkBrush"]).Color);
         }

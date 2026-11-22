@@ -242,24 +242,46 @@
                 </If>
                 <If Condition="{Binding IsSettings}">
                   <Container id="home-settings-page" Type="Vertical Stack">
-                    <Text text="Home settings" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-                    <Container id="home-appearance-settings" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" Margin="0 12 0 20">
-                      <Text Text="Appearance / CUI" FontSize="20" FontWeight="SemiBold" />
-                      <Text Text="{Binding HomeAppearanceScope}" Foreground="{Resource CuiTextSoftBrush}" />
-                      <Text Text="{Binding HomeAppearanceStatus}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Text Text="Theme" FontWeight="SemiBold" />
-                      <Repeat id="home-theme-options" Source="{Binding HomeThemeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
-                        <Button id="home-theme-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Padding="12 8" Margin="0 0 8 8" />
-                      </Repeat>
-                      <Text Text="Brightness" FontWeight="SemiBold" />
-                      <Repeat id="home-appearance-options" Source="{Binding HomeAppearanceChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
-                        <Button id="home-appearance-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Padding="12 8" Margin="0 0 8 8" />
-                      </Repeat>
-                      <Text Text="Accessibility" FontWeight="SemiBold" />
-                      <Repeat id="home-accessibility-options" Source="{Binding HomeAccessibilityChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
-                        <Button id="home-accessibility-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Padding="12 8" Margin="0 0 8 8" />
-                      </Repeat>
-                      <Button id="home-appearance-refresh" action="RefreshHomeAppearance" Content="Refresh appearance" IsEnabled="{Binding HomeAppearanceCanRefresh, fallback=false}" HorizontalAlignment="Left" />
+                    <Container id="home-appearance-settings" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1000" CellGap="16" Padding="12 12 12 24">
+                      <Container Type="Vertical Stack" CellGap="3" Margin="0 0 0 8">
+                        <Text Text="Global Settings" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Text Text="Appearance" FontSize="32" FontWeight="800" />
+                      </Container>
+                      <Container id="home-theme-gallery" Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="18" Padding="20" CellGap="14">
+                        <Text Text="Theme" FontSize="18" FontWeight="750" />
+                        <Repeat id="home-theme-options" Source="{Binding HomeThemeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
+                          <Button id="home-theme-option" action="ApplyHomeAppearanceOption" AccessibleName="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Width="172" MinHeight="94" Padding="9" Margin="0 0 8 8" CornerRadius="12" HorizontalContentAlignment="Stretch">
+                            <Container Type="Vertical Stack" CellGap="8">
+                              <If Condition="{Binding option.HasPreview}">
+                                <Container Type="Grid" ColumnSizes="Auto 1fr Auto" Height="44" Padding="10 6" CornerRadius="8" Background="{Binding option.PreviewPanel}">
+                                  <Container Type="Overlay" Width="16" Height="24" CornerRadius="4" VerticalAlignment="Center" Background="{Binding option.PreviewTile}" />
+                                  <Text Column="1" Text="Aa" FontSize="19" FontWeight="800" TextAlignment="Center" VerticalAlignment="Center" Foreground="{Binding option.PreviewInk}" />
+                                  <Container Type="Overlay" Column="2" Width="23" Height="11" CornerRadius="6" VerticalAlignment="Center" Background="{Binding option.PreviewAccent}" />
+                                </Container>
+                              </If>
+                              <Text Text="{Binding option.Name}" FontWeight="750" TextTrimming="CharacterEllipsis" />
+                            </Container>
+                          </Button>
+                        </Repeat>
+                      </Container>
+                      <Container id="home-display-settings" Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="18" Padding="20" CellGap="12">
+                        <Text Text="Display" FontSize="18" FontWeight="750" />
+                        <Text Text="Appearance presets" FontWeight="700" />
+                        <Repeat id="home-appearance-options" Source="{Binding HomeAppearanceChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
+                          <Button id="home-appearance-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" FontWeight="700" Padding="16 8" CornerRadius="18" Margin="0 0 6 4" />
+                        </Repeat>
+                      </Container>
+                      <Container Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="18" Padding="20" CellGap="12">
+                        <Text Text="Accessibility" FontSize="18" FontWeight="750" />
+                        <Repeat id="home-accessibility-options" Source="{Binding HomeAccessibilityChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
+                          <Button id="home-accessibility-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" FontWeight="700" Padding="14 8" Margin="0 0 6 4" />
+                        </Repeat>
+                      </Container>
+                      <Container Type="Wrap" CellGap="12">
+                        <Button id="home-appearance-refresh" action="RefreshHomeAppearance" Content="Refresh" AccessibleName="Refresh appearance" IsEnabled="{Binding HomeAppearanceCanRefresh, fallback=false}" FontWeight="700" />
+                        <Text Text="{Binding HomeAppearanceStatus}" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <Text Text="{Binding HomeAppearanceScope}" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                      </Container>
                     </Container>
                     <Button id="settings-open-cake-account" action="OpenHomeCakeAccount" content="CAKE ID account" accessible-name="Open CAKE ID account settings" />
                     <Text id="home-profile-status" text="{Binding HomeProfileSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 12" />

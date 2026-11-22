@@ -19,7 +19,7 @@
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
   <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
-    <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiBackgroundBrush}">
+    <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiWorkspaceBrush}">
       <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to swap at either outer edge, split on either inner edge, or group in the center. Invalid privacy, profile, or pinned boundaries are refused. Keyboard move controls are also available in More tools.">
         <Container id="BrowseTabViewport" Type="Overlay" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">

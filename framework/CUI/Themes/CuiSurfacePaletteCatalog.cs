@@ -182,7 +182,30 @@ public static class CuiSurfacePaletteCatalog
         if (anchors is not null)
             hue = hue with { Tide = Blend(Colors.White, surfaceAccent ?? accent, .28).ToString() };
         var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft, surfaceAccent);
-        return theme == CuiTheme.Glow ? palette : Express(palette, appearance);
+        if (theme != CuiTheme.Glow) return Express(palette, appearance);
+        return appearance is CuiAppearance.Dark or CuiAppearance.SuperDark
+            ? GlowDark(palette, appearance, surfaceAccent ?? accent) : palette;
+    }
+
+    // The v4 dark field follows the scoped hue. Neutral accents stay neutral. Only the
+    // interface materials change; the original app/override accent still owns its actions.
+    private static CuiPalette GlowDark(CuiPalette palette, CuiAppearance appearance, Color surfaceAccent)
+    {
+        var hue = surfaceAccent.ToHsl();
+        var saturation = hue.S < .025 ? 0 : Math.Max(.9, hue.S);
+        var scale = appearance == CuiAppearance.SuperDark ? .86 : 1.0;
+        var secondaryInk = Color.Parse("#ABB7DC");
+        Color Tone(double lightness) => CuiContrast.EnsureForegroundContrast(
+            new HslColor(1, hue.H, saturation, lightness * scale).ToRgb(), secondaryInk, 4.6);
+        return palette with
+        {
+            TideBase = Tone(.12), TideColour = Tone(.215), Panel = Tone(.155),
+            Panel2 = Tone(.19), Panel3 = Tone(.135), PanelHover = Tone(.245),
+            Button = Tone(.20), ButtonHover = Tone(.25), ButtonPressed = Tone(.28),
+            Text = Color.Parse("#F5F5FF"), TextSoft = Color.Parse("#B5BEE5"),
+            Muted = secondaryInk, Muted2 = secondaryInk,
+            Line = Blend(Tone(.155), secondaryInk, .17), LineStrong = Blend(Tone(.155), secondaryInk, .32)
+        };
     }
 
     private static CuiAccentAnchorSet ColourAnchors(string value)

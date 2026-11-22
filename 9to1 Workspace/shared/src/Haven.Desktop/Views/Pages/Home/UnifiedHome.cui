@@ -27,7 +27,7 @@
   -->
   <Theme Name="user_preference">
     <Page AccessibleName="9to1 Home">
-      <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiBackgroundBrush}">
+      <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiWorkspaceBrush}">
         <Container id="home-sidebar" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
           <Container id="home-rail-nav" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
             <Button id="home-apps" action="home.apps" accessible-name="Apps" Tooltip="Apps" Selected="{Binding rail.appsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">

@@ -178,7 +178,28 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         { ["Name"] = name, ["Key"] = key is "reduce-motion" or "high-contrast" ? key : key + ":" + next,
           ["Target"] = Target(key, next), ["IsSelected"] = selected };
         var available = !_closing && value is not null;
-        var names = CuiThemeCatalog.All.Select(theme => theme.DisplayName).ToList();
+        var themes = CuiThemeCatalog.All.OrderBy(theme => theme.Theme switch
+        {
+            CuiTheme.Professional => 0, CuiTheme.Glow => 1, CuiTheme.Playful => 2,
+            CuiTheme.FrostedGlass => 3, CuiTheme.Bubble => 4, CuiTheme.Metallic => 5,
+            CuiTheme.Retro => 6, CuiTheme.Western => 7, _ => 8
+        }).ToArray();
+        var names = themes.Select(theme => theme.DisplayName).ToList();
+        Dictionary<string, object?> ThemeOption(string name)
+        {
+            var option = Option(name, "theme", name, string.Equals(name, value!.ThemeName, StringComparison.OrdinalIgnoreCase));
+            var theme = themes.FirstOrDefault(item => item.DisplayName == name);
+            option["HasPreview"] = theme is not null;
+            if (theme is null) return option;
+            var appearance = Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
+            var accent = Current.EffectiveAccent.ResolveColour("app.home");
+            var palette = CuiAccessibilityPalette.Resolve(CuiSurfacePaletteCatalog.For("Home", appearance, theme.Theme, accent), Current.Accessibility);
+            option["PreviewPanel"] = palette.Panel2.ToString();
+            option["PreviewTile"] = palette.PanelHover.ToString();
+            option["PreviewInk"] = palette.Text.ToString();
+            option["PreviewAccent"] = palette.Accent.ToString();
+            return option;
+        }
         if (value?.CustomThemesJson is { } custom)
             try { names.AddRange(CuiCustomThemeContract.DeserializeLibrary(custom).Select(theme => theme.Name)); }
             catch (ArgumentException) { }
@@ -188,7 +209,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             ["HomeAppearanceScope"] = "Applies to this device profile.",
             ["HomeAppearanceStatus"] = Diagnostic ?? (value is null ? "Appearance has not been loaded." : "Saved theme: " + value.ThemeName),
             ["HomeThemeChoices"] = available ? names.Distinct(StringComparer.OrdinalIgnoreCase)
-                .Select(name => Option(name, "theme", name, name == value!.ThemeName)).ToArray() : Array.Empty<Dictionary<string, object?>>(),
+                .Select(ThemeOption).ToArray() : Array.Empty<Dictionary<string, object?>>(),
             ["HomeAppearanceChoices"] = available ? new[] { "SuperBright", "Bright", "Dark", "SuperDark" }
                 .Select(name => Option(name is "SuperBright" ? "Super bright" : name is "SuperDark" ? "Super dark" : name, "appearance", name, name == value!.Appearance)).ToArray() : Array.Empty<Dictionary<string, object?>>(),
             ["HomeAccessibilityChoices"] = available ? new[]

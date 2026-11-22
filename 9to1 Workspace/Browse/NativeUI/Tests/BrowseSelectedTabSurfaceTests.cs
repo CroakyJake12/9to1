@@ -25,7 +25,7 @@ public sealed partial class BrowseNativeUiTests
     {
         var chrome = await BrowseChrome.CreateAsync(new Paths(),
             internalContentFactory: new TabSurfaceInternalFixtureFactory(), homeProfileId: "tab-surface-fixture");
-        var workspace = new BrowseNativeWorkspace(chrome, _ => true, tabIconSource: address =>
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, null, null, tabIconSource: address =>
             address.Authority == "home" ? "avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" : null);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
         RegisterProductionImageResolver(window);

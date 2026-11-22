@@ -22,28 +22,27 @@ public sealed class CuiThemeTests
 {
     // === Original PersonalisationTests ported ===
 
-    [Fact]
-    public void Glow_palette_matches_the_pre_theme_baseline()
+    [Theory]
+    [InlineData("#405BD2")]
+    [InlineData("#E78D32")]
+    [InlineData("#999999")]
+    public void Glow_dark_fields_follow_the_scoped_accent_and_retain_readable_text(string accent)
     {
-        CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
-        CuiSurfacePaletteCatalog.OverrideAccent = false;
-        CuiSurfacePaletteCatalog.AccentOverride = null;
-
-        var home = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.SuperDark);
-        Assert.Equal(Color.Parse("#FF06090D"), home.TideBase);
-        Assert.Equal<byte>(0xF5, home.Panel.A);
-        Assert.Equal<byte>(0xF5, home.Panel2.A);
-        Assert.Equal(CuiTheme.Glow, home.Theme);
-
-        var bright = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright);
+        var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Glow, accent);
+        Assert.Equal(Color.Parse(accent), palette.AccentSecondary);
+        Assert.NotEqual(palette.TideBase, palette.Panel2);
+        var source = Color.Parse(accent).ToHsl();
+        var field = palette.TideBase.ToHsl();
+        if (source.S < .025) Assert.Equal(0, field.S);
+        else
+        {
+            Assert.InRange(Math.Abs(source.H - field.H), 0, 2);
+            Assert.InRange(field.S, .85, 1);
+        }
+        foreach (var surface in new[] { palette.TideBase, palette.TideColour, palette.Panel, palette.Panel2, palette.ButtonHover })
+            Assert.True(CuiContrast.Ratio(palette.Muted, surface) >= 4.5);
+        var bright = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow, accent);
         Assert.Equal(Colors.White, bright.TideBase);
-        Assert.Equal(Color.Parse("#FF111111"), bright.Text);
-
-        // Glow is the identity transform: hover keeps its original blend.
-        var accent = Color.Parse("#FF3527FF");
-        var darkSoft = Blend(Color.Parse("#FF121526"), accent, 0.20);
-        var expectedHover = Blend(darkSoft, accent, 0.22);
-        Assert.Equal(expectedHover, home.ButtonHover);
     }
 
     [Fact]
@@ -88,7 +87,7 @@ public sealed class CuiThemeTests
         var retro = For(CuiTheme.Retro, "Chat", CuiAppearance.Dark);
         Assert.NotEqual(glow.ButtonHover, retro.ButtonHover);
         Assert.NotEqual(glow.Line, retro.Line);
-        Assert.Equal(glow.Text, retro.Text);
+        Assert.Equal(Color.Parse("#F8F8FC"), retro.Text);
 
         var playful = For(CuiTheme.Playful, "Chat", CuiAppearance.Dark);
         Assert.NotEqual(retro.ButtonHover, playful.ButtonHover);
@@ -923,15 +922,7 @@ public sealed class CuiThemeTests
 
     private static double Luminance(string hex) => Luminance(Color.Parse(hex));
 
-    private static Color Blend(Color first, Color second, double secondWeight)
-    {
-        var weight = Math.Clamp(secondWeight, 0, 1);
-        return Color.FromArgb(
-            255,
-            (byte)Math.Round(first.R + (second.R - first.R) * weight),
-            (byte)Math.Round(first.G + (second.G - first.G) * weight),
-            (byte)Math.Round(first.B + (second.B - first.B) * weight));
-    }
+
 
     private sealed class TestStringResources : ICuiStringResources
     {

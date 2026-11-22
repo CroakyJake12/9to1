@@ -376,9 +376,9 @@ public static class CuiThemeResourceApplier
         // Share the page's tonal ramp and lower it only slightly for its backing
         // workspace; a transparent sidebar then paints that same continuous field.
         var page = new CuiAccentGradient(
-            Readable(Blend(panel, accent, dark ? .14 : .08)),
-            Readable(Blend(panel, accent, dark ? .24 : .15)),
-            Readable(Blend(panel, secondary, dark ? .38 : .24)),
+            dark ? palette.Panel : Readable(Blend(panel, accent, .08)),
+            dark ? palette.TideColour : Readable(Blend(panel, accent, .15)),
+            dark ? Readable(Blend(palette.TideColour, palette.Accent, .27)) : Readable(Blend(panel, secondary, .24)),
             new RelativePoint(0, 0, RelativeUnit.Relative),
             new RelativePoint(1, 1, RelativeUnit.Relative));
         var backing = dark ? .08 : .025;

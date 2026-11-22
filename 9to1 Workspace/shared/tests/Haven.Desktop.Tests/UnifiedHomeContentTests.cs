@@ -762,7 +762,7 @@ public sealed class UnifiedHomeContentTests
             CuiRuntimeIdentity.GetStableId(button) is { } identity &&
             identity.Contains("id:home-theme-options|key:", StringComparison.Ordinal) &&
             identity.EndsWith("/id:home-theme-option", StringComparison.Ordinal) &&
-            string.Equals(button.Content?.ToString(), name, StringComparison.Ordinal));
+            string.Equals(Avalonia.Automation.AutomationProperties.GetName(button), name, StringComparison.Ordinal));
 
     [AvaloniaFact]
     public async Task Only_actual_home_owner_projects_native_theme_into_shared_CUI_and_legacy_resources()

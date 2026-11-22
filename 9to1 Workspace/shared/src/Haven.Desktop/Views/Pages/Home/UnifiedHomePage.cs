@@ -239,6 +239,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         Set(_searchRow!, "IsVisible", section == "newtab");
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
+        Set(_heading, "IsVisible", section != "settings");
         Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
         if (section == "apps")
         {
