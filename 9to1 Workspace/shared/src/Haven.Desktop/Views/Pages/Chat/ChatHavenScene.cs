@@ -369,8 +369,13 @@ internal sealed partial class ChatHavenScene : IDisposable
     public void SetAssistantCatalogue(IReadOnlyList<AssistantDefinitionSnapshot>? assistants, string? unavailableMessage = null) =>
         _addMenu.SetAssistantCatalogue(assistants, unavailableMessage);
 
-    public void SetResponseState(string agentName, ChatActionMode actionMode, GenerativeUiResponseMode visualMode) =>
+    public void SetResponseState(string agentName, ChatActionMode actionMode, GenerativeUiResponseMode visualMode)
+    {
+        _composerSource.ActionMode = actionMode;
+        _composerSource.ResponseMode = visualMode;
         _addMenu.SetResponseState(agentName, actionMode, visualMode);
+        ComposerView.RefreshSurface();
+    }
 
     public void SyncMessages(IReadOnlyList<ChatSceneMessage> messages)
     {

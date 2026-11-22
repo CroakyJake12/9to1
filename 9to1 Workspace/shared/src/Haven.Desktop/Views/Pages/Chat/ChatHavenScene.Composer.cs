@@ -31,6 +31,8 @@ internal sealed partial class ChatHavenScene
         private IChatComposerTaskActions? ActiveTask => TaskActions is { IsApplicable: true } actual ? actual : null;
         public HavenComposerSource(ChatHavenScene scene) => _scene = scene;
 
+        public ChatActionMode ActionMode { get; set; } = ChatActionMode.AllowBasicActions;
+        public GenerativeUiResponseMode ResponseMode { get; set; } = GenerativeUiResponseMode.Auto;
         public string Draft { get => _scene.Input.Text; set => _scene.Input.Text = value ?? string.Empty; }
         public string Placeholder { get; set; } = "Ask Haven anything";
         public bool IsSending => _scene._isSending || ActiveTask?.IsRunning == true;

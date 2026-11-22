@@ -291,11 +291,8 @@ public sealed class ChatComposerCompiledTransportTests
     }
 
     [Fact]
-    public void Composer_settings_action_is_thread_settings_not_permission_selector()
+    public void Composer_options_exposes_existing_thread_choices_and_explicit_permission_commit()
     {
-        // The authored settings control's real action is composer.settings and its panel is Thread
-        // settings (Actions + Responses). It is NOT the canonical permission selector and must not
-        // be relabelled Permissions or manufacture a policy/owner permission.
         var artifact = ReadEmbeddedArtifact();
         var doc = ComposerDocument(artifact);
         var semantics = doc.Semantics;
@@ -303,10 +300,10 @@ public sealed class ChatComposerCompiledTransportTests
         var settings = FindComponent(semantics, "settings-button")!;
         var settingsAction = settings.Actions["action"]!.Name;
         Assert.Equal("composer.settings", settingsAction);
-        Assert.True(settings.Properties.TryGetValue("accessible-name", out var name) && name.LiteralValue == "Thread settings");
+        Assert.True(settings.Properties.TryGetValue("accessible-name", out var name) && name.LiteralValue == "Options");
         Assert.True(settings.Properties.TryGetValue("tooltip", out var tip) && tip.LiteralValue!.Contains("allowed actions", StringComparison.Ordinal));
 
-        // The thread-settings modes/actions exist and no command in the model is a permission selector.
+        // Atlas v4 spaces-permissions stages the existing allowed-actions choice until Save.
         foreach (var mode in new[] { "AllowAllActions", "AllowBasicActions", "JustChat" })
         {
             Assert.True(semantics.Actions.TryGetValue("composer.set-action-mode." + mode, out var action));
@@ -319,7 +316,9 @@ public sealed class ChatComposerCompiledTransportTests
             Assert.Equal("composer.set-response-mode", action!.Command);
             Assert.Equal(mode, action.Parameter?.LiteralValue);
         }
-        Assert.DoesNotContain(semantics.Actions.Keys, command => command.Contains("permission", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("composer.save-options", FindComponent(semantics, "options-save")!.Actions["action"]!.Name);
+        Assert.Equal("composer.cancel-options", FindComponent(semantics, "options-cancel")!.Actions["action"]!.Name);
+        Assert.Equal("composer.cancel-options", FindComponent(semantics, "options-close")!.Actions["action"]!.Name);
     }
 
     [Fact]

@@ -40,7 +40,7 @@
   <Container id="composer-surface" Type="Overlay Float" padding="8"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="composer-body" Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="Auto Auto Auto Auto Auto Auto" CellGap="8">
+    <Container id="composer-body" Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="Auto Auto Auto Auto Auto" CellGap="8">
     <Container id="chips-row" ColumnSpan="3" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
@@ -81,7 +81,7 @@
                 tooltip="Enter uses this Space's saved action; Alt+Enter uses the opposite action once" />
         <Button id="settings-button" action="composer.settings" IsVisible="{Binding Composer.HasSettings}" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true" Selected="{Binding Composer.ShowSettings}"
-                accessible-name="Thread settings" tooltip="Choose allowed actions and response style">
+                accessible-name="Options" tooltip="Options for responses and allowed actions">
           <Image Source="avares://Haven/Assets/composer-settings.svg" Width="24" Height="24" />
         </Button>
         <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
@@ -159,22 +159,45 @@
       </Container>
     </Container>
 
-    <Container id="settings-panel" ColumnSpan="3" Row="5" Type="Wrap" CellGap="8" padding="8"
-          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
-      <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
-              IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"
-              accessible-name="Refresh this original task's available actions" />
-      <Text text="Actions:" font-size="12" font-weight="SemiBold" />
-      <Button action="composer.set-action-mode.AllowAllActions" content="All" font-size="12" />
-      <Button action="composer.set-action-mode.AllowBasicActions" content="Basic" font-size="12" />
-      <Button action="composer.set-action-mode.JustChat" content="Just chat" font-size="12" />
-      <Text text="Responses:" font-size="12" font-weight="SemiBold" />
-      <Button action="composer.set-response-mode.Auto" content="Auto" font-size="12" />
-      <Button action="composer.set-response-mode.AlwaysVisual" content="Always visual" font-size="12" />
-      <Button action="composer.set-response-mode.PreferVisual" content="Prefer visual" font-size="12" />
-      <Button action="composer.set-response-mode.PreferText" content="Prefer text" font-size="12" />
-      <Button action="composer.set-response-mode.AlwaysText" content="Always text" font-size="12" />
     </Container>
+
+    <Container id="options-popup-slot" Type="Vertical Stack" IsVisible="False">
+      <Container id="settings-panel" Type="Vertical Stack" Width="440" CellGap="12" Padding="16" CornerRadius="16"
+                 VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiOverlaySurfaceBrush}"
+                 BorderColor="{Resource CuiLineBrush}" BorderWidth="1" accessible-name="Conversation options">
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+          <Container Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
+            <Text Text="Options" FontSize="20" FontWeight="Bold" />
+            <Text Text="This conversation" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Button id="options-close" Column="1" action="composer.cancel-options" Content="×" Width="44" Height="44"
+                  accessible-name="Close options" Chromeless="True" />
+        </Container>
+        <Text Text="Response style" FontSize="15" FontWeight="Bold" />
+        <Container Type="Wrap" CellGap="6">
+          <Button action="composer.set-response-mode.Auto" Content="Automatic" MinHeight="44" Selected="{Binding Composer.ResponseChoice.Auto}" />
+          <Button action="composer.set-response-mode.AlwaysVisual" Content="Always visual" MinHeight="44" Selected="{Binding Composer.ResponseChoice.AlwaysVisual}" />
+          <Button action="composer.set-response-mode.PreferVisual" Content="Prefer visual" MinHeight="44" Selected="{Binding Composer.ResponseChoice.PreferVisual}" />
+          <Button action="composer.set-response-mode.PreferText" Content="Prefer text" MinHeight="44" Selected="{Binding Composer.ResponseChoice.PreferText}" />
+          <Button action="composer.set-response-mode.AlwaysText" Content="Always text" MinHeight="44" Selected="{Binding Composer.ResponseChoice.AlwaysText}" />
+        </Container>
+        <Text Text="Applies to future responses in this chat." FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Text Text="Allowed actions" FontSize="15" FontWeight="Bold" />
+        <Container Type="Wrap" CellGap="6">
+          <Button action="composer.set-action-mode.JustChat" Content="Just chat" MinHeight="44" Selected="{Binding Composer.ActionChoice.JustChat}" />
+          <Button action="composer.set-action-mode.AllowBasicActions" Content="Basic actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowBasicActions}" />
+          <Button action="composer.set-action-mode.AllowAllActions" Content="All actions" MinHeight="44" Selected="{Binding Composer.ActionChoice.AllowAllActions}" />
+        </Container>
+        <Text Text="Save to change which actions this conversation can request." FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Button id="refresh-task-actions" action="composer.refresh-task-controls" content="Refresh task actions"
+                IsVisible="{Binding Composer.CanRefreshTaskControls}" MinHeight="44"
+                accessible-name="Refresh this original task's available actions" />
+        <Container Type="Wrap" HorizontalAlignment="Right" CellGap="8">
+          <Button id="options-cancel" action="composer.cancel-options" Content="Cancel" accessible-name="Cancel permissions" MinHeight="44" />
+          <Button id="options-save" action="composer.save-options" IsEnabled="{Binding Composer.HasPermissionChanges}" Content="Save permissions" MinHeight="44"
+                  Background="{Resource CuiAccentPrimaryBrush}" Foreground="{Resource CuiAccentPrimaryForegroundBrush}" />
+        </Container>
+      </Container>
     </Container>
 
     <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting">

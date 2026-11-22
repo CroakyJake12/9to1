@@ -51,6 +51,8 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
     public bool HasPendingMessage => !string.IsNullOrWhiteSpace(Draft) || Snapshot.Composer.Attachments.Count > 0;
     public bool IsSafetyLocked => Snapshot.IsSafetyLocked;
     public bool HasAdd => !Snapshot.IsSafetyLocked;
+    public ChatActionMode ActionMode => Snapshot.ThreadSettings?.ActionMode ?? ChatActionMode.AllowBasicActions;
+    public GenerativeUiResponseMode ResponseMode => Snapshot.ThreadSettings?.ResponseMode ?? GenerativeUiResponseMode.Auto;
     public bool CanSend => !Snapshot.IsLoading && !Snapshot.IsSafetyLocked && Snapshot.Composer.CanSend;
     public bool IsEditing => Snapshot.Composer.IsEditing;
 

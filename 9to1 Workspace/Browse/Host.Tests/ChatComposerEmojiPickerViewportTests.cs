@@ -1,5 +1,6 @@
 using Avalonia;
 using Haven.UI.Emoji;
+using Haven.Core;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -78,8 +79,25 @@ public sealed class ChatComposerEmojiPickerViewportTests
         public ValueTask Add() => ValueTask.CompletedTask;
         public ValueTask OpenSettings() => ValueTask.CompletedTask;
         public ValueTask CloseSettings() => ValueTask.CompletedTask;
-        public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
-        public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
+        public ChatActionMode ActionMode { get; private set; } = ChatActionMode.AllowBasicActions;
+        public GenerativeUiResponseMode ResponseMode { get; private set; } = GenerativeUiResponseMode.Auto;
+        public int ActionModeWrites { get; private set; }
+        public object? ActionIdentity { get; set; }
+        public Task? ActionWriteReceipt { get; set; }
+
+        public async ValueTask SetActionMode(string mode)
+        {
+            var conversation = ActionIdentity;
+            ActionModeWrites++;
+            if (ActionWriteReceipt is { } receipt) await receipt;
+            if (Equals(conversation, ActionIdentity))
+                ActionMode = Enum.Parse<ChatActionMode>(mode);
+        }
+        public ValueTask SetResponseMode(string mode)
+        {
+            ResponseMode = Enum.Parse<GenerativeUiResponseMode>(mode);
+            return ValueTask.CompletedTask;
+        }
         public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
         public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
         public ValueTask FormatSelection(string command) => ValueTask.CompletedTask;
@@ -675,40 +693,152 @@ public sealed class ChatComposerEmojiPickerViewportTests
     }
 
     [AvaloniaFact]
-    public async Task Settings_gear_action_opens_thread_settings_panel_not_permissions()
+    public async Task Completed_options_write_never_reenables_another_conversations_pending_save()
     {
-        var source = new DraftInsertingSource { CanSend = true };
+        var source = new DraftInsertingSource { ActionIdentity = "first" };
+        var bindings = new ChatComposerBindings(source);
+        var first = new TaskCompletionSource();
+        var second = new TaskCompletionSource();
+        await bindings.DispatchAsync("composer.settings", null);
+        await bindings.DispatchAsync("composer.set-action-mode", "AllowAllActions");
+        source.ActionWriteReceipt = first.Task;
+        var firstSave = bindings.DispatchAsync("composer.save-options", null).AsTask();
+        source.ActionIdentity = "second";
+        bindings.RefreshSource();
+        await bindings.DispatchAsync("composer.settings", null);
+        await bindings.DispatchAsync("composer.set-action-mode", "JustChat");
+        source.ActionWriteReceipt = second.Task;
+        var secondSave = bindings.DispatchAsync("composer.save-options", null).AsTask();
+
+        first.SetResult();
+        await firstSave;
+        Assert.False(bindings.IsActionAvailable("composer.save-options"));
+        Assert.True(bindings.TryGetValue("Composer.ShowSettings", out var open));
+        Assert.Equal(true, open);
+        Assert.Equal(2, source.ActionModeWrites);
+        second.SetResult();
+        await secondSave;
+        Assert.Equal(ChatActionMode.JustChat, source.ActionMode);
+        Assert.True(bindings.TryGetValue("Composer.ShowSettings", out open));
+        Assert.Equal(false, open);
+    }
+
+    [AvaloniaFact]
+    public async Task Options_floats_over_the_retained_conversation_and_only_Save_applies_allowed_actions()
+    {
+        var chip = new ChatComposerChip("existing-file", "Revision notes", false);
+        var source = new DraftInsertingSource { Draft = "Keep this draft", Chips = [chip] };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        var transcript = new ScrollViewer { Content = new Border { Height = 2000 } };
+        var grid = new Grid { RowDefinitions = new("*,Auto") };
+        grid.Children.Add(transcript);
+        grid.Children.Add(view);
+        Grid.SetRow(view, 1);
+        var window = new Window { Width = 900, Height = 700, Content = grid };
         window.Show();
         Exception? testFailure = null;
         try
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-
-            var settings = FindButton(view, "settings-button");
-            Assert.NotNull(settings);
-            Assert.Equal("Thread settings", AutomationProperties.GetName(settings!));
-            Assert.Equal("Choose allowed actions and response style",
-                settings.GetValue(ToolTip.TipProperty)?.ToString());
-
-            settings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
-            var panel = FindContainer(view, "settings-panel");
-            Assert.NotNull(panel);
-            Assert.True(panel!.IsVisible, "settings trigger must open the thread-settings panel");
-
-            var texts = panel.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToArray();
-            Assert.Contains(texts, t => t.Contains("Actions:", StringComparison.Ordinal));
-            Assert.Contains(texts, t => t.Contains("Responses:", StringComparison.Ordinal));
-            Assert.DoesNotContain(texts, t => t.Contains("Permissions", StringComparison.OrdinalIgnoreCase));
-
-            // The gear is a genuine packaged-SVG control, not the intricate Unicode gear.
-            Assert.IsType<Image>(settings.Content);
+            window.Activate();
+            var input = Assert.IsType<TextBox>(FindInput(view));
+            view.Input.SetSelection(2, 7);
+            transcript.Offset = new Vector(0, 165);
+            var offset = transcript.Offset;
+            var settings = Assert.IsType<Button>(FindButton(view, "settings-button"));
+            Assert.Equal("Options", AutomationProperties.GetName(settings));
             Assert.IsType<DrawingImage>(Assert.IsType<Image>(settings.Content).Source);
+            var composerBounds = view.Bounds;
+            void Click(Button button)
+            {
+                Assert.True(button.IsEffectivelyEnabled);
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                PumpLayout(window);
+            }
+            Control Open()
+            {
+                Click(settings);
+                Assert.True(view.OptionsPopup?.IsOpen);
+                return Assert.IsAssignableFrom<Control>(view.OptionsPopup!.Child);
+            }
+            static Button Choice(Control panel, string label) =>
+                panel.GetVisualDescendants().OfType<Button>().Single(control => Equals(control.Content, label));
+            var panel = Open();
+            var panelTop = Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(panel));
+            var close = panel.GetVisualDescendants().OfType<Button>().Single(control =>
+                AutomationProperties.GetAutomationId(control) == "options-close");
+            Assert.True(close.Focus());
+            var visited = new HashSet<Control>();
+            for (var index = 0; index < 24; index++)
+            {
+                var focused = Assert.IsAssignableFrom<Control>(panelTop.FocusManager?.GetFocusedElement());
+                Assert.True(ReferenceEquals(focused, panel) || panel.IsVisualAncestorOf(focused));
+                if (!visited.Add(focused)) break;
+                panelTop.KeyPress(Key.Tab, RawInputModifiers.None, PhysicalKey.Tab, null);
+                panelTop.KeyRelease(Key.Tab, RawInputModifiers.None, PhysicalKey.Tab, null);
+                PumpLayout(window);
+            }
+            Assert.True(visited.Count >= 4);
+            Assert.Same(close, panelTop.FocusManager?.GetFocusedElement());
+            Assert.Equal(composerBounds, view.Bounds);
+            Click(Choice(panel, "Prefer visual"));
+            Assert.Equal(GenerativeUiResponseMode.PreferVisual, source.ResponseMode);
+            Assert.True(view.OptionsPopup?.IsOpen);
+            Click(Choice(panel, "All actions"));
+            Assert.Equal(0, source.ActionModeWrites);
+            Click(Choice(panel, "Cancel"));
+            Assert.Null(view.OptionsPopup);
+            Assert.Equal(0, source.ActionModeWrites);
+            Assert.Same(settings, window.FocusManager?.GetFocusedElement());
 
-            settings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
-            Assert.False(panel.IsVisible, "settings trigger toggles the panel closed");
+            panel = Open();
+            Click(Choice(panel, "All actions"));
+            Choice(panel, "All actions").RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
+            PumpLayout(window);
+            Assert.Null(view.OptionsPopup);
+            Assert.Equal(0, source.ActionModeWrites);
+
+            panel = Open();
+            Click(Choice(panel, "All actions"));
+            window.MouseDown(new Point(4, 4), MouseButton.Left);
+            window.MouseUp(new Point(4, 4), MouseButton.Left);
+            PumpLayout(window);
+            Assert.Null(view.OptionsPopup);
+            Assert.Equal(0, source.ActionModeWrites);
+            panel = Open();
+            Click(Choice(panel, "All actions"));
+            source.ActionIdentity = Guid.NewGuid();
+            view.RefreshSurface();
+            PumpLayout(window);
+            Assert.Null(view.OptionsPopup);
+            Assert.Equal(0, source.ActionModeWrites);
+
+            panel = Open();
+            Click(Choice(panel, "Just chat"));
+            Click(Choice(panel, "Save permissions"));
+            Assert.Equal(ChatActionMode.JustChat, source.ActionMode);
+            Assert.Equal(1, source.ActionModeWrites);
+            Assert.Null(view.OptionsPopup);
+            Assert.Same(settings, window.FocusManager?.GetFocusedElement());
+            Assert.Same(input, FindInput(view));
+            Assert.Equal("Keep this draft", view.Input.Text);
+            Assert.Equal(2, view.Input.SelectionStart);
+            Assert.Equal(5, view.Input.SelectionLength);
+            Assert.Same(chip, Assert.Single(source.Chips));
+            Assert.Equal(offset, transcript.Offset);
+            Assert.Equal(0, source.SendCount);
+
+            window.Width = 365;
+            PumpLayout(window);
+            panel = Open();
+            var activePopup = view.OptionsPopup!;
+            Assert.InRange(panel.Bounds.Width, 1, window.ClientSize.Width - 23);
+            Click(Choice(panel, "All actions"));
+            await view.CloseAsync();
+            Assert.False(activePopup.IsOpen);
+            Assert.Null(view.OptionsPopup);
+            Assert.Equal(1, source.ActionModeWrites);
         }
         catch (Exception error) { testFailure = error; throw; }
         finally { await FinishComposerTestAsync(window, view, testFailure); }

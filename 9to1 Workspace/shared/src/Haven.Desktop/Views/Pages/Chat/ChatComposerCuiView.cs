@@ -3,7 +3,10 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
@@ -86,6 +89,8 @@ public interface IChatComposerSource
     bool IsSafetyLocked { get; }
     bool HasAdd { get; }
     bool HasSettings => true;
+    ChatActionMode ActionMode => ChatActionMode.AllowBasicActions;
+    GenerativeUiResponseMode ResponseMode => GenerativeUiResponseMode.Auto;
     bool HasSendModePreference => false;
     TaskFollowUpMode? PreferredSendMode => null;
     bool CanSubmit => IsSending ? CanQueue : CanSend;
@@ -132,6 +137,14 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     private readonly IChatComposerSource _source;
     private readonly Func<object, bool>? _ownsSubmitSender;
     private bool _settingsOpen;
+    private object? _optionsTarget;
+    private bool _optionsExpanded;
+    private bool _optionsFormatting;
+    private long? _savingOptionsGeneration;
+    private long _optionsGeneration;
+    private ChatActionMode _draftActionMode;
+    private ChatActionMode _openingActionMode;
+    internal event Action<bool>? OptionsVisibilityChanged;
     private bool _emojiOpen;
     private bool _focused;
     private bool _expanded;
@@ -192,9 +205,24 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
 
     public IChatComposerSource Source => _source;
 
+    private bool IsExpanded => _focused || _source.HasPendingMessage || _source.Chips.Count > 0 || _source.IsSending || _emojiOpen;
+    private bool ShowFormatting => _source.HasFormatting && _expanded && (_focused || _emojiOpen);
+
     public bool TryGetValue(string path, out object? value)
     {
         value = null;
+        const string actionChoice = "Composer.ActionChoice.";
+        const string responseChoice = "Composer.ResponseChoice.";
+        if (path.StartsWith(actionChoice, StringComparison.Ordinal))
+        {
+            value = path[actionChoice.Length..] == _draftActionMode.ToString();
+            return true;
+        }
+        if (path.StartsWith(responseChoice, StringComparison.Ordinal))
+        {
+            value = path[responseChoice.Length..] == _source.ResponseMode.ToString();
+            return true;
+        }
         switch (path)
         {
             case "Composer.CanRefreshTaskControls": value = _source.CanRefreshTaskControls; return true;
@@ -206,7 +234,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _source.Placeholder;
                 return true;
             case "Composer.IsExpanded":
-                value = _focused || _source.HasPendingMessage || _source.Chips.Count > 0 || _source.IsSending || _settingsOpen || _emojiOpen;
+                value = _settingsOpen ? _optionsExpanded : IsExpanded;
                 return true;
             case "Composer.HasChips":
                 value = _source.Chips.Count > 0;
@@ -248,8 +276,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _source.IsEditing ? "Update the message being edited" : "Send message";
                 return true;
             case "Composer.ShowFormatting":
-                value = _source.HasFormatting && _expanded && (_focused || _settingsOpen || _emojiOpen);
+                value = _settingsOpen ? _optionsFormatting : ShowFormatting;
                 return true;
+            case "Composer.HasPermissionChanges": value = CanSaveOptions; return true;
             case "Composer.ShowSettings":
                 value = _settingsOpen;
                 return true;
@@ -327,7 +356,10 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             "composer.resume" => _source.CanResume,
             "composer.add" => _source.HasAdd,
             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => _source.HasFormatting,
-            "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => _source.HasSettings,
+            "composer.settings" => _source.HasSettings,
+            "composer.cancel-options" => _settingsOpen,
+            "composer.save-options" => CanSaveOptions,
+            "composer.set-action-mode" or "composer.set-response-mode" => HasCurrentOptions,
             _ => true
         };
     }
@@ -366,21 +398,20 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return ValueTask.FromException(new InvalidOperationException("This conversation action is no longer available."));
             case "composer.add":
                 return _source.Add();
-            case "composer.settings":
-                _settingsOpen = !_settingsOpen;
-                _emojiOpen = false;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return _settingsOpen ? _source.OpenSettings() : _source.CloseSettings();
-            case "composer.set-action-mode" when parameter is string mode:
-                _settingsOpen = false;
-                _emojiOpen = false;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return ApplyActionModeAsync(mode);
-            case "composer.set-response-mode" when parameter is string mode:
-                _settingsOpen = false;
-                _emojiOpen = false;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return ApplyResponseModeAsync(mode);
+            case "composer.settings" when _source.HasSettings:
+                return _settingsOpen ? CancelOptions() : OpenOptionsAsync();
+            case "composer.cancel-options":
+                return CancelOptions();
+            case "composer.set-action-mode" when HasCurrentOptions && parameter is string mode &&
+                Enum.TryParse<ChatActionMode>(mode, out var selected) && Enum.IsDefined(selected):
+                _draftActionMode = selected;
+                Refresh();
+                return ValueTask.CompletedTask;
+            case "composer.save-options" when CanSaveOptions:
+                return SaveOptionsAsync();
+            case "composer.set-response-mode" when HasCurrentOptions && parameter is string response &&
+                Enum.TryParse<GenerativeUiResponseMode>(response, out var selectedResponse) && Enum.IsDefined(selectedResponse):
+                return SetResponseModeAsync(response);
             case "composer.invoke-chip" when parameter is string id:
                 return _source.InvokeChip(id);
             case "composer.remove-chip" when parameter is string id:
@@ -421,16 +452,85 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sourceFailure).Throw();
     }
 
-    private async ValueTask ApplyActionModeAsync(string mode)
+    private async ValueTask OpenOptionsAsync()
     {
-        await _source.SetActionMode(mode).ConfigureAwait(false);
-        await _source.CloseSettings().ConfigureAwait(false);
+        var generation = ++_optionsGeneration;
+        _openingActionMode = _draftActionMode = _source.ActionMode;
+        _optionsTarget = _source.ActionIdentity;
+        _optionsExpanded = IsExpanded;
+        _optionsFormatting = ShowFormatting;
+        _settingsOpen = true;
+        _emojiOpen = false;
+        try
+        {
+            await _source.OpenSettings();
+            if (generation != _optionsGeneration || !_settingsOpen) return;
+            RefreshSource();
+            if (_settingsOpen) OptionsVisibilityChanged?.Invoke(true);
+        }
+        catch
+        {
+            if (generation == _optionsGeneration) DismissOptions();
+            throw;
+        }
     }
 
-    private async ValueTask ApplyResponseModeAsync(string mode)
+    private bool HasCurrentOptions => _settingsOpen && _source.HasSettings &&
+        Equals(_optionsTarget, _source.ActionIdentity) && _openingActionMode == _source.ActionMode;
+
+    internal void RefreshSource()
     {
-        await _source.SetResponseMode(mode).ConfigureAwait(false);
-        await _source.CloseSettings().ConfigureAwait(false);
+        if (_settingsOpen && (!_source.HasSettings || !Equals(_optionsTarget, _source.ActionIdentity) ||
+            (_savingOptionsGeneration != _optionsGeneration && _openingActionMode != _source.ActionMode)))
+            DismissOptions();
+        else
+            Refresh();
+    }
+
+    private bool CanSaveOptions => HasCurrentOptions && _savingOptionsGeneration != _optionsGeneration && _draftActionMode != _openingActionMode;
+
+    internal void DismissOptions()
+    {
+        if (!_settingsOpen) return;
+        _settingsOpen = false;
+        _optionsTarget = null;
+        OptionsVisibilityChanged?.Invoke(false);
+        Refresh();
+    }
+
+    private ValueTask CancelOptions()
+    {
+        if (!_settingsOpen) return ValueTask.CompletedTask;
+        DismissOptions();
+        return _source.CloseSettings();
+    }
+
+    private async ValueTask SaveOptionsAsync()
+    {
+        // Admit exactly one write on this gesture, before any focus or projection callback
+        // can switch the current conversation. A late completion cannot close a newer edit.
+        var generation = _optionsGeneration;
+        _savingOptionsGeneration = generation;
+        try
+        {
+            await _source.SetActionMode(_draftActionMode.ToString());
+            if (_settingsOpen && generation == _optionsGeneration)
+            {
+                DismissOptions();
+                await _source.CloseSettings();
+            }
+        }
+        finally
+        {
+            if (_savingOptionsGeneration == generation) _savingOptionsGeneration = null;
+            if (_optionsGeneration == generation) Refresh();
+        }
+    }
+
+    private async ValueTask SetResponseModeAsync(string mode)
+    {
+        await _source.SetResponseMode(mode);
+        await Dispatcher.UIThread.InvokeAsync(Refresh);
     }
 
     /// <summary>
@@ -629,6 +729,9 @@ internal sealed class ChatComposerReadiness : ICuiSceneReadiness
 public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDisposable
 {
     private readonly CuiSceneHost _host;
+    private readonly Panel _optionsSlot = new();
+    private Popup? _optionsPopup;
+    internal Popup? OptionsPopup => _optionsPopup;
     private readonly ChatComposerBindings _bindings;
     private readonly CuiComposerInputPort _input;
     private readonly object _initGate = new();
@@ -668,6 +771,9 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         // Shared typed packaged-SVG image infrastructure for authored icon assets (e.g. the enlarged
         // rounded plus). This is the one registered image-source resolver for the shared composer.
         registry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
+        registry.BindAuthoredControl("options-popup-slot", _ => _optionsSlot);
+        _bindings.OptionsVisibilityChanged += ShowOptions;
+        DetachedFromVisualTree += (_, _) => _bindings.DismissOptions();
         _host = new CuiSceneHost(registry);
         AutomationProperties.SetAutomationId(this, "ChatComposerCuiView");
         AutomationProperties.SetName(this, "Chat composer");
@@ -771,8 +877,13 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         await start.ConfigureAwait(false);
         // Withdraw producers/action admission first: start the host close independently of the
         // initialization, so a cancellation or fault in init can never skip withdrawal.
-        var hostClose = _host.CloseOriginalAsync();
         var faults = new List<Exception>();
+        if (_optionsPopup is not null)
+        {
+            try { await Dispatcher.UIThread.InvokeAsync(_bindings.DismissOptions); }
+            catch (Exception error) { faults.Add(error); }
+        }
+        var hostClose = _host.CloseOriginalAsync();
 
         // Join the complete actual initialization independently, retaining its fault.
         Task<CuiSceneAvailability>? initTask;
@@ -807,6 +918,89 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         _input.Attach(box);
     }
 
+    // The normal scene loader owns the authored options tree and all its commands. Move the
+    // same controls from their hidden slot into a native popup without reloading the scene.
+    private void ShowOptions(bool show)
+    {
+        if (!show)
+        {
+            _optionsPopup?.Close();
+            return;
+        }
+        var anchor = this.GetVisualDescendants().OfType<Button>().FirstOrDefault(control =>
+            AutomationProperties.GetAutomationId(control) == "settings-button");
+        if (_closing || anchor is null || TopLevel.GetTopLevel(anchor) is not { } owner ||
+            _optionsSlot.Children.SingleOrDefault() is not { } panel)
+        {
+            _bindings.DismissOptions();
+            return;
+        }
+
+        void FitPanel()
+        {
+            panel.MaxWidth = Math.Max(1, owner.ClientSize.Width - 24);
+            panel.MaxHeight = Math.Max(1, owner.ClientSize.Height - 32);
+        }
+        void OnOwnerSizeChanged(object? sender, SizeChangedEventArgs e) => FitPanel();
+        FitPanel();
+        KeyboardNavigation.SetTabNavigation(panel, KeyboardNavigationMode.Cycle);
+        var popup = new Popup
+        {
+            PlacementTarget = anchor,
+            Placement = PlacementMode.TopEdgeAlignedLeft,
+            VerticalOffset = -6,
+            IsLightDismissEnabled = true,
+            OverlayDismissEventPassThrough = false,
+            WindowManagerAddShadowHint = false
+        };
+        CuiPopupPresentation.RequestTransparency(popup);
+        _optionsSlot.Children.Remove(panel);
+        _optionsPopup = popup;
+        void OnKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Escape || e.Handled) return;
+            e.Handled = true;
+            _bindings.DismissOptions();
+        }
+        void Reclaim()
+        {
+            if (!ReferenceEquals(_optionsPopup, popup)) return;
+            _optionsPopup = null;
+            popup.Closed -= OnClosed;
+            owner.SizeChanged -= OnOwnerSizeChanged;
+            panel.KeyDown -= OnKeyDown;
+            popup.Child = null;
+            ((ISetLogicalParent)popup).SetParent(null);
+            _optionsSlot.Children.Add(panel);
+            _bindings.DismissOptions();
+        }
+        void OnClosed(object? sender, EventArgs args)
+        {
+            Reclaim();
+            if (!_closing && anchor.IsEffectivelyVisible && anchor.IsAttachedToVisualTree() &&
+                owner is not Window { IsActive: false })
+                anchor.Focus(NavigationMethod.Unspecified);
+        }
+        try
+        {
+            ((ISetLogicalParent)popup).SetParent(anchor);
+            popup.Child = panel;
+            popup.Closed += OnClosed;
+            panel.KeyDown += OnKeyDown;
+            owner.SizeChanged += OnOwnerSizeChanged;
+            popup.Open();
+            panel.UpdateLayout();
+            panel.GetVisualDescendants().OfType<Button>().FirstOrDefault(control =>
+                AutomationProperties.GetAutomationId(control) == "options-close")?.Focus();
+        }
+        catch
+        {
+            try { popup.Close(); }
+            finally { Reclaim(); }
+            throw;
+        }
+    }
+
     private TextBox? FindComposerTextBox()
     {
         if (!ReferenceEquals(Content, _host) || _host.Content is not Visual root) return null;
@@ -820,7 +1014,7 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
     }
 
     /// <summary>Republishes host state into the composer scene (Send/Safety/chips/placeholder).</summary>
-    public void RefreshSurface() => _bindings.Refresh();
+    public void RefreshSurface() => _bindings.RefreshSource();
 
     public void Dispose()
     {

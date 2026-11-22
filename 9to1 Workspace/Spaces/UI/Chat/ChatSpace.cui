@@ -20,16 +20,6 @@
           <Input id="branch-choice" Type="Select" ItemsSource="{Binding Conversation.Branches}" SelectedIndex="{Binding SelectedBranchIndex}" accessible-name="Choose conversation branch" />
           <Text id="branch-choice-current" text="{Binding Conversation.CurrentBranchId}" accessible-name="Current branch" />
 
-          <Container id="thread-settings" Type="Wrap" CellGap="8" accessible-name="Thread settings">
-            <Text text="Actions:" />
-            <Button action="chat.set-action-mode" action-argument="AllowAllActions" content="All" />
-            <Button action="chat.set-action-mode" action-argument="AllowBasicActions" content="Basic" />
-            <Button action="chat.set-action-mode" action-argument="JustChat" content="Just chat" />
-            <Text text="Responses:" />
-            <Button action="chat.set-response-mode" action-argument="Auto" content="Auto" />
-            <Button action="chat.set-response-mode" action-argument="AlwaysVisual" content="Visual" />
-            <Button action="chat.set-response-mode" action-argument="AlwaysText" content="Text" />
-          </Container>
 
         </Container>
 
