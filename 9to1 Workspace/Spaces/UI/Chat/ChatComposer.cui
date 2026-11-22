@@ -163,7 +163,7 @@
 
     <Container id="options-popup-slot" Type="Vertical Stack" IsVisible="False">
       <Container id="settings-panel" Type="Vertical Stack" Width="440" CellGap="12" Padding="16" CornerRadius="16"
-                 VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiOverlaySurfaceBrush}"
+                 VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPopupSurfaceBrush}"
                  BorderColor="{Resource CuiLineBrush}" BorderWidth="1" accessible-name="Conversation options">
         <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
           <Container Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
