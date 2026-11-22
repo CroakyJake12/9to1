@@ -407,7 +407,8 @@ public sealed class NativeAdmissionShutdownTests
         internal readonly App App = new();
         internal readonly Paths Paths = new();
         internal readonly ServiceProvider Services = new ServiceCollection().BuildServiceProvider();
-        internal readonly CancellationTokenSource AppLifetime = new(), WindowLifetime = new();
+        internal readonly CancellationTokenSource AppLifetime = new();
+        private readonly MainWindow _window = new();
         internal readonly ClassicDesktopStyleApplicationLifetime Desktop = new();
         internal readonly HomeNativeWindowsComposition Home;
         internal readonly App.UnifiedWorkspaceHost Host;
@@ -423,7 +424,9 @@ public sealed class NativeAdmissionShutdownTests
             Directory.CreateDirectory(Paths.DataDirectory);
             Home = new(new FileHomeCoreStateStore(Path.Combine(Paths.DataDirectory, "home.json")),
                 new OperatingSystemPrincipalSource(), Paths, new("native.admission." + Guid.NewGuid().ToString("N")));
-            Host = new(App, Services, Home, AppLifetime.Token, WindowLifetime.Token);
+            Host = new(App, Services, Home, _window, AppLifetime.Token, _window.AcquireOriginalWindowLifetime());
+            _window.Content = Host;
+            Desktop.MainWindow = _window;
             Set(App, "_actualDesktop", Desktop); Set(App, "_actualUnifiedWorkspace", Host);
             Set(App, "_actualDesktopBorrowers", new object[] { Host });
         }
@@ -495,9 +498,14 @@ public sealed class NativeAdmissionShutdownTests
             if (Host.OriginalClose is { IsCompletedSuccessfully: true })
                 foreach (var scene in _sceneHosts)
                     await AddFailureAsync(failures, () => scene.CloseOriginalAsync().WaitAsync(Bound));
+            await AddFailureAsync(failures, async () =>
+            {
+                await _window.CloseAndDrainAsync().WaitAsync(Bound);
+                _window.Close();
+            });
             await AddFailureAsync(failures, () => Home.CloseAndDrainAsync().WaitAsync(Bound));
             await AddFailureAsync(failures, () => Services.DisposeAsync().AsTask().WaitAsync(Bound));
-            AppLifetime.Dispose(); WindowLifetime.Dispose();
+            AppLifetime.Dispose();
             try { Directory.Delete(Paths.DataDirectory, true); } catch (Exception failure) { failures.Add(failure); }
             return failures;
         }

@@ -34,7 +34,7 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         Assert.NotNull(lease);
         var owner = factory.Owner!; owner.AllowClose = false;
 
-        var desktop = new ClassicDesktopStyleApplicationLifetime();
+        var desktop = new ClassicDesktopStyleApplicationLifetime { MainWindow = rig.Window };
         Set(rig.App, "_actualDesktop", desktop); Set(rig.App, "_actualUnifiedWorkspace", rig.Host);
         Set(rig.App, "_actualDesktopBorrowers", new object[] { rig.Host });
         var attemptType = typeof(App).GetNestedType("OriginalDocumentCloseAttempt", BindingFlags.NonPublic)!;
@@ -137,7 +137,7 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         Set(rig.Host, "_initialization", creation); Set(rig.Host, "_chromeCreation", creation);
         Set(rig.Host, "_chrome", chrome); Set(rig.Host, "_workspace", workspace);
 
-        var desktop = new ClassicDesktopStyleApplicationLifetime();
+        var desktop = new ClassicDesktopStyleApplicationLifetime { MainWindow = rig.Window };
         Set(rig.App, "_actualDesktop", desktop); Set(rig.App, "_actualUnifiedWorkspace", rig.Host);
         Set(rig.App, "_actualDesktopBorrowers", new object[] { rig.Host });
         var attemptType = typeof(App).GetNestedType("OriginalDocumentCloseAttempt", BindingFlags.NonPublic)!;
@@ -174,7 +174,7 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         var lease = prep.GetType().GetProperty("Result")!.GetValue(prep)!;
         Assert.True((bool)lease.GetType().GetProperty("Startup", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(lease)!);
 
-        var desktop = new ClassicDesktopStyleApplicationLifetime();
+        var desktop = new ClassicDesktopStyleApplicationLifetime { MainWindow = rig.Window };
         Set(rig.App, "_actualDesktop", desktop); Set(rig.App, "_actualUnifiedWorkspace", rig.Host);
         Set(rig.App, "_actualDesktopBorrowers", new object[] { rig.Host });
         var attemptType = typeof(App).GetNestedType("OriginalDocumentCloseAttempt", BindingFlags.NonPublic)!;
@@ -199,6 +199,7 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         internal readonly ServiceProvider Services;
         internal readonly HomeNativeWindowsComposition Home;
         internal readonly App.UnifiedWorkspaceHost Host;
+        internal readonly MainWindow Window;
         internal Rig()
         {
             Assert.True(OperatingSystem.IsWindows(), "This owning host fixture requires actual Windows Home; Linux is unvalidated.");
@@ -206,10 +207,18 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
             Services = new ServiceCollection().BuildServiceProvider();
             Home = new(new FileHomeCoreStateStore(Path.Combine(Paths.DataDirectory, "home.json")),
                 new OperatingSystemPrincipalSource(), Paths, new("9to1.host-lifetime." + Guid.NewGuid().ToString("N")));
-            Host = new(App, Services, Home, CancellationToken.None, CancellationToken.None);
+            Window = new MainWindow();
+            Host = new(App, Services, Home, Window, CancellationToken.None, Window.AcquireOriginalWindowLifetime());
+            Window.Content = Host;
         }
         internal async Task FinishAsync()
-        { await Home.CloseAndDrainAsync(); await Services.DisposeAsync(); Directory.Delete(Paths.DataDirectory, true); }
+        {
+            await Window.CloseAndDrainAsync();
+            Window.Close();
+            await Home.CloseAndDrainAsync();
+            await Services.DisposeAsync();
+            Directory.Delete(Paths.DataDirectory, true);
+        }
     }
     private sealed class ContentFactory(Exception? initializationFailure = null, Exception? closeFailure = null) : IBrowseInternalContentFactory
     {

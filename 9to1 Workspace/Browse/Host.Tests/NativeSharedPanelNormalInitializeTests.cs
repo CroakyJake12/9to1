@@ -130,7 +130,8 @@ public sealed class NativeSharedPanelNormalInitializeTests
     {
         internal readonly App App = new();
         internal readonly Paths Paths = new();
-        internal readonly CancellationTokenSource AppLifetime = new(), WindowLifetime = new();
+        internal readonly CancellationTokenSource AppLifetime = new();
+        private readonly MainWindow _window = new();
         internal readonly ClassicDesktopStyleApplicationLifetime Desktop = new();
         internal readonly OperatingSystemPrincipalSource Principal = new();
         internal readonly HomeNativeWindowsComposition Home;
@@ -160,7 +161,9 @@ public sealed class NativeSharedPanelNormalInitializeTests
             // normal initialize (App.OriginalModelCatalogueLifetime) resolves the real configured
             // provider instead of failing on a null _services.
             Set(App, "_services", Services);
-            Host = new(App, Services, Home, AppLifetime.Token, WindowLifetime.Token);
+            Host = new(App, Services, Home, _window, AppLifetime.Token, _window.AcquireOriginalWindowLifetime());
+            _window.Content = Host;
+            Desktop.MainWindow = _window;
             Set(App, "_actualDesktop", Desktop); Set(App, "_actualUnifiedWorkspace", Host);
             Set(App, "_actualDesktopBorrowers", new object[] { Host });
         }
@@ -197,6 +200,8 @@ public sealed class NativeSharedPanelNormalInitializeTests
                 try { await Host.CloseAndDrainAsync().WaitAsync(Bound); }
                 catch (Exception failure) { failures.Add(failure); }
             }
+            try { await _window.CloseAndDrainAsync().WaitAsync(Bound); _window.Close(); }
+            catch (Exception failure) { failures.Add(failure); }
             if (Home is not null)
             {
                 try { await Home.CloseAndDrainAsync().WaitAsync(Bound); } catch (Exception failure) { failures.Add(failure); }
@@ -205,7 +210,7 @@ public sealed class NativeSharedPanelNormalInitializeTests
             {
                 try { await Services.DisposeAsync().AsTask().WaitAsync(Bound); } catch (Exception failure) { failures.Add(failure); }
             }
-            AppLifetime.Dispose(); WindowLifetime.Dispose();
+            AppLifetime.Dispose();
             try { Directory.Delete(Paths.DataDirectory, true); } catch (Exception failure) { failures.Add(failure); }
             if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
             if (failures.Count > 1) throw new AggregateException("The normal-rig cleanup failed.", failures);

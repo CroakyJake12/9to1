@@ -215,7 +215,8 @@ public sealed class UnifiedClosePreparationTests
         internal readonly App App = new();
         internal readonly Paths Paths = new();
         internal readonly ServiceProvider Services = new ServiceCollection().BuildServiceProvider();
-        internal readonly CancellationTokenSource AppLifetime = new(), WindowLifetime = new();
+        internal readonly CancellationTokenSource AppLifetime = new();
+        private readonly MainWindow _window = new();
         internal readonly ClassicDesktopStyleApplicationLifetime Desktop = new();
         internal readonly HomeNativeWindowsComposition Home;
         internal readonly App.UnifiedWorkspaceHost Host;
@@ -227,7 +228,9 @@ public sealed class UnifiedClosePreparationTests
             Directory.CreateDirectory(Paths.DataDirectory);
             Home = new(new FileHomeCoreStateStore(Path.Combine(Paths.DataDirectory, "home.json")),
                 new OperatingSystemPrincipalSource(), Paths, new("unified.close.test." + Guid.NewGuid().ToString("N")));
-            Host = new(App, Services, Home, AppLifetime.Token, WindowLifetime.Token);
+            Host = new(App, Services, Home, _window, AppLifetime.Token, _window.AcquireOriginalWindowLifetime());
+            _window.Content = Host;
+            Desktop.MainWindow = _window;
             Set(App, "_actualDesktop", Desktop); Set(App, "_actualUnifiedWorkspace", Host);
             Set(App, "_actualDesktopBorrowers", new object[] { Host });
         }
@@ -254,8 +257,10 @@ public sealed class UnifiedClosePreparationTests
             // Never waive pending cleanup, a timeout, or an unasserted original failure.
             var actual = Host.CloseAndDrainAsync();
             await JoinAssertedOrSuccessfulAsync(actual, ExpectedFailedClose);
+            await _window.CloseAndDrainAsync().WaitAsync(Bound);
+            _window.Close();
             await Home.CloseAndDrainAsync().WaitAsync(Bound); await Services.DisposeAsync();
-            AppLifetime.Dispose(); WindowLifetime.Dispose(); Directory.Delete(Paths.DataDirectory, true);
+            AppLifetime.Dispose(); Directory.Delete(Paths.DataDirectory, true);
         }
     }
     private static readonly ModeDefinition Files = BuiltInModeSeed.Modes.Single(mode => mode.Key == "files");
