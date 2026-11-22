@@ -45,6 +45,21 @@ public sealed class CuiThemeTests
         Assert.Equal(Colors.White, bright.TideBase);
     }
 
+    [Theory]
+    [InlineData(CuiAppearance.Bright, 100)]
+    [InlineData(CuiAppearance.Dark, 0)]
+    public void Display_extremes_keep_professional_layers_distinct(CuiAppearance mode, int brightness)
+    {
+        var source = CuiSurfacePaletteCatalog.For("Home", mode, CuiTheme.Professional);
+        CuiPalette Adjust(int contrast) => CuiAccessibilityPalette.Resolve(source,
+            new() { Brightness = brightness, ColourContrast = contrast });
+        double Distance(CuiPalette value) => Math.Abs(value.Panel.ToHsl().L - value.Panel2.ToHsl().L);
+        Assert.True(Distance(Adjust(100)) > Distance(Adjust(0)));
+        Assert.NotEqual(Adjust(100).Panel, Adjust(100).Panel2);
+        Assert.Equal(source.Accent, Adjust(100).Accent);
+        Assert.Same(source, CuiAccessibilityPalette.Resolve(source, new() { Brightness = 50, ColourContrast = 50 }));
+    }
+
     [Fact]
     public void Every_theme_resolves_for_every_surface_and_appearance()
     {

@@ -79,7 +79,12 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         parameter = NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _bindings);
         return new(_work.RunAsync(async original =>
         {
-            if (command == "RefreshHomeAppearance") { await RefreshAsync(original, cancellationToken); return; }
+            if (command == "RefreshHomeAppearance")
+            {
+                NativeHomeThemePreferences.ReloadDisplayDraft(_bindings);
+                await RefreshAsync(original, cancellationToken);
+                return;
+            }
             var generation = _generation;
             original.BindPublicationGuard(() => _active && IsAlive && generation == _generation);
             cancellationToken.ThrowIfCancellationRequested();

@@ -33,6 +33,7 @@ public static class CuiCustomThemeResourceApplier
         resources["CuiWorkspaceMaterial"] = resources["CuiWorkspaceBrush"];
         resources["CuiShellMaterial"] = resources["CuiBackgroundBrush"];
         resources["CuiSurfaceMaterial"] = resources["CuiPanelBrush"];
+        resources["CuiChromeMaterial"] = resources["CuiPanelBrush"];
         resources["CuiFloatingSurfaceMaterial"] = resources["CuiPanel2Brush"];
         if (resources["CuiPanel2Brush"] is ISolidColorBrush popup)
             resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(Color.FromRgb(popup.Color.R, popup.Color.G, popup.Color.B)).ToImmutable();

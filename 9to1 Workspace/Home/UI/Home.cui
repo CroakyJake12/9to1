@@ -248,7 +248,7 @@
                         <Text Text="Global Settings" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
                         <Text Text="Appearance" FontSize="32" FontWeight="800" />
                       </Container>
-                      <Container id="home-theme-gallery" Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="18" Padding="20" CellGap="14">
+                      <Container id="home-theme-gallery" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="14">
                         <Text Text="Theme" FontSize="18" FontWeight="750" />
                         <Repeat id="home-theme-options" Source="{Binding HomeThemeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
                           <Button id="home-theme-option" action="ApplyHomeAppearanceOption" AccessibleName="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Width="172" MinHeight="94" Padding="9" Margin="0 0 8 8" CornerRadius="12" HorizontalContentAlignment="Stretch">
@@ -265,7 +265,7 @@
                           </Button>
                         </Repeat>
                       </Container>
-                      <Container id="home-display-settings" Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="18" Padding="20" CellGap="12">
+                      <Container id="home-display-settings" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="12">
                         <Text Text="Display" FontSize="18" FontWeight="750" />
                         <Container Type="Grid" ColumnSizes="1fr 2fr" CellGap="10">
                           <Text Text="Mode" FontWeight="700" VerticalAlignment="Center" />
@@ -275,26 +275,34 @@
                             </Repeat>
                           </Container>
                         </Container>
-                        <Container Type="Grid" ColumnSizes="1fr 1fr Auto" CellGap="10" MinHeight="48">
+                        <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="10" MinHeight="48">
                           <Container Type="Vertical Stack" CellGap="3" VerticalAlignment="Center">
                             <Text Text="Brightness" FontWeight="700" TextWrapping="Wrap" />
                             <Text Text="Adjust the light level of the interface." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                           </Container>
-                          <Input id="home-brightness" Type="Slider" Column="1" AccessibleName="Brightness" Minimum="0" Maximum="100" Value="{Binding HomeBrightness, Mode=TwoWay}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" MinHeight="34" MaxWidth="208" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-                          <Text Column="2" Text="{Binding HomeBrightnessText}" FontWeight="700" MinWidth="40" TextAlignment="Right" VerticalAlignment="Center" />
+                          <Container Column="1" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" MaxWidth="260" HorizontalAlignment="Stretch">
+                            <Input id="home-brightness" Type="Slider" Column="0" AccessibleName="Brightness" Minimum="0" Maximum="100" Value="{Binding HomeBrightness, Mode=TwoWay}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" MinHeight="34" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                            <Text Column="1" Text="{Binding HomeBrightnessText}" FontWeight="700" MinWidth="40" TextAlignment="Right" VerticalAlignment="Center" />
+                          </Container>
                         </Container>
-                        <Container Type="Grid" ColumnSizes="1fr 1fr Auto" CellGap="10" MinHeight="48">
+                        <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="10" MinHeight="48">
                           <Container Type="Vertical Stack" CellGap="3" VerticalAlignment="Center">
                             <Text Text="Colour contrast" FontWeight="700" TextWrapping="Wrap" />
                             <Text Text="Adjust separation between surfaces and controls." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                           </Container>
-                          <Input id="home-colour-contrast" Type="Slider" Column="1" AccessibleName="Colour contrast" Minimum="0" Maximum="100" Value="{Binding HomeColourContrast, Mode=TwoWay}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" MinHeight="34" MaxWidth="208" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-                          <Text Column="2" Text="{Binding HomeColourContrastText}" FontWeight="700" MinWidth="40" TextAlignment="Right" VerticalAlignment="Center" />
+                          <Container Column="1" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" MaxWidth="260" HorizontalAlignment="Stretch">
+                            <Input id="home-colour-contrast" Type="Slider" Column="0" AccessibleName="Colour contrast" Minimum="0" Maximum="100" Value="{Binding HomeColourContrast, Mode=TwoWay}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" MinHeight="34" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                            <Text Column="1" Text="{Binding HomeColourContrastText}" FontWeight="700" MinWidth="40" TextAlignment="Right" VerticalAlignment="Center" />
+                          </Container>
                         </Container>
                         <Text IsVisible="{Binding HomeHighContrastActive, fallback=false}" Text="High contrast is active. Your display levels take effect when you turn it off." FontSize="12" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Container Type="Wrap" CellGap="8" IsVisible="{Binding HomeDisplayConflict, fallback=false}">
+                          <Text Text="Display levels changed in another window. Your draft is still here." TextWrapping="Wrap" FontWeight="600" VerticalAlignment="Center" />
+                          <Button action="RefreshHomeAppearance" Content="Reload saved levels" AccessibleName="Replace draft with saved display levels" />
+                        </Container>
                         <Button id="home-display-apply" action="ApplyDisplayLevels" Content="Apply display settings" IsEnabled="{Binding HomeCanApplyLevels, fallback=false}" HorizontalAlignment="Right" FontWeight="750" />
                       </Container>
-                      <Container Type="Vertical Stack" Background="{Resource CuiPanelBrush}" CornerRadius="18" Padding="20" CellGap="12">
+                      <Container Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="12">
                         <Text Text="Accessibility" FontSize="18" FontWeight="750" />
                         <Repeat id="home-accessibility-options" Source="{Binding HomeAccessibilityChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
                           <Button id="home-accessibility-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" FontWeight="700" Padding="14 8" Margin="0 0 6 4" />

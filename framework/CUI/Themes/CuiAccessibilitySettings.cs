@@ -239,13 +239,22 @@ public static class CuiAccessibilityPalette
         if (brightness == 50 && contrast == 50) return palette;
         var canvas = palette.TideBase.ToHsl();
         var dark = canvas.L < .5;
-        var spread = 1 + (contrast - 50) * .009;
-        var offset = (brightness - 50) * (dark ? .0024 : .0020);
+        var surfaces = new[] { palette.TideBase, palette.TideColour, palette.Panel, palette.Panel2, palette.Panel3,
+            palette.PanelHover, palette.Button, palette.ButtonHover, palette.ButtonPressed, palette.Line, palette.LineStrong };
+        var levels = surfaces.Select(role => role.ToHsl().L).ToArray();
+        var min = levels.Min();
+        var max = levels.Max();
+        var spread = Math.Min(1 + (contrast - 50) * .009, max > min ? 1 / (max - min) : 1);
+        // Translate the whole range if necessary. Clipping individual near-white roles
+        // would paint panels, cards and inset controls the same colour at maximum brightness.
+        var offset = Math.Max(-min * spread, Math.Min(1 - max * spread, canvas.L * (1 - spread)));
+        var target = brightness >= 50 ? (dark ? .48 : 1d) : (dark ? 0d : .54);
+        var amount = Math.Abs(brightness - 50) / 50d * .38;
         Color Surface(Color colour)
         {
             var hsl = colour.ToHsl();
-            var lightness = Math.Clamp(canvas.L + (hsl.L - canvas.L) * spread + offset,
-                dark ? .018 : .54, dark ? .46 : .995);
+            var level = Math.Clamp(hsl.L * spread + offset, 0, 1);
+            var lightness = level + (target - level) * amount;
             return new HslColor(hsl.A, hsl.H, hsl.S, lightness).ToRgb();
         }
         var adjusted = palette with
@@ -259,9 +268,17 @@ public static class CuiAccessibilityPalette
         // Tone against the least favourable ordinary surface. The resource layer separately
         // measures text against action gradients and handles translucent button materials.
         var backgrounds = new[] { adjusted.TideBase, adjusted.TideColour, adjusted.Panel, adjusted.Panel2, adjusted.Panel3, adjusted.PanelHover };
+        Color Composite(Color surface)
+        {
+            var alpha = surface.A / 255d;
+            byte Channel(byte lower, byte upper) => (byte)Math.Round(lower + (upper - lower) * alpha);
+            return Color.FromRgb(Channel(adjusted.TideBase.R, surface.R), Channel(adjusted.TideBase.G, surface.G),
+                Channel(adjusted.TideBase.B, surface.B));
+        }
+        var painted = backgrounds.Select(Composite).ToArray();
         Color Ink(Color colour, double minimum)
         {
-            var weakest = backgrounds.MinBy(background => CuiContrast.Ratio(colour, background));
+            var weakest = painted.MinBy(background => CuiContrast.Ratio(colour, background));
             return CuiContrast.EnsureForegroundContrast(colour, weakest, minimum);
         }
         return adjusted with { Text = Ink(palette.Text, 7), TextSoft = Ink(palette.TextSoft, 4.6),

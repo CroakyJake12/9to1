@@ -4,26 +4,38 @@ using Avalonia.Media;
 
 namespace CakeOS.Cui.Themes;
 
-/// <summary>Shared decorative surfaces for presets. These are ordinary gradients, not backdrop filters.</summary>
+/// <summary>Shared preset surfaces, including native frosted materials and opaque popup fallbacks.</summary>
 internal static class CuiPresetSurfaceResources
 {
     public static void Apply(IResourceDictionary resources, CuiPalette palette, CuiAccessibilitySettings settings)
     {
-        if (settings.HighContrast || palette.Theme is not (CuiTheme.FrostedGlass or CuiTheme.Metallic or CuiTheme.Western)) return;
-        var dark = palette.Text.ToHsl().L > palette.Panel.ToHsl().L;
+        if (settings.HighContrast) return;
+        if (palette.Theme == CuiTheme.Bubble)
+        {
+            resources["CuiWorkspaceBrush"] = Gradient(30, (0, palette.TideColour), (1, palette.TideBase));
+            resources["CuiWorkspaceMaterial"] = resources["CuiWorkspaceBrush"];
+            return;
+        }
+        if (palette.Theme is not (CuiTheme.FrostedGlass or CuiTheme.Metallic or CuiTheme.Western)) return;
         var white = Colors.White;
         var black = Colors.Black;
+        var dark = palette.TideBase.ToHsl().L < .5;
+        if (palette.Theme == CuiTheme.FrostedGlass)
+        {
+            resources["CuiWorkspaceBrush"] = Gradient(40, (0, palette.TideColour), (1, palette.TideBase));
+            resources["CuiWorkspaceMaterial"] = resources["CuiWorkspaceBrush"];
+            var pane = new CuiMaterialBrush(palette.Panel, 1, 32);
+            var floating = new CuiMaterialBrush(palette.Panel2, 1, 30);
+            resources["CuiShellMaterial"] = pane;
+            resources["CuiChromeMaterial"] = pane;
+            resources["CuiSurfaceMaterial"] = pane;
+            resources["CuiFloatingSurfaceMaterial"] = floating;
+            resources["CuiPopupSurfaceBrush"] = floating;
+            resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Composite(palette.Panel2, palette.TideBase));
+            return;
+        }
         switch (palette.Theme)
         {
-            case CuiTheme.FrostedGlass:
-                resources["CuiWorkspaceBrush"] = Gradient(0, (0, palette.TideColour), (1, palette.TideBase));
-                resources["CuiPanel2Brush"] = Gradient(90,
-                    (0, Mix(palette.Panel2, white, dark ? .09 : .28)), (.4, palette.Panel2),
-                    (1, Mix(palette.Panel2, Color.Parse("#9ACDED"), .07)));
-                resources["CuiButtonBrush"] = Glass(palette.Button);
-                resources["CuiButtonHoverBrush"] = Glass(palette.ButtonHover);
-                resources["CuiButtonPressedBrush"] = Glass(palette.ButtonPressed);
-                break;
             case CuiTheme.Metallic:
                 resources["CuiWorkspaceBrush"] = Gradient(90, (0, palette.TideColour), (.5, palette.TideBase), (1, palette.TideColour));
                 resources["CuiPanel2Brush"] = Gradient(90, (0, Mix(palette.Panel2, white, .06)), (.48, palette.Panel2), (1, Mix(palette.Panel2, black, .045)));
@@ -52,7 +64,6 @@ internal static class CuiPresetSurfaceResources
         resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Opaque(palette.Panel2));
         ApplyForeground(resources, palette);
 
-        IBrush Glass(Color colour) => Gradient(90, (0, Mix(colour, white, dark ? .09 : .20)), (.35, colour), (1, colour));
         IBrush Metal(Color colour) => Gradient(90, (0, Mix(colour, white, .10)), (.43, colour),
             (.47, Mix(colour, black, .08)), (1, Mix(colour, white, .035)));
         IBrush Leather(Color colour) => Gradient(90, (0, Mix(colour, white, .04)), (1, Mix(colour, black, .065)));

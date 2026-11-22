@@ -973,6 +973,24 @@ public sealed class UnifiedHomeContentTests
             var same = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
             Assert.Equal("existing", saved["keep"]!.GetValue<string>());
             Assert.Equal(new HomeDisplaySettings(HomeDisplayMode.Light, 72, 38), same.Display);
+
+            source.ApplyEditorBindings(model);
+            Assert.True(model.TrySetValue("HomeBrightness", 80d));
+            var other = new CuiViewModel();
+            source.ApplyEditorBindings(other);
+            Assert.True(other.TrySetValue("HomeBrightness", 60d));
+            var external = NativeHomeThemePreferences.CaptureDisplayDraft(other.Get("HomeDisplayTarget"), other);
+            Assert.True((await source.ApplySettingsAsync(external)).Succeeded);
+            await source.RefreshAsync();
+            source.ApplyEditorBindings(model);
+            Assert.Equal(80d, model.Get("HomeBrightness"));
+            Assert.Equal(true, model.Get("HomeDisplayConflict"));
+            Assert.Null(model.Get("HomeDisplayTarget"));
+            Assert.Equal(false, model.Get("HomeCanApplyLevels"));
+            NativeHomeThemePreferences.ReloadDisplayDraft(model);
+            source.ApplyEditorBindings(model);
+            Assert.Equal(60d, model.Get("HomeBrightness"));
+            Assert.Equal(false, model.Get("HomeDisplayConflict"));
         }
         finally
         {

@@ -28,7 +28,7 @@
   <Theme Name="user_preference">
     <Page AccessibleName="9to1 Home">
       <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiWorkspaceBrush}">
-        <Container id="home-sidebar" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+        <Container id="home-sidebar" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
           <Container id="home-rail-nav" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
             <Button id="home-apps" action="home.apps" accessible-name="Apps" Tooltip="Apps" Selected="{Binding rail.appsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="home-apps-icon" Source="icon:apps" Width="26" Height="26" />
@@ -43,10 +43,10 @@
               <Image id="home-newtab-icon" Source="icon:plus" Width="26" Height="26" />
             </Button>
             <Container id="home-rail-primary-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
-            <Button id="home-library" action="home.library" accessible-name="Library" Tooltip="Library" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Button id="home-library" action="home.library" accessible-name="Library" Tooltip="Library" Selected="{Binding rail.librarySelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="home-library-icon" Source="icon:folder" Width="26" Height="26" />
             </Button>
-            <Button id="home-events" action="home.events" accessible-name="Events" Tooltip="Events" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Button id="home-events" action="home.events" accessible-name="Events" Tooltip="Events" Selected="{Binding rail.eventsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="home-events-icon" Source="icon:calendar" Width="26" Height="26" />
             </Button>
             <Button id="home-mesh" action="home.mesh" accessible-name="Mesh" Tooltip="Mesh" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
@@ -54,7 +54,7 @@
             </Button>
           </Container>
           <Container id="home-rail-footer" Row="1" Type="Vertical Stack" CellGap="8" Padding="0">
-            <Button id="home-settings" action="home.settings" accessible-name="Settings" Tooltip="Settings" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Button id="home-settings" action="home.settings" accessible-name="Settings" Tooltip="Settings" Selected="{Binding rail.settingsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="home-settings-icon" Source="icon:settings" Width="26" Height="26" />
             </Button>
           </Container>

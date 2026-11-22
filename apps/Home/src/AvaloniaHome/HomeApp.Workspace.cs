@@ -181,6 +181,7 @@ internal sealed partial class HomeApp
     private async Task RefreshHomeAppearanceAsync()
     {
         if (_homeTheme is not { } source || _homeAppearanceClosing) return;
+        NativeHomeThemePreferences.ReloadDisplayDraft(_viewModel);
         await source.RefreshAsync(); _homeAppearanceStatus = null;
     }
 

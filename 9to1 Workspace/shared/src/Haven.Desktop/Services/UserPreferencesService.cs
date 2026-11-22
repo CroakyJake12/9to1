@@ -89,6 +89,8 @@ public sealed partial class UserPreferencesService
     private HavenUiAppearance? _homeAppearancePresentation;
     private CuiTheme? _homeThemePresentation;
     private CuiAccentPreference? _homeAccentPresentation;
+    private CuiAccessibilitySettings? _homeAccessibilityPresentation;
+    private CuiCustomTheme? _homeCustomThemePresentation;
 
     /// <summary>Typed recovery state for corrupt, unreadable or incompatible preference data.</summary>
     public UserPreferenceRecoveryState RecoveryState { get; private set; } = UserPreferenceRecoveryState.None;
@@ -181,6 +183,7 @@ public sealed partial class UserPreferencesService
         // until the authoritative native Home context publishes its next observation.
         _homeAppearancePresentation = null;
         _homeThemePresentation = null;
+        _homeCustomThemePresentation = null;
         _homeAccentPresentation = null;
         _preferences = _preferences with
         {
@@ -213,6 +216,7 @@ public sealed partial class UserPreferencesService
         // Retain those authoritative observations while replacing only the selected theme;
         // clearing them would make the presentation fall back to stale legacy preferences.
         _homeThemePresentation = null;
+        _homeCustomThemePresentation = null;
 
         _preferences = _preferences with { HavenUiThemeName = CuiThemeCatalog.Name(theme) };
         // Publication (including CUI active theme) happens only after successful persistence
@@ -332,10 +336,8 @@ public sealed partial class UserPreferencesService
                 // AppearanceChanged may refresh a surface-specific TidalBackground,
                 // whose legacy palette aliases share the app CUI brushes. Republish the
                 // canonical Home palette last so that callback cannot overwrite it.
-                if (activeAccent is null)
-                    CuiThemeScopeApplier.ApplyGlobalTheme(activeTheme, appearanceOverride: cuiAppearance);
-                else
-                    CuiThemeScopeApplier.ApplyGlobalTheme(activeTheme, appearanceOverride: cuiAppearance, accentPreference: activeAccent);
+                CuiThemeScopeApplier.ApplyGlobalTheme(activeTheme, accessibility: _homeAccessibilityPresentation,
+                    appearanceOverride: cuiAppearance, accentPreference: activeAccent, customTheme: _homeCustomThemePresentation);
                 application.RequestedThemeVariant = cuiAppearance is CuiAppearance.Dark or CuiAppearance.SuperDark
                     ? ThemeVariant.Dark
                     : ThemeVariant.Light;
@@ -354,6 +356,8 @@ public sealed partial class UserPreferencesService
         _homeAppearancePresentation = (HavenUiAppearance)effectiveAppearance;
         _homeThemePresentation = current.Theme.BaseTheme;
         _homeAccentPresentation = current.EffectiveAccent;
+        _homeAccessibilityPresentation = current.Accessibility;
+        _homeCustomThemePresentation = current.Theme.CustomTheme;
 
         CuiSurfacePaletteCatalog.ActiveTheme = current.Theme.BaseTheme;
         CuiSurfacePaletteCatalog.OverrideAccent = current.EffectiveAccent.Mode == CuiAccentOverrideMode.AllApps && legacyAccent is not null;

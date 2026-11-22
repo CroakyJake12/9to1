@@ -3368,6 +3368,11 @@ public sealed partial class CuiControlLoader : IDisposable
             return false;
         }
 
+        if (sourceType == typeof(double) && rawValue is double typedNumber)
+        {
+            converted = typedNumber;
+            return double.IsFinite(typedNumber);
+        }
         var text = rawValue.ToString() ?? string.Empty;
         if (sourceType == typeof(string))
         {

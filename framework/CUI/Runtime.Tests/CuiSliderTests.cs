@@ -13,6 +13,30 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiSliderTests
 {
     [Fact]
+    public async Task Fractional_slider_writeback_preserves_the_native_value_in_a_comma_decimal_locale()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var previous = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("fr-FR");
+                var model = new CuiViewModel();
+                model.Set("Level", 50d);
+                using var loader = new CuiControlLoader();
+                loader.SetBindingContext(model);
+                var loaded = loader.LoadMarkup("""<Input Type="Slider" Minimum="0" Maximum="100" Value="{Binding Level, Mode=TwoWay}"/>""");
+                var slider = Assert.IsType<Slider>(loaded.Root);
+                loader.WireBindings(slider);
+                slider.Value = 72.5;
+                Assert.Equal(72.5, model.Get("Level"));
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
+        }, default);
+    }
+
+    [Fact]
     public async Task Mixed_literal_range_survives_other_slider_theme_refresh_and_reattachment()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));

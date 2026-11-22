@@ -187,33 +187,65 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
 
     internal SettingsWriteOutcome CreateSettingsWriteOutcome() => new(this);
 
+    private static Avalonia.Media.Color PreviewSurface(Avalonia.Media.Color canvas, Avalonia.Media.Color layer)
+    {
+        byte Channel(byte lower, byte upper) => (byte)Math.Round(lower + (upper - lower) * layer.A / 255d);
+        return Avalonia.Media.Color.FromRgb(Channel(canvas.R, layer.R), Channel(canvas.G, layer.G), Channel(canvas.B, layer.B));
+    }
+
     internal static void UpdateDisplayReadout(object? sender, PropertyChangedEventArgs args)
     {
         if (sender is not CuiViewModel model) return;
         var key = args.PropertyName;
         if (key is "HomeBrightness" or "HomeColourContrast" && model.Get(key) is double number && double.IsFinite(number))
             model.Set(key + "Text", Math.Round(number) + "%");
-        if (key is "HomeBrightness" or "HomeColourContrast" or "HomeBrightnessSaved" or "HomeColourContrastSaved" or "HomeAppearanceAvailable")
+        if (key is "HomeBrightness" or "HomeColourContrast" or "HomeBrightnessSaved" or "HomeColourContrastSaved" or "HomeAppearanceAvailable" or "HomeDisplayConflict")
         {
             bool Changed(string name) => model.Get(name) is double draft && model.Get(name + "Saved") is double saved &&
                 double.IsFinite(draft) && Math.Round(draft) != saved;
-            model.Set("HomeCanApplyLevels", model.Get("HomeAppearanceAvailable") is true &&
+            model.Set("HomeCanApplyLevels", model.Get("HomeAppearanceAvailable") is true && model.Get("HomeDisplayConflict") is not true &&
                 (Changed("HomeBrightness") || Changed("HomeColourContrast")));
         }
     }
 
     internal void ApplyEditorBindings(CuiViewModel model)
     {
-        foreach (var (key, value) in SettingsBindings())
+        var bindings = SettingsBindings();
+        var conflict = model.Get("HomeDisplayConflict") is true;
+        foreach (var key in new[] { "HomeBrightness", "HomeColourContrast" })
         {
-            if (key is "HomeBrightness" or "HomeColourContrast")
+            var incoming = (double)bindings[key]!;
+            if (model.Get(key + "Saved") is double saved)
             {
-                // A pending edit survives an unrelated theme, mode or accessibility refresh.
-                if (Equals(model.Get(key + "Saved"), value)) continue;
-                model.Set(key + "Saved", value);
+                if (saved == incoming) continue;
+                if (model.Get(key) is double draft && Math.Round(draft) != saved && Math.Round(draft) != incoming)
+                {
+                    conflict = true;
+                    continue;
+                }
             }
-            model.Set(key, value);
+            model.Set(key + "Saved", incoming);
+            model.Set(key, incoming);
         }
+        foreach (var (key, value) in bindings)
+            if (key is not ("HomeBrightness" or "HomeColourContrast" or "HomeDisplayTarget")) model.Set(key, value);
+        model.Set("HomeDisplayConflict", conflict);
+        model.Set("HomeDisplayTarget", conflict ? null : bindings["HomeDisplayTarget"]);
+    }
+
+    internal static void ReloadDisplayDraft(CuiViewModel model)
+    {
+        model.Set("HomeBrightnessSaved", null);
+        model.Set("HomeColourContrastSaved", null);
+        model.Set("HomeDisplayConflict", false);
+    }
+
+    private CuiAppearance EffectiveAppearance(HomeThemePreference value)
+    {
+        var mode = value.EffectiveDisplay().Mode;
+        if (mode != HomeDisplayMode.FollowSystem && value.Appearance is { } legacy && HomeDisplaySettings.FromLegacy(legacy) == mode)
+            return Enum.Parse<CuiAppearance>(legacy);
+        return ResolveMode(mode);
     }
 
     internal static object? CaptureDisplayDraft(object? target, CuiViewModel model)
@@ -258,8 +290,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             var appearance = Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
             var accent = Current.EffectiveAccent.ResolveColour("app.home");
             var palette = CuiAccessibilityPalette.Resolve(CuiSurfacePaletteCatalog.For("Home", appearance, theme.Theme, accent), Current.Accessibility);
-            option["PreviewPanel"] = palette.Panel2.ToString();
-            option["PreviewTile"] = palette.PanelHover.ToString();
+            option["PreviewPanel"] = PreviewSurface(palette.TideBase, palette.Panel2).ToString();
+            option["PreviewTile"] = PreviewSurface(palette.TideBase, palette.PanelHover).ToString();
             option["PreviewInk"] = palette.Text.ToString();
             option["PreviewAccent"] = palette.Accent.ToString();
             return option;
@@ -383,8 +415,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                     Brightness = value.EffectiveDisplay().Brightness, ColourContrast = value.EffectiveDisplay().ColourContrast,
                     DisplayScale = access.DisplayScale, InterfaceFontFamilyOverride = access.InterfaceFontFamily,
                     CodeFontFamilyOverride = access.CodeFontFamily },
-                value.EffectiveDisplay().Mode == HomeDisplayMode.FollowSystem ? ResolveMode(HomeDisplayMode.FollowSystem)
-                    : value.Appearance is null ? ResolveMode(value.EffectiveDisplay().Mode) : Enum.Parse<CuiAppearance>(value.Appearance),
+                EffectiveAppearance(value),
                 value.Accent is { } accent ? new((CuiAccentOverrideMode)accent.Mode, accent.AllAppsColour, accent.IndividualApps) : null,
                 resolved.UsedFallback ? null : value.CustomThemesJson);
             if (next.Revision < Current.Revision && next.ScopeId == Current.ScopeId) return;

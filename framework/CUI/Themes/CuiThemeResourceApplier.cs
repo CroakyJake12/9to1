@@ -267,6 +267,7 @@ public static class CuiThemeResourceApplier
         resources["CuiInputRadius"] = new CornerRadius(professional
             ? (34d * settings.DisplayScale) / 2d // default single-line control → full capsule
             : CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale * settings.DisplayScale);
+        resources["CuiChromeMaterial"] = resources["CuiPanelBrush"];
         resources["CuiWorkspaceBrush"] = new SolidColorBrush(professional ? palette.TideColour : palette.TideBase);
         var material = professional && !settings.HighContrast;
         var dark = Luminance(palette.Text) > Luminance(palette.Panel);
@@ -344,11 +345,12 @@ public static class CuiThemeResourceApplier
         resources["CuiSwitchThumbBrush"] = new SolidColorBrush(Color.Parse("#FFFFFFFF"));
         // Slider rail: a fixed-height decorative rail, fully rounded at half its own height.
         var railHeight = 24d * settings.DisplayScale;
-        var thumbInk = CuiContrast.Ratio(Colors.White, palette.Accent) >= CuiContrast.Ratio(Colors.Black, palette.Accent)
-            ? Colors.White : Colors.Black;
+        var unusedRail = Blend(palette.Panel, palette.Text, settings.HighContrast ? .45 : .23);
+        double ThumbContrast(Color ink) => Math.Min(CuiContrast.Ratio(ink, palette.Accent), CuiContrast.Ratio(ink, unusedRail));
+        var thumbInk = ThumbContrast(Colors.White) >= ThumbContrast(Colors.Black) ? Colors.White : Colors.Black;
         resources["CuiSliderThumbBrush"] = new SolidColorBrush(thumbInk);
         resources["CuiSliderThumbEdgeBrush"] = new SolidColorBrush(palette.Accent);
-        resources["CuiSliderTrackBrush"] = new SolidColorBrush(Blend(palette.Panel, palette.Text, settings.HighContrast ? .45 : .23));
+        resources["CuiSliderTrackBrush"] = new SolidColorBrush(unusedRail);
         resources["CuiRailHeight"] = railHeight;
         resources["CuiRailRadius"] = new CornerRadius(railHeight / 2);
         // Progress primitive: read-only determinate rail. The fill reuses CuiAccentBrush. Its track

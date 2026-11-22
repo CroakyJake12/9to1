@@ -60,6 +60,14 @@ public sealed class CuiPresetSurfaceTests
             {
                 var ink = Assert.IsAssignableFrom<ISolidColorBrush>(resources[$"CuiButton{state}ForegroundBrush"]).Color;
                 Assert.Same(resources[$"CuiButton{state}ForegroundBrush"], resources[$"HavenButton{state}ForegroundBrush"]);
+                if (theme == CuiTheme.FrostedGlass)
+                {
+                    var control = Assert.IsAssignableFrom<ISolidColorBrush>(resources[$"CuiButton{state}Brush"]);
+                    AssertContrast(ink, Composite(control.Color, panel), 4.5, $"Frosted {state} control");
+                    var material = Assert.IsType<CuiMaterialBrush>(resources["CuiSurfaceMaterial"]);
+                    Assert.InRange(material.BlurRadius, 30, 32);
+                    continue;
+                }
                 var brush = Assert.IsAssignableFrom<IGradientBrush>(resources[$"CuiButton{state}Brush"]);
                 foreach (var stop in brush.GradientStops)
                     AssertContrast(ink, Composite(stop.Color, panel), 4.5, $"{theme}/{appearance}/{app.Surface}/{accent}/{state}@{stop.Offset}");
@@ -76,7 +84,8 @@ public sealed class CuiPresetSurfaceTests
         {
             var palette = CuiSurfacePaletteCatalog.For("Present", appearance, theme, null);
             CuiThemeResourceApplier.ApplyToResources(resources, palette);
-            Assert.IsAssignableFrom<IGradientBrush>(resources["CuiButtonBrush"]);
+            if (theme == CuiTheme.FrostedGlass) Assert.IsType<CuiMaterialBrush>(resources["CuiSurfaceMaterial"]);
+            else Assert.IsAssignableFrom<IGradientBrush>(resources["CuiButtonBrush"]);
             CuiThemeResourceApplier.ApplyToResources(resources, palette, new CuiAccessibilitySettings { HighContrast = true });
             foreach (var key in new[] { "CuiWorkspaceBrush", "CuiPanel2Brush", "CuiButtonBrush", "CuiButtonHoverBrush", "CuiButtonPressedBrush", "CuiPopupSurfaceBrush" })
             {

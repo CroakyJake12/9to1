@@ -20,7 +20,7 @@
   </Actions>
   <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
     <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiWorkspaceBrush}">
-      <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to swap at either outer edge, split on either inner edge, or group in the center. Invalid privacy, profile, or pinned boundaries are refused. Keyboard move controls are also available in More tools.">
+      <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiChromeMaterial}" AccessibleName="Open tabs" AccessibleDescription="Drag a tab to swap at either outer edge, split on either inner edge, or group in the center. Invalid privacy, profile, or pinned boundaries are refused. Keyboard move controls are also available in More tools.">
         <Container id="BrowseTabViewport" Type="Overlay" HorizontalScrolling="True" HorizontalOverflowArrows="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
             <Container id="BrowseTabRow" Type="Grid" ColumnSizes="1fr Auto" Width="172" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Background="{Binding tab.Background}" Class="cui-hover-surface" BringIntoView="{Binding tab.Selected}">
@@ -48,7 +48,7 @@
         </Container>
           <Button id="BrowseNewTabButton" Column="1" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Tooltip="New tab (Ctrl+T)" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">+</Button>
       </Container>
-      <Container id="BrowseNavigationBar" Type="Grid" Row="1" Column="0" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto" CellGap="2" Padding="4 4 4 6" Background="{Resource CuiPanelBrush}">
+      <Container id="BrowseNavigationBar" Type="Grid" Row="1" Column="0" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto" CellGap="2" Padding="4 4 4 6" Background="{Resource CuiChromeMaterial}">
         <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Tooltip="Go back (Alt+Left)" Interactive="{Binding CanBack}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="7" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-back.svg" Width="18" Height="18" /></Button>
         <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Tooltip="Go forward (Alt+Right)" Interactive="{Binding CanForward}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="7" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" Width="18" Height="18" /></Button>
         <Container Type="Overlay" Column="2">
