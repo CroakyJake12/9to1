@@ -11,3 +11,10 @@ The Home gear opens the supported part of the Atlas Settings hierarchy. Global c
 The Atlas `appearance`, `appearance-palette` and `settings-layout` routes were rendered in Chromium. Its fixed 1440 × 900 desktop canvas clips at narrow viewport widths. The previous native Appearance capture has the icon-only Home rail beside the gallery. The Settings view uses that space for readable category controls. The supported routes keep the same appearance preference scope, draft and write owner. The rest of the Settings taxonomy, search, accent palette, theme editor and global layout options still need implementation.
 
 Linux Release `net10.0` with SDK `10.0.401` passed all 11 focused `UnifiedHomeContentTests.Settings_` and `Configured_Home_Settings` cases. These exercise the rendered buttons, keyboard navigation, scroll reachability, a saved theme, the uncommitted brightness draft, explicit reload, and the existing access and write lifecycle. The initial test host tried a read-only default configuration path. Subsequent runs used precreated, private `HAVEN_DATA_DIR` and XDG directories.
+
+Both interaction cases passed again with headless Skia enabled on `53f68b49bf317ea9d47087e0358e8ed59ac47843`. The 1280 × 900 Professional Dark view preserves the reference's theme gallery and separates the active category from plain resting rows. At 520 × 520 the orange-accent view stacks two scroll areas. Scrolling the categories can take Back to Home out of view. Each adjacent JSON receipt records the viewport, actual fixture appearance and accent, and image and assembly hashes.
+
+| Surface | Wide | Narrow |
+| --- | --- | --- |
+| Appearance | [1280 × 900 · Professional / Blue](settings/home-settings-appearance-1280x900.png) | [520 × 520 · Professional / Orange](settings/home-settings-appearance-520x520.png) |
+| Layout | [1280 × 900 · Glow / Blue](settings/home-settings-layout-1280x900.png) | [520 × 520 · Professional / Orange](settings/home-settings-layout-520x520.png) |
