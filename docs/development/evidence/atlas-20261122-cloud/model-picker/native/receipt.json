@@ -1,0 +1,56 @@
+{
+  "source_revision": "f3f15e8247f319eaa4f22d551d9522939013bf30",
+  "renderer": "native Linux Haven apphost on X11 (Xvfb/Openbox)",
+  "profile": "isolated Professional Dark and Blue #4E86FF",
+  "apphost": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "73c1ef5c76d4c2d6e27ae98490f7c146370d3468b96cc48555c9699cf6a952b5",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  },
+  "normal_close": "Normal WM_DELETE_WINDOW requested, exact scoped main window disappeared, owning apphost exit code 0",
+  "owner_state": "Home state and preferences SHA-256 unchanged during the native picker flow",
+  "background_sample": [
+    "01-spaces-before-wide.png srgb(28,28,30)",
+    "02-compact-no-scrim-wide.png srgb(28,28,30)",
+    "03-expanded-dimmed-wide.png srgb(68,68,69)",
+    "04-escape-clear-scrim-wide.png srgb(28,28,30)",
+    "05-escape-trigger-focus-wide.png srgb(28,28,30)",
+    "06-spaces-before-narrow.png srgb(28,28,30)",
+    "07-compact-no-scrim-narrow.png srgb(28,28,30)",
+    "08-expanded-dimmed-narrow.png srgb(68,68,69)",
+    "09-escape-clear-scrim-narrow.png srgb(28,28,30)",
+    "10-escape-trigger-focus-narrow.png srgb(28,28,30)"
+  ],
+  "captures": [
+    {
+      "file": "02-compact-no-scrim-wide.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "5ec82d2faaa8708d5b88b248ee5f7ba96aec08f5c6ea3d8204f2fd443795e14f"
+    },
+    {
+      "file": "03-expanded-dimmed-wide.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "06e6f1727a46082595a2ae571084502757ea5f7d68c5179704d7da444260236c"
+    },
+    {
+      "file": "07-compact-no-scrim-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "1d264498c4d5c5f1d2ac1c74378b1359a34328cc10dfc550afba1e140a9d7e45"
+    },
+    {
+      "file": "08-expanded-dimmed-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "c03e02e1cf13ecc50be3aded1c161cd1d61417fd26f5046840ac5b1dc2fd8dcf"
+    },
+    {
+      "file": "10-escape-trigger-focus-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "54af6fdfe711447c0c07e50e4bcb9143dab05e484c8df5ee4dde1ce49a26d27f"
+    }
+  ]
+}
