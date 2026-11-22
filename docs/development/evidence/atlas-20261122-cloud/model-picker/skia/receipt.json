@@ -1,0 +1,37 @@
+{
+  "renderer": "headless-Skia",
+  "owning_check": "Shared_model_panel_bounds_scroll_and_keeps_its_close_action_reachable_without_mutating_the_route",
+  "availability": "isolated authorised catalogue fixture with an active sample model",
+  "assemblies": {
+    "HavenOS.Apps.Browse.NativeUI.Tests.dll": "c47314679c12f85be09d7aedde34365d6f71d3cbcffb10c949b7e2267c1faa4c",
+    "HavenOS.Home.dll": "f01febebe4c8628ee3fc1332d1b9cb342d614447a7b74e4718f62fc23a2fd2d7",
+    "Haven.SharedHeader.dll": "e74a82cbcc2a239c5a63cc0873df0b4ba9febea5a87b74a111c01aeaf79d6ffb",
+    "CakeOS.Cui.Runtime.dll": "bc6771e71a972f4568d6bdb14a13cdbf04ca18ad3603b2cbe4ea9c3f147dfb31"
+  },
+  "captures": [
+    {
+      "file": "compact-model-picker-1440x920.png",
+      "width": 1440,
+      "height": 920,
+      "sha256": "5b6335ce2e73efe6457d2c52aeeeea3f4e3e623b22466af917230d30785f4bb9"
+    },
+    {
+      "file": "compact-model-picker-360x520.png",
+      "width": 360,
+      "height": 520,
+      "sha256": "1ea2638d00ecb9a6804c03de1fc8a9bd09f409954f9c950675a67aeaf8dfe6d6"
+    },
+    {
+      "file": "expanded-model-settings-1440x920.png",
+      "width": 1440,
+      "height": 920,
+      "sha256": "f6804c6044e9d7654439cc6a3f400cea07720f11b4fe5f5478d501d68e1c6c76"
+    },
+    {
+      "file": "expanded-model-settings-360x520.png",
+      "width": 360,
+      "height": 520,
+      "sha256": "bae1e44fc728a91f6ef97aeefa08683daee0eafa14a59f82cf577e7ab08a66a7"
+    }
+  ]
+}

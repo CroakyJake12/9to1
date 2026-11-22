@@ -11,8 +11,12 @@
            structure/backdrop/visibility is authored in C#. -->
       <Container id="shared-frame-root" Type="Overlay">
         <Container id="shared-scene-host" Type="Grid" ColumnSizes="1fr" RowSizes="1fr" />
-        <Container id="shared-shell-backdrop" Type="Grid" IsVisible="{Binding HasOpenPanel}" Background="#667F7F7F">
-          <Container id="shared-panel-frame" Type="Grid" RowSizes="Auto 1fr" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="16" Padding="16" CellGap="12" MaxWidth="880" MaxHeight="720" Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12">
+        <Container id="shared-shell-backdrop" Type="Grid" IsVisible="{Binding HasOpenPanel}" Background="{Binding PanelBackdrop, fallback=#667F7F7F}">
+          <Container id="shared-panel-frame" Type="Grid" RowSizes="Auto 1fr" Padding="16" CellGap="12"
+                     HorizontalAlignment="{Binding PanelHorizontalAlignment, fallback=Stretch}" VerticalAlignment="{Binding PanelVerticalAlignment, fallback=Stretch}"
+                     Margin="{Binding PanelMargin, fallback=16}" MinWidth="{Binding PanelMinWidth, fallback=0}"
+                     MaxWidth="{Binding PanelMaxWidth, fallback=880}" MaxHeight="{Binding PanelMaxHeight, fallback=720}"
+                     Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12">
             <Container Type="Grid" ColumnSizes="1fr Auto">
               <Button id="shared-panel-close" Column="1" action="CloseSharedPanel" CancelAction="True" AccessibleName="Close shared panel" Tooltip="Close panel (Esc)" MinHeight="36" Padding="12 6" CornerRadius="8">Close</Button>
             </Container>

@@ -1,0 +1,55 @@
+{
+  "source_revision": "9085c35777ee058a7775c5b42f1bf6fc0c6e6ca2",
+  "renderer": "native Linux Haven apphost on X11 (Xvfb/Openbox)",
+  "profile": "isolated Professional Dark and Blue #4E86FF",
+  "apphost": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "1a4f781b2836b3e65204dc705d2540e27f0c95d43a3eafd88c0509ffc794a634",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  },
+  "captures": [
+    {
+      "file": "02a-home-wide-labels.png",
+      "width": 1180,
+      "height": 760,
+      "sha256": "418625d88e8495fdc39cc20347d8aa1c5503f20f701b670ce8974d64ac3695f2"
+    },
+    {
+      "file": "05-new-tab-narrow-draft.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "ba2462f51011b3546aa7b7270de772a04da36fa6d2ddb7a1b59e176d7a758bda"
+    },
+    {
+      "file": "07-layout-sticky-back-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "4d00891b18d810e75b319d68770f134e24281724348be90f0ab80269ce591c0e"
+    },
+    {
+      "file": "08-accessibility-sticky-back-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "ea82bdcf1be9985114cfc86fae2f6ee5ce57db0dc3423308cc3710ead05fd40d"
+    },
+    {
+      "file": "12a-dashboard-reopened-after-publication.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "bce2ed35ac6a4746caf690e0d15b6b5076e7f51a6839990b95fbc7a892556223"
+    },
+    {
+      "file": "15-overflow-home-focus-to-right.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "cc3292ad1933c9673374147331f218349e1c26dc37062ba3389f994c83e93714"
+    },
+    {
+      "file": "16-overflow-end-focus-to-left.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "79e8d08afa45d75aa424a53e59f2445c3ec28e30f950229327e5f305cd29696b"
+    }
+  ],
+  "normal_close": "Normal WM_DELETE_WINDOW requested, exact scoped main window disappeared, owning apphost exit code 0"
+}

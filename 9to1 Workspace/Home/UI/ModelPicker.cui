@@ -4,7 +4,8 @@
     <Action name="RefreshCatalogue" command="RefreshCatalogue" />
     <Action name="AddCatalogueCandidate" command="AddCatalogueCandidate" parameter="{Binding model.Selection}" />
     <Action name="ToggleFamily" command="ToggleFamily" parameter="{Binding family.ToggleSelection}" />
-    <Action name="SelectCurrentRoute" command="SelectRoute" parameter="{Binding CurrentRouteSelection}" />
+    <Action name="ShowModelSettings" command="ShowModelSettings" />
+    <Action name="ShowCompactPicker" command="ShowCompactPicker" />
     <Action name="SelectRoute" command="SelectRoute" parameter="{Binding route.Selection}" />
     <Action name="ChatCategory" command="SelectCategory" parameter="chat" />
     <Action name="ImageCategory" command="SelectCategory" parameter="image" />
@@ -19,6 +20,7 @@
     <Action name="SelectReasoningLevel" command="SelectReasoningLevel" parameter="{Binding choice.Selection}" />
     <Action name="ClearReasoningLevel" command="ClearReasoningLevel" parameter="{Binding candidate.ClearReasoningLevelSelection}" />
     <Action name="SaveRoute" command="SaveRoute" />
+    <Action name="DiscardRoute" command="DiscardRoute" />
     <Action name="PreviewText" command="PreviewResolution" parameter="text" />
     <Action name="PreviewImage" command="PreviewResolution" parameter="image-generation" />
     <Action name="PreviewVoice" command="PreviewResolution" parameter="voice" />
@@ -27,179 +29,197 @@
   </Actions>
   <Theme Name="user_preference">
     <Page>
-      <Container id="model-picker-root" background="{Resource CuiBackgroundBrush}" padding="24" Type="Vertical Stack">
-        <Container id="compact-model-picker" background="{Resource CuiPanelBrush}" padding="12" margin="0 0 0 16" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
-          <Text id="compact-model-picker-label" text="Model route" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" VerticalAlignment="Center" />
-          <Text id="compact-model-picker-selection" Column="1" text="{Binding State.SelectedRouteId, fallback=Choose a route}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" tooltip="{Binding State.SelectedRouteId}" />
-          <Button id="compact-model-picker-edit" Column="2" action="SelectCurrentRoute" content="Manage" accessible-name="Manage the selected model route" VerticalAlignment="Center" />
-        </Container>
-        <Container id="model-picker-header" margin="0 0 0 18" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
-          <Container Type="Vertical Stack">
-            <Text id="model-picker-title" text="AI models and routes" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-            <Text id="model-picker-description" text="Choose a model route for each kind of work. Route order applies only after eligibility and policy checks." foreground="{Resource CuiTextSoftBrush}" margin="0 5 0 14" TextWrapping="Wrap" />
+      <Container id="model-picker-root" Type="Vertical Stack">
+        <Container id="compact-model-picker" Type="Vertical Stack" IsVisible="{Binding IsPickerOpen, fallback=true}" Padding="8" CellGap="14">
+          <Container Type="Vertical Stack" CellGap="3">
+            <Text Text="Main model" FontSize="13" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="compact-model-picker-selection" Text="{Binding CompactModelName}" FontSize="22" FontWeight="800" TextWrapping="Wrap" />
+            <Text id="compact-model-picker-source" IsVisible="{Binding HasCompactModelSource, fallback=false}" Text="{Binding CompactModelSource}"
+                  Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           </Container>
-          <Button id="model-picker-refresh" Column="1" action="Refresh" content="Refresh" accessible-name="Refresh model routes" VerticalAlignment="Center" />
-        </Container>
-        <Container id="model-picker-categories" margin="0 0 0 18" Type="Wrap">
-          <Button id="category-chat" action="ChatCategory" content="Chat" accessible-name="Show chat routes" />
-          <Button id="category-image" action="ImageCategory" content="Image" margin="8 0 0 0" accessible-name="Show image routes" />
-          <Button id="category-voice" action="VoiceCategory" content="Voice" margin="8 0 0 0" accessible-name="Show voice routes" />
-          <Button id="category-audio" action="AudioCategory" content="Advanced audio" margin="8 0 0 0" accessible-name="Show advanced audio routes" />
-          <Button id="category-video" action="VideoCategory" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
-        </Container>
-        <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" TextWrapping="Wrap" />
-        <Container id="model-catalogue" background="{Resource CuiPanelBrush}" padding="14" margin="0 8 8 8" Type="Vertical Stack" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
-          <Container Type="Vertical Stack">
-            <Text id="model-catalogue-title" text="Add a model to your route" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-            <Button id="model-catalogue-refresh" action="RefreshCatalogue" content="Refresh catalogue" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Refresh the model list" />
+          <Container Type="Wrap" CellGap="8" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 1 0 0">
+            <Text Text="Reasoning" FontWeight="700" />
+            <Text id="compact-model-picker-reasoning" Text="{Binding CompactReasoning}" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
-          <Text id="model-catalogue-status" text="{Binding CatalogueStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 6" TextWrapping="Wrap" />
-          <Repeat Source="{Binding Families}" As="family" Key="{Binding family.Identity}">
-            <Container id="model-planned-family" Type="Vertical Stack" padding="12" margin="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
-              <Text id="model-planned-family-title" text="{Binding family.Title}" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-              <Text id="model-planned-family-description" text="{Binding family.Description}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" margin="0 6" />
-              <Button id="model-family-toggle" action="ToggleFamily" content="{Binding family.ToggleLabel}" accessible-name="{Binding family.ToggleLabel}" HorizontalAlignment="Left" />
-              <If condition="{Binding family.Expanded}">
-                <Container id="model-planned-family-expanded" Type="Vertical Stack" margin="0 8 0 0">
-                  <Text id="model-planned-fallback-status" text="{Binding family.FallbackStatus}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  <Repeat Source="{Binding family.Children}" As="model" Key="{Binding model.Identity}">
-                    <Container id="model-planned-fallback-entry" Type="Vertical Stack" padding="10" margin="0 8 0 0">
-                      <Text id="model-fallback-actual-name" text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-                      <Text id="model-fallback-publisher-id" text="{Binding model.PublisherIdentity}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Text id="model-fallback-label" text="{Binding model.FamilyLabel}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Text id="model-fallback-provider" text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Text id="model-fallback-runtime" text="{Binding model.RuntimeState}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Text id="model-fallback-resources" text="{Binding model.ResourceSummary}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Text id="model-fallback-quant" text="{Binding model.Quantisation}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                      <Button id="model-fallback-add-route" action="AddCatalogueCandidate" content="Add to route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Add Qwen3.8-Flash-Next to the route" />
-                    </Container>
-                  </Repeat>
-                </Container>
-              </If>
+          <Container Type="Wrap" CellGap="8" IsVisible="{Binding HasCompactContextCapacity, fallback=false}">
+            <Text Text="Reported context capacity" FontWeight="700" />
+            <Text id="compact-model-picker-capacity" Text="{Binding CompactContextCapacity}" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Button id="compact-model-picker-edit" Action="ShowModelSettings" Content="More settings" HorizontalAlignment="Right" />
+        </Container>
+        <Container id="expanded-model-settings" Type="Vertical Stack" IsVisible="{Binding IsSettingsOpen, fallback=false}" Padding="8">
+          <Button id="model-settings-back" Action="ShowCompactPicker" Content="Back to picker" HorizontalAlignment="Left"
+                  Background="{Resource CuiTransparentBrush}" BorderWidth="0" Margin="0 0 0 10" />
+          <Container id="model-picker-header" margin="0 0 0 18" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+            <Container Type="Vertical Stack">
+              <Text id="model-picker-title" text="Model settings" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+              <Text id="model-picker-description" text="Choose a model route for each kind of work. Route order applies only after eligibility and policy checks." foreground="{Resource CuiTextSoftBrush}" margin="0 5 0 14" TextWrapping="Wrap" />
             </Container>
-          </Repeat>
-          <If condition="{Binding HasUngroupedCatalogue}">
-            <Repeat Source="{Binding UngroupedCatalogue}" As="model" Key="{Binding model.Identity}">
-              <Container id="model-catalogue-entry" margin="0 5 0 0" Type="Vertical Stack">
-                <Container Type="Vertical Stack">
-                  <Text text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-                  <Text text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  <Text text="{Binding model.Locality}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  <Text text="{Binding model.Capabilities}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  <Text id="model-catalogue-resource-details" text="{Binding model.ResourceSummary}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                  <Text id="model-catalogue-quant-details" text="{Binding model.Quantisation}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                </Container>
-                <Button action="AddCatalogueCandidate" content="Add to route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Add this catalogue model to the route draft" />
+            <Button id="model-picker-refresh" Column="1" action="Refresh" content="Refresh" accessible-name="Refresh model routes" VerticalAlignment="Center" />
+          </Container>
+          <Container id="model-picker-categories" margin="0 0 0 18" Type="Wrap">
+            <Button id="category-chat" action="ChatCategory" content="Chat" accessible-name="Show chat routes" />
+            <Button id="category-image" action="ImageCategory" content="Image" margin="8 0 0 0" accessible-name="Show image routes" />
+            <Button id="category-voice" action="VoiceCategory" content="Voice" margin="8 0 0 0" accessible-name="Show voice routes" />
+            <Button id="category-audio" action="AudioCategory" content="Advanced audio" margin="8 0 0 0" accessible-name="Show advanced audio routes" />
+            <Button id="category-video" action="VideoCategory" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
+          </Container>
+          <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" TextWrapping="Wrap" />
+          <Container id="model-catalogue" background="{Resource CuiPanelBrush}" padding="14" margin="0 8 8 8" Type="Vertical Stack" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+            <Container Type="Vertical Stack">
+              <Text id="model-catalogue-title" text="Add a model to your route" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+              <Button id="model-catalogue-refresh" action="RefreshCatalogue" content="Refresh catalogue" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Refresh the model list" />
+            </Container>
+            <Text id="model-catalogue-status" text="{Binding CatalogueStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 6" TextWrapping="Wrap" />
+            <Repeat Source="{Binding Families}" As="family" Key="{Binding family.Identity}">
+              <Container id="model-planned-family" Type="Vertical Stack" padding="12" margin="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+                <Text id="model-planned-family-title" text="{Binding family.Title}" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                <Text id="model-planned-family-description" text="{Binding family.Description}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" margin="0 6" />
+                <Button id="model-family-toggle" action="ToggleFamily" content="{Binding family.ToggleLabel}" accessible-name="{Binding family.ToggleLabel}" HorizontalAlignment="Left" />
+                <If condition="{Binding family.Expanded}">
+                  <Container id="model-planned-family-expanded" Type="Vertical Stack" margin="0 8 0 0">
+                    <Text id="model-planned-fallback-status" text="{Binding family.FallbackStatus}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    <Repeat Source="{Binding family.Children}" As="model" Key="{Binding model.Identity}">
+                      <Container id="model-planned-fallback-entry" Type="Vertical Stack" padding="10" margin="0 8 0 0">
+                        <Text id="model-fallback-actual-name" text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                        <Text id="model-fallback-publisher-id" text="{Binding model.PublisherIdentity}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Text id="model-fallback-label" text="{Binding model.FamilyLabel}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Text id="model-fallback-provider" text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Text id="model-fallback-runtime" text="{Binding model.RuntimeState}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Text id="model-fallback-resources" text="{Binding model.ResourceSummary}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Text id="model-fallback-quant" text="{Binding model.Quantisation}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        <Button id="model-fallback-add-route" action="AddCatalogueCandidate" content="Add to route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Add Qwen3.8-Flash-Next to the route" />
+                      </Container>
+                    </Repeat>
+                  </Container>
+                </If>
               </Container>
             </Repeat>
-          </If>
-        </Container>
-        <If condition="{Binding HasPendingApproval}">
-          <Text id="model-picker-pending-approval" text="Change pending review in Home" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 8" TextWrapping="Wrap" />
-        </If>
-        <Container id="model-route-list" Type="Vertical Stack">
-          <If condition="{Binding HasSnapshot}">
-            <If condition="{Binding HasRoutes}">
-            <Repeat Source="{Binding Snapshot.Routes}" As="route" Key="{Binding route.RouteId}">
-              <Container id="model-route-template" margin="0 0 0 14" Type="Vertical Stack">
-                <Container id="model-route-card" background="{Resource CuiPanelBrush}" corner-radius="12" padding="18" margin="0 0 0 12" Type="Overlay" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+            <If condition="{Binding HasUngroupedCatalogue}">
+              <Repeat Source="{Binding UngroupedCatalogue}" As="model" Key="{Binding model.Identity}">
+                <Container id="model-catalogue-entry" margin="0 5 0 0" Type="Vertical Stack">
                   <Container Type="Vertical Stack">
+                    <Text text="{Binding model.DisplayName}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                    <Text text="{Binding model.ProviderName}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    <Text text="{Binding model.Locality}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    <Text text="{Binding model.Capabilities}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    <Text id="model-catalogue-resource-details" text="{Binding model.ResourceSummary}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    <Text id="model-catalogue-quant-details" text="{Binding model.Quantisation}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  </Container>
+                  <Button action="AddCatalogueCandidate" content="Add to route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Add this catalogue model to the route draft" />
+                </Container>
+              </Repeat>
+            </If>
+          </Container>
+          <If condition="{Binding HasPendingApproval}">
+            <Text id="model-picker-pending-approval" text="Change pending review in Home" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 8" TextWrapping="Wrap" />
+          </If>
+          <Container id="model-route-list" Type="Vertical Stack">
+            <If condition="{Binding HasSnapshot}">
+              <If condition="{Binding HasRoutes}">
+              <Repeat Source="{Binding Snapshot.Routes}" As="route" Key="{Binding route.RouteId}">
+                <Container id="model-route-template" margin="0 0 0 14" Type="Vertical Stack">
+                  <Container id="model-route-card" background="{Resource CuiPanelBrush}" corner-radius="12" padding="18" margin="0 0 0 12" Type="Overlay" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
                     <Container Type="Vertical Stack">
-                      <Text id="model-route-title" text="{Binding route.RouteId}" font-size="17" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-                      <Text id="model-route-scope" text="{Binding route.Scope}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" TextWrapping="Wrap" />
-                      <Button id="model-route-select" action="SelectRoute" content="Edit route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Edit this model route" />
-                    </Container>
-                    <Text id="model-route-category" text="{Binding route.Category}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 8" TextWrapping="Wrap" />
-                    <Container id="model-route-candidates" Type="Vertical Stack">
-                      <If condition="{Binding route.HasCandidates}">
-                        <Repeat Source="{Binding route.Candidates}" As="candidate" Key="{Binding candidate.Identity}">
-                          <Container id="model-candidate-template" margin="0 8 0 0" Type="Vertical Stack" CellGap="8">
-                            <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
-                            <Text id="candidate-order" text="{Binding candidate.Order}" width="28" foreground="{Resource CuiTextSoftBrush}" />
-                            <Container Column="1" Type="Vertical Stack">
-                              <Text id="candidate-model-id" text="{Binding candidate.ModelId}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-                              <Text id="candidate-provider" text="{Binding candidate.ProviderId}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                            </Container>
-                            <Text id="candidate-enabled" Column="2" text="{Binding candidate.Enabled}" foreground="{Resource CuiTextSoftBrush}" />
-                            </Container>
-                            <Container Type="Wrap">
-                            <Button id="candidate-move-up" action="MoveCandidateUp" content="Up" accessible-name="Move model earlier in route" />
-                            <Button id="candidate-move-down" action="MoveCandidateDown" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
-                            <If condition="{Binding candidate.Enabled}">
-                              <Button action="DisableCandidate" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
-                            </If>
-                            <Else>
-                              <Button action="EnableCandidate" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
-                            </Else>
-                            <If condition="{Binding candidate.HasAdvertisedReasoningLevels}">
-                              <Container id="candidate-reasoning-choices" Type="Wrap" margin="0 8 0 0">
-                                <Text id="candidate-reasoning-selected" text="{Binding candidate.SelectedReasoningLabel, fallback=No level selected}" foreground="{Resource CuiTextBrush}" margin="0 4 0 0" TextWrapping="Wrap" />
-                                <Repeat Source="{Binding candidate.ReasoningLevelChoices}" As="choice" Key="{Binding choice.Identity}">
-                                  <Button action="SelectReasoningLevel" content="{Binding choice.Label}" margin="4 0 0 0" accessible-name="Select reasoning level" />
-                                </Repeat>
-                                <If condition="{Binding candidate.HasReasoningLevel}">
-                                  <Button action="ClearReasoningLevel" content="Clear" margin="4 0 0 0" accessible-name="Clear the saved reasoning level default" />
-                                </If>
+                      <Container Type="Vertical Stack">
+                        <Text id="model-route-title" text="{Binding route.RouteId}" font-size="17" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                        <Text id="model-route-scope" text="{Binding route.Scope}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" TextWrapping="Wrap" />
+                        <Button id="model-route-select" action="SelectRoute" content="Edit route" margin="0 8 0 0" HorizontalAlignment="Left" accessible-name="Edit this model route" />
+                      </Container>
+                      <Text id="model-route-category" text="{Binding route.Category}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 8" TextWrapping="Wrap" />
+                      <Container id="model-route-candidates" Type="Vertical Stack">
+                        <If condition="{Binding route.HasCandidates}">
+                          <Repeat Source="{Binding route.Candidates}" As="candidate" Key="{Binding candidate.Identity}">
+                            <Container id="model-candidate-template" margin="0 8 0 0" Type="Vertical Stack" CellGap="8">
+                              <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+                              <Text id="candidate-order" text="{Binding candidate.Order}" width="28" foreground="{Resource CuiTextSoftBrush}" />
+                              <Container Column="1" Type="Vertical Stack">
+                                <Text id="candidate-model-id" text="{Binding candidate.ModelId}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+                                <Text id="candidate-provider" text="{Binding candidate.ProviderId}" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                               </Container>
-                            </If>
-                            <Else>
-                              <Text id="candidate-reasoning-level" text="{Binding candidate.ReasoningLevelId, fallback=No reasoning level}" foreground="{Resource CuiTextSoftBrush}" margin="12 0 0 0" TextWrapping="Wrap" />
-                              <If condition="{Binding candidate.HasReasoningLevel}">
-                                <Button action="ClearReasoningLevel" content="Clear level" margin="6 0 0 0" accessible-name="Clear the saved reasoning level default" />
+                              <Text id="candidate-enabled" Column="2" text="{Binding candidate.Enabled}" foreground="{Resource CuiTextSoftBrush}" />
+                              </Container>
+                              <Container Type="Wrap">
+                              <Button id="candidate-move-up" action="MoveCandidateUp" content="Up" accessible-name="Move model earlier in route" />
+                              <Button id="candidate-move-down" action="MoveCandidateDown" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
+                              <If condition="{Binding candidate.Enabled}">
+                                <Button action="DisableCandidate" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
                               </If>
                               <Else>
-                                <Text text="Reasoning choices are unavailable for this model." foreground="{Resource CuiTextSoftBrush}" margin="6 0 0 0" TextWrapping="Wrap" />
+                                <Button action="EnableCandidate" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
                               </Else>
-                            </Else>
+                              <If condition="{Binding candidate.HasAdvertisedReasoningLevels}">
+                                <Container id="candidate-reasoning-choices" Type="Wrap" margin="0 8 0 0">
+                                  <Text id="candidate-reasoning-selected" text="{Binding candidate.SelectedReasoningLabel, fallback=No level selected}" foreground="{Resource CuiTextBrush}" margin="0 4 0 0" TextWrapping="Wrap" />
+                                  <Repeat Source="{Binding candidate.ReasoningLevelChoices}" As="choice" Key="{Binding choice.Identity}">
+                                    <Button action="SelectReasoningLevel" content="{Binding choice.Label}" margin="4 0 0 0" accessible-name="Select reasoning level" />
+                                  </Repeat>
+                                  <If condition="{Binding candidate.HasReasoningLevel}">
+                                    <Button action="ClearReasoningLevel" content="Clear" margin="4 0 0 0" accessible-name="Clear the saved reasoning level default" />
+                                  </If>
+                                </Container>
+                              </If>
+                              <Else>
+                                <Text id="candidate-reasoning-level" text="{Binding candidate.ReasoningLevelId, fallback=No reasoning level}" foreground="{Resource CuiTextSoftBrush}" margin="12 0 0 0" TextWrapping="Wrap" />
+                                <If condition="{Binding candidate.HasReasoningLevel}">
+                                  <Button action="ClearReasoningLevel" content="Clear level" margin="6 0 0 0" accessible-name="Clear the saved reasoning level default" />
+                                </If>
+                                <Else>
+                                  <Text text="Reasoning choices are unavailable for this model." foreground="{Resource CuiTextSoftBrush}" margin="6 0 0 0" TextWrapping="Wrap" />
+                                </Else>
+                              </Else>
+                              </Container>
                             </Container>
+                          </Repeat>
+                        </If>
+                        <Else>
+                          <Container id="model-candidate-empty" padding="12" Type="Vertical Stack">
+                            <Text text="This route has no candidates." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                           </Container>
-                        </Repeat>
-                      </If>
-                      <Else>
-                        <Container id="model-candidate-empty" padding="12" Type="Vertical Stack">
-                          <Text text="This route has no candidates." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                        </Container>
-                      </Else>
+                        </Else>
+                      </Container>
                     </Container>
                   </Container>
                 </Container>
-              </Container>
-            </Repeat>
-            </If>
-            <Else>
-              <Container id="model-route-empty" padding="20" Type="Vertical Stack">
-                <Text text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-              </Container>
-            </Else>
-          </If>
-        </Container>
-        <Container id="model-route-actions" margin="0 12 0 8" Type="Wrap" CellGap="8">
-          <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />
-          <Button id="preview-text-route" action="PreviewText" content="Preview text" accessible-name="Preview text model routing" />
-          <Button id="preview-image-route" action="PreviewImage" content="Preview image" accessible-name="Preview image model routing" />
-          <Button id="preview-voice-route" action="PreviewVoice" content="Preview voice" accessible-name="Preview voice model routing" />
-          <Button id="preview-audio-route" action="PreviewAudio" content="Preview audio" accessible-name="Preview audio model routing" />
-          <Button id="preview-video-route" action="PreviewVideo" content="Preview video" accessible-name="Preview video model routing" />
-        </Container>
-        <If condition="{Binding HasPreview}">
-          <Container id="model-route-preview" margin="0 0 0 14" Type="Vertical Stack">
-            <Text id="model-route-preview-state" text="{Binding Preview.ResolutionState}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
-            <Container id="model-route-preview-trace" Type="Vertical Stack">
-              <If condition="{Binding HasTrace}">
-                <Repeat Source="{Binding Preview.Trace}" As="trace" Key="{Binding trace.Identity}">
-                  <Container id="model-route-trace-template" Type="Vertical Stack">
-                    <Text id="model-route-trace-entry" text="{Binding trace.Text}" foreground="{Resource CuiTextSoftBrush}" margin="0 2 0 0" TextWrapping="Wrap" />
-                  </Container>
-                </Repeat>
+              </Repeat>
               </If>
               <Else>
-                <Container id="model-route-trace-empty" Type="Vertical Stack">
-                  <Text text="No candidates were skipped." foreground="{Resource CuiTextSoftBrush}" />
+                <Container id="model-route-empty" padding="20" Type="Vertical Stack">
+                  <Text text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                 </Container>
               </Else>
-            </Container>
+            </If>
           </Container>
-        </If>
+          <Container id="model-route-actions" margin="0 12 0 8" Type="Wrap" CellGap="8">
+            <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />
+            <Button id="discard-model-route" action="DiscardRoute" content="Discard changes" accessible-name="Discard unsaved model route changes"
+                    IsEnabled="{Binding CanDiscardRoute, fallback=false}" />
+            <Button id="preview-text-route" action="PreviewText" content="Preview text" accessible-name="Preview text model routing" />
+            <Button id="preview-image-route" action="PreviewImage" content="Preview image" accessible-name="Preview image model routing" />
+            <Button id="preview-voice-route" action="PreviewVoice" content="Preview voice" accessible-name="Preview voice model routing" />
+            <Button id="preview-audio-route" action="PreviewAudio" content="Preview audio" accessible-name="Preview audio model routing" />
+            <Button id="preview-video-route" action="PreviewVideo" content="Preview video" accessible-name="Preview video model routing" />
+          </Container>
+          <If condition="{Binding HasPreview}">
+            <Container id="model-route-preview" margin="0 0 0 14" Type="Vertical Stack">
+              <Text id="model-route-preview-state" text="{Binding Preview.ResolutionState}" foreground="{Resource CuiTextBrush}" TextWrapping="Wrap" />
+              <Container id="model-route-preview-trace" Type="Vertical Stack">
+                <If condition="{Binding HasTrace}">
+                  <Repeat Source="{Binding Preview.Trace}" As="trace" Key="{Binding trace.Identity}">
+                    <Container id="model-route-trace-template" Type="Vertical Stack">
+                      <Text id="model-route-trace-entry" text="{Binding trace.Text}" foreground="{Resource CuiTextSoftBrush}" margin="0 2 0 0" TextWrapping="Wrap" />
+                    </Container>
+                  </Repeat>
+                </If>
+                <Else>
+                  <Container id="model-route-trace-empty" Type="Vertical Stack">
+                    <Text text="No candidates were skipped." foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
+                </Else>
+              </Container>
+            </Container>
+          </If>
+        </Container>
       </Container>
     </Page>
   </Theme>

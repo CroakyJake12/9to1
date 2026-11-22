@@ -4,6 +4,7 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using Dulche.Runtime;
 using Haven.Application;
+using Haven.Application.Haven;
 using HavenOS.Home.Core;
 
 namespace HavenOS.Home;
@@ -24,6 +25,7 @@ public enum HomeModelPickerAction
     SetReasoningLevel,
     CommitReasoningLevel,
     ToggleFamily,
+    DiscardRoute,
 }
 
 public sealed record HomeModelPickerActionRequest(
@@ -50,6 +52,8 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     private HomeModelFamilyReleaseContext _familyRelease = new();
     private bool _catalogueObserved;
     private bool _catalogueReadFailed;
+    private HavenModelProjectionSnapshot? _compactModel;
+    private bool _mainRouteHasCandidates;
 
     public HomeModelPickerCuiSurface(CuiDocument document)
     {
@@ -70,6 +74,7 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     public string CatalogueStatus { get; private set; } = "Refresh the model list to add a model to your route.";
     public string? PendingApprovalRequestId { get; set; }
     public string? PendingAuditRequestId { get; set; }
+    public bool IsSettingsOpen { get; private set; }
     public HomeModelPickerCuiProjection Projection { get; private set; } =
         new(HomeModelPickerEditorState.Initial, "global", "chat");
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -77,7 +82,56 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
     /// <summary>True once a real route snapshot has been applied to this surface.</summary>
     public bool HasSnapshot => Projection.HasSnapshot;
 
-    public bool TryGetValue(string path, out object? value) => Projection.TryGetValue(path, out value);
+    public bool TryGetValue(string path, out object? value)
+    {
+        switch (path)
+        {
+            case "IsSettingsOpen": value = IsSettingsOpen; return true;
+            case "IsPickerOpen": value = !IsSettingsOpen; return true;
+            case "CanDiscardRoute": value = CanDiscardRoute(State); return true;
+            case "CompactModelName":
+                value = CompactCatalogueModel?.DisplayName ?? _compactModel?.ModelId ??
+                    (_mainRouteHasCandidates ? "Model unavailable" : "Choose a model");
+                return true;
+            case "CompactModelSource":
+                value = _compactModel is { LocalityKnown: true, IsLocal: true } ? "This device"
+                    : CompactCatalogueModel?.ProviderName ?? _compactModel?.ProviderId;
+                return true;
+            case "HasCompactModelSource": value = _compactModel?.ProviderId is not null; return true;
+            case "CompactReasoning":
+                value = _compactModel is { AdvertisedReasoningIds.Count: > 0 } model
+                    ? HomeModelPickerReasoningLabels.LabelForLevel(model.AdvertisedReasoningIds, model.SelectedReasoningId)
+                        ?? (model.SelectedReasoningOrdinal is not null ? model.SelectedReasoningId : "No level selected")
+                    : "Unavailable";
+                return true;
+            case "HasCompactContextCapacity": value = CompactCatalogueModel?.ContextWindow is > 0; return true;
+            case "CompactContextCapacity":
+                value = CompactCatalogueModel?.ContextWindow is { } capacity && capacity > 0 ? $"{capacity:N0} tokens" : null;
+                return true;
+            default: return Projection.TryGetValue(path, out value);
+        }
+    }
+
+    private HomeModelPickerCatalogueEntry? CompactCatalogueModel => _compactModel is { ProviderId: { } provider, ModelId: { } id }
+        ? Catalogue.FirstOrDefault(entry => StringComparer.OrdinalIgnoreCase.Equals(entry.ProviderId, provider) &&
+            StringComparer.OrdinalIgnoreCase.Equals(entry.ModelId, id))
+        : null;
+
+    internal static bool CanDiscardRoute(HomeModelPickerEditorState state) => state is
+        { HasUnsavedChanges: true, IsBusy: false, PendingApprovalRequestId: null, PendingAuditRequestId: null };
+
+    public void SetSettingsOpen(bool settingsOpen)
+    {
+        if (IsSettingsOpen == settingsOpen) return;
+        IsSettingsOpen = settingsOpen;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
+
+    public void ApplyCompactModel(HavenModelProjectionSnapshot? model)
+    {
+        _compactModel = model;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
 
     public static HomeModelPickerCuiSurface LoadDefault()
     {
@@ -93,9 +147,14 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
             Scope = snapshot.Scope;
             Category = snapshot.Category;
             ScopeId = snapshot.Routes.FirstOrDefault()?.ScopeId;
+            if (IsMainCategory(Category))
+                _mainRouteHasCandidates = snapshot.Routes.Any(route => route.Candidates.Any(candidate => candidate.Enabled));
         }
         RebuildProjection();
     }
+
+    internal static bool IsMainCategory(string category) => string.Equals(category, "chat", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(category, "active", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Applies the effective resolved candidate's real advertised reasoning choices and selected
     /// label (from the shared Home-owned source) for the visible personal route.</summary>
@@ -201,6 +260,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
         {
             Surface.ApplyState(_editor.Current);
             await ApplyEffectiveReasoningAsync(cancellationToken).ConfigureAwait(false);
+            if (result.Succeeded && CanPublish()) await LoadCatalogueAsync(cancellationToken).ConfigureAwait(false);
         }
         return result;
     }
@@ -246,6 +306,10 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
                     HomeModelPickerAction.MoveCandidateDown => Box(Move(action, 1)),
                     HomeModelPickerAction.FinishAudit => await FinishAuditAsync(cancellationToken).ConfigureAwait(false),
                     HomeModelPickerAction.SaveRoute => Box(await _editor.SaveAsync(cancellationToken).ConfigureAwait(false)),
+                    HomeModelPickerAction.DiscardRoute => HomeModelPickerCuiSurface.CanDiscardRoute(_editor.Current)
+                        ? Box(await _editor.RefreshAsync(Surface.Scope, Surface.Category, discardUnsavedChanges: true,
+                            cancellationToken: cancellationToken).ConfigureAwait(false))
+                        : Failure<object>("DiscardUnavailable", "There are no editable route changes to discard."),
                     HomeModelPickerAction.PreviewResolution => Box(await _editor.PreviewAsync(
                         Required(action.Capability, "required capability"), action.AppId, action.AgentId, action.Context,
                         cancellationToken).ConfigureAwait(false)),
@@ -324,9 +388,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
     private async Task ApplyEffectiveReasoningAsync(CancellationToken cancellationToken)
     {
         if (_source is null || _actor is null) return;
-        var chatOrActive = string.Equals(Surface.Category, "chat", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(Surface.Category, "active", StringComparison.OrdinalIgnoreCase);
-        if (!chatOrActive)
+        if (!HomeModelPickerCuiSurface.IsMainCategory(Surface.Category))
         {
             // Non-Chat/Active surfaces never carry Chat-tier choices or a pending Home review; clear
             // any stale effective state so Chat choices can never leak into another category/view.
@@ -339,6 +401,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
         // Recheck currentness after the awaited projection: a retired panel or actor switch must not
         // publish a stale selected tier or stale pending review.
         if (!CanPublish()) return;
+        Surface.ApplyCompactModel(snapshot);
         if (snapshot is null)
         {
             Surface.ApplyEffectiveReasoning([], null, null, null, null);

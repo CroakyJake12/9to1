@@ -2,9 +2,14 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.ExceptionServices;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -224,6 +229,7 @@ public sealed partial class App
                     return;
                 }
                 shellLoader.WireBindings(loaded.Root);
+                loaded.Root.AddHandler(KeyDownEvent, OnSharedPanelKeyDown, RoutingStrategies.Tunnel);
                 var sceneHost = FindNamedContainer(loaded.Root, SharedSceneHostId);
                 if (sceneHost is null)
                 {
@@ -310,7 +316,7 @@ public sealed partial class App
         /// When the authored panel host is absent (or mounting/retirement failed), the incoming
         /// loader is retired, the panel is NOT shown, and the caller must publish a truthful refusal
         /// instead of reporting success.</summary>
-        private bool ShowSharedPanel(CuiControlLoader loader, Control root)
+        private bool ShowSharedPanel(CuiControlLoader loader, Control root, HomeModelPickerCuiSurface? modelPicker = null)
         {
             Dispatcher.UIThread.VerifyAccess();
             if (_sharedPanelHost is null) { RetireLoader(loader); return false; }
@@ -346,7 +352,11 @@ public sealed partial class App
             _sharedPanelLoader = loader;
             _sharedPanelRoot = root;
             _sharedPanelHost.AddChild(root);
-            if (_shellBindings is not null) _shellBindings.HasOpenPanel = true;
+            if (_shellBindings is { } shell)
+            {
+                shell.SetModelPicker(modelPicker);
+                shell.HasOpenPanel = true;
+            }
             return true;
         }
 
@@ -358,6 +368,7 @@ public sealed partial class App
             var loader = _sharedPanelLoader;
             var root = _sharedPanelRoot;
             var page = _mountedAutomationPage;
+            var restoreModelFocus = root is not null && _shellBindings?.ModelPicker is not null;
             _sharedPanelLoader = null;
             _sharedPanelRoot = null;
             _mountedAutomationPage = null;
@@ -381,7 +392,14 @@ public sealed partial class App
             if (_sharedPanelLoader is null && _mountedAutomationPage is null)
             {
                 Interlocked.Increment(ref _sharedPanelGeneration);
-                if (_shellBindings is not null) _shellBindings.HasOpenPanel = false;
+                if (_shellBindings is { } shell)
+                {
+                    shell.HasOpenPanel = false;
+                    shell.SetModelPicker(null);
+                }
+                if (restoreModelFocus)
+                    _scene?.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.Name == "HavenModelButton")
+                        ?.Focus(NavigationMethod.Tab);
                 RefreshAfterPanelJourney();
             }
             // If a replacement mounted, its own Show already set HasOpenPanel and reserved its
@@ -395,6 +413,37 @@ public sealed partial class App
             IsCurrent &&
             generation == Volatile.Read(ref _sharedPanelGeneration) &&
             StringComparer.Ordinal.Equals(profile, _actor?.ProfileId);
+
+        private void OnSharedPanelKeyDown(object? sender, KeyEventArgs args)
+        {
+            if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None &&
+                _shellBindings?.ModelPicker is { IsSettingsOpen: true } &&
+                ShowModelPickerView(settingsOpen: false))
+                args.Handled = true;
+        }
+
+        private bool ShowModelPickerView(bool settingsOpen)
+        {
+            if (!IsCurrent || _sharedPanelRoot is not { } root ||
+                _shellBindings is not { HasOpenPanel: true, ModelPicker: { } modelPicker } shell)
+                return false;
+            modelPicker.SetSettingsOpen(settingsOpen);
+            if (!ReferenceEquals(_sharedPanelRoot, root)) return false;
+            shell.RefreshPanelPlacement();
+            FocusModelPickerControl(root, settingsOpen ? "model-settings-back" : "compact-model-picker-edit");
+            return true;
+        }
+
+        private void FocusModelPickerControl(Control root, string buttonName)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!IsCurrent || !ReferenceEquals(_sharedPanelRoot, root)) return;
+                var button = root.GetVisualDescendants().OfType<Button>().FirstOrDefault(control => control.Name == buttonName);
+                button?.BringIntoView();
+                button?.Focus(NavigationMethod.Tab);
+            }, DispatcherPriority.Loaded);
+        }
 
         /// <summary>Lifetime-owned snapshot of the genuine current selected model/provider/route for
         /// the top-bar cluster. It is populated from the REAL Home provider/route repository and is
@@ -860,7 +909,11 @@ public sealed partial class App
                 return true; // genuinely already mounted
             _mountedAutomationPage = page;
             _sharedPanelHost.AddChild(page);
-            if (_shellBindings is not null) _shellBindings.HasOpenPanel = true;
+            if (_shellBindings is { } shell)
+            {
+                shell.SetModelPicker(null);
+                shell.HasOpenPanel = true;
+            }
             return true;
         }
 
@@ -1036,9 +1089,10 @@ public sealed partial class App
                         : HavenSharedOpenResult.Refused(opened.Code ?? "ModelOpenFailed", opened.Message);
                 }
                 _modelSessions.Add(session);
-                if (!ShowSharedPanel(loader, loaded.Root))
+                if (!ShowSharedPanel(loader, loaded.Root, controller.Surface))
                     return HavenSharedOpenResult.Refused("PanelHostUnavailable",
                         "The authored shared-panel host is unavailable.");
+                FocusModelPickerControl(loaded.Root, "compact-model-picker-edit");
                 return HavenSharedOpenResult.Succeeded();
             });
         }
@@ -1114,6 +1168,8 @@ public sealed partial class App
             : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
         {
             private bool _hasOpenPanel;
+            public HomeModelPickerCuiSurface? ModelPicker { get; private set; }
+            private bool IsCompactModelPicker => ModelPicker is { IsSettingsOpen: false };
             public event PropertyChangedEventHandler? PropertyChanged;
             public bool HasOpenPanel
             {
@@ -1122,9 +1178,29 @@ public sealed partial class App
             }
             public bool TryGetValue(string path, out object? value)
             {
-                value = path switch { "HasOpenPanel" => _hasOpenPanel, _ => null };
+                value = path switch
+                {
+                    "HasOpenPanel" => _hasOpenPanel,
+                    "PanelBackdrop" => IsCompactModelPicker ? "#00000000" : "#667F7F7F",
+                    "PanelHorizontalAlignment" => IsCompactModelPicker ? HorizontalAlignment.Right : HorizontalAlignment.Stretch,
+                    "PanelVerticalAlignment" => IsCompactModelPicker ? VerticalAlignment.Top : VerticalAlignment.Stretch,
+                    "PanelMargin" => IsCompactModelPicker ? new Thickness(16, 84, 16, 16) : new Thickness(16),
+                    "PanelMinWidth" => IsCompactModelPicker ? 240d : 0d,
+                    "PanelMaxWidth" => IsCompactModelPicker ? 360d : 880d,
+                    "PanelMaxHeight" => IsCompactModelPicker ? 420d : 720d,
+                    _ => null
+                };
                 return value is not null;
             }
+
+            public void SetModelPicker(HomeModelPickerCuiSurface? modelPicker)
+            {
+                if (ReferenceEquals(ModelPicker, modelPicker)) return;
+                ModelPicker = modelPicker;
+                RefreshPanelPlacement();
+            }
+
+            public void RefreshPanelPlacement() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
             public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -1161,6 +1237,12 @@ public sealed partial class App
                 // no longer the mounted/current one.
                 if (!_host.IsPanelCurrent(_generation, _profile))
                 { _host.PublishSharedRefusal("StalePanel", "This model-picker panel is no longer current."); return; }
+                if (command is "ShowModelSettings" or "ShowCompactPicker")
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _host.ShowModelPickerView(command == "ShowModelSettings");
+                    return;
+                }
                 // Full current actor/admission re-validation BEFORE calling the owner, so a
                 // retired/actor-switched panel refuses before touching the owning service. The
                 // exact mounted panel/generation is re-checked AFTER the await, because the panel
@@ -1256,6 +1338,9 @@ public sealed partial class App
                         return;
                     case "SaveRoute":
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.SaveRoute), cancellationToken));
+                        return;
+                    case "DiscardRoute":
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.DiscardRoute), cancellationToken));
                         return;
                     case "FinishAudit":
                         await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.FinishAudit), cancellationToken));

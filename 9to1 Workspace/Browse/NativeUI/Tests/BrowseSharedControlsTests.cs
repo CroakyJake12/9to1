@@ -8,6 +8,8 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Headless.XUnit;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -32,13 +34,6 @@ public sealed partial class BrowseNativeUiTests
     [InlineData(1440, 920)]
     public async Task Shared_model_panel_bounds_scroll_and_keeps_its_close_action_reachable_without_mutating_the_route(int width, int height)
     {
-        var bindings = new SharedPanelDocumentFixture();
-        using var shellLoader = new CuiControlLoader();
-        shellLoader.SetBindingContext(bindings); shellLoader.SetActionDispatcher(bindings);
-        var shell = shellLoader.TryLoad(HavenSharedHeaderDocuments.LoadShell());
-        Assert.NotNull(shell.Root);
-        Assert.DoesNotContain(shell.Diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
-        shellLoader.WireBindings(shell.Root!);
         var surface = HomeModelPickerCuiSurface.LoadDefault();
         var route = new HomeModelRouteContract("fixture.route.with.a.long.stable.identifier.for.narrow.viewport.regression", 1,
             "global", "chat", null, null,
@@ -47,9 +42,18 @@ public sealed partial class BrowseNativeUiTests
         surface.ApplyState(new(false, "Fixture", "Explicit model-picker layout fixture", new(1, "global", "chat", [route]),
             route.RouteId, route, true, null));
         surface.ApplyCatalogue(new HomeModelCataloguePage([new HomeModelPickerCatalogueEntry(
-            "fixture-provider", "fixture-model", "fixture-revision", "Explicit catalogue layout fixture",
-            "Fixture provider", null, new HashSet<string>(["text"]), 1024, "fixture", "local", "fixture")],
+            "fixture-provider", "fixture-model-0", "fixture-revision", "Explicit catalogue layout fixture",
+            "Fixture provider", true, new HashSet<string>(["text"]), 1024, "fixture", "local", "fixture")],
             0, 50, false, 1), "Explicit catalogue fixture, not provider readiness");
+        surface.ApplyCompactModel(HavenModelProjectionSnapshot.CreateValidated(null, null, "global", null,
+            route.RouteId, route.Version, 1, "fixture-provider", "fixture-model-0", true, true, ["quick", "balanced", "deep"], "deep"));
+        var bindings = new SharedPanelDocumentFixture { ModelPicker = surface };
+        using var shellLoader = new CuiControlLoader();
+        shellLoader.SetBindingContext(bindings); shellLoader.SetActionDispatcher(bindings);
+        var shell = shellLoader.TryLoad(HavenSharedHeaderDocuments.LoadShell());
+        Assert.NotNull(shell.Root);
+        Assert.DoesNotContain(shell.Diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+        shellLoader.WireBindings(shell.Root!);
         var originalState = surface.State;
         using var pickerLoader = new CuiControlLoader();
         pickerLoader.SetBindingContext(surface); pickerLoader.SetActionDispatcher(bindings);
@@ -65,21 +69,45 @@ public sealed partial class BrowseNativeUiTests
             window.Show(); Pump();
             var frame = NamedContainer(shell.Root!, "shared-panel-frame");
             var close = shell.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "shared-panel-close");
+            var backdrop = NamedContainer(shell.Root!, "shared-shell-backdrop");
             var scroll = Assert.Single(body.GetVisualDescendants().OfType<ScrollViewer>());
             var viewport = Assert.Single(scroll.GetVisualDescendants().OfType<ScrollContentPresenter>());
             AssertInside(frame, window); AssertInside(close, window);
+            Assert.InRange(frame.Bounds.Width, 240, 360);
+            Assert.Equal(HorizontalAlignment.Right, frame.HorizontalAlignment);
+            Assert.Equal(0, Assert.IsAssignableFrom<ISolidColorBrush>(backdrop.Background).Color.A);
+            var modelName = picker.Root!.GetVisualDescendants().OfType<TextBlock>()
+                .Single(control => control.Name == "compact-model-picker-selection");
+            Assert.Equal("Explicit catalogue layout fixture", modelName.Text);
+            Assert.True(modelName.IsEffectivelyVisible);
+            var more = NamedButton("compact-model-picker-edit");
+            Assert.DoesNotContain(picker.Root!.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "save-model-route" && button.IsEffectivelyVisible);
+            AssertInside(more, viewport);
+            Capture("compact-model-picker");
+            await Click(more);
+            Assert.True(surface.IsSettingsOpen);
+            Assert.Equal(HorizontalAlignment.Stretch, frame.HorizontalAlignment);
+            Assert.Equal(0x66, Assert.IsAssignableFrom<ISolidColorBrush>(backdrop.Background).Color.A);
+            var back = NamedButton("model-settings-back");
+            AssertInside(back, viewport);
+            Capture("expanded-model-settings");
+            Assert.Same(originalState, surface.State);
+            await Click(back);
+            Assert.False(surface.IsSettingsOpen);
+            Assert.Same(originalState, surface.State);
+            await Click(more);
             Assert.True(close.IsCancel);
             Assert.Equal(ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
             Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
-            foreach (var name in new[] { "compact-model-picker-edit", "model-picker-refresh", "model-catalogue-refresh",
-                "category-video", "save-model-route", "preview-video-route" })
+            foreach (var name in new[] { "model-settings-back", "model-picker-refresh", "model-catalogue-refresh",
+                "category-video", "save-model-route", "discard-model-route", "preview-video-route" })
             {
-                var button = picker.Root!.GetVisualDescendants().OfType<Button>().Single(control => control.Name == name);
+                var button = NamedButton(name);
                 button.BringIntoView(); Pump();
                 AssertInside(button, viewport);
                 AssertInside(close, window); // The dismiss action does not scroll away with content.
             }
-            using (var rendered = window.CaptureRenderedFrame()) Assert.NotNull(rendered);
             var point = close.TranslatePoint(new Point(close.Bounds.Width / 2, close.Bounds.Height / 2), window)!.Value;
             var hit = window.InputHitTest(point) as Visual;
             Assert.Contains(close, hit!.GetSelfAndVisualAncestors());
@@ -88,7 +116,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.False(bindings.HasOpenPanel); Assert.Equal(1, bindings.CloseCommands);
             Assert.Same(originalState, surface.State);
             bindings.HasOpenPanel = true; Pump();
-            var save = picker.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "save-model-route");
+            var save = NamedButton("save-model-route");
             save.BringIntoView(); Pump(); save.Focus();
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
             window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.None, null);
@@ -100,6 +128,23 @@ public sealed partial class BrowseNativeUiTests
         finally { window.Close(); }
 
         void Pump() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        Button NamedButton(string name) => picker.Root!.GetVisualDescendants().OfType<Button>().Single(control => control.Name == name);
+        void Capture(string view)
+        {
+            using var rendered = window.CaptureRenderedFrame();
+            Assert.NotNull(rendered);
+            var evidence = Environment.GetEnvironmentVariable("BROWSE_EVIDENCE_DIRECTORY");
+            if (string.IsNullOrWhiteSpace(evidence)) return;
+            Directory.CreateDirectory(evidence);
+            rendered.Save(Path.Combine(evidence, $"{view}-{width}x{height}.png"));
+        }
+        async Task Click(Button button)
+        {
+            button.BringIntoView(); Pump();
+            var center = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
+            window.MouseDown(center, MouseButton.Left); window.MouseUp(center, MouseButton.Left);
+            await pickerLoader.WhenActionsIdleAsync(); Pump();
+        }
         static CuiContainerControl NamedContainer(Control root, string name) => root.GetVisualDescendants().OfType<CuiContainerControl>()
             .Single(control => control.Name == name);
         static void AssertInside(Control child, Control parent)
@@ -115,6 +160,8 @@ public sealed partial class BrowseNativeUiTests
     private sealed class SharedPanelDocumentFixture : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
     {
         private bool _hasOpenPanel = true;
+        public HomeModelPickerCuiSurface? ModelPicker { get; init; }
+        private bool IsCompactModelPicker => ModelPicker is { IsSettingsOpen: false };
         public bool HasOpenPanel
         {
             get => _hasOpenPanel;
@@ -123,10 +170,31 @@ public sealed partial class BrowseNativeUiTests
         public int CloseCommands { get; private set; }
         public event PropertyChangedEventHandler? PropertyChanged;
         public bool TryGetValue(string path, out object? value)
-        { value = path == nameof(HasOpenPanel) ? HasOpenPanel : null; return value is not null; }
+        {
+            value = path switch
+            {
+                nameof(HasOpenPanel) => HasOpenPanel,
+                "PanelBackdrop" => IsCompactModelPicker ? "#00000000" : "#667F7F7F",
+                "PanelHorizontalAlignment" => IsCompactModelPicker ? HorizontalAlignment.Right : HorizontalAlignment.Stretch,
+                "PanelVerticalAlignment" => IsCompactModelPicker ? VerticalAlignment.Top : VerticalAlignment.Stretch,
+                "PanelMargin" => IsCompactModelPicker ? new Thickness(16, 84, 16, 16) : new Thickness(16),
+                "PanelMinWidth" => IsCompactModelPicker ? 240d : 0d,
+                "PanelMaxWidth" => IsCompactModelPicker ? 360d : 880d,
+                "PanelMaxHeight" => IsCompactModelPicker ? 420d : 720d,
+                _ => null
+            };
+            return value is not null;
+        }
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
+            if (command is "ShowModelSettings" or "ShowCompactPicker")
+            {
+                Assert.NotNull(ModelPicker);
+                ModelPicker.SetSettingsOpen(command == "ShowModelSettings");
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+                return ValueTask.CompletedTask;
+            }
             Assert.Equal("9to1.Haven.ClosePanel", command);
             CloseCommands++; HasOpenPanel = false;
             return ValueTask.CompletedTask;
