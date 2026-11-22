@@ -25,7 +25,8 @@ public sealed partial class BrowseNativeUiTests
     {
         var chrome = await BrowseChrome.CreateAsync(new Paths(),
             internalContentFactory: new TabSurfaceInternalFixtureFactory(), homeProfileId: "tab-surface-fixture");
-        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, tabIconSource: address =>
+            address.Authority == "home" ? "avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" : null);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
         RegisterProductionImageResolver(window);
         try
@@ -36,6 +37,11 @@ public sealed partial class BrowseNativeUiTests
             Assert.True(chrome.State.SelectedTab.IsHome);
             var home = Tabs(window).Single();
             Assert.False(Close(home).IsEffectivelyVisible);
+            var icon = Assert.Single(home.GetVisualDescendants().OfType<Image>());
+            Assert.NotNull(icon.Source);
+            Assert.Equal(16, icon.Bounds.Width);
+            Assert.Equal(FontWeight.Bold, Title(home).FontWeight);
+            Assert.True(Title(home).Padding.Left >= icon.Bounds.Width + 10);
             Assert.Equal(new CornerRadius(8), home.CornerRadius);
 
             // The address text's actual presenter is vertically centred with the trailing arrow.

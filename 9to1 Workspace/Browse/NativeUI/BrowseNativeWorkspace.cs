@@ -44,6 +44,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private readonly BrowseChrome _chrome;
     private readonly Func<string, bool> _originalActionAvailability;
     private readonly IHavenHostContext? _hostContext;
+    private readonly Func<AppContentAddress, string?>? _tabIconSource;
     private readonly object _sourceGate = new();
     private readonly List<Task> _originalCommands = [], _originalOperations = [], _originalNotifications = [], _originalUiOperations = [];
     private BrowseChromeSnapshot _snapshot;
@@ -72,8 +73,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public IReadOnlyList<Task> OriginalOperations { get { lock (_sourceGate) return _originalOperations.ToArray(); } }
     public IReadOnlyList<Task> OriginalNotifications { get { lock (_sourceGate) return _originalNotifications.Concat(_originalUiOperations).ToArray(); } }
 
-    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null)
+    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null,
+        Func<AppContentAddress, string?>? tabIconSource = null)
     {
+        _tabIconSource = tabIconSource;
         _originalDownloadFilesService = originalDownloadFilesService;
         _hostContext = sharedContext;
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
@@ -855,6 +858,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     Description: tab.Title + (membership.Count > 0 ? " · " + string.Join(" · ", membership) : string.Empty) + " · " + (tab.Address.IsWeb
                         ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
                         : tab.IsHome ? "Home" : tab.Address.Authority) + (selected ? " · Selected tab" : string.Empty),
+                    IconSource: _tabIconSource?.Invoke(tab.Address),
                     Address: tab.Address.ToString(), Selected: selected, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned,
                     Background: appearance.Background, Foreground: appearance.Foreground,
                     CloseForeground: appearance.CloseForeground);
@@ -862,14 +866,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
             pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label &&
             pair.First.Description == pair.Second.Description && pair.First.Address == pair.Second.Address && pair.First.Selected == pair.Second.Selected &&
-            pair.First.CanClose == pair.Second.CanClose && pair.First.BackgroundColor == pair.Second.Background &&
+            pair.First.CanClose == pair.Second.CanClose && pair.First.IconSource == pair.Second.IconSource && pair.First.BackgroundColor == pair.Second.Background &&
             pair.First.ForegroundColor == pair.Second.Foreground && pair.First.CloseForegroundColor == pair.Second.CloseForeground)) return;
         var epoch = checked(++_rowEpoch);
         var placementStamp = TabPlacementStamp(_snapshot);
         _tabRows = actualRows.Select(row => new TabRow(
             new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
         {
-            Description = row.Description, Address = row.Address, CanClose = row.CanClose,
+            Description = row.Description, Address = row.Address, CanClose = row.CanClose, IconSource = row.IconSource,
             BackgroundColor = row.Background, ForegroundColor = row.Foreground,
             CloseForegroundColor = row.CloseForeground
         }).ToArray();
@@ -973,6 +977,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 "CollapseLabel" => group.IsCollapsed ? "Expand " + group.Name : "Collapse " + group.Name, _ => null };
         else if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
+                "IconSource" => row.IconSource, "HasIcon" => row.IconSource is not null,
+                "TitlePadding" => row.IconSource is null ? "12 4 8 4" : "32 4 8 4",
                 "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label,
                 "Background" => row.Background, "Foreground" => row.Foreground,
                 "CloseForeground" => row.CloseForeground, "DropSwapBefore" => row.DropSwapBefore,
@@ -1099,6 +1105,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             PropertyChanged?.Invoke(this, new(nameof(DropEdgeBrush)));
             return true;
         }
+        public string? IconSource { get; init; }
         public string Description { get; init; } = Label;
         public string Address { get; init; } = string.Empty;
         public bool CanClose { get; init; }

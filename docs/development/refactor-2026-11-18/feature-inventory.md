@@ -6,6 +6,15 @@ Evidence levels: `code` (source inspected) · `test` (focused check passes) · `
 
 Product authority: `docs/specification/owner-references/2026-11-18-interface-refactor/` (SPECIFICATION.md `b6cd0617…`, Atlas v3.3 `75c0abad…`, SOURCE_PRECEDENCE.md).
 
+## Current pass · 22 November 2026
+
+The owner’s 22 November v4 Atlas and bundled four-volume specification govern current product work. The 18 November map and dated observations below describe their original revisions.
+
+| Surface | Classification at 8da96dbb3 | Required user flow |
+| --- | --- | --- |
+| Browse native application tabs | Adaptation (UI-006, HAV-TAB-002). Clean left-aligned titles and joined close controls already work. Icons are missing and 200-unit tabs overflow early. | Open Home, select an app tab by title or icon, close a closable tab, and use horizontal overflow or the keyboard to reach remaining tabs. Preserve the same tab and drag targets. |
+| Home Settings / Appearance | Adaptation (UI-001–017). The shared Home fragment has functioning theme and accessibility writes. Its current “Brightness” row selects legacy appearance modes. Independent continuous adjustments are incomplete. | Open the Home gear, identify the selected theme, choose an available theme and see the real response from the preference owner. Preserve saved values and failure/refresh states. |
+
 ## Actual implementation map (code-observed 18 Nov)
 
 | Area | Real location | Notes |

@@ -478,13 +478,15 @@ public sealed partial class App
             DemandCurrent();
             _sharedGateway = new HavenGateway(this);
             _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent,
-                CaptureOriginalDownloadFilesService(), sharedContext: new SharedHostContext(this));
+                CaptureOriginalDownloadFilesService(), sharedContext: new SharedHostContext(this), tabIconSource: TabIconSource);
             var theme = _homeTheme?.Context
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, theme);
             var controlRegistry = scene.ControlRegistry
                 ?? throw new InvalidOperationException("The original Browse CUI control registry is unavailable.");
-            controlRegistry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
+            controlRegistry.RegisterImageSourceResolver((source, target) =>
+                source == HavenTabLogo && HomeAppBrandingIcons.PackagedBitmap.TryResolve(source, out var logo)
+                    ? logo : HomeAppBrandingIcons.Resolve(source, target) ?? HavenPackagedSvgResolver.Resolve(source, target));
             _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
             _scene = new CuiSceneHost(controlRegistry);
             ComposeSharedFrame();
@@ -492,6 +494,19 @@ public sealed partial class App
             var ready = await _sceneInitialization;
             _workspace.ObserveReadiness(ready);
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(ready.Message);
+        }
+
+        private const string HavenTabLogo = "avares://Haven/Assets/haven-32.png";
+
+        private static string? TabIconSource(AppContentAddress address)
+        {
+            if (address.Namespace == AppContentNamespace.Browse && address.Authority is "home" or "newtab")
+                return HavenTabLogo;
+            if (address.Namespace != AppContentNamespace.NativeApp) return null;
+            if (address.Authority == "mesh") return "avares://Haven/Assets/HomeRail/home-rail-mesh.svg";
+            var mode = BuiltInModeSeed.Modes.FirstOrDefault(item => item.Key == address.Authority);
+            return mode is not null && HomeAppBrandingIcons.TryGetBrandStem(mode.Id, mode.Source, out _)
+                ? HomeAppBrandingIcons.SourceFor(mode.IconKey, mode.Id, mode.Source) : null;
         }
 
         /// <summary>
