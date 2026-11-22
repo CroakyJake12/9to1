@@ -1,0 +1,9 @@
+{
+  "source_repository": "Strata hardware integration checkout",
+  "base": "2647f6a9d1399be85d68f5490fc61b4c1f48e9c3",
+  "tested_revision": "612e2065f9ba64809d422f2c45adae6ba5351b40",
+  "backend": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+  "patch": "thunder-training-tools.patch",
+  "sha256": "77441d8e868cdfb4a6c5d30701880ef72a3092363a88644ce7f88c59235da414",
+  "scope": "Eight files under tools/dual_gpu/training. Full hardware results and a private recovery bundle belong to the owner handoff. The overnight cloud task is frontend work."
+}

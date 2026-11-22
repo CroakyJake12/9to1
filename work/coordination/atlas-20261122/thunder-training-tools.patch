@@ -1,0 +1,576 @@
+diff --git a/tools/dual_gpu/training/README.md b/tools/dual_gpu/training/README.md
+new file mode 100644
+index 0000000..03da6b1
+--- /dev/null
++++ b/tools/dual_gpu/training/README.md
+@@ -0,0 +1,36 @@
++# Fine-tuning one FP32 model across the RTX and V100
++
++This opt-in Linux trainer splits Llama transformer layers between the RTX 5080 on the host and the Tesla V100 in its existing guest. Both devices contribute to the same SGD update. The host retains the token embedding. A run publishes a usable GGUF only after it sees changed block weights on both assigned devices and verifies every trained tensor against the native output.
++
++## Build a private trainer
++
++Start at the Strata repository root with the existing Release Unix Makefiles CUDA/RPC build at `build-rpc-cuda`, its linked CUDA libraries, Git, GNU patch and Python 3.11+. The vendor checkout must be clean at `3cf03257f219afbe7334045ff7c6a06ac68c627d`. Choose a new directory whose parent already exists. The following command prints the build plan.
++
++```bash
++python3 tools/dual_gpu/training/build.py "$TRAIN_BUILD" --dry-run
++```
++
++Run the same command without `--dry-run` for the build. For a source-only audit, use `--prepare-only` with a separate new directory. The helper reads four source files from the pinned Git objects, applies the four patches to private copies, compiles the changed objects and links new libraries and a trainer into its own `bin/`. It reuses the existing configured build's other objects and original shared libraries. Preserve the configured build and its CUDA runtime at the recorded paths. `--cmake-build` and `--cuda-runtime` select an equivalent existing installation. A successful build writes `build.json` with the source, patch, binary and dependency identities. An interrupted build keeps its plan, private files and compiler log.
++
++The patches pack strided gradients for CUDA accumulation, avoid retaining stale gradients in a one-update window, train on the requested sequence length, and make dataset and label shapes match that length. The launcher fixes batch and microbatch to the same value. SGD avoids relying on unverified distributed Adam moment state.
++
++## Train in an owned hardware window
++
++The workstation coordinator controls the two existing service lanes and watchdog. Verify both workers have drained, acquire the agreed training window, and confirm the guest’s compatible RPC worker is reachable through the existing loopback forward. Reserve capacity for both sets of local layers, gradients, activations, scratch space and runtime overhead. A 1:1 layer split does not predict equal VRAM use. Read the currently available VRAM on each card and compare it with the measured requirement for this model, corpus and context. Keep enough host memory for the input, training process and checkpoint export, and enough disk for the raw weights and the verified checkpoint. Resume the original workers after the window even if the run fails. [Hardware topology and operating procedure](../../../docs/DUAL_GPU.md)
++
++Use an environment with NumPy and the pinned `gguf-py` reader. The example variables identify the private build, local FP32 Llama GGUF, authorised UTF-8 training text, fresh run directory, and separate RTX/V100 free-memory budgets in MiB.
++
++```bash
++export PYTHONPATH="$PWD/third_party/llamacpp/gguf-py"
++python tools/dual_gpu/training/train.py \
++  --build "$TRAIN_BUILD" --model "$BASE_GGUF" --text "$TRAIN_TEXT" \
++  --run-dir "$TRAIN_RUN" --context 128 --dry-run
++```
++
++Inside the owned window, replace `--dry-run` with `--window-owned --min-free-mib "$RTX_MIB" "$V100_MIB"`. The dry run uses local model metadata and source/build receipts only. The actual run checks the fresh dual-device thermal guard, active 165 W V100 limit, core/HBM temperatures, standby state and host memory reserve. It monitors that guard throughout training and stops its own process if a limit is crossed or the deadline expires. It never starts or stops services. Read the guard from the configured workstation path or supply `--guard-status` for that same active producer.
++
++The invocation registers the existing loopback RPC endpoint **before** resolving `CUDA0,RPC0`. It selects layer placement, a 1:1 split, host token embedding, one synchronous scheduler copy, one SGD epoch, seed 4703 and a 25% validation partition. Each training tensor must be finite, little-endian F32, and the text must yield at least one complete training window. Quantised GGUFs, adapter tuning, DDP replicas and optimizer-resume checkpoints are outside this implementation. The compact stories260K trial supplies evidence for that topology and shape. Other models and context lengths need their own fit and numerical checks.
++
++## Read the result
++
++A verified run writes `checkpoint.gguf`, `receipt.json`, `native.log`, guard samples and the native trainer’s `native-weights.gguf`. The export copies the original GGUF, replaces only the tensor payloads, checks names, shapes, types, finite values and both devices’ changes, then verifies the complete tensor readback and original metadata bytes before a create-new publish. The output retains the original tokenizer and context metadata. Use the verified checkpoint when reloading for inference. Compare its updates with a matching single-device control and retain the inference-reload receipt for a hardware qualification. A raw output, an early progress line or a completed trainer build does not establish those results.
+diff --git a/tools/dual_gpu/training/build.py b/tools/dual_gpu/training/build.py
+new file mode 100644
+index 0000000..1e80791
+--- /dev/null
++++ b/tools/dual_gpu/training/build.py
+@@ -0,0 +1,130 @@
++"""Build the opt-in native trainer in a new directory using the existing CUDA/RPC build."""
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++import shlex
++import subprocess
++
++HERE = Path(__file__).resolve().parent
++ROOT = HERE.parents[2]
++PIN = "3cf03257f219afbe7334045ff7c6a06ac68c627d"
++PATCHES = {
++    "ggml/src/ggml.c": "packed-gradient.patch",
++    "ggml/src/ggml-opt.cpp": "optimizer-gradient-window.patch",
++    "src/llama-context.cpp": "optimizer-dataset-window.patch",
++    "examples/training/finetune.cpp": "training-window.patch",
++}
++
++
++def digest(path):
++    with Path(path).open("rb") as stream:
++        return hashlib.file_digest(stream, "sha256").hexdigest()
++
++
++def make_flags(target, language):
++    lines = (target / "flags.make").read_text().splitlines()
++    values = dict(line.split(" = ", 1) for line in lines if " = " in line)
++    return [arg for field in ("DEFINES", "INCLUDES", "FLAGS")
++            for arg in shlex.split(values[f"{language}_{field}"])]
++
++
++def build(args):
++    source = ROOT / "third_party/llamacpp"
++    prior = args.cmake_build.resolve(strict=True)
++    cuda = args.cuda_runtime.resolve(strict=True)
++    output = args.output.resolve()
++    if os.path.lexists(args.output) or any(output.is_relative_to(x) for x in (source, prior, HERE)):
++        raise ValueError("Choose a new build directory outside the source and configured build.")
++    if subprocess.check_output(["git", "-C", source, "rev-parse", "HEAD"], text=True).strip() != PIN:
++        raise ValueError(f"The llama.cpp checkout must be at {PIN}.")
++    subprocess.run(["git", "-C", source, "diff", "--quiet", "HEAD", "--"], check=True)
++    cache = {}
++    for line in (prior / "CMakeCache.txt").read_text().splitlines():
++        if ":" in line and "=" in line and not line.startswith(("#", "//")):
++            key, value = line.split("=", 1)
++            cache[key.split(":", 1)[0]] = value
++    if (Path(cache["CMAKE_HOME_DIRECTORY"]).resolve() != source.resolve()
++            or cache["GGML_CUDA"] != "ON" or cache["GGML_RPC"] != "ON"
++            or cache["CMAKE_GENERATOR"] != "Unix Makefiles"):
++        raise ValueError("The existing build must use this pinned source, CUDA, RPC and Unix Makefiles.")
++
++    patched = output / "source"
++    runtime = output / "bin"
++    commands = []
++    aliases = {}
++    for directory, target, files in [
++        ("ggml/src", "ggml-base", ["ggml/src/ggml.c", "ggml/src/ggml-opt.cpp"]),
++        ("src", "llama", ["src/llama-context.cpp"]),
++    ]:
++        cwd = prior / directory
++        target_dir = cwd / "CMakeFiles" / (target + ".dir")
++        link = shlex.split((target_dir / "link.txt").read_text())
++        lib = Path(link[link.index("-o") + 1]).name
++        link[link.index("-o") + 1] = str(runtime / lib)
++        for relative in files:
++            filename = Path(relative).name
++            obj = output / (filename + ".o")
++            lang = "C" if filename.endswith(".c") else "CXX"
++            command = [cache[f"CMAKE_{lang}_COMPILER"], *make_flags(target_dir, lang),
++                       "-I" + str((source / relative).parent), "-I" + str(cwd),
++                       "-c", str(patched / relative), "-o", str(obj)]
++            commands.append((cwd, command))
++            link[link.index(f"CMakeFiles/{target}.dir/{filename}.o")] = str(obj)
++        commands.append((cwd, link))
++        soname = next(arg.split("-soname,", 1)[1] for arg in link if "-soname," in arg)
++        aliases[soname] = lib
++        aliases[f"lib{target}.so"] = lib
++
++    common = prior / "common/CMakeFiles/llama-common.dir"
++    libs = prior / "bin"
++    trainer = runtime / "thunder-finetune"
++    command = [cache["CMAKE_CXX_COMPILER"], *make_flags(common, "CXX"),
++               "-I" + str(source / "examples/training"), str(patched / "examples/training/finetune.cpp"),
++               "-L" + str(runtime), "-L" + str(libs), "-Wl,-rpath,$ORIGIN",
++               "-Wl,-rpath-link," + str(libs), "-Wl,-rpath-link," + str(cuda),
++               "-lllama-common", "-lllama", "-lggml", "-lggml-base", "-lpthread", "-o", str(trainer)]
++    plan = {"source_commit": PIN, "cmake_build": str(prior), "cuda_runtime": str(cuda),
++            "patches": {n: digest(HERE / "patches" / n) for n in PATCHES.values()},
++            "commands": [cmd for _, cmd in [*commands, (prior, command)]]}
++    if args.dry_run:
++        print(json.dumps(plan, indent=2))
++        return
++
++    output.mkdir(mode=0o700)
++    runtime.mkdir()
++    (output / "plan.json").write_text(json.dumps(plan, indent=2) + "\n")
++    for relative, name in PATCHES.items():
++        path = patched / relative
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_bytes(subprocess.check_output(["git", "-C", source, "show", f"{PIN}:{relative}"]))
++        subprocess.run(["patch", "--batch", "--forward", "--fuzz=0", "-p1", "-i", HERE / "patches" / name],
++                       cwd=patched, check=True)
++    if args.prepare_only:
++        print(f"Sources and command plan prepared at {output}; compilation was skipped.")
++        return
++    with (output / "build.log").open("x") as log:
++        for cwd, cmd in commands:
++            subprocess.run(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, check=True)
++        for alias, name in aliases.items():
++            if alias != name:
++                (runtime / alias).symlink_to(name)
++        subprocess.run(command, cwd=prior, stdout=log, stderr=subprocess.STDOUT, check=True)
++    plan["runtime_sha256"] = {path.name: digest(path) for path in sorted(runtime.iterdir())}
++    # The overlay also consumes the configured build's original shared libraries.
++    plan["dependency_sha256"] = {p.name: digest(p) for p in sorted(libs.glob("*.so*"))
++                                if p.is_file() and not (runtime / p.name).exists()}
++    (output / "build.json").write_text(json.dumps(plan, indent=2) + "\n")
++    print(f"Built {trainer}")
++
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("output", type=Path, help="fresh build directory")
++    parser.add_argument("--cmake-build", type=Path, default=ROOT / "build-rpc-cuda")
++    parser.add_argument("--cuda-runtime", type=Path, default=Path.home() / ".cache/strata-cuda-12.9/lib")
++    mode = parser.add_mutually_exclusive_group()
++    mode.add_argument("--dry-run", action="store_true", help="verify prerequisites and print commands")
++    mode.add_argument("--prepare-only", action="store_true", help="apply patches privately without compiling")
++    build(parser.parse_args())
+diff --git a/tools/dual_gpu/training/checkpoint.py b/tools/dual_gpu/training/checkpoint.py
+new file mode 100644
+index 0000000..7fef845
+--- /dev/null
++++ b/tools/dual_gpu/training/checkpoint.py
+@@ -0,0 +1,97 @@
++"""Validate FP32 Llama tensors and publish trained bytes on the original GGUF layout."""
++import os
++from pathlib import Path
++import re
++import shutil
++import tempfile
++
++import numpy as np
++from gguf import GGMLQuantizationType, GGUFReader
++
++
++def blocks(tensor):
++    flat = tensor.data.reshape(-1)
++    for i in range(0, flat.size, 1 << 18):
++        yield flat[i:i + (1 << 18)]
++
++
++def inventory(reader):
++    tensors = {t.name: t for t in reader.tensors}
++    if not tensors or len(tensors) != len(reader.tensors):
++        raise ValueError("Expected a nonempty GGUF with unique tensor names.")
++    for tensor in tensors.values():
++        if tensor.tensor_type != GGMLQuantizationType.F32 or tensor.data.dtype != np.dtype("<f4"):
++            raise ValueError("Expected genuine little-endian F32 tensor: " + tensor.name)
++        if not all(np.isfinite(block).all() for block in blocks(tensor)):
++            raise ValueError("Nonfinite input tensor: " + tensor.name)
++    return tensors
++
++
++def inspect_model(path, context):
++    reader = GGUFReader(str(path))
++    if reader.fields["general.architecture"].contents() != "llama":
++        raise ValueError("This trainer supports Llama GGUF inputs.")
++    tensors = inventory(reader)
++    if "token_embd.weight" not in tensors or reader.fields["llama.block_count"].contents() < 2:
++        raise ValueError("Expected a token embedding and at least two transformer blocks.")
++    if not 2 <= context <= reader.fields["llama.context_length"].contents():
++        raise ValueError("Training context must fit the model's declared context.")
++    return len(tensors)
++
++
++def parse_placement(log):
++    layers = {int(index): device for index, device in
++              re.findall(r"layer\s+(\d+) assigned to device ([^,\s]+)", log)}
++    if set(layers.values()) != {"CUDA0", "RPC0"}:
++        raise ValueError("The native log did not confirm assignment to both requested devices.")
++    copies = re.findall(r"sched copies = (\d+)", log)
++    if not copies or set(copies) != {"1"}:
++        raise ValueError("Expected the single-copy synchronous training scheduler.")
++    if not re.search(r"token_embd\.weight .*buffer type overridden to (?:CUDA_Host|CPU)\b", log):
++        raise ValueError("The host token embedding placement was not observed.")
++    batches = re.findall(r"train:[^\r\n]*?data=([0-9]+)/([0-9]+) loss=([\d.eE+-]+)", log)
++    if not batches or int(batches[-1][0]) != int(batches[-1][1]) or int(batches[-1][0]) < 1:
++        raise ValueError("The native log did not confirm a completed training epoch.")
++    return layers
++
++
++def export(base_path, raw_path, destination, layers):
++    if os.path.lexists(destination):
++        raise FileExistsError(destination)
++    base = GGUFReader(str(base_path))
++    originals = inventory(base)
++    learned = inventory(GGUFReader(str(raw_path)))
++    if originals.keys() != learned.keys():
++        raise ValueError("Checkpoint tensor inventory changed.")
++    changed = {"CUDA0": 0, "RPC0": 0}
++    fd, temp_name = tempfile.mkstemp(dir=destination.parent, prefix=".training-export-")
++    os.close(fd)
++    temp = Path(temp_name)
++    try:
++        shutil.copyfile(base_path, temp)
++        with temp.open("r+b") as stream:
++            for name, original in originals.items():
++                new = learned[name]
++                if not np.array_equal(original.shape, new.shape) or original.n_bytes != new.n_bytes:
++                    raise ValueError("Checkpoint tensor shape changed: " + name)
++                layer = re.match(r"blk\.(\d+)\.", name)
++                stream.seek(original.data_offset)
++                for old_block, new_block in zip(blocks(original), blocks(new), strict=True):
++                    if layer:
++                        changed[layers[int(layer[1])]] += int(np.count_nonzero(old_block != new_block))
++                    stream.write(new_block.tobytes())
++            stream.flush()
++            os.fsync(stream.fileno())
++        if not all(changed.values()):
++            raise ValueError("No changed transformer weights on one or both assigned devices.")
++        readback = GGUFReader(str(temp))
++        for check in readback.tensors:
++            if not np.array_equal(check.data, learned[check.name].data):
++                raise ValueError("Checkpoint readback mismatch: " + check.name)
++        with base_path.open("rb") as first, temp.open("rb") as second:
++            if first.read(base.data_offset) != second.read(base.data_offset):
++                raise ValueError("The original GGUF metadata or tensor descriptors changed.")
++        os.link(temp, destination)
++    finally:
++        temp.unlink(missing_ok=True)
++    return changed
+diff --git a/tools/dual_gpu/training/patches/optimizer-dataset-window.patch b/tools/dual_gpu/training/patches/optimizer-dataset-window.patch
+new file mode 100644
+index 0000000..99b2bae
+--- /dev/null
++++ b/tools/dual_gpu/training/patches/optimizer-dataset-window.patch
+@@ -0,0 +1,16 @@
++--- a/src/llama-context.cpp
+++++ b/src/llama-context.cpp
++@@ -3598,7 +3598,12 @@
++         int64_t                   idata_split,
++         ggml_opt_epoch_callback   callback_train,
++         ggml_opt_epoch_callback   callback_eval) {
++-    const uint32_t n_ctx    = this->n_ctx();
+++    // Match opt_epoch_iter and the admitted dataset. The inference cache may
+++    // be padded to 256 even for a model trained with a 128-token window.
+++    const uint32_t n_ctx = llama_model_n_ctx_train(&model);
+++    GGML_ASSERT(n_ctx <= this->n_ctx());
+++    GGML_ASSERT(ggml_opt_dataset_data(dataset)->ne[0] == n_ctx);
+++    GGML_ASSERT(ggml_opt_dataset_labels(dataset)->ne[0] == n_ctx);
++     const uint32_t n_batch  = std::min(cparams.n_batch,  n_ctx);
++     const uint32_t n_ubatch = std::min(cparams.n_ubatch, n_batch);
++     const  int64_t ndata    = ggml_opt_dataset_ndata(dataset);
+diff --git a/tools/dual_gpu/training/patches/optimizer-gradient-window.patch b/tools/dual_gpu/training/patches/optimizer-gradient-window.patch
+new file mode 100644
+index 0000000..d222287
+--- /dev/null
++++ b/tools/dual_gpu/training/patches/optimizer-gradient-window.patch
+@@ -0,0 +1,11 @@
++--- a/ggml/src/ggml-opt.cpp
+++++ b/ggml/src/ggml-opt.cpp
++@@ -326,7 +326,7 @@
++     const enum ggml_opt_optimizer_type optimizer = opt_ctx->optimizer;
++
++     const bool accumulate = opt_ctx->build_type_alloc >= GGML_OPT_BUILD_TYPE_GRAD &&
++-        !(opt_ctx->static_graphs && opt_ctx->build_type_alloc == GGML_OPT_BUILD_TYPE_OPT && opt_ctx->opt_period == 1);
+++        !(opt_ctx->build_type_alloc == GGML_OPT_BUILD_TYPE_OPT && opt_ctx->opt_period == 1);
++
++     const bool need_momenta = opt_ctx->build_type_alloc == GGML_OPT_BUILD_TYPE_OPT &&
++         opt_ctx->optimizer == GGML_OPT_OPTIMIZER_TYPE_ADAMW;
+diff --git a/tools/dual_gpu/training/patches/packed-gradient.patch b/tools/dual_gpu/training/patches/packed-gradient.patch
+new file mode 100644
+index 0000000..813c7a2
+--- /dev/null
++++ b/tools/dual_gpu/training/patches/packed-gradient.patch
+@@ -0,0 +1,14 @@
++--- a/ggml/src/ggml.c
+++++ b/ggml/src/ggml.c
++@@ -6706,6 +6706,11 @@
++         const  size_t         offset) {
++     struct ggml_tensor * src = cgraph->visited_hash_set.keys[isrc];
++     GGML_ASSERT(src);
+++    // Accumulate logical gradient values into the destination view. CUDA and
+++    // remote CUDA backends require a packed source for GGML_OP_ACC.
+++    if (!ggml_is_contiguous(tensor)) {
+++        tensor = ggml_cont(ctx, tensor);
+++    }
++     if (cgraph->grads[isrc]) {
++         cgraph->grads[isrc] = ggml_acc_impl(ctx, cgraph->grads[isrc], tensor, nb1, nb2, nb3, offset, cgraph->grad_accs[isrc]);
++     } else {
+diff --git a/tools/dual_gpu/training/patches/training-window.patch b/tools/dual_gpu/training/patches/training-window.patch
+new file mode 100644
+index 0000000..50577ea
+--- /dev/null
++++ b/tools/dual_gpu/training/patches/training-window.patch
+@@ -0,0 +1,47 @@
++--- a/examples/training/finetune.cpp
+++++ b/examples/training/finetune.cpp
++@@ -4,4 +4,5 @@
++ #include "llama.h"
++
+++#include <algorithm>
++ #include <clocale>
++ #include <cmath>
++@@ -60,5 +61,24 @@
++
++     std::vector<llama_token> tokens  = common_tokenize(ctx, params.prompt, true);
++-    ggml_opt_dataset_t       dataset = common_opt_dataset_init(ctx, tokens, llama_n_ctx(ctx) / 2);
+++    // The physical cache may be padded beyond the sequence length requested for training.
+++    const int64_t context = std::min<int64_t>(params.n_ctx > 0 ? params.n_ctx : llama_n_ctx(ctx),
+++                                               llama_model_n_ctx_train(model));
+++    const int64_t stride = context / 2;
+++    if (stride < 1 || tokens.size() < static_cast<size_t>(context + stride + 1)) {
+++        LOG_ERR("Training text must contain at least one complete shifted token window.\n");
+++        return 1;
+++    }
+++    const int64_t samples = (static_cast<int64_t>(tokens.size()) - context - 1) / stride;
+++    if (static_cast<int64_t>(samples * (1.0f - params.val_split)) < 1) {
+++        LOG_ERR("The validation split leaves no training windows.\n");
+++        return 1;
+++    }
+++    auto dataset = ggml_opt_dataset_init(GGML_TYPE_I32, GGML_TYPE_I32, context, context, samples, 1);
+++    auto * data = static_cast<llama_token *>(ggml_opt_dataset_data(dataset)->data);
+++    auto * labels = static_cast<llama_token *>(ggml_opt_dataset_labels(dataset)->data);
+++    for (int64_t i = 0; i < samples; ++i) {
+++        std::copy_n(tokens.data() + i*stride, context, data + i*context);
+++        std::copy_n(tokens.data() + i*stride + 1, context, labels + i*context);
+++    }
++
++     struct lr_opt & lr = params.lr;
++@@ -68,5 +88,5 @@
++
++     struct llama_opt_params lopt_params{
++-        /*n_ctx_train     =*/0,
+++        /*n_ctx_train     =*/static_cast<uint32_t>(context),
++         /*param_filter    =*/llama_opt_param_filter_all,
++         /*param_filter_ud =*/nullptr,
++@@ -90,4 +110,5 @@
++         ggml_opt_result_reset(result_eval);
++     }
+++    ggml_opt_dataset_free(dataset);
++     ggml_opt_result_free(result_train);
++     ggml_opt_result_free(result_eval);
+diff --git a/tools/dual_gpu/training/train.py b/tools/dual_gpu/training/train.py
+new file mode 100644
+index 0000000..9b8bf13
+--- /dev/null
++++ b/tools/dual_gpu/training/train.py
+@@ -0,0 +1,177 @@
++"""Run one synchronous SGD epoch on a local RTX and the existing V100 RPC worker."""
++import argparse
++import contextlib
++import fcntl
++import json
++import math
++import os
++from pathlib import Path
++import signal
++import subprocess
++import time
++
++from build import PIN, digest
++
++
++def rpc_endpoint(value):
++    # The operator's existing SSH forward terminates on loopback. Never expose RPC.
++    host, sep, port = value.rpartition(":")
++    if not sep or host != "127.0.0.1" or not port.isdecimal() or not 0 < int(port) < 65536:
++        raise argparse.ArgumentTypeError("Expected an existing 127.0.0.1:PORT RPC forward.")
++    return value
++
++
++def command(args, run):
++    ctx = str(args.context)
++    return [str(args.build / "bin/thunder-finetune"), "-m", str(args.model), "-f", str(args.text),
++            "-o", str(run / "native-weights.gguf"), "--rpc", args.rpc, "-dev", "CUDA0,RPC0",
++            "-sm", "layer", "-ts", "1,1", "-ngl", "99", "--fit", "off", "-fa", "off",
++            "-ot", "token_embd.weight=CPU", "-c", ctx, "-b", ctx, "-ub", ctx,
++            "-epochs", "1", "-opt", "sgd", "-lr", "0.0001", "-s", "4703",
++            "-val-split", "0.25", "-t", "2", "-lv", "5"]
++
++
++def guard_sample(path):
++    now = time.time()
++    status = json.loads(path.read_text())
++    if not -1 <= now - status["ts"] < 6 or status["halted"] or path.with_name("v100-standby").exists():
++        raise RuntimeError("Thermal guard is stale, halted, or the V100 is in standby.")
++    sample = {"time": now}
++    for device in ("rtx5080", "v100"):
++        node = status["devices"][device]
++        reading = node["reading_full"]
++        if (not node["telemetry_ok"] or node["stopped"] or not -1 <= now - node["last_telemetry_ts"] < 6
++                or not reading or reading["driver_ok"] is not True or not math.isfinite(reading["temp"])
++                or reading["temp"] >= 68):
++            raise RuntimeError(f"Missing, stale or unsafe {device} reading.")
++        if device == "v100" and (reading["power_limit_active"] != 165 or
++                                 not math.isfinite(reading["temp_mem"]) or reading["temp_mem"] >= 67):
++            raise RuntimeError("V100 power cap or HBM temperature failed the measured workstation guard.")
++        if not (isinstance(reading["mem_total"], (int, float)) and
++                isinstance(reading["mem_used"], (int, float)) and 0 <= reading["mem_used"] <= reading["mem_total"]):
++            raise RuntimeError(f"Missing device memory headroom for {device}.")
++        sample[device] = {k: reading[k] for k in ("name", "mem_used", "mem_total", "temp", "util", "temp_mem")}
++    mem = next(line for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemAvailable:"))
++    sample["host_available_mib"] = int(mem.split()[1]) // 1024
++    if sample["host_available_mib"] < 1536:
++        raise RuntimeError("Available host memory fell below 1536 MiB.")
++    return sample
++
++
++def run_training(args):
++    from checkpoint import export, inspect_model, parse_placement
++    args.build = args.build.resolve(strict=True)
++    args.model = args.model.resolve(strict=True)
++    args.text = args.text.resolve(strict=True)
++    run = args.run_dir.absolute()
++    if os.path.lexists(run):
++        raise FileExistsError(f"Training run directory already exists: {run}")
++    if not args.text.is_file() or not args.text.stat().st_size or not args.model.is_file():
++        raise ValueError("Supply an original FP32 GGUF model and a nonempty local training text file.")
++    inspect_model(args.model, args.context)
++    cmd = command(args, run)
++    result = args.build / "build.json"
++    if args.dry_run and not result.exists():
++        plan = json.loads((args.build / "plan.json").read_text())
++        if plan["source_commit"] != PIN:
++            raise ValueError("Prepared sources have an unexpected revision.")
++        print(json.dumps({"build": "prepared, uncompiled", "argv": cmd}, indent=2))
++        return
++    build = json.loads(result.read_text())
++    if build["source_commit"] != PIN or "thunder-finetune" not in build["runtime_sha256"]:
++        raise ValueError("Use a completed build from the pinned training helper.")
++    linked = Path(build["cmake_build"]) / "bin"
++    for directory, hashes in [(args.build / "bin", build["runtime_sha256"]), (linked, build["dependency_sha256"])]:
++        for name, expected in hashes.items():
++            if Path(name).name != name or digest(directory / name) != expected:
++                raise ValueError("Built library or trainer changed: " + name)
++    if args.dry_run:
++        print(json.dumps(cmd, indent=2))
++        return
++    if not args.window_owned:
++        raise ValueError("Run inside the workstation coordinator's drained GPU window (--window-owned).")
++    admission_sample = guard_sample(args.guard_status)
++    if args.min_free_mib is None:
++        raise ValueError("Supply measured per-device free-memory requirements for this model and context.")
++    for device, minimum in zip(("rtx5080", "v100"), args.min_free_mib, strict=True):
++        reading = admission_sample[device]
++        free_mib = (reading["mem_total"] - reading["mem_used"]) / (1024 ** 2)
++        if free_mib < minimum:
++            raise RuntimeError(f"{device} has {free_mib:.0f} MiB free; this run requires {minimum} MiB.")
++    env = dict(os.environ, CUDA_VISIBLE_DEVICES="0",
++               LD_LIBRARY_PATH=os.pathsep.join(map(str, [args.build / "bin", linked, build["cuda_runtime"]])))
++    run.mkdir(mode=0o700)
++    receipt = {"source_commit": PIN, "command": cmd, "base_sha256": digest(args.model),
++               "text_sha256": digest(args.text), "build_sha256": digest(args.build / "build.json"),
++               "required_free_mib": args.min_free_mib, "admission": admission_sample, "status": "failed"}
++    try:
++        with (run / "native.log").open("xb") as log, (run / "telemetry.jsonl").open("x") as telemetry:
++            start = time.monotonic()
++            proc = subprocess.Popen(cmd, cwd=run, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
++            try:
++                while True:
++                    sample = guard_sample(args.guard_status)
++                    telemetry.write(json.dumps(sample) + "\n")
++                    telemetry.flush()
++                    if proc.poll() is not None:
++                        break
++                    if time.monotonic() - start >= args.timeout:
++                        raise TimeoutError("Owned training window expired.")
++                    time.sleep(0.2)
++            finally:
++                if proc.poll() is None:
++                    with contextlib.suppress(ProcessLookupError):
++                        os.killpg(proc.pid, signal.SIGTERM)
++                    try:
++                        proc.wait(timeout=3)
++                    except subprocess.TimeoutExpired:
++                        with contextlib.suppress(ProcessLookupError):
++                            os.killpg(proc.pid, signal.SIGKILL)
++                        proc.wait()
++                receipt["exit_code"] = proc.returncode
++            if proc.returncode:
++                raise RuntimeError(f"Native training exited {proc.returncode}; see native.log.")
++        layers = parse_placement((run / "native.log").read_text(errors="replace"))
++        if digest(args.model) != receipt["base_sha256"] or digest(args.text) != receipt["text_sha256"]:
++            raise ValueError("An input changed during training.")
++        checkpoint = run / "checkpoint.gguf"
++        receipt["changed_weight_elements"] = export(args.model, run / "native-weights.gguf", checkpoint, layers)
++        receipt.update(status="verified", checkpoint_sha256=digest(checkpoint))
++    except BaseException as error:
++        receipt["error"] = str(error) or type(error).__name__
++        raise
++    finally:
++        with (run / "receipt.json").open("x") as output:
++            json.dump(receipt, output, indent=2)
++            output.write("\n")
++    print(checkpoint)
++
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--build", type=Path, required=True)
++    parser.add_argument("--model", type=Path, required=True)
++    parser.add_argument("--text", type=Path, required=True)
++    parser.add_argument("--run-dir", type=Path, required=True)
++    parser.add_argument("--rpc", type=rpc_endpoint, default="127.0.0.1:19110")
++    parser.add_argument("--context", type=int, default=128)
++    parser.add_argument("--timeout", type=int, default=90)
++    parser.add_argument("--guard-status", type=Path, default=Path.home() / "strata-run/thermal_guard_status.json")
++    parser.add_argument("--min-free-mib", type=int, nargs=2, metavar=("RTX", "V100"),
++                        help="operator's fit budget for this model and context on each device")
++    parser.add_argument("--window-owned", action="store_true", help="the operator has already drained both devices")
++    parser.add_argument("--dry-run", action="store_true", help="check local inputs and print argv without device access")
++    options = parser.parse_args()
++    if options.min_free_mib is not None and min(options.min_free_mib) <= 0:
++        parser.error("Both free-memory requirements must be positive.")
++    if options.timeout <= 0:
++        parser.error("Timeout must be positive.")
++    def terminate(signum, _frame):
++        raise SystemExit(128 + signum)
++
++    signal.signal(signal.SIGTERM, terminate)
++    # This shared checkout only runs one opt-in trainer at a time.
++    with Path(__file__).open("rb") as lock:
++        if not options.dry_run:
++            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
++        run_training(options)
