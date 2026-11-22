@@ -1,25 +1,25 @@
-# Development, integration and recovery
+# Developing and testing 9to1
 
-This is the operational companion to `AGENTS.md`. Product authority remains the
-[canonical specification](../specification/9to1-development-specification-v2.md)
-(current amended SHA256 `e1779d226848da492e926ab70e8d4722ad444476cfc91312bf5c2c067654fe81`; original attachment-derived baseline `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`),
-APP-AC-001–009, GOV-001–002 and later explicit owner decisions. Read the
-[22 October owner amendment](../specification/owner-references/2026-10-22-development-reliability/owner-correction.json).
-Mercury is revoked. Normal development uses actual supported Beam/Codex execution;
-historical directories containing “mercury” remain useful source/evidence. At an
-actually observed **10% remaining Codex allowance**, the owner's conditional
-exception permits handoff to a genuinely verified Thunder development worker.
-If that worker is unavailable, preserve the handoff, commit and pause. The last
-owner reading was 99%; forecasts, context tokens and other provider limits do
-not trigger this rule. This current amendment governs older receipt summaries.
+Use the [current contributor instructions](../../AGENTS.md) and [22 November product and design sources](../specification/owner-references/2026-11-22-atlas-v4/README.md). Work on the existing main checkout. Before an edit, record the revision, dirty paths, owning component and user interaction. Track the implementation and its evidence separately.
 
-The registered coordinator is the owner's **laptop**, not the RTX desktop.
-Inference access does not provide deployment or administration access. Preserve
-existing work and reconcile actual shared model custody before requesting
-another Thunder worker. A bridge's saved monitor/session-active flag alone does
-not establish a current model consumer. The current owner amendment records the
-desktop task channel's verified scope and its remaining unverified capabilities;
-read it before setup or inference, rather than restoring older endpoint assumptions.
+## Native development on the owner’s PC
+
+The production desktop runs Haven with the native Browse workspace. On Linux x64 its project is `9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj`. Theme, CUI runtime, Home and Browse changes must reach that host via its ordinary dependency graph. Use the existing `~/.local/state/9to1-sdk.lock` and `eng/development/guarded_lowmem_build.py` for serial SDK work. Keep the documented resource floor and leave the owner’s other workloads running. Verify disk reserve plus the new runtime copy before publication.
+
+A typical focused compiler check from the repository root uses the following command. Choose a new log path for each attempt.
+
+```bash
+flock -n "$HOME/.local/state/9to1-sdk.lock" python3 -B eng/development/guarded_lowmem_build.py \
+  --floor-mib 1100 --timeout 2400 --log "$BUILD_LOG" -- \
+  "$HOME/.dotnet/dotnet" build "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj" \
+  -c Release -m:1 -p:UseSharedCompilation=false -f net10.0 -p:EnableWindowsTargeting=true
+```
+
+For an owning test, use the same lock and guard with the test project and a focused filter. Keep the raw output, test results, source revision and observed outcome. Compare unexpected failures with the same tests on the preceding build. [Reviewer feedback](model-performance-feedback-2026-10-29.md)
+
+For an on-screen checkpoint, publish the same Desktop project self-contained for linux-x64 into a fresh private runtime directory. Bind its real guard receipt to the source revision, verify and freeze the completed runtime, then use the preview helper to prepare and reload the tracked development copy. Respect close refusals and use the documented recovery operation for a reviewed nonzero exit. [Native preview and recovery](live-preview.md)
+
+The sections below describe additional custody, evidence and platform-specific operations. A dated release, staffing or delivery instruction records the context of that operation. Fresh work follows the active checkout, assigned owner, tested runtime handoff and current product sources.
 
 ## Resume and ownership
 

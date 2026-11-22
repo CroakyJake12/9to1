@@ -4,7 +4,7 @@ Living document required by QWEN_STARTER_PROMPT.md and HANDOFF-007. Classify eve
 **Conforming** · **Adaptation** (keep behaviour, change presentation/placement) · **Conflict** (cite the specific requirement being violated) · **Additional compatible feature** (preserve) · **Incomplete** (specified, not implemented).
 Evidence levels: `code` (source inspected) · `test` (focused check passes) · `native` (running dev copy observed) · `not observed`.
 
-Product authority: `docs/specification/owner-references/2026-11-18-interface-refactor/` (SPECIFICATION.md `b6cd0617…`, Atlas v3.3 `75c0abad…`, SOURCE_PRECEDENCE.md).
+The [22 November source register](../../specification/owner-references/2026-11-22-atlas-v4/README.md) governs new work. Earlier entries in this inventory refer to their dated specification and runtime.
 
 ## Current pass · 22 November 2026
 

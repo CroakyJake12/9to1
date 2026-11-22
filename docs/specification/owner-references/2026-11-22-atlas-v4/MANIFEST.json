@@ -1,0 +1,731 @@
+{
+  "bundle": "9to1_Astra_Launch_2026-11-22",
+  "created_at_utc": "2026-11-22T16:42:25+00:00",
+  "execution": {
+    "first_60_minutes": "Astra directly implements visible UI",
+    "after_60_minutes": "Astra carefully coordinates, integrates and reviews rapid implementers",
+    "qwen_3_8": "Await separate tested handoff; no first-hour use or time-based automatic admission"
+  },
+  "atlas": {
+    "filename": "atlas/9to1_Interface_Atlas_v4_Editable.html",
+    "sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+    "library_file_id": "libfile_be15fdd80d0081918fbbf8649f9e2b90",
+    "library_version": 6,
+    "screen_count": 282,
+    "label": "Frosted & Bubble rebuild · 22 Nov",
+    "owner_v4_1_received": false
+  },
+  "specification_sources": [
+    {
+      "slug": "main",
+      "documentId": "1DoTJEvTbrzXWYvFu2XLswItDW1sIYbQ-7Mw7mkHt8Pk",
+      "title": "9to1 Spec",
+      "revisionId": "AHj4eMTD4SXgl-bjAf5eFL1cN4nCKO8auFtw9tTq34DmQTrz8194Lif76SUagCa8LbxQnyqDwiPCrwRS-7PgtDIGAZu7XaGMffyS9A53JUY",
+      "url": "https://docs.google.com/document/d/1DoTJEvTbrzXWYvFu2XLswItDW1sIYbQ-7Mw7mkHt8Pk",
+      "tabs": [
+        {
+          "tabId": "t.0",
+          "title": "1. Authority & product",
+          "file": "specification/main/tabs/01-1-authority-product.md",
+          "paragraphs": 61,
+          "nonblankParagraphs": 61
+        },
+        {
+          "tabId": "t.obqvgw6tngdr",
+          "title": "2. Shared interface",
+          "file": "specification/main/tabs/02-2-shared-interface.md",
+          "paragraphs": 223,
+          "nonblankParagraphs": 223
+        },
+        {
+          "tabId": "t.swhqr510gg2a",
+          "title": "3. Runtime & architecture",
+          "file": "specification/main/tabs/03-3-runtime-architecture.md",
+          "paragraphs": 259,
+          "nonblankParagraphs": 255
+        },
+        {
+          "tabId": "t.lz5gnfevfm8d",
+          "title": "4. Data, memory & trust",
+          "file": "specification/main/tabs/04-4-data-memory-trust.md",
+          "paragraphs": 105,
+          "nonblankParagraphs": 105
+        },
+        {
+          "tabId": "t.s5es88y3ngdy",
+          "title": "5. Spaces",
+          "file": "specification/main/tabs/05-5-spaces.md",
+          "paragraphs": 477,
+          "nonblankParagraphs": 467
+        },
+        {
+          "tabId": "t.1z0hcvqlwwzx",
+          "title": "6. Editors & data",
+          "file": "specification/main/tabs/06-6-editors-data.md",
+          "paragraphs": 138,
+          "nonblankParagraphs": 138
+        },
+        {
+          "tabId": "t.ipt3iyqq8u5x",
+          "title": "7. Apps & ecosystem",
+          "file": "specification/main/tabs/07-7-apps-ecosystem.md",
+          "paragraphs": 260,
+          "nonblankParagraphs": 253
+        },
+        {
+          "tabId": "t.vkroobcb81z8",
+          "title": "8. Engineering & acceptance",
+          "file": "specification/main/tabs/08-8-engineering-acceptance.md",
+          "paragraphs": 56,
+          "nonblankParagraphs": 56
+        },
+        {
+          "tabId": "t.wt3w9wnq1gjn",
+          "title": "9. Atlas screen register",
+          "file": "specification/main/tabs/09-9-atlas-screen-register.md",
+          "paragraphs": 1525,
+          "nonblankParagraphs": 1524
+        },
+        {
+          "tabId": "t.quf4eijpf3g",
+          "title": "10. Decisions & adoption",
+          "file": "specification/main/tabs/10-10-decisions-adoption.md",
+          "paragraphs": 48,
+          "nonblankParagraphs": 48
+        },
+        {
+          "tabId": "t.j832uc9l5tk",
+          "title": "11. Interaction rules",
+          "file": "specification/main/tabs/11-11-interaction-rules.md",
+          "paragraphs": 345,
+          "nonblankParagraphs": 344
+        },
+        {
+          "tabId": "t.f2hdpuo82co9",
+          "title": "12. Home & Settings controls",
+          "file": "specification/main/tabs/12-12-home-settings-controls.md",
+          "paragraphs": 553,
+          "nonblankParagraphs": 552
+        },
+        {
+          "tabId": "t.rh42mon9x4c",
+          "title": "13. Comic theme",
+          "file": "specification/main/tabs/13-13-comic-theme.md",
+          "paragraphs": 32,
+          "nonblankParagraphs": 29
+        },
+        {
+          "tabId": "t.b2rmbujhva1f",
+          "title": "14. Interaction control index",
+          "file": "specification/main/tabs/14-14-interaction-control-index.md",
+          "paragraphs": 487,
+          "nonblankParagraphs": 486
+        },
+        {
+          "tabId": "t.2dw4sn4oeuxw",
+          "title": "15. v4 review & decisions",
+          "file": "specification/main/tabs/15-15-v4-review-decisions.md",
+          "paragraphs": 114,
+          "nonblankParagraphs": 110
+        }
+      ],
+      "paragraphs": 4683,
+      "nonblankParagraphs": 4651,
+      "nativeSHA256": "0547c7a60be83d43263fb1bcafc7dcebb962601cdb52e7d33992adae388196b2"
+    },
+    {
+      "slug": "spaces",
+      "documentId": "1CJf0VXUVLXn1qyj3AYUTOTdxEouxuJfqXc48_jHpApE",
+      "title": "9to1 Spec — Spaces interaction reference",
+      "revisionId": "AHj4eMRRfihU7GnOHVxErQlUEnIZRuHWrgP9Z_P8hotIUuZYRjp1UZi5zBTPcmRc4k5_f9EERAWN8DkmTkGOXXevfmO1L5B8dET7GriimlU",
+      "url": "https://docs.google.com/document/d/1CJf0VXUVLXn1qyj3AYUTOTdxEouxuJfqXc48_jHpApE",
+      "tabs": [
+        {
+          "tabId": "t.0",
+          "title": "Read me & screen index",
+          "file": "specification/spaces/tabs/01-read-me-screen-index.md",
+          "paragraphs": 107,
+          "nonblankParagraphs": 104
+        },
+        {
+          "tabId": "t.4u1kzupu761c",
+          "title": "Interaction records",
+          "file": "specification/spaces/tabs/02-interaction-records.md",
+          "paragraphs": 1468,
+          "nonblankParagraphs": 1467
+        },
+        {
+          "tabId": "t.fyw5awfuccr",
+          "title": "Control bindings",
+          "file": "specification/spaces/tabs/03-control-bindings.md",
+          "paragraphs": 948,
+          "nonblankParagraphs": 947
+        }
+      ],
+      "paragraphs": 2523,
+      "nonblankParagraphs": 2518,
+      "nativeSHA256": "8e4b8b2f2aac353a7c8a9e87770ab2f9fbd14c29fb9a43167cd73271832dd804"
+    },
+    {
+      "slug": "editors",
+      "documentId": "1djno_7ptJQNPuuQyqUWOMxrmdhflZ3GKgHevnCJJBLc",
+      "title": "9to1 Spec — Editor interaction reference",
+      "revisionId": "AHj4eMR90_JLA3JhJABtXSpA5wf4Zke29fnPjm4B3WQ6L7UzkxmjE4ZNB_9EuR-fevyzGuwgN995aQxmtXgOxFjqCfOLMinKsCh4xtGOe1g",
+      "url": "https://docs.google.com/document/d/1djno_7ptJQNPuuQyqUWOMxrmdhflZ3GKgHevnCJJBLc",
+      "tabs": [
+        {
+          "tabId": "t.0",
+          "title": "Read me & screen index",
+          "file": "specification/editors/tabs/01-read-me-screen-index.md",
+          "paragraphs": 110,
+          "nonblankParagraphs": 107
+        },
+        {
+          "tabId": "t.yh4mk9q4cw20",
+          "title": "Interaction records",
+          "file": "specification/editors/tabs/02-interaction-records.md",
+          "paragraphs": 1292,
+          "nonblankParagraphs": 1291
+        },
+        {
+          "tabId": "t.fzdpe0p3kolb",
+          "title": "Control bindings",
+          "file": "specification/editors/tabs/03-control-bindings.md",
+          "paragraphs": 2481,
+          "nonblankParagraphs": 2480
+        }
+      ],
+      "paragraphs": 3883,
+      "nonblankParagraphs": 3878,
+      "nativeSHA256": "f262f3d9252c36a2d805ea4e40a6dc784dc10927fee9cd6e69fe356155346710"
+    },
+    {
+      "slug": "apps",
+      "documentId": "1tBC60DTC70QAZha8o7wn1SvgK1V3qL6vvKxDapYExl0",
+      "title": "9to1 Spec — App interaction reference",
+      "revisionId": "AHj4eMRkGvgV5i9pY5zlsfhRUQfg74bGGlFzKYi6qbzOEh5aA5T0xl-F12Q-1CcISl4lNxZ3f-S5qS_CS_XLuOgGhpdAK5N9EADaO620kSc",
+      "url": "https://docs.google.com/document/d/1tBC60DTC70QAZha8o7wn1SvgK1V3qL6vvKxDapYExl0",
+      "tabs": [
+        {
+          "tabId": "t.0",
+          "title": "Read me & screen index",
+          "file": "specification/apps/tabs/01-read-me-screen-index.md",
+          "paragraphs": 130,
+          "nonblankParagraphs": 127
+        },
+        {
+          "tabId": "t.kh6hghkncf6x",
+          "title": "Interaction records",
+          "file": "specification/apps/tabs/02-interaction-records.md",
+          "paragraphs": 1226,
+          "nonblankParagraphs": 1225
+        },
+        {
+          "tabId": "t.d6rtwhgxqmna",
+          "title": "Control bindings",
+          "file": "specification/apps/tabs/03-control-bindings.md",
+          "paragraphs": 1920,
+          "nonblankParagraphs": 1919
+        }
+      ],
+      "paragraphs": 3276,
+      "nonblankParagraphs": 3271,
+      "nativeSHA256": "14d20b7008b0e55bbccfc3a3e0a2070f7e621ee894ad40deb1f8c2f39ddddb02"
+    }
+  ],
+  "definition_occurrences": 1505,
+  "core_definition_count": 1113,
+  "verification": {
+    "source_and_text_parity": true,
+    "all_native_tabs_included": true,
+    "atlas_bytes_match_current_release": true,
+    "original_atlas_assets_retained": 29,
+    "production_repo_inspected": false,
+    "production_repo_modified": false,
+    "atlas_browser_rendered": false,
+    "qwen_connection_or_performance_verified": false,
+    "native_document_pixel_rendering_verified": false
+  },
+  "files": [
+    {
+      "path": "00_START_HERE.md",
+      "bytes": 4073,
+      "sha256": "36a6cdac1e4184b66407d440b7ef542080c53111a9a4b092a8a690b5dbcebdb4"
+    },
+    {
+      "path": "01_ASTRA_LAUNCH_PROMPT.md",
+      "bytes": 5061,
+      "sha256": "ab85710d96d7c5e5861bccc549330690f18bb1b983a3366dd68d1869043a3a1d"
+    },
+    {
+      "path": "02_UI_PRIORITIES.md",
+      "bytes": 9476,
+      "sha256": "fc1dd09171167a24d7f34682d2bc99ff759481406aed122e7c611f6e51fc9973"
+    },
+    {
+      "path": "03_COORDINATION_CONTRACT.md",
+      "bytes": 6911,
+      "sha256": "356da3f1a5665224a187d766493f93334893088635c4d53a19d20f1687c82c68"
+    },
+    {
+      "path": "04_QWEN_HANDOFF.md",
+      "bytes": 1839,
+      "sha256": "e05059beb1e5eb98966232bd1c28aed952e8c7d20424f8708014013f21f113cc"
+    },
+    {
+      "path": "atlas/9to1_Interface_Atlas_v4_Editable.html",
+      "bytes": 16995958,
+      "sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2"
+    },
+    {
+      "path": "atlas/9to1_v4_Review.md",
+      "bytes": 33192,
+      "sha256": "a5c50e34f9cf35f455d2eb153eaeec5f09efed043efc7b77bb1162d07e6955bc"
+    },
+    {
+      "path": "atlas/atlas-spec-map-v4-complete.json",
+      "bytes": 215477,
+      "sha256": "df4bb60dbb3d6818a1170e32a7705781b8e23859d42a0ab678d284099b1c33f2"
+    },
+    {
+      "path": "atlas/atlas-v4-validation.json",
+      "bytes": 1137,
+      "sha256": "4b585098b20e6136f827381bfc6f762df751ad92bb2f78d957f713b302eef1ea"
+    },
+    {
+      "path": "atlas/v4-new-screen-register.json",
+      "bytes": 7442,
+      "sha256": "3881c4c95dde9dcc4fa64162c78f48b13818f732eb0e43f12e205653b4e93a7d"
+    },
+    {
+      "path": "references/README.md",
+      "bytes": 2138,
+      "sha256": "2d6a5714618f1a6c6eedf0996c54354b47642636d053ea53ef476902956e3278"
+    },
+    {
+      "path": "references/bubble-light-approved.png",
+      "bytes": 1522600,
+      "sha256": "e563fb74ccf35431418ea9243629a60d07d9e8ec49c069b8346ab41c88c20bb5"
+    },
+    {
+      "path": "references/comic-owner.png",
+      "bytes": 2389379,
+      "sha256": "025b173bca23df132745872c56e971db7064345e2435c85e3ee36c1a4019b574"
+    },
+    {
+      "path": "references/defects/glow-washed-out-do-not-copy.png",
+      "bytes": 576179,
+      "sha256": "7a5f8da5af398d410474dad00ab146222a2ad5594c388468185c0ef82369e718"
+    },
+    {
+      "path": "references/frosted-dark-online.png",
+      "bytes": 331056,
+      "sha256": "62f35c3005cf7423f8fc2c2d5b1ed384a2d738681313724c2f5876f97d4cfc28"
+    },
+    {
+      "path": "references/frosted-light-online.png",
+      "bytes": 1742304,
+      "sha256": "c48ec31cde7090a1b201d7085615b2cbbeb6c2efddcb9f27622c58f22dc09b97"
+    },
+    {
+      "path": "references/glow-dark-approved.png",
+      "bytes": 1655647,
+      "sha256": "973312bd0b63d9d1a353c4dcc88541daa0d4fbca5c206f68698d8c7aa685ee96"
+    },
+    {
+      "path": "references/playful-dark-approved.png",
+      "bytes": 1323596,
+      "sha256": "bed8b944051f1e90fe27201dfbb52db80b19c117c91a71c3170a286686c57184"
+    },
+    {
+      "path": "references/professional-control-01.jpg",
+      "bytes": 49226,
+      "sha256": "82bf6fe005a211cabe2cf1ef76c09427c81626fe24fbe2021a482e83c3d83523"
+    },
+    {
+      "path": "references/professional-control-02.jpg",
+      "bytes": 44037,
+      "sha256": "dc37e8e28f4efe2e7a0b54dda76ac05a7c61ecec16c5e041badd880a618b02fa"
+    },
+    {
+      "path": "references/professional-thick-slider.jpg",
+      "bytes": 28819,
+      "sha256": "9788cbe9432094bb1c9a22961b61fad209163b134804266bac9f23a21df3a021"
+    },
+    {
+      "path": "references/reference-index.json",
+      "bytes": 3626,
+      "sha256": "0467808e1b9ad9278855d1b230909a9a27456b9b52c27f5fd758a4c330864be0"
+    },
+    {
+      "path": "references/study-type-and-composer.png",
+      "bytes": 561605,
+      "sha256": "d82274ae11b436733155fc196be9dc1cb0be32e72d00ac537a00b529eaa8ce49"
+    },
+    {
+      "path": "specification/README.md",
+      "bytes": 2737,
+      "sha256": "bfa1d1b663fc1e50e043bf1cffd9efe769687d1bc67c04f56fea0b979f56b394"
+    },
+    {
+      "path": "specification/apps/INDEX.md",
+      "bytes": 426,
+      "sha256": "955519f6acc52f816dde024227ed1b0d996823938cb11909f39ea63854e59754"
+    },
+    {
+      "path": "specification/apps/all-text.txt",
+      "bytes": 653102,
+      "sha256": "d3c76b5b9c59a55311dce355495ee052929d322d0e35e897abcfb58ea7e6a57e"
+    },
+    {
+      "path": "specification/apps/native.json",
+      "bytes": 4074568,
+      "sha256": "14d20b7008b0e55bbccfc3a3e0a2070f7e621ee894ad40deb1f8c2f39ddddb02"
+    },
+    {
+      "path": "specification/apps/paragraphs.json",
+      "bytes": 1761139,
+      "sha256": "e2733eaae4ded27c8417f03421eb15bb91b4df52bc206bb041473aea771d856b"
+    },
+    {
+      "path": "specification/apps/tabs/01-read-me-screen-index.md",
+      "bytes": 123034,
+      "sha256": "97a15a73baabc41aed709fd2cb92d4a77beb957d51508b8161089f93cb597964"
+    },
+    {
+      "path": "specification/apps/tabs/02-interaction-records.md",
+      "bytes": 280585,
+      "sha256": "2e05c11b7da3687ae2a8f6e3cff9c9c75698f8a20e53bfe425978d63506397db"
+    },
+    {
+      "path": "specification/apps/tabs/03-control-bindings.md",
+      "bytes": 722381,
+      "sha256": "5d87081c4e255fee6068c7a4f055b4a8f46f24534fd4fb89212a1e06e6840412"
+    },
+    {
+      "path": "specification/editors/INDEX.md",
+      "bytes": 429,
+      "sha256": "7d095f8f1ad2c547de947cf50bf903e0614e46e1d25f62d1e855d575e09fb45d"
+    },
+    {
+      "path": "specification/editors/all-text.txt",
+      "bytes": 658645,
+      "sha256": "50d6c47b7eadebd59311b0f701f4ab6608ee272fe0f0a195d7c74ef23bc66624"
+    },
+    {
+      "path": "specification/editors/native.json",
+      "bytes": 4856822,
+      "sha256": "f262f3d9252c36a2d805ea4e40a6dc784dc10927fee9cd6e69fe356155346710"
+    },
+    {
+      "path": "specification/editors/paragraphs.json",
+      "bytes": 1983002,
+      "sha256": "f7c527b88d4f556cd2032c004768e8b2f862159f734a56dce97d980e37ea6ac3"
+    },
+    {
+      "path": "specification/editors/tabs/01-read-me-screen-index.md",
+      "bytes": 162462,
+      "sha256": "3d93e42e8a91a0c6fe5bc60e96b323d1cef0a967e821e2969dc2a8242966b1d2"
+    },
+    {
+      "path": "specification/editors/tabs/02-interaction-records.md",
+      "bytes": 288216,
+      "sha256": "d3df50e8f82cd9ef0157315ae00152550d007012c4753639386661aba076fcee"
+    },
+    {
+      "path": "specification/editors/tabs/03-control-bindings.md",
+      "bytes": 814292,
+      "sha256": "06de345d34006f05e252c19bbb617b228ed67e79ce45703b71ce88f4bff66465"
+    },
+    {
+      "path": "specification/links-index.json",
+      "bytes": 3111113,
+      "sha256": "a8f88b67091d3c406156fb3aa5b64401d111f41dfc37a445e1db2821409475a8"
+    },
+    {
+      "path": "specification/main/INDEX.md",
+      "bytes": 1120,
+      "sha256": "7392f60bf148a7e17314e1e33f7d8fc0a2d09f832ae0c05aef5ae1c99c323141"
+    },
+    {
+      "path": "specification/main/all-text.txt",
+      "bytes": 1070743,
+      "sha256": "3e6151724b7a38b7a8e53ae67850f2f3ec083c0b161e4a3c48bfd318332951c0"
+    },
+    {
+      "path": "specification/main/native.json",
+      "bytes": 4944103,
+      "sha256": "0547c7a60be83d43263fb1bcafc7dcebb962601cdb52e7d33992adae388196b2"
+    },
+    {
+      "path": "specification/main/paragraphs.json",
+      "bytes": 2689287,
+      "sha256": "03e2ea19c659cb7f361a8c65f35ac4ffbeaefefcada9422048f970a1d299a6fd"
+    },
+    {
+      "path": "specification/main/tabs/01-1-authority-product.md",
+      "bytes": 34871,
+      "sha256": "0ffe85f4e3af518e2422aaa56182724e0aef7da1c19387ee1f94bbb360b65cac"
+    },
+    {
+      "path": "specification/main/tabs/02-2-shared-interface.md",
+      "bytes": 138864,
+      "sha256": "9483796793a535b04661709dd4fb2478bde73c6549090b160818f85dc88a4169"
+    },
+    {
+      "path": "specification/main/tabs/03-3-runtime-architecture.md",
+      "bytes": 113842,
+      "sha256": "fe805928228ec29a2c134a28aac75ea1f9274c6104bfe2348270968d32ce9de5"
+    },
+    {
+      "path": "specification/main/tabs/04-4-data-memory-trust.md",
+      "bytes": 47728,
+      "sha256": "9a7773b8c9e465e295b627486200fdbe1a1a28b6b014baffbb062f4a44bc9568"
+    },
+    {
+      "path": "specification/main/tabs/05-5-spaces.md",
+      "bytes": 193080,
+      "sha256": "8f49d32087c39a72ebbd70749a2ad04ce05676b18e2dcc16c710a6aa4aeb7440"
+    },
+    {
+      "path": "specification/main/tabs/06-6-editors-data.md",
+      "bytes": 63528,
+      "sha256": "cb56167e86962d0ee6e042d25a10e4a6986fcb29790758bbfbf67a37ba64ef27"
+    },
+    {
+      "path": "specification/main/tabs/07-7-apps-ecosystem.md",
+      "bytes": 133161,
+      "sha256": "186a31ebfc9188f739322a0a27db01711116c4b2075111a2d5d49e1f6383ce80"
+    },
+    {
+      "path": "specification/main/tabs/08-8-engineering-acceptance.md",
+      "bytes": 21041,
+      "sha256": "c32f0a851e70bae753594ca857d708b34e034d40f8ec0b65b1fbd5128fac8a2e"
+    },
+    {
+      "path": "specification/main/tabs/09-9-atlas-screen-register.md",
+      "bytes": 108816,
+      "sha256": "a499196f486d89bc8c98b7350ea53dea4b093dfd39b3f5388a04760ef61c9928"
+    },
+    {
+      "path": "specification/main/tabs/10-10-decisions-adoption.md",
+      "bytes": 21497,
+      "sha256": "782d5937aa8af51b3028d86ac35c5a7d435afe2789e6b0d7581b8b4f4da2e28f"
+    },
+    {
+      "path": "specification/main/tabs/11-11-interaction-rules.md",
+      "bytes": 68329,
+      "sha256": "fa8142d76703486510b6af9abfe8e2603320a27374ac7e42e6622b5e4eb311d6"
+    },
+    {
+      "path": "specification/main/tabs/12-12-home-settings-controls.md",
+      "bytes": 117383,
+      "sha256": "82b111fb825137f9b692eada096534fb4c4c3059aa4b0325460a341ee43c3f1f"
+    },
+    {
+      "path": "specification/main/tabs/13-13-comic-theme.md",
+      "bytes": 13375,
+      "sha256": "b9786b9b111973f405be8007a0636b563614cc70d178375697113b4c35a1ee44"
+    },
+    {
+      "path": "specification/main/tabs/14-14-interaction-control-index.md",
+      "bytes": 122317,
+      "sha256": "498e459b3cbdd81279c927851a49dbd0f571f1c12a149e33fddd27b211d01b4c"
+    },
+    {
+      "path": "specification/main/tabs/15-15-v4-review-decisions.md",
+      "bytes": 22827,
+      "sha256": "e1de3ba06c001dde0b00ed6ab862eb212c34ddc801220f246da45129fa3ac6a6"
+    },
+    {
+      "path": "specification/requirements-index.json",
+      "bytes": 1059751,
+      "sha256": "83e2fa38f4c1475362bfb4d5f3b4601ce1e5f2d5f9f94ed4e47c40bb005d1ed0"
+    },
+    {
+      "path": "specification/sources.json",
+      "bytes": 7475,
+      "sha256": "bf56f851eb535efc7b0752821ecfeb6bb77dcd6641b55c0bd374b964504dc6c9"
+    },
+    {
+      "path": "specification/spaces/INDEX.md",
+      "bytes": 429,
+      "sha256": "148ec2fb855a225fc97f9f84ab9e1c87ee6d7506abb52524541f42bd329a62dc"
+    },
+    {
+      "path": "specification/spaces/all-text.txt",
+      "bytes": 427492,
+      "sha256": "878ee27d50ae6e8862d27aaddc9d0d4c4fa2307b2d3caeccda95bb976d1b37b1"
+    },
+    {
+      "path": "specification/spaces/native.json",
+      "bytes": 3312775,
+      "sha256": "8e4b8b2f2aac353a7c8a9e87770ab2f9fbd14c29fb9a43167cd73271832dd804"
+    },
+    {
+      "path": "specification/spaces/paragraphs.json",
+      "bytes": 1287081,
+      "sha256": "f7a26378e02fbf00476edb414767155117db60424ac2af523ba7d28dca7c8ef4"
+    },
+    {
+      "path": "specification/spaces/tabs/01-read-me-screen-index.md",
+      "bytes": 163897,
+      "sha256": "a4a406d9dd119220af4b94c97470d9dc675ba4b7ede69ffa4331cf3152f0c0a1"
+    },
+    {
+      "path": "specification/spaces/tabs/02-interaction-records.md",
+      "bytes": 276614,
+      "sha256": "3a4c3158046d6aa615cbb35b2da32f43dab5d5349730ee022f3d22292d91964e"
+    },
+    {
+      "path": "specification/spaces/tabs/03-control-bindings.md",
+      "bytes": 394034,
+      "sha256": "089b6efd6366c586976e61024acc22f431edd40944c80bcb62e17fc199b7d6b3"
+    },
+    {
+      "path": "templates/PASS_STATE.md",
+      "bytes": 1037,
+      "sha256": "f2b5ad4733bfce981842c2ea3d53b8015ed07fca6bdeb363c92862a118de3a08"
+    },
+    {
+      "path": "templates/QWEN_HANDOFF.template.json",
+      "bytes": 664,
+      "sha256": "02a90b61c2eca127f52c1475f38d4c32092c432d8204cf6f05a3d9ec40837df8"
+    },
+    {
+      "path": "templates/WORKER_TASK.md",
+      "bytes": 733,
+      "sha256": "d9e021e4347b10b711c99f6cedc35c4fc332fa16bc7996ba1d7abc8bba3bba21"
+    },
+    {
+      "path": "tools/verify_bundle.py",
+      "bytes": 1156,
+      "sha256": "15db25b606c15c8b727e533a2bcdcf0acecb33d43c8bc08c2a0fa158d570c8b7"
+    },
+    {
+      "path": "v4-modules/README.md",
+      "bytes": 868,
+      "sha256": "2590a37596d680200759f198253d403d50d4b9601b747ca776c1b47e10d3a5b1"
+    },
+    {
+      "path": "v4-modules/appearance-colour-notes.md",
+      "bytes": 5325,
+      "sha256": "d70b01cb2dee24d10360e447536487f59b30dab4eab009c66373acc12d039d12"
+    },
+    {
+      "path": "v4-modules/appearance.js",
+      "bytes": 55378,
+      "sha256": "b054df45dba9029e21ec568bc44cc25ce387bc9449fb60c69e74a240ea60a622"
+    },
+    {
+      "path": "v4-modules/bubble-material-notes.md",
+      "bytes": 7047,
+      "sha256": "15f014cbf879dce88f91b4c90bb7e7d2c1885a65f1246aaaa32baf575fe6354d"
+    },
+    {
+      "path": "v4-modules/bubble-material.js",
+      "bytes": 9724,
+      "sha256": "8763f130927365db276226f800b3ebd480249b4f21d6ca0391b3c25b02f53e63"
+    },
+    {
+      "path": "v4-modules/component-materials.js",
+      "bytes": 7384,
+      "sha256": "dda8b19960ab9eb8d7e1d8e7f71886516985746c627fcf69ecd4e87276ea5993"
+    },
+    {
+      "path": "v4-modules/core.js",
+      "bytes": 6786,
+      "sha256": "aefe47544161d963ef7e8fc4633a878d2791aa125f76c858e108d352b2f0aa4a"
+    },
+    {
+      "path": "v4-modules/frosted-rebuild-notes.md",
+      "bytes": 4527,
+      "sha256": "28cb6b1e4788d0ec7dc6c0f48fb4d602fa9fb648e5783e6de16545d8d4d2c764"
+    },
+    {
+      "path": "v4-modules/hubs.js",
+      "bytes": 68473,
+      "sha256": "d897af72219d13734193dc3ad9d50c1d568405327cc6ec097b023c1e64cef3d3"
+    },
+    {
+      "path": "v4-modules/options-notes.md",
+      "bytes": 4990,
+      "sha256": "5b9135bcce4b2159c5c1c68335d67418f7d17f23f963c71e486b59a68aaf913e"
+    },
+    {
+      "path": "v4-modules/options.js",
+      "bytes": 28487,
+      "sha256": "88efba794bc06b3826a235da8a3323e7a6a30b33bfe386a7c716e72ebeec34f3"
+    },
+    {
+      "path": "v4-modules/picker-notes.md",
+      "bytes": 4399,
+      "sha256": "e35d20166ec7cf94b15f07d411f3b385d3128153abda48af84ed36184c55058b"
+    },
+    {
+      "path": "v4-modules/picker.js",
+      "bytes": 25785,
+      "sha256": "0980d203d7c02022c797b092113656602d6a0b6cf909e55a53a83e380aea79af"
+    },
+    {
+      "path": "v4-modules/review.js",
+      "bytes": 13606,
+      "sha256": "4b4375c2423697e70a0877ea2c717bffe51425b02793a0774ced90ce804e1ed5"
+    },
+    {
+      "path": "v4-modules/sculpt.js",
+      "bytes": 35036,
+      "sha256": "0d2f149b4b5ce57ca6126a76272f1b0c2af6c9946bfaafc2114eab27b9891b4c"
+    },
+    {
+      "path": "v4-modules/settings-materials-notes.md",
+      "bytes": 4539,
+      "sha256": "131fb00703c86b5443d05d773b2d8acf792081256d687a9346243d9844356a37"
+    },
+    {
+      "path": "v4-modules/settings-materials.js",
+      "bytes": 4796,
+      "sha256": "20a9c230098cd9ffde89058de734602ddef1136ee2c1084d56ffcb42fa3566e9"
+    },
+    {
+      "path": "v4-modules/sliders.js",
+      "bytes": 7537,
+      "sha256": "f4a451bb9ab67f90103cf9b2e7f2b364e4d9e02caf751df593cb31646ec37a13"
+    },
+    {
+      "path": "v4-modules/surfaces.js",
+      "bytes": 88727,
+      "sha256": "be8c872fd8632b92a43fed77275b9e1fd2f72a2080fca1dfcb197b3b0a981b75"
+    },
+    {
+      "path": "v4-modules/tabs.js",
+      "bytes": 8588,
+      "sha256": "bde49fd82718b6fbbc5267507c45500744a2f4265d0b85f1024e9bb54a68669a"
+    },
+    {
+      "path": "v4-modules/temporary-notes.md",
+      "bytes": 5410,
+      "sha256": "fbfca98083000e576d280d4a59478c5fb46cdfe6c58a56b71a4fda24052431b3"
+    },
+    {
+      "path": "v4-modules/temporary.js",
+      "bytes": 35048,
+      "sha256": "fb5406d734b39e9a7bd102f4cccbaedbbab51e48965f30394440f2309a557ebb"
+    },
+    {
+      "path": "v4-modules/typography-notes.md",
+      "bytes": 3079,
+      "sha256": "3780cff3f47576882375fcd2d33c5e2b390bdae4490f96cdd09343498cbdd1f1"
+    },
+    {
+      "path": "v4-modules/typography.js",
+      "bytes": 11522,
+      "sha256": "9b52f84a972ad541c7989a15e342df98d5fea1c7ae3c12395fee92343aea19fd"
+    },
+    {
+      "path": "v4-modules/work.js",
+      "bytes": 60507,
+      "sha256": "dc3b27e0baeaef8a0ce26772555508cdc53013e7c88e9a2cf517f527572013b0"
+    }
+  ]
+}

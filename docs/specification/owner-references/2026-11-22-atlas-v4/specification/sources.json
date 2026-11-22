@@ -1,0 +1,218 @@
+[
+  {
+    "slug": "main",
+    "documentId": "1DoTJEvTbrzXWYvFu2XLswItDW1sIYbQ-7Mw7mkHt8Pk",
+    "title": "9to1 Spec",
+    "revisionId": "AHj4eMTD4SXgl-bjAf5eFL1cN4nCKO8auFtw9tTq34DmQTrz8194Lif76SUagCa8LbxQnyqDwiPCrwRS-7PgtDIGAZu7XaGMffyS9A53JUY",
+    "url": "https://docs.google.com/document/d/1DoTJEvTbrzXWYvFu2XLswItDW1sIYbQ-7Mw7mkHt8Pk",
+    "tabs": [
+      {
+        "tabId": "t.0",
+        "title": "1. Authority & product",
+        "file": "specification/main/tabs/01-1-authority-product.md",
+        "paragraphs": 61,
+        "nonblankParagraphs": 61
+      },
+      {
+        "tabId": "t.obqvgw6tngdr",
+        "title": "2. Shared interface",
+        "file": "specification/main/tabs/02-2-shared-interface.md",
+        "paragraphs": 223,
+        "nonblankParagraphs": 223
+      },
+      {
+        "tabId": "t.swhqr510gg2a",
+        "title": "3. Runtime & architecture",
+        "file": "specification/main/tabs/03-3-runtime-architecture.md",
+        "paragraphs": 259,
+        "nonblankParagraphs": 255
+      },
+      {
+        "tabId": "t.lz5gnfevfm8d",
+        "title": "4. Data, memory & trust",
+        "file": "specification/main/tabs/04-4-data-memory-trust.md",
+        "paragraphs": 105,
+        "nonblankParagraphs": 105
+      },
+      {
+        "tabId": "t.s5es88y3ngdy",
+        "title": "5. Spaces",
+        "file": "specification/main/tabs/05-5-spaces.md",
+        "paragraphs": 477,
+        "nonblankParagraphs": 467
+      },
+      {
+        "tabId": "t.1z0hcvqlwwzx",
+        "title": "6. Editors & data",
+        "file": "specification/main/tabs/06-6-editors-data.md",
+        "paragraphs": 138,
+        "nonblankParagraphs": 138
+      },
+      {
+        "tabId": "t.ipt3iyqq8u5x",
+        "title": "7. Apps & ecosystem",
+        "file": "specification/main/tabs/07-7-apps-ecosystem.md",
+        "paragraphs": 260,
+        "nonblankParagraphs": 253
+      },
+      {
+        "tabId": "t.vkroobcb81z8",
+        "title": "8. Engineering & acceptance",
+        "file": "specification/main/tabs/08-8-engineering-acceptance.md",
+        "paragraphs": 56,
+        "nonblankParagraphs": 56
+      },
+      {
+        "tabId": "t.wt3w9wnq1gjn",
+        "title": "9. Atlas screen register",
+        "file": "specification/main/tabs/09-9-atlas-screen-register.md",
+        "paragraphs": 1525,
+        "nonblankParagraphs": 1524
+      },
+      {
+        "tabId": "t.quf4eijpf3g",
+        "title": "10. Decisions & adoption",
+        "file": "specification/main/tabs/10-10-decisions-adoption.md",
+        "paragraphs": 48,
+        "nonblankParagraphs": 48
+      },
+      {
+        "tabId": "t.j832uc9l5tk",
+        "title": "11. Interaction rules",
+        "file": "specification/main/tabs/11-11-interaction-rules.md",
+        "paragraphs": 345,
+        "nonblankParagraphs": 344
+      },
+      {
+        "tabId": "t.f2hdpuo82co9",
+        "title": "12. Home & Settings controls",
+        "file": "specification/main/tabs/12-12-home-settings-controls.md",
+        "paragraphs": 553,
+        "nonblankParagraphs": 552
+      },
+      {
+        "tabId": "t.rh42mon9x4c",
+        "title": "13. Comic theme",
+        "file": "specification/main/tabs/13-13-comic-theme.md",
+        "paragraphs": 32,
+        "nonblankParagraphs": 29
+      },
+      {
+        "tabId": "t.b2rmbujhva1f",
+        "title": "14. Interaction control index",
+        "file": "specification/main/tabs/14-14-interaction-control-index.md",
+        "paragraphs": 487,
+        "nonblankParagraphs": 486
+      },
+      {
+        "tabId": "t.2dw4sn4oeuxw",
+        "title": "15. v4 review & decisions",
+        "file": "specification/main/tabs/15-15-v4-review-decisions.md",
+        "paragraphs": 114,
+        "nonblankParagraphs": 110
+      }
+    ],
+    "paragraphs": 4683,
+    "nonblankParagraphs": 4651,
+    "nativeSHA256": "0547c7a60be83d43263fb1bcafc7dcebb962601cdb52e7d33992adae388196b2"
+  },
+  {
+    "slug": "spaces",
+    "documentId": "1CJf0VXUVLXn1qyj3AYUTOTdxEouxuJfqXc48_jHpApE",
+    "title": "9to1 Spec — Spaces interaction reference",
+    "revisionId": "AHj4eMRRfihU7GnOHVxErQlUEnIZRuHWrgP9Z_P8hotIUuZYRjp1UZi5zBTPcmRc4k5_f9EERAWN8DkmTkGOXXevfmO1L5B8dET7GriimlU",
+    "url": "https://docs.google.com/document/d/1CJf0VXUVLXn1qyj3AYUTOTdxEouxuJfqXc48_jHpApE",
+    "tabs": [
+      {
+        "tabId": "t.0",
+        "title": "Read me & screen index",
+        "file": "specification/spaces/tabs/01-read-me-screen-index.md",
+        "paragraphs": 107,
+        "nonblankParagraphs": 104
+      },
+      {
+        "tabId": "t.4u1kzupu761c",
+        "title": "Interaction records",
+        "file": "specification/spaces/tabs/02-interaction-records.md",
+        "paragraphs": 1468,
+        "nonblankParagraphs": 1467
+      },
+      {
+        "tabId": "t.fyw5awfuccr",
+        "title": "Control bindings",
+        "file": "specification/spaces/tabs/03-control-bindings.md",
+        "paragraphs": 948,
+        "nonblankParagraphs": 947
+      }
+    ],
+    "paragraphs": 2523,
+    "nonblankParagraphs": 2518,
+    "nativeSHA256": "8e4b8b2f2aac353a7c8a9e87770ab2f9fbd14c29fb9a43167cd73271832dd804"
+  },
+  {
+    "slug": "editors",
+    "documentId": "1djno_7ptJQNPuuQyqUWOMxrmdhflZ3GKgHevnCJJBLc",
+    "title": "9to1 Spec — Editor interaction reference",
+    "revisionId": "AHj4eMR90_JLA3JhJABtXSpA5wf4Zke29fnPjm4B3WQ6L7UzkxmjE4ZNB_9EuR-fevyzGuwgN995aQxmtXgOxFjqCfOLMinKsCh4xtGOe1g",
+    "url": "https://docs.google.com/document/d/1djno_7ptJQNPuuQyqUWOMxrmdhflZ3GKgHevnCJJBLc",
+    "tabs": [
+      {
+        "tabId": "t.0",
+        "title": "Read me & screen index",
+        "file": "specification/editors/tabs/01-read-me-screen-index.md",
+        "paragraphs": 110,
+        "nonblankParagraphs": 107
+      },
+      {
+        "tabId": "t.yh4mk9q4cw20",
+        "title": "Interaction records",
+        "file": "specification/editors/tabs/02-interaction-records.md",
+        "paragraphs": 1292,
+        "nonblankParagraphs": 1291
+      },
+      {
+        "tabId": "t.fzdpe0p3kolb",
+        "title": "Control bindings",
+        "file": "specification/editors/tabs/03-control-bindings.md",
+        "paragraphs": 2481,
+        "nonblankParagraphs": 2480
+      }
+    ],
+    "paragraphs": 3883,
+    "nonblankParagraphs": 3878,
+    "nativeSHA256": "f262f3d9252c36a2d805ea4e40a6dc784dc10927fee9cd6e69fe356155346710"
+  },
+  {
+    "slug": "apps",
+    "documentId": "1tBC60DTC70QAZha8o7wn1SvgK1V3qL6vvKxDapYExl0",
+    "title": "9to1 Spec — App interaction reference",
+    "revisionId": "AHj4eMRkGvgV5i9pY5zlsfhRUQfg74bGGlFzKYi6qbzOEh5aA5T0xl-F12Q-1CcISl4lNxZ3f-S5qS_CS_XLuOgGhpdAK5N9EADaO620kSc",
+    "url": "https://docs.google.com/document/d/1tBC60DTC70QAZha8o7wn1SvgK1V3qL6vvKxDapYExl0",
+    "tabs": [
+      {
+        "tabId": "t.0",
+        "title": "Read me & screen index",
+        "file": "specification/apps/tabs/01-read-me-screen-index.md",
+        "paragraphs": 130,
+        "nonblankParagraphs": 127
+      },
+      {
+        "tabId": "t.kh6hghkncf6x",
+        "title": "Interaction records",
+        "file": "specification/apps/tabs/02-interaction-records.md",
+        "paragraphs": 1226,
+        "nonblankParagraphs": 1225
+      },
+      {
+        "tabId": "t.d6rtwhgxqmna",
+        "title": "Control bindings",
+        "file": "specification/apps/tabs/03-control-bindings.md",
+        "paragraphs": 1920,
+        "nonblankParagraphs": 1919
+      }
+    ],
+    "paragraphs": 3276,
+    "nonblankParagraphs": 3271,
+    "nativeSHA256": "14d20b7008b0e55bbccfc3a3e0a2070f7e621ee894ad40deb1f8c2f39ddddb02"
+  }
+]

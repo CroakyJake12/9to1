@@ -1,23 +1,25 @@
 # 9to1
 
-The [attached 9to1 Development Specification v2](docs/specification/9to1-development-specification-v2.md) is the sole product authority. It is the exact local owner attachment from 18 October 2026, recorded in [provenance](docs/specification/provenance.json). Do not substitute web copies or older repository instructions. Read [AGENTS.md](AGENTS.md) before work, including after a handoff or context compaction.
+9to1 brings its apps, documents and Spaces into Haven, a native desktop host with a shared tab strip. Home owns app discovery, Dashboard and global settings. New Tab has its own start surface. Spaces owns conversations, Study and Space Builder. The product also includes web and device delivery targets.
 
-Haven is the browser-derived super-app; Home Core is its shared service/control plane. Spaces owns core Spaces and Space Builder. Build combines Dev, Sites and Stacks into one application. The specification defines all other product identities, complete scope, dependencies, delivery surfaces and acceptance requirements.
+Use the **22 November 2026 specification and Interface Atlas v4** for current behaviour and design. The four volumes cover the core product, Spaces, applications and editors. The screen register maps 282 Atlas routes to their requirements. [Product specification and editable Atlas](docs/specification/owner-references/2026-11-22-atlas-v4/README.md)
 
-Applications are authored only in CUI, including their state, behaviour and orchestration. Infrastructure/donor internals retain permitted implementation languages behind typed boundaries. Avalonia supplies approved low-level capabilities; FluentTheme and donor theme presentation do not belong in CUI. Existing nonconforming code is migration work, never authority to weaken this contract.
+## Work on the desktop app
 
-## Source and evidence
+Read the current contributor instructions, then find the production route before editing. Haven composes the native Browse workspace, Home and app owners in `9to1 Workspace/shared/src/Haven.Desktop/`. The shared tab strip lives in `9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui`. Home’s Appearance controls are authored in `9to1 Workspace/Home/UI/Home.cui` and use the Home preference service. [Contributor instructions](AGENTS.md)
 
-- `framework/CUI/` contains the shared CUI language, compiler/runtime, themes and backend infrastructure.
-- `9to1 Workspace/` contains application and shared service sources; legacy directory names do not define the product roster.
-- `apps/`, `cloud/`, `9to1 OS/` and `9-1 OS (Android)/` contain delivery/platform sources.
-- `docs/development/unified-host-tasks.md` and other retained engineering records are historical implementation evidence, not product authority or automatic proof of current acceptance.
-- `reference/` contains historical/donor evidence. Preserve applicable donor licences and notices.
+The checkout’s root build entry is `eng/9to1.ps1`. Native desktop development on the owner’s PC uses a serial guarded build, an immutable self-contained publish and the managed development profile. Use the preview procedure to identify the exact candidate and inspect it on screen. [Development workflow](docs/development/workflow.md) · [Native preview](docs/development/live-preview.md)
 
-The repository remains under development. Readiness requires exact-source/runtime evidence for all applicable requirements and all seven acceptance criteria. A successful build, shell, test fixture or partial checkpoint does not establish completed product acceptance. [Open decisions](docs/specification/open-decisions.json) hold unresolved owner decisions without blocking independent authorised work.
+## Source map
 
-## Build entry point
+| Location | Responsibility |
+| --- | --- |
+| `framework/CUI/` | UI language, native runtime, material roles and accessibility |
+| `9to1 Workspace/` | App implementations, native host, shared services and owning tests |
+| `apps/` | Web and standalone app hosts |
+| `cloud/` | Connected services and their deployment-specific configuration |
+| `9to1 OS/` and `9-1 OS (Android)/` | Device and platform delivery |
+| `docs/specification/owner-references/` | Dated owner materials and their provenance |
+| `reference/` | Retained upstream and historical material |
 
-The existing root orchestration entry is `eng/9to1.ps1`; consult its current component help and the active coordinator's memory/build-concurrency safeguards before running it. Select focused authentic checks for the changed dependency graph. Commands and old status documents cannot waive the specification.
-
-Third-party provenance is indexed in [THIRD_PARTY.md](THIRD_PARTY.md). Preserve upstream licence and attribution obligations.
+A feature’s evidence belongs to the revision, host and interaction actually checked. Use the requirement register for outstanding work, the applicable build or interaction tests for implementation evidence, and native captures for visual comparisons. Preserve upstream licences and original attribution. [Third-party notices](THIRD_PARTY.md)
