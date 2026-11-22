@@ -2,6 +2,10 @@
 
 Use the owner’s current instructions and the **22 November 2026** product specification and Interface Atlas v4. The bundled four-volume specification governs behaviour. The approved Atlas decisions govern design. An owner-supplied replacement becomes current when it is received and identified. P1–P7 are proposals. [Current source register](docs/specification/owner-references/2026-11-22-atlas-v4/README.md)
 
+## Overnight cloud continuation · 22 November 2026
+
+The owner authorised overnight Haven shell and frontend work in the saved **9to1** cloud environment. Use its checked-out repository and authorised branch, following the [cloud handoff](docs/development/CLOUD-HANDOFF-2026-11-22.md). The PC checkout path, live user profile and GPU service procedures below apply to the development PC. In cloud, use the available build and rendering tools, preserve original evidence, and verify pushed branch revisions. Stop testing below 15% actual remaining Codex allowance. At 5% remaining, commit and push outstanding owned work, verify the remote revision, record the handoff, and stop before lock-out.
+
 ## Source and ownership
 
 - Work on `main` in `/home/jacob/Documents/GitHub/9to1` on the development PC. Check the revision, existing changes and current file owners before editing. Keep one owner for the shared shell and theme system at any time.
