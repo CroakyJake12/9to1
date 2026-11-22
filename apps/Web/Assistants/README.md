@@ -1,6 +1,6 @@
-# Assistants browser owner
+# Assistants in the browser host
 
-This is the dedicated Assistants product surface. It uses the same Assistants Core and authored NativeUI CUI as the native product. It does not register a special Space or construct a second Den, Task store, model router or permission broker.
+The browser feature mounts the Assistants owner through its canonical adapter and native CUI resources. Session and permissions come from the injected owner. Use the binding fence whenever changing the active account or route so late content belongs to the original context. [Binding fence](BrowserAssistantsBindingFence.cs) · [Mounted feature](AssistantsBrowserFeature.cs)
 
 The current browser host lacks an authenticated Home Den owner. `BrowserAssistantsBootstrap` therefore displays the canonical Home scene with explicit setup status and refuses every action. CAKE identity and the browser's canonical Task read partition do not provide definition, conversation, model, resource or execution authority.
 

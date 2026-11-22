@@ -1,6 +1,6 @@
-# HUI Android primitive adapter
+# Android HUI primitive renderer
 
-This directory contains the bounded Android execution end of the HUI rendering path:
+AndroidHuiCanvasRenderer consumes the shared draw command stream and paints the supported primitives on Android Graphics Canvas. Use this path to test command translation and token resolution on Android. The desktop’s authored CUI routes use the native Haven host and their own tests. [Canvas renderer](AndroidHuiCanvasRenderer.cs)
 
 `HavenSceneRenderer` → `IReadOnlyList<HavenDrawCommand>` → `AndroidHuiCommandAdapter` → `AndroidHuiCanvasRenderer` → `Android.Graphics.Canvas`.
 

@@ -1,70 +1,10 @@
-# State and Persistence
+# State and persistence in native Haven
 
-9to1 keeps data local-first. Categories, owners and lifecycles:
+Choose the durable owner before adding storage. A document has its own identity and save/reopen rules. Device preferences belong to Home. Conversations and task runs have distinct repository identities and authorization. A window, view model or cache can present those records without becoming their authority.
 
-## 1. Durable domain data — SQLite (`Haven.Infrastructure`)
+Use a disposable existing-format profile when testing migrations. Preserve unknown fields, use the expected revision on updates and treat a conflicting write as a recoverable result. Confirm first use, reopening, draft recovery and a failed or interrupted operation through the same owner.
 
-Conversations, messages, groups, projects, lessons, planner items, calls,
-Apps/modes (by stable ID), agents, instructions, capabilities, run history.
-Accessed through repositories defined in `Application`; schemas change via
-**forward-only numbered migrations** with fixtures for every prior schema and
-a backup/integrity check before migrating. Never renumber persisted enums or
-recycle stable IDs. Representative: `src/Haven.Infrastructure` SQLite
-services; fixtures in `tests/Haven.Infrastructure.Tests`.
-
-Agentic recovery data is also durable SQLite (migration 23):
-
-- `workspace_versions.haven_sequence` — nullable sequence column backfilled
-  from `rowid`, kept populated by the `trg_workspace_versions_sequence`
-  insert trigger and indexed per workspace root.
-- `agent_checkpoints` — one row per recorded checkpoint (id, optional
-  conversation/container ids, `workspace_root`, label, `CheckpointMode`,
-  `start_sequence`, `created_at`). Full restores take the before-content of
-  each path's earliest mutation after `start_sequence`, ordered by sequence.
-  Later before-content reflects intermediate edits, not checkpoint-time state.
-  `UndoLastActionAsync` separately reverses only the most recent mutation.
-  Recovery works in non-Git directories. Owned by `CheckpointRepository`.
-
-Restore plans use the same platform path identity as the owning workspace tools:
-case-insensitive ordinal comparison on Windows and ordinal comparison elsewhere.
-Distinct Linux paths such as `src/a.cs` and `src/A.cs` retain separate original
-before-content; Windows case aliases retain one earliest mutation.
-
-## 2. User preferences — JSON files
-
-| Store | File | Contents |
-|---|---|---|
-| `UserPreferencesService` | `{DataDir}/preferences.json` | Appearance + theme + accent override + font + avatar flags, model defaults, permissions, voice profiles. Atomic tmp+move writes; malformed JSON falls back to defaults. |
-| `MotionPreferencesService` | `%LocalAppData%/Haven/ui-preferences.json` | Reduced-motion toggle. |
-
-Personalisation fields are tolerant: unknown theme names resolve to Glow,
-unknown accent palettes disable override, unknown fonts fall back to bundled
-Montserrat.
-
-### 2.1 Versioned settings — `{DataDir}/settings.json`
-
-`VersionedAtomicSettingsStore`
-(`src/Haven.Application/VersionedAtomicSettingsStore.cs`) persists named JSON
-documents as one exportable manifest (`{version, exportedAt, settings}`) with
-atomic tmp+move writes, a `.bak` fallback on corruption and export/import for
-settings transfer. Keys defined so far (implementations in
-`Haven.Infrastructure/Persistence` unless noted):
-
-| Key | Implementing store | Contents |
-|---|---|---|
-| `models.fallback-order.v1` | `VersionedModelFallbackOrderStore` | Ordered model fallback keys, most preferred first. |
-| `models.personalisation.v1` | `VersionedModelPersonalisationStore` | Shared personality defaults plus per-model entries; null personality members mean "use Haven defaults" and round-trip as explicit nulls; blank nicknames persist as null (= inherit). |
-| `models.permissions.v1` | `VersionedModelPermissionStore` | Deny-rule model permission policy evaluated by `ModelPermissionEvaluator`. |
-| `actions.default-providers.v1` | `VersionedDefaultProviderStore` (`Persistence/DefaultProviderStore.cs`) | Per-category default provider App key or `"ask"` (Always Ask). |
-| `updates.preferences.v1` | `VersionedUpdatePreferenceStore` (`Updates/UpdateOrchestrator.cs`) | Background-check toggle and preferred release channel. |
-
-The checkpoint policy (`CheckpointMode`) is engine-owned state on
-`CheckpointService.Mode` (default `BeforeFileChanges`) and is not yet exposed
-as a settings key — PARTIAL.
-
-Spaces are also persisted through `IVersionedSettingsStore` by
-`SpaceRegistry`; they are user content, not preferences. See
-`docs/ARCHITECTURE_RULES.md` for state ownership rules.
+The retained boundaries below describe individual stores and recovery records. Match an old path to the current checkout and profile before acting on it.
 
 ## 3. Avatar assets — processed local files
 
@@ -84,19 +24,6 @@ Model lists, retrieval indexes, generated-UI instances (`GenUiInstanceStore`)
 are rebuildable caches or explicitly persisted stores with their own
 contracts. Treat as disposable unless the owning service documents
 persistence.
-
-## Rules of thumb
-
-- New durable product data → repository + migration in Infrastructure.
-- New user setting → field on the existing preferences record + safe default;
-  never a second settings store.
-- New shared cross-surface policy or default (model routing, permissions,
-  provider defaults, update behaviour) → contract in Application +
-  `IVersionedSettingsStore` key named `<area>.<name>.v1`; never a bespoke
-  settings file.
-- New binary asset → process into a stable file under the data directory;
-  never embed blobs in preferences.json.
-
 
 ## Canonical Task/Run recovery
 
@@ -160,7 +87,6 @@ The existing `agent_runs.activity_json` carries an additive `CanonicalBindingVer
 
 `RetryAsync` uses only a retained live private original and the narrowly supported source-approved never-started continuation. It preserves the same Agent row and canonical IDs and never falls back to `RunAsync` automatically. Historical/invoked/unknown recovery is explicitly unavailable. `RunAsync` remains an explicit new-work action. `HasOriginalUnstartedRetrySource` is deny-only UI availability; every retry still performs fresh owning policy and input checks. Parent/child delegation and accepted-checkpoint recovery remain separate unfinished production seams.
 
-
 ## Spaces and Dev composition boundaries
 
 Spaces task presentations read the canonical `TaskExecutionSnapshot`; `Conversation.Id`
@@ -213,3 +139,11 @@ installed Home Windows startup connection/approved host tuple, configured worksp
 trust, complete process-owner handoff and native/browser runtime acceptance remain
 required receiving dependencies. A compatibility readiness check is not a rendered
 frame, installed authority, successful tool effect or completed durable task.
+
+## Schema and restore order
+
+Keep stable IDs and persisted enum values intact. Use forward-only numbered SQLite migrations, with backup and integrity checks before a profile upgrade. In the workspace checkpoint store, a full restore recovers each path’s earliest before-content after the checkpoint’s start sequence. `UndoLastActionAsync` reverses the most recent mutation. Use the current platform’s path comparison rules so case-distinct Linux files remain distinct.
+
+Device settings are separate JSON data. Use the existing typed owner for preference updates, preserve unknown fields across rewrites and retain any documented backup or repair outcome. Do not use a cached view-model value to overwrite a newer profile revision.
+
+[Profile paths](../../src/Haven.Infrastructure/Lifecycle/AppPaths.cs) · [SQLite](../../src/Haven.Infrastructure/Database/SqliteDatabase.cs) · [Device preferences](../../../Home/Source/Home/Core/HomeNativePreferenceFile.cs)

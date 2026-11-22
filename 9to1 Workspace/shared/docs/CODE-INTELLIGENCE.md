@@ -1,6 +1,8 @@
-# Haven code intelligence
+# Language services in the development workspace
 
-Haven's code-intelligence layer adds optional Language Server Protocol support to Studio while preserving useful local fallbacks when no server is installed.
+Code intelligence attaches a configured language server to a real workspace and language. Local indexing and editor fallbacks remain available when the provider is absent. Connect the resulting observations to the existing development workspace and its current project root.
+
+Treat edit proposals and executable language-server configuration as separate operations. Preserve the user’s decision, working directory and cancellation boundary. A successful handshake alone does not verify document synchronisation, diagnostics or rename edits.
 
 ## Security model
 
@@ -81,49 +83,6 @@ Microsoft documents `dotnet format` separately, but Haven does not invoke it aut
 
 - `dotnet format`: `https://learn.microsoft.com/dotnet/core/tools/dotnet-format`
 
-## Built-in disabled definitions
-
-Haven creates disabled suggestions for:
-
-| ID | Command | Languages |
-|---|---|---|
-| `csharp-ls` | `csharp-ls` | `.cs` |
-| `typescript-language-server` | `typescript-language-server --stdio` | `.ts`, `.tsx`, `.js`, `.jsx` |
-| `pylsp` | `pylsp` | `.py` |
-| `rust-analyzer` | `rust-analyzer` | `.rs` |
-
-These entries are configuration suggestions only. Haven does not install the tools or claim they are available.
-
-## Studio workflow
-
-Open a Studio project and expand **Conversation tools**. The code-intelligence panel supports:
-
-- inspecting the configured server and fallback status for a workspace-relative file;
-- loading diagnostics;
-- searching project symbols;
-- inserting diagnostics or symbols into the active composer;
-- previewing a formatter diff;
-- applying the reviewed diff transactionally.
-
-## Validation
-
-Run from the repository root on Windows:
-
-```powershell
-dotnet restore Haven.sln
-dotnet build Haven.sln -c Debug --no-restore
-dotnet test Haven.sln -c Debug --no-build
-dotnet build Haven.sln -c Release --no-restore
-dotnet test Haven.sln -c Release --no-build
-dotnet build src/Haven.AutomationWorker/Haven.AutomationWorker.csproj -c Release --no-restore
-```
-
-Focused tests added by this tranche:
-
-```powershell
-dotnet test tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj -c Debug --filter "FullyQualifiedName~CodeIntelligence|FullyQualifiedName~LanguageServer"
-```
-
 ## Manual smoke checks
 
 1. Start Haven and open Settings.
@@ -139,3 +98,5 @@ dotnet test tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj -
 11. Cancel a slow request and verify the server process does not remain orphaned.
 
 This checkpoint must not be marked fully validated until the build, automated tests, and Windows smoke checks above pass.
+
+[Language-service contracts](../src/Haven.Application/CodeIntelligenceAbstractions.cs) · [Development workspace](../../Dev/README.md)

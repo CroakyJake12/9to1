@@ -1,6 +1,10 @@
 # Dulche Shared Runtime Cancellation
 
-## Decision
+## Trace a cancellation
+
+Identify the broker-owned model slot and the original request. Cancel that request through its existing broker control path, observe the worker and request settlement, then verify the next permitted request on the same model. Keep a disconnect, a drained request and a new worker instance as distinct observations. The recorded implementation and test evidence below are scoped to the llama.cpp broker. [Broker implementation](../../9to1%20Workspace/Home/Source/Dulche/llamacpp/broker.py)
+
+## Slot ownership
 
 Dulche runs broker-owned `llama-server` workers for the shared local runtime, one per explicitly loaded model slot. It does not start a server per application. Each worker starts with `--parallel 1`, has its own private Unix socket, and serves CUI/provider traffic through the broker. `GET /health` reports the `single-broker-owned-slot-workers` topology and loaded slot diagnostics under `runtime`.
 

@@ -1,51 +1,10 @@
-# Haven browser automation safety
+# Browser automation permissions and lifetime
 
-This document describes the production browser-automation tranche implemented on the `haven-continuation` branch.
+An interactive browser action belongs to the actual attached browser session. The caller’s current capability and the user’s decision determine whether it may proceed. A disconnected browser, an expired approval or a changed destination must remain observable to the caller.
 
-## Scope
+Keep the navigation policy, sensitive-field handling, approved-download boundary and private-profile storage rules together when modifying an adapter. Check the original target immediately before execution. Do not recover a failed action by silently repeating a side effect.
 
-The tranche adds:
-
-- public-network destination policy for model-driven navigation;
-- DNS-pinned, redirect-validated headless page loading;
-- bounded structured page snapshots;
-- stable page-element references;
-- rejection of raw model-provided CSS selectors;
-- sensitive-field blocking;
-- explicit approval for form-submitting controls;
-- element-fingerprint validation when a submission is approved;
-- explicit approval for downloads;
-- session-only handling of signed download targets;
-- expiring persistent actions;
-- interrupted-action recovery without automatic replay;
-- persistent browser audit and download records;
-- redirect-by-redirect download validation;
-- DNS-result pinning during approved downloads;
-- streamed size limits, atomic file completion, and SHA-256 records;
-- a Browser safety approval centre shared by Haven Chat and the Browse side assistant.
-
-## Model-visible tools
-
-The runtime advertises:
-
-- `browser_navigate`
-- `browser_snapshot`
-- `browser_read_page` as a compatibility alias for `browser_snapshot`
-- `browser_click_ref`
-- `browser_fill_ref`
-- `browser_download`
-- `browser_back`
-- `browser_forward`
-- `browser_reload`
-- `browser_scroll`
-
-It no longer advertises the previous raw-selector tools:
-
-- `browser_click`
-- `browser_click_text`
-- `browser_fill`
-
-The legacy methods remain on the browser host for trusted UI compatibility only. They are not included in the model tool schema.
+The following retained interface and validation contracts describe the existing implementation. Run the appropriate native/backend checks against the current build before using any historical result as evidence.
 
 ## Structured snapshots
 
@@ -181,55 +140,6 @@ The transport:
 - removes query strings and fragments from the persisted address record;
 - never opens or executes the downloaded file automatically.
 
-## Shared runtime
-
-Haven Chat and the Browse side assistant resolve the same `IBrowserAutomationService`, policy, action store, pinned transports, and audit trail. The shared mapping is registered before `MainWindowViewModel` is created, so the existing one-argument `BrowserToolRuntime` construction in the Browse view cannot bypass the production safety coordinator.
-
-The existing `ToolAvailabilityPlanner` receives the new definitions through the same background and interactive browser groups:
-
-- background navigation, snapshots, and approval requests still require an active browser plugin and non-`Ask` browser permission;
-- reference-based interactive controls require `@BrowserUse`, an attached native Browse view, and Full Access browser permission.
-
-## Tests
-
-The Browser-focused tests cover:
-
-- private and local network rejection;
-- URL credential rejection;
-- safe public IP acceptance;
-- action persistence and expiry;
-- corrupt-state quarantine;
-- structured safe clicks and fills;
-- sensitive-field rejection;
-- approval-gated form submission;
-- audit redaction of entered field values;
-- stale-reference failure;
-- approval-gated download requests and rejection;
-- removal of raw selector tools from the model-visible schema;
-- redirect-by-redirect pinned headless loading against a local test server;
-- interrupted approved-action recovery and audit;
-- live approved actions remaining stable during ordinary UI refresh;
-- signed URL targets remaining session-only and absent from audit text.
-
-## Required validation
-
-Run from a Windows x64 checkout of `haven-continuation`:
-
-```powershell
-dotnet restore Haven.sln
-dotnet build Haven.sln -c Debug --no-restore
-dotnet test Haven.sln -c Debug --no-build
-dotnet build Haven.sln -c Release --no-restore
-dotnet test Haven.sln -c Release --no-build
-dotnet build src\Haven.AutomationWorker\Haven.AutomationWorker.csproj -c Release --no-restore
-```
-
-Focused test command:
-
-```powershell
-dotnet test tests\Haven.Desktop.Tests\Haven.Desktop.Tests.csproj -c Debug --filter "FullyQualifiedName~Browser"
-```
-
 ## Windows smoke checklist
 
 1. Open Browse and confirm the browser profile loads normally.
@@ -251,9 +161,4 @@ dotnet test tests\Haven.Desktop.Tests\Haven.Desktop.Tests.csproj -c Debug --filt
 17. Navigate to a loopback/private literal from the real model path and verify it is blocked.
 18. Confirm direct user browsing, bookmarks, history, extension management, and trusted credential autofill still work.
 
-## Primary documentation consulted
-
-- Microsoft WebView2 navigation events and `NavigationStarting` cancellation behaviour.
-- Microsoft WebView2 security guidance for treating web content as untrusted and validating origins around host interactions.
-- .NET `HttpClient` and `SocketsHttpHandler` lifetime and DNS guidance.
-- .NET `SocketsHttpHandler.ConnectCallback` API documentation and examples.
+[Browser scope](../src/Haven.Browser) · [Browse integration](App-Editing-Guide/BROWSER.md)

@@ -1,23 +1,10 @@
-# 9to1OS Canvas Rnote Proof of Concept
+# Rnote engine bridge for Canvas
 
-This crate provides a renderer-neutral bridge between the Rnote 0.14.2 engine core and the CakeOS HUI layer. It deliberately depends on `rnote-engine` and `rnote-compose` with default features disabled — no GTK, Libadwaita, or `rnote-ui` is imported.
+The Rust bridge links to the pinned Rnote engine and composition crates. It exposes a renderer-neutral C ABI so the Canvas host can pass input, request output and retain its document envelope without embedding the donor frontend.
 
-## Architecture
+Keep the public header, runtime library and donor revision together. Check every exported buffer or handle against its ownership and release contract. Test input, serialization and reopening at the bridge, then verify a real Canvas action through the native route.
 
-```
-┌─────────────────┐      ┌──────────────────────┐      ┌─────────────────┐
-│   HUI Input     │─────▶│  C ABI Boundary      │─────▶│  Rnote Engine   │
-│   (pointer      │      │  (cakeos_canvas.h)   │      │  (headless)     │
-│   samples)      │      │                      │      │                 │
-└─────────────────┘      └──────────────────────┘      └─────────────────┘
-                                │
-                        ┌───────▼───────┐
-                        │  Renderer-    │
-                        │  Neutral Frame│
-                        │  (SVG +       │
-                        │  bounds)      │
-                        └───────────────┘
-```
+Use the existing build and test recipes only for the matching toolchain and target. Preserve donor notices and patch provenance.
 
 ## Exports
 
@@ -56,3 +43,5 @@ The tests verify:
 - Eraser trashing + history restoration
 - Camera zoom/pan with document-coordinate preservation
 - Atomic Rnote save → reopen round-trip with no retained temporary file
+
+[Crate configuration](Cargo.toml) · [C ABI](include) · [Provenance](PROVENANCE.md)

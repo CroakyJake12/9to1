@@ -1,4 +1,6 @@
-# llama.cpp model lifecycle manager
+# Local GGUF store and broker slot lifecycle
+
+Use modelctl for explicit local GGUF store changes and the live broker for managed slot state. Before an import, confirm the declared identity, expected digest and destination model key. Afterward, retain the store receipt together with the actual broker slot observation for any runtime claim. [Store commands](modelctl.py) · [Model leases](model_lease.py)
 
 `modelctl.py` is the explicit mutation boundary for Haven's local GGUF store. It is intentionally separate from `haven-inference-broker.service`, whose systemd sandbox keeps the model store read-only.
 

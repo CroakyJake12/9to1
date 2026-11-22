@@ -1,6 +1,6 @@
-# Hardware, backend and benchmark evidence
+# Recording hardware and runtime benchmark evidence
 
-This slice adds **read-only planning and evidence tooling**. It does not inspect the approved VM automatically, install a driver/toolkit, enable a GPU backend, download a model, or claim model runtime performance.
+Start with the observed target identity and the declared backend. Record read-only inventory separately from model build, admission, actual generation and performance samples. The VM observations below belong to their original evidence set. Measure later candidates against the same model, precision and request conditions before comparing performance. [Benchmark owner](benchmark.py)
 
 ## Approved VM
 

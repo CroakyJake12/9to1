@@ -1,4 +1,6 @@
-# Connect the protected Present preview
+# Connecting the protected Present preview
+
+An authorised administrator selects **Connect Present preview** on the CAKE ID account page. Confirm the protected host, registered origin and redirect destination are the intended preview. The action prepares the public client through the existing issuer owner. Deployment, authorisation and a successful browser callback each have separate evidence.
 
 The CAKE ID `/account` page has a separate **Connect Present preview** administrator action for the existing protected host. This source path prepares a public OAuth client; it does not deploy an issuer, register a hosted client automatically, or authenticate a user to Present.
 

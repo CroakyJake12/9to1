@@ -1,4 +1,10 @@
-# Current receiver local PKCE execution proposal
+# Local account sign-in browser check
+
+The current runner exercises the native CUI account surface in browser-WASM with a local fixture issuer. Match the redirect, callback and final account identity to the original request. Keep fixture output and account data local. Distinguish the preparation check from an executed, signed-in browser interaction. [Local runner](run-local-auth-current.cjs) · [Runner source contract](source-contract.json)
+
+The preparation program verifies its fixture checkout against the paths and SHA-256 values in `source-contract.json`, including issuer documentation. Replay the fixture against its original pinned revision. The contracted issuer paths retain their original bytes. Maintained issuer guides are linked from the CAKE ID service index; its fixture still requires every other source pin, the selected revision and its original evidence.
+
+## Original PKCE test scope and evidence
 
 This is a new bounded test of the existing browser-WASM JOSE broker and actual native CUI account surface. It does not reconstruct Team B's missing auth07 driver, relabel anonymous interop7, grant simulated identity, or prove hosted identity, strict .NET RSA/auth_revision authority, owner adoption or global app acceptance. This test successor changes no provider, fixture custodian, browser custodian or publisher implementation. Its explicitly separate fixture source incorporates the reviewed issuer UI redirect correction; the existing Web consumer bodies remain unchanged.
 
@@ -95,3 +101,5 @@ The actual fourth9af/0d/df execution is preserved as one PASS, two FAIL and four
 The existing issuer compiled UI and pinned better-auth1.7.7 standard redirect plugin were exercised offline with synthetic DOM/HTTP responses. A single redirect response performed the standard plugin's href assignment and then the own page handler's assign again. Proposalff453ff9 removes only those two redundant own sign-in/consent redirects, retaining the standard plugin's URL-scheme check and existing fallback, errors and button guards. The exact generated bundle differs by only those two executable assignments. Original final controls retain four PASS/four FAIL; corrected controls pass all eight. This is source/offline evidence, not a new issuer or authentication execution.
 
 The runtime successor adds only fixed public network-boundary categories, request methods/resource types, numeric HTTP statuses, known exact Chromium failure codes, failure-phase categories and fixed console startup/resource classifications. Unknown values become OTHER; each counter saturates at10000 with an explicit flag. No raw URL/query/code/state/header/body/token/console or error text survives. All seven assertions, including exactly one callback, zero unexpected errors and full source/asset/custody criteria, remain unchanged. A new fresh Root-owned issuer using the explicit corrected fixture HEAD and separately reviewed test HEAD is required; the original9af asset tuple can remain9af truthfully.
+
+[CAKE ID service and maintained fixture guides](../../../../cloud/cake-id-auth/README.md)

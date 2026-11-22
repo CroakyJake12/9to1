@@ -1,9 +1,9 @@
-# Files donor-source instructions
+# Contributing to the Files donor integration
 
-The repository root [AGENTS.md](../../../../AGENTS.md) and exact local [9to1 specification v2](../../../../docs/specification/9to1-development-specification-v2.md) govern this tree. This donor's old WinUI/XAML product design and build-only validation are not 9to1 authority. Read the specification's Files, CUI, donor-parity, privacy and acceptance sections before changes.
+Use the repository’s current product register and contributor instructions for 9to1 integration. This subtree includes the external Files source and project-specific guidance. Preserve upstream provenance, licences and compatible behavior.
 
-Author 9to1 application structure, state, behaviour and orchestration in canonical CUI. Preserve compatible donor engines, storage/interoperation capabilities, stable identities, user data, licences and notices behind reviewed typed boundaries. Do not mistake the unadapted upstream UI for 9to1 acceptance or revive an alternative XAML authoring path.
+Author first-party Files UI in canonical CUI. Reuse the active Files owner for navigation, storage, document operations, permissions and native integration. Keep WinUI, generated adapters and platform wrappers within their existing donor or infrastructure boundaries.
 
-For permitted donor/infrastructure changes, preserve `.editorconfig`, native interoperability wrappers and source-generation inputs; do not edit generated CsWin32 output. Treat file operations, shell integration, drag/drop, preview handlers, archives and settings persistence with appropriate targeted validation. Keep trimming/AOT diagnostics visible and justify narrowly scoped preservation declarations. Match build architecture to the target.
+For a donor change preserve the existing native interop wrappers, source-generator inputs, trimming/AOT diagnostics and target architecture. Edit generated CsWin32 output through its original input or producer. Test the affected file operation, shell integration or preview in the owning environment. Keep SDK allocation serial and preserve existing work, receipts and user data.
 
-Preserve existing memory limits and shared build serialization. Do not run parallel heavy builds or bypass locks. Keep searches/output bounded, avoid generated build directories, change only owned files and preserve unrelated work. Focused smoke tests do not replace independent specification acceptance. Queue observable/security/data/architecture uncertainty through the root open-decisions process while continuing safe independent work.
+[Repository instructions](../../../../AGENTS.md) · [Product and Files requirements](../../../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md) · [Donor provenance](../DONOR-PROVENANCE.md)

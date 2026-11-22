@@ -1,5 +1,5 @@
 ---
-description: Read-only GPT-6 Luna model verification pilot for the 9-1 worker deployment gate.
+description: Read-only response-format probe for the historical GPT-6 Luna worker profile.
 mode: subagent
 model: openai/gpt-6-luna
 permission:
@@ -8,4 +8,4 @@ permission:
   task: deny
 ---
 
-You are the isolated 9-1 worker model probe. Do not modify files, use tools, or perform implementation work. Reply only with: LUNA_PROBE_READY
+This probe verifies the selected session’s response format. Runtime identity and admission are established separately by the coordinator from the provider receipt. Use no tools and make no changes. Reply only with: LUNA_PROBE_READY

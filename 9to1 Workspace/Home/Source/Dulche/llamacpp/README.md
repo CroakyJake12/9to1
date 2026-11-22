@@ -1,6 +1,6 @@
 # Dulche llama.cpp runtime - staged implementation
 
-This directory implements the production boundary for local GGUF inference. It does **not** bundle a model, download a model, install packages, modify the approved VM, or expose llama.cpp directly to CUI applications.
+This broker admits reviewed GGUF bytes from the local store and supervises llama-server workers. Apps use the stable provider routes; model import, package installation and individual engine source upgrades have separate owners. To debug a route, identify the model key, broker slot, continuing request and matching runtime receipt. [Provider contract](provider-contract.json) · [Local store and slot lifecycle](MODEL-LIFECYCLE.md)
 
 ## Evidence state
 
@@ -10,7 +10,7 @@ Evidence is attached to the exact commit that produced it; one stage never inher
 - Haven broker/model admission code: **implemented and CI-gated**.
 - Explicit local model manager: **implemented on the lifecycle slice; tested only when that slice's CI succeeds**.
 - Pinned CPU `llama-server`: **built/smoke-tested only when the relevant current-head `build-pinned-llamacpp-cpu` CI job succeeds**.
-- This `llamacpp/` directory holds 9-1 integration/broker code, **not** upstream llama.cpp. The actual newest pinned upstream source is now separately materialised in `../Source/llama.cpp/`, with provenance in `../Source/DONOR-PROVENANCE.md`. The existing broker build lock still targets v0.4.0; compatibility with the latest source is unverified.
+- This `llamacpp/` directory holds 9-1 integration/broker code, **not** upstream llama.cpp. The donor provenance records the separate upstream and consumed revisions. The broker build uses its own v0.4.0 lock. Match the candidate to the lock actually consumed by its build. [Donor reconciliation](../Source/DONOR-PROVENANCE.md)
 - Model inference: **not runtime-proven until an approved GGUF is actually loaded and prompted**.
 - Approved Ubuntu VM: **unchanged until a separately recorded staging/runtime gate**.
 - GPU backends: **not built, tested, benchmarked, or runtime-proven**.

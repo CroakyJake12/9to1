@@ -1,6 +1,8 @@
-# llama.cpp Debian packaging
+# Model-free llama.cpp Debian package
 
-`build-deb.sh` assembles a **model-free** `haven-llamacpp-runtime` package from the CakeOS runtime sources plus an already-built pinned `llama-server` executable.
+The `haven-llamacpp-runtime` package assembles the pinned server executable with the runtime sources and required notices. The package manifest and cohort lock identify the deliverable. A model file and a working inference session have separate owners and validation. Keep the version check and target package inspection below when replacing the server. [Cohort artifact lock](cohort-artifact.lock.json)
+
+From this directory, `build-deb.sh` packages the specified executable and integration sources. Compare the generated package against its expected metadata and verify the installed server binary identity before exercising the broker.
 
 The builder refuses an unverified-looking server unless `--version` contains both llama.cpp `0.4.0` and commit prefix `5266f24`. The upstream source itself is not copied into CakeOS; the package includes the required upstream MIT notice and the pinned upstream lock file.
 

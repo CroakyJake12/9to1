@@ -1,6 +1,6 @@
 # 9to1
 
-9to1 brings its apps, documents and Spaces into Haven, a native desktop host with a shared tab strip. Home owns app discovery, Dashboard and global settings. New Tab has its own start surface. Spaces owns conversations, Study and Space Builder. The product also includes web and device delivery targets.
+9to1 brings its apps, documents and Spaces into Haven, a native desktop host with a shared tab strip. Home owns app discovery, Dashboard and global settings. Atlas v4 specifies separate Dashboard and New Tab layouts. The November 18 implementation map records a shared production start surface, so verify both routes on the candidate being reviewed. Spaces owns conversations, Study and Space Builder. The product also includes web and device delivery targets.
 
 Use the **22 November 2026 specification and Interface Atlas v4** for current behaviour and design. The four volumes cover the core product, Spaces, applications and editors. The screen register maps 282 Atlas routes to their requirements. [Product specification and editable Atlas](docs/specification/owner-references/2026-11-22-atlas-v4/README.md)
 

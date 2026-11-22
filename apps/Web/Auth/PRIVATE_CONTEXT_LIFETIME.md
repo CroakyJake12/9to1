@@ -1,4 +1,6 @@
-# Private account lifetime
+# Private account lifetime in the browser
+
+When account identity changes, the browser withdraws private route admission and sensitive UI/accessibility bindings first. Then it cancels and drains the original owners, factories, commands and native resets through their retained completion receipts. Check both the immediate disappearance of private content and the final settlement before publishing the replacement account context.
 
 The browser root synchronously removes private route admission, sensitive native bindings and accessibility references before cancellation callbacks. Every asynchronous owner, factory, command and native reset has a completion receipt registered before callbacks. Replacement waits for all issued resets; cleanup failures remain observable and prevent new private registration. Device-local owners retain their existing canonical sessions.
 

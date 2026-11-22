@@ -1,6 +1,10 @@
-# 9to1 Account Worker — current launch branch
+# 9to1 Account Worker
 
-Updated 16 November 2026. Read-only Cloudflare metadata confirms the owner-only identity Worker is serving version f7ed455e-709a-4e1e-98cb-5d68c6f3fe61 at 100 percent (deployment 95aedb62-7dff-4899-8097-635ee400d720, created 2026-11-15 17:38 UTC). Its live worker.mjs SHA-256 is 7123c42a9f2b13f38e17a72404df1b9d9d859d1e1607fa4123d73143338a5a07. Public registration remains held. Current outside source has not yet been reproduced byte-for-byte as that bundle; current src/pages.ts hash differs from the recorded validation hash and pinned local dry-runs did not match the live artifact. Do not claim an exact source-to-bundle mapping.
+The Worker owns account pages, identity sessions, resource routes, public-client registration and account preferences. Start with the route owner and environment before attributing a browser failure to the issuer. Source checkout, local Workerd and hosted deployment each need their own revision or receipt. [Worker entry point](src/index.ts) · [Local account fixture](BROWSER_FIXTURE.current.md)
+
+## Hosted observation on 16 November 2026
+
+Read-only Cloudflare metadata recorded on that date confirmed the owner-only identity Worker is serving version f7ed455e-709a-4e1e-98cb-5d68c6f3fe61 at 100 percent (deployment 95aedb62-7dff-4899-8097-635ee400d720, created 2026-11-15 17:38 UTC). Its live worker.mjs SHA-256 is 7123c42a9f2b13f38e17a72404df1b9d9d859d1e1607fa4123d73143338a5a07. Public registration remains held. Current outside source has not yet been reproduced byte-for-byte as that bundle; current src/pages.ts hash differs from the recorded validation hash and pinned local dry-runs did not match the live artifact. Do not claim an exact source-to-bundle mapping.
 
 The 15 November local Workerd/D1 integration passed 248 assertions, including migration/restart idempotence. The later final-branding file run reported 163 tests: 161 passed, 2 failed (the known Linux-only custody fixtures), and 0 skipped. The earlier 130/132 file-test result is retained as historical and superseded by the final 163-test run.
 
@@ -82,3 +86,7 @@ Password hashing uses Better Auth maintained scrypt default. The 15 November loc
 - The two packages/test reports do not authorize any driver, DNS, billing, public signup, or AI change.
 
 Production DNS, WordPress, Sites authoring/publishing, and account contents are unchanged.
+
+## Current issuer and validation guides
+
+Use these guides for current service work. LocalAuth separately authenticates the original issuer documents as part of the selected 92-file fixture checkout. [Browser fixture](BROWSER_FIXTURE.current.md) · [Public-client CORS](PUBLIC_CLIENT_CORS.current.md) · [Deployment preparation](deployment/README.current.md) · [HTTPS validation](deployment/https/README.current.md) · [Authenticated validation](deployment/https/AUTHENTICATED.current.md) · [Recovery](deployment/recovery/README.current.md)

@@ -1,9 +1,6 @@
-# Browser host
+# 9to1 browser host
 
-This host embeds the existing canonical `Home.cui` and references the pinned CUI
-runtime and Avalonia browser adapter from source. It does not translate CUI to
-AXAML, define a second Home surface, start local Home/Dulche services, or choose
-new account/Files HTTP contracts.
+`NineToOne.Web.csproj` embeds the browser Home CUI document and composes the selected native source-linked features with the Avalonia browser adapter. Check the project includes, registered feature and backing owner before treating a source folder as a working browser route. The host keeps URL navigation separate from permission to execute an action. Match visible app state to the corresponding Atlas route and test both browser and desktop compositions when they differ. [Compiled feature set](NineToOne.Web.csproj) · [Feature registrations](BrowserFeatureComposition.cs)
 
 `BrowserRouteCodec` maps `HomeFeatureNavigationRequest` to a URL fragment such as
 `#/home.library?entityType=app.write&entityId=opaque-id`. IDs and optional action/
@@ -227,3 +224,7 @@ types; test handlers are fixtures and do not establish backend acceptance.
 
 Account/root teardown ordering and remaining CUI/provider gates are described in
 [Auth/PRIVATE_CONTEXT_LIFETIME.md](Auth/PRIVATE_CONTEXT_LIFETIME.md).
+
+## Mathematics validation guide
+
+Use the current guide for the browser mathematics controls and keep the adjacent original README with the native-four fixture. [Mathematics validation](Productivity/Mathematics/README.current.md)

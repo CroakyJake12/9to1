@@ -1,6 +1,6 @@
-# 9to1OS Windows compatibility broker
+# 9to1 OS Windows compatibility broker
 
-This directory contains the first implementation slice of the optional Windows compatibility layer for the current 9to1OS repository. Historical HavenOS interface names are retained for API compatibility.
+The optional user broker tracks registered Windows applications and their prefixes through the manifest API. The GTK chooser owns the interactive selection of Wine or a configured WinBoat guest. Keep established HavenOS interface names when updating the implementation or packaging. Test the chosen backend with the target executable and profile. [Application manifest](manifest.schema.json)
 
 The [EXE chooser](EXE-CHOOSER.md) adds a desktop popup, managed ARM64
 Hangover/FEX preparation, and an external FreeRDP connection to a configured

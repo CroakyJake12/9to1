@@ -1,4 +1,6 @@
-# Production website client registration
+# Production website client registrations
+
+Authorised administrators use the private production-sites page to review and register selected website clients. Read the state endpoint for current registrations and pair the selected origin and redirect with the requested site. The Worker independently checks administrator access for the operation; maintain the Cloudflare Access policy on both administrative routes. [Registration owner](src/production-sites.ts)
 
 This change adds the private `/account/production-sites` administrator page and
 its read-only `/account/production-sites/state` endpoint. Keep both behind the

@@ -1,6 +1,8 @@
 # UCML v1 local context backend
 
-UCML means **User Context Markdown Language**. This implementation follows the owner-approved SPUI-194/195 correction in the [Universal Spaces specification](https://docs.google.com/document/d/12AbDnWynZjVbKZ5XhkkiGMmJkINOSqMfnPuHuI6XDBE/edit). The specification intentionally leaves the detailed schema open; the schema here is an initial version, not a pre-existing standard.
+UCML means **User Context Markdown Language**. This directory owns the version-one interchange codec and document model. The host authorises the current actor’s context use before selecting and releasing records. Temporary Chat’s memory exclusions and recipient scope belong to that user flow. For current product behaviour consult the Core and Spaces volumes, and for byte-level interchange consult the codec below. [Specification source register](../../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md) · [UCML codec](UcmlCodec.cs)
+
+The version-one design originated in the owner’s SPUI-194/195 correction. Its initial schema and the earlier specification are retained for provenance. [Original Universal Spaces specification](https://docs.google.com/document/d/12AbDnWynZjVbKZ5XhkkiGMmJkINOSqMfnPuHuI6XDBE/edit)
 
 ## Format
 

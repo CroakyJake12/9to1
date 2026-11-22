@@ -1,4 +1,6 @@
-# Local integrated account-theme acceptance
+# Testing account theme preferences in a browser
+
+Exercise the built browser application against the local CAKE ID Worker/D1 fixture. Start with a generated local account, save a theme through the user-facing route and reopen it in the same account. Verify account separation and retain the resulting response, browser state and revision. This lane covers local integrated behaviour. [Preference owner](src/theme-preferences.ts) · [Browser editor](../../apps/Web/Home/THEME_CREATOR.md)
 
 This lane runs the real built 9to1 browser application against the maintained local Workerd/D1 CAKE implementation. It does not establish hosted, native-packaged, donor or whole-app acceptance. Account bootstrap uses only generated example.test accounts and the existing local-test-only outbox/admin fixture. No external email or hosted API is used.
 

@@ -1,3 +1,9 @@
+# Present browser editor
+
+The browser host mounts `PresentBrowserFeature` and routes editing actions through the canonical Present editor. The browser session owns presentation bindings while the owner controls ordered mutations, selection and persistence. For tables or charts, make a change, move the selection and reopen to verify the edited content on its original slide. [Browser content actions](PresentBrowserSession.ContentUi.cs)
+
+## Dated UI work and retained acceptance evidence
+
 Current browser UI restoration (12 October 2026): the same original owner now
 exposes table/chart insertion and Properties editing through all Insert menus.
 `PresentBrowserSession.ContentUi.cs` holds only presentation bindings and dispatch;

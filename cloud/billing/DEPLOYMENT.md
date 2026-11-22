@@ -1,3 +1,9 @@
+# Preparing the billing Worker deployment
+
+Pin the Worker source, schema and target environment together. The install creates a durable webhook receipt foundation; review the active secret mode and binding identities before evaluating a deployment or rollback. A webhook receipt has its own lifecycle, independent of any later entitlement operation. [Billing adapter](README.md) · [Receipt reconciliation](PROVIDER-READ-RECOVERY.md)
+
+## Environment and rollback procedure
+
 This is a durable Stripe receipt Worker, not integrated billing. The existing production entry uses Cloudflare D1 directly. No consumer, scheduler, provider-object reconciliation, checkout, price catalogue, entitlement grant or invoice lifecycle is supplied here. D1 selection and commercial policies still require their owner decisions.
 
 Preparation requires explicit verified account, Worker and database identities, test/live mode, signature tolerance, body limit, CPU limit and workers.dev publication choice. `node scripts/prepare-deployment.mjs INPUT.json FRESH_OUTPUT_DIRECTORY` uses `BILLING_TOOLCHAIN_ROOT` with exact Wrangler 4.146.0 and esbuild 0.28.1. It makes no provider requests. An absent real database ID blocks preparation; no placeholder ID is a production plan. Numeric JSON variables are required by the unchanged Worker checks. The tested compatibility date is 2026-10-01. Observability is disabled to avoid activating an additional unapproved logging workload; no provider payloads or secret values are logged.

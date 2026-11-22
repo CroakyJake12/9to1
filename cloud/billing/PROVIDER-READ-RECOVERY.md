@@ -1,12 +1,8 @@
-# Read-only Stripe recovery proposal
+# Reconciling a claimed billing receipt
 
-`readClaimedStripeState` composes the existing durable receipt/lease API with
-bounded provider reads. A caller first obtains ownership through `claimEvent`.
-The reader loads that exact mode/event/token with an unexpired lease, checks the
-configured merchant through `GET /v1/account`, retrieves the receipt's event,
-and fetches the current invoice or subscription referenced by that event. It
-rechecks the same lease and immutable receipt facts before returning. No reader
-SQL mutates the inbox, and no receipt is completed or failed automatically.
+The recovery reader loads the claimed event under its current unexpired lease and checks the configured account/mode before a bounded provider read. A reconciled receipt records what the provider returned. Subsequent entitlement decisions require their own authorised owner and idempotent operation. Keep original failure and later recovery evidence for the same receipt. [Reconciliation implementation](src/provider-reconciliation.mjs)
+
+The caller claims the exact event before invoking `readClaimedStripeState`. The reader checks the account at `GET /v1/account`, reads the specific event and referenced invoice or subscription, then rechecks the same lease and immutable receipt facts. The read leaves the inbox disposition with its owner.
 
 The server must supply an authenticated `transport.fetch(Request)` capability,
 the exact expected merchant, explicit Stripe API version, response-byte bound,

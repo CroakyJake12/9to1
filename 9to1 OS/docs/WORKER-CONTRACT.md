@@ -1,3 +1,3 @@
-# HavenOS worker contract
+# 9to1 OS worker scope and evidence
 
-Every assignment names an authoritative branch/base SHA, source paths, ownership class from `havenos.lock`, build primitive, test scope, VM expectation, and completion evidence. A GNOME task must change `platform/gnome-shell` or `platform/mutter`; a boot/ISO task requires a real artifact and boot evidence; HUI and apps must remain under their root-owned paths.
+Assign a specific platform component and source revision. Record the owned paths, ownership class from `havenos.lock`, build primitive, target VM or device and expected observable result. Coordinate changes through the current main checkout. A GNOME integration belongs with the relevant GNOME Shell or Mutter owner. A boot or ISO claim needs both the artifact identity and a real target boot. A native app UI change belongs to the app and CUI owners. Retain the build and target receipts with the ticket. [Repository ownership and verification](../../AGENTS.md)

@@ -5,6 +5,10 @@ toy tensor updates. Every attempt and checkpoint has purpose
 `software_test_only`. Eligible resume checks repeat update 2 and compare all
 checkpoint metadata and tensor bytes with the original uninterrupted update.
 
+## Operation identity
+
+The worker’s preparation utility and protocol parser bind the requested operation, immutable bundle and attempt identity. Retain the emitted terminal event and checkpoint reference with the request. Confirm whether the requested operation is the baseline run or a resumed software self-check before interpreting the update-two comparison. [Wire protocol](protocol.py) · [Bundle preparation](prepare_bundle.py)
+
 ## Launch and transport
 
 Studio starts the operator-pinned Windows Python and verified CLI ZIP with

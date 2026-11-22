@@ -1,5 +1,9 @@
 # Canvas / Rnote donor parity
 
+Use the pinned Rnote inventory to identify the tool or document capability under comparison. Record the native engine build, Canvas route and one reproducible input gesture. Compare persisted strokes and the rendered result after reopening on the target device. The historical capability matrix below belongs to the donor revision stated there. [Donor inventory](../../../eng/donor-sources.json)
+
+## Donor baseline and capability matrix
+
 Donor: Rnote 0.14.2 (`https://github.com/flxzt/rnote` rev `8cac558fa73ee63d958cec05124ea2fdbd7d608d`).
 Donor UI inventory source: `crates/rnote-ui` (appwindow, mainheader, penssidebar,
 canvasmenu, colorpicker, strokewidthpicker, workspacebrowser, dialogs,

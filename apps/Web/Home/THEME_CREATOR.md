@@ -1,14 +1,8 @@
-# Account theme creator
+# Editing an account theme in Home Settings
 
-`BrowserThemeCreator` owns an unsaved presentation draft in the existing Home Settings
-route. It borrows `IBrowserHomeThemePreferences`; it owns no account store, app document,
-identity, or permission. The constructor's save callback receives the exact Home theme
-snapshot captured when the creator opened. The original account owner must compare its
-scope and revision and perform its ordinary compare-and-swap update. A failed or unknown
-save keeps the draft; Cancel does not call persistence. A second Open does not reset work.
-If the same account advances its revision, an explicit review action can retain the
-draft and use the new observed revision; it performs no write. A different account
-cannot adopt the old draft through that action.
+`BrowserThemeCreator` holds an unsaved draft in the Home Settings route. The explicit save callback hands the draft to the current Home preference owner. On cancel, reset or account change, discard the correct draft and leave unrelated appearance preferences, including mode and accent ownership, with that owner. Verify persistence through a fresh account read. [Editor and commit boundary](BrowserThemeCreator.cs)
+
+The editor captures the `IBrowserHomeThemePreferences` snapshot when opened. The account owner compares the original scope and revision when saving. A failed or unknown response keeps the draft, and reopening the editor keeps work in progress. Review can rebind a draft to a newer revision of the same account without writing. A new account starts its own draft.
 
 The canonical library is `framework/CUI/Components/ThemeCreator.cui`, imported explicitly
 through `CuiThemeCreatorComponents`. Hosts without the creator binding retain the same

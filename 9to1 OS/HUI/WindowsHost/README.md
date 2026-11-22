@@ -1,6 +1,6 @@
-# 9to1OS HUI Windows host
+# Windows HUI preview host
 
-Windows port of the HUI preview host. It runs the **real** Cake engines, not mocks:
+PreviewWindow mounts the Windows HUI root using the shared platform contract. Canvas rendering goes through the Rnote native bridge, with the Windows DLL and ABI checked on that target. Retain the source, native binary identity and a target screenshot along with the preview result. The Windows build uses these components. [Windows preview window](PreviewWindow.cs)
 
 - Canvas: `apps/canvas/rnote-poc` Rust cdylib (`cakeos_canvas_rnote_poc.dll` on
   Windows, ABI v2) through `Canvas/CanvasNativeBridge.cs`, rendered as SVG via

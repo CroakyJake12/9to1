@@ -1,4 +1,6 @@
-This is the unadopted successor02 source proposal; original01 and its setup defect remain preserved. Install the workflow as `.github/workflows/team-b-ordinary-native.yml` and the driver as `apps/Web/Tests/ci/run-ordinary-native.py` only after root/B6 review. B1 has not pushed, dispatched, built or executed the workflow.
+# Ordinary browser source and native test drivers
+
+`run-ordinary-native.py` provides isolated build, fixture and result paths for source-bound native tests. Each adopting workflow selects its own exact revision and project. Inspect the actual workflow file before dispatching or claiming an execution. The six-job matrix below records the historical successor02 proposal and keeps the original01 setup failure visible. [Native driver](run-ordinary-native.py) · [Browser publisher](run-ordinary-web-publish.py)
 
 The workflow accepts only Team B branches (`team-b/**`); it checks out `github.sha` and the driver rejects a different actual HEAD. Six independent Ubuntu 24.04 matrix jobs use SDK 10.0.401, read-only repository permissions, a 30-minute job timeout and a 26-minute driver deadline. Each job restores and builds its genuine maintained project through ordinary SDK/NuGet resolution with its own fresh artifact, CLI, package, temp and fixture directories. The two required Avalonia gitlinks are initialized at their checked-out commits; unrelated app/OS submodules are not fetched.
 

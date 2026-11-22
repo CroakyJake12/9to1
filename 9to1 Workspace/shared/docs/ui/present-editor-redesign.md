@@ -1,66 +1,8 @@
-# Present editor redesign ÔÇö command migration
+# Present layout and canvas interaction
 
-Status: the canvas regression and compact editor repair pass the bounded cloud-browser checks below. Whole-product acceptance remains open; compilation and native tests alone do not establish acceptance.
-Inventory captured before changing Present.cui on 12 October 2026. The existing PresentEditor, repository CAS/recovery, import/export services, route identity and retained canvas remain authoritative.
+The Present editor has an active slide, document selection, canvas and editing tools. Preserve their shared selection when the toolbar wraps, a panel opens or the viewport changes. Position the canvas from measured layout so the document remains selectable at both desktop and compact sizes.
 
-| Existing commands / workflows | New destination |
-|---|---|
-| ShellHome; ReturnToStart; ResumePresentation | 9to1 navigation; File ÔåÆ Back to Present start; retained start/resume journey |
-| Create; Refresh; Open (saved/recent); ToggleFiles; Close | File ÔåÆ New / Open / Refresh / Close; existing start and library |
-| Save; Inspect unknown commit | Header Save/status; File ÔåÆ Save / Inspect saved state |
-| ImportPowerPoint; ExportPowerPoint | File ÔåÆ Import .pptx / Export .pptx; import also remains on start |
-| Undo; Redo; Copy; Paste; DeleteElement / DeleteObject | Edit menu; undo/redo toolbar; canvas keyboard |
-| AddSlide; DuplicateSlide; DeleteSlide | Slide menu; Add slide toolbar |
-| SlideUp / MoveSlideEarlier; SlideDown / MoveSlideLater | Slide ÔåÆ Move slide up/down; thumbnail Ctrl+Up/Down and drag reorder |
-| PreviousSlide; NextSlide; SelectSlide | Thumbnails, footer navigation and Slide menu |
-| ToggleHidden; HideSlide; ShowSlide | Slide ÔåÆ Hide / Show slide (same owner; aliases retained) |
-| AddText; AddShape | Insert menu; stable toolbar controls |
-| Bold; Italic; FontLarger; FontSmaller | Edit ÔåÆ Text formatting; contextual text toolbar and Properties |
-| Grow; Shrink; RotateLeft; RotateRight; RotateObject | Arrange ÔåÆ Transform; numeric contextual Properties |
-| MoveObjectLeft/Right/Up/Down | Arrange ÔåÆ Move; canvas keyboard and drag |
-| BringToFront; SendToBack; BringForward; SendBackward | Arrange ÔåÆ Order; contextual Properties order menu |
-| AlignLeft/Center/Top/Middle; DistributeHorizontal/Vertical | Arrange ÔåÆ Align / Distribute; contextual toolbar menu |
-| Group; Ungroup | Arrange; contextual toolbar menu |
-| ApplyFill; ApplyStroke; ApplyStrokeWidth | Shape Properties with actual color/width values |
-| ApplyTransition | Slide Properties: typed transition selector and duration |
-| AddAnimation; RemoveAnimation; AnimationSteps | Object Properties: animation selector/trigger and existing cue list |
-| Present; Advance; PlayPrevious; ExitPresentation | Header Present; dedicated playback controls while playing |
-| ToggleInspector; ToggleSidebar | View menu; toolbar Properties / Slides, panel close controls |
-| Title; SlideTitle; SelectedText; SpeakerNotes | Header title; slide/text contextual Properties; collapsible notes |
-| Pointer object selection, Shift multi-select, marquee | Retained canonical canvas, unchanged owner |
-| Drag move/resize/rotate, vector-node/control-point edit | Retained canonical canvas, unchanged owner |
-| Double-click/Enter text edit, caret/selection, clipboard, IME, commit/cancel | Retained canonical canvas with native focus and original text owner |
-| Dirty start/resume, save-before-navigation, same-ID reopen, conflict/unknown-save refusal | Existing session lifecycle, retained and regression tested |
-| Read-only/admission/busy/playback input guards | Same owner availability, reflected by new controls |
-| Compact inspector and width restoration | Responsive workspace preserving scene/session identity |
-
-All existing command names retain their dispatch implementations, including semantic aliases. The inspector no longer owns import/export, library or slideshow actions. Primary toolbar positions are stable; lower-priority groups go into overflow and never wrap.
-
-## Gaps found by inventory
-
-- Implemented genuine current/previous saved-version history through the existing repository boundary. Restore is undoable and preserves the current CAS base; Save creates a new revision. No unlimited timeline is implied.
-- Comments/collaboration have no Present browser owner. Do not show false enabled controls. They remain a broader specification gap.
-- The current browser editor exposes text and shapes, but no image/media picker. Existing model APIs alone are not working browser media insertion; do not add placeholder toolbar items.
-- Implemented measured Fit and 50ÔÇô250% zoom on the actual retained canvas. Fit fills the bounded editing stage, with centred aspect-preserving paper and canonical document drawing scaled as one unit. Resizing/panels/notes update the measured space.
-- Implemented owner bindings for contextual position/size/rotation, opacity, typography, layout and background. Position is relative to slide centre with Y positive upward; stored normalized model coordinates remain compatible.
-
-## Shared architecture
-
-Canonical CUI editor definitions own compact shell rows, toolbar groups, centred icon hit areas, separators and property fields. Shared runtime tooltip/shortcut support and a semantic panel-resize input supply real keyboard/pointer behavior. Present supplies commands, bindings, and specialised document canvas only. No other editor is redesigned in this change. Native menu/select/range providers supply browser semantics. Choice rows own complete pointer hit areas, and equal collection notifications preserve native containers and focus. Thumbnail previews call the same canonical slide drawing path as the editor; they do not draw generic substitute shapes.
-
-## Acceptance
-
-| Criterion | Evidence and boundary |
-|---|---|
-| Usability | Actual pointer/keyboard editing, notes, menus, Properties, overflow, resizing and zoom/Fit exercised in Chromium. |
-| Product fit | Three-row document/menu/one-toolbar arrangement retained; actual editable slide fills and centres in its stage. |
-| Functionality | Canvas/text/shape editing, slide lifecycle, history/undo, save/reopen and playback pass bounded runs. Existing PPTX interchange remains lossy; full functionality acceptance is open. |
-| Integration | Existing editor, saved-data/CAS identity, retained renderer, service contracts and Home route remain authoritative. |
-| Authenticity | Main canvas and thumbnails draw actual owner content; browser checks use real pointer/keyboard input, not command proxies. |
-| User fit | The invisible-slide P0 is repaired without replacing the base or reverting the header. |
-| Refinement | Desktop/compact screenshots inspected, notes wrap, controls stay in one toolbar and five current theme choices retain the slide. All four brightness appearances and native packaged hosts remain unverified. |
-
-The real PPTX download/import test exposes the existing documented subset: titles/plain text and geometry survive, while shapes are represented as text and notes/styling are lost in the imported copy. The original saved deck stays intact. Do not describe that as a lossless round-trip or interoperability acceptance. Comments/collaboration, browser media insertion, complete layout fidelity, mandatory real donor execution and whole-app gates remain open. No donor, packaged or whole-app release acceptance is claimed.
+For toolbar changes exercise a real command on the selected object, undo it, change slides and return. Inspect content bounds and keyboard focus in the current native host. The previous browser checks remain evidence for their recorded build and do not establish native rendering or complete editor parity.
 
 ## Canvas regression and evidence boundary
 
@@ -75,3 +17,5 @@ Publish 21 changes only speaker-notes wrapping after publish 20. Its actual 390�
 Text uses the existing canonical paragraph shaper for wrapping, horizontal/vertical alignment, caret hit testing and selection. Authored point sizes convert to 96-dpi document pixels once and remain independent of text-box height; one slide transform handles zoom. Bounded immutable paragraph caching reuses measurements across paints. Short hex, alpha hex and named colours use the same literal parser as the editor; invalid imported colours fall back to a real document colour instead of looking up a literal as a semantic resource. Browser publish 19 exposed this colour-entry error and remains failed diagnostic evidence.
 
 Browser theme-change completion (choice click to current theme plus two animation frames) measured 196ÔÇô249 ms for five warmed Settings choices in publish 20, versus earlier multi-second observations. Publish 21 measured 281ÔÇô511 ms for four choices while navigating between Settings and the editor. These software-rendered cloud measurements are bounded observations, not approved whole-app performance budgets or cold-start acceptance.
+
+[Editor](../../src/Haven.Application/Present/PresentEditor.cs) · [Interaction engine](present-interaction-engine.md) · [Present screen requirements](../../../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md)

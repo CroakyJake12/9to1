@@ -1,6 +1,6 @@
-# Browser account presentation
+# Account controls in Home Settings
 
-`Accounts.cui` and `AccountBrowserBindings` use the existing CUI binding, explicit input-writeback, repeated-item, action-dispatch and action-availability contracts. The surface belongs in the account part of the existing `home.settings` destination. It does not replace the Home settings authority or add an application route.
+`AccountSettingsFeature` mounts the account’s CUI controls inside Home Settings. `AccountBrowserBindings` maps explicit input writeback and allowed actions to the current account context. Exercise edits using the active account, then switch or sign out and verify the old binding cannot publish private state. [Feature integration](AccountSettingsFeature.cs)
 
 The service transport consumes the reviewed `Auth/AccountApiClient` replies unchanged. Account, profile and session bodies stay as server wire JSON; only the unsaved field draft, original edit revision, busy/error state and session confirmation are view-local. There is no account, entitlement, permission, subscription or job authority here.
 

@@ -1,42 +1,15 @@
-# Native Haven Files: Google Drive first-use preflight
+# Check the native Drive connection prerequisites
 
-17 November 2026. Current owner correction: docs/specification/owner-references/2026-11-17-native-files-drive/owner-correction.json. The intended app is native Haven Files, NOT a second web Files frontend. This is a read-only prerequisite inspector, not another provider, storage layer, login flow, deployment, token verifier or proof that Google Drive works.
+Run the preflight on the Ubuntu account and application profile that will open native Files. Its bounded output checks the configured public client ID and local operating-system prerequisites, including the browser-opening path. The JSON form is suitable for a receipt and omits credential values.
 
-## Run locally on the intended Ubuntu account
+Resolve the specific reported condition before selecting Connect. A ready result confirms local prerequisites. The user still completes the real browser consent flow; only a successful account-bound operation verifies item access.
 
-From the repository root:
+```bash
+python3 -B eng/development/native_files_drive_preflight.py --json
+```
 
-    python3 -B eng/development/native_files_drive_preflight.py
-    python3 -B eng/development/native_files_drive_preflight.py --json
+[Preflight](../../eng/development/native_files_drive_preflight.py) · [Focused checks](../../eng/development/test_native_files_drive_preflight.py) · [Configure a client](native-files-drive-setup-2026-11-17.md)
 
-Exit 0: local prerequisites appear present, not authenticated Google acceptance. Exit 2: the local user needs to review at least one prerequisite. JSON output is bounded to fixed status strings and generic recommendations. The tool does not print the home path, client ID, account/email identity, token contents, or any user file data. It does no network, sign-in, Google API, browser launch, directory creation, permission change, token-file read or live Drive operation.
+## Dated delivery evidence
 
-The new native implementation in 9to1 Workspace/Files/NativeUI/FilesNativeBrowserSurface.Drive.cs reads HAVEN_GOOGLE_DRIVE_CLIENT_ID if its value is longer than ten characters. Otherwise it reads the public OAuth client ID from ~/.config/9to1/google-drive-client-id.txt. The checker validates the usual .apps.googleusercontent.com suffix and refuses unsafe/symlinked config paths; its public client-ID fallback now uses a bounded (4096-byte) no-follow, descriptor-relative read rather than metadata-then-`read_text`, preventing a parent/file symlink swap from redirecting the read. It still CANNOT establish that the ID belongs to a valid approved OAuth Desktop client or that the Google project has the Drive API and user test consent configured. A **Desktop** OAuth client remains the recommended native PKCE/loopback configuration. Newer native source also accepts an optional local confidential-client secret file for a console-created web-type client; that does not prove its registered loopback redirect URI, OAuth consent or refresh will succeed. Do not reuse the 9to1.uk Worker OAuth credentials without explicit separate approval.
-
-The native profile defaults to ~/.local/share/9to1-development/profile, or the absolute HAVEN_DATA_DIR when set. The checker needs an existing user-owned, non-symlink private 0700 profile directory, refuses symlink/writable-parent paths, and inspects the type, owner and permission bits of google-drive-account.json WITHOUT reading that file. A missing account file is normal on first use; an existing 0600 file is NOT proof that its contents or refresh token are valid. It also reports whether `xdg-open` is on PATH for attempted automatic browser opening. Missing `xdg-open` is **advisory**, not a false authentication failure: native Haven can support a separately reviewed private manual consent flow. The current fixed `/tmp` consent-URL implementation requires native security hardening and must not be advertised as a safe fallback until that work is verified. Presence of `xdg-open` does not guarantee it works in snap/DBus environments.
-
-**Optional client-secret metadata (20:xx UTC follow-up):** Current native source additionally reads `~/.config/9to1/google-drive-client-secret.txt` if it exists, even if the public client ID comes from `HAVEN_GOOGLE_DRIVE_CLIENT_ID`. The preflight now checks the secret file metadata and all relevant config ancestors independently of the public client-ID precedence, exposing only the fixed `client_secret_file` status (`absent`, `private_regular`, or a bounded unsafe code). A missing secret is normal for Desktop OAuth clients and does not block the preflight; a symlink, a world-readable/special/foreign-owner secret, or unsafe config directory makes `ready_for_sign_in` false. No secret contents are ever opened, read, printed, copied, or required. A file mode and ownership snapshot cannot replace secure in-app no-follow reads or validate an actual Google OAuth handshake.
-
-Prepare any missing profile directory manually under the intended user account, preserving existing profile data. Do not recursively chmod, erase files, overwrite a credential, follow or delete a symlink, or post any secret to a public GitHub issue. This tool NEVER repairs permissions or creates profiles.
-
-## Executed local disposable tests
-
-    python3 -m py_compile eng/development/native_files_drive_preflight.py eng/development/test_native_files_drive_preflight.py
-    python3 -B -m unittest discover -s eng/development -p 'test_native_files_drive_preflight.py' -v
-
-24 local tests passed (the original 16 plus eight new optional-secret regression cases): missing/configured IDs, native file fallback, malformed client ID, private/unprepared/nonprivate profile, relative data path, config/profile/account symlinks, world-writable config and ancestor directories, exposed token file mode, missing browser opener, and subprocess JSON exit/output that never contains test credentials or paths. New tests cover absent/0600/0644 secrets, secret symlinks, symlink/writable parents even with an environment-provided client ID, FIFO/special files, and actual subprocess CLI redaction. Tests use temporary HOME and dummy text; no Google API or real owner files. The original CLI subprocess timeout was increased from five to fifteen seconds to avoid an observed container-startup timing false failure; it does not loosen any safety assertion.
-
-## Native release safety boundary
-
-This companion preflight does NOT fix native application code. Independent source inspection of FilesNativeBrowserSurface.Drive.cs on commit 0070736f found refresh-token JSON written with File.WriteAllText before the subsequent chmod 0600 (potential short mode 0644 exposure or symlink follow), and downloads written using FileMode.Create to a deterministic /tmp path (potential clobber/symlink risk). See the source-specific safety handoff at https://github.com/CroakyJake12/9to1/issues/27#issuecomment-6957245765. The native owner must fix and test the actual file-write boundaries before treating a passing preflight as safe to use with live credentials/files.
-
-The native code also needs actual owner OAuth consent, Drive listing/navigation, pagination beyond 200 items, supported Google Workspace exports, safe file opens, mutation receipts and permissions/conflict tests. A passing local configuration check cannot substitute for any of these, nor authorize real-account writes. The current native app still directly reads an optional secret with `File.ReadAllText`; this checker cannot enforce its decision on the native process. Also see the source-level fixed `/tmp/9to1-drive-auth-url.txt` OAuth URL exposure/clobber note in issue #27; the local native owner must address that write path before claiming secure live consent.
-
-## Source custody
-
-This scoped cloud continuation changed only this standalone tool, its disposable tests and this documentation. Local Strata owns 9to1 Workspace/Files/** and the Haven desktop process, profiles and native Drive provider. No local machine was accessed, no secrets or data were read, and no production Worker/deployment was changed. Use the existing issue #27 coordination handoff to reconcile subsequent source claims.
-## 21:59 UTC corrective acceptance — browser opener and public ID reads
-
-After actual native Google Drive consent/listing evidence in issue #27 (21:43 and 21:51 UTC), a missing automatic `xdg-open` is not by itself an OAuth blocker: report it separately and allow local prerequisites to pass if file permissions and config are safe. A manually approved privacy-preserving consent route may work even if automatic spawning fails; the currently reported fixed public `/tmp` URL write is **not** security-reviewed and remains a separate native blocker. Current browser helper presence proves neither launch success nor consent.
-
-The public client-ID fallback is now bounded to 4096 bytes, opened through directory-relative no-follow file descriptors and checked on the actual opened inode. It refuses symlink swaps, special files and unsafe ancestor permissions without reading the token or optional secret. This does not harden the native app's own credential or download writes. Focused disposable filesystem/CLI regressions cover the prior missing-opener false refusal, symlink exchange and oversize input; the wider existing preflight suite must still pass. No owner account, live Drive, native C# or production infrastructure was accessed by this cloud slice.
+The 17 November 2026 record retains the test counts, source custody, security boundaries and the 21:59 UTC corrective acceptance. [Original record](evidence/files-delivery-before-atlas-v4/native-files-drive-preflight-2026-11-17.md) · [Native Files owner correction](../specification/owner-references/2026-11-17-native-files-drive/owner-correction.json) · [Recorded issue acknowledgement](https://github.com/CroakyJake12/9to1/issues/27#issuecomment-6957245765)

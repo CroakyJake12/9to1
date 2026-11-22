@@ -1,10 +1,6 @@
-# Open an EXE with Wine or WinBoat
+# Open a Windows executable with Wine or WinBoat
 
-`9to1-open-exe` presents **Wine OS layer**, **WinBoat OS layer** and **Cancel**.
-An unavailable option explains what is missing. No backend is selected by
-default, and closing the dialog does not launch the EXE. The file's PE header is
-inspected without executing it. This is an experimental GTK desktop integration
-helper, not evidence of CUI migration parity or application compatibility.
+The desktop helper inspects the selected file’s PE header and presents Wine, WinBoat or Cancel. The operator chooses a backend for this execution. A missing local runtime or guest is reported in the chooser. Closing or cancelling the dialog leaves the executable unopened. For package contents and enablement rules, see the packaging contract. [Chooser packaging](PACKAGING.md)
 
 ## Install on Ubuntu
 

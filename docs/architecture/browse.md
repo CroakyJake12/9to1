@@ -1,10 +1,6 @@
-# Browse architecture and acceptance status
+# Browse and Haven host architecture
 
-The revised weekend directive makes Browse the main 9to1 host, with one canonical
-tab/session model and one authored CUI shell. Host integration is in progress. Gecko is
-the default engine; Chromium is an explicit alternative. Engine-local cookies,
-profiles and renderer resources must remain physically isolated. An unavailable
-Gecko adapter never authorises relabeling Chromium as Firefox.
+Haven composes Browse’s native workspace as its application shell. Browse owns tab identity, navigation, close preparation and engine selection. The production tab strip is authored in `BrowseWorkspace.cui`; its left-aligned app names and artwork share the same tab hit target. Internal app tabs use their own layout and actions. Gecko is the default web engine and Chromium is an explicit alternative with separate profiles, cookies and renderer state. [Haven tab strip](../../9to1%20Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui)
 
 ## Implemented source boundaries
 
@@ -113,8 +109,7 @@ installed launcher/bootstrap producer and Windows native execution remain open.
 
 ## Full acceptance remains incomplete
 
-The current V2 source's Browse section requires all of the following. Tests of
-existing Core/CUI paths do not establish completion of these families:
+The table below records the v2-era browser checks and their original coverage. For a current change, map the affected navigation, tab or engine interaction to a current requirement and retest it on the named candidate. [22 November source register](../specification/owner-references/2026-11-22-atlas-v4/README.md)
 
 | Family | Current evidence / required work |
 | --- | --- |

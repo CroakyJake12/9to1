@@ -1,10 +1,6 @@
 # Boards development test build
 
-The owner requests a test version after **all** Boards UI changes from the active
-thread are applied. Full independent acceptance remains paused. A development
-package must say `TEST_BUILD_NOT_ACCEPTED`, preserve known limitations, and keep
-source, compilation, static package checks, native use and delivery separate.
-Neither this document nor a generated manifest declares the app100%implemented.
+Use this procedure to produce a development test package after the requested Boards changes have been checked on their exact source revision. Record its `TEST_BUILD_NOT_ACCEPTED` status, target architecture, known limitations and private transfer receipt. For the Atlas UI pass, exercise Boards in the managed native Haven window first. The ARM producer and laptop receipt below are separate, target-specific delivery stages. [Native development workflow](workflow.md)
 
 The existing production receiver, `eng/release-delivery/installer_delivery.py`,
 still requires an independently READY release. Its checks are unchanged. Do not

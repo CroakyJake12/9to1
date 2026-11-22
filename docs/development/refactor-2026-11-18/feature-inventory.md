@@ -1,6 +1,6 @@
-# Feature inventory — full refactor to the 18 November specification
+# 9to1 feature inventory
 
-Living document required by QWEN_STARTER_PROMPT.md and HANDOFF-007. Classify every existing capability before it is touched:
+The original 18 November handoff identified this register as HANDOFF-007. Record the current production route, its existing behaviour and the required change before editing a surface. Use the following classifications.
 **Conforming** · **Adaptation** (keep behaviour, change presentation/placement) · **Conflict** (cite the specific requirement being violated) · **Additional compatible feature** (preserve) · **Incomplete** (specified, not implemented).
 Evidence levels: `code` (source inspected) · `test` (focused check passes) · `native` (running dev copy observed) · `not observed`.
 
@@ -14,6 +14,10 @@ The owner’s 22 November v4 Atlas and bundled four-volume specification govern 
 | --- | --- | --- |
 | Browse native application tabs | Adaptation (UI-006, HAV-TAB-002). Clean left-aligned titles and joined close controls already work. Icons are missing and 200-unit tabs overflow early. | Open Home, select an app tab by title or icon, close a closable tab, and use horizontal overflow or the keyboard to reach remaining tabs. Preserve the same tab and drag targets. |
 | Home Settings / Appearance | Adaptation (UI-001–017). The shared Home fragment has functioning theme and accessibility writes. Its current “Brightness” row selects legacy appearance modes. Independent continuous adjustments are incomplete. | Open the Home gear, identify the selected theme, choose an available theme and see the real response from the preference owner. Preserve saved values and failure/refresh states. |
+
+### First native checkpoint
+
+On 22 November the shared strip gained app artwork and heavier text (`8185046f4`). The Home Appearance gallery, independent brightness and colour contrast controls, keyboard-adjustable pill sliders and material fixes landed through `9235cca81`. Native checks included theme switching, persistence and restoring the development profile to Glow, SuperDark and 50/50. The local report records 76 focused CUI and 12 desktop test passes. Its existing Home failures, the separate Windows build errors and the Write close refusal remain recorded under their original checks. [22 November checkpoint](../../../work/coordination/atlas-20261122/pass-state.json)
 
 ## Actual implementation map (code-observed 18 Nov)
 
@@ -88,4 +92,3 @@ Actual self-contained dev copy started via live-preview custody at `010be319d` (
 * **Remaining tab gap (confirmed Sat):** no tab icons. The visible strip has no icon slot and no per-tab icon/favicon plumbing exists; `TopRail.BuildTab` supports an `IconKey` but nothing populates meaningful values. The mockup shows tab icons/favicons.
 * **Interactive activation — UNBLOCKED and PASSING (Sat):** after the owner restarted the session (issue #40), `eng/development/native_battery_g01.py` drives the real window: plus-button opens the canonical New tab start surface, Ctrl+T new tab, tab selection with truthful tooltips, user Drive folders intact (evidence g01b-13/-17). The earlier "cannot drive input" blockage was this session defect, not the app or the tooling.
 * Tooling added this window: reviewed `reconcile-lost-guardian` custody lane in `eng/development/live_preview.py` (34/34 tests, commits 76259b2c1/010be319d) after the 18-Nov X-teardown left a lost-guardian state with no documented recovery; native capture helper `eng/development/native_capture.py`.
-

@@ -1,55 +1,10 @@
-# Teach and Chat Groups
+# Conversation groups and learning sessions
 
-## Exact conversation scopes
+A group organizes related conversations. Keep the active conversation, membership and scope distinct from the group’s presentation. A learning session also needs the selected Space, material and current conversation context. Reuse durable references when a user changes view.
 
-`ConversationScope` in `src/Haven.Core/Entities.cs` is the canonical model for list and history boundaries:
+Use the same Chat controller for ordinary sending and visible response state. An uploaded or linked resource does not authorize reading every file in its directory. Permission changes, a missing file or a retired conversation need a clear outcome.
 
-| Scope | Required persistence |
-|---|---|
-| General Chat | `Mode = Chat`, `Kind = Chat`, no container or lesson |
-| Chat Group | `Mode = Chat`, `Kind = Chat`, exact `ContainerId`, no lesson |
-| Teach Quick Chat | `Mode = Teach`, `Kind = QuickChat`, no container or lesson |
-| Teach Lesson | `Mode = Teach`, `Kind = LessonChat`, exact subject and lesson IDs |
-
-Use `ConversationScope.GeneralChat`, `TeachQuickChat`, `ForChatGroup(id)` or `ForTeachLesson(subjectId, lessonId)`. Do not reproduce these predicates in a view-model.
-
-`ConversationRepository.GetRecentInScopeAsync` applies the exact SQL predicate and the scoped migration index. Do not return to loading a mode-wide recent list and filtering it in memory; that loses older group/lesson chats and mixes scopes.
-
-## Teach lifecycle
-
-Teach uses the shared `ChatPageViewModel`, but switching to Teach does not select the first subject or lesson. Quick Chats always remain available outside subjects. The sidebar always exposes Quick Chats, Subjects and Create Subject, plus an explanatory empty state when appropriate.
-
-Subject creation goes through `IContainerRepository.CreateSubjectAsync`. It inserts the subject and its default `General` lesson in one SQLite transaction. Lessons are ordered by `SortOrder` and carry `TopicGroup`, `Name` and `StructureJson`.
-
-Rapid subject switching cancels the previous lesson load. Keep the cancellation token through the repository call and check that the selected subject still matches before replacing the observable collection.
-
-The model context for a lesson is composed in `ChatPageViewModel` and includes:
-
-- subject context and instructions;
-- subject name;
-- lesson name;
-- topic group;
-- lesson structure JSON.
-
-Quick Chats must not inherit a subject or lesson context. Deleting a lesson clears its lesson link and converts its conversations into Teach Quick Chats; messages remain intact.
-
-## Chat Group home
-
-A Chat Group is a `ContainerDefinition` with `Mode = Chat` and no local project root. Opening a group selects its stable group-home tab and activates that group without changing the IDs of existing grouped conversations.
-
-`ChatGroupPageViewModel` owns:
-
-- New Chat;
-- recent and pinned group chat statistics;
-- group context and model instructions;
-- durable reference files;
-- Settings;
-- Archive;
-- confirmed permanent deletion.
-
-Each group keeps an independent current chat in `MainWindowViewModel`; opening another group must not reuse one mutable group conversation.
-
-Archive updates `ContainerDefinition.IsArchived` and preserves chats and resources. Confirmed permanent deletion calls `DeleteAndDetachConversationsAsync`: group conversations become General Chat conversations and their messages are retained. Never cascade-delete conversation history as part of deleting a group.
+Check switching between two groups, reopening a conversation and returning to an existing learning session. A temporary conversation stays within Chat and follows its own retention rules.
 
 ## Durable reference files
 
@@ -77,11 +32,8 @@ Chat Group context is shared model context, not a workspace. A group must not re
 
 Those require Do/Studio plus an existing selected root and the matching permission. Add a tool-policy regression test whenever group context is threaded through a new model request.
 
-## Required tests
+## Retained conversation scopes
 
-The focused suites are:
+The compatibility repository distinguishes General Chat, a Chat Group identified by its container, a Teach quick chat without a lesson, and a Teach lesson identified by subject and lesson. Use `ConversationScope.GeneralChat`, `ForChatGroup(id)`, `TeachQuickChat` and `ForTeachLesson(subjectId, lessonId)` as appropriate. Obtain recent rows with `GetRecentInScopeAsync` so older group or lesson conversations are not dropped by filtering a mode-wide page in memory.
 
-- `tests/Haven.Core.Tests/ConversationScopeTests.cs`;
-- `tests/Haven.Infrastructure.Tests/TeachAndChatGroupRepositoryTests.cs`.
-
-Cover a fresh database, exact scope isolation, atomic subject/default-lesson creation, rapid cancellation in UI/headless tests, restart persistence, full lesson context, file validation/deduplication, archive preservation and detach-on-delete behavior.
+[Chat surface](../../../Spaces/UI/Chat/ChatSpace.cui) · [Controller](../../../Spaces/Source/Chat/ChatSpaceController.cs) · [Spaces and learning interactions](../../../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md)

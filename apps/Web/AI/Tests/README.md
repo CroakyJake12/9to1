@@ -1,7 +1,8 @@
-# Separate ordinary Chat SAME10 source proposal
+# Browser Chat source checks
 
-All tests are NOT_RUN. Root is the sole integrator. No shared CI driver, workflow,
-owner source or production adapter was changed by this authoring step.
+The current checkout contains the ordinary native Chat driver and its workflow. Inspect the workflow’s selected revision, discovery count and result before reporting a test. This project links Chat adapter controls and its pinned sources. A successful source fixture covers neither a mounted browser composer nor a real conversation change. [Owning workflow](../../../../.github/workflows/team-b-chat-native.yml) · [Chat driver](../../Tests/ci/run-chat-native.py)
+
+## Original source proposal and input mapping
 
 Root mapping:
 - run-chat-native.py -> apps/Web/Tests/ci/run-chat-native.py

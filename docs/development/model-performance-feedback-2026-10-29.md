@@ -4,6 +4,8 @@ Preserved at the owner's request so it survives context compaction. The quoted b
 text verbatim; the rest is this worker's operational response, written so the behaviour changes rather
 than just being acknowledged.
 
+On the current native run, record the intended user action before editing, compile the owning edit unit, and attach a window capture from the managed candidate. Link any identified discrepancy to the production route and candidate revision. [Guarded development loop](workflow.md) · [Native preview](live-preview.md)
+
 ## The feedback (verbatim)
 
 > First, it sometimes coded before fully resolving requirements. The saving behaviour is a good example.

@@ -1,12 +1,10 @@
-# Windows native Home producer
+# The Windows native Home producer
 
-This change connects the existing Avalonia Home executable to one canonical Home owner. It requires the Windows transport and actor-bound session foundation from PR #12 (`0c014b5a0f552911ebd834c3fac78e0f3966bdc0`). The producer commit adds the composition and its two Windows tests and changes the native Program; the pull request may also show prerequisite foundation changes until that dependency is integrated.
+The Windows Home executable and shared Desktop entry use the canonical Home runtime and actor-bound session. Startup, permission decisions and shutdown remain with that original owner. A shell window cannot grant itself access by recreating the provider after a rejected connection.
 
-## Original owner and process lifetime
+For a candidate, identify the consuming host and active profile, observe the required service state and test both initial startup and normal shutdown. A configured producer, a process lease and a user-visible successful workflow are distinct observations.
 
-`HomeNativeWindowsComposition` constructs the original file state store, operating-system principal/profile, permissions service, ownership/evidence registry, authorization service, resource broker, private session issuer, Core API, productivity engine and Runtime. Its immutable service map belongs to the Home process. Optional store/resolver/owner stages capture the actual original instances in construction order. They cannot replace the canonical components or grant app authority.
-
-The native entrypoint starts this same owner through retained original work. An ordinary window close keeps Core running. Explicit process shutdown seals admission, joins the original startup and work, drains the same Bootstrap/session issuer/Runtime and observes the resulting shutdown task before exit. The receiver's existing Home controller route repairs are preserved.
+The retained candidate-admission details describe the relevant Windows binding. Use its source and actual process evidence when making a new claim.
 
 ## Candidate configuration and admission
 
@@ -25,3 +23,5 @@ dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" -c Release --f
 ```
 
 The actual native product project is `apps/Home/src/AvaloniaHome/AvaloniaHome.csproj`. Team C owns its coherent Windows packaging, invocation and global integration.
+
+[Home](../../9to1%20Workspace/Home/ReadMe.md) · [Native Home host](../../apps/Home/src/AvaloniaHome) · [Development workflow](../development/live-preview.md)

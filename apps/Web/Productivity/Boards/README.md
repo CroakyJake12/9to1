@@ -1,10 +1,6 @@
-This portable core calls the unchanged `BoardsWorkspaceService` over an injected
-real `INotesRepository`. It keeps original Notes notebook/section/page/block/card
-objects and owner-generated IDs, page Edit/View and Locked/Unlocked enforcement,
-and the backend's actual expected-version CAS and commit receipt. A transparent
-repository decorator observes owner create/save payloads and receipts; every
-method delegates to the same real backend. It provides no storage, counter,
-validator, document schema or alternative editor.
+# Boards browser workspace
+
+The browser core uses the injected `INotesRepository` and canonical `BoardsWorkspaceService` to work on the original notebook, page and block records. Keep existing IDs, expected-version writes, edit/view and lock state when changing the browser controls. A test of the core and a rendered board prove different stages. [Workspace integration](BoardsBrowserCore.Workspace.cs) · [Mounting the browser editor](BROWSER-CONNECTION.md)
 
 Typed changes run on a canonical snapshot through the real owner, preserving the
 existing draft if the owner denies an operation. Unknown commit outcome blocks

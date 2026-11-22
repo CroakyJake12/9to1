@@ -1,3 +1,10 @@
+# 26 October desktop takeover
+
+The takeover established the stable native development profile and the requirement to verify window and build identity on the PC. Today’s managed helper can report those identities before a change and prepare an immutable candidate for normal reload. A close veto leaves the original window with the user. [Current preview and recovery](live-preview.md) · [Guarded builds](workflow.md)
+
+<details>
+<summary>Original takeover, bug queue and evidence at its named revisions</summary>
+
 # OpenCode desktop takeover — 26 October 2026
 
 Jacob selects **OpenCode on `pc`** to continue 9to1 development locally. The aim is
@@ -197,3 +204,6 @@ Measure the actual PC before claiming speed gains.
 Thunder is parked separately. Do not resume its gateway/model benchmarks or change
 services to make this desktop test pass. Historical connected PC or laptop bridge
 labels do not prove a current administration channel. Keep all credentials private.
+
+
+</details>

@@ -1,9 +1,6 @@
-# Galaxy Book4 Edge 16-inch preparation
+# Samsung Galaxy Book4 Edge preparation
 
-Target: **Samsung Galaxy Book4 Edge 16-inch, Snapdragon X Elite**, preserving
-Windows. The x86-64 RTX 5080 PC is the preparation machine and can host WinBoat.
-Its NVIDIA driver does not belong in the laptop's ARM64 image; the laptop uses
-Qualcomm Adreno with the kernel MSM driver and Mesa Freedreno/Turnip.
+This kit targets the 16-inch Snapdragon X Elite Book4 Edge and preserves the existing Windows installation. The x86-64 PC prepares artifacts and can host a separate WinBoat guest. The laptop’s graphics stack uses Qualcomm Adreno, the kernel MSM driver and Mesa Freedreno/Turnip. Keep the host and target build records separate, especially when selecting firmware and driver packages.
 
 ## Status, checked 15 October 2026
 

@@ -1,6 +1,8 @@
 # Forms browser owner adapter
 
-This surface uses the original `FormsCuiWorkspace`, original embedded `HavenOS.Forms.UI.FormsWorkspace.cui`, `FormAuthoringService`, `FormPublicationService`, `FormProjectCodec` and issuer-created `FormHostSession`. It does not create a second Form model or storage format. The project consumption closure is the unchanged `9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj`, which already references the actual shared Application and CUI Runtime projects.
+The browser route delegates project state and published form operations to the existing Forms workspace, authoring service and publication service. Use the issuer-created host session to open or edit the selected form. A working adapter needs its canonical project owner and an actual registration in the consuming browser build. [Session binding](FormsBrowserSession.cs) · [Owner contract](OWNER-CONTRACT-REQUEST.json)
+
+The source graph is anchored by `9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj`. `FormsCuiWorkspace` mounts the embedded `HavenOS.Forms.UI.FormsWorkspace.cui`; `FormAuthoringService`, `FormPublicationService` and `FormProjectCodec` own edits, publication and serialization for the issued `FormHostSession`.
 
 The host supplies a factory returning a real owner-issued `FormHostSession` and a presentation freshness fence. The latter only suppresses stale presentation; actual actor, StoreID, ownership, revisions and final guarded compare/exchange admission remain the canonical services' responsibility. A null factory returns `HomeServiceUnavailable`. The browser must not instantiate native Home, the local settings provider, or `FormLocalStoreAuthority` to impersonate a remote account. No Forms HTTP, public submission, response, publication or account contract is guessed here. Publish/Close-publication/Respond/NewResponse remain disabled.
 

@@ -1,5 +1,9 @@
 # Boards default-startup contract controls
 
+This executable exercises default board creation and recovery at the persistence boundary. Use an isolated work directory to test first open, reopen, backup recovery and rejection of corrupt or future files. Its result belongs alongside the exact desktop package’s startup and window evidence. [Startup control program](Program.cs)
+
+## Original Windows probe and control coverage
+
 The original Windows probe `37203799923` used source
 `e2effba426353978b11fc1c0f2fc8e3e533318e4` over maintained owner basis
 `eecadfc7463c944bcc6f9788075c293ab14120f9`. Its default launch failed before a

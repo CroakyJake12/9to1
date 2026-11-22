@@ -1,21 +1,10 @@
-# Home, Call and Plan
+# Home, voice sessions and planning
 
-## Home dashboard
+Home hosts the Dashboard and global controls. A voice session and a planning action have their own service and authorization lifetimes. Moving between pages should preserve the active session and current document or calendar context.
 
-`HomePageViewModel` is an `IActivatablePage`. It refreshes when selected, on the Refresh command and once per minute while visible. Deactivation stops the timer, and a new refresh cancels the previous one.
+For a planning proposal, inspect the affected item, intended calendar and actor before applying it. Cancellation or rejection should preserve the draft. For a call, check actual input/output availability and distinguish a local device failure from a disconnected model or remote service.
 
-`DashboardRepository.GetSnapshotAsync` uses aggregate SQLite queries for counts, agenda and recent work. Do not replace it with one repository call per tile or an activity-log scan. The snapshot includes conversation, project/group/subject, task, event, automation and call activity plus today/overdue agenda items.
-
-Dashboard extension contracts are in `DashboardModels.cs` and `DashboardAbstractions.cs`:
-
-- `IDashboardTileProvider` supplies a stable definition and data derived from the snapshot;
-- `IDashboardTileProviderRegistry` resolves built-in providers through DI and gives application registrations precedence over defaults;
-- `DashboardTileLayout` stores version, key, order, visibility and size;
-- `DashboardPluginTileManifest` describes a declarative plugin tile.
-
-Layout is versioned JSON under the `settings` key `dashboard.layout.v1`. Built-in providers are registered in code. `DashboardTileManifestPolicy` is the single import allow-list for provider/navigation keys, duplicate keys, reserved keys and the tile-count limit. Imported plugin manifests are parsed as data and cannot load or execute arbitrary .NET code.
-
-When adding a tile, keep its key stable forever, calculate shared counts in `DashboardRepository`, supply an accessible empty/error state, and verify reorder/hide persistence after restart.
+The existing local Call and calendar interfaces below contain the implementation details for those capabilities. Exercise their owning routes as well as the Home shortcut.
 
 ## Fully local Haven Call
 
@@ -50,24 +39,6 @@ Persistence is deliberately narrow:
 - raw audio and frame bytes are never written to the database, token store, logs or call metadata.
 
 If you add another media service, keep its raw buffers behind the service interface and add a cleanup assertion to `CallCoordinatorTests`.
-
-## Haven Plan
-
-Planner domain records and enums live in `Haven.Core/Entities.cs` and `Enums.cs`. `IPlannerRepository` is implemented by `PlannerRepository`; the desktop owns only presentation and commands.
-
-The database starts with stable Personal, College and Work collection IDs plus one stable local Haven calendar. Collections can be created, renamed, reordered and archived. Tasks support hierarchy, notes, priority, status, tags, estimates, start/due/reminder times, recurrence, time zone and completion history. Events support local/provider calendars, recurrence, reminders, all-day values, read-only provider state and soft deletion.
-
-`PlannerRecurrence` calculates supported recurrence in the record's time zone. Keep wall-clock behavior across daylight-saving transitions and add a test for every new rule form.
-
-`PlanPageViewModel` presents Today, Inbox, Upcoming, List, Board, Day, Week, Month and Agenda views. It owns quick capture, task/event editors, subtasks, collection management, period navigation and provider status. Local tasks may appear alongside calendar data but are never sent to provider task systems.
-
-Planner entities remain `DateTimeOffset`-based. Avalonia's `CalendarDatePicker.SelectedDate` is `DateTime?`, so every planner date picker uses the shared `DateTimeOffsetDateConverter`; binding either type directly produces an `InvalidCastException` inside the control. Keep quick-event time pickers wide enough for both 24-hour fields and use the scrollable collection-management region at reduced window heights.
-
-## AI planner proposals
-
-`PlannerProposalService` parses and validates structured `planner_propose_changes` arguments. The model can propose create/update/complete/delete operations, but `PlanPageViewModel` shows a human-readable pending proposal first. Nothing mutates until Apply invokes the repository transaction; Dismiss discards it.
-
-Keep validation and application separate. Every change in a proposal must target a supported planner entity, and the repository must apply the whole proposal atomically or roll it back.
 
 ## Google and Microsoft calendars
 
@@ -105,10 +76,4 @@ Synchronization code must retain these rules:
 
 Never put a client secret in source, settings, SQLite or an environment-variable example.
 
-## Focused verification
-
-- Dashboard: aggregate counts, cancellation, timer activation, stable tile keys, order/hide persistence and manifest allow-list rejection.
-- Call: fake input/STT/TTS/capture, VAD turn flow, push-to-talk, interruption, second-call rejection, vision preflight, source closure and no-media-persistence invariant; then a manual Windows mic/TTS/picker smoke test.
-- Plan: hierarchy/cycle rejection, recurrence and DST, reminders, read-only provider events, atomic proposal rollback, cursors, offline outbox, retry, remote deletion, conflicts and permissions with mocked HTTP transports.
-
-Current focused test files include `DashboardContractsTests.cs`, `DashboardRepositoryTests.cs`, `CallCoordinatorTests.cs`, `CallRepositoryTests.cs`, `PlannerRecurrenceTests.cs`, `PlannerRepositoryTests.cs` and the Avalonia headless tests in `tests/Haven.Desktop.Tests`.
+[Home surface](../../../Home/UI/Home.cui) · [Call view model](../../src/Haven.Desktop/ViewModels/CallPageViewModel.cs) · [Planner proposals](../../src/Haven.Application/Planner/PlannerProposalService.cs)

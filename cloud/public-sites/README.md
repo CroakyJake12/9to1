@@ -1,6 +1,6 @@
 # CakeMods and 9to1 public websites
 
-Fresh shared Cloudflare Worker project for cakemods.com and9to1.uk. Source is independent of WordPress. Public content is rendered on the server, with a small progressively enhanced community search and account client.
+This Worker renders public pages for cakemods.com and 9to1.uk and serves the progressively enhanced search and account clients. Check route ownership before changing a path: the Files surface uses its separate service binding, and the account issuer owns authentication. Use a local Worker run for template changes and the named deployment version when checking hosted output. [Site Worker configuration](wrangler.jsonc) · [Owner-supplied brand assets](../BRAND-ASSETS.md)
 
 ## Build and checks
 

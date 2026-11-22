@@ -1,6 +1,6 @@
-# Windows compatibility packaging contract
+# Windows compatibility package contract
 
-This file defines packaging requirements only. Nothing in this branch installs packages, writes system unit directories, or changes the approved CakeOS VM.
+The chooser package and the optional per-user broker have distinct activation paths. Check the package contents, ownership of the data directory and unit behaviour before using the service on a target machine. The packaging script builds the chooser and CLI. Installing Wine, changing file associations and starting a guest are separate explicit operations. [Package builder](build-deb.sh)
 
 The standalone [EXE chooser package](EXE-CHOOSER.md) now has a functional
 `build-deb.sh` recipe. It packages the chooser and CLI without enabling a daemon,

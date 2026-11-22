@@ -1,6 +1,8 @@
 # Dulche Model Groups V2
 
-Authoritative specification: https://docs.google.com/document/d/17BoC2kINJzizCCA0ffqaeHukTtEtg_1FAWeO6zIGIFY/edit
+For current behaviour use the bundled Core runtime and model-picker requirements. In Haven, the compact picker and expanded options should resolve the same host-owned model, role and context. Match observations to the selected runtime and role before interpreting a group’s availability. [22 November specification and Atlas](../specification/owner-references/2026-11-22-atlas-v4/README.md)
+
+The October proposal below refers to its original [master document](https://docs.google.com/document/d/17BoC2kINJzizCCA0ffqaeHukTtEtg_1FAWeO6zIGIFY/edit).
 
 Source: approved user handoff, 16 October 2026. This is the reconciled specification proposal, not a claim that the master was updated. Two authenticated Google Docs writes (a revision-guarded formatted batch and a minimal insertion) returned HTTP 400 FAILED_PRECONDITION, 'Precondition check failed.' Read-back after the first failure showed the same revision and no feature marker. MG-T01 remains BLOCKED on a writable authoritative document; no master requirements were replaced. This is requirements and planning evidence, not implementation acceptance.
 
@@ -94,6 +96,6 @@ Apply all seven 9to1 acceptance tests: Usability, Product Fit, Functionality, In
 
 ### Scheduling and persistent task registration
 
-Register MG-T01 authoritative V2 incorporation; MG-T02 shared contracts; MG-T03 Den persistence/synchronisation; MG-T04 registry/routing; MG-T05 lazy send-time resolution; MG-T06 multi-backend coordination; MG-T07 shared CUI selector; MG-T08 group management; MG-T09 app integration; MG-T10 comprehensive automated tests; MG-T11 independent visual/functional acceptance; and MG-T12 regressions/release readiness. Preserve existing TODOs and priorities. Schedule implementation in Shared Frameworks → Dulche after required contracts, secure Den/sync, provider/runtime identity, permission/privacy and canonical request-history dependencies are available, with independent work allowed under the existing priority policy.
+The original October proposal called for MG-T01 v2 incorporation; MG-T02 shared contracts; MG-T03 Den persistence/synchronisation; MG-T04 registry/routing; MG-T05 lazy send-time resolution; MG-T06 multi-backend coordination; MG-T07 shared CUI selector; MG-T08 group management; MG-T09 app integration; MG-T10 comprehensive automated tests; MG-T11 independent visual/functional acceptance; and MG-T12 regressions/release readiness. Preserve existing TODOs and priorities. Schedule implementation in Shared Frameworks → Dulche after required contracts, secure Den/sync, provider/runtime identity, permission/privacy and canonical request-history dependencies are available, with independent work allowed under the existing priority policy.
 
-Specification incorporation and backlog registration are an immediate CHECKPOINT, separate from feature completion. Report saved specification sections, the repository commit, persistent task location/IDs, dependencies and evidence; do not wait for full implementation to report this checkpoint.
+The October handoff required a dated source and backlog receipt before implementation. For the current register, record the adopted requirement, owning code, checks and evidence before marking any picker behaviour implemented.

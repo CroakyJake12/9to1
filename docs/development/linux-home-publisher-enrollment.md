@@ -11,6 +11,10 @@ entry. It runs before GUI initialization and writes the existing canonical
 Ordinary startup does not invoke it. No elevation, key generation, private-key
 read, package activation or service start occurs in this command.
 
+## Use the enrollment flow
+
+Enrollment is relevant when registering a Linux Home publisher, activating its first signed bundle or recovering that published bundle. Select the matching section below and bind signer identity, signed artifact and target registration to the same transaction. For a local UI retest, build and reload the tracked development copy using its existing profile. [Native development copy](live-preview.md)
+
 ## Required signer inputs
 
 The installer must receive these genuine externally supplied inputs:

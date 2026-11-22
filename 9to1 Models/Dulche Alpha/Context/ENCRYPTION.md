@@ -2,6 +2,10 @@
 
 `UcmlProtection` protects sealed UCML artifacts using .NET AES-256-GCM and HKDF-SHA256. It is a trusted host API. It does not authenticate a caller or grant context permission. The canonical storage owner also uses it to encrypt UCML record fields and receipts before persistence; this does not encrypt whole databases or unrelated Den content. Authenticate the actual Home actor, enforce current app/scope/purpose/recipient grants, and recheck those grants before disclosing the decrypted document through the canonical context owner.
 
+## Reading or moving a sealed artifact
+
+Use the trusted storage owner to resolve the retained key and enforce the actual actor, purpose, recipient and scope. Recheck permission at release of plaintext. Inspect the envelope identity and the matching receipt when diagnosing an import or reopen. The command-line utility uses the same key custody for an explicit local operation. [Envelope implementation](UcmlProtection.cs) · [Offline envelope utility](../../../tools/ucml-protect/README.md)
+
 ## Key custody and retained records
 
 Compose `ProviderSecretUcmlKeyCustody` with the existing platform `IProviderSecretStore`. Windows uses Credential Manager. Linux uses the maintained `LinuxProviderSecretStore`: AES-GCM credential records with an euid-private root-key file, descriptor-relative no-follow access and restrictive permissions. Linux custody is not a claim that keys are hardware-backed or safe from full-disk/account compromise. The credential interface uses managed strings internally; the implementation clears mutable key buffers but cannot guarantee erasure of those immutable strings or all runtime copies.

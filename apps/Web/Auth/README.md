@@ -1,4 +1,8 @@
-# Browser account transport
+# Browser account API transport
+
+The browser transport sends account operations through the issuer’s maintained route contract and the current account session. Check a response belongs to the active account before exposing it to a view. The historical pins below identify the original implementation and coordination evidence. [Browser transport](account-api-client.js) · [Issuer resource API](../../../cloud/cake-id-auth/src/resource-api.ts)
+
+## Integrated route contract and original evidence
 
 This adapter binds only the acknowledged CAKE ID account routes from `cloud/cake-id-auth/src/resource-api.ts` and `README.md` at commit `7cc52df0411e0e9e617918f6c5158283cc3199fc`. Root obtained Team C acknowledgement at coordination readback `41e0ccc`. It preserves server wire bodies and error codes; it owns no authentication, billing, permissions, entitlements or account cache.
 

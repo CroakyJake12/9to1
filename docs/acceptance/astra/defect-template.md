@@ -1,21 +1,13 @@
 # Acceptance defect handoff
 
-Classification: MINOR or MAJOR, with architectural/feature rationale.
+| Field | Record |
+| --- | --- |
+| Candidate | Repository and exact revision, native runtime or artifact SHA-256, target platform, relevant donor and build receipts |
+| Requirement | Current specification ID, Atlas route, interaction and control binding |
+| Expected | Starting state, action and expected visible or persisted result |
+| Observed | Actual state, reproduction steps with disposable data, exact first failed assertion and any failure to reproduce |
+| Evidence | Environment, timestamp, command result, original capture or recording, and evidence paths and hashes |
+| Impact | Affected workflow, scope, severity (MINOR or MAJOR) and owning subsystem |
+| Retest | Repair revision, replacement build identity and result of the original failed interaction |
 
-Candidate/app/platform: REQUIRED. Exact source repository/revision, artifact SHA-256 or immutable deployment/bundle identity, donor/dependency identities, Smoke Tester receipt and specification snapshot/revision: REQUIRED.
-
-Failed atomic requirement ID and original assertion/citation: REQUIRED.
-
-Expected behaviour: REQUIRED.
-
-Actual independently observed behaviour: REQUIRED. Distinguish a reported upstream defect from one reproduced here; do not label unavailable execution as a product FAIL.
-
-Exact reproduction with disposable data and target IDs: REQUIRED.
-
-Original evidence paths/hashes, environment, timestamp, command exit/result, actual rendered screenshot where relevant: REQUIRED. Preserve the first failure and assertion.
-
-User impact and recommended repair scope: REQUIRED. Identify the existing owning subsystem; do not create a second implementation.
-
-Repair and requalification: for minor corrections, isolated repair revision → Smoke Tester replacement build/package/smoke receipt → affected independent acceptance. For major failures, return to the existing Astra Implementer; preserve unrelated healthy work.
-
-Status and recipient receipt: REQUIRED. Delivery of a report is separate from an acknowledged/qualified repair. No integration branch write or release follows from this report.
+Preserve the original evidence alongside the retest. Name unavailable target checks explicitly. A minor defect returns to its owning implementation and affected acceptance checks. A major defect needs the coordinator to reassign the underlying flow and review the integration boundary. A receipt for the report identifies the receiver; a qualified repair also requires the candidate and retest evidence. [Current specification and Atlas](../../specification/owner-references/2026-11-22-atlas-v4/README.md)

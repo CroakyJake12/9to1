@@ -1,10 +1,6 @@
-# Browser acceptance evidence validation
+# Validating browser acceptance evidence
 
-This tool checks the integrity and coverage of supplied acceptance records. It does
-not execute product tests, certify a complete canonical inventory, judge whether an
-assertion actually proves a requirement, or promote any requirement state. Exit 0
-means **EVIDENCE-CONSISTENT**, never browser parity complete. An independent reviewer
-must inspect runtime evidence and challenge each requirement-to-test mapping.
+Provide the collected records to `validate-acceptance-evidence.py` to check their structure, identity, coverage and consistency. Exit zero means `EVIDENCE-CONSISTENT`. A reviewer must still inspect the original browser actions and assertions on the named candidate and record missing platform or donor coverage before claiming parity. [Evidence validator](validate-acceptance-evidence.py)
 
 The current canonical document revision must be fetched again before final delivery.
 Pass its manifest and exact paragraph records from that fetch. The manifest must

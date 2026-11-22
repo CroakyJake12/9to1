@@ -1,19 +1,8 @@
-# CUI fallback fonts
+# Bundled fonts and missing-glyph fallback
 
-Montserrat remains the interface font. These bundled faces are used only when a
-requested glyph is missing; browser renderers cannot rely on operating-system
-fonts. The fallback does not rewrite authored font names or document content.
+CUI uses the configured interface font for authored text. If a glyph is missing, fallback can supply its shape without rewriting the document or its font choice. Preserve script coverage, emoji sequences, shaping tables and upstream licensing when updating assets.
 
-- `DejaVuSans/DejaVuSans.ttf`: unmodified DejaVu Sans 2.37, for symbols and wider
-  text coverage. `LICENSE.txt` preserves its embedded Bitstream/Arev notices.
-- `NotoEmoji/NotoEmoji-Regular.ttf`: a static weight-400 outline instance of
-  Google Noto Emoji. It retains the full glyph and shaping tables, including
-  joined emoji and skin-tone sequences; it is not a sample-specific subset.
-  `OFL.txt` accompanies the font under SIL OFL 1.1. Rendering is monochrome.
-
-Exact upstream revision, input/output SHA256 hashes and transformation details
-are in `fallback-provenance.json`. The Noto instance was made with fontTools
-4.61.1, preserving the source font's timestamps:
+The bundled DejaVu Sans face is the unmodified 2.37 distribution. Noto Emoji is a weight-400 outline instance of the variable font and renders monochrome. Verify the recorded input and output hashes, upstream revision and conversion tool version against the provenance record before updating either font.
 
 ```python
 from fontTools.ttLib import TTFont
@@ -25,6 +14,4 @@ font.recalcTimestamp = False
 font.save("NotoEmoji-Regular.ttf")
 ```
 
-The two TTF files add 1,646,348 uncompressed bytes. Measure the published payload
-and actual cold startup when accepting the browser build. These fonts cover
-common symbols and emoji; they do not establish full coverage of every script.
+[Source identities](fallback-provenance.json) · [DejaVu licence](DejaVuSans/LICENSE.txt) · [Noto licence](NotoEmoji/OFL.txt)

@@ -1,7 +1,7 @@
-# Architecture
+# Shared architecture reference
 
-- [Repository structure](repository-structure.md) — projects, ownership, dependency direction.
-- [System map](system-map.md) — where each major system lives and what it collaborates with.
-- [State and persistence](state-and-persistence.md) — SQLite vs preferences vs avatars vs session state.
+For a change to project references or host activation, begin with the solution map. For a change to user data, begin with persistence and identify the durable owner. For an embedded app, follow its route in the system map and confirm that the standalone host can reach the same implementation.
 
-For the mandatory layer rules see `docs/ARCHITECTURE_RULES.md` in the repository root.
+The Windows recovery guide and the Write engine guide cover narrower integration contracts. They describe different evidence and packaging boundaries.
+
+[Projects](repository-structure.md) · [Storage](state-and-persistence.md) · [Service map](system-map.md) · [Windows recovery](windows-native-personal-task-recovery.md) · [Write engine](write-libreoffice-engine.md)

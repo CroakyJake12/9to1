@@ -1,5 +1,9 @@
 # Trusted offline UCML envelope utility
 
+Use the explicit Linux CLI to wrap or unwrap an owner-selected sealed UCML file through the maintained credential store. Record the envelope identity and key reference without writing key bytes into a report. Check authorisation at the application boundary before releasing decrypted context. [Envelope and key custody](../../9to1%20Models/Dulche%20Alpha/Context/ENCRYPTION.md)
+
+## Build and invoke
+
 Linux only. Build with `dotnet build tools/ucml-protect/NineToOne.Ucml.Protect.csproj -c Release`.
 Run `dotnet tools/ucml-protect/bin/Release/net10.0/9to1-ucml-protect.dll --help`.
 

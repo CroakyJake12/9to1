@@ -13,6 +13,10 @@ authored surface rather than a lossy convenience tree.
 compatibility shell; it no longer compiles the competing lightweight parser.
 New production code must reference CUI Core and Language directly.
 
+## From a product route to a native frame
+
+Follow the app’s authored CUI document into `CuiSceneHost` and its scoped resources. The shared resource applier resolves the selected theme, appearance and effective app or host accent. Keep authored document styles separate from navigation, panel, overlay and action roles. For native comparisons exercise the same route with a second accent, keyboard focus and high contrast. [Scene host](../../framework/CUI/Runtime/CuiSceneHost.cs) · [Shared theme resources](../../framework/CUI/Themes/CuiThemeResourceApplier.cs)
+
 ## Runtime status
 
 `framework/CUI/Runtime` lowers the document into native Avalonia controls and

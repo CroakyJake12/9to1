@@ -1,6 +1,8 @@
-# Sites browser authoring
+# Authoring a Site through the browser adapter
 
-`Sites.cui`, `SitesBrowserController` and `SitesBrowserRoute` provide the actual `app.sites` destination for website list/create/open, page creation, paragraph creation and text editing. Browser presentation consumes the unchanged canonical `SiteProject`, page/component identities, `SiteSourceBinding`, schema and revision through host-retained `SitesBrowserOperations`. It supplies no API URL, actor, Files source directory, grants, default issuer or publishing service.
+The `app.sites` route binds the Sites CUI controls to `SitesBrowserController`. Site and page creation, paragraph insertion and text edits go to the supplied canonical workspace owner. Verify the current browser host mounts this adapter and supplies a permitted workspace before treating a source-level authoring test as a complete browser journey. [Route](SitesBrowserRoute.cs) · [Owner operations](SitesBrowserOperations.cs)
+
+Use `SiteSourceBinding` to bind the selected site to its canonical source, then mount `Sites.cui` with the original workspace session. A successful list or new paragraph is the owner’s response for that site.
 
 The composition root supplies each authenticated owner delegate, parses the embedded document and registers `new SitesBrowserRoute(ownerOperations, document)` with `registry.Register(route, route.CreateSurface)`. Optional deep-link state is `EntityType="site"` and the canonical SiteID GUID. Dispose the route on private account reset and the returned surface lifetime on close. Unsupported deployment/object actions fail before opening. The Web project consumes the portable unchanged model source link in `Contracts/NineToOne.Sites.Browser.Contracts.csproj`; native local tests consume the actual Sites owner assembly instead.
 

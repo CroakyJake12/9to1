@@ -1,8 +1,8 @@
 # 9to1 development relay
 
-Reference deployment status (13 October 2026): the local gated runner/dashboard and authenticated atomic coordinator are installed and live-tested. The private native cloud daily schedule has restored its environment/signing identity in real scheduled turns; native Goal resume remains blocked by an app error. Whole unattended switching is NOT VERIFIED. Cloning this source does not install or prove the relay on another host.
+The relay coordinates explicitly enabled local and cloud shifts. It stores lease and checkpoint state on its configured private service and reports runner status. Its 13 October local runner and dashboard checks describe that deployment only. Starting a worker requires a current assignment, account entitlement and a verified receiving session.
 
-The four-part V2 delivery directive effective 10 October 2026 remains authoritative. Part 1 FULL foundations/apps and donor-complete RCVP products are the critical path. Preserve the entire original/incorporated specification, donor functionality, native/web obligations, privacy, security, persistence and independent acceptance. No build or unit-test result promotes an app to RCVP or FULL.
+The 22 November native pass uses a single local main checkout and the existing guarded SDK loop. Relay operators handling an earlier handoff must retain its exact base, token and private evidence. Use the current source register and ticket for any new product change. [Product source register](../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md) · [Local workflow](../../docs/development/workflow.md)
 
 ## Components
 

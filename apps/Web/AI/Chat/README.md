@@ -1,4 +1,6 @@
-This subtree is excluded from the browser host and remains unregistered.
+# Browser Chat read adapter
+
+The web host excludes this source from its normal compilation. The adapter can initialise the existing Chat controller against an explicitly supplied backend and expose its state for inspection. A browser Chat route still needs an integrated transcript, composer, action bindings and authorised owner. For the current native Chat/Options flow, follow the Spaces interaction records. [Read adapter](ChatSpaceBrowserReadAdapter.cs) · [Product source register](../../../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md)
 
 `ChatSpaceBrowserReadAdapter` requires the actual owning `IChatSpaceBackend`, loads the existing embedded `ChatSpace.cui`, and calls the actual `ChatSpaceController.InitializeAsync`. It exposes existing owner state without replacement conversation or model records. It enables no markup mutations or inference, registers no route or controls, and supplies no default backend, persistence or authority.
 

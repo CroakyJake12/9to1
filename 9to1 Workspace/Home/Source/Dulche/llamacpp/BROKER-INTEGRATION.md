@@ -1,6 +1,6 @@
 # Model-free broker integration evidence
 
-`test_broker_integration.py` exercises the Haven broker across real Unix sockets and a real supervised subprocess while using a deliberately fake llama worker. It exists to prove Haven's process/transport mechanics without downloading or executing a model.
+The integration test sends real Unix-socket requests to the Haven broker and supervises a fake llama worker process. It exercises worker startup, transport, request lifecycle and cleanup independently of model files. Report the specific transport assertions it discovers and use a separate real-runtime receipt for generated output. [Integration test](tests/test_broker_integration.py)
 
 The fake worker implements only the llama-server endpoints needed for the test (`/health` and streaming `/v1/chat/completions`). The test then exercises:
 

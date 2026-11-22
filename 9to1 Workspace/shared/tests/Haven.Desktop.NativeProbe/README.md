@@ -1,11 +1,11 @@
-# Native chat popup probe
+# Observe the native Chat add-menu popup
 
-Run the same `ChatAddMenuNativePopupTests.RunAsync(requireNativePopup: true)` flow used by the maintained regression, on a real desktop display:
+Use the probe on an actual graphical session with the owning native build. Its purpose is to exercise the same add-menu popup interaction as the desktop regression with native popup behavior required. Keep the candidate identity, display and popup state with the receipt.
+
+A headless pass can establish command routing while leaving window-system popup placement or focus unresolved. Record the platform and inspect opening, dismissal and keyboard focus restoration on the target desktop.
 
 ```sh
 dotnet run --project "9to1 Workspace/shared/tests/Haven.Desktop.NativeProbe/Haven.Desktop.NativeProbe.csproj" --configuration Release
 ```
 
-The process uses Avalonia platform detection and the production CUI font/theme setup. Run it from an active X11 desktop session (with `DISPLAY` set). It exits nonzero if Avalonia falls back to the in-window overlay or if the native popup, anchoring, focus, interaction, or retirement assertions fail. The console runner shuts down explicitly after the probe completes.
-
-To capture the mounted composer and actual native popup host as separate PNGs for visual inspection, set `HAVEN_NATIVE_POPUP_CAPTURE_DIR` to an output directory before running. The capture uses Avalonia `RenderTargetBitmap` on those live controls; it does not synthesize a replacement popup.
+[Native preview](../../../../docs/development/live-preview.md) · [Native host boundaries](../../docs/App-Editing-Guide/BROWSER.md)

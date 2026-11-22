@@ -40,7 +40,11 @@ Two consequences that are easy to get wrong, so they are written down:
   unmodified embedded component and must be forked and labelled accordingly. Rnote is the live
   example of that, and it is already forked.
 
-## 2. Measured current state (MEASURED, 30 October 2026)
+## Applying a fork decision
+
+Use the donor inventory and the first-party wrapper to identify the exact source held in the current checkout. Check local changes, preserved notices, pinned revision and package contents. Record any source or platform gaps separately from the historical classification. [Donor inventory](../../eng/donor-sources.json) · [Verifier](../../eng/check-donor-sources.py)
+
+## 2. Inspection results from 30 October 2026
 
 - `.gitmodules` declares **26** donor entries; only **7** have a real gitlink in HEAD. The other
   **19** are stubs that `git submodule update` can never fetch: no gitlink and no on-disk source.
@@ -107,7 +111,7 @@ Two consequences that are easy to get wrong, so they are written down:
 8. **Drift check**: a census command comparing `.gitmodules` entries, gitlinks in HEAD, on-disk
    presence and consumed-by-build status, so "declared" can never again look like "integrated".
 
-## 5. Ordered actions
+## 5. Original 30 October work queue
 
 1. **Avalonia provenance** (integrity gap): identify upstream base commit, record it, list our changes
    as commits or a patch ledger, and point the vendor entry at a controlled fork.

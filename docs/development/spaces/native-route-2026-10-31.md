@@ -1,3 +1,10 @@
+# Opening the native Spaces workspace
+
+Open the managed Haven development copy, focus the normal address bar and navigate to `9to1://spaces`. Record the selected Space and mounted surface. Open Chat, enter a disposable draft and exercise Options without disturbing the conversation or attachments. Compare the behaviour with `spaces-chat` and `spaces-permissions` in the current register. [Managed native copy](../live-preview.md) · [Atlas and specification](../../specification/owner-references/2026-11-22-atlas-v4/README.md)
+
+<details>
+<summary>31 October Linux scratch environment and original findings</summary>
+
 # Actual Spaces native route — 31 October 2026
 
 Root owns the build and native run. This is launcher guidance from current source, not a launch receipt.
@@ -12,3 +19,6 @@ Root owns the build and native run. This is launcher guidance from current sourc
 - If original Home/profile startup fails, retain the startup failure screenshot and log. Do not bypass admission or synthesize a profile/service to obtain a passing visual.
 
 Use native.py capture/status for the same run. Close through the actual window lifecycle after checks, retaining the profile and screenshots. A native X11 result in this environment is distinct from the owner's installed PC and the separate Windows/browser acceptance matrix.
+
+
+</details>

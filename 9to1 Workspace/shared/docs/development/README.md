@@ -1,6 +1,7 @@
-# Development
+# Working in the shared solution
 
-- [Adding or changing a feature](adding-a-feature.md) — owning system → docs → reusable infrastructure → tests.
-- [Adding an app](adding-an-app.md) — stable IDs, routing, HUI surface, persistence.
-- [Testing](testing.md) — verified build and test commands and what headless does not prove.
-- [Common mistakes](common-mistakes.md) — parallel systems, UI vs backend split, HUI bypass, hard-coded tokens, and other 9to1-specific traps.
+Begin with the feature’s current product requirement, source owner and failing or missing user action. Use the feature guide to choose an implementation boundary and the native testing guide to produce evidence at the appropriate level.
+
+The common-mistakes guide covers recurring regressions around duplicate state, authored UI, action acknowledgements and host-only assumptions.
+
+[Changing a feature](adding-a-feature.md) · [Recurring defects](common-mistakes.md) · [Testing](testing.md) · [Guarded workflow](../../../../docs/development/workflow.md)

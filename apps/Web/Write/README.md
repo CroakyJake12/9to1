@@ -1,3 +1,9 @@
+# Write in the browser
+
+The browser Write feature hosts the original document editor and connects its persistence boundary to the current account’s notes store. For an edit, capture document identity, make a change, save and reopen the same document. Exercise retained-scene focus, selection and undo through the real browser mount before claiming parity for them. [Browser notes storage](Storage/README.md)
+
+## Implementation slices and retained evidence
+
 Write browser adapter
 =====================
 

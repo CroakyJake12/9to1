@@ -2,7 +2,11 @@
 
 This is a CPU-only reference/prototype, not the complete training engine or an LLM trainer. It implements the first software correctness slice of ETR-03/04/06/17, while all other requirements in the coordinator's continuous Dulche rubric remain active. No model downloads or GPU execution occur here.
 
-## Required flow pinned before implementation
+## Running the reference comparison
+
+The core accepts an already constructed dense CPU model, an explicit partition and an objective. Its tests compare the actual update under the supported optimizer and replay assumptions. Retain the model, objective, split and seed when comparing a change, so a different setup cannot account for the observed result. [Efficient reference core](core.py) · [Comparison tests](test_core.py)
+
+## Original required input and update flow
 
 1. The caller supplies an already constructed CPU dense sequential model, exact block partition, optimizer/configuration, and an independently admitted data purpose. Software tests supply arithmetic fixtures labelled `software_test_only`; they are never model-training datasets, selection signals, rewards or evaluation data.
 2. Validate supported modules, CPU tensors, finite scalar settings, parameter coverage and no shared parameters or mutable buffers. Reject unsupported models, quantization, QLoRA and custom stochastic/stateful modules rather than silently approximating them.

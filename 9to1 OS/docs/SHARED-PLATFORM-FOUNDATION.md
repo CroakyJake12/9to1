@@ -1,6 +1,6 @@
-# Shared CakeOS platform foundation
+# Shared 9to1 OS platform contracts
 
-This foundation is platform-neutral application infrastructure. It owns no application surface, GNOME UI integration, provider process, Linux secret store, audio stack, portal adapter, package, image, or release schema.
+Use the app registry and router for app identity and lifecycle, the storage layout for durable data, and central grants for platform access. Native UI, packages and host-specific services consume these contracts through their own adapters. A registry entry identifies an app; verify the actual launched host when testing product behaviour.
 
 ## Registry and routing
 

@@ -1,6 +1,6 @@
-# 9to1OS HUI Linux graphical preview host
+# Linux HUI preview host
 
-This is the first graphical Linux backend slice for HUI. It is intentionally a normal unprivileged desktop process: it does not replace GNOME Shell or Mutter, install a GDM session, or call privileged OS services.
+Use this unprivileged Avalonia host to open a platform-neutral HUI root through `IHuiRootProvider`. It runs inside the desktop session. GNOME Shell, Mutter and GDM keep their existing owners. For a current Haven tab, Home Settings or Spaces interaction, start the managed Haven.Desktop runtime. [Haven desktop run loop](../../../docs/development/live-preview.md)
 
 The host consumes the platform-neutral `Haven.UI` source supplied explicitly through `HavenUiProject`. The initial renderer deliberately implements only the HUI draw-command subset used by this preview and throws on unsupported commands so a partial backend cannot be mistaken for full HUI compatibility.
 

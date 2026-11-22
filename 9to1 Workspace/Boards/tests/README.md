@@ -1,14 +1,9 @@
-# Haven Boards verification
+# Choose a Boards verification path
 
-`verify-boards-foundation.ps1` is the zero-install static gate for the first AppFlowy-backed slice. It checks the exact AppFlowy pin, MPL provenance, vendor isolation, and the HUI-to-command boundary.
+Start with the operation that changed. The typed tests cover document integrity, attachments, freeform objects, rich editing, history granularity, section icons and Trash. Use the corresponding native CUI/host checks when the change affects a visible affordance.
 
-Passing this script is **static verification only**. It does not establish Flutter compilation, HUI compilation, runtime persistence, accessibility behaviour, Ubuntu packaging, or approved-VM execution.
+The PowerShell foundation check verifies the pinned AppFlowy boundary and provenance. The collaboration and generative checks cover separate contracts. A source-level gate cannot verify native input or restore a real document by itself.
 
-Runtime acceptance remains:
+For a user-facing edit, create a disposable local board, perform the action, undo or redo as appropriate, save and reopen. Keep donor compilation, native window evidence and distribution acceptance separate.
 
-1. run the static gate;
-2. build and test the Flutter AppFlowy proof at the pinned revision;
-3. build the shared HUI runtime plus `HavenBoardsHuiScene`;
-4. start with networking disabled, mutate and save a board, terminate, reopen, and verify exact group/card ordering;
-5. exercise all reorder operations without pointer drag;
-6. only then mark the first slice runtime-proven.
+[Tests](CakeOS.Apps.Boards.Tests.csproj) · [Static foundation check](verify-boards-foundation.ps1) · [Editor](../app) · [Native preview](../../../docs/development/live-preview.md)

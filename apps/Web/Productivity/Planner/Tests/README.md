@@ -1,3 +1,9 @@
+# Planner SQLite concurrency controls
+
+Run the original Planner concurrency cases against the linked SQLite owner and its assembly-wide serialisation settings. Compare the generated project and source pins before reusing the result on a different revision. The checked-in workflow identifies the active source and driver. [Source-linked project](Planner.OriginalSQLite.Tests.csproj) · [Planner workflow](../../../../../.github/workflows/team-b-original-planner.yml)
+
+## Original test composition and proposal
+
 This source-only project compiles nine unchanged original SQLite implementation files, the two original `PlannerStructuredConcurrencyTests` Facts and the owner's exact assembly serialization policy. It references the real Core/Application/CUI.AI graph and the owner's existing package versions. It defines no Planner model, repository, validator, provider or test replacement.
 
 The branch CI proposal uses the maintained B1 `apps/Web/Tests/ci/run-ordinary-native.py` `Commands` class. Its reviewed source binding must be adopted before the driver can run; there is no copied process engine. A fresh ordinary official restore and source build precede discovery of both Facts. Only `Concurrent_writers_preserve_one_revision_and_deleted_assignments_require_restore` executes, with an exact fresh TRX result/identity/counter gate. The other Fact's `Actors` fixture is not a grant or an acceptance result.

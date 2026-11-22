@@ -1,4 +1,8 @@
-# Maintained public-client bridge
+# Public-client browser bridge
+
+The configured browser client composes the account transport and the existing account service. The issuer owns public registration, scope and redirect policy. Use the checked-in builder when changing the browser bridge so the bundle and source remain traceable together. [Bundle builder](build-public-client.mjs) · [Issuer origin policy](../../../cloud/cake-id-auth/PUBLIC_CLIENT_CORS.current.md)
+
+## Original integration pins and request protocol
 
 `configured-accounts.bundle.js` composes `browser-public-client.js`, the reviewed `account-api-client.js`, and the existing `Services/account-service.js`. The issuer and registration authority remain Team C's maintained CAKE ID implementation at `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d`, with its `BROWSER_FIXTURE.md` handoff at `dc1d60eec2bb4edcdce2ba5b04883d711e692678`. No issuer, client, redirect, account, permission, entitlement or auth-revision defaults are created here.
 

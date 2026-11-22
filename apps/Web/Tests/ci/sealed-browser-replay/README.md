@@ -1,3 +1,9 @@
+# Replaying a sealed browser publication
+
+The replay driver takes a pinned browser publication, checks its source and artifact custody, and runs the selected account or Wave controls using that captured bundle. Keep the observed server and actual browser process bound to the attempt. A replay has the product and authentication scope of its sealed inputs. [Replay coordinator](run-sealed-browser-replay.py) · [Owning workflow](../../../../../.github/workflows/team-b-sealed-browser-replay.yml)
+
+## Pinned replay revisions and original results
+
 SOURCE03 binds the Accounts7/Wave14 replay to the **corrected normal public publisher**, source **22d2e2dd35c934f190d28efdef0190cbd8c4c957**, run **37206507459**, artifact **11304679865**. It preserves SOURCE01/SOURCE02 and their immutable 8ff tuple, known eager Picture startup risk and Accounts historical caption-polling limitation. Root owns adoption, push and execution. No SDK/publisher is duplicated here.
 
 Adopt `team-b-sealed-browser-replay.yml` at `.github/workflows/team-b-sealed-browser-replay.yml`. Adopt these seven runtime files and this README under `apps/Web/Tests/ci/sealed-browser-replay/`: `run-sealed-browser-replay.py`, `run-owned-account-replay01.py`, `run-owned-wave-replay01.py`, `run-unconfigured-interop7-portable-ci02.cjs`, `run-wave-browser-cold-quota.cjs`, `sealed-https-host-explicit-binding.cjs`, `owned-kernel-child-proof01.py`. Other files in this proposal are source evidence and UNIT controls. Existing maintained Commands `a57aa33f…` and receipt verifier `e5481670…` stay unchanged.

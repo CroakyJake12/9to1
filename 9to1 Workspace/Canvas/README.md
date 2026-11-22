@@ -1,23 +1,10 @@
-# 9to1OS Canvas
+# Canvas documents and ink editing
 
-This directory is the bounded standalone Canvas app surface for HavenOS.
+Canvas belongs to Work. Its app surface uses a revisioned document and Files integration. The editor and host helpers must preserve the active document, ink object identity and save destination across changes to the viewport or tool.
 
-## Functional journey
+The Rnote engine bridge provides drawing capabilities behind a renderer-neutral interface. Keep donor data and native artifact identity distinct from 9to1’s document envelope. Verify an ink or eraser action in the actual Canvas view, commit it, reopen the same document and check its persisted contents and undo behavior.
 
-The first slice exposes a framework-neutral Canvas session that can create, open, and save native Canvas documents through the shared `INotesRepository`, add and move objects, connect objects, draw ink, pan/zoom the board, and undo/redo edits. The repository retains the canonical Notes document and its versioned persistence behavior; Canvas does not introduce a second storage format.
-
-The app surface deliberately delegates creative behavior to the existing engine in `src/Haven.Application/Canvas` and the native Notes canvas data model in `src/Haven.Core/Notes`. It does not duplicate geometry, ink, connector, history, or document-storage rules.
-
-After history operations, `CanvasAppSurface` synchronizes the controller's active board back into the canonical `NotesDocument`, so restored state remains the state that storage and later app surfaces observe.
-
-## Focused validation
-
-```text
-dotnet build "9to1 Workspace/Canvas/HavenOS.Canvas.csproj" --configuration Release
-dotnet test "9to1 Workspace/Canvas/Tests/HavenOS.Canvas.Tests.csproj" --configuration Release
-```
-
-The interaction test covers create -> add objects -> snapped move -> connector -> pen stroke -> pan/zoom -> undo -> redo, plus canonical document synchronization. Persistence tests cover repository-backed create -> edit -> save -> reopen and reject opening ordinary Notes documents as Canvas.
+A bridge smoke test establishes the exercised engine operations. A complete Canvas interaction additionally needs the effective tool, viewport and actual object result.
 
 ## Native controller save and reopen
 
@@ -45,3 +32,5 @@ full application acceptance.
 The production Files bridge retains Windows physical ancestors, single-link artifact handles and the original Files directory-binding record, then passes the actual privately claimed Home commit fence through canonical Files CAS. It preserves an actual provider acknowledgement before later audit/reopen work and never replays that mutation. Unconfigured standalone Canvas launch refuses honestly.
 
 The compatible C22 engine imports 28 functions present in the preserved ABI-3 native kit. `tools/original-windows-native-kit.json` pins its 33-DLL closure; `tools/Stage-OriginalWindowsNativeKit.ps1` stages that original closure/licenses into a normal Home publish output. The later user-layer/filtered-render exports are unavailable. Source recovery, kit staging and component controls do not establish GUI, installed-domain, signing or clean-host acceptance; actual owning build and draw/save/normal-close/fresh-process-reopen evidence remains required.
+
+[Canvas workspace](CanvasCuiWorkspace.cs) · [Native viewport](CanvasNativeViewport.cs) · [Rnote bridge](rnote-poc/README.md) · [Capability inventory](tools/README.md)

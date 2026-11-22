@@ -1,8 +1,6 @@
-# 9to1 UI provider contract
+# HUI local provider contracts
 
-`llamacpp-provider.json` is the HUI-facing registry entry for the local
-llama.cpp provider. It describes discovery, status, model-key resolution, and
-streaming execution without bundling a model or requiring a network service.
+The HUI registry describes the local llama.cpp provider through `llamacpp-provider.json`. Consumers use the provider identity, model key, status and streaming routes from that contract. The broker owns inference and model lifecycle. This directory contains the HUI platform hosts and their shared contracts. [Provider declaration](llamacpp-provider.json)
 
 The registry entry is an adapter contract, not a second inference
 implementation:

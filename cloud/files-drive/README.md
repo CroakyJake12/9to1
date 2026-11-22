@@ -1,4 +1,6 @@
-# Private Google Drive for 9to1 Files
+# Private Drive provider for 9to1 Files
+
+The public-sites Worker forwards the Files browser path and its same-origin `/api/files/v1/` requests through the Files service binding. The Files Worker resolves the current session and authorised Drive operation. When checking a browser issue, distinguish route forwarding, account admission, provider read and displayed folder content. Use the exact target environment’s receipts for hosted status. [Files Worker configuration](wrangler.jsonc) · [Browser Files route](../../apps/Web/Files/README.md)
 
 This Worker serves the existing 9to1 Files browser app at `https://9to1.uk/files/` and its same-origin API at `/api/files/v1/`. The `cake-public-websites` Worker forwards those paths through its `FILES` service binding. Files uses the existing `WEB_SESSIONS` binding to validate the live 9to1 Account session, then checks the exact configured owner. Google consent is separate, and credentials stay encrypted in the Files Durable Object. Keep `workers.dev` and preview URLs disabled.
 

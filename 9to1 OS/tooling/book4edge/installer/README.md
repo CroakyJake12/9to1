@@ -1,7 +1,6 @@
-# NP960XMA installation handoff
+# Book4 Edge installer handoff
 
-These scripts prepare a private payload for the inventoried laptop. They are not
-a generic disk installer. No partition commands run during source builds.
+The preparation step assembles a private payload for the inventoried NP960XMA. The live launcher separately checks the current boot, matching kernel, pinned payload manifest, disk layout, clean NTFS space and backup mount before offering installation. Retain that boot’s evidence with the payload and keep the original partition safeguards. [Installer guard tests](test_guards.py)
 
 The live desktop launcher requires this boot's manual hardware checklist, the
 matched kernel, a pinned payload manifest, the original disk layout, a clean

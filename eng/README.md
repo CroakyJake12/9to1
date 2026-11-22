@@ -1,8 +1,6 @@
-# Repository commands
+# Repository build commands
 
-`9to1.ps1` is the root entry point for the buildable consolidation sets and the
-package recipes that actually exist. It deliberately fails when a requested
-package path is not implemented instead of reporting a placeholder as success.
+Use `9to1.ps1` for the supported component restore, build, test and package recipes. Select the component that owns the changed source and check the command result. On the development PC, run native SDK work under the existing serial lock and memory guard. The desktop preview is published self-contained into a fresh runtime slot. [Guarded PC workflow](../docs/development/workflow.md)
 
 ```powershell
 ./eng/9to1.ps1 restore -Component core
@@ -49,3 +47,7 @@ selection. `./eng/9to1.ps1 package-linux -Component compatibility` builds
 `artifacts/packages/9to1-windows-compat_0.1.0_all.deb`. GTK, Wine/WinBoat runtime
 and real Book4 Edge hardware acceptance are separate checks; see
 [`../9to1 OS/tooling/book4edge/README.md`](../9to1%20OS/tooling/book4edge/README.md).
+
+## Packaging and model staging guides
+
+Use the current guides below when preparing a candidate. The corresponding original documents remain at the paths consumed by the ARM source checks. [ARM package pipeline](../.github/scripts/native16-arm64/PIPELINE.current.md) · [Chromium staging](../.github/scripts/native16-arm64/chromium-native/README.current.md) · [Strata host-cache preparation](../9to1%20Models/Dulche%20Alpha/InferenceEngines/NativeStrata/prep/host-cache-v0.2.3.1/README.current.md) · [Dulche bundle](../9to1%20Workspace/Home/Source/Dulche/bundle/README.current.md) · [Offline staging](../9to1%20Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.current.md) · [Preview asset profile](../9to1%20Workspace/Home/Source/Dulche/bundle/preview-asset-profile.current.md)

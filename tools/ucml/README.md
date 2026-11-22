@@ -1,6 +1,8 @@
 # UCML local file utility
 
-Build with `.NET 10` from the repository root:
+Select this tool to validate, inspect, package or extract an explicit local UCML file. Its commands operate on the files supplied by the caller. Canonical context retrieval and grants belong to the authenticated application owner. Use the dedicated protection utility for retained encryption keys and envelopes. [Protected UCML envelopes](../ucml-protect/README.md)
+
+Build from the repository root with the pinned .NET SDK. On the development PC, use the guarded serial SDK workflow for the build. [PC build procedure](../../docs/development/workflow.md)
 
 ```sh
 dotnet build tools/ucml/NineToOne.Ucml.Tool.csproj -c Release

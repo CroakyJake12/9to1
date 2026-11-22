@@ -1,6 +1,6 @@
-# Local `.cakeupdate` bundles
+# Installing a local .cakeupdate bundle
 
-Settings exposes this channel as **Updates -> Install Update From File**. A bundle is a ZIP file with a `.cakeupdate` extension and exactly these entries:
+In the OS Settings update channel, select **Updates → Install Update From File**. The installer checks the manifest’s version range, architectures, package hashes and declared dependencies before installation. The package is a ZIP with extension `.cakeupdate` and exactly the following entries.
 
 - `manifest.json`
 - one or more direct `packages/*.deb` files declared by the manifest

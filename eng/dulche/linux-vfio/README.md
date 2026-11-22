@@ -1,11 +1,8 @@
 # Dulche Linux GPU integration preparation
 
-Prepared on 16 November 2026 against the Windows publication
-`41a4ddf0973f9601026701d72bb6a6e314d94680`. This directory is additive preparation,
-not an installed backend or permission to attach a GPU. Every generated plan is
-disabled. The single V100 proof allowance remains unspent by this work.
+The 16 November source under this directory prepares disabled Linux VFIO plans against Windows publication `41a4ddf0973f9601026701d72bb6a6e314d94680`. Its fixture evidence describes plan generation and host/guest boundaries. Preserve the original safety and proof-authority checks when reviewing a candidate; a generated plan alone does not spend or grant hardware admission. [Source-specific safety and proof gates](SAFETY.md)
 
-## Feasibility result
+## Feasibility recorded on 16 November 2026
 
 **The host/guest driver split is technically plausible on this machine. It is
 not yet ready for the physical proof or sustained V100 use.** Current Linux

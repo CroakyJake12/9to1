@@ -1,6 +1,10 @@
 # Package Preload Model
 
-## Current model
+## Mapping a release package
+
+Start from the approved package entry. Match its exact filename and SHA-256 to the standalone producer artifact and inspect dependency metadata for the target architecture. Carry the producer receipt into the preload manifest before generating an image. A local desktop publish has a different runtime layout and belongs in the developer preview workflow. [Preload manifest](../../9to1%20OS/release/package-preload-manifest.json)
+
+## Manifest and producer contract
 
 `9to1 OS/release/package-preload-manifest.json` is the release-owned allowlist
 for package preloading. Each entry names a standalone `.deb` by filename and

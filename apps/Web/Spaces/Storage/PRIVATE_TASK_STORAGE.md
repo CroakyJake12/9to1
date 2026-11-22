@@ -1,4 +1,6 @@
-# Browser private Task storage composition
+# Private Task storage in the browser
+
+The storage enrollment binds the private Task owner to the browser registry before account-specific views are created. Use the active actor and profile to read an existing Task or admit execution. On account switch, retire the original owner and outstanding work before exposing the next account’s records. The affected stores and transport have distinct acknowledgements. [Enrollment owner](BrowserPrivateTaskStorageEnrollment.cs) · [Context issuer](BrowserTaskContextIssuer.cs)
 
 `BrowserFeatureComposition` enrolls one `BrowserPrivateTaskStorage` through the
 actual registry's non-route private lifetime boundary before its account view

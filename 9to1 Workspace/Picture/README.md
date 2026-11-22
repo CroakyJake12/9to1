@@ -1,21 +1,10 @@
-# Picture
+# Frame image viewing and editing
 
-Picture is the HavenOS image viewer and editing surface under active development. The current local Avalonia implementation opens an image, previews it, supports fit/zoom/pan and adjacent-file navigation, and records a non-destructive crop operation before exporting a PNG copy.
+Frame is the current product name. The Picture directory and compatible route host the image viewer and editor. Preserve the source file and its metadata when applying a nondestructive edit or exporting a separate image.
 
-## Current local journey
+Open a supported image, exercise fit, zoom and pan, navigate to an adjacent file and return. Check that any crop applies to the intended source coordinates. Export to a separate destination, reopen the result and confirm the original remains usable.
 
-1. Open a local PNG, JPEG, BMP, GIF, or WebP supported by the platform decoder.
-2. View the image with fit, zoom, pointer-centred wheel zoom, and drag pan.
-3. Browse neighboring supported files in the same directory.
-4. Inspect the file signature, decoded pixel dimensions, file size, and metadata exposed by the installed reader through **Info**.
-5. Enter crop bounds in source-image pixels and export a new PNG file.
-6. Choose **Preserve supported metadata**, **Remove location (strips all metadata)**, or **Remove all metadata**. The location option currently strips all metadata because this implementation cannot reliably distinguish every location-bearing field across formats.
-
-The source image is protected from replacement. Crop edits remain non-destructive until export. Unsupported/corrupt data and metadata-reader limitations are surfaced as unavailable or failed operations.
-
-## Current limits
-
-This is not yet the complete Picture product contract. Raster brush/eraser, selections and transforms, layers, vector/text tools, history, AI generation/editing, linked Files identity and save workflows, color-profile handling, broad format writing, shared Home/CUI integration, and accessibility/device validation still require implementation or owner integration. Metadata DPI and ICC profiles are not currently reported. Donor trees in `Source/glycin` and `Source/loupe` are provenance inputs only; they are not integrated runtime dependencies.
+Format support depends on the real decoder and encoder on the target platform. Treat unsupported input, a missing file and an unavailable output destination separately. Keep decoder provenance and source-image ownership with the relevant adapter.
 
 ## Focused validation
 
@@ -23,3 +12,5 @@ This is not yet the complete Picture product contract. Raster brush/eraser, sele
 dotnet build "9to1 Workspace/Picture/HavenOS.Images.csproj" -c Release --no-restore -p:UsedAvaloniaProducts=
 dotnet test "9to1 Workspace/Picture/Tests/HavenOS.Images.Tests.csproj" -c Release --no-restore -p:UsedAvaloniaProducts=
 ```
+
+[Image app](HavenOS.Images.csproj) · [Image UI](UI) · [Owning tests](Tests) · [Frame and compatible aliases](../../docs/specification/owner-references/2026-11-22-atlas-v4/README.md)

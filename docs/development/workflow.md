@@ -21,6 +21,15 @@ For an on-screen checkpoint, publish the same Desktop project self-contained for
 
 The sections below describe additional custody, evidence and platform-specific operations. A dated release, staffing or delivery instruction records the context of that operation. Fresh work follows the active checkout, assigned owner, tested runtime handoff and current product sources.
 
+## Resume work on local main
+
+Observe the checkout, current HEAD and uncommitted paths. Read the current handoff and file ownership, then compare the installed development manifest with the code revision. A different running revision is normal while preparing a candidate. Record both. Check the actual SDK lock and use a fresh guarded log for the next build or focused test. Use the account’s observed remaining allowance to apply the current testing cutoff.
+
+For a handoff, record the source revision, dirty files, active owner, last user-visible result, native window or receipt, exact failed check and next bounded edit. The receiving coordinator acknowledges that same revision and file scope. Use the previously configured custody workflow when recovering one of its checkpoints. Its commands and earlier allocation protocol follow.
+
+<details>
+<summary>ROOT-LIVE recovery and allocation procedure for retained checkpoints</summary>
+
 ## Resume and ownership
 
 1. Read `AGENTS.md`, this document, applicable specification sections and the
@@ -96,6 +105,8 @@ for the PC milestone ledger. It cannot dispatch remote commands. Existing
 read-only bridge operations remain read-only; a delivery journal ID is not proof
 that a worker executed a task. Publication/authentication/delivery use only the
 existing supported mechanisms.
+
+</details>
 
 ## Preserve integrated commits during conflict recovery
 
@@ -327,7 +338,7 @@ command and outputs when correcting selection; keep valid assertions unchanged.
 
 ## Integration and immutable release candidates
 
-`main` is the owner's canonical completed-work integration branch. Parallel unfinished work stays on its existing isolated branch; after source review, applicable owning checks and independent review, Root integrates the exact completed change promptly through this existing workflow. Compare its base, dependencies and retained accepted-fix identities before merging or replaying a curated change. A branch label or an ancestor relationship is not a readiness result.
+Work on the owner’s local main checkout with exclusive file ownership. The coordinator reviews each small batch, its base, dependent changes and the actual verification before marking it integrated. Older isolated branches keep their existing history and unfinished work. Reconcile their source and evidence before importing any historical change.
 
 Root initialises or advances local `main` from the identified reviewed integration checkpoint with an expected-old-ref check. An absent local `main` must be created without checking out, resetting or rebasing an active or dirty worktree. Keep source-only staging separate, preserve historical refs and unfinished work, and record the integrated source/evidence and still-open gates in the existing CAS projection. Use the existing review/PR mechanism within the current publication permission; do not create another ledger or integration workflow.
 
@@ -446,9 +457,9 @@ the 268,435,456-byte reserve. Retain the original failure and do not retry when
 only the reserve has been recovered. The existing workflow test entrypoint also
 loads the copy-budget regressions; broad discovery runs each suite once.
 
-## Temporary owner priority — implementation until 03:00 BST, 24 October 2026
+## October implementation window
 
-Read [the latest implementation-window decision](../specification/owner-references/2026-10-23-implementation-window/owner-correction.json). Until **24 October 2026 03:00 Europe/London (02:00 UTC)**, prioritise implementation of feature gaps and basic smoke checks. Defer full acceptance and acceptance-only audits until that time; preserve their queue and evidence. Then resume independent acceptance from the exact latest candidate, unless a newer owner instruction changes the priority. This defers gates; it does not waive them or authorise an unaccepted release. Keep ordinary development, scoped Thunder work and progress reporting moving.
+The timed 24 October implementation window is historical. Its recorded owner decision is retained for interpreting that day’s evidence. Current work follows the 22 November pass and its live acceptance targets. [Historical owner decision](../specification/owner-references/2026-10-23-implementation-window/owner-correction.json)
 
 ## Current execution admission immediately before launch
 
@@ -513,25 +524,12 @@ Historical evidence assets must point to immutable revision-bound snapshots, nev
 
 For a source-export publication, the authoritative `development_candidates.NAME.manifest` must exactly equal `execution_custody.NAME.source.manifest`; the mistaken `source_manifest` shadow is refused. If a candidate declares `tree`, it must equal its actual committed Git tree. These checks run before a publication mutates state; historical read-only records retain their prior semantics. Use the current reviewed candidate's `workflow.py` entrypoint for coordination writes after an upgrade, rather than importing an older worktree helper that lacks the new publication checks. Preserve the original worktree and its uncommitted changes.
 
-## Current implementation-first execution mode
+## Local preview checks and release evidence
 
-The [24 October direct owner override](../specification/owner-references/2026-10-24-implementation-first-until-complete/owner-correction.json) pauses full independent acceptance until all canonical apps are100% implemented or the owner explicitly resumes it. This replaces the earlier timed03:00BST resumption. Prioritise implemented features and fixes, actual compilation and focused basic smoke tests. WIP may enter the development candidate without waiting for acceptance. Keep Accepted estimates frozen and preserve unfinished checks/failures; a build, screenshot or implementation estimate does not grant release acceptance. All specified scope and mandatory native, installation, persistence, shutdown and delivery gates still apply before any future accepted/released claim. Existing historical acceptance evidence is retained.
+Use the implementation owner’s genuine build, focused interactions and native captures to keep the desktop candidate reviewable. Independent acceptance and distribution each have their own gates and receipts. A passed local build, per-app percentage or earlier platform smoke does not complete them.
 
-## Fresh implementation checks during the acceptance pause
+For local workers assign an exclusive path set and a concrete view, route, action and expected state. Record tested capacity, the receiving session and the exact source. On a shared file, wait for transfer before the next writer starts. Integrate in small owned batches on main. A worker’s output must be reviewed against current source and the running app. Keep private model setup, previous ledgers and source archive receipts intact. [Contributor instructions](../../AGENTS.md) · [Earlier team adapter](opencode-teams.current.md)
 
-The current owner pauses full acceptance until all canonical apps are fully implemented or explicit resumption. Run affected fresh normal compilation and focused genuine smoke checks promptly. The complete reviewed toolchain/dependency closure in the `reusable()` section governs evidence reuse; it must not become an acceptance-only gate in front of every fresh Layer1 compile. Keep source/custody/current SDK host and exact command, normal dependency/copy and private writer checks, and the existing memory/disk/time/process safeguards. A fresh result with partial dependency coverage is explicitly PARTIAL and NOT REUSABLE. It grants no product/native/release acceptance and cannot stand in for mandatory future checks. Keep parallel implementation moving while the one physical SDK source is briefly frozen for its actual command.
+## Current development procedures
 
-## Visible local teams
-
-The [OpenCode team adjunct](opencode-teams.md) uses real team-leader session tabs,
-Luna child workers and one Astra supervisor in the existing coordinator ledger.
-Its five-minute leader and thirty-minute supervisor ticks coalesce when busy.
-Astra's five-minute budget is cooperative because the inspected native API has
-no hard per-prompt deadline; do not describe it as enforced. Reconcile uncertain
-creation or prompt receipts before retrying, and revalidate source, scope, model,
-provider and capacity immediately before dispatch. A configured team is not a
-running worker. Follow the [portable handoff](local-handoff.md) and exact source
-receipt; never pull blindly over an active checkout or interrupt Thunder services.
-See the team procedure for commands, native capability limits and actual launch
-gates. This extends the existing CAS projection and coordinator, with no second
-programme supervisor or replacement milestone database.
+These maintained procedures accompany the development workflow. The ARM preflight verifies historical document bytes at their original paths. [Installer delivery](installer-delivery.current.md) · [Source handoff](local-handoff.current.md) · [Worker coordination](opencode-teams.current.md) · [Progress reporting](progress-reporting.current.md)

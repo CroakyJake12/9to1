@@ -1,10 +1,6 @@
 # Partial service-source validation
 
-`Sites.Source.Tests.csproj` compiles the actual Sites domain, store, application,
-hosting services and existing tests, with actual shared abstraction sources and
-Haven.Core. It enables reproducible bounded checks while the normal Sites project
-is blocked by unrelated shared application compilation. No source is copied or
-replaced. Provider, DNS and authorization fixtures remain controlled test doubles.
+The Sites source test project compiles the Sites domain, store, hosting services and tests with their real shared sources and Haven.Core. It isolates those components when the normal solution has an unrelated failure. Provider, DNS and authorisation dependencies in this lane use controlled fixtures. Run the ordinary owning application lane as well when reporting a full product result.
 
 ```sh
 dotnet test eng/service-validation/Sites.Source.Tests.csproj -c Release
@@ -17,6 +13,4 @@ or the full specification acceptance suite. The normal project and baseline
 failures remain required release blockers. Count discovered, executed and skipped
 tests independently; a successful process with no discovered tests is not a pass.
 
-The recovered CAKE ID package has its own documented local Workerd/D1 tests under
-`cloud/cake-id-auth`. It must be reviewed and integrated before those paths exist
-on this candidate. No command here provisions remote infrastructure.
+CAKE ID has a separate local Workerd/D1 test suite in the checked-in service. Its results cover that service’s local composition. Preserve the failure output and revision when comparing it with the ordinary project or a deployed route. [CAKE ID service checks](../../cloud/cake-id-auth/README.md)

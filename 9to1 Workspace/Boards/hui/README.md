@@ -1,10 +1,8 @@
-# Haven Boards HUI projection
+# Boards scene compatibility layer
 
-This directory is the product-rendering side of Haven Boards.
+This directory contains the existing scene and command projections for Boards. The session maps user intent to the board contracts, including selection, allowed mutation and the original document identity. Preserve compatible functionality while composing current first-party presentation in CUI.
 
-`HavenBoardsHuiScene` projects the neutral `HavenBoardSnapshot` contract into Haven UI primitives and emits typed `HavenBoardCommand` mutations back to the application layer. It does **not** reference Flutter, `appflowy-board`, Avalonia, AppFlowy database types, or AppFlowy Cloud.
-
-The scene follows the preserved CakeAI/HavenUI scene API at the reviewed donor boundary: `HavenMarkupParser` creates the static root, while groups/cards are generated with platform-free `Haven.UI` primitives. The platform HUI migration worker remains responsible for moving the shared HUI runtime into CakeOS; this Boards worker does not create a competing runtime.
+Use the retained scene tests to verify the adapter boundary. Then exercise the actual native route for focus, pointer targets, document mutation and save/reopen. A scene rendering on its own is not a full board workflow.
 
 ## Accessibility contract
 
@@ -23,6 +21,4 @@ are the working equivalent and persist through the same typed commands.
 
 The AppFlowy Flutter proof may additionally expose pointer drag-and-drop, but drag is never the sole interaction mechanism.
 
-## Evidence state
-
-The scene is **implemented source**. It is not yet claimed built or runtime-proven because the CakeOS checkout is not currently registered with the desktop Sandbox coordinator and the shared HUI runtime has not yet landed in this branch.
+[Scene session](HavenBoardsHuiSession.cs) · [Scene](HavenBoardsHuiScene.cs) · [Current editor](../app)

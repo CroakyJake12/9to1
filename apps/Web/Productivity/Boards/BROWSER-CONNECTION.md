@@ -1,4 +1,8 @@
-The browser connection uses the existing `BoardsBrowserFeature`, `BoardsBrowserCore`, `BoardsWorkspaceService`, canonical Notes document/notebook IDs, and unchanged IndexedDbNotesRepository. It mounts the existing WriteRetainedSceneControl on the core's actual WriteDocumentEditor, rather than a cloned text model or editor. Register app.boards as DeviceLocal; neither signed-in identity nor a route supplies cloud, Home, Files, or sharing permission.
+# Mounting Boards inside the browser
+
+`BoardsBrowserFeature` supplies the actual workspace service, canonical notebook and document identities, and IndexedDB-backed notes owner. The retained Write scene mounts the existing selected document editor. Follow the selected page into its original controller when diagnosing a stale view, then verify the stored document after reopen. [Browser feature](BoardsBrowserFeature.cs) · [Mounted surface](BoardsBrowserSurface.cs)
+
+The `BoardsBrowserCore` and `BoardsWorkspaceService` retain canonical Notes identities and explicit edit/view checks. Pass the real `WriteDocumentEditor` into `WriteRetainedSceneControl` on each mount so input and persistence still refer to the selected document.
 
 This staged connection exposes the real notebook create, native rich edit/range formatting/undo/redo, save, clean close, saved-notebook list/open, unknown-outcome inspection and fresh-process continuation. The canonical core still enforces read-only/page Edit-View/Locked-Unlocked changes; broader Boards page/layout/live-components/attachments/collaboration/context-menu/import/export UI is outside this connection. Missing Cards CardSet/private-review contracts and Forms browser host authority remain missing; no Notes notebook is presented as a canonical Cards set.
 

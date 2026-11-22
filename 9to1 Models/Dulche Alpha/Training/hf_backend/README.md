@@ -1,6 +1,8 @@
 # Local Hugging Face adapter — bounded second unit
 
-Required flow, pinned before code:
+The adapter takes a sealed local model bundle, a reviewed dataset manifest and an explicit purpose. `LocalSession` performs the update and the checkpoint/restore code preserves the optimizer, model and input identity used to reproduce it. Use the controls below to distinguish a software-only fixture, a real admitted input and a durable resume result. [Local session](adapter.py) · [Restore contract](restore.py)
+
+## Original input, training and checkpoint contract
 
 1. Root registers reviewed dependency roots/source bundle; this package never modifies import paths or installs dependencies. Import alone must not initialize CUDA. Software-only tests construct a tiny random Llama and fixed token arrays to check software differentiation, never a real training dataset or selection signal.
 2. Model loading requires an explicit caller purpose matching the custody `DatasetManifest`, its verified local bytes, and an exact local model bundle whose files match sealed `ArtifactRef` records. Software fixtures retain `software_test_only` purpose and cannot run NF4 or pass as real training. Real training requires genuine admitted data and a verified immutable checkpoint publisher. Only an ordinary Llama causal LM with Safetensors is admitted initially. No remote code, network model lookup, arbitrary architecture or pickle weights.

@@ -1,4 +1,8 @@
-This repository implements the existing eight `INotesRepository` operations over this browser origin's IndexedDB. It uses actual `NotesDocument`, `NotesDocumentValidator`, `NotesTextStatistics`, `NotesDocumentSearch`, `NotesSaveResult`, `NotesVersionInfo`, and `NotesRevisionConflictException`; it defines no alternate document, account, ACL or remote service model.
+# Browser notes storage for Write
+
+`IndexedDbNotesRepository` implements the existing notes repository contract over the browser’s storage transport. Preserve canonical IDs, the expected version and the committed acknowledgement. Verify the reopened document against the same account and key. A completed UI callback alone cannot establish an IndexedDB write. [Repository](IndexedDbNotesRepository.cs) · [Acknowledgement](NotesStorageAcknowledgment.cs)
+
+The eight `INotesRepository` operations reuse `NotesDocumentValidator`, `NotesTextStatistics` and `NotesDocumentSearch`. Preserve `NotesSaveResult`, `NotesVersionInfo` and `NotesRevisionConflictException` so callers can distinguish saved, conflicting or unresolved writes.
 
 Root composition must register `createNotesModule()` from `Services/notes-indexeddb.js` as JS import module `nineToOneNotes`, then inject `new IndexedDbNotesRepository(new BrowserNotesTransport(), new NotesDocumentValidator())` into the existing Write session. The module/repository have device-local lifetime. Store identifiers and receipts are explicitly `indexeddb://nine-to-one-write/...`; they are not filesystem paths or cross-device locations. Origin storage can be cleared or evicted by the browser; no cloud synchronization or provider durability is claimed.
 

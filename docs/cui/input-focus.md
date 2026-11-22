@@ -1,39 +1,9 @@
-# Input focus requests and form actions
+# Request keyboard focus in a CUI form
 
-`Input` accepts two CUI boolean properties, both false by default:
+Use `FocusRequested` for an explicit false-to-true request after the input has been attached and measured. Keep the property false while a form is closed. A true value that persists through a binding refresh must leave ordinary typing undisturbed.
 
-- `FocusRequested`: a false-to-true transition requests keyboard focus after the
-  input is attached and layout has completed. Keeping the value true does not
-  refocus on binding refresh or interrupt typing. Set it false when closing the
-  form, then true when opening it again.
-- `SelectOnFocusRequest`: select the entire value of a text input when that
-  request successfully focuses it. It does not select text on ordinary pointer
-  clicks or subsequent focus changes. Other input types receive focus without
-  text selection.
+Set `SelectOnFocusRequest` when the whole value of a text field should be selected after a successful requested focus. It does not change an ordinary pointer selection. A hidden, disabled, detached or unmeasured target cannot take that request. Cancel it when the view closes and issue a fresh transition after re-opening.
 
-A request made before initial attachment waits for that attachment. False,
-detachment and runtime disposal cancel pending work. The deferred operation
-does not focus a hidden, disabled, nonfocusable or unmeasured input, including
-an input under an invisible or transparent ancestor. A rejected request does
-not silently retry when those gates later change; issue a fresh transition.
-These properties do not create a modal scope or disable surrounding controls.
+A visible enabled button with `DefaultAction="True"` or `CancelAction="True"` handles unconsumed Enter or Escape through its normal action. Expose one active target for each role in the input root and gate underlying forms while a modal is active. Verify keyboard-only operation, nested controls, opening and dismissing the form, and restoring focus to the opener.
 
-Ordinary `Button` controls accept `DefaultAction="True"` and
-`CancelAction="True"`. An unhandled Enter or Escape key respectively activates
-the same button and retained CUI action pipeline as pointer input. Effective
-visibility and enabled state remain authoritative. The host must expose only
-one active button for each role in its input root and gate background forms
-while a foreground form is open. Multiline text inputs retain their handled
-Enter behavior. These roles do not close a window or commit data themselves.
-
-```xml
-<Input Type="Text" Value="{Binding DraftName}"
-       FocusRequested="{Binding ShowRename}" SelectOnFocusRequest="True" />
-<Button Content="Rename" Action="Rename" DefaultAction="True" />
-<Button Content="Cancel" Action="CancelRename" CancelAction="True" />
-```
-
-The visible form/container owns activation; its owner validates the draft and
-implements both actions. CUI owns focus timing, selection and the backend
-keyboard adapter. Applications do not search native descendant controls or
-invoke backend input handlers to implement this flow.
+[Binding and action runtime](../../framework/CUI/Runtime/CuiControlLoader.cs) · [Focused runtime checks](../../framework/CUI/Runtime.Tests)

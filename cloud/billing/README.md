@@ -1,9 +1,8 @@
-# Stripe webhook receipt foundation
+# Billing webhook receipt Worker
 
-This Team C-owned Cloudflare Worker adapter is an incomplete billing foundation.
-It does not activate subscriptions, grant resources, purchase anything or calculate
-prices. `src/stripe-webhook.mjs` exports the actual Worker `fetch` entry point for
-`POST /webhooks/stripe`. No deployment or commercial activation has occurred.
+The Worker fetch entry verifies incoming Stripe webhooks and records their durable receipt for later processing. Check delivery, claim and reconciliation separately when tracing a billing event. Receipt acknowledgement by itself grants no subscription or resource. Keep environment and live/test mode explicit in diagnostics, without disclosing signing or provider credentials. [Webhook entry point](src/stripe-webhook.mjs) · [Receipt processing](src/inbox-processing.mjs)
+
+The fetch handler accepts `POST /webhooks/stripe`. The source-level contract and local receipts below describe the implementation. A hosted activation needs the deployment version, environment bindings and a corresponding received event.
 
 The operator must explicitly bind `BILLING_DB` (D1 API), provide a secret reference
 for `STRIPE_WEBHOOK_SECRET`, and configure `STRIPE_MODE` (`test` or `live`),

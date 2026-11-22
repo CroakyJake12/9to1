@@ -15,6 +15,10 @@ disabled and no inherited `PYTHONPATH`, `LD_PRELOAD` or `LD_LIBRARY_PATH`. This
 keeps arbitrary inherited startup hooks outside the fixed fixture. It is not a
 sandbox against editing the script or replacing the trusted Python executable.
 
+## Review a proof receipt
+
+Match the receipt to the exact caller, profile, fixture mode, authority record and named artifact. Inspect original failures and timeouts before interpreting a later candidate. This source’s fixture checks are independently reproducible in software. The physical proof gates below retain their own provenance. [Safety checks](proof_safety.py) · [Authority owner](proof_authority.py)
+
 ## Implemented policy
 
 - One monotonic start instant precedes fixture dispatch; receiving samples does

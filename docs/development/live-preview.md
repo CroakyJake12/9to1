@@ -6,11 +6,7 @@ same; each approved build occupies its own immutable runtime directory. All runs
 use the same explicitly chosen `HAVEN_DATA_DIR`, preserving the actual profile,
 documents, browser state and logs. It never migrates or deletes application data.
 
-This is a local process helper for the existing development workflow. It does not
-build, invoke models, start a server, schedule work, replace the coordinator, or
-establish a PC connection. The currently observed bridge cannot activate this
-copy: the owner or an already-authorized local worker must run the commands once
-in the PC's graphical user session.
+For an existing development copy, start with `python3 -B eng/development/live_preview.py status --state-root "$HOME/.local/state/9to1-live-preview"`. Compare the reported run ID and source revision with the expected candidate before touching the window. On the development PC, only initialise a profile or state root when establishing a genuinely new installation.
 
 ## First local activation
 
@@ -53,12 +49,7 @@ launcher state and from each other. Existing profile permissions are untouched.
 
 ## Build, approve, reload
 
-The local worker uses its **existing coordinator-admitted SDK allocation and
-guarded incremental build**, serializing through the existing SDK lock. Preserve
-the current source/manifest, memory, disk, process and native resource guards,
-normal CUI compilation, dependencies and `-m:1`/disabled shared compilation.
-The helper deliberately has no `dotnet watch` or arbitrary build-command option:
-an automatic unguarded compiler/restart would evade these boundaries.
+Use the serial SDK lock and low-memory guard from the desktop workflow. On the PC the self-contained Linux x64 publish supplies the native runtime. Capture the exact build inputs and guarded command with its output directory. Retain unrelated dirty work untouched. An approval claiming a committed revision must identify how that exact source was built. Retain admission, exit status and the real build log before freezing this new directory. [Guarded local compiler and publish procedure](workflow.md)
 
 The normal owning command must be `build` or `publish` of
 `9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj`, with an explicit
@@ -277,19 +268,7 @@ required demonstration of a usable app's normal close/reload and native retest.
 
 ## Local worker handoff
 
-Give the existing authorized local worker this instruction:
-
-> Work in `~/Documents/GitHub/9to1` and preserve its dirty source, user data,
-> installed package and existing coordinator. Reconcile the exact source and
-> process before starting. Set up the existing canonical native app once through
-> `live_preview.py`, using the owner's observed profile. For each reported bug:
-> reproduce in this development copy, fix its owned source, run the affected
-> checks and existing guarded incremental owning build into a new immutable slot,
-> retain its genuine receipt, prepare and reload that slot through normal close,
-> then report the loaded revision/hashes and actual result for the same repro.
-> Ask the owner to retest that one fix. Do not make a new installer for each bug,
-> start a second coordinator or model service, bypass a close veto, discard work,
-> or describe source preparation as a successful PC connection or native pass.
+Record the owned run ID, original PID and start ticks, source revision, manifest hash, stable profile, and any pending save or close result. Tell the receiver exactly which visible action succeeded and which UI state remains open. The receiver checks the same run through `status`, verifies the candidate, and requests normal reload only when the original close disposition permits it. Keep the installed package and the current development profile intact.
 
 ## Focused checks
 

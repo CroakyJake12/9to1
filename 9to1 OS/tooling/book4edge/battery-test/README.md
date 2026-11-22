@@ -1,7 +1,6 @@
-# Experimental NP960XMA battery reporting
+# Book4 Edge battery telemetry test
 
-The live desktop displayed 0% and UPower logged invalid readings from
-`qcom-battmgr-bat`. Samsung's EC is the actual battery interface.
+The recorded live desktop showed 0% while UPower received invalid values from `qcom-battmgr-bat`. This target-specific experiment reads the Samsung embedded controller. Compare the resulting battery reading with the boot’s original trace on the same hardware and retain the module identity and observations. The driver attribution and exact source digest follow.
 
 `book4_ec.c` derives from n1c0la84/book4-edge-linux at commit
 `6026e235a389a81f9264cad587c6410d902633ec`,

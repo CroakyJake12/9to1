@@ -1,7 +1,6 @@
-# WinBoat integration
+# WinBoat guest integration
 
-The pinned donor remains under `Source/WinBoat`. No changes to that upstream
-source or claims of an ARM64 Electron/guest-server port are made here.
+The EXE chooser connects to a separately configured WinBoat guest through FreeRDP 3. WinBoat and its Windows guest run on the preparation PC in the documented Book4 Edge topology. Keep the pinned `Source/WinBoat` donor and its notices intact. A successful RDP connection establishes the guest session; check execution of the chosen application independently. [Chooser and guest procedure](../wine/EXE-CHOOSER.md)
 
 The 9to1 EXE chooser now offers a FreeRDP 3 connection to an explicitly configured
 running WinBoat Windows guest. On the Galaxy Book4 Edge, the prepared topology

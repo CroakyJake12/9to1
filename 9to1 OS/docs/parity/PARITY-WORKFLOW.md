@@ -1,15 +1,13 @@
 # Parity-test workflow (laptop integrator)
 
-## 1. Detect
+## 1. Identify the candidate
 
-Fetch and list remote branches. A desktop delivery is a branch (never direct
-main work) with reviewable commits. Record it in DONOR-PARITY-STATUS.md as
-RECEIVED. Never assume a pushed branch is ready.
+Read the active coordinator’s handoff and verify the exact commit and dirty files on canonical main. Record the candidate in the parity ledger with its donor revision and target platform. For a historical branch delivery, compare the two pinned revisions before recording receipt. The source receipt alone records no native result.
 
 ## 2. Inspect
 
-- `git log` the branch: one coherent donor-parity milestone per merge.
-- `git diff` against the integration base: affected paths, donor-parity
+- `git log` the candidate: one reviewable donor-parity change per checkpoint.
+- `git diff` against the named integration base: affected paths, donor-parity
   intent, no unrelated redesign. Reject redesign masquerading as parity.
 - Shared HUI additions get extra scrutiny: reusable, not app-specific hacks.
 
