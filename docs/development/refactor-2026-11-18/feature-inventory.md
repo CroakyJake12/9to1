@@ -24,6 +24,7 @@ On 22 November the shared strip gained app artwork and heavier text (`8185046f4`
 | Surface | Classification | Current user flow |
 | --- | --- | --- |
 | Home gear → Settings → Appearance | Adaptation and partial coverage (SET-001–006, UI-001–017, IX-BASE-008) | The gear exposes labeled Global categories. Appearance, Theme and Accessibility share the original editor and draft. Layout links to Dashboard and offers explicit reload of saved appearance. Back returns to the previous Home section. Accent editing and the remaining Settings destinations are open. |
+| Dashboard and New Tab | Adaptation (HOME-001–005, SHELL-005) | The Dashboard opens through `browse://home/dashboard` with its own title and tab identity. New Tab keeps its search draft through Dashboard selection, close and reopen. Existing Dashboard widgets and New Tab actions retain their owners. |
 
 [Cloud checks and captures](../evidence/atlas-20261122-cloud/README.md)
 

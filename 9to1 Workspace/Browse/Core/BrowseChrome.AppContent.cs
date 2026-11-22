@@ -89,7 +89,7 @@ public sealed partial class BrowseChrome
             || BrowseOmniboxSearchRoute.TryParse(address, out _, out _)
             || (address.Authority == "home" && address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal))
             || (address.Authority == "home" && address.ResourceSegments.Count == 1
-                && address.ResourceSegments[0] is "models" or "events" or "settings" or "library"));
+                && address.ResourceSegments[0] is "dashboard" or "models" or "events" or "settings" or "library"));
     private static bool TryStoredAddress(string value, out AppContentAddress? address)
     {
         if (string.Equals(value, "about:blank", StringComparison.OrdinalIgnoreCase))

@@ -59,7 +59,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         var admissibleSegments = segments.Count == 0 ||
             (isHome && _library is not null && BrowseOmniboxSearchRoute.TryParse(request.Address, out _, out _)) ||
             (isHome && _library is not null && segments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal)) ||
-            (isHome && segments.Count == 1 && (segments[0].Equals("models", StringComparison.Ordinal) ||
+            (isHome && segments.Count == 1 && (segments[0] is "dashboard" or "models" ||
                 _events is not null && segments[0].Equals("events", StringComparison.Ordinal) ||
                 _settings is not null && segments[0].Equals("settings", StringComparison.Ordinal) ||
                 _library is not null && segments[0].Equals("library", StringComparison.Ordinal)));
@@ -92,7 +92,12 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
             _work = new(StopAsync, CleanupAsync);
         }
         public AppContentAddress Address => _request.Address;
-        public string Title => Address.Authority == "home" ? "Home" : "New Tab";
+        public string Title => Address.Authority switch
+        {
+            "home" when Address.ResourceSegments is ["dashboard"] => "Dashboard",
+            "home" => "Home",
+            _ => "New Tab"
+        };
         public string IconKey => "home";
         public event EventHandler? StateChanged;
         public Task? OriginalInitialization { get { lock (_gate) return _initialization; } }

@@ -1,0 +1,61 @@
+{
+  "source_revision": "53f68b49bf317ea9d47087e0358e8ed59ac47843",
+  "renderer": "native Linux Haven apphost on X11 (Xvfb/Openbox)",
+  "profile": "isolated local onboarding, Professional Dark and Blue #4E86FF",
+  "apphost": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "62d49379221d78cf7edd3d11886cfc05e20770b39c834851fa461438b7653a9c",
+    "Haven.runtimeconfig.json": "d9a5ea6e4e95460c1d9cb2db7cb642bbdb028204058c88b10b8f5056022ff44e"
+  },
+  "captures": [
+    {
+      "file": "01-home-before-gear.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "a6e07f70872f811506505bf3d5ecbb989ce0b293a108150000795fada2cc43f3"
+    },
+    {
+      "file": "02-appearance-wide.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "11a437fbb21cdee4b54f3a85d68d9ac9e993ff993a5d6329302466fadcddbd56"
+    },
+    {
+      "file": "05-layout-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "95ab67a2baee573008402852c48133ebf18e49713d708ecb4d614b023328cf2c"
+    },
+    {
+      "file": "06-accessibility-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "34c3d3cf7da14e7d8d4992f0cf3baf69fd191802b04961937739927d8b0b26e8"
+    },
+    {
+      "file": "07-high-contrast-narrow.png",
+      "width": 720,
+      "height": 520,
+      "sha256": "9eeb8a8f303ee4e8fbe20d2e638f055d070d1efc06e43a5f7610c3718aa9bfc2"
+    },
+    {
+      "file": "10-enter-after-return.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "901b1071278e98c3ba6b78137d56036b250c71f974653e3d5a713812eda3924f"
+    },
+    {
+      "file": "12-apps-reopen-by-enter.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "bbd5d9774e4b204557d911078b68c624e719014e93cbbcf2d7eedecf13fa1c4b"
+    },
+    {
+      "file": "17-dashboard-reopen-by-enter.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "bbd5d9774e4b204557d911078b68c624e719014e93cbbcf2d7eedecf13fa1c4b"
+    }
+  ],
+  "normal_close": "Normal WM_DELETE_WINDOW requested, exact scoped main window disappeared, owning apphost exit code 0"
+}

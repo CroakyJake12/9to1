@@ -20,6 +20,8 @@ namespace Haven.Desktop.Views.Pages.Home;
 /// not another shell or tab/session authority. Services remain owned by composition.</summary>
 internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
 {
+    private static readonly AppContentAddress DashboardAddress = AppContentAddress.Parse("browse://home/dashboard");
+
     private readonly BrowseAppContentRequest _request;
     private readonly IModeRegistry _modes;
     private readonly Func<NewDashboardPage> _createDashboard;
@@ -73,7 +75,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         {
             "newtab" => "newtab",
             _ when request.Address.ResourceSegments.Count == 1 &&
-                request.Address.ResourceSegments[0] is "models" or "events" or "settings" or "library" => request.Address.ResourceSegments[0],
+                request.Address.ResourceSegments[0] is "dashboard" or "models" or "events" or "settings" or "library" => request.Address.ResourceSegments[0],
             _ => "apps"
         };
         _work = new(StopAsync, CleanupAsync);
@@ -141,7 +143,16 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
             switch (command)
             {
-                case "home.apps": case "home.dashboard": case "home.models":
+                case "home.dashboard":
+                    await OpenDashboardAsync(original, linked.Token);
+                    break;
+                case "home.apps" when _request.Address == DashboardAddress:
+                    Queue(AppContentAddress.Parse("browse://home"), original);
+                    break;
+                case "home.models" when _request.Address == DashboardAddress:
+                    Queue(AppContentAddress.Parse("browse://home/models"), original);
+                    break;
+                case "home.apps": case "home.models":
                     await SelectAsync(command[5..], original, linked.Token); break;
                 case "home.events":
                     if (_createEvents is null) throw new InvalidOperationException("The Home Events source is unavailable.");
@@ -185,7 +196,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         "events" => "Events", "settings" => "Settings", "library" => "Library", _ => "Apps"
     };
 
-    private async Task SelectAsync(string section, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    private async Task SelectAsync(string section, DesktopOriginalWorkLifetime.Original original, CancellationToken token,
+        string? focusRailButton = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         var generation = ++_selection;
@@ -247,6 +259,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (section != "library") _library?.Deactivate();
         _section = section;
         _railBindings.Refresh();
+        if (focusRailButton is not null)
+            FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
+                .SingleOrDefault(button => button.Name == focusRailButton)?.Focus(NavigationMethod.Tab));
         Set(_searchRow!, "IsVisible", section == "newtab");
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
@@ -315,17 +330,25 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         original.DemandPublication();
     }
 
+    private Task OpenDashboardAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token,
+        string? focusRailButton = null)
+    {
+        token.ThrowIfCancellationRequested();
+        if (_request.Address == DashboardAddress)
+            return _section == "dashboard" ? Task.CompletedTask : SelectAsync("dashboard", original, token, focusRailButton);
+
+        Queue(DashboardAddress, original, newTab: true);
+        return Task.CompletedTask;
+    }
+
     private Task NavigateFromSettingsAsync(bool openDashboard, CancellationToken token)
     {
         if (!IsAlive || _section != "settings") return Task.CompletedTask;
         return _work.RunAsync(async original =>
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
-            await SelectAsync(openDashboard ? "dashboard" : _settingsReturnSection, original, linked.Token);
-            if (!original.IsAcceptedPublicationCurrent || _section == "settings") return;
-            var buttonName = openDashboard ? "home-dashboard" : "home-settings";
-            FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
-                .SingleOrDefault(button => button.Name == buttonName)?.Focus(NavigationMethod.Tab));
+            if (openDashboard) await OpenDashboardAsync(original, linked.Token, focusRailButton: "home-dashboard");
+            else await SelectAsync(_settingsReturnSection, original, linked.Token, focusRailButton: "home-settings");
         });
     }
 
@@ -336,7 +359,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         // once the destination is attached and this is still the latest section change.
         Dispatcher.UIThread.Post(() =>
         {
-            if (IsAlive && _selection == selection && this.IsAttachedToVisualTree()) focus();
+            if (IsAlive && _selection == selection && IsEffectivelyVisible && this.IsAttachedToVisualTree()) focus();
         }, DispatcherPriority.Loaded);
     }
 
@@ -415,12 +438,10 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private void OnConversation(object? sender, Conversation conversation) =>
         StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversation.Id:D}"));
     private void OnManageProviders(object? sender, EventArgs args) => StartNavigation(AppContentAddress.Parse("9to1://home/settings"));
-    private void OnManageApps(object? sender, EventArgs args) => StartSelection("apps");
-    private void OnDiscover(object? sender, EventArgs args) => StartSelection("models");
-    private void StartSelection(string section)
-    {
-        if (IsAlive) _ = _work.RunAsync(original => SelectAsync(section, original, original.Token));
-    }
+    private void OnManageApps(object? sender, EventArgs args) =>
+        StartNavigation(AppContentAddress.Parse("browse://home"));
+    private void OnDiscover(object? sender, EventArgs args) =>
+        StartNavigation(AppContentAddress.Parse("browse://home/models"));
     private void StartNavigation(AppContentAddress address)
     {
         if (IsAlive) _ = _work.RunAsync(original => { Queue(address, original); return Task.CompletedTask; });

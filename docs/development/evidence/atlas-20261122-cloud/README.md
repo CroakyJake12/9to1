@@ -18,3 +18,11 @@ Both interaction cases passed again with headless Skia enabled on `53f68b49bf317
 | --- | --- | --- |
 | Appearance | [1280 × 900 · Professional / Blue](settings/home-settings-appearance-1280x900.png) | [520 × 520 · Professional / Orange](settings/home-settings-appearance-520x520.png) |
 | Layout | [1280 × 900 · Glow / Blue](settings/home-settings-layout-1280x900.png) | [520 × 520 · Professional / Orange](settings/home-settings-layout-520x520.png) |
+
+The same `Haven.dll` ran in an isolated Linux X11 profile. Pointer and keyboard opened the gear, Layout and Accessibility. High contrast retained the stored Blue accent, and Back from Apps immediately restored gear focus. Back from Dashboard restored gear focus when its refresh finished. The receipt preserves that timing difference and the normal window close with exit 0. [Wide Appearance](settings/native/02-appearance-wide.png) · [Narrow Layout](settings/native/05-layout-narrow.png) · [Narrow High contrast](settings/native/07-high-contrast-narrow.png) · [Native receipt](settings/native/receipt.json)
+
+## Dashboard and New Tab identity
+
+The Dashboard rail and the Settings Layout shortcut open `browse://home/dashboard` as its own tab. `browse://newtab` keeps its search input and draft. The genuine Browse and Home controls were exercised in four passing targeted desktop cases, including tab close/reopen, strict private and nested-route refusals, and Settings regression checks. Also ran the existing Files double-click cases. The New Tab variant failed while finding its rail before layout on both this build and the preceding Settings build. The Home variant passed.
+
+Back from Settings now schedules rail focus when the prior section is published, ahead of any Dashboard refresh. The captured Atlas `home-dashboard` and `host-newtab` routes have independent overview and search surfaces. The route change preserves the existing dashboard widgets and New Tab action owner. Clock, presets and remaining New Tab widgets are open.

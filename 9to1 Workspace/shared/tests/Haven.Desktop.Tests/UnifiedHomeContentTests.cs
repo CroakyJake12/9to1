@@ -1646,6 +1646,117 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
+    public async Task Dashboard_rail_opens_a_distinct_native_tab_and_preserves_the_New_Tab_draft()
+    {
+        using var lifetime = new CancellationTokenSource();
+        using var bus = new HavenEventBus();
+        var paths = new LayoutPaths();
+        var limit = TimeSpan.FromSeconds(20);
+        var settings = new EmptySettings();
+        BrowseNativeWorkspace? workspace = null;
+        Task? originalNavigation = null;
+        var home = Factory(new Registry(), lifetime.Token,
+            navigation: (intent, settlement) => workspace!.TryQueueNavigationOriginal(intent, settlement, out originalNavigation),
+            dashboard: () => new NewDashboardPage(bus, null!, null!, null!, null!, settings,
+                new EmptyDashboard(), new EmptyDashboardLayout(), []));
+        var chrome = await BrowseChrome.CreateAsync(paths, internalContentFactory: home,
+            homeProfileId: "dashboard-route-fixture", cancellationToken: lifetime.Token);
+        workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        try
+        {
+            RegisterProductionImageResolver(window);
+            window.Show();
+            await window.InitializeAsync(lifetime.Token).WaitAsync(limit);
+            await chrome.NewTabAsync(false, lifetime.Token).WaitAsync(limit);
+            await RenderPublishedStateAsync();
+
+            var newTab = chrome.State.SelectedTab;
+            Assert.Equal("browse://newtab", newTab.Address.Value);
+            Assert.Equal("New Tab", newTab.Title);
+            var newTabSession = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(
+                chrome.ObserveOriginalAppContent(newTab.Id));
+            var newTabPage = Assert.IsType<UnifiedHomePage>(
+                Assert.IsType<OriginalTabTransientPresentation>(newTabSession.OriginalNativeView).OriginalContent);
+            Assert.True(newTabPage.IsEffectivelyVisible);
+            var search = Assert.Single(newTabPage.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "home-search");
+            Assert.True(search.IsEffectivelyVisible);
+            search.Text = "a search draft";
+            Capture("new-tab");
+
+            var dashboard = HomeRailButton(newTabPage, "home-dashboard", "Dashboard");
+            var center = dashboard.TranslatePoint(new Rect(dashboard.Bounds.Size).Center, window);
+            Assert.NotNull(center);
+            window.MouseMove(center.Value);
+            window.MouseDown(center.Value, MouseButton.Left);
+            window.MouseUp(center.Value, MouseButton.Left);
+            await newTabPage.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.NotNull(originalNavigation);
+            await originalNavigation!.WaitAsync(limit);
+            await RenderPublishedStateAsync();
+
+            var dashboardTab = chrome.State.SelectedTab;
+            Assert.Equal("browse://home/dashboard", dashboardTab.Address.Value);
+            Assert.Equal("Dashboard", dashboardTab.Title);
+            Assert.NotEqual(newTab.Id, dashboardTab.Id);
+            Assert.Equal(BrowseEngineState.NativeApp, dashboardTab.EngineState);
+            Assert.Same(newTabSession, chrome.ObserveOriginalAppContent(newTab.Id));
+            Assert.True(newTabSession.IsPublicationCurrent);
+            Assert.Single(window.GetVisualDescendants().OfType<NewDashboardPage>(), page => page.IsEffectivelyVisible);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<TextBox>(),
+                item => item.Name == "home-search" && item.IsEffectivelyVisible);
+            Capture("dashboard");
+
+            foreach (var invalid in new[] { "browse://newtab/dashboard", "browse://home/dashboard/nested" })
+            {
+                var refused = await chrome.NavigateAsync(invalid, lifetime.Token).WaitAsync(limit);
+                Assert.Equal(dashboardTab.Id, refused.SelectedTabId);
+                Assert.Contains("not registered", refused.Status, StringComparison.Ordinal);
+            }
+            Assert.Throws<NotSupportedException>(() => home.CreateSession(
+                Request("browse://home/dashboard") with { Privacy = BrowserTabPrivacy.Private }));
+
+            await chrome.CloseTabAsync(dashboardTab.Id, lifetime.Token).WaitAsync(limit);
+            await RenderPublishedStateAsync();
+            Assert.Equal(newTab.Id, chrome.State.SelectedTabId);
+            Assert.Same(search, Assert.Single(window.GetVisualDescendants().OfType<TextBox>(),
+                item => item.Name == "home-search" && item.IsEffectivelyVisible));
+            Assert.Equal("a search draft", search.Text);
+            await chrome.ReopenClosedTabAsync(lifetime.Token).WaitAsync(limit);
+            await RenderPublishedStateAsync();
+            Assert.Equal(dashboardTab.Id, chrome.State.SelectedTabId);
+            Assert.Equal(dashboardTab.Address, chrome.State.SelectedTab.Address);
+            Assert.Equal("Dashboard", chrome.State.SelectedTab.Title);
+            Assert.Same(newTabSession, chrome.ObserveOriginalAppContent(newTab.Id));
+            Assert.Single(window.GetVisualDescendants().OfType<NewDashboardPage>(), page => page.IsEffectivelyVisible);
+        }
+        finally
+        {
+            window.Close();
+            if (window.OriginalClosePreparation is { } preparation) Assert.True(await preparation.WaitAsync(limit));
+            Dispatcher.UIThread.RunJobs();
+            Assert.NotNull(window.OriginalClose);
+            await window.OriginalClose!.WaitAsync(limit);
+            Directory.Delete(paths.DataDirectory, recursive: true);
+        }
+
+        async Task RenderPublishedStateAsync()
+        {
+            await Task.WhenAll(workspace!.OriginalNotifications).WaitAsync(limit);
+            SettleFixtureLayout(window);
+        }
+
+        void Capture(string route)
+        {
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES"))) return;
+            using var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+            CaptureOptionalFrame(window, frame, $"dashboard-route-{route}-{frame.PixelSize.Width}x{frame.PixelSize.Height}",
+                "Browse-hosted Home route fixture, isolated Dashboard sources");
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable()
     {
         using var lifetime = new CancellationTokenSource();
