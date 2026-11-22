@@ -1,6 +1,6 @@
 {
  "ledger": "ATLAS-20261120 runtime task ledger",
- "updated": "2026-11-21T18:44:42+00:00",
+ "updated": "2026-11-21T22:00:49+00:00",
  "tasks": [
   {
    "id": "G00-T01",
@@ -1287,6 +1287,17 @@
    "runtime_worker_id": null,
    "evidence": "/tmp/browse-baseline-pagecommit.log (baseline FAIL), /tmp/browse-flake-1/2.log (2x FAIL current tree), /tmp/browse-after-guard.log (only failure at 188/1). | 2026-11-21T18:44:42+00:00: coordinator rerun full Browse lane Passed 189 / Failed 0 / Skipped 0 (/tmp/browse-final-verify.log) - lane now fully green for the first time tonight (178/9 -> 189/0 across the two worker fixes plus the 2 added close-prep tests).",
    "updated": "2026-11-21T18:24:15+00:00"
+  },
+  {
+   "id": "DEF-T04",
+   "parent_goal_id": "ATLAS-20261120",
+   "title": "Owner directives 21 Nov 20:3x-21:4x: (a) Force quit on the refusal screen (shipped g09, OWNER-USED LIVE at 20:26:42 with recorded election); (b) Save/Don't-save/Keep-open prompt replacing blocking refusals (design worker ses_dffebccfcffea on 27B lane); (c) action errors as auto-dismissing notifications, not persistent banner (g10); (d) 'happens when closing some tabs' = begin-side lease churn vetoing CloseTab un-retried (g10 settle re-ask).",
+   "status": "a_shipped_owner_verified_b_in_design_c_shipped_d_test_verified_live_not_run",
+   "priority": 0,
+   "preferred_owner_role": "coordinator",
+   "runtime_worker_id": "ses_dffebccfcffeaGRTC4dkwqHxTt",
+   "evidence": "g10 8da96dbb3 RUNNING. Xlib screen captures (/tmp/g10clean.png): app renders with NO persistent action banner; refusal election 'owner elected FORCE QUIT' in close-preflight 20:26:42; Browse 189/189 + CUI 777/782 == stashed baseline. NOT RUN honestly: live X-click close of a real tab (fractional 1.7x display scaling defeated three xdotool coordinate attempts; test-lane churn tests stand in) and the 6s dismissal animation (framework code + suite reviewed, no pinned visual). Window-cohort close with churning Write doc still vetoes after its 3 re-asks - that is exactly what the Save/discard dialog design (b) targets; thermal watchdog paused the first attempt at 21:3x, lane resumed via /api/thermal_resume at 21:4x (47C, no throttle bits).",
+   "updated": "2026-11-21T22:00:49+00:00"
   }
  ]
 }
