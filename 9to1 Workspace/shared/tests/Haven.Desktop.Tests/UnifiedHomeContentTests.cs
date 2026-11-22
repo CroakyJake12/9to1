@@ -13,6 +13,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -447,7 +448,7 @@ public sealed class UnifiedHomeContentTests
         var root = Path.Combine(Path.GetTempPath(), "home-settings-route-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var file = Path.Combine(root, "preferences.json");
-        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"retained-model\"}");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"havenUiAppearance\":2,\"overrideAccentColour\":true,\"accentColourName\":\"Blue\",\"defaultModel\":\"retained-model\"}");
         var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
             UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
         using var lifetime = new CancellationTokenSource();
@@ -460,13 +461,19 @@ public sealed class UnifiedHomeContentTests
             await session.InitializeAsync();
             var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
             window = Show(session.OriginalNativeView);
-            page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-settings")
-                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var gear = HomeRailButton(page, "home-settings", "Settings");
+            ClickSettingsButton(window, gear);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.NotNull(settings);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            Assert.Contains(settings!.GetVisualDescendants().OfType<Control>(), control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
+            var appearance = SettingsControl<Button>(settings!, "home-settings-appearance");
+            var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
+            Assert.True(fragment.IsEffectivelyVisible);
+            Assert.True(appearance.IsFocused);
+            Assert.True(SettingsCategorySelected(appearance));
+            CaptureSettingsIfRequested(window, "appearance", source);
+
             AppearanceOption(settings, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
@@ -477,10 +484,60 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal("Glow", HomeNativePreferenceFile.Resolve(saved,
                 new(HomeDataScope.DeviceLocal, "original-home-profile"), UserPreferencesService.ProjectLegacyHomeTheme).ThemeName);
             Assert.Single(Directory.EnumerateFiles(root, "*.json"));
-            await page.DispatchAsync("home.apps", null);
-            await page.DispatchAsync("home.settings", null);
+
+            var savedBytes = await File.ReadAllBytesAsync(file, testToken);
+            var brightness = SettingsControl<Slider>(settings, "home-brightness");
+            var savedBrightness = brightness.Value;
+            Assert.True(brightness.Focus());
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            var draftBrightness = brightness.Value;
+            Assert.True(draftBrightness > savedBrightness);
+
+            var layout = SettingsControl<Button>(settings, "home-settings-layout");
+            ClickSettingsButton(window, layout);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.True(SettingsCategorySelected(layout));
+            Assert.False(SettingsCategorySelected(appearance));
+            Assert.True(SettingsControl<Button>(settings, "home-settings-open-dashboard").IsEffectivelyVisible);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-reload-appearance").IsEffectivelyVisible);
+            CaptureSettingsIfRequested(window, "layout", source);
+
+            ClickSettingsButton(window, appearance);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.True(SettingsCategorySelected(appearance));
+            Assert.Same(fragment, SettingsControl<CuiContainerControl>(settings, "home-appearance-settings"));
+            Assert.Equal(draftBrightness, brightness.Value);
+            Assert.Equal(savedBytes, await File.ReadAllBytesAsync(file, testToken));
+
+            ClickSettingsButton(window, SettingsControl<Button>(settings, "home-settings-back"));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.DoesNotContain(page.GetVisualDescendants(), control => ReferenceEquals(control, settings));
+            Assert.True(gear.IsFocused);
+            Assert.True(SettingsCategorySelected(HomeRailButton(page, "home-apps", "Apps")));
+
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+            Assert.True(SettingsControl<Button>(settings, "home-settings-appearance").IsFocused);
+            Assert.Equal(draftBrightness, brightness.Value);
+
+            ClickSettingsButton(window, layout);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, SettingsControl<Button>(settings, "home-settings-reload-appearance"));
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, appearance);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
+            Assert.Equal(savedBrightness, brightness.Value);
+            Assert.Equal(savedBytes, await File.ReadAllBytesAsync(file, testToken));
+
             Assert.True(await session.TryPrepareToCloseAsync());
             await session.CloseAndDrainAsync();
             Assert.True(session.CanRetireOriginalView);
@@ -501,7 +558,7 @@ public sealed class UnifiedHomeContentTests
     {
         var root = Path.Combine(Path.GetTempPath(), "home-settings-short-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root); var file = Path.Combine(root, "preferences.json");
-        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"havenUiAppearance\":2,\"overrideAccentColour\":true,\"accentColourName\":\"Orange\"}");
         var initial = await File.ReadAllBytesAsync(file);
         var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
             UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
@@ -516,10 +573,59 @@ public sealed class UnifiedHomeContentTests
             await session.InitializeAsync();
             window = new Window { Width = 520, Height = 520, Content = session.OriginalNativeView };
             window.Show(); Layout(); Assert.NotNull(settings);
-            var fragment = Assert.Single(settings!.GetVisualDescendants().OfType<CuiContainerControl>(),
-                control => CuiRuntimeIdentity.GetStableId(control) == "id:home-appearance-settings");
+            var appearance = SettingsControl<Button>(settings!, "home-settings-appearance");
+            var theme = SettingsControl<Button>(settings, "home-settings-theme");
+            var layout = SettingsControl<Button>(settings, "home-settings-layout");
+            Assert.True(appearance.Focus());
+            CaptureSettingsIfRequested(window, "appearance", source);
+            PressSettingsKey(window, PhysicalKey.Tab);
+            Assert.True(theme.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowDown);
+            Layout();
+            Assert.True(layout.IsFocused);
+            var nav = SettingsControl<CuiContainerControl>(settings, "home-settings-nav");
+            var navScroll = Assert.IsType<ScrollViewer>(nav.Child);
+            Assert.True(navScroll.Offset.Y > 0);
+            Assert.False(SettingsCategorySelected(layout));
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(layout));
+            CaptureSettingsIfRequested(window, "layout", source);
+
+            var accessibility = SettingsControl<Button>(settings, "home-settings-accessibility");
+            PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(accessibility.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(accessibility));
+            var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
             Assert.Equal("Vertical Stack", fragment.LayoutType);
             var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
+            var accessibilityPanel = SettingsControl<CuiContainerControl>(settings, "home-appearance-accessibility");
+            var accessibilityOrigin = accessibilityPanel.TranslatePoint(default, scroll)!.Value;
+            Assert.True(scroll.Offset.Y > 0);
+            Assert.InRange(accessibilityOrigin.Y, -accessibilityPanel.Bounds.Height + 1, scroll.Viewport.Height - 1);
+
+            PressSettingsKey(window, PhysicalKey.Home);
+            var global = SettingsControl<Button>(settings, "home-settings-global");
+            Assert.True(global.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            Layout();
+            Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(global));
+            Assert.DoesNotContain(settings.GetVisualDescendants(), control => ReferenceEquals(control, theme));
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            Layout();
+            Assert.Equal("Expanded", AutomationProperties.GetItemStatus(global));
+            Assert.Contains(settings.GetVisualDescendants(), control => ReferenceEquals(control, theme));
+            Assert.True(theme.IsEffectivelyVisible);
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            Assert.True(appearance.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(appearance));
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.VerticalScrollBarVisibility);
             Assert.True(scroll.Viewport.Height > 0 && scroll.Viewport.Height <= 520);
@@ -544,6 +650,38 @@ public sealed class UnifiedHomeContentTests
             try { await session.CloseAndDrainAsync(); }
             finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
         }
+    }
+
+    private static T SettingsControl<T>(Control root, string id) where T : Control =>
+        Assert.Single(root.GetVisualDescendants().OfType<T>(), control => CuiRuntimeIdentity.GetStableId(control) == "id:" + id);
+
+    private static bool SettingsCategorySelected(Button button) =>
+        Assert.IsType<bool>(CuiPropertyPresentation.For(button).Resolve("Selected").Value);
+
+    private static void ClickSettingsButton(Window window, Button button)
+    {
+        var center = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window);
+        Assert.NotNull(center);
+        window.MouseMove(center.Value);
+        window.MouseDown(center.Value, MouseButton.Left);
+        window.MouseUp(center.Value, MouseButton.Left);
+    }
+
+    private static void PressSettingsKey(Window window, PhysicalKey key)
+    {
+        window.KeyPressQwerty(key, RawInputModifiers.None);
+        window.KeyReleaseQwerty(key, RawInputModifiers.None);
+    }
+
+    private static void CaptureSettingsIfRequested(Window window, string section, NativeHomeThemePreferences source)
+    {
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES"))) return;
+        using var frame = window.CaptureRenderedFrame();
+        Assert.NotNull(frame);
+        var current = source.Context.Current;
+        var accent = current.EffectiveAccent.ResolveColour("app.home") ?? "Home default";
+        CaptureOptionalFrame(window, frame, $"home-settings-{section}-{frame.PixelSize.Width}x{frame.PixelSize.Height}",
+            $"UnifiedHome Settings route, isolated fixture theme {current.Theme.Name}, accent {accent}", current.Appearance);
     }
 
     [AvaloniaFact]

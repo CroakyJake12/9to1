@@ -3,6 +3,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -49,6 +50,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private HomeLibraryDestinationPage? _library;
     private Control? _appsView;
     private string _section;
+    private string _settingsReturnSection = "apps";
     private long _selection;
     private Task? _initialization;
     private Task<bool>? _preparation;
@@ -147,7 +149,13 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 case "home.settings":
                     if (_createSettings is null) throw new InvalidOperationException("The Home Settings owner is unavailable.");
                     if (_request.Address.Authority == "newtab") Queue(AppContentAddress.Parse("browse://home/settings"), original, false);
-                    else await SelectAsync("settings", original, linked.Token);
+                    else
+                    {
+                        if (_section != "settings") _settingsReturnSection = _section;
+                        await SelectAsync("settings", original, linked.Token);
+                        if (original.IsAcceptedPublicationCurrent)
+                            FocusAfterSelection(() => _settings?.FocusCategory());
+                    }
                     break;
                 case "home.library":
                     if (_createLibrary is null) throw new InvalidOperationException("The Home Library owner is unavailable.");
@@ -211,8 +219,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (section == "settings")
         {
             if (_settings is null)
-                original.RunAcceptedPublicationCallback(() => _settings = (_createSettings
-                    ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))());
+                original.RunAcceptedPublicationCallback(() =>
+                {
+                    _settings = (_createSettings ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))();
+                    _settings.NavigateHomeAsync = NavigateFromSettingsAsync;
+                });
             if (!original.IsAcceptedPublicationCurrent) return;
             var settings = _settings ?? throw new InvalidOperationException("The Home Settings owner was not acquired.");
             await original.AwaitAsync(settings.ActivateAsync(token));
@@ -302,6 +313,31 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         }
         if (!IsAlive || generation != _selection) return;
         original.DemandPublication();
+    }
+
+    private Task NavigateFromSettingsAsync(bool openDashboard, CancellationToken token)
+    {
+        if (!IsAlive || _section != "settings") return Task.CompletedTask;
+        return _work.RunAsync(async original =>
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
+            await SelectAsync(openDashboard ? "dashboard" : _settingsReturnSection, original, linked.Token);
+            if (!original.IsAcceptedPublicationCurrent || _section == "settings") return;
+            var buttonName = openDashboard ? "home-dashboard" : "home-settings";
+            FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
+                .SingleOrDefault(button => button.Name == buttonName)?.Focus(NavigationMethod.Tab));
+        });
+    }
+
+    private void FocusAfterSelection(Action focus)
+    {
+        var selection = _selection;
+        // The ContentPresenter attaches Home destinations during layout. Only transfer focus
+        // once the destination is attached and this is still the latest section change.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (IsAlive && _selection == selection && this.IsAttachedToVisualTree()) focus();
+        }, DispatcherPriority.Loaded);
     }
 
     private Control BuildAppsView()

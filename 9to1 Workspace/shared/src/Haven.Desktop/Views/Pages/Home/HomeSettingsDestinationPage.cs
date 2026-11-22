@@ -1,5 +1,9 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -20,6 +24,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly DesktopOriginalWorkLifetime _work;
+    private readonly Button[] _categoryButtons;
+    private string _category = "appearance";
+    private bool _globalExpanded = true;
     private Task? _initialization;
     private Task<bool>? _preparation;
     private bool _active, _unavailable, _stopped;
@@ -37,18 +44,25 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _admit = admit ?? throw new ArgumentNullException(nameof(admit));
         _work = new(StopAsync, CleanupAsync);
-        var document = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
-        var theme = document.Components.Single(component => component.IsThemeScope);
-        var fragment = Descendants(theme).Single(component => component.AuthoredId == "home-appearance-settings");
-        var scope = new CuiComponent(theme.Type, theme.Name, theme.Classes, theme.Properties, theme.Actions,
-            [fragment], theme.Condition, theme.List, theme.Span, theme.DefaultTheme, theme.Repeat,
-            theme.ElseChildren, theme.Groups, theme.IsDefinition, theme.PropertyRegion);
         _loader.SetThemePreferenceContext(source.Context);
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
-        var loaded = _loader.TryLoad(document with { Components = [scope] });
+        _categoryButtons = new[] { "global", "appearance", "theme", "layout", "accessibility" }
+            .Select(category =>
+            {
+                var button = new Button();
+                _loader.BindAuthoredControl("home-settings-" + category, _ => button);
+                return button;
+            }).ToArray();
+        PublishCategory();
+        ApplyResponsiveLayout(double.PositiveInfinity);
+        var loaded = _loader.TryLoad(LoadSettingsDocument());
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The canonical Home Appearance fragment could not be rendered.");
+            throw new InvalidDataException("Home Settings could not be rendered: " + string.Join("; ",
+                loaded.Diagnostics.Select(item => item.Code + " " + item.Message)));
         _loader.WireBindings(loaded.Root); Content = loaded.Root;
+        PublishCategory();
+        SizeChanged += (_, args) => ApplyResponsiveLayout(args.NewSize.Width);
+        AddHandler(KeyDownEvent, OnCategoryKeyDown, RoutingStrategies.Tunnel);
         _bindings.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
         _source.Changed += OnSourceChanged;
         RefreshBindings();
@@ -59,23 +73,54 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal Task? OriginalClose => _work.OriginalClose;
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
     internal NativeHomeThemePreferences.SettingsWriteOutcome? LastWrite { get; private set; }
+    internal Func<bool, CancellationToken, Task>? NavigateHomeAsync { get; set; }
 
     internal Task ActivateAsync(CancellationToken token)
     {
-        Dispatcher.UIThread.VerifyAccess(); _active = true;
+        Dispatcher.UIThread.VerifyAccess();
+        if (!_active)
+        {
+            _category = "appearance";
+            _globalExpanded = true;
+            PublishCategory();
+        }
+        _active = true;
         return _work.RunAsync(original => RefreshAsync(original, token), actual => _initialization ??= actual);
     }
     internal void Deactivate()
     { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
 
-    public bool? IsActionAvailable(string command) => IsAlive && _active && !IsBusy && !_unavailable &&
-        command is "ApplyHomeAppearance" or "RefreshHomeAppearance";
+    internal void FocusCategory() => _categoryButtons[1].Focus(NavigationMethod.Tab);
+
+    public bool? IsActionAvailable(string command) => IsAlive && _active && (command switch
+    {
+        "SettingsBack" or "SettingsOpenDashboard" => NavigateHomeAsync is not null,
+        "SettingsGlobal" or "SettingsAppearance" or "SettingsTheme" or "SettingsLayout" or "SettingsAccessibility" => true,
+        "ApplyHomeAppearance" or "RefreshHomeAppearance" => !IsBusy && !_unavailable,
+        _ => false
+    });
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
-        if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Appearance action is unavailable.");
+        if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Settings action is unavailable.");
+        switch (command)
+        {
+            case "SettingsBack":
+            case "SettingsOpenDashboard":
+                return new(NavigateHomeAsync!(command == "SettingsOpenDashboard", cancellationToken));
+            case "SettingsGlobal":
+                _globalExpanded = !_globalExpanded;
+                PublishCategory();
+                return ValueTask.CompletedTask;
+            case "SettingsAppearance":
+            case "SettingsTheme":
+            case "SettingsLayout":
+            case "SettingsAccessibility":
+                SelectCategory(command["Settings".Length..].ToLowerInvariant());
+                return ValueTask.CompletedTask;
+        }
         parameter = NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _bindings);
         return new(_work.RunAsync(async original =>
         {
@@ -138,6 +183,105 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                     }
             }
         }));
+    }
+
+    private static CuiDocument LoadSettingsDocument()
+    {
+        using var stream = typeof(HomeSettingsDestinationPage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Settings.cui")
+            ?? throw new InvalidDataException("The Home Settings document is missing.");
+        using var reader = new StreamReader(stream);
+        var parser = new CuiRichParser();
+        var document = parser.Parse(reader.ReadToEnd(), "HomeSettings.cui");
+        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The Home Settings document is invalid.");
+        var home = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
+        var appearance = home.Components
+            .SelectMany(component => component.DescendantsAndSelf())
+            .Single(component => component.AuthoredId == "home-appearance-settings");
+        return document with
+        {
+            Actions = home.Actions,
+            Components = document.Components.Select(IncludeAppearance).ToArray()
+        };
+
+        CuiComponent IncludeAppearance(CuiComponent component) => new(component.Type, component.Name,
+            component.Classes, component.Properties, component.Actions,
+            component.AuthoredId == "home-settings-appearance-host" ? [appearance] : component.Children.Select(IncludeAppearance).ToArray(),
+            component.Condition, component.List, component.Span, component.DefaultTheme, component.Repeat,
+            component.ElseChildren, component.Groups, component.IsDefinition, component.PropertyRegion)
+        { Text = component.Text, TextParts = component.TextParts };
+    }
+
+    private void ApplyResponsiveLayout(double width)
+    {
+        var narrow = width < 720;
+        _bindings.Set("SettingsColumns", narrow ? "1fr" : "220 1fr");
+        _bindings.Set("SettingsRows", narrow ? "Auto 1fr" : "1fr");
+        _bindings.Set("SettingsContentRow", narrow ? 1 : 0);
+        _bindings.Set("SettingsContentColumn", narrow ? 0 : 1);
+        _bindings.Set("SettingsNavHeight", narrow ? 176d : double.PositiveInfinity);
+    }
+
+    private void PublishCategory()
+    {
+        _bindings.Set("SettingsGlobalExpanded", _globalExpanded);
+        _bindings.Set("SettingsGlobalLabel", _globalExpanded ? "▾  Global" : "▸  Global");
+        _bindings.Set("SettingsShowsAppearance", _category != "layout");
+        _bindings.Set("SettingsLayoutSelected", _category == "layout");
+        _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
+        _bindings.Set("SettingsThemeSelected", _category == "theme");
+        _bindings.Set("SettingsAccessibilitySelected", _category == "accessibility");
+        AutomationProperties.SetItemStatus(_categoryButtons[0], _globalExpanded ? "Expanded" : "Collapsed");
+        foreach (var button in _categoryButtons.Skip(1))
+            AutomationProperties.SetItemStatus(button, button.Name == "home-settings-" + _category ? "Current page" : null);
+    }
+
+    private void SelectCategory(string category)
+    {
+        _category = category;
+        PublishCategory();
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_active || !IsAlive || _category != category || category == "layout") return;
+            var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
+                .Single(control => control.Name == "home-appearance-settings");
+            if (category == "appearance")
+            {
+                appearance.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.ScrollToHome();
+                return;
+            }
+            var anchor = category == "theme" ? "home-theme-gallery" : "home-appearance-accessibility";
+            appearance.GetVisualDescendants().OfType<Control>().First(control => control.Name == anchor).BringIntoView();
+        }, DispatcherPriority.Loaded);
+    }
+
+    private void OnCategoryKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (!_active || args.KeyModifiers != KeyModifiers.None ||
+            TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not Button focused) return;
+        var index = Array.IndexOf(_categoryButtons, focused);
+        if (index < 0) return;
+        var last = _globalExpanded ? _categoryButtons.Length - 1 : 0;
+        var next = args.Key switch
+        {
+            Key.Up => Math.Max(0, index - 1),
+            Key.Down => Math.Min(last, index + 1),
+            Key.Home => 0,
+            Key.End => last,
+            Key.Left when index > 0 => index == 1 ? 0 : 1,
+            Key.Left when _globalExpanded => CollapseGlobal(),
+            Key.Right when index == 0 && !_globalExpanded => ExpandGlobal(),
+            Key.Right when index == 0 => 1,
+            Key.Right when index == 1 => 2,
+            _ => -1
+        };
+        if (next < 0) return;
+        args.Handled = true;
+        _categoryButtons[next].Focus(NavigationMethod.Directional);
+        _categoryButtons[next].BringIntoView();
+
+        int CollapseGlobal() { _globalExpanded = false; PublishCategory(); return 0; }
+        int ExpandGlobal() { _globalExpanded = true; PublishCategory(); return 0; }
     }
 
     private async Task<bool> IsAdmittedAsync(CancellationToken token)
@@ -305,8 +449,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         Dispatcher.UIThread.VerifyAccess();
         if (!_stopped) throw new InvalidOperationException("The original Settings actions must settle before detachment.");
+        NavigateHomeAsync = null;
         Content = null; return Task.CompletedTask;
     }
-    private static IEnumerable<CuiComponent> Descendants(CuiComponent node) =>
-        new[] { node }.Concat(node.Children.SelectMany(Descendants)).Concat(node.ElseChildren.SelectMany(Descendants));
 }

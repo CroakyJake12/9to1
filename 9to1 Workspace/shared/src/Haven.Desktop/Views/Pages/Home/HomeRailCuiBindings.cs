@@ -42,6 +42,7 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
             "rail.dashboardSelected" => section == "dashboard",
             "rail.modelsSelected" => section == "models",
             "rail.settingsSelected" => section == "settings",
+            "rail.homeVisible" => section != "settings",
             "rail.eventsSelected" => section == "events",
             "rail.librarySelected" => section == "library",
             "rail.newtabSelected" => section == "newtab",

@@ -302,7 +302,7 @@
                         </Container>
                         <Button id="home-display-apply" action="ApplyDisplayLevels" Content="Apply display settings" IsEnabled="{Binding HomeCanApplyLevels, fallback=false}" HorizontalAlignment="Right" FontWeight="750" />
                       </Container>
-                      <Container Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="12">
+                      <Container id="home-appearance-accessibility" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="12">
                         <Text Text="Accessibility" FontSize="18" FontWeight="750" />
                         <Repeat id="home-accessibility-options" Source="{Binding HomeAccessibilityChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
                           <Button id="home-accessibility-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" FontWeight="700" Padding="14 8" Margin="0 0 6 4" />

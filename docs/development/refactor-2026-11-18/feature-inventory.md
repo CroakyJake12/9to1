@@ -19,6 +19,14 @@ The owner’s 22 November v4 Atlas and bundled four-volume specification govern 
 
 On 22 November the shared strip gained app artwork and heavier text (`8185046f4`). The Home Appearance gallery, independent brightness and colour contrast controls, keyboard-adjustable pill sliders and material fixes landed through `9235cca81`. Native checks included theme switching, persistence and restoring the development profile to Glow, SuperDark and 50/50. The local report records 76 focused CUI and 12 desktop test passes. Its existing Home failures, the separate Windows build errors and the Write close refusal remain recorded under their original checks. [22 November checkpoint](../../../work/coordination/atlas-20261122/pass-state.json)
 
+### Cloud continuation
+
+| Surface | Classification | Current user flow |
+| --- | --- | --- |
+| Home gear → Settings → Appearance | Adaptation and partial coverage (SET-001–006, UI-001–017, IX-BASE-008) | The gear exposes labeled Global categories. Appearance, Theme and Accessibility share the original editor and draft. Layout links to Dashboard and offers explicit reload of saved appearance. Back returns to the previous Home section. Accent editing and the remaining Settings destinations are open. |
+
+[Cloud checks and captures](../evidence/atlas-20261122-cloud/README.md)
+
 ## Actual implementation map (code-observed 18 Nov)
 
 | Area | Real location | Notes |
