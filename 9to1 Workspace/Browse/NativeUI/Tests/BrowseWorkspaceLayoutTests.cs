@@ -60,9 +60,9 @@ public sealed partial class BrowseNativeUiTests
     }
 
     [AvaloniaFact]
-    public async Task Eleven_tabs_use_real_overflow_arrows_without_a_scrollbar_and_keep_selection_close_and_drag_targets()
+    public async Task Overflowing_tabs_use_real_overflow_arrows_without_a_scrollbar_and_keep_selection_close_and_drag_targets()
     {
-        var ids = Enumerable.Range(0, 11).Select(_ => Guid.NewGuid()).ToArray();
+        var ids = Enumerable.Range(0, 14).Select(_ => Guid.NewGuid()).ToArray();
         var stamp = DateTimeOffset.UtcNow;
         var session = new NativeDragSession(new BrowseTabSessionProjection(ids.Select((id, index) =>
             new BrowserTabState(id, "Tab " + (index + 1), "https://tabs.example/" + index,
@@ -128,7 +128,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.NotNull(workspace.OriginalCommand); await Observe(workspace.OriginalCommand!, window);
             await JoinTabNotificationsAsync(workspace, window); Layout();
             Assert.DoesNotContain(chrome.State.Tabs, tab => tab.Id == ids[^1]);
-            Assert.Equal(ids.Take(10), chrome.State.Tabs.Select(tab => tab.Id));
+            Assert.Equal(ids[..^1], chrome.State.Tabs.Select(tab => tab.Id));
             await Retire(window);
 
             void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
@@ -140,7 +140,7 @@ public sealed partial class BrowseNativeUiTests
     [InlineData(720)]
     [InlineData(1440)]
     [InlineData(2048)]
-    public async Task Creating_eleven_tabs_reveals_the_selected_full_row_without_focus_theft_or_manual_scroll_snapback(int width)
+    public async Task Creating_overflowing_tabs_reveals_the_selected_full_row_without_focus_theft_or_manual_scroll_snapback(int width)
     {
         var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory());
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
@@ -156,14 +156,14 @@ public sealed partial class BrowseNativeUiTests
             var firstId = chrome.State.SelectedTabId;
             var add = Find(window, "BrowseNewTabButton");
             Assert.True(add.Focus(), "The new-tab action must genuinely hold focus before testing its retention.");
-            for (var index = 0; index < 10; index++)
+            for (var index = 0; index < 13; index++)
             {
                 await Click(window, workspace, add);
                 await JoinTabNotificationsAsync(workspace, window); Layout();
                 AssertSelectedRowVisible();
                 Assert.True(add.IsFocused, "Revealing a selected tab must not move keyboard focus.");
             }
-            Assert.Equal(11, chrome.State.Tabs.Count);
+            Assert.Equal(14, chrome.State.Tabs.Count);
             Assert.True(scroll.Offset.X > 0);
             Assert.Equal(ScrollBarVisibility.Hidden, scroll.HorizontalScrollBarVisibility);
             var lastId = chrome.State.SelectedTabId;
