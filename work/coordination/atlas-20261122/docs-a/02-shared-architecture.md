@@ -1,0 +1,23 @@
+# 02-shared-architecture
+
+- `9to1 Workspace/shared/README.md` — Haven native host and shared services; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/ARCHITECTURE.md` — Architecture of the shared native application; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/BROWSER-AUTOMATION-SAFETY.md` — Browser automation permissions and lifetime; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/BUILT-IN-DEVELOPER-TOOLS.md` — Inspect the running desktop interface; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/CODE-INTELLIGENCE.md` — Language services in the development workspace; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/CURRENT-REQUIREMENTS.md` — Product and engineering requirements for shared code; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/HAVENOS-GNOME-PLATFORM.md` — GNOME integration in the native OS image; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/HAVENOS-LLAMA-CPP-RUNTIME.md` — Local inference provider integration; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/README.md` — Shared application developer documentation; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/architecture/README.md` — Shared architecture reference; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/architecture/agent-observation-retirement.md` — Retire an observed agent operation; source owners and local destinations checked. Rechecked observer and producer outcomes.
+- `9to1 Workspace/shared/docs/architecture/repository-structure.md` — Repository structure for shared native code; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/architecture/state-and-persistence.md` — State and persistence in native Haven; source owners and local destinations checked. Rechecked schema and restore order.
+- `9to1 Workspace/shared/docs/architecture/system-map.md` — Map a product action to its owner; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/architecture/windows-native-personal-task-recovery.md` — Recover a personal task on Windows; source owners and local destinations checked. Rechecked windows activation and private storage.
+- `9to1 Workspace/shared/docs/architecture/write-libreoffice-engine.md` — Write and the LibreOfficeKit engine boundary; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/development/README.md` — Working in the shared solution; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/development/adding-a-feature.md` — Add or change a native feature; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/development/common-mistakes.md` — Frequent native integration defects; source owners and local destinations checked.
+- `9to1 Workspace/shared/docs/development/testing.md` — Test a change to native Haven; source owners and local destinations checked.
+- `9to1 Workspace/shared/tests/Haven.Desktop.NativeProbe/README.md` — Observe the native Chat add-menu popup; source owners and local destinations checked.

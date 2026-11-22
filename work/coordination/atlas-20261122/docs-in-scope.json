@@ -1,0 +1,962 @@
+[
+  {
+    "path": ".github/scripts/native16-arm64/PIPELINE.md",
+    "group": "platform-and-build",
+    "source_blob": "9fe6a353e57cfac382095a6d77c61af91a7e5081"
+  },
+  {
+    "path": ".github/scripts/native16-arm64/chromium-native/README.md",
+    "group": "platform-and-build",
+    "source_blob": "e2e2692069567c53f05580531892573c4ca301dd"
+  },
+  {
+    "path": ".opencode/agent/luna-model-probe.md",
+    "group": "project-workflow",
+    "source_blob": "75d5654002a67524ca9a6eee6b13b6ef688a1aa9"
+  },
+  {
+    "path": "9-1 OS (Android)/src/Haven.Android/Hui/README.md",
+    "group": "platform-and-build",
+    "source_blob": "43159202fb0b77b06f369c848d8607e88d771076"
+  },
+  {
+    "path": "9to1 Models/Dulche Alpha/Context/ENCRYPTION.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "44f9d8437dc393d5ac12a03933c1e70325197f82"
+  },
+  {
+    "path": "9to1 Models/Dulche Alpha/Context/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "4172a32159cac5af29fad464d2bd6fc3373b167b"
+  },
+  {
+    "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/host-cache-v0.2.3.1/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "d255f568defca47f16d47c45799004f3ae30d754"
+  },
+  {
+    "path": "9to1 Models/Dulche Alpha/Training/efficient/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "7c6d9ce6ca749ce1d0822347f697a198ea33c767"
+  },
+  {
+    "path": "9to1 Models/Dulche Alpha/Training/hf_backend/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "5607345246571cb6e604fb6b8ad56f703970c00d"
+  },
+  {
+    "path": "9to1 Models/Dulche Alpha/Training/worker_api/protocol.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "14a508184f175c63586d05778374cf98b0a1151d"
+  },
+  {
+    "path": "9to1 OS/HUI/LinuxHost/README.md",
+    "group": "platform-and-build",
+    "source_blob": "6a65f40153bb8c289919d215c2179bf401d96ee7"
+  },
+  {
+    "path": "9to1 OS/HUI/README.md",
+    "group": "platform-and-build",
+    "source_blob": "e6642cbcd12c12a761a16b43dae280dca3f426b1"
+  },
+  {
+    "path": "9to1 OS/HUI/WindowsHost/README.md",
+    "group": "platform-and-build",
+    "source_blob": "0f67a45e916b57c5afac4dd231f15239051b2a41"
+  },
+  {
+    "path": "9to1 OS/compatibility/winboat/README.md",
+    "group": "platform-and-build",
+    "source_blob": "e35ab2ee5ed9d3b4fa1ea79e95fb7a2ab7e71c21"
+  },
+  {
+    "path": "9to1 OS/compatibility/wine/EXE-CHOOSER.md",
+    "group": "platform-and-build",
+    "source_blob": "ef0d49d90f8b60989c549e51461e7c3e9fd4f86b"
+  },
+  {
+    "path": "9to1 OS/compatibility/wine/PACKAGING.md",
+    "group": "platform-and-build",
+    "source_blob": "dc36c40a09de948d8fe03416cf4522d0b9e2997c"
+  },
+  {
+    "path": "9to1 OS/compatibility/wine/README.md",
+    "group": "platform-and-build",
+    "source_blob": "98bcdb856fe6be24ecf70fd70325633b46cd1c44"
+  },
+  {
+    "path": "9to1 OS/docs/LOCAL-CAKEUPDATE.md",
+    "group": "platform-and-build",
+    "source_blob": "2582f7d90e5c85e91d0ed8bde69fccfe14b60eb5"
+  },
+  {
+    "path": "9to1 OS/docs/SHARED-PLATFORM-FOUNDATION.md",
+    "group": "platform-and-build",
+    "source_blob": "0b390512ac1dc1441b9b1693871b31dba1df2a21"
+  },
+  {
+    "path": "9to1 OS/docs/WORKER-CONTRACT.md",
+    "group": "platform-and-build",
+    "source_blob": "8341387483c67b5959d02668de1dd2c55bf9b084"
+  },
+  {
+    "path": "9to1 OS/docs/parity/CANVAS-RNOTE-PARITY.md",
+    "group": "platform-and-build",
+    "source_blob": "e75edd9d146885359f0d9a830a956c849073243e"
+  },
+  {
+    "path": "9to1 OS/docs/parity/PARITY-WORKFLOW.md",
+    "group": "platform-and-build",
+    "source_blob": "6fc77cdf5208b7db2c5b53d21d3aca638bcd06cc"
+  },
+  {
+    "path": "9to1 OS/packaging/llamacpp/PACKAGING.md",
+    "group": "platform-and-build",
+    "source_blob": "a14185d1d82dc63855c4ae525effd9580c1da2e8"
+  },
+  {
+    "path": "9to1 OS/tooling/book4edge/README.md",
+    "group": "platform-and-build",
+    "source_blob": "0ff5bcd8df26526fe421f41a0858bd687d876b08"
+  },
+  {
+    "path": "9to1 OS/tooling/book4edge/battery-test/README.md",
+    "group": "platform-and-build",
+    "source_blob": "8a4cd30f539711d4c20b6a460238630caa67dbd1"
+  },
+  {
+    "path": "9to1 OS/tooling/book4edge/installer/README.md",
+    "group": "platform-and-build",
+    "source_blob": "2ce82730eeca7c971d6dba90c2a75ed5c9acfdca"
+  },
+  {
+    "path": "9to1 Workspace/Assistants/Memory/README.md",
+    "group": "workspace-apps",
+    "source_blob": "18ccc3f607da36a395ae519d76d37fea902dd3dd"
+  },
+  {
+    "path": "9to1 Workspace/Assistants/Migration/README.md",
+    "group": "workspace-apps",
+    "source_blob": "b0286f2c1f25c9391b7220ae555ebd0cd6c0e4e7"
+  },
+  {
+    "path": "9to1 Workspace/Assistants/README.md",
+    "group": "workspace-apps",
+    "source_blob": "5cf30760612bee85b3966f9a2359fe4e7f73535f"
+  },
+  {
+    "path": "9to1 Workspace/Assistants/docs/windows-publish.md",
+    "group": "workspace-apps",
+    "source_blob": "c539b5a26b19ed67688b6c531392eb7f44efc556"
+  },
+  {
+    "path": "9to1 Workspace/Boards/README.md",
+    "group": "workspace-apps",
+    "source_blob": "95f2e0f71fe3ce85b533c3972fc31940048db3c1"
+  },
+  {
+    "path": "9to1 Workspace/Boards/hui/README.md",
+    "group": "workspace-apps",
+    "source_blob": "701c0024f5df8c0cd03c1512240ea7eeeca2826c"
+  },
+  {
+    "path": "9to1 Workspace/Boards/tests/README.md",
+    "group": "workspace-apps",
+    "source_blob": "ee7c9d0dd40234685d0b0a3df871ed00788d9c74"
+  },
+  {
+    "path": "9to1 Workspace/Browse/README.md",
+    "group": "workspace-apps",
+    "source_blob": "9f3b26bdcfb31f3b1915f91b671ec6b024464202"
+  },
+  {
+    "path": "9to1 Workspace/Canvas/README.md",
+    "group": "workspace-apps",
+    "source_blob": "819fcef3684f07ebd4169c2cb10035dfeaf47e99"
+  },
+  {
+    "path": "9to1 Workspace/Canvas/rnote-poc/README.md",
+    "group": "workspace-apps",
+    "source_blob": "52083487a46a903ad9a25ef9974145a92aa12651"
+  },
+  {
+    "path": "9to1 Workspace/Canvas/tools/README.md",
+    "group": "workspace-apps",
+    "source_blob": "705517848efe42830dbaf2760aafa0604f368c66"
+  },
+  {
+    "path": "9to1 Workspace/Data/Native/README.md",
+    "group": "workspace-apps",
+    "source_blob": "277793310b4e91d229b73f3ddedf31b3658606b9"
+  },
+  {
+    "path": "9to1 Workspace/Data/README.md",
+    "group": "workspace-apps",
+    "source_blob": "61e8867a7e0db4bb549fbd6531b5b90f5d0484b5"
+  },
+  {
+    "path": "9to1 Workspace/Dev/README.md",
+    "group": "workspace-apps",
+    "source_blob": "7ac1aedbb86f822ae5b73161c76f8cf45329354a"
+  },
+  {
+    "path": "9to1 Workspace/Files/Source/Files/AGENTS.md",
+    "group": "workspace-apps",
+    "source_blob": "5a21fc11775a4930add217c771bf828b2d2628c6"
+  },
+  {
+    "path": "9to1 Workspace/Files/Source/Files/CLAUDE.md",
+    "group": "workspace-apps",
+    "source_blob": "47dc3e3d863cfb5727b87d785d09abf9743c0a72"
+  },
+  {
+    "path": "9to1 Workspace/Home/ReadMe.md",
+    "group": "workspace-apps",
+    "source_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/bundle/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "062398a615151076e0f480c893037ff03334b99a"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "ec47bfa19a88f1db171ad6279d7d1ab18ee7eeac"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "6a7d89a6925fd6048658fa3daa2141e1c16931f0"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/BROKER-INTEGRATION.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "e431aab34da7e7b11a7a07c4bc7842db792e9c4f"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/HARDWARE-BENCHMARK.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "51c32418863a4e1f6d8dbaa02df4bdf66f8441cd"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/MODEL-LIFECYCLE.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "6ac145b2800d4e3333251ccfb2404a8e6b655d4f"
+  },
+  {
+    "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "46767843289664fd43ef5d6b42d1d6aa65beacb3"
+  },
+  {
+    "path": "9to1 Workspace/Mail/README.md",
+    "group": "workspace-apps",
+    "source_blob": "e27c65d52e934baaf1472ae9dfa8bf028b7daaca"
+  },
+  {
+    "path": "9to1 Workspace/Motion/IMPLEMENTATION.md",
+    "group": "workspace-apps",
+    "source_blob": "7508d3d3179b70b1517c95bbf70ca3c81f0dd8be"
+  },
+  {
+    "path": "9to1 Workspace/Picture/README.md",
+    "group": "workspace-apps",
+    "source_blob": "34a6c033dddc30ea84b3991bb7bf58e34bca76d4"
+  },
+  {
+    "path": "9to1 Workspace/Present/README.md",
+    "group": "workspace-apps",
+    "source_blob": "60d6ae2e43acb236f84654a6d81a1986f9717898"
+  },
+  {
+    "path": "9to1 Workspace/Present/present-engine/README.md",
+    "group": "workspace-apps",
+    "source_blob": "1c6e78d11c6e91329f2e24d621374585f0df927d"
+  },
+  {
+    "path": "9to1 Workspace/Spaces/README.md",
+    "group": "workspace-apps",
+    "source_blob": "b128f87566e5840ba15c9b03c7e43e2472c3a308"
+  },
+  {
+    "path": "9to1 Workspace/Stacks/README.md",
+    "group": "workspace-apps",
+    "source_blob": "36f27e6dc02ba1149987307671fc71c6ca6f1650"
+  },
+  {
+    "path": "9to1 Workspace/Wave/README.md",
+    "group": "workspace-apps",
+    "source_blob": "2ed09e4eb0aade17af1b33d28ea49dec8e9d807d"
+  },
+  {
+    "path": "9to1 Workspace/Write/Native/README.md",
+    "group": "workspace-apps",
+    "source_blob": "14bd1f3c0ebac7aa89327b0cc6ce3cc1292c38fe"
+  },
+  {
+    "path": "9to1 Workspace/Write/README.md",
+    "group": "workspace-apps",
+    "source_blob": "195041d5ec910e67c44ab18fe616f491a263ff65"
+  },
+  {
+    "path": "9to1 Workspace/shared/README.md",
+    "group": "shared-architecture",
+    "source_blob": "eee7d59cc4168a603bce19d8e27d8bd5c9c74eff"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/ARCHITECTURE.md",
+    "group": "shared-architecture",
+    "source_blob": "1c5cefadb3dfe8ef6985734c8fc5e488906725da"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/ARCHITECTURE.md",
+    "group": "desktop-and-interface",
+    "source_blob": "a6b1a62270a6efe42ecd48b1b0a8c57cbc6a47a8"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/BROWSER.md",
+    "group": "desktop-and-interface",
+    "source_blob": "f65aa80c10ee21df8b531917c321fdfb1d1f1ec9"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/BUILD-TEST-AND-RECIPES.md",
+    "group": "desktop-and-interface",
+    "source_blob": "3bc02e534c562d98272e57ed70c3ee4e9ef43b35"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/CHAT-PROJECTS-AND-TOOLS.md",
+    "group": "desktop-and-interface",
+    "source_blob": "e57940d007a81e59af6e6ba236dd8739890f738e"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/DATA-STORAGE.md",
+    "group": "desktop-and-interface",
+    "source_blob": "7be48ce315d2a0b7d018c4e334f388858609ca1d"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/HOME-CALL-AND-PLAN.md",
+    "group": "desktop-and-interface",
+    "source_blob": "499a507f3a0c0605335801be049a0a0028c4d36a"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/README.md",
+    "group": "desktop-and-interface",
+    "source_blob": "e1ce040b261befecd45581ed4ac5fc9d934c835d"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/TEACH-AND-CHAT-GROUPS.md",
+    "group": "desktop-and-interface",
+    "source_blob": "e4f16028f6f7cacaba484af55bd8cc65b6aef12d"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/App-Editing-Guide/UI-MAP.md",
+    "group": "desktop-and-interface",
+    "source_blob": "13df49070d2539b50903aa8227373c597ab9cd46"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/BROWSER-AUTOMATION-SAFETY.md",
+    "group": "shared-architecture",
+    "source_blob": "09b11ea7faeadfdf0caf221ff0fbb5f25d37d8f9"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/BUILT-IN-DEVELOPER-TOOLS.md",
+    "group": "shared-architecture",
+    "source_blob": "92afa2b629f88f31b50713db6fa8346582a58ef0"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/CODE-INTELLIGENCE.md",
+    "group": "shared-architecture",
+    "source_blob": "763102569820deda22e70646236ce9b13fbb6674"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/CURRENT-REQUIREMENTS.md",
+    "group": "shared-architecture",
+    "source_blob": "b8252c944e0aae5f069e765cf84fadff04ec48fd"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/HAVENOS-GNOME-PLATFORM.md",
+    "group": "shared-architecture",
+    "source_blob": "a9ecceb1a66589dfc01d7ecea6e2c4a1e593fb20"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/HAVENOS-LLAMA-CPP-RUNTIME.md",
+    "group": "shared-architecture",
+    "source_blob": "99d8a79140729302584f51b79b3e7e93746de4f0"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/README.md",
+    "group": "shared-architecture",
+    "source_blob": "85232f8e0a5e06f38e3761300fa02c3acc6462e9"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/README.md",
+    "group": "shared-architecture",
+    "source_blob": "fd094e99c71aad6252d02fcc35bdcd9938f5a17a"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/agent-observation-retirement.md",
+    "group": "shared-architecture",
+    "source_blob": "496fbc249e921000c3e033c223688f8d38a06704"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/repository-structure.md",
+    "group": "shared-architecture",
+    "source_blob": "b65f9ecc9aafccf514a80c13f89aa31952eb91b3"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/state-and-persistence.md",
+    "group": "shared-architecture",
+    "source_blob": "591e269a5740252a0c8aaa7fe19211744649f427"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/system-map.md",
+    "group": "shared-architecture",
+    "source_blob": "269dd83dd9b6305fea1b0eb42531938a309d2c78"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/windows-native-personal-task-recovery.md",
+    "group": "shared-architecture",
+    "source_blob": "a6816a4274e2f6af29daba5f5fde5a5ec44217a3"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/architecture/write-libreoffice-engine.md",
+    "group": "shared-architecture",
+    "source_blob": "851a33176f3f41f34ceb565cf3934ead36d5d7de"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/development/README.md",
+    "group": "shared-architecture",
+    "source_blob": "1b448a8f37f79dd82278021fcca950566f2441aa"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/development/adding-a-feature.md",
+    "group": "shared-architecture",
+    "source_blob": "c6ac52e4b0448915d2f91404231a39cbc9295d55"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/development/common-mistakes.md",
+    "group": "shared-architecture",
+    "source_blob": "94fa0533e1c30df064bb1ab86f072c89c01547f3"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/development/testing.md",
+    "group": "shared-architecture",
+    "source_blob": "881d60963547734743f94425f2a518ac54d8ec1b"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/ui/README.md",
+    "group": "desktop-and-interface",
+    "source_blob": "41898ac02f8a3c2d375762cacf58386e42f6ad1f"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/ui/haven-ui.md",
+    "group": "desktop-and-interface",
+    "source_blob": "dbb647b98798e979cce5895b39d270078e9bc210"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/ui/present-editor-redesign.md",
+    "group": "desktop-and-interface",
+    "source_blob": "06267598da3be7361033813c5fe58d9aa063bbe6"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/ui/present-interaction-engine.md",
+    "group": "desktop-and-interface",
+    "source_blob": "9267725d77e2f1634a28d3b76960a74e628d4470"
+  },
+  {
+    "path": "9to1 Workspace/shared/docs/ui/theming-and-personalisation.md",
+    "group": "desktop-and-interface",
+    "source_blob": "2e8a0de34d62ca374305cafbc136203d7f007e12"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Desktop/Information/README.md",
+    "group": "desktop-and-interface",
+    "source_blob": "b782146bf084387528e43f450132bd174ac5e596"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Desktop.NativeProbe/README.md",
+    "group": "shared-architecture",
+    "source_blob": "85b1c704a8f216b1e23e3e06484afb07345e8ce9"
+  },
+  {
+    "path": "AGENTS.md",
+    "group": "project-workflow",
+    "source_blob": "49e58027413dd3db50eb4a4212e2fc5ed9214d39"
+  },
+  {
+    "path": "README.md",
+    "group": "project-workflow",
+    "source_blob": "5c8ae87b62087d0f2fcc9d780776e6a5408e3a73"
+  },
+  {
+    "path": "apps/Web/AI/Chat/README.md",
+    "group": "web-and-services",
+    "source_blob": "e5c883dc746ccdb9a545a7f5380a321b14803b4b"
+  },
+  {
+    "path": "apps/Web/AI/Tests/README.md",
+    "group": "web-and-services",
+    "source_blob": "7f081771ae9726a60f209a08ebe4105b7e49736f"
+  },
+  {
+    "path": "apps/Web/Accounts/README.md",
+    "group": "web-and-services",
+    "source_blob": "314db30168438386e6ccefae6b9bf8e95532d2a5"
+  },
+  {
+    "path": "apps/Web/Assistants/README.md",
+    "group": "web-and-services",
+    "source_blob": "2febe8ead5ec990edf57aa06c29a7cccc4d15419"
+  },
+  {
+    "path": "apps/Web/Auth/PRIVATE_CONTEXT_LIFETIME.md",
+    "group": "web-and-services",
+    "source_blob": "2ab938191da477315844d88d5c7177a3ca642e19"
+  },
+  {
+    "path": "apps/Web/Auth/PUBLIC_CLIENT.md",
+    "group": "web-and-services",
+    "source_blob": "e39a70489045769f306dd92e351e08c5b36ae02b"
+  },
+  {
+    "path": "apps/Web/Auth/README.md",
+    "group": "web-and-services",
+    "source_blob": "b98626f726a6d273cddaacb2478116e5c67756ee"
+  },
+  {
+    "path": "apps/Web/Files/README.md",
+    "group": "web-and-services",
+    "source_blob": "8d614ba79fdf8c1cc86c51c8ec46ad9dcfad0354"
+  },
+  {
+    "path": "apps/Web/Forms/README.md",
+    "group": "web-and-services",
+    "source_blob": "2de22105ae5ce58518681d8acc385943cd709a72"
+  },
+  {
+    "path": "apps/Web/Home/THEME_CREATOR.md",
+    "group": "web-and-services",
+    "source_blob": "2328d4efc99596a3eb7e191a96fbdaa2a98b7429"
+  },
+  {
+    "path": "apps/Web/Productivity/Boards/BROWSER-CONNECTION.md",
+    "group": "web-and-services",
+    "source_blob": "66b46f46fa1060af7897cc24aa5c8610e9b0776c"
+  },
+  {
+    "path": "apps/Web/Productivity/Boards/README.md",
+    "group": "web-and-services",
+    "source_blob": "6d6a51080ac6decc67caa969c01bc3f79260e45a"
+  },
+  {
+    "path": "apps/Web/Productivity/Mathematics/README.md",
+    "group": "web-and-services",
+    "source_blob": "8c32fa188f05259c1a61c527f3721f0ff28fcb7b"
+  },
+  {
+    "path": "apps/Web/Productivity/Planner/Tests/README.md",
+    "group": "web-and-services",
+    "source_blob": "e640d8a2278f76e2dc777127e969dd86e94cabd7"
+  },
+  {
+    "path": "apps/Web/Productivity/Present/README.md",
+    "group": "web-and-services",
+    "source_blob": "e9d70f2377dab97143ae9324068569dc87e51c5d"
+  },
+  {
+    "path": "apps/Web/README.md",
+    "group": "web-and-services",
+    "source_blob": "e7c2003f8cf0e619bc4ace2a6c1330f2e69072b0"
+  },
+  {
+    "path": "apps/Web/Sites/Contracts/README.md",
+    "group": "web-and-services",
+    "source_blob": "044c3a31a6cb5861d7f99ba8aa0c4cf9765fbdee"
+  },
+  {
+    "path": "apps/Web/Sites/README.md",
+    "group": "web-and-services",
+    "source_blob": "0c7b8786a12d7468b0f3e9cfebdcd58a81f945f5"
+  },
+  {
+    "path": "apps/Web/Spaces/Storage/PRIVATE_TASK_STORAGE.md",
+    "group": "web-and-services",
+    "source_blob": "3596632ba8111b954f2d3137c5676e4092215f03"
+  },
+  {
+    "path": "apps/Web/Tests/LocalAuth/README.md",
+    "group": "web-and-services",
+    "source_blob": "a4d228c112de6354e986d1b7634b03929ef81dae"
+  },
+  {
+    "path": "apps/Web/Tests/ci/README.md",
+    "group": "web-and-services",
+    "source_blob": "7fb0fcc8e86697be9242eb406a4fe8487d443c1a"
+  },
+  {
+    "path": "apps/Web/Tests/ci/sealed-browser-replay/README.md",
+    "group": "web-and-services",
+    "source_blob": "6a0310e75714f8b285afd1dd3d5b0e42804ea328"
+  },
+  {
+    "path": "apps/Web/Write/README.md",
+    "group": "web-and-services",
+    "source_blob": "0495242b259ad33981a762bf782ab76ad111a886"
+  },
+  {
+    "path": "apps/Web/Write/Storage/README.md",
+    "group": "web-and-services",
+    "source_blob": "3e6dc7853d4e3fe332f956eb4d71c6f00d534c6c"
+  },
+  {
+    "path": "cloud/BRAND-ASSETS.md",
+    "group": "web-and-services",
+    "source_blob": "bbd42a63649cd048c69de49bdee130da93373c38"
+  },
+  {
+    "path": "cloud/billing/DEPLOYMENT.md",
+    "group": "web-and-services",
+    "source_blob": "54eab311d9dc77cb6a48656a442d985a281ba812"
+  },
+  {
+    "path": "cloud/billing/PROVIDER-READ-RECOVERY.md",
+    "group": "web-and-services",
+    "source_blob": "1d77660229f2c700a7f903bda57f4ae0da258425"
+  },
+  {
+    "path": "cloud/billing/README.md",
+    "group": "web-and-services",
+    "source_blob": "75d26000b28dc19e3a425a839ead26759d68c592"
+  },
+  {
+    "path": "cloud/cake-id-auth/BROWSER_FIXTURE.md",
+    "group": "web-and-services",
+    "source_blob": "20ec2c1ec0f5cf5981236f9532271b84d9313272"
+  },
+  {
+    "path": "cloud/cake-id-auth/LOCAL_THEME_BROWSER_ACCEPTANCE.md",
+    "group": "web-and-services",
+    "source_blob": "a05c40d49765b1d6f702bcd4cd81bd0389e9d8bc"
+  },
+  {
+    "path": "cloud/cake-id-auth/PRESENT_CLIENT_REGISTRATION.md",
+    "group": "web-and-services",
+    "source_blob": "75c97d8502aea49e1c3eb728579b4764e4b670b4"
+  },
+  {
+    "path": "cloud/cake-id-auth/PRODUCTION_SITES.md",
+    "group": "web-and-services",
+    "source_blob": "b9ff496bc2cf95f5a231951cc9a13a801d769655"
+  },
+  {
+    "path": "cloud/cake-id-auth/PUBLIC_CLIENT_CORS.md",
+    "group": "web-and-services",
+    "source_blob": "6ea38ee9dbd17319bc6de8d8211ce64dc24b8652"
+  },
+  {
+    "path": "cloud/cake-id-auth/README.md",
+    "group": "web-and-services",
+    "source_blob": "890238407c9e27e351ae681a1687920b273dd20c"
+  },
+  {
+    "path": "cloud/cake-id-auth/deployment/README.md",
+    "group": "web-and-services",
+    "source_blob": "5d31758dde32baec649638259876f9b52760f8a5"
+  },
+  {
+    "path": "cloud/cake-id-auth/deployment/https/AUTHENTICATED.md",
+    "group": "web-and-services",
+    "source_blob": "8d29e49844623edbd85c7cecc6e8b8f7e6e0e776"
+  },
+  {
+    "path": "cloud/cake-id-auth/deployment/https/README.md",
+    "group": "web-and-services",
+    "source_blob": "c2553e60c7f8e16531f978024d95178eaabfd881"
+  },
+  {
+    "path": "cloud/cake-id-auth/deployment/recovery/README.md",
+    "group": "web-and-services",
+    "source_blob": "5544698571a9ac1ec3010adf3c3ac5dbf73bd7c6"
+  },
+  {
+    "path": "cloud/files-drive/README.md",
+    "group": "web-and-services",
+    "source_blob": "e76b5277c95814deb4b335ceadd8f238c69bf17b"
+  },
+  {
+    "path": "cloud/public-sites/README.md",
+    "group": "web-and-services",
+    "source_blob": "0eb16d8426ac33551d239759fcf90eb9d2b6b5b0"
+  },
+  {
+    "path": "docs/acceptance/astra/defect-template.md",
+    "group": "project-workflow",
+    "source_blob": "4e378ba683b45973fa7340cc3ac29a1ae56c85fd"
+  },
+  {
+    "path": "docs/architecture/browse.md",
+    "group": "project-workflow",
+    "source_blob": "d5e26660cb48287465742d19fb80bf933b08db35"
+  },
+  {
+    "path": "docs/architecture/cui.md",
+    "group": "project-workflow",
+    "source_blob": "7860feb17b36e6bd3d8253bd635adfb25a68d18c"
+  },
+  {
+    "path": "docs/architecture/third-party.md",
+    "group": "project-workflow",
+    "source_blob": "2997a5ceac55b8d61d75a4350c4cc34f01f660a4"
+  },
+  {
+    "path": "docs/cui/README.md",
+    "group": "cui-framework",
+    "source_blob": "6458c0f4505e6af4ea719ce4d16c8c6cc4b840ca"
+  },
+  {
+    "path": "docs/cui/input-focus.md",
+    "group": "cui-framework",
+    "source_blob": "9ae544ad2364625d233ef6cab06372ff668b5605"
+  },
+  {
+    "path": "docs/development/boards-test-build.md",
+    "group": "project-workflow",
+    "source_blob": "7f0be2623321eb432f3a16f1f2368f86f8950704"
+  },
+  {
+    "path": "docs/development/donor-forking.md",
+    "group": "project-workflow",
+    "source_blob": "35671abaa6692cc89f08591d7a1ca43246af8ce0"
+  },
+  {
+    "path": "docs/development/files-candidate-local-release-2026-11-17.md",
+    "group": "files-delivery",
+    "source_blob": "eee3222a5275b69e9cddb491d147199b92eb923d"
+  },
+  {
+    "path": "docs/development/files-local-candidate-2026-11-17.md",
+    "group": "files-delivery",
+    "source_blob": "57ce047036972346cea56510e8a8b65d28c809f1"
+  },
+  {
+    "path": "docs/development/files-native-windows-route.md",
+    "group": "files-delivery",
+    "source_blob": "e04a864639a41b8c7cbbbcc3d7d186ec5f01441e"
+  },
+  {
+    "path": "docs/development/files-web-launcher-2026-11-17.md",
+    "group": "files-delivery",
+    "source_blob": "e87099ce0220744deeaf9780c4419aacc98190ba"
+  },
+  {
+    "path": "docs/development/installer-delivery.md",
+    "group": "project-workflow",
+    "source_blob": "27f1da894c26447be301bb4c36b2bef0a8cf2306"
+  },
+  {
+    "path": "docs/development/linux-home-publisher-enrollment.md",
+    "group": "project-workflow",
+    "source_blob": "d4f628d19035b158af1beb2e0a4cc5fc31179f2a"
+  },
+  {
+    "path": "docs/development/live-preview.md",
+    "group": "project-workflow",
+    "source_blob": "07f118095c92470e66eaba9aa2ad5437c9890f5d"
+  },
+  {
+    "path": "docs/development/local-handoff.md",
+    "group": "project-workflow",
+    "source_blob": "28a9bfe1bea62579f0fff846874bd504796f62f5"
+  },
+  {
+    "path": "docs/development/model-performance-feedback-2026-10-29.md",
+    "group": "project-workflow",
+    "source_blob": "e44f2b5c89e2ad4dba605ddb89bdd67d7a6e6b6b"
+  },
+  {
+    "path": "docs/development/native-files-drive-import-2026-11-17.md",
+    "group": "files-delivery",
+    "source_blob": "6d0e1e0567c1256a79a98679a5e148a253a9d153"
+  },
+  {
+    "path": "docs/development/native-files-drive-preflight-2026-11-17.md",
+    "group": "files-delivery",
+    "source_blob": "11ded66e342925dc347fbfc6345d51dcc21b1926"
+  },
+  {
+    "path": "docs/development/native-files-drive-setup-2026-11-17.md",
+    "group": "files-delivery",
+    "source_blob": "bbb81fe529949189300f3aa3c053a4c3caa262c2"
+  },
+  {
+    "path": "docs/development/native-files-linux-smoke-2026-11-18.md",
+    "group": "files-delivery",
+    "source_blob": "11ac1f9002ec6784367b96a1f663c6536ebc5622"
+  },
+  {
+    "path": "docs/development/native-files-normal-close-2026-11-18.md",
+    "group": "files-delivery",
+    "source_blob": "678af3691a1a6b96dfbddc0c8cb6f028b7a80cd0"
+  },
+  {
+    "path": "docs/development/native-files-owner-launch-2026-11-18.md",
+    "group": "files-delivery",
+    "source_blob": "8800c319bfc830abf2d1a630e3a32ea3e41b1029"
+  },
+  {
+    "path": "docs/development/native-files-package-admission-2026-11-18.md",
+    "group": "files-delivery",
+    "source_blob": "904f1cd2960a641eb04cbd31e645b2e1e3d933e1"
+  },
+  {
+    "path": "docs/development/native-files-profile-reopen-2026-11-18.md",
+    "group": "files-delivery",
+    "source_blob": "fd80d5e58845d879d0465c2feba8a83175f91c1a"
+  },
+  {
+    "path": "docs/development/native-files-source-candidate-2026-11-18.md",
+    "group": "files-delivery",
+    "source_blob": "b825ed360c6dd501290524f6e8e195ed0f6ed3c4"
+  },
+  {
+    "path": "docs/development/opencode-pc-live-takeover-2026-10-26.md",
+    "group": "project-workflow",
+    "source_blob": "d01a5e5d8e495e0ad796f5048d23b8c3537dc84d"
+  },
+  {
+    "path": "docs/development/opencode-teams.md",
+    "group": "project-workflow",
+    "source_blob": "e363f6c6e3c97b24c2c6e235852a4723addfe593"
+  },
+  {
+    "path": "docs/development/progress-reporting.md",
+    "group": "project-workflow",
+    "source_blob": "0c8e7cf641b33427dad16bf89df930bbf42d394d"
+  },
+  {
+    "path": "docs/development/refactor-2026-11-18/feature-inventory.md",
+    "group": "project-workflow",
+    "source_blob": "8e706d01d4687c4b4594ae98c2003436d0db65be"
+  },
+  {
+    "path": "docs/development/spaces/native-route-2026-10-31.md",
+    "group": "project-workflow",
+    "source_blob": "e2be3755cf9ed63f78c4ad8e183aae3390e39247"
+  },
+  {
+    "path": "docs/development/workflow.md",
+    "group": "project-workflow",
+    "source_blob": "cdcf9072ad66bc904bdf335ea66444cded582938"
+  },
+  {
+    "path": "docs/dulche/model-groups-v2.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "5375eee0c508d7eed8c5d13d8e6e5a3583e5d5d4"
+  },
+  {
+    "path": "docs/dulche/shared-runtime-cancellation.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "6ebfbf2c22f1067e8cdb3275999f287dd4dc9196"
+  },
+  {
+    "path": "docs/home/windows-native-producer.md",
+    "group": "workspace-apps",
+    "source_blob": "93c12f1520834691098755d18ff1a732934b43a7"
+  },
+  {
+    "path": "docs/packaging/package-preload.md",
+    "group": "platform-and-build",
+    "source_blob": "cb7da3ab8f2361670f2875a81b6a12e397561c76"
+  },
+  {
+    "path": "eng/README.md",
+    "group": "platform-and-build",
+    "source_blob": "0336368d858f8bb050930955c776f0b8e231d1fa"
+  },
+  {
+    "path": "eng/browser/README.md",
+    "group": "platform-and-build",
+    "source_blob": "1deed225ce8e1c3488b8ac6742efbb11917d15f8"
+  },
+  {
+    "path": "eng/cui/README.md",
+    "group": "cui-framework",
+    "source_blob": "715ad738c105ee9835abf06cc1dc666666daba9a"
+  },
+  {
+    "path": "eng/cui/native-entrypoints.md",
+    "group": "cui-framework",
+    "source_blob": "6d39e38ef370eb61d19ee35842130fa465db6831"
+  },
+  {
+    "path": "eng/dulche/linux-vfio/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "4abcccaadd9486c2834df18d888e685eb4b6e9b9"
+  },
+  {
+    "path": "eng/dulche/linux-vfio/SAFETY.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "281828039d1f2b12e4bcde2cc00c41bda18c9c8c"
+  },
+  {
+    "path": "eng/release-validation/boards-startup/README.md",
+    "group": "platform-and-build",
+    "source_blob": "3e165a7531d1fc23174ebfddc43e491d09c161d0"
+  },
+  {
+    "path": "eng/service-validation/README.md",
+    "group": "platform-and-build",
+    "source_blob": "9043f713afbffc1f96fd13c24f99efb04dd2f1c2"
+  },
+  {
+    "path": "framework/CUI/Build.Tasks/README.md",
+    "group": "cui-framework",
+    "source_blob": "a19651e3adcba850d3864789d08b265335734cd9"
+  },
+  {
+    "path": "framework/CUI/Runtime/Assets/Fonts/README.md",
+    "group": "cui-framework",
+    "source_blob": "70763b2d0ac7c49197bcc9d8ad0e985cbb92667b"
+  },
+  {
+    "path": "framework/CUI/Themes/README.md",
+    "group": "cui-framework",
+    "source_blob": "9a27c6303022b60f7266337ffbf79f7266d1bf44"
+  },
+  {
+    "path": "framework/CUI/Themes/SpatialBackgrounds.md",
+    "group": "cui-framework",
+    "source_blob": "7760b8610068c5f322885b8e7aa6367f22603d44"
+  },
+  {
+    "path": "framework/CUI/vendor/Avalonia/build/9to1-source-build.md",
+    "group": "cui-framework",
+    "source_blob": "84fc6c1da6c480074da9cf34b6fdaae0d3ac874b"
+  },
+  {
+    "path": "tools/development-relay/CLOUD-WORKER.md",
+    "group": "project-workflow",
+    "source_blob": "f7af2576a49bef89b50d5f64692b8d2fa65af7be"
+  },
+  {
+    "path": "tools/development-relay/LOCAL-WORKER.md",
+    "group": "project-workflow",
+    "source_blob": "b38fa90f788c82c033ff7b8801e709dd72414912"
+  },
+  {
+    "path": "tools/development-relay/README.md",
+    "group": "project-workflow",
+    "source_blob": "9e17325ceb364b3ce5e650587530a1c06fd7fd36"
+  },
+  {
+    "path": "tools/ucml-protect/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "5fd60af4eebb73791c8e3fffa98476c70f6ac116"
+  },
+  {
+    "path": "tools/ucml/README.md",
+    "group": "model-and-runtime-docs",
+    "source_blob": "a3a9384feba4748a8134be7c8c45e5d4f2a1217f"
+  }
+]

@@ -1,0 +1,112 @@
+{
+  "revision": "2a9c4d980c4b16741f7d3880f1c982c0560eae88",
+  "affected_source_ownership": "Docs B owner relinquished the completed paths to Docs A for this correction.",
+  "utc": "2026-11-22T18:35:15.531639+00:00",
+  "preserved_source_paths": {
+    ".github/scripts/native16-arm64/PIPELINE.md": ".github/scripts/native16-arm64/PIPELINE.current.md",
+    ".github/scripts/native16-arm64/chromium-native/README.md": ".github/scripts/native16-arm64/chromium-native/README.current.md",
+    "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/host-cache-v0.2.3.1/README.md": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/host-cache-v0.2.3.1/README.current.md",
+    "9to1 Workspace/Home/Source/Dulche/bundle/README.md": "9to1 Workspace/Home/Source/Dulche/bundle/README.current.md",
+    "9to1 Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.md": "9to1 Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.current.md",
+    "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.md": "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.current.md",
+    "apps/Web/Productivity/Mathematics/README.md": "apps/Web/Productivity/Mathematics/README.current.md",
+    "cloud/cake-id-auth/BROWSER_FIXTURE.md": "cloud/cake-id-auth/BROWSER_FIXTURE.current.md",
+    "cloud/cake-id-auth/PUBLIC_CLIENT_CORS.md": "cloud/cake-id-auth/PUBLIC_CLIENT_CORS.current.md",
+    "cloud/cake-id-auth/deployment/README.md": "cloud/cake-id-auth/deployment/README.current.md",
+    "cloud/cake-id-auth/deployment/https/AUTHENTICATED.md": "cloud/cake-id-auth/deployment/https/AUTHENTICATED.current.md",
+    "cloud/cake-id-auth/deployment/https/README.md": "cloud/cake-id-auth/deployment/https/README.current.md",
+    "cloud/cake-id-auth/deployment/recovery/README.md": "cloud/cake-id-auth/deployment/recovery/README.current.md",
+    "docs/development/installer-delivery.md": "docs/development/installer-delivery.current.md",
+    "docs/development/local-handoff.md": "docs/development/local-handoff.current.md",
+    "docs/development/opencode-teams.md": "docs/development/opencode-teams.current.md",
+    "docs/development/progress-reporting.md": "docs/development/progress-reporting.current.md"
+  },
+  "current_indexes": [
+    "eng/README.md",
+    "docs/development/workflow.md",
+    "apps/Web/README.md",
+    "cloud/cake-id-auth/README.md"
+  ],
+  "active_manifest_comparison": {
+    "native16": {
+      "paths": 1148,
+      "baseline_mismatches": 226,
+      "pre_repair_mismatches": 236,
+      "post_repair_mismatches": 226,
+      "repaired_paths": [
+        ".github/scripts/native16-arm64/PIPELINE.md",
+        ".github/scripts/native16-arm64/chromium-native/README.md",
+        "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/host-cache-v0.2.3.1/README.md",
+        "9to1 Workspace/Home/Source/Dulche/bundle/README.md",
+        "9to1 Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.md",
+        "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.md",
+        "docs/development/installer-delivery.md",
+        "docs/development/local-handoff.md",
+        "docs/development/opencode-teams.md",
+        "docs/development/progress-reporting.md"
+      ],
+      "consumer": ".github/scripts/native16-arm64/pipeline-preflight.py:57",
+      "consumer_scope": "The ARM job checks the chosen GitHub SHA, then hashes the current working files named by changed_files_sha256. A workflow-level private-custody gate precedes the build.",
+      "manifest": ".github/scripts/native16-arm64/native16-source-identity.json",
+      "manifest_current_sha256": "cd72400329e3ef2d60df42c1bdaeccce280dd09c1bfd92f2d7e9c8765e5dfa10",
+      "manifest_matches_baseline": true
+    },
+    "inference_stage": {
+      "paths": 44,
+      "baseline_mismatches": 3,
+      "pre_repair_mismatches": 6,
+      "post_repair_mismatches": 3,
+      "repaired_paths": [
+        "9to1 Workspace/Home/Source/Dulche/bundle/README.md",
+        "9to1 Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.md",
+        "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.md"
+      ],
+      "consumer": ".github/scripts/native16-arm64/inference_stage.py:32",
+      "consumer_scope": "source_context verifies actual path, regular-file status, SHA-256 and byte size under root before the data-only package stage.",
+      "manifest": ".github/scripts/native16-arm64/inference-source-manifest.json",
+      "manifest_current_sha256": "384472e672cffa35ac5c0078f07f39f6c90416e4a8eeadbdcc3b196de6d89669",
+      "manifest_matches_baseline": true
+    },
+    "math_native_four": {
+      "paths": 73,
+      "baseline_mismatches": 43,
+      "pre_repair_mismatches": 44,
+      "post_repair_mismatches": 43,
+      "repaired_paths": [
+        "apps/Web/Productivity/Mathematics/README.md"
+      ],
+      "consumer": "apps/Web/Mathematics/Tests/ci/run-math-native-four.py:43",
+      "consumer_scope": "The runner checks the current checkout against GITHUB_SHA, its byte-pinned ledger and every input path before and after the build. Its workflow is restricted to the named team-b validation branch.",
+      "manifest": "apps/Web/Mathematics/Tests/ci/math-native-four-source-pins.json",
+      "manifest_current_sha256": "2b4d6ec01d4b14150207a1ee983c037256fcbd8de0f89be420ca1cc8c2d599b9",
+      "manifest_matches_baseline": true
+    },
+    "local_auth_fixture": {
+      "paths": 92,
+      "baseline_mismatches": 24,
+      "pre_repair_mismatches": 30,
+      "post_repair_mismatches": 24,
+      "repaired_paths": [
+        "cloud/cake-id-auth/BROWSER_FIXTURE.md",
+        "cloud/cake-id-auth/PUBLIC_CLIENT_CORS.md",
+        "cloud/cake-id-auth/deployment/README.md",
+        "cloud/cake-id-auth/deployment/https/AUTHENTICATED.md",
+        "cloud/cake-id-auth/deployment/https/README.md",
+        "cloud/cake-id-auth/deployment/recovery/README.md"
+      ],
+      "consumer": "apps/Web/Tests/LocalAuth/prepare-local-auth-plan.py:43",
+      "consumer_scope": "The fixture must be a separate owner-selected checkout at its explicit commit. reviewed_checkout reads each actual file and compares it both to git show <revision>:<path> and the pinned SHA/size. A past prepared fixture remains attributable to its original checkout.",
+      "manifest": "apps/Web/Tests/LocalAuth/source-contract.json",
+      "manifest_current_sha256": "021a76a1202a1fecc391078ef3046df63f998af96f9527d54280a487ef7067ad",
+      "manifest_matches_baseline": true
+    }
+  },
+  "historical_only": {
+    "handoff/team-c/browser-fixture/evidence.json": "Past handoff record authenticates a prior source/commit. Its linked BROWSER_FIXTURE.md is already restored for the separately callable LocalAuth preparation; no evidence was modified.",
+    "docs/development/boards-menu-repair-2026-10-30.evidence.json": "Generic empty-file digest records an empty patch; no Home README dependency.",
+    "eng/development/donor-inputs.json": "Same empty-file digest belongs to other named donor inputs, not Home/ReadMe.md."
+  },
+  "living_internal_links_verified": 205,
+  "inbound_links_from_other_docs_groups": [],
+  "scope": "Static source-byte verification only. No SDK, GPU, package execution, revision retargeting or historical evidence regeneration."
+}

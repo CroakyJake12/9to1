@@ -1,0 +1,8 @@
+{
+  "state": "closed",
+  "ui_coordinator": "Flash ACK ses_dfb9da4f6ffegHIL2IGcMhOHX4",
+  "rtx": "Original profile restored; served benchmark and acknowledged final UI handback.",
+  "v100": "Original two-slot profile restored; passed real generation after the last training window.",
+  "workstation_test_floor": "15% Codex remaining; 83% most recent observation",
+  "headroom_report": "See pass-state.json and the packaged Thunder report."
+}

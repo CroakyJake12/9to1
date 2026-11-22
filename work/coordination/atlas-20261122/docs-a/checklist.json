@@ -1,0 +1,1238 @@
+{
+  "baseline": "2a9c4d980",
+  "records": {
+    "9to1 Workspace/shared/docs/App-Editing-Guide/README.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "e1ce040b261befecd45581ed4ac5fc9d934c835d",
+      "new_sha256": "578c23fcb356f7103c522acabab9f0bf5903f79c2208dabaefe801c7568a04dc",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "docs/development/live-preview.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/ARCHITECTURE.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "a6b1a62270a6efe42ecd48b1b0a8c57cbc6a47a8",
+      "new_sha256": "1733797ba5b6fa313da66bdb25ccebddee1a262333c3aa7e215f1e3c8300bdf3",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+        "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeThemePreferences.cs",
+        "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs",
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/BROWSER.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "f65aa80c10ee21df8b531917c321fdfb1d1f1ec9",
+      "new_sha256": "33c2b2b2daf675c3976e6f1cf0519f69d46473fa75f959d50c51956d0f289ca4",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/shared/src/Haven.Browser/Session/BrowserSessionService.cs",
+        "9to1 Workspace/shared/src/Haven.Browser/Data/BrowserDataService.cs",
+        "9to1 Workspace/shared/docs/BROWSER-AUTOMATION-SAFETY.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/BUILD-TEST-AND-RECIPES.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "3bc02e534c562d98272e57ed70c3ee4e9ef43b35",
+      "new_sha256": "a8a078c1a833e4e1479c6ff6eedb861ff2488e638b685ccfc9c9383f654729ab",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "eng/9to1.ps1",
+        "docs/development/workflow.md",
+        "docs/development/live-preview.md",
+        "9to1 Workspace/shared/Haven.sln"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/CHAT-PROJECTS-AND-TOOLS.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "e57940d007a81e59af6e6ba236dd8739890f738e",
+      "new_sha256": "d04b1983b61f4dd572049e82d03612e89179a526444052a0e1f7db281d423bfc",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui",
+        "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.Sending.cs",
+        "9to1 Workspace/shared/src/Haven.Application/Tools/ToolAvailability.cs",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/DATA-STORAGE.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "7be48ce315d2a0b7d018c4e334f388858609ca1d",
+      "new_sha256": "5d9a70ffba008c5c2cd0b6db56af06ebbdb3bdf183da0b04129bc3a6dd700962",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteDatabase.cs",
+        "9to1 Workspace/Home/Source/Home/Core/HomeNativePreferenceFile.cs",
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/UI-MAP.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "13df49070d2539b50903aa8227373c597ab9cd46",
+      "new_sha256": "f5effe3c9e9c005f120783cfe5bdf91dadf4550dc5f3b39ed442c540fa5f283c",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "framework/CUI/Runtime/CuiControlLoader.cs",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/ui/README.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "41898ac02f8a3c2d375762cacf58386e42f6ad1f",
+      "new_sha256": "f4da22b28811432a288ac6cec7d323b6766b0261f83af0efe6f70e4e1552b51b",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/ui/haven-ui.md",
+        "9to1 Workspace/shared/docs/ui/theming-and-personalisation.md",
+        "9to1 Workspace/shared/docs/ui/present-editor-redesign.md",
+        "9to1 Workspace/shared/docs/ui/present-interaction-engine.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/ui/haven-ui.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "dbb647b98798e979cce5895b39d270078e9bc210",
+      "new_sha256": "8a0fcb55254fdf1e2b430e97e3b61b1103d3149dc09457d3e0e0b0a4b4dbebe8",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path.",
+      "verified_local_references": [
+        "framework/CUI/Compiler",
+        "framework/CUI/Runtime",
+        "framework/CUI/Themes/README.md",
+        "9to1 Workspace/Home/UI/Home.cui"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/ui/theming-and-personalisation.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "2e8a0de34d62ca374305cafbc136203d7f007e12",
+      "new_sha256": "85043ad6b1608664f9bd4400ac46cfb7bb6e8d8ee1d6c148df9991aac9d97070",
+      "review": "Recovered the damaged source encoding and rewrote this guide around its current owners and inspection path. Rechecked custom themes and type.",
+      "verified_local_references": [
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeThemePreferences.cs",
+        "framework/CUI/Themes/CuiAccessibilitySettings.cs",
+        "framework/CUI/Themes/CuiThemeResourceApplier.cs",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md",
+        "framework/CUI/Themes/CuiThemePreferenceContext.cs"
+      ],
+      "local_links_checked": 6
+    },
+    "9to1 Workspace/shared/README.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "eee7d59cc4168a603bce19d8e27d8bd5c9c74eff",
+      "new_sha256": "0af3636d585eb04e8cf7564dad437811afd821bb5d5c612621189021e2796c79",
+      "review": "Haven native host and shared services; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/Haven.sln",
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "docs/development/live-preview.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/ARCHITECTURE.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "1c5cefadb3dfe8ef6985734c8fc5e488906725da",
+      "new_sha256": "39c4b3f9b03c1067a75ae21e1d6c58f2d22d1be26c624c31cbbd9bd48f70b5fc",
+      "review": "Architecture of the shared native application; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/architecture/system-map.md",
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md",
+        "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+        "9to1 Workspace/shared/docs/App-Editing-Guide/ARCHITECTURE.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/BROWSER-AUTOMATION-SAFETY.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "09b11ea7faeadfdf0caf221ff0fbb5f25d37d8f9",
+      "new_sha256": "265fdb66ca6ab25c319cfdd3e97de4705ad9784b35b1b8f27992b04aaef97e38",
+      "review": "Browser automation permissions and lifetime; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Browser",
+        "9to1 Workspace/shared/docs/App-Editing-Guide/BROWSER.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/shared/docs/BUILT-IN-DEVELOPER-TOOLS.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "92afa2b629f88f31b50713db6fa8346582a58ef0",
+      "new_sha256": "abe43fdbd800a38b573139e93d50db3bb35d57f0e698ce40444d3f210ea1e558",
+      "review": "Inspect the running desktop interface; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/ui/haven-ui.md",
+        "docs/development/live-preview.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/shared/docs/CODE-INTELLIGENCE.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "763102569820deda22e70646236ce9b13fbb6674",
+      "new_sha256": "2a2a1b520098b2cbfe82a329489f98ef9cb3afa7bbd4b3ee32a703c1706bd75f",
+      "review": "Language services in the development workspace; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Application/CodeIntelligenceAbstractions.cs",
+        "9to1 Workspace/Dev/README.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/shared/docs/CURRENT-REQUIREMENTS.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "b8252c944e0aae5f069e765cf84fadff04ec48fd",
+      "new_sha256": "a56b5d7ab41c70c9845a84e57dc3b668edc66ba261bbfa7f185b3a357e7b6e5e",
+      "review": "Product and engineering requirements for shared code; source owners and local destinations checked.",
+      "verified_local_references": [
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md",
+        "AGENTS.md",
+        "docs/development/workflow.md",
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/HAVENOS-GNOME-PLATFORM.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "a9ecceb1a66589dfc01d7ecea6e2c4a1e593fb20",
+      "new_sha256": "0ba71d49f6e2f4cc5176d4bfbacbdc556123e222307650547df8ee9972fc9221",
+      "review": "GNOME integration in the native OS image; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 OS",
+        "9to1 OS/docs/SHARED-PLATFORM-FOUNDATION.md",
+        "9to1 OS/platform/ubuntu/RELEASE-INCLUSION-MATRIX.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/HAVENOS-LLAMA-CPP-RUNTIME.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "99d8a79140729302584f51b79b3e7e93746de4f0",
+      "new_sha256": "6ed941779296fcb768d237b1cfe6e21638be15e0266cf5675b2b18814a894a15",
+      "review": "Local inference provider integration; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Home/Source/Dulche/llamacpp/README.md",
+        "9to1 OS/packaging/llamacpp/PACKAGING.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/shared/docs/README.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "85232f8e0a5e06f38e3761300fa02c3acc6462e9",
+      "new_sha256": "a5a524004745ea27922c91d114902d56fb56f31d5be850b8712deb75df421a7c",
+      "review": "Shared application developer documentation; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/architecture/README.md",
+        "9to1 Workspace/shared/docs/App-Editing-Guide/README.md",
+        "9to1 Workspace/shared/docs/ui/README.md",
+        "9to1 Workspace/shared/docs/development/README.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/architecture/README.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "fd094e99c71aad6252d02fcc35bdcd9938f5a17a",
+      "new_sha256": "566f2b14528177879fb7e91f226da291bc0323eb4c20f89ad31f81f238ff525d",
+      "review": "Shared architecture reference; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/architecture/repository-structure.md",
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md",
+        "9to1 Workspace/shared/docs/architecture/system-map.md",
+        "9to1 Workspace/shared/docs/architecture/windows-native-personal-task-recovery.md",
+        "9to1 Workspace/shared/docs/architecture/write-libreoffice-engine.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/shared/docs/architecture/agent-observation-retirement.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "496fbc249e921000c3e033c223688f8d38a06704",
+      "new_sha256": "b884f4b230f0839e3152b26b28b1851b80e978c15be271dee2cdfeeec412b1b5",
+      "review": "Retire an observed agent operation; source owners and local destinations checked. Rechecked observer and producer outcomes.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Application",
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md",
+        "9to1 Workspace/shared/src/Haven.Application/Agents/AgentTaskRuntimeService.OriginalObservation.cs"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/architecture/repository-structure.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "b65f9ecc9aafccf514a80c13f89aa31952eb91b3",
+      "new_sha256": "ddb80389ee878b5749e1d3400df818ae6028f520a7ad00c9d87a5fc1b449b77a",
+      "review": "Repository structure for shared native code; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/Haven.sln",
+        "9to1 Workspace/shared/src/Haven.Core",
+        "9to1 Workspace/shared/src/Haven.Application",
+        "9to1 Workspace/shared/src/Haven.Infrastructure",
+        "9to1 Workspace/shared/src/Haven.Desktop",
+        "framework/CUI"
+      ],
+      "local_links_checked": 6
+    },
+    "9to1 Workspace/shared/docs/architecture/state-and-persistence.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "591e269a5740252a0c8aaa7fe19211744649f427",
+      "new_sha256": "09be2217fc7e061d9088b10a6640737a9a59ba9a68faad59be3e73948e77fd72",
+      "review": "State and persistence in native Haven; source owners and local destinations checked. Rechecked schema and restore order.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Database/SqliteDatabase.cs",
+        "9to1 Workspace/Home/Source/Home/Core/HomeNativePreferenceFile.cs"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/architecture/system-map.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "269dd83dd9b6305fea1b0eb42531938a309d2c78",
+      "new_sha256": "d0b83a74d4fd2186451c7e7ca37089c895c20e7e00f0f67887b30d9ab9673386",
+      "review": "Map a product action to its owner; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+        "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs",
+        "9to1 Workspace/Home/UI/Home.cui",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/architecture/windows-native-personal-task-recovery.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "a6816a4274e2f6af29daba5f5fde5a5ec44217a3",
+      "new_sha256": "eeba2f67c9c322ebd108ff2a25929eafffdcfb0bbc0499cd262987097ec39eb1",
+      "review": "Recover a personal task on Windows; source owners and local destinations checked. Rechecked windows activation and private storage.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/architecture/state-and-persistence.md",
+        "9to1 Workspace/Dev/README.md",
+        "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/Recovery/NativePersonalTaskRecoveryStore.Windows.cs"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/architecture/write-libreoffice-engine.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "851a33176f3f41f34ceb565cf3934ead36d5d7de",
+      "new_sha256": "695233aa4031a6c1fca00c3a99555103afa4ca7d2060407c8c5aec19e8cafd86",
+      "review": "Write and the LibreOfficeKit engine boundary; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Write/Native/README.md",
+        "9to1 Workspace/Write/README.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/shared/docs/development/README.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "1b448a8f37f79dd82278021fcca950566f2441aa",
+      "new_sha256": "75749fc364412a853612278cda735ed055fe39f25e3ce151d592e6863c6a3d3c",
+      "review": "Working in the shared solution; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/docs/development/adding-a-feature.md",
+        "9to1 Workspace/shared/docs/development/common-mistakes.md",
+        "9to1 Workspace/shared/docs/development/testing.md",
+        "docs/development/workflow.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/docs/development/adding-a-feature.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "c6ac52e4b0448915d2f91404231a39cbc9295d55",
+      "new_sha256": "1a904c6e493e6c94d1dffd94ec47bad387747065374f6112182ea22730d86051",
+      "review": "Add or change a native feature; source owners and local destinations checked.",
+      "verified_local_references": [
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md",
+        "9to1 Workspace/shared/docs/architecture/system-map.md",
+        "9to1 Workspace/shared/docs/App-Editing-Guide/BUILD-TEST-AND-RECIPES.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/development/common-mistakes.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "94fa0533e1c30df064bb1ab86f072c89c01547f3",
+      "new_sha256": "288333cff2a80503f94ab0d6fb8a65dc9c5f2cb12f9c6fe8c1b4f1953dc0bbfb",
+      "review": "Frequent native integration defects; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeThemePreferences.cs",
+        "9to1 Workspace/shared/docs/development/testing.md",
+        "9to1 Workspace/shared/docs/App-Editing-Guide/UI-MAP.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/development/testing.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "881d60963547734743f94425f2a518ac54d8ec1b",
+      "new_sha256": "233be0b52d744154f7a9e74e7435e8c107b777e5f221fb9fb4fd4f4591eb4dd9",
+      "review": "Test a change to native Haven; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/Haven.sln",
+        "docs/development/workflow.md",
+        "docs/development/live-preview.md",
+        "9to1 Workspace/shared/docs/ui/theming-and-personalisation.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/shared/tests/Haven.Desktop.NativeProbe/README.md": {
+      "group": "shared-architecture",
+      "baseline_blob": "85b1c704a8f216b1e23e3e06484afb07345e8ce9",
+      "new_sha256": "99f61fff2ed73333d6b483a8f19cfec1106ed2015c7b4491ec28f2b8f928728e",
+      "review": "Observe the native Chat add-menu popup; source owners and local destinations checked.",
+      "verified_local_references": [
+        "docs/development/live-preview.md",
+        "9to1 Workspace/shared/docs/App-Editing-Guide/BROWSER.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/HOME-CALL-AND-PLAN.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "499a507f3a0c0605335801be049a0a0028c4d36a",
+      "new_sha256": "afcb3e12a55f7a3dc9a80361bfdefee832cc2844f60c637ddc9eca8c4b231d2e",
+      "review": "Home, voice sessions and planning; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/shared/src/Haven.Desktop/ViewModels/CallPageViewModel.cs",
+        "9to1 Workspace/shared/src/Haven.Application/Planner/PlannerProposalService.cs"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/App-Editing-Guide/TEACH-AND-CHAT-GROUPS.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "e4f16028f6f7cacaba484af55bd8cc65b6aef12d",
+      "new_sha256": "c7c54c4bf3672aa75396847421d53bb1bd1abacb84ff7c962bb2e2a1ff1bb7f3",
+      "review": "Conversation groups and learning sessions; source owners and local destinations checked. Rechecked retained conversation scopes.",
+      "verified_local_references": [
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/ui/present-editor-redesign.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "06267598da3be7361033813c5fe58d9aa063bbe6",
+      "new_sha256": "47e01a4c6d0c4a9baa63f8a8456ee6a417744c27e1568246b6741cdcafe54e96",
+      "review": "Present layout and canvas interaction; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.cs",
+        "9to1 Workspace/shared/docs/ui/present-interaction-engine.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/docs/ui/present-interaction-engine.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "9267725d77e2f1634a28d3b76960a74e628d4470",
+      "new_sha256": "6115e68d4e52ba66f33ed25482d85dca0200fbc4745f33f1fdf049c8ceb49f2f",
+      "review": "Present document interactions; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.InteractionTransforms.cs",
+        "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.TextEditing.cs",
+        "9to1 Workspace/shared/docs/ui/present-editor-redesign.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/shared/src/Haven.Desktop/Information/README.md": {
+      "group": "desktop-and-interface",
+      "baseline_blob": "b782146bf084387528e43f450132bd174ac5e596",
+      "new_sha256": "2104f5df9f7b9d28297b4b8285a4b8f75a9f8e0fd519b221c70c1427e8ab977d",
+      "review": "Desktop composition and event information; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/shared/src/Haven.Desktop/Information/ObjectDigest.md"
+      ],
+      "local_links_checked": 4
+    },
+    "docs/cui/README.md": {
+      "group": "cui-framework",
+      "baseline_blob": "6458c0f4505e6af4ea719ce4d16c8c6cc4b840ca",
+      "new_sha256": "1ed4892845f310f2288755d4f0ba4a20ef61da540d17426a66ffef66ca96559d",
+      "review": "Canonical CUI framework; source owners and local destinations checked.",
+      "verified_local_references": [
+        "framework/CUI/Language",
+        "framework/CUI/Compiler",
+        "framework/CUI/Runtime",
+        "framework/CUI/Themes/README.md",
+        "9to1 Workspace/Home/UI/Home.cui"
+      ],
+      "local_links_checked": 5
+    },
+    "docs/cui/input-focus.md": {
+      "group": "cui-framework",
+      "baseline_blob": "9ae544ad2364625d233ef6cab06372ff668b5605",
+      "new_sha256": "d13c33d883d431f6a39126221c8136ecc0777639f9e4ecd4ac4bec5c32dcbce9",
+      "review": "Request keyboard focus in a CUI form; source owners and local destinations checked.",
+      "verified_local_references": [
+        "framework/CUI/Runtime/CuiControlLoader.cs",
+        "framework/CUI/Runtime.Tests"
+      ],
+      "local_links_checked": 2
+    },
+    "eng/cui/README.md": {
+      "group": "cui-framework",
+      "baseline_blob": "715ad738c105ee9835abf06cc1dc666666daba9a",
+      "new_sha256": "8dea3aa1359bc2beb780f140379fffb3f3c0849a0561941d4641ed984c50f26b",
+      "review": "Review and migrate a legacy CUI document; source owners and local destinations checked. Rechecked what to review in the conversion.",
+      "verified_local_references": [
+        "eng/cui/migrate_legacy.py",
+        "eng/cui/test_migrate_legacy.py",
+        "docs/development/workflow.md"
+      ],
+      "local_links_checked": 3
+    },
+    "eng/cui/native-entrypoints.md": {
+      "group": "cui-framework",
+      "baseline_blob": "6d39e38ef370eb61d19ee35842130fa465db6831",
+      "new_sha256": "7fa205418f9922a976e5b7551747b555c1fab3361e61fe43b05a26b09bdc4ad9",
+      "review": "Trace native CUI entry points; source owners and local destinations checked. Rechecked additional native routes.",
+      "verified_local_references": [
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md",
+        "9to1 Workspace/Write/README.md",
+        "9to1 Workspace/Present/README.md",
+        "9to1 Workspace/Boards/README.md",
+        "9to1 Workspace/Canvas/README.md",
+        "9to1 Workspace/Picture/README.md",
+        "9to1 Workspace/Wave/README.md"
+      ],
+      "local_links_checked": 11
+    },
+    "framework/CUI/Build.Tasks/README.md": {
+      "group": "cui-framework",
+      "baseline_blob": "a19651e3adcba850d3864789d08b265335734cd9",
+      "new_sha256": "32b4124979a30dd60682567b34c45e6e27bef332fe213a6c9c28f36bfa463b81",
+      "review": "Compile canonical CUI during an SDK build; source owners and local destinations checked. Rechecked inputs and emitted artifact.",
+      "verified_local_references": [
+        "framework/CUI/Build.Tasks",
+        "framework/CUI/Build.Tasks.Tests",
+        "framework/CUI/Compiler",
+        "docs/development/workflow.md",
+        "framework/CUI/Build.Tasks/CompileCuiSourcesTask.cs",
+        "framework/CUI/Build.Tasks.Tests/verify_msbuild.py",
+        "framework/CUI/Build.Tasks.Tests/verify_package_custody.py"
+      ],
+      "local_links_checked": 7
+    },
+    "framework/CUI/Themes/README.md": {
+      "group": "cui-framework",
+      "baseline_blob": "9a27c6303022b60f7266337ffbf79f7266d1bf44",
+      "new_sha256": "ad369bb24c914d37a8015c8797de26485c5f0b4e944a4da738cee3c807da18c9",
+      "review": "Native CUI themes and display resources; source owners and local destinations checked.",
+      "verified_local_references": [
+        "framework/CUI/Themes/CuiThemeResourceApplier.cs",
+        "framework/CUI/Themes/CuiAccessibilitySettings.cs",
+        "framework/CUI/Themes/CuiThemePreferenceContext.cs",
+        "framework/CUI/Themes/CuiThemeCatalog.cs",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "framework/CUI/Themes/SpatialBackgrounds.md": {
+      "group": "cui-framework",
+      "baseline_blob": "7760b8610068c5f322885b8e7aa6367f22603d44",
+      "new_sha256": "cfadd2e3592241f8feeb46c724abc19823605a7f122ace6e712cd4ce74cca3f7",
+      "review": "Render a custom spatial background; source owners and local destinations checked. Rechecked gradient and pattern geometry.",
+      "verified_local_references": [
+        "framework/CUI/Themes/CuiCustomMaterialBrush.cs",
+        "framework/CUI/Themes/CuiCustomThemeResourceApplier.cs",
+        "framework/CUI/Themes/CuiMaterialBrush.cs"
+      ],
+      "local_links_checked": 3
+    },
+    "framework/CUI/Runtime/Assets/Fonts/README.md": {
+      "group": "cui-framework",
+      "baseline_blob": "70763b2d0ac7c49197bcc9d8ad0e985cbb92667b",
+      "new_sha256": "d4c5e2bed1a39921bbf2c59564040f9d8f8b2d654af1718639b8e23e487d99a9",
+      "review": "Bundled fonts and missing-glyph fallback; source owners and local destinations checked.",
+      "verified_local_references": [
+        "framework/CUI/Runtime/Assets/Fonts/fallback-provenance.json",
+        "framework/CUI/Runtime/Assets/Fonts/DejaVuSans/LICENSE.txt",
+        "framework/CUI/Runtime/Assets/Fonts/NotoEmoji/OFL.txt"
+      ],
+      "local_links_checked": 3
+    },
+    "framework/CUI/vendor/Avalonia/build/9to1-source-build.md": {
+      "group": "cui-framework",
+      "baseline_blob": "84fc6c1da6c480074da9cf34b6fdaae0d3ac874b",
+      "new_sha256": "6738dc7fbd714bce4454296e8f9e307401ce350869808e9ad83e14484067ab35",
+      "review": "Build the pinned Avalonia platform source; source owners and local destinations checked. Rechecked pinned submodules.",
+      "verified_local_references": [
+        "framework/CUI/vendor/Avalonia/SOURCE.md",
+        "framework/CUI/vendor/Avalonia/NOTICE.md",
+        "framework/CUI/vendor/Avalonia/licence.md"
+      ],
+      "local_links_checked": 3
+    },
+    "docs/development/files-candidate-local-release-2026-11-17.md": {
+      "group": "files-delivery",
+      "baseline_blob": "eee3222a5275b69e9cddb491d147199b92eb923d",
+      "new_sha256": "1c33b2f9b349f45e21bcdc416d7720093f4d6769b2fa3536203d56794add1880",
+      "review": "Verify a Files web candidate before extraction; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/files_candidate_release_gate.py",
+        "apps/Web/Files/README.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/files-candidate-local-release-2026-11-17.md"
+      ],
+      "local_links_checked": 3,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/files-candidate-local-release-2026-11-17.md",
+        "original_blob": "eee3222a5275b69e9cddb491d147199b92eb923d",
+        "sha256": "be316708ee109e1c5d7cb9e9b0ac30390cd99ea8d752e112fdc11fc1a3f18b3d",
+        "source_change_timestamp": "2026-11-17T15:15:29+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/files-local-candidate-2026-11-17.md": {
+      "group": "files-delivery",
+      "baseline_blob": "57ce047036972346cea56510e8a8b65d28c809f1",
+      "new_sha256": "5a3f5cd6cc659c415e0be4873d77fcfd6894d834f425e904a18b4bf4d2c573ed",
+      "review": "Run the sealed Files web app locally; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "cloud/files-drive/dev/run-local.sh",
+        "cloud/files-drive/dev/local-candidate.mjs",
+        "docs/development/files-candidate-local-release-2026-11-17.md",
+        "docs/development/native-files-owner-launch-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/files-local-candidate-2026-11-17.md",
+        "docs/specification/owner-references/2026-11-17-native-files-drive/owner-correction.json"
+      ],
+      "local_links_checked": 6,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/files-local-candidate-2026-11-17.md",
+        "original_blob": "57ce047036972346cea56510e8a8b65d28c809f1",
+        "sha256": "2570fa51aa9745e1962f9c654bcd11626a30081997001007600915d890abacd8",
+        "source_change_timestamp": "2026-11-17T18:51:35+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/files-native-windows-route.md": {
+      "group": "files-delivery",
+      "baseline_blob": "e04a864639a41b8c7cbbbcc3d7d186ec5f01441e",
+      "new_sha256": "11af7e14a8c4770fa669540cfec2cd8ea03a4b9dc0e4ffc2ade3ddbf272fb0a1",
+      "review": "Open native Files through the Windows desktop host; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+        "9to1 Workspace/Files",
+        "docs/development/workflow.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/files-native-windows-route.md"
+      ],
+      "local_links_checked": 4,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/files-native-windows-route.md",
+        "original_blob": "e04a864639a41b8c7cbbbcc3d7d186ec5f01441e",
+        "sha256": "e24921aa5b977803f4b287ca06e81b0b270bc5c1e83aa3e54b131450a325f12b",
+        "source_change_timestamp": "2026-10-04T21:29:21+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/files-web-launcher-2026-11-17.md": {
+      "group": "files-delivery",
+      "baseline_blob": "e87099ce0220744deeaf9780c4419aacc98190ba",
+      "new_sha256": "f07b394a8ad88003fc533c766d333b493fcfc3a301fb3a1b3b470a4a6f87e6dc",
+      "review": "Use the optional Files website launcher; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/files-web-launcher.sh",
+        "docs/development/native-files-owner-launch-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/files-web-launcher-2026-11-17.md"
+      ],
+      "local_links_checked": 3,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/files-web-launcher-2026-11-17.md",
+        "original_blob": "e87099ce0220744deeaf9780c4419aacc98190ba",
+        "sha256": "ce05017013e4b1f6053856f52b72f5710053cd7340d21dafa61f0a020bb1618f",
+        "source_change_timestamp": "2026-11-17T17:17:14+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-drive-import-2026-11-17.md": {
+      "group": "files-delivery",
+      "baseline_blob": "6d0e1e0567c1256a79a98679a5e148a253a9d153",
+      "new_sha256": "ea712219276dbdf53597de97a925ce139389d1af2bbd929c3e285715935d4434",
+      "review": "Import a Desktop OAuth client for native Files; source owners and local destinations checked. Rechecked imported value and source lifetime. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_drive_import.py",
+        "eng/development/native_files_drive_preflight.py",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-drive-import-2026-11-17.md"
+      ],
+      "local_links_checked": 3,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-drive-import-2026-11-17.md",
+        "original_blob": "6d0e1e0567c1256a79a98679a5e148a253a9d153",
+        "sha256": "460326272b4177a929634ef34796dc447366931c56bd813f1aeda450df97552a",
+        "source_change_timestamp": "2026-11-17T21:05:19+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-drive-preflight-2026-11-17.md": {
+      "group": "files-delivery",
+      "baseline_blob": "11ded66e342925dc347fbfc6345d51dcc21b1926",
+      "new_sha256": "17d12e674d4913981dd6d9cca6aa9194e6fae28370bd1d5f42ec5eae5aae617b",
+      "review": "Check the native Drive connection prerequisites; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_drive_preflight.py",
+        "eng/development/test_native_files_drive_preflight.py",
+        "docs/development/native-files-drive-setup-2026-11-17.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-drive-preflight-2026-11-17.md",
+        "docs/specification/owner-references/2026-11-17-native-files-drive/owner-correction.json"
+      ],
+      "local_links_checked": 5,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-drive-preflight-2026-11-17.md",
+        "original_blob": "11ded66e342925dc347fbfc6345d51dcc21b1926",
+        "sha256": "369ac5a5fc28e2dfcc5b4fb52c2639ff11ff4f80691f583ac92cdfa3fcfc91b8",
+        "source_change_timestamp": "2026-11-17T22:02:54+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-drive-setup-2026-11-17.md": {
+      "group": "files-delivery",
+      "baseline_blob": "bbb81fe529949189300f3aa3c053a4c3caa262c2",
+      "new_sha256": "444b145ff5f13679753d6315333251dc27dcb526f5bc7ecccf21f116229f8f38",
+      "review": "Configure the native Files OAuth client locally; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_drive_setup.py",
+        "eng/development/test_native_files_drive_setup.py",
+        "eng/development/native_files_drive_preflight.py",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-drive-setup-2026-11-17.md"
+      ],
+      "local_links_checked": 4,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-drive-setup-2026-11-17.md",
+        "original_blob": "bbb81fe529949189300f3aa3c053a4c3caa262c2",
+        "sha256": "aa3b7ce436d890c31fd8aa4cc899ce5309905ec3d7ad42172445705bfae5bb06",
+        "source_change_timestamp": "2026-11-17T20:22:16+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-linux-smoke-2026-11-18.md": {
+      "group": "files-delivery",
+      "baseline_blob": "11ac1f9002ec6784367b96a1f663c6536ebc5622",
+      "new_sha256": "5a6b09909db0b0bc8ca8b71da4502f2f49679ed0aaa07bb857c5709ee3e6cc9f",
+      "review": "Smoke-test the native Files window on Linux; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_linux_smoke.py",
+        ".github/workflows/native-files-linux-smoke.yml",
+        "docs/development/native-files-normal-close-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-linux-smoke-2026-11-18.md"
+      ],
+      "local_links_checked": 4,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-linux-smoke-2026-11-18.md",
+        "original_blob": "11ac1f9002ec6784367b96a1f663c6536ebc5622",
+        "sha256": "235b7008f54a48bb279c379bfe54fc24a51a7f83f0755f6761ba75c0e37c6b4d",
+        "source_change_timestamp": "2026-11-18T00:23:18+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-normal-close-2026-11-18.md": {
+      "group": "files-delivery",
+      "baseline_blob": "678af3691a1a6b96dfbddc0c8cb6f028b7a80cd0",
+      "new_sha256": "6e6084eac7ba3f4f045566bef7165305eb796fa8697ad0baa9e9bfe5f5516e9c",
+      "review": "Check that the native Files window closes normally; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_normal_close.py",
+        "eng/development/test_native_files_normal_close.py",
+        "docs/development/native-files-profile-reopen-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-normal-close-2026-11-18.md"
+      ],
+      "local_links_checked": 4,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-normal-close-2026-11-18.md",
+        "original_blob": "678af3691a1a6b96dfbddc0c8cb6f028b7a80cd0",
+        "sha256": "f9df3f352c4475f046df168ba4045db2f43cb78f9dbc7a7504634a6554912444",
+        "source_change_timestamp": "2026-11-18T05:48:42+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-owner-launch-2026-11-18.md": {
+      "group": "files-delivery",
+      "baseline_blob": "8800c319bfc830abf2d1a630e3a32ea3e41b1029",
+      "new_sha256": "d980d41e57ac21292283652e1edd2d5651fa04f720cc7837361482460c3c3a30",
+      "review": "Launch an admitted native Files candidate; source owners and local destinations checked. Rechecked first and subsequent launches. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_owner_launch.py",
+        "eng/development/native_files_source_candidate.py",
+        "eng/development/native_files_drive_preflight.py",
+        "docs/development/live-preview.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-owner-launch-2026-11-18.md"
+      ],
+      "local_links_checked": 5,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-owner-launch-2026-11-18.md",
+        "original_blob": "8800c319bfc830abf2d1a630e3a32ea3e41b1029",
+        "sha256": "7d2fa8bd02f74f2ace0456e97336a4cf27bd734c895b66153bc54df7fafd6807",
+        "source_change_timestamp": "2026-11-18T07:18:37+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-package-admission-2026-11-18.md": {
+      "group": "files-delivery",
+      "baseline_blob": "904f1cd2960a641eb04cbd31e645b2e1e3d933e1",
+      "new_sha256": "bc40965f74f778443001e3ab2645dcff82bf38d6e496164dc2501fb4fb788da3",
+      "review": "Verify and privately extract a native Files package; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_package_admission.py",
+        "eng/development/test_native_files_package_admission.py",
+        "docs/development/native-files-owner-launch-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-package-admission-2026-11-18.md"
+      ],
+      "local_links_checked": 4,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-package-admission-2026-11-18.md",
+        "original_blob": "904f1cd2960a641eb04cbd31e645b2e1e3d933e1",
+        "sha256": "e2602bfb3d501e55df1df0f6f8dc43b9a57974d7b9d51d2682ca405548ee1f45",
+        "source_change_timestamp": "2026-11-18T00:51:56+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-profile-reopen-2026-11-18.md": {
+      "group": "files-delivery",
+      "baseline_blob": "fd80d5e58845d879d0465c2feba8a83175f91c1a",
+      "new_sha256": "e55fe8572acd62ced64007747cfbfd5a440ca3e90e9f55dcfc60afe5195edcd1",
+      "review": "Reopen native Files with the same test profile; source owners and local destinations checked. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_profile_reopen.py",
+        "docs/development/native-files-normal-close-2026-11-18.md",
+        "docs/development/native-files-linux-smoke-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-profile-reopen-2026-11-18.md"
+      ],
+      "local_links_checked": 4,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-profile-reopen-2026-11-18.md",
+        "original_blob": "fd80d5e58845d879d0465c2feba8a83175f91c1a",
+        "sha256": "99e51394326fe31e0e64331553befde16615345715aad7b74df0ed3e6117e3c4",
+        "source_change_timestamp": "2026-11-18T03:39:56+00:00",
+        "verbatim": true
+      }
+    },
+    "docs/development/native-files-source-candidate-2026-11-18.md": {
+      "group": "files-delivery",
+      "baseline_blob": "b825ed360c6dd501290524f6e8e195ed0f6ed3c4",
+      "new_sha256": "ffd09a74df5cb1d1ba69a871ec3f6c5fbd9b34fad33584d895129e0623feec6a",
+      "review": "Build a source-identified native Files candidate; source owners and local destinations checked. Rechecked candidate and build receipt. Restored the complete pre-rewrite source record verbatim and linked its evidence.",
+      "verified_local_references": [
+        "eng/development/native_files_source_candidate.py",
+        "docs/development/workflow.md",
+        "docs/development/native-files-owner-launch-2026-11-18.md",
+        "docs/development/native-files-profile-reopen-2026-11-18.md",
+        "docs/development/evidence/files-delivery-before-atlas-v4/native-files-source-candidate-2026-11-18.md"
+      ],
+      "local_links_checked": 5,
+      "restored_original": {
+        "path": "docs/development/evidence/files-delivery-before-atlas-v4/native-files-source-candidate-2026-11-18.md",
+        "original_blob": "b825ed360c6dd501290524f6e8e195ed0f6ed3c4",
+        "sha256": "2d1a4168319c14417e3a48c32507353bf1ae836de3d63c174f88d2965c6024c6",
+        "source_change_timestamp": "2026-11-18T03:19:56+00:00",
+        "verbatim": true
+      }
+    },
+    "9to1 Workspace/Assistants/Memory/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "18ccc3f607da36a395ae519d76d37fea902dd3dd",
+      "new_sha256": "c9ab167b975bfb4f8d870d3a9886a68baf9714fc949502c0c04473a7cc3defdc",
+      "review": "Assistant and Specialist memory access; source owners and local destinations checked. Rechecked admission and commit.",
+      "verified_local_references": [
+        "9to1 Workspace/Assistants/Memory/Core",
+        "9to1 Workspace/Assistants/Memory/Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Assistants/Migration/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "b0286f2c1f25c9391b7220ae555ebd0cd6c0e4e7",
+      "new_sha256": "b35d6ebb75e9273bcf9f5d2787cc7140449bf2d916f90223876c7721dcbb47fb",
+      "review": "Migrate a saved Assistant definition; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Assistants/Migration/LegacySavedAgentSqliteSource.cs",
+        "9to1 Workspace/Assistants/Migration/LegacyAgentMigrationController.cs",
+        "9to1 Workspace/Assistants/Migration/Tests"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Assistants/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "5cf30760612bee85b3966f9a2359fe4e7f73535f",
+      "new_sha256": "b292526d8368f15e4a1d32956e8c99b43752f01f293fe6b9c098d7f896610982",
+      "review": "Assistants and Specialists; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Assistants/Contracts",
+        "9to1 Workspace/Assistants/Migration/README.md",
+        "9to1 Workspace/Assistants/Memory/README.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Assistants/docs/windows-publish.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "c539b5a26b19ed67688b6c531392eb7f44efc556",
+      "new_sha256": "9f8311db51ef528334c19e88505e4a5a6bfe5d2333edcb59d9a1110777e876da",
+      "review": "Publish the Windows Assistants compatibility entry; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Assistants/HavenOS.Assistants.csproj",
+        "9to1 Workspace/Assistants/README.md",
+        "docs/development/workflow.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Boards/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "95f2e0f71fe3ce85b533c3972fc31940048db3c1",
+      "new_sha256": "b63fdf99bef72c5ca80d51319ecd03845053c0328b014e1bff15afb1e44c8f2e",
+      "review": "Boards documents and editing; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Boards/app",
+        "9to1 Workspace/Boards/contract",
+        "9to1 Workspace/Boards/tests/README.md",
+        "9to1 Workspace/Boards/THIRD_PARTY.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Boards/hui/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "701c0024f5df8c0cd03c1512240ea7eeeca2826c",
+      "new_sha256": "d8e36e198a881e52ff5fe8260bfe6de32ab4c4cbcf8dd21d1c2693a25dde79dc",
+      "review": "Boards scene compatibility layer; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Boards/hui/HavenBoardsHuiSession.cs",
+        "9to1 Workspace/Boards/hui/HavenBoardsHuiScene.cs",
+        "9to1 Workspace/Boards/app"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Boards/tests/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "ee7c9d0dd40234685d0b0a3df871ed00788d9c74",
+      "new_sha256": "ee6474dfc867fa46940a4aeebf7374680c8428c7457f301b7c00f145d58bed61",
+      "review": "Choose a Boards verification path; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Boards/tests/CakeOS.Apps.Boards.Tests.csproj",
+        "9to1 Workspace/Boards/tests/verify-boards-foundation.ps1",
+        "9to1 Workspace/Boards/app",
+        "docs/development/live-preview.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Browse/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "9f3b26bdcfb31f3b1915f91b671ec6b024464202",
+      "new_sha256": "58dea2764f7666f2a93ef49256790ee215029822948a7f0bd26d314bb61ff6eb",
+      "review": "Browse sessions and Haven workspace tabs; source owners and local destinations checked. Rechecked browser engine and private-tab rules.",
+      "verified_local_references": [
+        "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
+        "9to1 Workspace/Browse/BrowseEngineSelectionPolicy.cs",
+        "9to1 Workspace/Browse/NativeUI/Tests",
+        "9to1 Workspace/Browse/Host.Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Canvas/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "819fcef3684f07ebd4169c2cb10035dfeaf47e99",
+      "new_sha256": "ca518b9f38b87c169a3f18c839c9d9d5b4eeeb98bfaff29624afd8647e63373a",
+      "review": "Canvas documents and ink editing; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Canvas/CanvasCuiWorkspace.cs",
+        "9to1 Workspace/Canvas/CanvasNativeViewport.cs",
+        "9to1 Workspace/Canvas/rnote-poc/README.md",
+        "9to1 Workspace/Canvas/tools/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Canvas/rnote-poc/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "52083487a46a903ad9a25ef9974145a92aa12651",
+      "new_sha256": "680da150dc88a2492df6a4bfb1a2aeb33b1e8a3b3d6515be4ec38735da033118",
+      "review": "Rnote engine bridge for Canvas; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Canvas/rnote-poc/Cargo.toml",
+        "9to1 Workspace/Canvas/rnote-poc/include",
+        "9to1 Workspace/Canvas/rnote-poc/PROVENANCE.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Canvas/tools/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "705517848efe42830dbaf2760aafa0604f368c66",
+      "new_sha256": "a1173f86c6ff0c3410eaa63315d06ed881a6321aab96f5d67e49cb51c5b6a5c1",
+      "review": "Audit Canvas donor capability and native artifacts; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Canvas/tools/inspect_rnote_capabilities.py",
+        "9to1 Workspace/Canvas/tools/test_validate_rnote_native_artifact.py",
+        "9to1 Workspace/Canvas/rnote-poc/PROVENANCE.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Data/Native/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "277793310b4e91d229b73f3ddedf31b3658606b9",
+      "new_sha256": "dba849e2665751e3be91ebf2e3d15c641de558ad3a1da5653cf3ef113b6ab72e",
+      "review": "Native Data workbook entry; source owners and local destinations checked. Rechecked source and engine evidence.",
+      "verified_local_references": [
+        "9to1 Workspace/Data/Native",
+        "9to1 Workspace/Data/App",
+        "9to1 Workspace/Data/workers",
+        "9to1 Workspace/Data/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Data/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "61e8867a7e0db4bb549fbd6531b5b90f5d0484b5",
+      "new_sha256": "8be014ebf198e57637dfe720467676acdeae97f8809d908afe70b86fbf02610a",
+      "review": "Data workbooks, database queries and engine workers; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Data/Cui",
+        "9to1 Workspace/Data/workers",
+        "9to1 Workspace/Data/Tests",
+        "9to1 Workspace/Data/Native/README.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Dev/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "7ac1aedbb86f822ae5b73161c76f8cf45329354a",
+      "new_sha256": "c98a46d65a24621cd0f5daa730af4053303914abe37a207e030b906ccb8b72f9",
+      "review": "Code projects and development workspaces; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Dev/DeveloperWorkspaceStore.cs",
+        "9to1 Workspace/Dev/DeveloperProjectTemplateMaterializer.cs",
+        "9to1 Workspace/Dev/DeveloperTaskWorkspaceService.cs",
+        "9to1 Workspace/Dev/Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Files/Source/Files/AGENTS.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "5a21fc11775a4930add217c771bf828b2d2628c6",
+      "new_sha256": "ee682471a3a9137a7013fcaa4f32a684f137ae73d0576409db5badcb6ae45144",
+      "review": "Contributing to the Files donor integration; source owners and local destinations checked.",
+      "verified_local_references": [
+        "AGENTS.md",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md",
+        "9to1 Workspace/Files/Source/DONOR-PROVENANCE.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Files/Source/Files/CLAUDE.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "47dc3e3d863cfb5727b87d785d09abf9743c0a72",
+      "new_sha256": "c13cbbdc875a57de05d55a621b27600012bbb6799bedec6f3441b9761a76dbbf",
+      "review": "Local instructions for the Files donor tree; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Files/Source/Files/AGENTS.md",
+        "AGENTS.md"
+      ],
+      "local_links_checked": 2
+    },
+    "9to1 Workspace/Home/ReadMe.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "new_sha256": "65f2b6be03428cc5eead556bf8e17844254ff9633c9a2e934ca213dd91853a16",
+      "review": "Home and global settings; source owners and local destinations checked. Rechecked read the current device state.",
+      "verified_local_references": [
+        "9to1 Workspace/Home/UI/Home.cui",
+        "9to1 Workspace/Home/Source/Home/Core/HomeThemePreferenceService.cs",
+        "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeThemePreferences.cs",
+        "9to1 Workspace/Home/Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Mail/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "e27c65d52e934baaf1472ae9dfa8bf028b7daaca",
+      "new_sha256": "9a6c9c12b94993f0b3b72849079d1c26bdf83cf3f4ec8f6f4f48c6c8efedabe9",
+      "review": "Mail in Connect; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Mail/Contracts",
+        "9to1 Workspace/Mail/Storage",
+        "9to1 Workspace/Mail/Providers",
+        "9to1 Workspace/Mail/Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Motion/IMPLEMENTATION.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "7508d3d3179b70b1517c95bbf70ca3c81f0dd8be",
+      "new_sha256": "707556c0dc4937adbee70d923a2bd2eb0c619f54a930d663fe7a22c57f9f39f4",
+      "review": "Motion sequence and caption editing; source owners and local destinations checked. Rechecked media and edit-session ownership.",
+      "verified_local_references": [
+        "9to1 Workspace/Motion/UI/MotionWorkspace.cui",
+        "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Picture/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "34a6c033dddc30ea84b3991bb7bf58e34bca76d4",
+      "new_sha256": "c1cc3b3cc28116486b99a8b3ed1130c79dacb549c18606b3690c3f64cba8be8f",
+      "review": "Frame image viewing and editing; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Picture/HavenOS.Images.csproj",
+        "9to1 Workspace/Picture/UI",
+        "9to1 Workspace/Picture/Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Present/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "60d6ae2e43acb236f84654a6d81a1986f9717898",
+      "new_sha256": "c05489e36b65c2e6fc65d7669106f2f24cc302dda1126ea0f2d3562c6f958646",
+      "review": "Present standalone and embedded entry points; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Present/HavenOS.Present.csproj",
+        "9to1 Workspace/shared/src/Haven.Application/Present/PresentEditor.cs",
+        "9to1 Workspace/Present/present-engine/README.md",
+        "9to1 Workspace/shared/docs/ui/present-editor-redesign.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Present/present-engine/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "1c6e78d11c6e91329f2e24d621374585f0df927d",
+      "new_sha256": "5f82170f1c2a63e26c1326426b6e1c4bb66f6baff49f2ddb6e573fef2f251dd2",
+      "review": "Impress engine integration for Present; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Present/present-engine/include",
+        "9to1 Workspace/Present/present-engine/tests",
+        "9to1 Workspace/Present/README.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Spaces/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "b128f87566e5840ba15c9b03c7e43e2472c3a308",
+      "new_sha256": "2f7d55756b3aa694eaa6f3becae2428d24f02a75fd23503516d9f8822d8f0299",
+      "review": "Spaces, conversations and task context; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+        "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs",
+        "9to1 Workspace/Spaces/Source/Development",
+        "9to1 Workspace/Spaces/Source/Tasks",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 5
+    },
+    "9to1 Workspace/Stacks/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "36f27e6dc02ba1149987307671fc71c6ca6f1650",
+      "new_sha256": "c6497e0e3292d8d7f76d65e594f2ab6bbc89a311b5f3d0bf8cc91852cca2befc",
+      "review": "Stacks identities and managed project metadata; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Stacks/StackEngine.cs",
+        "9to1 Workspace/Stacks/StackManifest.cs",
+        "9to1 Workspace/Stacks/StackManagedRefs.cs",
+        "9to1 Workspace/Stacks/Tests"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Wave/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "2ed09e4eb0aade17af1b33d28ea49dec8e9d807d",
+      "new_sha256": "26ba0b92264468ec21116cb168528c58f89404f39185273681716b082ee19d45",
+      "review": "Wave audio projects and native editing; source owners and local destinations checked. Rechecked timeline commands.",
+      "verified_local_references": [
+        "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+        "9to1 Workspace/Wave/UI",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 3
+    },
+    "9to1 Workspace/Write/Native/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "14bd1f3c0ebac7aa89327b0cc6ce3cc1292c38fe",
+      "new_sha256": "c06c36b309e6bf712b8337897b73162ad257f5073d12c30ed91d920228c27e76",
+      "review": "Write native LibreOfficeKit bridge; source owners and local destinations checked. Rechecked abi check boundaries.",
+      "verified_local_references": [
+        "9to1 Workspace/Write/Native/9to1_write_lok.h",
+        "9to1 Workspace/Write/Native/build-windows.ps1",
+        "9to1 Workspace/Write/Native/test-abi.py",
+        "9to1 Workspace/Write/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "9to1 Workspace/Write/README.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "195041d5ec910e67c44ab18fe616f491a263ff65",
+      "new_sha256": "88f44d6333fb07f76b9861eb9a3229fa231b6bb03d6c41eb1db5d12d4c4282b5",
+      "review": "Write document hosting; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Write/HavenOS.Write.csproj",
+        "9to1 Workspace/Write/Native/README.md",
+        "9to1 Workspace/Write/Tests",
+        "docs/specification/owner-references/2026-11-22-atlas-v4/README.md"
+      ],
+      "local_links_checked": 4
+    },
+    "docs/home/windows-native-producer.md": {
+      "group": "workspace-apps",
+      "baseline_blob": "93c12f1520834691098755d18ff1a732934b43a7",
+      "new_sha256": "6da8f408af522469dbd1847beddc53c9a93db49d5fc2310be9d9c65552a91aae",
+      "review": "The Windows native Home producer; source owners and local destinations checked.",
+      "verified_local_references": [
+        "9to1 Workspace/Home/ReadMe.md",
+        "apps/Home/src/AvaloniaHome",
+        "docs/development/live-preview.md"
+      ],
+      "local_links_checked": 3
+    }
+  },
+  "groups": [
+    "cui-framework",
+    "desktop-and-interface",
+    "files-delivery",
+    "shared-architecture",
+    "workspace-apps"
+  ],
+  "assigned": 86,
+  "completed": 86,
+  "verification": {
+    "baseline_count": 86,
+    "link_scope": "All Markdown local destinations in the 86 rewritten files. Code fences excluded. Network, operating-system, OAuth and SDK commands were not executed.",
+    "encoding": "Strict UTF-8; all ten affected guides have readable Markdown headings and no original pair-decoding artefacts.",
+    "worktree_scope": "Only the 86 assigned documents and this handoff were written. No staging, commit or push.",
+    "known_product_gap": "UI-002 calls for Comic replacing Cinematic and legacy preference migration; CuiThemeCatalog at review still contains Cinematic. No product change claimed.",
+    "local_link_instances_checked": 336,
+    "group_totals": {
+      "desktop-and-interface": 15,
+      "shared-architecture": 21,
+      "cui-framework": 9,
+      "files-delivery": 13,
+      "workspace-apps": 28
+    },
+    "new_document_words": 26124,
+    "files_delivery_fixback": {
+      "decision": "Flash decision 2 §3",
+      "timestamp": "2026-11-22T18:26:18.975873+00:00",
+      "matched_blobs": 13,
+      "links_in_to_files_guides_or_evidence": 25,
+      "broken_refs_or_anchors": [],
+      "evidence_boundary": "The 13 added historical snapshots are byte-identical to the originals in commit 2a9c4d980 and are outside the 192 maintained-doc rewrite count."
+    }
+  }
+}

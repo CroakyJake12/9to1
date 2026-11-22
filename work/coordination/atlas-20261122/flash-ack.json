@@ -1,0 +1,26 @@
+{
+  "acknowledged_by": "Flash (RTX Flash-Next), temporary UI and documentation coordinator",
+  "opencode_session_id": "ses_dfb9da4f6ffegHIL2IGcMhOHX4",
+  "session_note": "Identifier read by the receiving session itself via the OpenCode tool interface (session rename of its own session); the caller may still bind this ack to the tool receipt.",
+  "acknowledged_at_utc": "2026-11-22T17:54:29Z",
+  "observed_revision": "2a9c4d980c4b16741f7d3880f1c982c0560eae88",
+  "observed_revision_matches_approved": true,
+  "shared_file_owner": "Flash holds exclusive coordination of the shared CUI theme/shell from this ACK; Astra transfers per updated AGENTS.md; no concurrent shared-file edits",
+  "work_lanes": {
+    "spaces_chat": "Codex app implementer owns the floating Options panel component and focused tests; Flash reviews against spaces-chat and spaces-permissions (save/cancel, Escape, focus return, drafts, attachments)",
+    "build_code_document_tabs": "V100 specialist ticket owns one replacement container in '9to1 Workspace/Dev/UI/DeveloperWorkbench.cui' plus one owning focused check; Flash applies and verifies against the focus, wrap and trailing Pin/Unpin contract",
+    "first_party_documentation": "Codex documentation workers own their disjoint groups from docs-in-scope.json (192 documents); Flash reviews real component details and links; historical evidence, source copies, licence text and the four pre-existing dirty paths are protected"
+  },
+  "constraints_accepted": [
+    "No starting, stopping, reconfiguring or reserving models or devices; Thunder and GPU administration belong to Astra; worker pauses only, resumed immediately after training",
+    "Work on local main only; never stage unrelated files; SDK lock and memory guard for validation",
+    "Stop testing below 15% observed Codex allowance (most recent observation 84%); standing 10%/5% development thresholds apply",
+    "Preserve this conversation and all worker ticket histories",
+    "Handoff ends only when Astra explicitly resumes coordination"
+  ],
+  "observations_at_ack": {
+    "working_tree": "Four pre-existing dirty paths confirmed present and untouched. A fifth modified path, '9to1 Workspace/Browse/NativeUI/Tests/BrowseWorkspaceLayoutTests.cs' (tab-overflow test renamed 11→overflowing tabs, counts 11→14), is NOT in pass-state pre_existing_wip; left unowned, unstaged and unmodified pending caller identification.",
+    "v100_result": "v100-build-result.txt not yet present at ack time; Flash session remains available to receive and apply it.",
+    "stale_write_close_lease": "Noted from handoff; any subsequent native restart escalates to the caller, not actioned by Flash."
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "start": "2026-11-22T16:49:54Z",
+  "transition_due": "2026-11-22T17:49:54Z",
+  "phase": "Checkpoint complete; Astra owns integration again. Flash handed back the UI/docs coordinator role and both tested inference services resumed.",
+  "approved_source_revision": "2a9c4d980c4b16741f7d3880f1c982c0560eae88",
+  "accepted_app_changes": [
+    "8185046f4 native tab artwork and typography",
+    "351394030 actual theme gallery and Glow material",
+    "cb265e50d independent mode, brightness, contrast and pill rails",
+    "9235cca81 Frosted, Playful and Bubble materials plus conflict and display-range fixes"
+  ],
+  "documentation": "2a9c4d980 adopted 22 November sources and rewrote README, root AGENTS and active workflow entry. All 192 maintained first-party documents listed in docs-in-scope.json. The feature inventory preserves its dated observations. Retain immutable owner copies, historical evidence and attribution.",
+  "verification": [
+    "Native startup and database integrity passed after same-profile recovery on running revision 5e0178908.",
+    "Published source tabs rendered with actual admitted temporary Home/Files project. Readable native Options panel, staged cancel, draft preservation and Appearance seen on screen.",
+    "76 CUI material/slider checks, 12 Home checks, 26 Spaces tests, 13 native Options/formatting cases, 38 Develop contract checks, 5 compact overflow cases. Additional published-binary geometry/keyboard and pointer cases passed.",
+    "Broad native Browse on the integrated implementation: 80 passed, 34 failed. Exactly the same 34 were present on the earlier checkpoint. Broader Home before/after had the same 16 failures."
+  ],
+  "owner_updates": [
+    "Sandbox retired. Work in canonical local main under SDK lock and guard.",
+    "Temporarily delegate UI/docs coordination to actual Flash after worker launch; Astra owns Thunder dual-GPU work.",
+    "Compact model split across both cards; measure headroom. Brief worker pauses authorised; resume both immediately after a training session.",
+    "Stop testing if real Codex allowance remaining drops below 15%. Most recent account observation 84% remaining."
+  ],
+  "pre_existing_wip": [
+    "docs/development/refactor-2026-11-18/overnight-2026-11-20/TASKS.json",
+    "cloud/files-drive/dev/live-attach.mjs",
+    "cloud/files-drive/dev/live-firefox.mjs",
+    "docs/development/evidence/atlas-20261120/g03-t01-report.md"
+  ],
+  "ui_ownership": {
+    "Astra": "Shared files and integration returned after Flash receipt.",
+    "Flash": "Original coordinator session retained and engine restored.",
+    "V100": "Original two-slot service healthy, original task delivered and integrated."
+  },
+  "gpu_handoff": "Real V100 operating manifest at /home/jacob/Documents/Codex/2026-11-22/files-pasted-by-the-user-mission/outputs/astra-v100.json. No first-hour dispatch. Flash-Next actual backend identifier unsloth-ud-iq4_xs; verify exact route at handoff.",
+  "workspace": "/home/jacob/Documents/Codex/2026-11-22/start-the-9to1-implementation-pass-now",
+  "hardware_result": "One compact model trained across RTX 5080 and V100 at once, repeated at Stories15M scale. Reloads through the original native inference runtime matched all 32 greedy tokens for both sizes. Paired original Flash/V100 benchmark returned 6/6 in 35.604s, previous 35.910s. Both serving profiles restored.",
+  "current_issues": [
+    "Atlas-wide implementation remains open, including native Comic migration, full Settings tree, the complete three-pane Develop editor and contextual Study options.",
+    "Unresolved Write close lease blocks normal restart of this profile, author-authorised in-app Force quit & reviewed recovery used.",
+    "Existing standalone Windows Home Files integration compile errors; 34 pre-existing Browse failures and 16 pre-existing Home failures are documented."
+  ],
+  "active_native_revision": "5e0178908cd2854875fc8a767b84f6a848cdb38d",
+  "native_run_id": "889228e5-63fa-4262-b486-c5a5bc730ad3",
+  "docs_commit": "00bf9179064422fc785a492728d608ac32beb79b",
+  "ui_worker_changes": [
+    "50799b146",
+    "2cb04f4f0",
+    "b0f4ca315",
+    "aaac7fa5c",
+    "9f7b4a035"
+  ],
+  "strata_tools_commit": "612e206",
+  "latest_atlas": "v4, original SHA-256 612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+  "tests": {
+    "cui": 76,
+    "appearance_home": 12,
+    "spaces": 26,
+    "floating_options_and_formatting": 13,
+    "develop_workbench": 38,
+    "shell_overflow": 5
+  },
+  "usage_remaining_last_observed_percent": 69,
+  "native_observations": [
+    "On 9f7b4a035 the real Spaces > Chat composer opened its floating Options over the live conversation. Corrected translucent bleed through using the popup material. On prior integrated native revision aaac7fa5c, staged Just chat then Escape; Basic actions stayed selected and synthetic text was preserved. Test draft removed without sending.",
+    "The latest release is a guarded framework-dependent publish against installed .NET 10.0.9. Host assembly and updated Spaces/Dev producer hashes checked; PID/window verified.",
+    "Develop landing reached through real native 9to1://dev, but scratch path outside the configured personal Files root was not admitted. Do not misstate full live editor navigation proof."
+  ],
+  "durable_receipts": {
+    "training_evidence": "/home/jacob/Documents/Codex/2026-11-22/start-the-9to1-implementation-pass-now/outputs/Thunder-validation/verification.json",
+    "managed_preview": "/home/jacob/.local/state/9to1-live-preview/approved-astra-v4-develop-final-5e0178908.json",
+    "chat": "/home/jacob/Documents/Codex/2026-11-22/start-the-9to1-implementation-pass-now/outputs/chat-options.png",
+    "ownership": "flash-handback.json",
+    "document_integrity": "docs-b/pin-integrity.json",
+    "published_workbench": "/home/jacob/Documents/Codex/2026-11-22/start-the-9to1-implementation-pass-now/outputs/develop-native-receipt.json"
+  },
+  "develop_additional_finding": "The private typed rows had no CUI value contract and the long normal page could not scroll to the source tabs. Both defects fixed at 5e0178908 and verified in wide/narrow published-binary renders.",
+  "broad_browse_verification": {
+    "total": 114,
+    "passed": 80,
+    "failed": 34,
+    "baseline_failures": 34,
+    "new_failures": [],
+    "baseline_failures_now_passing": []
+  },
+  "develop_source_revision": "5e0178908cd2854875fc8a767b84f6a848cdb38d",
+  "develop_verification": {
+    "fixture": "Real admitted temporary Home/Files project and the exact production DeveloperProjectWorkbenchPage partial sources, with compiled Dev CUI. The private root of the managed desktop profile was untouched.",
+    "sizes_dip": {
+      "wide": [
+        1250,
+        850
+      ],
+      "narrow": [
+        540,
+        850
+      ]
+    },
+    "open_files": [
+      "seed.txt",
+      "Layout.cs",
+      "Colors.cs"
+    ],
+    "measured_wide_center_delta_dip": 0,
+    "measured_narrow_center_delta_dip": 0,
+    "output_geometry": "/home/jacob/Documents/Codex/2026-11-22/start-the-9to1-implementation-pass-now/outputs/develop-tab-geometry.json",
+    "regular_host_build_status": "Full source compiled with 41 embedded resources and serial Roslyn using a private output. Normal Avalonia post-processing and the guarded owning publish passed. The regular development app starts and uses the original profile. Final geometry test loaded that exact published Haven.dll and original real project owners. Both inference workers remained online during this UI-only compilation.",
+    "source_sha256": "10601674933b3d848767689ff055fa05686555b6b9b02e105d96cdd8fb916434",
+    "published_haven_sha256": "3a48f2bdd7a161fd5960f18c953760eef3244648893c3af1dda8a37ba30f8d78"
+  },
+  "coordination_reports": "Flash handback received. Both original inference services were restored, independent simultaneous training and shared training were validated, durable helper committed.",
+  "reference_bundle_zip_sha256": "46b2b17c3f540e013bedaafc7556e4aac99e69674ffaf16e4877ce5e33de888a",
+  "operator_auth": "Jacob authorised briefly interrupting inference workers for training and immediate resumption; a separate UI-build-only pause requires a decision. Stop tests below 15% actual remaining Codex allowance.",
+  "remaining_discrepancies": [
+    "Atlas-wide implementation remains open, including native Comic migration, full Settings tree, the complete three-pane Develop editor and contextual Study options.",
+    "Unresolved Write close lease blocks normal restart of this profile, author-authorised in-app Force quit & reviewed recovery used.",
+    "Existing standalone Windows Home Files integration compile errors; 34 pre-existing Browse failures and 16 pre-existing Home failures are documented."
+  ],
+  "open_ui": [
+    "Next broader Atlas slices remain unassigned; latest UI and documentation changes locally committed and tested."
+  ]
+}

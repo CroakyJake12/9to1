@@ -1,0 +1,3 @@
+# Temporary coordination handback
+
+Thunder training and runtime verification is complete. Astra now owns overall integration, shared CUI/shell and final review. Flash keeps exclusive ownership only of the current Develop internal-tab integration until it finishes or explicitly returns the file. Record the exact current result, affected paths and validation needs in flash-decisions.md, then hand it back. The original V100 candidate has completed; do not apply its unsupported Column element. Docs-A has supplied the restored Files evidence. The app worker is running the next guarded Chat check. Keep the worker sessions and current profile intact.

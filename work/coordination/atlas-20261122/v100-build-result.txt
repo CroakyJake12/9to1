@@ -1,0 +1,20 @@
+<Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6" accessible-name="Open source documents">
+  <Column>
+    <Container Type="Wrap" CellGap="6" HorizontalAlignment="Center">
+      <Repeat id="dev-source-tabs" Source="{Binding SourceTabs}" As="item" Key="{Binding item.SelectionKey}">
+        <Container Type="Horizontal Stack" CellGap="2">
+          <Button id="dev-select-source-tab" action="dev.select-source-tab" content="{Binding item.Label}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanSelect}" />
+          <Button id="dev-close-source-tab" action="dev.close-source-tab" content="×" accessible-name="{Binding item.CloseAccessibleName}" Interactive="{Binding item.CanClose}" />
+        </Container>
+      </Repeat>
+    </Container>
+  </Column>
+  <Column>
+    <Button id="dev-pin-source-tab" action="dev.toggle-source-tab-pin" content="{Binding SourceTabPinLabel}" accessible-name="Pin or unpin the selected source tab" Interactive="{Binding CanPinSourceTab}" />
+  </Column>
+</Container>
+
+Focused checks:
+1. The document group is centered in the `1fr` column while the Pin/Unpin button remains in the trailing `Auto` column.
+2. Existing `Repeat` key, button IDs, actions, bindings, accessible names, and tab order are unchanged.
+3. The tab group remains wrapped in a `Wrap` container with the original `CellGap="6"` for narrow-width wrapping.

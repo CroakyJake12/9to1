@@ -1,0 +1,19 @@
+{
+  "model": "qwen3.8-27b-v100",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a 9to1 UI implementation specialist. Implement the bounded CUI item using only the supplied source. Do not invoke tools."
+    },
+    {
+      "role": "user",
+      "content": "# Build document tabs\n\nOwn one patch to the internal document strip in `9to1 Workspace/Dev/UI/DeveloperWorkbench.cui`, beginning at the container holding `dev-source-tabs`, on revision `2a9c4d980c4b16741f7d3880f1c982c0560eae88`. Atlas v4 routes `build-code` and `build-code-diagnostics`. Requirements UI-006 and APP-BUILD-001/002.\n\nCenter the open document group in the available space before the trailing Pin/Unpin action. Retain existing stable item keys, selection and close actions, keyboard names, order and narrow wrapping. Do not change the top application tab strip. Return the complete replacement container only, followed by up to three focused check descriptions. No source edits or other tools are needed for this specialist ticket. The coordinator will apply and verify the result.\n\nHere is the actual container in scope.\n<Container Type=\"Wrap\" CellGap=\"6\" accessible-name=\"Open source documents\">\n        <Repeat id=\"dev-source-tabs\" Source=\"{Binding SourceTabs}\" As=\"item\" Key=\"{Binding item.SelectionKey}\">\n          <Container Type=\"Horizontal Stack\" CellGap=\"2\">\n            <Button id=\"dev-select-source-tab\" action=\"dev.select-source-tab\" content=\"{Binding item.Label}\" accessible-name=\"{Binding item.AccessibleName}\" Interactive=\"{Binding item.CanSelect}\" />\n            <Button id=\"dev-close-source-tab\" action=\"dev.close-source-tab\" content=\"\u00d7\" accessible-name=\"{Binding item.CloseAccessibleName}\" Interactive=\"{Binding item.CanClose}\" />\n          </Container>\n        </Repeat>\n        <Button id=\"dev-pin-source-tab\" action=\"dev.toggle-source-tab-pin\" content=\"{Binding SourceTabPinLabel}\" accessible-name=\"Pin or unpin the selected source tab\" Interactive=\"{Binding CanPinSourceTab}\" />\n      </Container>\n      \nCUI supports Type=\"Grid\", ColumnSizes=\"1fr Auto\", CellGap, Column, HorizontalAlignment and nested Containers. Leave action names and bindings verbatim. Only output one replacement container and focused checks."
+    }
+  ],
+  "temperature": 0,
+  "max_tokens": 4096,
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  }
+}

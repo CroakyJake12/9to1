@@ -1,0 +1,30 @@
+# 05-workspace-applications
+
+- `9to1 Workspace/Assistants/Memory/README.md` — Assistant and Specialist memory access; source owners and local destinations checked. Rechecked admission and commit.
+- `9to1 Workspace/Assistants/Migration/README.md` — Migrate a saved Assistant definition; source owners and local destinations checked.
+- `9to1 Workspace/Assistants/README.md` — Assistants and Specialists; source owners and local destinations checked.
+- `9to1 Workspace/Assistants/docs/windows-publish.md` — Publish the Windows Assistants compatibility entry; source owners and local destinations checked.
+- `9to1 Workspace/Boards/README.md` — Boards documents and editing; source owners and local destinations checked.
+- `9to1 Workspace/Boards/hui/README.md` — Boards scene compatibility layer; source owners and local destinations checked.
+- `9to1 Workspace/Boards/tests/README.md` — Choose a Boards verification path; source owners and local destinations checked.
+- `9to1 Workspace/Browse/README.md` — Browse sessions and Haven workspace tabs; source owners and local destinations checked. Rechecked browser engine and private-tab rules.
+- `9to1 Workspace/Canvas/README.md` — Canvas documents and ink editing; source owners and local destinations checked.
+- `9to1 Workspace/Canvas/rnote-poc/README.md` — Rnote engine bridge for Canvas; source owners and local destinations checked.
+- `9to1 Workspace/Canvas/tools/README.md` — Audit Canvas donor capability and native artifacts; source owners and local destinations checked.
+- `9to1 Workspace/Data/Native/README.md` — Native Data workbook entry; source owners and local destinations checked. Rechecked source and engine evidence.
+- `9to1 Workspace/Data/README.md` — Data workbooks, database queries and engine workers; source owners and local destinations checked.
+- `9to1 Workspace/Dev/README.md` — Code projects and development workspaces; source owners and local destinations checked.
+- `9to1 Workspace/Files/Source/Files/AGENTS.md` — Contributing to the Files donor integration; source owners and local destinations checked.
+- `9to1 Workspace/Files/Source/Files/CLAUDE.md` — Local instructions for the Files donor tree; source owners and local destinations checked.
+- `9to1 Workspace/Home/ReadMe.md` — Home and global settings; source owners and local destinations checked. Rechecked read the current device state.
+- `9to1 Workspace/Mail/README.md` — Mail in Connect; source owners and local destinations checked.
+- `9to1 Workspace/Motion/IMPLEMENTATION.md` — Motion sequence and caption editing; source owners and local destinations checked. Rechecked media and edit-session ownership.
+- `9to1 Workspace/Picture/README.md` — Frame image viewing and editing; source owners and local destinations checked.
+- `9to1 Workspace/Present/README.md` — Present standalone and embedded entry points; source owners and local destinations checked.
+- `9to1 Workspace/Present/present-engine/README.md` — Impress engine integration for Present; source owners and local destinations checked.
+- `9to1 Workspace/Spaces/README.md` — Spaces, conversations and task context; source owners and local destinations checked.
+- `9to1 Workspace/Stacks/README.md` — Stacks identities and managed project metadata; source owners and local destinations checked.
+- `9to1 Workspace/Wave/README.md` — Wave audio projects and native editing; source owners and local destinations checked. Rechecked timeline commands.
+- `9to1 Workspace/Write/Native/README.md` — Write native LibreOfficeKit bridge; source owners and local destinations checked. Rechecked abi check boundaries.
+- `9to1 Workspace/Write/README.md` — Write document hosting; source owners and local destinations checked.
+- `docs/home/windows-native-producer.md` — The Windows native Home producer; source owners and local destinations checked.

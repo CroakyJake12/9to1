@@ -1,0 +1,43 @@
+{
+  "baseline": "2a9c4d980c4b16741f7d3880f1c982c0560eae88",
+  "groups": {
+    "model-and-runtime-docs": 19,
+    "platform-and-build": 24,
+    "project-workflow": 23,
+    "web-and-services": 40
+  },
+  "maintained_markdown_paths": 106,
+  "current_relative_link_targets_checked": 205,
+  "broken_relative_markdown_file_targets": [],
+  "original_fenced_example_bodies_lost": [],
+  "preserved_historical_source_pins": true,
+  "frozen_proof_manifest_comparison": {
+    "native16": {
+      "paths": 1148,
+      "baseline_mismatches": 226,
+      "pre_repair_mismatches": 236,
+      "post_repair_mismatches": 226
+    },
+    "inference_stage": {
+      "paths": 44,
+      "baseline_mismatches": 3,
+      "pre_repair_mismatches": 6,
+      "post_repair_mismatches": 3
+    },
+    "math_native_four": {
+      "paths": 73,
+      "baseline_mismatches": 43,
+      "pre_repair_mismatches": 44,
+      "post_repair_mismatches": 43
+    },
+    "local_auth_fixture": {
+      "paths": 92,
+      "baseline_mismatches": 24,
+      "pre_repair_mismatches": 30,
+      "post_repair_mismatches": 24
+    }
+  },
+  "check_scope": "Checked all maintained Markdown file-target links and fenced example bodies in the owned documents. Comparisons concern the current local source against the historical manifests, not the historical pinned trees themselves. No production, hardware, deployment, remote-link or target-device acceptance executed.",
+  "authenticated_documents_restored_at_original_path": 17,
+  "current_maintained_paths": 106
+}

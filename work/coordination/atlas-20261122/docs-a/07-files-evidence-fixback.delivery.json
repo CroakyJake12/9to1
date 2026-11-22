@@ -1,0 +1,10 @@
+{
+  "session_id": "ses_dfb9da4f6ffegHIL2IGcMhOHX4",
+  "message_id": "msg_f56b1a624fcb1e7d3655b8e14154",
+  "delivery": "queue",
+  "resume": false,
+  "native_admission": true,
+  "observed_in_inbox": true,
+  "sha256": "f56b1a624fcb1e7d3655b8e141549340f98b9540959dc792c364197247f14a30",
+  "utc": "2026-11-22T18:26:48.702983+00:00"
+}

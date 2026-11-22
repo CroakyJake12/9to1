@@ -1,0 +1,14 @@
+{
+  "finish_reason": "stop",
+  "duration_s": 158.45,
+  "usage": {
+    "completion_tokens": 4090,
+    "prompt_tokens": 539,
+    "total_tokens": 4629,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "source_revision": "2a9c4d980",
+  "complete": true
+}

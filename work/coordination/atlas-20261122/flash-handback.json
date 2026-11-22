@@ -1,0 +1,43 @@
+{
+  "from": "Flash (temporary UI/docs coordinator), opencode session ses_dfb9da4f6ffegHIL2IGcMhOHX4",
+  "to": "Astra",
+  "utc": "2026-11-22T18:42Z",
+  "source_at_handback": {
+    "head": "00bf9179064422fc785a492728d608ac32beb79b",
+    "reviewed_base_of_this_pass": "2a9c4d980c4b16741f7d3880f1c982c0560eae88",
+    "note": "00bf91790 is the caller's docs-lane integration commit over the reviewed base; Flash verified it contains zero non-Markdown files and the 13 pinned evidence snapshots."
+  },
+  "files_flash_changed": [
+    "9to1 Workspace/Dev/UI/DeveloperWorkbench.cui — one replacement of the internal 'Open source documents' container (single hunk @@ -79,14 +79,16 @@, +10/−8): V100 candidate structure with its unsupported <Column> element wrappers repaired to attached Column=\"0\"/\"1\" attributes; working tree only, never staged, XML well-formed, all repeat keys/actions/bindings/accessible names byte-identical to base, top application tab strip untouched"
+  ],
+  "coordination_files_written": [
+    "work/coordination/atlas-20261122/flash-ack.json",
+    "work/coordination/atlas-20261122/flash-decisions.md",
+    "work/coordination/atlas-20261122/flash-handback.json"
+  ],
+  "accepted": {
+    "v100_build_tabs": "candidate integrated with the bounded Column-attribute repair (Decision 3); the original element form was not applied",
+    "spaces_chat_options": "chat-candidate.diff 7514715560b848cf4954fae51f3dafc1a69c3137bbb3f8c68c3f2ec8e22e8a14 accepted on source review; eight owned paths; tree equality re-verified after the docs commit",
+    "documentation": "192/192 guides accepted at batch level; files-delivery fix-back independently verified 13/13 byte-identical snapshots, links and owner references; committed as 00bf91790",
+    "no_heavy_jobs": "Flash ran no SDK, GPU, build or inference work; the app worker's guarded Chat check is running under Astra's restored services"
+  },
+  "pending_native_validation": [
+    "Guarded DeveloperWorkbenchCuiDocumentTests + DeveloperWorkbenchCompiledTransportTests for the applied tab hunk",
+    "Native build-code / build-code-diagnostics observation: document group centred in available width, narrow wrapping preserved, keyboard reach, Pin/Unpin trailing and reachable",
+    "Guarded compile/test and native Options pass for the accepted Chat candidate (app worker in progress)",
+    "Release and independent acceptance gates remain open for every item; nothing is claimed accepted"
+  ],
+  "ownership_release": {
+    "shared_cui_theme_shell": "Astra (Flash made no changes; held from 17:54Z ACK to this handback)",
+    "develop_workbench_cui_tab_hunk": "Astra — explicitly returned now, uncommitted in the working tree",
+    "spaces_chat_component": "app worker until its guarded check reports",
+    "documentation_groups": "docs-A / docs-B reports as committed",
+    "astra_pending": "BrowseWorkspaceLayoutTests.cs (compact-tab fixture) untouched by Flash throughout"
+  },
+  "preserved": {
+    "pre_existing_wip": "four pass-state paths untouched and unstaged",
+    "fifth_path_resolution": "tab-overflow test attributed to Astra at coordinator instruction",
+    "profile": "Glow/SuperDark/50/50 left as found",
+    "sessions": "all worker ticket histories and this coordinator session kept; inference engine remains available"
+  }
+}
