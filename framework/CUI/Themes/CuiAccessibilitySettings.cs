@@ -18,6 +18,8 @@ public sealed record CuiAccessibilitySettings
     public bool ReduceMotion { get; init; }
     public bool HighContrast { get; init; }
     public double DisplayScale { get; init; } = 1d;
+    public int Brightness { get; init; } = 50;
+    public int ColourContrast { get; init; } = 50;
     public string? InterfaceFontFamilyOverride { get; init; }
     public string? CodeFontFamilyOverride { get; init; }
 
@@ -26,6 +28,8 @@ public sealed record CuiAccessibilitySettings
         if (!double.IsFinite(DisplayScale) || DisplayScale is < 0.5d or > 5d)
             throw new ArgumentOutOfRangeException(nameof(DisplayScale), DisplayScale,
                 "Display scale must be finite and between 0.5 and 5.");
+        if (Brightness is < 0 or > 100 || ColourContrast is < 0 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(Brightness), "Display percentages must be between 0 and 100.");
         _ = CuiTypography.ResolveInterfaceFontFamily(InterfaceFontFamilyOverride);
         _ = CuiTypography.ResolveCodeFontFamily(CodeFontFamilyOverride);
         return this;
@@ -228,11 +232,47 @@ public static class CuiContrast
 /// <summary>Applies high-contrast and motion preferences without changing theme identity.</summary>
 public static class CuiAccessibilityPalette
 {
+    // Adjust chrome roles individually. The neutral settings leave every original byte,
+    // including translucent alpha and authored document/guest colours, untouched.
+    private static CuiPalette AdjustDisplay(CuiPalette palette, int brightness, int contrast)
+    {
+        if (brightness == 50 && contrast == 50) return palette;
+        var canvas = palette.TideBase.ToHsl();
+        var dark = canvas.L < .5;
+        var spread = 1 + (contrast - 50) * .009;
+        var offset = (brightness - 50) * (dark ? .0024 : .0020);
+        Color Surface(Color colour)
+        {
+            var hsl = colour.ToHsl();
+            var lightness = Math.Clamp(canvas.L + (hsl.L - canvas.L) * spread + offset,
+                dark ? .018 : .54, dark ? .46 : .995);
+            return new HslColor(hsl.A, hsl.H, hsl.S, lightness).ToRgb();
+        }
+        var adjusted = palette with
+        {
+            TideBase = Surface(palette.TideBase), TideColour = Surface(palette.TideColour),
+            Panel = Surface(palette.Panel), Panel2 = Surface(palette.Panel2), Panel3 = Surface(palette.Panel3),
+            PanelHover = Surface(palette.PanelHover), Button = Surface(palette.Button),
+            ButtonHover = Surface(palette.ButtonHover), ButtonPressed = Surface(palette.ButtonPressed),
+            Line = Surface(palette.Line), LineStrong = Surface(palette.LineStrong)
+        };
+        // Tone against the least favourable ordinary surface. The resource layer separately
+        // measures text against action gradients and handles translucent button materials.
+        var backgrounds = new[] { adjusted.TideBase, adjusted.TideColour, adjusted.Panel, adjusted.Panel2, adjusted.Panel3, adjusted.PanelHover };
+        Color Ink(Color colour, double minimum)
+        {
+            var weakest = backgrounds.MinBy(background => CuiContrast.Ratio(colour, background));
+            return CuiContrast.EnsureForegroundContrast(colour, weakest, minimum);
+        }
+        return adjusted with { Text = Ink(palette.Text, 7), TextSoft = Ink(palette.TextSoft, 4.6),
+            Muted = Ink(palette.Muted, 4.6), Muted2 = Ink(palette.Muted2, 4.6) };
+    }
+
     public static CuiPalette Resolve(CuiPalette palette, CuiAccessibilitySettings? settings = null)
     {
         var profile = (settings ?? CuiAccessibilitySettings.Default).Validate();
         if (!profile.HighContrast)
-            return palette;
+            return AdjustDisplay(palette, profile.Brightness, profile.ColourContrast);
 
         var backgroundLuminance = (0.2126d * palette.TideBase.R) + (0.7152d * palette.TideBase.G) + (0.0722d * palette.TideBase.B);
         var isDark = backgroundLuminance < 127.5d;

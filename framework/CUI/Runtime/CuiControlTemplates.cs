@@ -478,15 +478,63 @@ public static class CuiControlTemplates
         track.IncreaseButton = Name(new RepeatButton { Focusable = false }, "PART_IncreaseButton", scope);
         CuiPropertyPresentation.ConfigurePart(track.DecreaseButton,CuiPropertyPresentation.TemplatePart.RailButton);
         CuiPropertyPresentation.ConfigurePart(track.IncreaseButton,CuiPropertyPresentation.TemplatePart.RailButton);
-        // The rail is a theme-owned rounded control rail: a fixed-height track (CuiRailHeight,
-        // CuiRailRadius) using the same muted track brush as determinate progress. It reads as part
-        // of the same control family while rounding at its own fixed height. The Track above still
-        // owns all position/value/thumb logic; the rail is purely visual.
-        var rail = new Border { VerticalAlignment = VerticalAlignment.Center };
-        Resource(rail, Border.HeightProperty, "CuiRailHeight");
-        Resource(rail, Border.CornerRadiusProperty, "CuiRailRadius");
-        Resource(rail, Border.BackgroundProperty, "CuiProgressTrackBrush");
+        var rail = new SliderRail(owner, thumb) { IsHitTestVisible = false };
+        Resource(rail, TemplatedControl.CornerRadiusProperty, "CuiRailRadius");
+        Resource(rail, TemplatedControl.BackgroundProperty, "CuiSliderTrackBrush");
+        Resource(rail, TemplatedControl.BorderBrushProperty, "CuiAccentBrush");
         return new Panel { Children = { rail, track } };
+    }
+
+    // The native Track positions the thumb, handles dragging and preserves range automation.
+    // Paint its actual centre so fractional values, reversed and vertical sliders stay aligned.
+    private sealed class SliderRail(Slider owner, Thumb thumb) : TemplatedControl
+    {
+        static SliderRail() => AffectsRender<SliderRail>(BackgroundProperty, BorderBrushProperty, CornerRadiusProperty);
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs args)
+        {
+            base.OnAttachedToVisualTree(args);
+            thumb.PropertyChanged += ThumbChanged;
+            owner.PropertyChanged += DirectionChanged;
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs args)
+        {
+            thumb.PropertyChanged -= ThumbChanged;
+            owner.PropertyChanged -= DirectionChanged;
+            base.OnDetachedFromVisualTree(args);
+        }
+
+        private void ThumbChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+        {
+            if (change.Property == BoundsProperty) InvalidateVisual();
+        }
+
+        private void DirectionChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+        {
+            if (change.Property == Avalonia.Controls.Slider.OrientationProperty || change.Property == Avalonia.Controls.Slider.IsDirectionReversedProperty)
+                InvalidateVisual();
+        }
+
+        public override void Render(DrawingContext context)
+        {
+            var vertical = owner.Orientation == Orientation.Vertical;
+            var width = Bounds.Width;
+            var height = Bounds.Height;
+            var thickness = Math.Min(CornerRadius.TopLeft * 2, vertical ? width : height);
+            if (width <= 0 || height <= 0 || thickness <= 0) return;
+            var bounds = vertical ? new Rect((width - thickness) / 2, 0, thickness, height)
+                                  : new Rect(0, (height - thickness) / 2, width, thickness);
+            var pill = new RoundedRect(bounds, thickness / 2);
+            context.DrawRectangle(Background, null, pill);
+            var centre = thumb.Bounds.Center;
+            var reverse = owner.IsDirectionReversed;
+            var filled = vertical
+                ? (reverse ? new Rect(0, 0, width, centre.Y) : new Rect(0, centre.Y, width, Math.Max(0, height - centre.Y)))
+                : (reverse ? new Rect(centre.X, 0, Math.Max(0, width - centre.X), height) : new Rect(0, 0, centre.X, height));
+            using (context.PushClip(pill))
+                context.DrawRectangle(BorderBrush, null, filled);
+        }
     }
 
     private static ItemsPresenter ItemPresenter(ItemsControl owner, INameScope scope)

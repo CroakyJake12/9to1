@@ -107,6 +107,8 @@ public static class HomeNativePreferenceFile
                     Revision = checked(stored.Revision + 1),
                     ThemeName = themeChanged.Contains("havenUiThemeName") ? legacy.ThemeName : stored.ThemeName,
                     Appearance = themeChanged.Contains("havenUiAppearance") ? legacy.Appearance : stored.Appearance,
+                    Display = themeChanged.Contains("havenUiAppearance") && stored.Display is { } display
+                        ? display with { Mode = HomeDisplaySettings.FromLegacy(legacy.Appearance) } : stored.Display,
                     Accessibility = themeChanged.Contains("fontFamilyName") ? stored.Accessibility with { InterfaceFontFamily = legacy.Accessibility.InterfaceFontFamily } : stored.Accessibility,
                     Accent = themeChanged.Any(key => key is "overrideAccentColour" or "accentColourName")
                         ? new HomeThemeAccentPreference(legacy.Accent?.Mode ?? HomeThemeAccentOverrideMode.None,
@@ -160,7 +162,7 @@ public static class HomeNativePreferenceFile
         // as complete values, allowing deliberate removals to take effect.
         foreach (var pair in serialized)
         {
-            if (pair.Key is "scope" or "accessibility" or "accent" &&
+            if (pair.Key is "scope" or "accessibility" or "accent" or "display" &&
                 pair.Value is JsonObject sourceNested &&
                 envelope[pair.Key] is JsonObject targetNested)
             {

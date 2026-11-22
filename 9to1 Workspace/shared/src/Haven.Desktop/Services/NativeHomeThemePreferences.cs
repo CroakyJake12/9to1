@@ -1,4 +1,7 @@
+using System.ComponentModel;
 using System.Text.Json.Nodes;
+using Avalonia.Platform;
+using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using HavenOS.Home.Core;
 
@@ -8,6 +11,9 @@ namespace Haven.Desktop.Services;
 internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IAsyncDisposable
 {
     private readonly HomeThemeScope _scope;
+    private readonly IPlatformSettings? _platform;
+    private volatile PlatformThemeVariant _systemVariant;
+    private sealed record DisplayChange(object Target, int Brightness, int ColourContrast);
     private readonly HomeThemePreferenceService _service;
     private readonly FileBackend _backend;
     private readonly Action<Action> _dispatch;
@@ -47,10 +53,29 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         _publishThemePresentation = publishThemePresentation;
         _backend = new(preferencePath, scope, projectLegacy, authorise);
         _service = new(_backend, _backend, new ThemeCatalog());
+        _platform = Avalonia.Application.Current?.PlatformSettings;
+        if (_platform is not null)
+        {
+            _systemVariant = _platform.GetColorValues().ThemeVariant;
+            _platform.ColorValuesChanged += SystemColoursChanged;
+        }
         Context = new(this);
         if (_publishThemePresentation is not null) Context.Changed += ContextChanged;
         _service.Changed += Invalidated;
     }
+
+    private void SystemColoursChanged(object? sender, PlatformColorValues colours)
+    {
+        if (_systemVariant == colours.ThemeVariant) return;
+        _systemVariant = colours.ThemeVariant;
+        lock (_operationsGate)
+            if (_closing || _preference?.EffectiveDisplay().Mode != HomeDisplayMode.FollowSystem) return;
+        Invalidated(this, _scope);
+    }
+
+    private CuiAppearance ResolveMode(HomeDisplayMode mode) =>
+        mode == HomeDisplayMode.Dark || mode == HomeDisplayMode.FollowSystem && _systemVariant == PlatformThemeVariant.Dark
+            ? CuiAppearance.Dark : CuiAppearance.Bright;
 
     private void ContextChanged(object? sender, EventArgs args)
     {
@@ -162,6 +187,44 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
 
     internal SettingsWriteOutcome CreateSettingsWriteOutcome() => new(this);
 
+    internal static void UpdateDisplayReadout(object? sender, PropertyChangedEventArgs args)
+    {
+        if (sender is not CuiViewModel model) return;
+        var key = args.PropertyName;
+        if (key is "HomeBrightness" or "HomeColourContrast" && model.Get(key) is double number && double.IsFinite(number))
+            model.Set(key + "Text", Math.Round(number) + "%");
+        if (key is "HomeBrightness" or "HomeColourContrast" or "HomeBrightnessSaved" or "HomeColourContrastSaved" or "HomeAppearanceAvailable")
+        {
+            bool Changed(string name) => model.Get(name) is double draft && model.Get(name + "Saved") is double saved &&
+                double.IsFinite(draft) && Math.Round(draft) != saved;
+            model.Set("HomeCanApplyLevels", model.Get("HomeAppearanceAvailable") is true &&
+                (Changed("HomeBrightness") || Changed("HomeColourContrast")));
+        }
+    }
+
+    internal void ApplyEditorBindings(CuiViewModel model)
+    {
+        foreach (var (key, value) in SettingsBindings())
+        {
+            if (key is "HomeBrightness" or "HomeColourContrast")
+            {
+                // A pending edit survives an unrelated theme, mode or accessibility refresh.
+                if (Equals(model.Get(key + "Saved"), value)) continue;
+                model.Set(key + "Saved", value);
+            }
+            model.Set(key, value);
+        }
+    }
+
+    internal static object? CaptureDisplayDraft(object? target, CuiViewModel model)
+    {
+        if (target is not SettingTarget { Key: "display" }) return target;
+        if (model.Get("HomeBrightness") is not double brightness || model.Get("HomeColourContrast") is not double contrast ||
+            !double.IsFinite(brightness) || !double.IsFinite(contrast) ||
+            brightness is < 0 or > 100 || contrast is < 0 or > 100) return null;
+        return new DisplayChange(target, (int)Math.Round(brightness), (int)Math.Round(contrast));
+    }
+
     internal IReadOnlyDictionary<string, object?> SettingsBindings()
     {
         lock (_operationsGate)
@@ -178,6 +241,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         { ["Name"] = name, ["Key"] = key is "reduce-motion" or "high-contrast" ? key : key + ":" + next,
           ["Target"] = Target(key, next), ["IsSelected"] = selected };
         var available = !_closing && value is not null;
+        var display = value?.EffectiveDisplay() ?? new(HomeDisplayMode.FollowSystem);
         var themes = CuiThemeCatalog.All.OrderBy(theme => theme.Theme switch
         {
             CuiTheme.Professional => 0, CuiTheme.Glow => 1, CuiTheme.Playful => 2,
@@ -206,6 +270,13 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         return new Dictionary<string, object?>
         {
             ["HomeAppearanceAvailable"] = available,
+            ["HomeBrightness"] = (double)display.Brightness,
+            ["HomeColourContrast"] = (double)display.ColourContrast,
+            ["HomeDisplayTarget"] = available ? Target("display", "levels") : null,
+            ["HomeHighContrastActive"] = value?.Accessibility.HighContrast == true,
+            ["HomeModeChoices"] = available ? Enum.GetValues<HomeDisplayMode>()
+                .Select(mode => Option(mode == HomeDisplayMode.FollowSystem ? "Follow system" : mode.ToString(),
+                    "mode", mode.ToString(), mode == display.Mode)).ToArray() : Array.Empty<Dictionary<string, object?>>(),
             ["HomeAppearanceScope"] = "Applies to this device profile.",
             ["HomeAppearanceStatus"] = Diagnostic ?? (value is null ? "Appearance has not been loaded." : "Saved theme: " + value.ThemeName),
             ["HomeThemeChoices"] = available ? names.Distinct(StringComparer.OrdinalIgnoreCase)
@@ -223,12 +294,14 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
 
     internal Task<HomeThemeOperationResult> ApplySettingsAsync(object? issuedTarget, CancellationToken token = default)
     {
+        var displayChange = issuedTarget as DisplayChange;
+        if (displayChange is not null) issuedTarget = displayChange.Target;
         SettingTarget target;
         lock (_operationsGate)
         {
             if (issuedTarget is not SettingTarget observed || !ReferenceEquals(observed.Owner, this) ||
                 !_targets.Values.Any(current => ReferenceEquals(current, observed)) || _preference is null ||
-                observed.Revision != _preference.Revision)
+                observed.Revision != _preference.Revision || (observed.Key == "display") != (displayChange is not null))
                 return Task.FromResult(new HomeThemeOperationResult(false, "SettingsIntentRetired", Diagnostic: "Appearance changed. Refresh before choosing again."));
             target = observed;
         }
@@ -244,7 +317,14 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 "high-contrast" => prior.Accessibility with { HighContrast = bool.Parse(target.Value) },
                 _ => prior.Accessibility
             };
-            var actual = _service.SetAsync(_scope, target.Key == "theme" ? target.Value : prior.ThemeName,
+            var display = prior.EffectiveDisplay();
+            var updatedDisplay = target.Key == "mode" ? display with { Mode = Enum.Parse<HomeDisplayMode>(target.Value) }
+                : displayChange is null ? null
+                : display with { Brightness = displayChange.Brightness, ColourContrast = displayChange.ColourContrast };
+            var compatibleAppearance = target.Key == "mode" ? ResolveMode(updatedDisplay!.Mode).ToString() : prior.Appearance;
+            var actual = updatedDisplay is not null
+                ? _service.SetDisplayAsync(prior, updatedDisplay, compatibleAppearance, current)
+                : _service.SetAsync(_scope, target.Key == "theme" ? target.Value : prior.ThemeName,
                 accessibility, target.Revision, current,
                 appearance: target.Key == "appearance" ? target.Value : prior.Appearance,
                 accent: prior.Accent, customThemesJson: prior.CustomThemesJson);
@@ -300,9 +380,11 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 resolved.UsedFallback ? Math.Max(value.Revision, Current.Revision) : value.Revision,
                 "device:" + value.Scope.OwnerId, resolved.FromCache,
                 new() { ReduceMotion = access.ReduceMotion, HighContrast = access.HighContrast,
+                    Brightness = value.EffectiveDisplay().Brightness, ColourContrast = value.EffectiveDisplay().ColourContrast,
                     DisplayScale = access.DisplayScale, InterfaceFontFamilyOverride = access.InterfaceFontFamily,
                     CodeFontFamilyOverride = access.CodeFontFamily },
-                value.Appearance is null ? null : Enum.Parse<CuiAppearance>(value.Appearance),
+                value.EffectiveDisplay().Mode == HomeDisplayMode.FollowSystem ? ResolveMode(HomeDisplayMode.FollowSystem)
+                    : value.Appearance is null ? ResolveMode(value.EffectiveDisplay().Mode) : Enum.Parse<CuiAppearance>(value.Appearance),
                 value.Accent is { } accent ? new((CuiAccentOverrideMode)accent.Mode, accent.AllAppsColour, accent.IndividualApps) : null,
                 resolved.UsedFallback ? null : value.CustomThemesJson);
             if (next.Revision < Current.Revision && next.ScopeId == Current.ScopeId) return;
@@ -368,6 +450,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         await start;
         var failures = new List<Exception>();
         lock (_operationsGate) failures.AddRange(_observerFailures);
+        if (_platform is not null) _platform.ColorValuesChanged -= SystemColoursChanged;
         try { _service.Changed -= Invalidated; } catch (Exception error) { failures.Add(error); }
         if (_publishThemePresentation is not null)
             try { Context.Changed -= ContextChanged; } catch (Exception error) { failures.Add(error); }

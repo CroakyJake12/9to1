@@ -311,7 +311,9 @@ public static class CuiPropertyPresentation
             }
             if (part == TemplatePart.SliderThumb)
             {
-                Watch("CuiSelectionIndicatorBrush","Background",source,1);
+                Watch("CuiSliderThumbBrush","Background",source,1);
+                Watch("CuiSliderThumbEdgeBrush","BorderColor",source,1);
+                Value("BorderWidth",new Thickness(2));
                 Watch("CuiThumbSize","Width",source,1);Watch("CuiThumbSize","Height",source,1);
                 Watch("CuiThumbRadius","CornerRadius",source,1);
             }

@@ -49,6 +49,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The canonical Home Appearance fragment could not be rendered.");
         _loader.WireBindings(loaded.Root); Content = loaded.Root;
+        _bindings.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
         _source.Changed += OnSourceChanged;
         RefreshBindings();
     }
@@ -75,6 +76,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Appearance action is unavailable.");
+        parameter = NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _bindings);
         return new(_work.RunAsync(async original =>
         {
             if (command == "RefreshHomeAppearance") { await RefreshAsync(original, cancellationToken); return; }
@@ -217,12 +219,14 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_active && !_unavailable)
-            foreach (var (key, value) in _source.SettingsBindings()) _bindings.Set(key, value);
+            _source.ApplyEditorBindings(_bindings);
         else
         {
             _bindings.Set("HomeAppearanceScope", "Applies to this device profile.");
             _bindings.Set("HomeThemeChoices", Array.Empty<object>());
             _bindings.Set("HomeAppearanceChoices", Array.Empty<object>());
+            _bindings.Set("HomeModeChoices", Array.Empty<object>());
+            _bindings.Set("HomeDisplayTarget", null);
             _bindings.Set("HomeAccessibilityChoices", Array.Empty<object>());
         }
         var available = _active && IsAlive && !IsBusy && !_unavailable;

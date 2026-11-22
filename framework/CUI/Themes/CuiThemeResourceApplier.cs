@@ -343,7 +343,12 @@ public static class CuiThemeResourceApplier
         resources["CuiSwitchHoverBrush"] = new SolidColorBrush(WithAlpha(palette.LineStrong, dark ? (byte)0x73 : (byte)0x61));
         resources["CuiSwitchThumbBrush"] = new SolidColorBrush(Color.Parse("#FFFFFFFF"));
         // Slider rail: a fixed-height decorative rail, fully rounded at half its own height.
-        var railHeight = 6d * settings.DisplayScale;
+        var railHeight = 24d * settings.DisplayScale;
+        var thumbInk = CuiContrast.Ratio(Colors.White, palette.Accent) >= CuiContrast.Ratio(Colors.Black, palette.Accent)
+            ? Colors.White : Colors.Black;
+        resources["CuiSliderThumbBrush"] = new SolidColorBrush(thumbInk);
+        resources["CuiSliderThumbEdgeBrush"] = new SolidColorBrush(palette.Accent);
+        resources["CuiSliderTrackBrush"] = new SolidColorBrush(Blend(palette.Panel, palette.Text, settings.HighContrast ? .45 : .23));
         resources["CuiRailHeight"] = railHeight;
         resources["CuiRailRadius"] = new CornerRadius(railHeight / 2);
         // Progress primitive: read-only determinate rail. The fill reuses CuiAccentBrush. Its track

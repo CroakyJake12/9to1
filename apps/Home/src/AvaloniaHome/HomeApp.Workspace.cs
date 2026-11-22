@@ -200,8 +200,9 @@ internal sealed partial class HomeApp
         RegisterOriginalLibraryActions();
         RegisterWorkspaceAction("RefreshHomePermissions", RefreshWorkspacePermissionsAsync);
         RegisterWorkspaceAction("RefreshHomeAppearance", RefreshHomeAppearanceAsync);
+        _viewModel.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
         _viewModel.On("ApplyHomeAppearance", parameter => _ = RunOriginalNativeWork(() =>
-            RunHomeAppearanceActionAsync(parameter)));
+            RunHomeAppearanceActionAsync(NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _viewModel))));
         RegisterWorkspaceAction("RefreshHomeWorkspace", RefreshWorkspaceAsync);
         RegisterWorkspaceAction("RefreshEvents", RefreshWorkspaceEventsAsync);
         RegisterWorkspaceAction("OpenEventObject", OpenWorkspaceEventAsync);
@@ -572,12 +573,14 @@ internal sealed partial class HomeApp
         _viewModel.SetActionAvailability("RefreshEvents", _workspaceInitialized && !_workspaceBusy);
         _viewModel.SetActionAvailability("SelectEventObject", _workspaceInitialized && !_workspaceBusy);
         if (_homeTheme is { } appearance && !_homeAppearanceProjectionUnavailable)
-            foreach (var (key, value) in appearance.SettingsBindings()) _viewModel.Set(key, value);
+            appearance.ApplyEditorBindings(_viewModel);
         else
         {
             _viewModel.Set("HomeAppearanceScope", "Applies to this device profile.");
             _viewModel.Set("HomeThemeChoices", Array.Empty<object>());
             _viewModel.Set("HomeAppearanceChoices", Array.Empty<object>());
+            _viewModel.Set("HomeModeChoices", Array.Empty<object>());
+            _viewModel.Set("HomeDisplayTarget", null);
             _viewModel.Set("HomeAccessibilityChoices", Array.Empty<object>());
         }
         var canEditAppearance = _homeTheme is not null && _workspaceInitialized && !_workspaceBusy && !_homeAppearanceClosing && !_homeAppearanceProjectionUnavailable;

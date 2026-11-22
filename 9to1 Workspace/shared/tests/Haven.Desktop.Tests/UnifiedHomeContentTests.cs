@@ -924,6 +924,64 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
+    public async Task Home_display_sliders_commit_once_preserve_legacy_settings_and_reject_a_stale_draft()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-display-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, """{"havenUiThemeName":"Glow","havenUiAppearance":3,"keep":"existing"}""");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "display-test");
+        var source = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            var original = await File.ReadAllBytesAsync(file);
+            await source.RefreshAsync();
+            var model = new CuiViewModel();
+            model.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
+            source.ApplyEditorBindings(model);
+            Assert.False((bool)model.Get("HomeCanApplyLevels")!);
+            Assert.Equal(50d, model.Get("HomeBrightness"));
+            Assert.Equal(50d, model.Get("HomeColourContrast"));
+            Assert.True(model.TrySetValue("HomeBrightness", 72d));
+            Assert.True(model.TrySetValue("HomeColourContrast", 38d));
+            source.ApplyEditorBindings(model);
+            Assert.Equal("72%", model.Get("HomeBrightnessText"));
+            Assert.True((bool)model.Get("HomeCanApplyLevels")!);
+            Assert.Equal(original, await File.ReadAllBytesAsync(file));
+
+            var draft = NativeHomeThemePreferences.CaptureDisplayDraft(model.Get("HomeDisplayTarget"), model);
+            var commit = await source.ApplySettingsAsync(draft);
+            Assert.True(commit.Succeeded);
+            Assert.Equal(new HomeDisplaySettings(HomeDisplayMode.Dark, 72, 38), commit.Value!.Preference.Display);
+            Assert.Equal("SuperDark", commit.Value.Preference.Appearance);
+            await source.RefreshAsync();
+            source.ApplyEditorBindings(model);
+            Assert.False((bool)model.Get("HomeCanApplyLevels")!);
+            Assert.False((await source.ApplySettingsAsync(draft)).Succeeded);
+            Assert.True((await source.ApplySettingsAsync(AppearanceTarget(source, "HomeModeChoices", "Light"))).Succeeded);
+            await source.RefreshAsync();
+            Assert.Equal(CuiAppearance.Bright, source.Current.Appearance);
+            Assert.Equal(72, source.Current.Accessibility.Brightness);
+            Assert.Equal(38, source.Current.Accessibility.ColourContrast);
+            var highContrast = await source.ApplySettingsAsync(AppearanceTarget(source, "HomeAccessibilityChoices", "High contrast"));
+            Assert.True(highContrast.Succeeded);
+            await source.RefreshAsync();
+            var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Bright, CuiTheme.Glow);
+            Assert.Equal(Colors.White, CuiAccessibilityPalette.Resolve(palette, source.Current.Accessibility).TideBase);
+            var saved = HomeNativePreferenceFile.Read(file);
+            var same = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+            Assert.Equal("existing", saved["keep"]!.GetValue<string>());
+            Assert.Equal(new HomeDisplaySettings(HomeDisplayMode.Light, 72, 38), same.Display);
+        }
+        finally
+        {
+            await source.DisposeAsync();
+            Directory.Delete(root, true);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Home_appearance_changes_preserve_custom_library_per_app_accents_and_additive_saved_fields()
     {
         var root = Path.Combine(Path.GetTempPath(), "home-settings-additive-" + Guid.NewGuid().ToString("N"));
