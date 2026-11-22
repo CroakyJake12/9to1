@@ -257,9 +257,9 @@ public sealed class CuiHorizontalOverflowTests
                 right.Focus(); Press(window, Key.Right); Pump(window);
                 Assert.True(scroll.Offset.X > previous);
                 Press(window, Key.End); Pump(window);
-                Assert.False(right.IsEffectivelyVisible);
-                left.Focus(); Press(window, Key.Home); Pump(window);
-                Assert.Equal(0, scroll.Offset.X); Assert.False(left.IsEffectivelyVisible);
+                Assert.False(right.IsEffectivelyVisible); Assert.True(left.IsFocused);
+                Press(window, Key.Home); Pump(window);
+                Assert.Equal(0, scroll.Offset.X); Assert.False(left.IsEffectivelyVisible); Assert.True(right.IsFocused);
                 container.Resources["CuiPanel2Brush"] = Brushes.Green;
                 container.Resources["CuiTextBrush"] = Brushes.Yellow;
                 container.Resources["CuiReduceMotion"] = true;

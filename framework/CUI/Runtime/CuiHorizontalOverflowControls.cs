@@ -100,8 +100,15 @@ internal sealed class CuiHorizontalOverflowControls : IDisposable
     {
         var end = Math.Max(0, _scroll.Extent.Width - _scroll.Viewport.Width);
         var available = _enabled && _owner.IsEffectivelyEnabled && end > .5;
-        _leftBackdrop.IsVisible = available && _scroll.Offset.X > .5;
-        _rightBackdrop.IsVisible = available && end - _scroll.Offset.X > .5;
+        var showLeft = available && _scroll.Offset.X > .5;
+        var showRight = available && end - _scroll.Offset.X > .5;
+        // Make the surviving arrow focusable before the endpoint hides the focused arrow.
+        if (showLeft) _leftBackdrop.IsVisible = true;
+        if (showRight) _rightBackdrop.IsVisible = true;
+        if (!showLeft && showRight && _left.IsFocused) _right.Focus(NavigationMethod.Tab);
+        else if (!showRight && showLeft && _right.IsFocused) _left.Focus(NavigationMethod.Tab);
+        if (!showLeft) _leftBackdrop.IsVisible = false;
+        if (!showRight) _rightBackdrop.IsVisible = false;
     }
     private bool Move(double delta)
     {
