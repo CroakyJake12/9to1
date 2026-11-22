@@ -38,3 +38,9 @@ Arrow keys and Home/End move focus along the live tab titles while Enter still s
 Thirteen focused Browse NativeUI cases passed with the production assembly `598cd7eaa7b7bc1660005004a6fa8f9c2e20581cf3cb3217bdbf59114f815ae2`. The genuine controls were exercised at 360 and 1180 pixels. The cases include physical inline Close followed immediately by Ctrl+Shift+T, keyboard Close, selected tab styling, a retained address draft and the private reopen rule. [360 × 800 Skia](tabs/reopened-tab-focus-360x800.png) · [1180 × 800 Skia](tabs/reopened-tab-focus-1180x800.png)
 
 The CUI overflow controls transfer focus to the opposite arrow when Home or End hides the focused arrow. Seventeen owning runtime checks and eight Browse checks passed. Shift+Tab from New Tab reached the visible arrow, and End scrolled the strip while preserving the selected tab. The runtime assembly SHA-256 was `bc6771e71a972f4568d6bdb14a13cdbf04ca18ad3603b2cbe4ea9c3f147dfb31`. [Skia view after End](tabs/overflow-keyboard-end.png)
+
+## Responsive Home and Settings
+
+Home displays labels on the existing rail at desktop widths, with the same controls, tooltips and accessible names in compact mode. New Tab places its Search and Go controls in a fluid row above the mode and quick links. The disabled Ask AI option explains its availability and preserves the typed input. Settings keeps Back and its heading above the scrolling category list.
+
+The Linux owning desktop build passed with zero warnings and errors. Ten genuine-control cases passed at component widths from 360 to 1440 pixels, including rail dimensions, button and keyboard reachability, the New Tab draft and the Settings Back location after opening Layout and Accessibility.

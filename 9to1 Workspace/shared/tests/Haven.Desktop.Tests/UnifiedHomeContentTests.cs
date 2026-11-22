@@ -573,7 +573,9 @@ public sealed class UnifiedHomeContentTests
             await session.InitializeAsync();
             window = new Window { Width = 520, Height = 520, Content = session.OriginalNativeView };
             window.Show(); Layout(); Assert.NotNull(settings);
-            var appearance = SettingsControl<Button>(settings!, "home-settings-appearance");
+            var back = SettingsControl<Button>(settings!, "home-settings-back");
+            var backOrigin = back.TranslatePoint(default, window)!.Value;
+            var appearance = SettingsControl<Button>(settings, "home-settings-appearance");
             var theme = SettingsControl<Button>(settings, "home-settings-theme");
             var layout = SettingsControl<Button>(settings, "home-settings-layout");
             Assert.True(appearance.Focus());
@@ -584,13 +586,18 @@ public sealed class UnifiedHomeContentTests
             Layout();
             Assert.True(layout.IsFocused);
             var nav = SettingsControl<CuiContainerControl>(settings, "home-settings-nav");
-            var navScroll = Assert.IsType<ScrollViewer>(nav.Child);
+            var categories = SettingsControl<CuiContainerControl>(settings, "home-settings-categories");
+            var navScroll = Assert.IsType<ScrollViewer>(categories.Child);
+            Assert.InRange(nav.Bounds.Height, 1, 176.5);
             Assert.True(navScroll.Offset.Y > 0);
+            var categoriesOrigin = categories.TranslatePoint(default, window)!.Value;
+            Assert.True(backOrigin.Y >= 0 && backOrigin.Y + back.Bounds.Height <= categoriesOrigin.Y + .5);
             Assert.False(SettingsCategorySelected(layout));
             PressSettingsKey(window, PhysicalKey.Enter);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Layout();
             Assert.True(SettingsCategorySelected(layout));
+            Assert.Equal(backOrigin, back.TranslatePoint(default, window)!.Value);
             CaptureSettingsIfRequested(window, "layout", source);
 
             var accessibility = SettingsControl<Button>(settings, "home-settings-accessibility");
@@ -600,6 +607,8 @@ public sealed class UnifiedHomeContentTests
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Layout();
             Assert.True(SettingsCategorySelected(accessibility));
+            Assert.Equal(backOrigin, back.TranslatePoint(default, window)!.Value);
+            Assert.True(back.IsEffectivelyVisible && back.IsEnabled);
             var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
             Assert.Equal("Vertical Stack", fragment.LayoutType);
             var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
@@ -1756,8 +1765,11 @@ public sealed class UnifiedHomeContentTests
         }
     }
 
-    [AvaloniaFact]
-    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable()
+    [AvaloniaTheory]
+    [InlineData(360)]
+    [InlineData(430)]
+    [InlineData(1180)]
+    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable(int width)
     {
         using var lifetime = new CancellationTokenSource();
         using var bus = new HavenEventBus();
@@ -1768,13 +1780,36 @@ public sealed class UnifiedHomeContentTests
                 new EmptyDashboard(), new EmptyDashboardLayout(), [])).CreateSession(Request("browse://newtab")));
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
-        var window = Show(session.OriginalNativeView);
+        var window = new Window { Width = width, Height = 760, Content = session.OriginalNativeView };
         try
         {
+            window.Show();
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
             var mode = page.GetVisualDescendants().OfType<ComboBox>().Single(item => item.Name == "home-search-mode");
-            Assert.False(Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1)).IsEnabled);
+            var askAi = Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1));
+            Assert.False(askAi.IsEnabled);
+            Assert.Equal("Ask AI (unavailable)", askAi.Content);
             var search = page.GetVisualDescendants().OfType<TextBox>().Single(item => item.Name == "home-search");
-            Assert.True(search.IsEffectivelyVisible);
+            var submit = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "home-submit");
+            var searchOrigin = search.TranslatePoint(default, window)!.Value;
+            var submitOrigin = submit.TranslatePoint(default, window)!.Value;
+            var modeOrigin = mode.TranslatePoint(default, window)!.Value;
+            Assert.True(searchOrigin.X + search.Bounds.Width <= submitOrigin.X + .5);
+            Assert.True(searchOrigin.Y + search.Bounds.Height <= modeOrigin.Y + .5);
+            Assert.True(search.Bounds.Width >= 150);
+            foreach (var control in new Control[] { search, submit, mode })
+            {
+                Assert.True(control.IsEffectivelyVisible && control.Focus());
+                var origin = control.TranslatePoint(default, window)!.Value;
+                Assert.InRange(origin.X, -.5, width - control.Bounds.Width + .5);
+                Assert.InRange(origin.Y, -.5, window.ClientSize.Height - control.Bounds.Height + .5);
+            }
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES")))
+            {
+                using var frame = window.CaptureRenderedFrame();
+                Assert.NotNull(frame);
+                CaptureOptionalFrame(window, frame, $"home-newtab-{width}", "UnifiedHome New Tab fixture with unavailable Ask AI");
+            }
             search.Text = "charging diagnosis";
             mode.SelectedIndex = 1; // Programmatic/late action must also refuse harmlessly.
             await page.DispatchAsync("home.submit", null);
@@ -1782,7 +1817,10 @@ public sealed class UnifiedHomeContentTests
             Assert.Null(navigation);
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item => item.Text?.Contains("AI is unavailable") == true);
             mode.SelectedIndex = 0;
-            await page.DispatchAsync("home.submit", null);
+            Assert.True(search.Focus());
+            window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            Dispatcher.UIThread.RunJobs();
             Assert.NotNull(navigation);
             Assert.True(navigation.Address.IsWeb);
             Assert.True(await session.TryPrepareToCloseAsync());
@@ -2172,7 +2210,6 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
             foreach (var (id, label) in new[] { ("home-apps", "Apps"), ("home-models", "Models / Discover"), ("home-newtab", "New Tab") })
             {
-                // Owner-refined icon-only rail: Content is an Image, not its accessible label.
                 var button = HomeRailButton(page, id, label);
                 Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
                 var origin = button.TranslatePoint(default, window);
@@ -2348,8 +2385,7 @@ public sealed class UnifiedHomeContentTests
             var main = page.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "home-main");
             var sideOrigin = sidebar.TranslatePoint(default, window)!.Value;
             var mainOrigin = main.TranslatePoint(default, window)!.Value;
-            // Canonical Home is seven scrolling icon destinations plus a pinned Settings footer.
-            // Profile/notifications/model remain on Haven's persistent topbar, not this rail.
+            // Home keeps seven scrolling destinations plus a pinned Settings footer across widths.
             var nav = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-nav"));
             var footer = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
@@ -2371,7 +2407,13 @@ public sealed class UnifiedHomeContentTests
                 Assert.True(origin.X >= 0 && origin.X + button.Bounds.Width <= nav.Bounds.Width + .5,
                     $"{button.Name}: X={origin.X}, Width={button.Bounds.Width}, NavigationWidth={nav.Bounds.Width}, ViewportWidth={scroll.Viewport.Width}.");
                 previousBottom = origin.Y + button.Bounds.Height;
-                Assert.False(string.IsNullOrWhiteSpace(AutomationProperties.GetName(button)));
+                var label = Assert.IsType<string>(AutomationProperties.GetName(button));
+                var visibleLabels = button.GetVisualDescendants().OfType<TextBlock>()
+                    .Where(text => text.IsEffectivelyVisible && text.Text == label);
+                if (width >= 840)
+                    Assert.True(Assert.Single(visibleLabels).Bounds.Width > 0);
+                else
+                    Assert.Empty(visibleLabels);
                 var icon = Assert.Single(button.GetVisualDescendants().OfType<Image>());
                 Assert.NotNull(icon.Source);
                 Assert.True(icon.Bounds.Width > 0 && icon.Bounds.Height > 0);

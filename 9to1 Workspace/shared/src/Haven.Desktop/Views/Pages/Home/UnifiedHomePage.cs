@@ -38,7 +38,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
     private readonly TextBox _search = new();
-    private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "AI" }, SelectedIndex = 0 };
+    private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "Ask AI" }, SelectedIndex = 0 };
     private readonly HomeAppsCuiBindings _appsBindings;
     private readonly HomeRailCuiBindings _railBindings;
     private readonly CuiKeyboardTooltipHost _keyboardTooltips;
@@ -109,8 +109,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         // keyboard-focus visibility (same retained popup/transparency seam) for this Home surface.
         _keyboardTooltips = CuiKeyboardTooltipHost.Attach(loaded.Root);
         if (!_aiAvailable)
-            Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "AI (unavailable)", IsEnabled = false } });
+            Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "Ask AI (unavailable)", IsEnabled = false } });
         Content = loaded.Root;
+        SizeChanged += (_, args) => _railBindings.SetViewportWidth(args.NewSize.Width);
         _search.KeyDown += OnSearchKey;
     }
 
@@ -266,7 +267,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
         Set(_heading, "IsVisible", section != "settings");
-        Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
+        Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. Ask AI requires an available Spaces destination." : string.Empty);
         if (section == "apps")
         {
             _viewport.Child = prepared!;

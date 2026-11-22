@@ -2,24 +2,27 @@
   <Theme Name="user_preference">
     <Page AccessibleName="Home Settings">
       <Container Type="Grid" ColumnSizes="{Binding SettingsColumns}" RowSizes="{Binding SettingsRows}" CellGap="12">
-        <Container id="home-settings-nav" Type="Vertical Stack" Role="navigation" AccessibleName="Settings categories"
-                   MaxHeight="{Binding SettingsNavHeight}" VerticalScrolling="True" HorizontalScrolling="False"
-                   Background="{Resource CuiChromeMaterial}" CornerRadius="14" Padding="12" CellGap="5">
-          <Button id="home-settings-back" Action="SettingsBack" Content="‹  Back to Home" AccessibleName="Back to Home"
-                  Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
-          <Text Text="Settings" FontSize="20" FontWeight="800" Margin="8 6 0 2" />
-          <Button id="home-settings-global" Action="SettingsGlobal" Content="{Binding SettingsGlobalLabel}" AccessibleName="Global Settings"
-                  Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="750" />
-          <Container Type="Vertical Stack" IsVisible="{Binding SettingsGlobalExpanded}" CellGap="3">
-            <Button id="home-settings-appearance" Action="SettingsAppearance" Content="Appearance" Selected="{Binding SettingsAppearanceSelected}"
+        <Container id="home-settings-nav" Type="Grid" RowSizes="Auto 1fr" Role="navigation" AccessibleName="Settings categories"
+                   MaxHeight="{Binding SettingsNavHeight}" Background="{Resource CuiChromeMaterial}" CornerRadius="14" Padding="12" CellGap="5">
+          <Container Type="Vertical Stack" CellGap="5">
+            <Button id="home-settings-back" Action="SettingsBack" Content="‹  Back to Home" AccessibleName="Back to Home"
                     Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
-            <Container Type="Vertical Stack" CellGap="3" Margin="14 0 0 0" Padding="6 0 0 0" BorderColor="{Resource CuiLineBrush}" BorderThickness="1 0 0 0">
-              <Button id="home-settings-theme" Action="SettingsTheme" Content="Theme" Selected="{Binding SettingsThemeSelected}"
+            <Text Text="Settings" FontSize="20" FontWeight="800" Margin="8 6 0 2" />
+          </Container>
+          <Container id="home-settings-categories" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="5">
+            <Button id="home-settings-global" Action="SettingsGlobal" Content="{Binding SettingsGlobalLabel}" AccessibleName="Global Settings"
+                    Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="750" />
+            <Container Type="Vertical Stack" IsVisible="{Binding SettingsGlobalExpanded}" CellGap="3">
+              <Button id="home-settings-appearance" Action="SettingsAppearance" Content="Appearance" Selected="{Binding SettingsAppearanceSelected}"
                       Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
-              <Button id="home-settings-layout" Action="SettingsLayout" Content="Layout" Selected="{Binding SettingsLayoutSelected}"
-                      Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
-              <Button id="home-settings-accessibility" Action="SettingsAccessibility" Content="Accessibility" Selected="{Binding SettingsAccessibilitySelected}"
-                      Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
+              <Container Type="Vertical Stack" CellGap="3" Margin="14 0 0 0" Padding="6 0 0 0" BorderColor="{Resource CuiLineBrush}" BorderThickness="1 0 0 0">
+                <Button id="home-settings-theme" Action="SettingsTheme" Content="Theme" Selected="{Binding SettingsThemeSelected}"
+                        Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
+                <Button id="home-settings-layout" Action="SettingsLayout" Content="Layout" Selected="{Binding SettingsLayoutSelected}"
+                        Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
+                <Button id="home-settings-accessibility" Action="SettingsAccessibility" Content="Accessibility" Selected="{Binding SettingsAccessibilitySelected}"
+                        Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8" HorizontalContentAlignment="Left" FontWeight="700" />
+              </Container>
             </Container>
           </Container>
         </Container>
