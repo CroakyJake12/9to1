@@ -45,7 +45,7 @@ public static class BrowseNativeSurface
         CuiAppearance? appearance, CuiThemePreferenceContext? themePreference)
     {
         ArgumentNullException.ThrowIfNull(workspace); ArgumentNullException.ThrowIfNull(originalReadiness);
-        var registry = new CuiControlRegistry();
+        var registry = new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = workspace.IsEmbeddedHost };
         registry.RegisterObjectRenderer("browse.engine", _ => new BrowseEngineViewport(workspace));
         registry.BindAuthoredControl("HavenHostMark", _ => new Image { Source = HostMark.Value });
         return new("browse", "Browse", "Browse", BrowseNativeWorkspace.LoadDocument(), workspace, workspace, originalReadiness)
@@ -235,7 +235,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         if (_findKeyScope is not null)
         {
             _findKeyScope.SizeChanged += OnSceneSizeChanged;
-            _workspace.SetHostChromeWidth(_findKeyScope.Bounds.Width);
+            UpdateHostChromeWidth(_findKeyScope.Bounds.Width);
             if (_workspace.IsEmbeddedHost)
             {
                 _findKeyScope.ResourcesChanged += OnSceneResourcesChanged;
@@ -283,8 +283,19 @@ internal sealed class BrowseEngineViewport : ContentControl
         _tabStrip = null;
         _findKeyScope = null;
     }
-    private void OnSceneSizeChanged(object? sender, SizeChangedEventArgs args) => _workspace.SetHostChromeWidth(args.NewSize.Width);
-    private void OnSceneResourcesChanged(object? sender, ResourcesChangedEventArgs args) => RefreshHostTabColours();
+    private void OnSceneSizeChanged(object? sender, SizeChangedEventArgs args) => UpdateHostChromeWidth(args.NewSize.Width);
+
+    private void OnSceneResourcesChanged(object? sender, ResourcesChangedEventArgs args)
+    {
+        if (_findKeyScope is { } scope) UpdateHostChromeWidth(scope.Bounds.Width);
+        RefreshHostTabColours();
+    }
+
+    private void UpdateHostChromeWidth(double width)
+    {
+        var scale = _workspace.IsEmbeddedHost && _findKeyScope is { } scope ? CuiInterfaceScale.For(scope) : 1;
+        _workspace.SetHostChromeWidth(CuiInterfaceScale.LogicalWidth(width, scale));
+    }
 
     private async void OnAddressShortcut(object? sender, KeyEventArgs args)
     {

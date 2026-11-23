@@ -2808,7 +2808,7 @@ public sealed partial class CuiControlLoader : IDisposable
         var value = ResolveResourceObject(resource.Key, control);
         if (value is null) throw new CuiRuntimeLoadException(new("CUIR057", CuiDiagnosticSeverity.Error,
             $"CUI resource '{resource.Key}' is unavailable in this scope.", resource.Span));
-        if (value is string literal) ApplyLiteralProperty(control, property, literal, resource.Span, level);
+        if (value is string literal) ApplyLiteralProperty(control, property, literal, resource.Span, level, scaleMetric: false);
         else ApplyTypedProperty(control, property, value, resource.Span, level);
     }
 
@@ -3406,7 +3406,8 @@ public sealed partial class CuiControlLoader : IDisposable
         return false;
     }
 
-    private void ApplyLiteralProperty(Control control, string propName, string resolved, CuiSourceSpan sourceSpan, CuiPropertyLevel level = CuiPropertyLevel.Instance)
+    private void ApplyLiteralProperty(Control control, string propName, string resolved, CuiSourceSpan sourceSpan,
+        CuiPropertyLevel level = CuiPropertyLevel.Instance, bool scaleMetric = true)
     {
         try
         {
@@ -3460,9 +3461,10 @@ public sealed partial class CuiControlLoader : IDisposable
                 CuiHoverTintPolicy.Set(control, resolved);
                 return;
             }
-            if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
-            if (CuiLayoutProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
-            if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;
+            var source = CuiInterfaceScale.Source(propName, level, scaleMetric && _controlRegistry.ScaleAuthoredInterfaceMetrics);
+            if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, source)) return;
+            if (CuiLayoutProperties.SetLiteral(control, propName, resolved, level, source)) return;
+            if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, source, sourceSpan: sourceSpan)) return;
         }
         catch (Exception error) when (error is FormatException or ArgumentException or InvalidOperationException)
         { throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {propName}: {error.Message}", sourceSpan), error); }

@@ -112,6 +112,8 @@ public static class CuiPropertyPresentation
         private CuiAccentRole _accentRole;
         private CuiCustomFonts? _customFonts;
         private double _customFontScale = 1;
+        private double _interfaceScale = 1;
+        private HashSet<string>? _interfaceMetrics;
         private double? _roundnessPercent;
         private TemplatePart? _part;
         public CuiEffectivePropertyStore Store { get; } = new();
@@ -269,6 +271,15 @@ public static class CuiPropertyPresentation
         public bool Set(string name, object? value, CuiPropertyLevel level, string source, long order)
         {
             name = Canonical(name);
+            if (CuiInterfaceScale.IsAuthored(source))
+            {
+                if (_interfaceMetrics is null)
+                {
+                    _interfaceMetrics = new(StringComparer.OrdinalIgnoreCase);
+                    WatchCustom(CuiInterfaceScale.ResourceKey, RefreshInterfaceMetrics);
+                }
+                _interfaceMetrics.Add(name);
+            }
             if (_custom.ContainsKey(name)) { Store.Set(name, value, level, source, order); return true; }
             var property = Property(name);
             if (property is null) return false;
@@ -523,10 +534,23 @@ public static class CuiPropertyPresentation
             if (_control is TemplatedControl templated) _focusRing.CornerRadius = templated.CornerRadius;
         }
 
+        private void RefreshInterfaceMetrics(object? value)
+        {
+            var scale = CuiInterfaceScale.ValidScale(value);
+            if (_interfaceScale == scale) return;
+            _interfaceScale = scale;
+            if (_interfaceMetrics is null) return;
+            foreach (var name in _interfaceMetrics)
+                if (Store.Contains(name) && Store.Resolve(name) is { } metric && CuiInterfaceScale.IsAuthored(metric.Source))
+                    Apply(metric);
+        }
+
         private void Apply(CuiEffectiveProperty resolved)
         {
-            if (_custom.TryGetValue(resolved.Name, out var apply)) { apply(resolved.Value); return; }
-            if (!_mapped.TryGetValue(resolved.Name, out var property) || Equals(_control.GetValue(property), resolved.Value)) return;
+            var value = CuiInterfaceScale.IsAuthored(resolved.Source)
+                ? CuiInterfaceScale.Apply(resolved.Value, _interfaceScale) : resolved.Value;
+            if (_custom.TryGetValue(resolved.Name, out var apply)) { apply(value); return; }
+            if (!_mapped.TryGetValue(resolved.Name, out var property) || Equals(_control.GetValue(property), value)) return;
             _applying = true;
             try
             {
@@ -540,7 +564,7 @@ public static class CuiPropertyPresentation
                 // store and NativeChanged fence as its sole value authority.
                 var rangeEndpoint = _control is RangeBase && property.Name is "Minimum" or "Maximum";
                 var priority=property.IsDirect||IsInputRepresentation(property)||rangeEndpoint?BindingPriority.LocalValue:BindingPriority.Animation;
-                var fence=_control.SetValue(property,resolved.Value,priority);
+                var fence=_control.SetValue(property,value,priority);
                 if(fence is not null)_nativeFences[property]=fence;
             }
             finally { _applying = false; }

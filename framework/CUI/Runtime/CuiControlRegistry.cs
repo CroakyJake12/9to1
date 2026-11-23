@@ -29,6 +29,9 @@ public sealed class CuiControlRegistry
     /// <summary>The canonical read-only CUI element/property metadata registry.</summary>
     public static CuiControlRegistry Default { get; } = new();
 
+    /// <summary>Scale declared interface metrics in loaders using this host-owned registry.</summary>
+    public bool ScaleAuthoredInterfaceMetrics { get; init; }
+
     public CuiControlRegistry()
     {
         // Markdown is a specialised content renderer behind Object's typed boundary,
