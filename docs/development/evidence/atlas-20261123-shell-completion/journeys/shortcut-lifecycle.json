@@ -1,7 +1,6 @@
 {
-  "source_change": "868af0893d51c06c577adf87c228ed68b8b32793",
-  "renderer": "Running Linux Haven on X11, isolated profile, real native input.",
-  "source_parent_at_build": "c4168c6e14e639f554c493a98dfc57509b884afa",
+  "renderer": "Actual Linux Haven app, private X11 at 1:1 device scale, separate disposable Professional Dark profile.",
+  "source_base_at_snapshot": "c4168c6e14e639f554c493a98dfc57509b884afa",
   "assemblies": {
     "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
     "Haven.dll": "1777152b40355fc3af8bbd02b46c907168c6c3c10993d8f6b95749f556b46999",
@@ -14,10 +13,11 @@
     "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
     "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
   },
-  "duplicate": "An attempted duplicate of Dashboard showed validation. The profile had no saved New Tab layout before the first accepted placement.",
-  "same_after_relaunch": true,
-  "unchanged_other_layout_fields": true,
-  "states": {
+  "baseline": "Fresh New Tab shows three native defaults with Add shortcut in the fourth position at 1440×900. Scrolling at 720×520 shows both rows and the same actions.",
+  "duplicate_validation": "The 720×520 editor visibly rejected the already present Dashboard destination. No layout write was observed. The existing three placements were preserved.",
+  "physical_lifecycle": "Created the local Settings placement using native Save, closed and fully relaunched, moved it earlier using the real editor, renamed it and removed it. The original ID and canonical destination persisted across move and rename. The native Settings gear still reached its existing owner after removal.",
+  "non_shortcut_layout_preserved": true,
+  "layout_records": {
     "create": {
       "revision": 1,
       "shortcuts": [
@@ -139,13 +139,29 @@
       ]
     }
   },
+  "termination": "Both native sessions closed normally, apphost exit code 0.",
+  "scope": "The first functionality proof uses the inline editor. Visual correspondence for the later shortcut picker is verified on its owning build.",
   "images": {
-    "stage11-shortcut-relaunch.png": {
+    "stage11-shortcut-duplicate-validation.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "75b4c5f22b2a32c90b11ab20616548d29ebc31b2cf0cf6bb4d6b5adc66989ff0"
+    },
+    "stage11-shortcut-target-owner-retained.png": {
       "size": [
         1440,
         900
       ],
-      "sha256": "4fe9e4c68146559f50fac2e2f3deb06de4618675381b72b43ebb52229518286e"
+      "sha256": "0b6310cbc559dd6d45babd829ad5e0d05afef2945c108473c18dfac4ca86fa14"
+    },
+    "stage11-shortcut-remove.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "daacb31f585d8aefce9d1cc0dce35a02d2c3de564403c55e69e8b5d66073a2e1"
     },
     "stage11-shortcut-move-rename.png": {
       "size": [
@@ -154,12 +170,14 @@
       ],
       "sha256": "bf5ab8ca6bb605fe5e23b9a7ece9d1b32509cf1eb8f772579b7fd2b1d18368d1"
     },
-    "stage11-shortcut-remove.png": {
+    "stage11-shortcut-relaunch.png": {
       "size": [
         1440,
         900
       ],
-      "sha256": "daacb31f585d8aefce9d1cc0dce35a02d2c3de564403c55e69e8b5d66073a2e1"
+      "sha256": "4fe9e4c68146559f50fac2e2f3deb06de4618675381b72b43ebb52229518286e"
     }
-  }
+  },
+  "source_change": "868af0893d51c06c577adf87c228ed68b8b32793",
+  "unchanged_other_layout_fields": true
 }

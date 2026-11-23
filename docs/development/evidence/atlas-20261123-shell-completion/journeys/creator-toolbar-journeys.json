@@ -1,0 +1,281 @@
+{
+  "reference": "Verified Atlas v4 from docs/specification/owner-references/2026-11-22-atlas-v4, genuinely rendered in Chromium at device scale 1. Raw pane captures and comparisons are recorded at original resolution.",
+  "stage12_toolbar_save": {
+    "build_checkout_parent_sha": "cfb9e66742782843daffa26be53bbc1848783fae",
+    "owning_source_commits": [
+      "cfb9e66742782843daffa26be53bbc1848783fae",
+      "46f877bb9e80028e32f02a43faa13dd5b598e3f6"
+    ],
+    "assembly_sha256": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "adaec2b83beb9bcca471e5dabaa1d3060e38807540c8dfe9daade31b64102827",
+      "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
+      "HavenOS.Apps.Browse.NativeUI.dll": "88e2c4f86e45951690ac658d028fd21eee8eca1892fca8329149380950c50f80",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "43a488a142fe8f9eaf42226a9e24f2f30535b41a0b65e65ea7c778100ecde6eb",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+    },
+    "mode": "Professional Dark",
+    "profile": "Disposable profile captured by the normal Linux Release Haven apphost on X11.",
+    "canonical_route": "browse://home/settings/custom-theme",
+    "actions": [
+      "Entered the real address using Ctrl+L and Enter. Opened the native Create theme tab and identified the Save theme action beside the wide address bar.",
+      "Typed Native Toolbar Proof into the editor. Before Save, the persisted appearance projection matched its starting value. Inline Cancel remained and footer Save was absent when the shared toolbar owned Save.",
+      "Resized to 720×520. Opened shared Profile/tools and clicked the existing top Save theme action. The new library entry immediately became the active Professional-derived Dark theme.",
+      "After an ordinary WM_DELETE_WINDOW close and restart in the same profile, left the new editor draft without saving and opened the Theme gallery. The saved entry remained selected and authoritative preference and library readback matched the prior Save byte-for-byte."
+    ],
+    "persisted": {
+      "name": "Native Toolbar Proof",
+      "appearance": "Dark",
+      "revision": 2,
+      "library_entry_id": "77c940e4-da83-4c1c-9c2a-f5fb164cfc57"
+    },
+    "ordinary_exit_statuses": [
+      0,
+      0
+    ],
+    "secondary_frames": [
+      {
+        "file": "stage12-toolbar/05-creator-direct-route-wide.png",
+        "sha256": "c75b2226d8913511ebc2572ad7c00355926884e34ad5e825b42952db9c4048db",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage12-toolbar/06-creator-preview-cancel-and-toolbar-wide.png",
+        "sha256": "e43f8adb71fbdc9e7f03672aa8b86b98ba8c0c771e237e20adef127b1bb3f494",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage12-toolbar/08-creator-compact-overflow-save-visible.png",
+        "sha256": "c2e17f24f81a20a60fc8f89f29631368802704bf28c11811f855b40c9870fca6",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage12-toolbar/10-saved-theme-active-gallery-wide.png",
+        "sha256": "fdfc598759cb9d0df58cc20c681c4240e00b3522b24565b364728dd9bf110107",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage12-toolbar/13-stage12-relaunch-gallery-selected.png",
+        "sha256": "d49ba8e029251489f8be1c6bc11a2d8166be190d852448cdc7fb0287a33afe4a",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage12-toolbar/03-new-tab-four-shortcuts-narrow-scrolled.png",
+        "sha256": "a0a697594920f021da85fb92d417b3231ba2656885f3780cb9dd4dfefa5dc6b7",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    ],
+    "new_tab_baseline": {
+      "route": "host-newtab",
+      "pairs": [
+        {
+          "viewport": "1440x900",
+          "atlas_raw": {
+            "file": "atlas/shortcuts/atlas-host-newtab-1440x900.png",
+            "sha256": "681929d7830fc08a0385debf82f8178a81705e79802b4ce3e17c2e30d94dda3c",
+            "dimensions": [
+              1440,
+              900
+            ]
+          },
+          "haven_raw": {
+            "file": "stage12-toolbar/01-new-tab-fresh-baseline-wide.png",
+            "sha256": "0261b454a7cc65f9451030f1b780f66fb41ef8cc02d004a65661ee35e96f14ed",
+            "dimensions": [
+              1440,
+              900
+            ]
+          },
+          "comparison": {
+            "file": "comparison-stage12-toolbar-professional-dark-1440x900.png",
+            "sha256": "f4bd6ace5e4d351d3a495cce26a9f01d6b0cf742d04263f1a9bf7bec89d7df3c",
+            "dimensions": [
+              2934,
+              970
+            ]
+          }
+        },
+        {
+          "viewport": "720x520",
+          "atlas_raw": {
+            "file": "atlas/shortcuts/atlas-host-newtab-720x520.png",
+            "sha256": "b9311c0602ca341cd7aa815c43ba3202623956b055523220a0fabbf802968f3c",
+            "dimensions": [
+              720,
+              520
+            ]
+          },
+          "haven_raw": {
+            "file": "stage12-toolbar/02-new-tab-fresh-baseline-narrow.png",
+            "sha256": "76e30665aa15aeff8382e8eb218ae47be5483dc8c6aab0da471cf8bb694fd8d5",
+            "dimensions": [
+              720,
+              520
+            ]
+          },
+          "comparison": {
+            "file": "comparison-stage12-toolbar-professional-dark-720x520.png",
+            "sha256": "681d05cdc4bf69de18b0f17b91951b0a5d47bf12c8bb41c2de79985587b022d4",
+            "dimensions": [
+              1494,
+              590
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "stage13_creator_surface": {
+    "build_checkout_parent_sha": "6f3599808724dae306e28c9778d3efcbba6fea83",
+    "owning_source_commits": [
+      "79d83a745390d7ee326f9892c4b15afee91eadc2"
+    ],
+    "assembly_sha256": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "c8c6e041087cf08c5949edd0f9dd2c2f1ee51757e5cade5d5ccfb7bb8df2805e",
+      "HavenOS.Home.dll": "5e56bf4c87b7ae3bc8c92a4affc8c19f200663f732848d99203a7030e1586678",
+      "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "7ca947b10b42bdfb7ce7063a4f94b541e4e216d86d1162e9ac222c35698508d3"
+    },
+    "mode": "Professional Dark",
+    "profile": "Disposable profile captured by the normal Linux Release Haven apphost on X11.",
+    "canonical_route": "browse://home/settings/custom-theme",
+    "route": "custom-theme",
+    "pairs": [
+      {
+        "viewport": "1440x900",
+        "atlas_raw": {
+          "file": "atlas/atlas-custom-theme-1440x900.png",
+          "sha256": "9328b3817eeb1ff08c3899edb9d9e697ee4fe0d0c18edd1506fa10ebe4a9c5a8",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        "haven_raw": {
+          "file": "stage13-creator/02-creator-final-wide.png",
+          "sha256": "978b8d85783d093bbacae87d66c78bb9b839df5e933c091fadf9ac1c00aea559",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        "comparison": {
+          "file": "comparison-stage13-creator-professional-dark-1440x900.png",
+          "sha256": "df62c8081aa2f99bbb4f4fdbc19aa9499d966c2687c71425936defd7b55a4cb6",
+          "dimensions": [
+            2934,
+            970
+          ]
+        }
+      },
+      {
+        "viewport": "720x520",
+        "atlas_raw": {
+          "file": "atlas/atlas-custom-theme-720x520.png",
+          "sha256": "c0764eb49f1ec805a8bac412c06ad591db8652ef2eeaac77cd6821f1890018b4",
+          "dimensions": [
+            720,
+            520
+          ]
+        },
+        "haven_raw": {
+          "file": "stage13-creator/03-creator-final-narrow.png",
+          "sha256": "55f5dd81966b94974cd7d9465dbf5962a3ae645e9ca72088fd4527a35f864d3b",
+          "dimensions": [
+            720,
+            520
+          ]
+        },
+        "comparison": {
+          "file": "comparison-stage13-creator-professional-dark-720x520.png",
+          "sha256": "ccb140adac05a5d56c29799c4c7c71024022af77a90268766c5d6d4c6f4fcd14",
+          "dimensions": [
+            1494,
+            590
+          ]
+        }
+      }
+    ],
+    "secondary_frames": [
+      {
+        "file": "stage13-creator/01-creator-direct-canonical-location.png",
+        "sha256": "7282e7ed5bcdbc2b2c9ff7658b8ee51f5b3ccf319cd0698b05f11a5cde9b6389",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage13-creator/04-creator-final-compact-overflow.png",
+        "sha256": "759aa63152bcf81b6c05d85d31d110ab2f01096e5a9b6fbc45c184932cee8f6d",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage13-creator/05-creator-compact-overflow-escape.png",
+        "sha256": "fea6ab966d041352b9d7ba946aedb69826a33854da4487e3fbd72be4a2a47759",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage13-creator/06-creator-escape-return.png",
+        "sha256": "6369e0006a8f38f2a0f119aabff16311837ef270974527d887b35d6b92f9be81",
+        "dimensions": [
+          720,
+          520
+        ]
+      }
+    ],
+    "observed": [
+      "The normal omnibox opens the direct native creator. At 1440×900 Save theme and its white check appear immediately beside the address. At 720×520 the same labeled check action is the top row of the genuine Profile/tools overflow.",
+      "OCR for the unscaled wide Create theme heading gives Haven x331/y140, 260×28 pixels, and Atlas x329/y135, 253×28 pixels.",
+      "The compact native rail and editor stack vertically. Atlas retains a 1440 CSS-pixel content canvas in its narrow capture, so its width clips at a 720-pixel viewport.",
+      "Fresh native editor starts My theme with Professional inheritance and Solid Colour. Atlas uses a sample Quiet horizon with configured gradient and pattern.",
+      "Escape closed the actual Profile/tools overflow. Escape with focus in the editor then returned to Theme Options with identical persisted appearance state."
+    ],
+    "ordinary_exit_statuses": [
+      0
+    ]
+  },
+  "repository_captures": {
+    "create-theme-narrow-save-menu.png": {
+      "viewport": [
+        720,
+        520
+      ],
+      "sha256": "759aa63152bcf81b6c05d85d31d110ab2f01096e5a9b6fbc45c184932cee8f6d"
+    }
+  }
+}
