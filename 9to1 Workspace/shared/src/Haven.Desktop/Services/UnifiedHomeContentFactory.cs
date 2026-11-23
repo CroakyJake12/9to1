@@ -16,7 +16,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     private readonly Func<NewDashboardPage> _dashboard;
     private readonly Func<HomeDiscoverPage> _discover;
     private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
-    private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
+    private readonly Func<BrowseAppContentRequest, string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly Func<BrowseAppContentRequest, CancellationToken, Task> _admit;
     private readonly Func<bool> _hostIsCurrent;
     private readonly CancellationToken _hostLifetime;
@@ -30,7 +30,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
 
     internal UnifiedHomeContentFactory(IModeRegistry modes, Func<NewDashboardPage> dashboard,
         Func<HomeDiscoverPage> discover, Func<BrowseNavigationIntent, Task, bool> queue,
-        Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft,
+        Func<BrowseAppContentRequest, string, CancellationToken, Task<AppContentAddress>> prepareAiDraft,
         Func<BrowseAppContentRequest, CancellationToken, Task> admit,
         Func<bool> hostIsCurrent, CancellationToken hostLifetime, bool aiAvailable = true,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
@@ -156,7 +156,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                                 (_request.Address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal) ||
                                     BrowseOmniboxSearchRoute.TryParse(_request.Address, out _, out _))
                                     ? _request with { Address = AppContentAddress.Parse("browse://home/library") } : _request, _owner._modes, _owner._dashboard,
-                                _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable,
+                                _owner._discover, _owner._queue, (text, token) => _owner._prepareAiDraft(_request, text, token), _owner._aiAvailable,
                                 _owner._events is null ? null : () => _owner._events(_request),
                                 _owner._settings is null ? null : () => _owner.CreateSettings(_request),
                                 _owner._library is null ? null : () => _owner._library(_request),

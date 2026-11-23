@@ -647,7 +647,12 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             if (_preparedAiDraft is not { } draft || draft.Query != query)
             {
                 // The Spaces owner prepares an unsent draft and returns its own exact route.
-                var address = await original.AwaitAsync(_prepareAiDraft(query, token));
+                var result = await original.AwaitAsync(PrepareDraftAsync(query, token));
+                if (result.Address is not { } address)
+                {
+                    if (original.IsAcceptedPublicationCurrent) Set(_status, "Text", result.Message);
+                    return;
+                }
                 if (address.Namespace != AppContentNamespace.NativeApp || address.Authority != "spaces" || !HasConversationIdentity(address))
                     throw new InvalidOperationException("The canonical AI draft must identify its conversation in Spaces.");
                 draft = (query, address);
@@ -662,6 +667,27 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         {
             _preparingAiDraft = false;
             if (IsAlive) RefreshNewTabSearchActions();
+        }
+    }
+
+    private async Task<(AppContentAddress? Address, string? Message)> PrepareDraftAsync(string query, CancellationToken token)
+    {
+        try
+        {
+            return (await _prepareAiDraft(query, token), null);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return (null, "This tab can no longer prepare a draft in the current Chat Space. Your text is still here.");
+        }
+        catch (NotSupportedException)
+        {
+            return (null, "This host cannot save an unsent Spaces draft. Your text is still here.");
+        }
+        catch (Exception cause) when (cause is IOException or System.Data.Common.DbException)
+        {
+            System.Diagnostics.Trace.TraceError("New Tab could not save its Chat draft: {0}", cause);
+            return (null, "The draft could not be saved. Your text is still here. Try Ask AI again.");
         }
     }
 

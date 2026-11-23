@@ -46,12 +46,12 @@ public sealed partial class UnifiedHomeContentTests
         Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
         Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null,
-        Func<string, CancellationToken, Task<AppContentAddress>>? prepareAiDraft = null,
+        Func<BrowseAppContentRequest, string, CancellationToken, Task<AppContentAddress>>? prepareAiDraft = null,
         Func<BrowseAppContentRequest, NewTabLayoutPreferences>? newTabLayout = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
-            prepareAiDraft ?? ((_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI.")),
+            prepareAiDraft ?? ((_, _, _) => throw new InvalidOperationException("Search must not implicitly invoke AI.")),
             admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings, newTabLayout: newTabLayout);
 
     // Merge inside the existing UnifiedHomeContentTests class. This is a component
@@ -2220,8 +2220,9 @@ public sealed partial class UnifiedHomeContentTests
         var canNavigate = false;
         var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
             (intent, _) => { navigation.Add(intent); return canNavigate; },
-            prepareAiDraft: (query, token) =>
+            prepareAiDraft: (origin, query, token) =>
             {
+                Assert.Equal(request, origin);
                 preparations++;
                 entered.TrySetResult(query);
                 return preparations == 1 ? prepared.Task.WaitAsync(token) : Task.FromResult(nextRoute);

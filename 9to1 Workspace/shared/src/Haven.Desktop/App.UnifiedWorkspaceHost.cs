@@ -433,19 +433,8 @@ public sealed partial class App
                     new HomeRegisteredModelCatalogueSource(catalogue, provider.Id, () => !privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()))),
                     _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles),
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
-                // Spaces owns the canonical draft. Create it through the shared conversation
-                // repository, then open the registered Spaces destination in the same tab.
-                async (text, token) =>
-                {
-                    var conversations = _services.GetRequiredService<IConversationRepository>();
-                    var now = DateTimeOffset.UtcNow;
-                    var conversation = new Conversation(
-                        Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, text, null, null,
-                        false, true, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
-                    await conversations.UpsertConversationAsync(conversation, token).ConfigureAwait(false);
-                    return AppContentAddress.Parse("9to1://spaces");
-                },
-                AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false,
+                PrepareNewTabChatDraftAsync, AdmitHomeAsync, () => IsCurrent, _windowLifetime,
+                aiAvailable: _services.GetRequiredService<IConversationProductionRepository>().SupportsUnsentChatDraft,
                 events: request =>
                 {
                     DemandCurrent();
@@ -760,6 +749,45 @@ public sealed partial class App
                 _services.GetRequiredService<IHuggingFaceModelService>(), async token => await ObserveActorAsync(token),
                 () => !_services.GetRequiredService<IPrivacyPreferenceStore>().Current.LocalOnlyMode));
             return page;
+        }
+
+        private async Task<AppContentAddress> PrepareNewTabChatDraftAsync(BrowseAppContentRequest origin, string prompt,
+            CancellationToken token)
+        {
+            var chrome = _chrome ?? throw new UnauthorizedAccessException("The original New Tab is no longer available.");
+            var owner = chrome.ObserveOriginalAppContent(origin.TabId);
+            if (origin.Privacy != BrowserTabPrivacy.Standard || origin.Address.Namespace != AppContentNamespace.Browse ||
+                origin.Address.Authority != "newtab" || owner is null)
+                throw new UnauthorizedAccessException("Open a standard New Tab to prepare a Spaces draft.");
+
+            await AdmitHomeAsync(origin, token);
+            var registry = _services.GetRequiredService<SpaceRegistry>();
+            var chat = await registry.GetAsync(SpaceRegistry.ChatSpaceId, token);
+            if (chat is not { IsBuiltIn: true, IsArchived: false, Kind: SpaceKind.Chat })
+                throw new UnauthorizedAccessException("The built-in Chat Space is unavailable.");
+
+            async Task AdmitDraftAsync(CancellationToken cancellation)
+            {
+                await AdmitHomeAsync(origin, cancellation).ConfigureAwait(false);
+                var current = await registry.ReadExistingAsync(chat.Id, cancellation).ConfigureAwait(false);
+                if (current is not { IsBuiltIn: true, IsArchived: false, Kind: SpaceKind.Chat } || current.Revision != chat.Revision)
+                    throw new UnauthorizedAccessException("The Chat Space changed. Reopen New Tab to try again.");
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    cancellation.ThrowIfCancellationRequested();
+                    DemandCurrent();
+                    if (chrome.State.SelectedTabId != origin.TabId || chrome.State.SelectedTab.Address != origin.Address ||
+                        !ReferenceEquals(chrome.ObserveOriginalAppContent(origin.TabId), owner) || !owner.IsPublicationCurrent)
+                        throw new UnauthorizedAccessException("The original New Tab is no longer selected.");
+                });
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "New chat",
+                null, null, false, false, now, now, SpaceId: chat.Id);
+            var repository = _services.GetRequiredService<IConversationProductionRepository>();
+            var draft = await repository.CreateUnsentChatDraftAsync(conversation, prompt, AdmitDraftAsync, token);
+            return AppContentAddress.Parse($"9to1://spaces/selected/{chat.Id:D}/chat/{draft.ConversationId:D}");
         }
 
         private async Task AdmitHomeAsync(BrowseAppContentRequest request, CancellationToken token)
