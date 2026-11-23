@@ -89,7 +89,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _hostContext = sharedContext;
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
-        _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
+        _snapshot = _chrome.State; _observedPageTab = _snapshot.SelectedTabId; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
         _omniboxMode = sharedContext?.IsEmbedded == true ? OmniboxMode.Home : OmniboxMode.Web;
         ApplyOmniboxLocation(_snapshot.SelectedTab);
         IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
@@ -124,6 +124,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         var model = _hostContext?.ModelInfo;
         value = path switch
         {
+            "PageCommandTarget" => _pageCommand,
+            "PageCommandLabel" => _pageCommand?.Command.Label ?? string.Empty,
+            "PageCommandInBar" => _pageCommand is not null && _pageCommandFits,
+            "PageCommandInOverflow" => _pageCommand is not null && !_pageCommandFits,
             "Tabs" => _tabRows,
             "Browse.TabStripMinimumHeight" => _wideHostChrome ? 48d : 38d,
             "Browse.TabControlHeight" => _wideHostChrome ? 36d : 32d,
@@ -365,6 +369,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 "9to1.Browse.EnableTabRestore" or "9to1.Browse.DisableTabRestore" => true,
             "9to1.Browse.DiscardAddress" => _addressDraft,
             "9to1.Browse.ToggleTools" => true,
+            "9to1.Browse.RunPageCommand" => CanRunPageCommand(_pageCommand),
             "9to1.Browse.CloseTools" => _toolsOpen,
             "9to1.Browse.ToggleProfileMenu" => true,
             "9to1.Browse.CloseProfileMenu" => HasOpenTransientMenu,
@@ -379,13 +384,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
+        if (command == "9to1.Browse.RunPageCommand" && !CanRunPageCommand(parameter)) return ValueTask.CompletedTask;
         if (command is "9to1.Browse.SearchHome" or "9to1.Browse.SearchFiles" or "9to1.Browse.SearchWeb")
         {
             _omniboxMode = command == "9to1.Browse.SearchHome" ? OmniboxMode.Home :
                 command == "9to1.Browse.SearchFiles" ? OmniboxMode.Files : OmniboxMode.Web;
             Changed(); return ValueTask.CompletedTask;
         }
-        if (IsHavenSharedCommand(command))
+        if (IsHavenSharedCommand(command) || command == "9to1.Browse.RunPageCommand")
         {
             DismissTransientMenus();
             // Shared rail opens are genuine retained operations: reserve admission before
@@ -398,7 +404,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             var sharedStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var sharedPrior = LogicalDriver.Value;
             var sharedInvocation = new CommandInvocation(this, sharedPrior);
-            var sharedOriginal = RunSharedOpenAsync(sharedStart.Task, command, token, sharedInvocation);
+            var sharedOriginal = RunSharedOpenAsync(sharedStart.Task, command, parameter, token, sharedInvocation);
             sharedInvocation.Self = sharedOriginal;
             lock (_sourceGate) Retain(_originalOperations, sharedOriginal);
             sharedStart.SetResult();
@@ -676,12 +682,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _retiring = true;
         _originalClose ??= _pendingCloseAttempt;
         _originalChromeClose = _chrome.OriginalClose;
-        var original = Dispatcher.UIThread.InvokeAsync(Changed).GetTask();
+        var original = Dispatcher.UIThread.InvokeAsync(() => { ObservePageCommand(); Changed(); }).GetTask();
         lock (_sourceGate) Retain(_originalUiOperations, original);
     }
     private void OnChromeStateChanged(object? sender, BrowseChromeSnapshot snapshot)
     {
         if (!IsOriginalPublicationCurrent) return;
+        ObservePageVisit(snapshot.SelectedTabId);
         lock (_sourceGate) CheckAdmission(_originalNotifications);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var original = NotifyAsync(start.Task, snapshot);
@@ -707,7 +714,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             _snapshot.SelectedTab.Address != snapshot.SelectedTab.Address ||
             _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage)
         { _profileMenuOpen = false; _manageUsersOpen = false; }
-        _snapshot = snapshot; IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
+        _snapshot = snapshot; ObservePageCommand(); IssueCurrentRows(); IssueGroupRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
         if (!_addressDraft) ApplyOmniboxLocation(snapshot.SelectedTab);
         _status = snapshot.Status; Changed();
     }
@@ -1076,8 +1083,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     internal void SetHostChromeWidth(double width)
     {
         var wide = IsEmbeddedHost && width >= 640;
-        if (_wideHostChrome == wide) return;
+        var mounted = width > 0;
+        var pageCommandFits = width >= 800;
+        if (_wideHostChrome == wide && _toolbarMounted == mounted && _pageCommandFits == pageCommandFits) return;
         _wideHostChrome = wide;
+        _toolbarMounted = mounted;
+        _pageCommandFits = pageCommandFits;
+        ObservePageCommand();
         Changed();
     }
 

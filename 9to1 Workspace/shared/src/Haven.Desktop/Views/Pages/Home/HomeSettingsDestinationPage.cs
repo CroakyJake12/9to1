@@ -12,6 +12,7 @@ using Haven.Application.Haven;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
+using HavenOS.Apps.Browse;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -25,6 +26,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 {
     private readonly NativeHomeThemePreferences _source;
     private readonly NativeHomeThemeCreator _creator;
+    private BrowsePageCommandSlot? _pageCommands;
+    private BrowsePageCommand? _saveTheme;
     private readonly NativeHomeAccentEditor _accentEditor;
     private readonly Func<CancellationToken, Task> _admit;
     private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
@@ -133,7 +136,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 SelectCategory(origin, scroll: origin != "theme-options");
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (!_active || !IsAlive || _category != origin) return;
+                    if (!_active || !IsAlive || _category != origin || _pageCommands is { IsHosted: true, IsSelected: false }) return;
                     if (origin == "theme-options")
                         this.GetVisualDescendants().OfType<Button>()
                             .SingleOrDefault(item => item.Name == "home-theme-options-create")?.Focus(NavigationMethod.Tab);
@@ -162,6 +165,27 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     }
     internal event EventHandler? CategoryChanged;
 
+    internal void AttachPageCommands(BrowsePageCommandSlot slot)
+    {
+        _pageCommands = slot;
+        slot.HostChanged += OnCommandHostChanged;
+        _creator.DraftChanged += OnDraftChanged;
+        _creator.SetShellHosted(slot.IsHosted, slot.IsSelected);
+        UpdatePageCommand();
+    }
+
+    private void OnCommandHostChanged(object? sender, EventArgs args) =>
+        _creator.SetShellHosted(_pageCommands!.IsHosted, _pageCommands.IsSelected);
+    private void OnDraftChanged(object? sender, EventArgs args) => UpdatePageCommand();
+    private void UpdatePageCommand()
+    {
+        if (_pageCommands is null) return;
+        if (_active && IsAlive && _category == "theme" && CreatorOpen)
+            _saveTheme ??= new("Save theme", _creator.SaveFromShellAsync);
+        else _saveTheme = null;
+        _pageCommands.Update(_saveTheme, _saveTheme is not null && _creator.CanSave);
+    }
+
     internal Task ActivateAsync(CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess();
@@ -179,7 +203,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         return _work.RunAsync(original => RefreshAsync(original, token), actual => _initialization ??= actual);
     }
     internal void Deactivate()
-    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
+    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; UpdatePageCommand(); }
 
     internal void FocusCategory() => FocusDirectoryItem(_category);
 
@@ -625,6 +649,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var changed = _category != category;
         _category = category;
         _creator.SetCategoryPresentation(category == "theme");
+        UpdatePageCommand();
         var item = HomeSettingsCatalog.Get(category);
         _expanded[HomeSettingsCatalog.GroupFor(item).Key] = true;
         if (changed) SetBrowseStatus(string.Empty);
@@ -814,6 +839,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     }
     private void RefreshBindings()
     {
+        UpdatePageCommand();
         Dispatcher.UIThread.VerifyAccess();
         if (_active && !_unavailable)
             _source.ApplyEditorBindings(_bindings);
@@ -880,6 +906,12 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation;
         _source.Changed -= OnSourceChanged;
         _bindings.PropertyChanged -= OnCreatorOpenChanged;
+        if (_pageCommands is { } slot)
+        {
+            _creator.DraftChanged -= OnDraftChanged;
+            slot.HostChanged -= OnCommandHostChanged;
+            slot.Update(null, false);
+        }
         // Seal page admission first. Let admitted CUI actions acknowledge their same global
         // writes before disposing this loader's caller token. The shared source remains live.
         var failures = new List<Exception>();

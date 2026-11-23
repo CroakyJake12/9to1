@@ -17,6 +17,9 @@ internal sealed class NativeHomeThemeCreator : IDisposable
     private readonly CuiThemePreferenceContext _context;
     private readonly BrowserThemeCreator _editor;
     private readonly CuiViewModel _host;
+    private readonly CuiViewModel _bindings = new();
+    private Task _shellSave = Task.CompletedTask;
+    private bool _canRestoreFocus = true;
     private readonly Func<bool> _canEdit;
     private Button? _trigger;
     private readonly ContentControl _mount = new UserControl();
@@ -31,13 +34,14 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         _canEdit = canEdit;
         var catalog = new CuiThemeDefinitionCatalog();
         _context = new(source, catalog);
-        var bindings = new CuiViewModel();
-        _editor = new(bindings, bindings, source, catalog, canEdit,
+        _bindings.Set("ShowInlineThemeSave", true);
+        _editor = new(_bindings, _bindings, source, catalog, canEdit,
             (theme, opening, token) => source.SaveThemeDraftAsync(theme, opening, apply, token));
         _loader.SetThemePreferenceContext(_context);
         _loader.SetBindingContext(_editor);
         _loader.SetActionDispatcher(_editor);
         _editor.PropertyChanged += SyncOpen;
+        _editor.PropertyChanged += OnDraftChanged;
         _host.Set("HomeThemeCreatorOpen", false);
         _host.Set("HomeThemeCreationAvailable", true);
         SetCategoryPresentation(true);
@@ -94,11 +98,25 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         _host.Set("HomeThemeCreatorOpen", _open);
         SetCategoryPresentation(_showInCategory);
         if (!_open && !_disposed)
-            Dispatcher.UIThread.Post(() => { if (!_open && !_disposed && _trigger?.IsEffectivelyVisible == true) _trigger.Focus(NavigationMethod.Tab); },
+            Dispatcher.UIThread.Post(() => { if (!_open && !_disposed && _canRestoreFocus && _trigger?.IsEffectivelyVisible == true) _trigger.Focus(NavigationMethod.Tab); },
                 DispatcherPriority.Loaded);
     }
 
-    internal Task WhenIdleAsync() => _loader.WhenActionsIdleAsync();
+    internal event EventHandler? DraftChanged;
+    private void OnDraftChanged(object? sender, PropertyChangedEventArgs args) => DraftChanged?.Invoke(this, EventArgs.Empty);
+    internal bool CanSave => _open && _showInCategory && !_disposed && _canEdit() && _editor.IsActionAvailable("ThemeCreatorSave") == true;
+    internal void SetShellHosted(bool hosted, bool selected)
+    {
+        _canRestoreFocus = !hosted || selected;
+        _bindings.Set("ShowInlineThemeSave", !hosted);
+    }
+    internal Task SaveFromShellAsync(CancellationToken token)
+    {
+        if (!CanSave) return Task.CompletedTask;
+        return _shellSave = _editor.DispatchAsync("ThemeCreatorSave", null, token).AsTask();
+    }
+
+    internal Task WhenIdleAsync() => Task.WhenAll(_loader.WhenActionsIdleAsync(), _shellSave);
     internal Task CloseAndDrainAsync() => _retirement ??= RetireAsync();
 
     private async Task RetireAsync()
@@ -116,6 +134,7 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         if (_disposed) return;
         _disposed = true;
         _editor.PropertyChanged -= SyncOpen;
+        _editor.PropertyChanged -= OnDraftChanged;
         if (_mount.Content is Control root) root.KeyDown -= OnEditorKey;
         _loader.Dispose();
         _editor.Dispose();

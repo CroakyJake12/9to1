@@ -143,7 +143,7 @@ public sealed partial class UnifiedHomeContentTests
                 .Single(field => field.IsEffectivelyVisible && AutomationProperties.GetName(field) == "Theme name");
             name.Text = "Title restoration";
             SettleFixtureLayout(window);
-            await Activate(ButtonByName("Save custom theme"));
+            await Activate(SettingsControl<Button>(window, "BrowsePrimaryPageCommand"));
             Title("Theme Options");
             await WaitForAppliedThemeAsync(source, "Title restoration", token);
         }

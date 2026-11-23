@@ -259,6 +259,8 @@ internal sealed class BrowseEngineViewport : ContentControl
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
     {
         _workspace.PropertyChanged -= OnChanged;
+        _workspace.SetHostChromeWidth(0);
+        foreach (var source in _originalAppViews.Keys.OfType<IBrowseNativePageCommandSource>()) source.PageCommandSlot.SetHosted(false);
         if (_workspace.CaptureTabTransitionFocus == CaptureTabTransitionFocus)
             _workspace.CaptureTabTransitionFocus = null;
         _workspace.DismissTransientMenus();
@@ -688,6 +690,7 @@ internal sealed class BrowseEngineViewport : ContentControl
                 currentApps.Add(app);
                 if (app.OriginalInitialization is { IsCompletedSuccessfully: true } && app.IsPublicationCurrent)
                 {
+                    if (app is IBrowseNativePageCommandSource provider) provider.PageCommandSlot.SetHosted(this.IsAttachedToVisualTree(), tab.Id == state.SelectedTabId);
                     var view = app.OriginalNativeView;
                     if (!_originalAppViews.TryGetValue(app, out var mountedApp))
                     {
@@ -731,6 +734,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         {
             if (original.OriginalClose is not { IsCompletedSuccessfully: true } || !original.CanRetireOriginalView)
                 throw new InvalidOperationException("The original app still owns its native view.");
+            if (original is IBrowseNativePageCommandSource provider) provider.PageCommandSlot.SetHosted(false);
             _surfaces.Children.Remove(_originalAppViews[original]); _originalAppViews.Remove(original);
         }
         // Inactive views remain mounted: selecting a tab does not destroy its

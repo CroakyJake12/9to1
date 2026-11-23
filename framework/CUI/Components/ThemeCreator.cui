@@ -73,7 +73,7 @@
     <Container id="theme-creator" Active="{Binding ThemeCreatorOpen, fallback=false}" Type="Vertical Stack" CellGap="12" Margin="0 0 0 24">
       <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8" Margin="0 0 0 12">
         <Text Text="Create theme" FontSize="32" FontWeight="800" TextWrapping="Wrap" />
-        <Button Column="1" Action="ThemeCreatorSave" Content="Save theme" AccentRole="Primary" Interactive="{Binding ThemeCreatorCanSave}" AccessibleName="Save custom theme" CornerRadius="18" Padding="14 8" VerticalAlignment="Center" />
+        <Button Column="1" Action="ThemeCreatorSave" IsVisible="{Binding ShowInlineThemeSave, fallback=true}" Content="Save theme" AccentRole="Primary" Interactive="{Binding ThemeCreatorCanSave}" AccessibleName="Save custom theme" CornerRadius="18" Padding="14 8" VerticalAlignment="Center" />
       </Container>
       <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1" Padding="0 12">
         <Text Text="Theme Name" FontWeight="600" VerticalAlignment="Center" />

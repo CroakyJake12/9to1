@@ -25,13 +25,18 @@ public sealed partial class BrowseNativeWorkspace
     /// close cannot join its own in-flight action. The operation does not report success until
     /// the borrowed surface's real open has settled; a refused or failed open publishes its
     /// structured message and retains the original fault (never fabricates success).</summary>
-    private async Task RunSharedOpenAsync(Task start, string command, CancellationToken token,
+    private async Task RunSharedOpenAsync(Task start, string command, object? parameter, CancellationToken token,
         CommandInvocation invocation)
     {
         var prior = LogicalDriver.Value; LogicalDriver.Value = invocation;
         try
         {
             await start; token.ThrowIfCancellationRequested();
+            if (command == "9to1.Browse.RunPageCommand")
+            {
+                await RunPageCommandAsync(parameter, token);
+                return;
+            }
             var context = _hostContext;
             HavenSharedOpenResult result;
             try

@@ -65,6 +65,7 @@
     <Compile Include="StrataLoopbackProviderSettingsTests.cs" />
     <Compile Include="HomeLibraryDestinationTests.cs;DeveloperManualDraftRecoveryTests.cs" />
     <Compile Include="NativeThemeCreatorTests.cs" />
+    <Compile Include="NativeThemeToolbarTests.cs" />
     <Compile Include="DeveloperSavedProjectsNavigationTests.cs;TaskRunEndPassTests.cs" />
     <Compile Include="DeveloperManualRecoveryConflictTests.cs" />
     <Compile Include="OriginalAutomationLibraryGraphEditingTests.cs" />

@@ -85,15 +85,17 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         return new Session(this, request);
     }
 
-    private HomeSettingsDestinationPage CreateSettings(BrowseAppContentRequest request)
+    private HomeSettingsDestinationPage CreateSettings(BrowseAppContentRequest request, BrowsePageCommandSlot commands)
     {
         var page = _settings!(request);
+        page.AttachPageCommands(commands);
         page.NewTabCustomisationAvailable = _newTabLayout is not null;
         return page;
     }
 
-    private sealed class Session : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner
+    private sealed class Session : IBrowseNativePageCommandSource, IOriginalTabTransientPresentationOwner
     {
+        public BrowsePageCommandSlot PageCommandSlot { get; } = new();
         private OriginalTabTransientPresentation? _transientPresentation;
         public OriginalTabTransientPresentation TransientPresentation => _transientPresentation
             ?? throw new InvalidOperationException("The original tab presentation has not initialized.");
@@ -158,7 +160,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                                     ? _request with { Address = AppContentAddress.Parse("browse://home/library") } : _request, _owner._modes, _owner._dashboard,
                                 _owner._discover, _owner._queue, (text, token) => _owner._prepareAiDraft(_request, text, token), _owner._aiAvailable,
                                 _owner._events is null ? null : () => _owner._events(_request),
-                                _owner._settings is null ? null : () => _owner.CreateSettings(_request),
+                                _owner._settings is null ? null : () => _owner.CreateSettings(_request, PageCommandSlot),
                                 _owner._library is null ? null : () => _owner._library(_request),
                                 newTabLayout: _request.Address.Authority == "newtab" ? _owner._newTabLayout?.Invoke(_request) : null,
                                 newTabWidgets: _request.Address.Authority == "newtab" ? _owner._newTabWidgets?.Invoke(_request) : null,
