@@ -12,22 +12,26 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     ICuiActionAvailability, INotifyPropertyChanged, IDisposable
 {
     internal const string PreviewThemeName = "9to1 Draft Theme Preview";
+    private static readonly CuiTheme[] BaseThemes = Enum.GetValues<CuiTheme>();
+    private static readonly string[] MaterialStyles = ["Solid Colour", "Gradient", "Pattern"];
     private readonly ICuiBindingContext _bindings;
     private readonly ICuiActionDispatcher _actions;
-    private readonly IBrowserHomeThemePreferences _preferences;
+    private readonly ICuiThemePreferenceSource _preferences;
+    private readonly CuiThemeDefinitionCatalog _catalog;
+    private readonly Func<bool> _canChange;
     private readonly Func<CuiCustomTheme, CuiThemePreferenceSnapshot, CancellationToken, Task<HomeThemeOperationResult>> _save;
     private readonly string _previewId = Guid.NewGuid().ToString("D");
     private ThemeDraft? _draft = new(CuiCustomThemeContract.CreateDefault());
     private CuiThemePreferenceSnapshot? _opening;
-    private bool _open, _busy, _disposed, _presentationFailure;
+    private bool _open, _busy, _disposed, _presentationFailure, _materialDetails;
     private string? _status, _validation, _previewFingerprint;
     private int _accentIndex, _fontIndex;
     private bool CanEdit => _open && !_busy && !_disposed;
     private bool SameOwner => _opening is { } original && original.ScopeId == _preferences.Current.ScopeId
         && original.Revision == _preferences.Current.Revision;
-    private bool CanUseCurrentRevision => CanEdit && _preferences.CanChange && _opening is { } original
+    private bool CanUseCurrentRevision => CanEdit && _canChange() && _opening is { } original
         && original.ScopeId == _preferences.Current.ScopeId && original.Revision != _preferences.Current.Revision;
-    private bool CanSave => CanEdit && _preferences.CanChange && SameOwner && _validation is null;
+    private bool CanSave => CanEdit && _canChange() && SameOwner && _validation is null;
     private AccentDraft Accent => _draft!.Accents[_accentIndex];
     private ColourDraft Colour => Accent.Kind switch
     {
@@ -39,21 +43,22 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     public event PropertyChangedEventHandler? PropertyChanged;
 
     internal BrowserThemeCreator(ICuiBindingContext bindings, ICuiActionDispatcher actions,
-        IBrowserHomeThemePreferences preferences,
+        ICuiThemePreferenceSource preferences, CuiThemeDefinitionCatalog catalog, Func<bool> canChange,
         Func<CuiCustomTheme, CuiThemePreferenceSnapshot, CancellationToken, Task<HomeThemeOperationResult>> save)
     {
-        _bindings = bindings; _actions = actions; _preferences = preferences; _save = save;
+        _bindings = bindings; _actions = actions; _preferences = preferences; _catalog = catalog; _canChange = canChange; _save = save;
         if (bindings is INotifyPropertyChanged observable) observable.PropertyChanged += OwnerChanged;
         preferences.Changed += PreferencesChanged;
     }
 
     internal void Open()
     {
-        if (_disposed || _busy || !_preferences.CanChange) return;
+        if (_disposed || _busy || !_canChange()) return;
         if (_open) return; // Clicking Create Theme again must not discard unsaved work.
         _opening = _preferences.Current;
         _draft = new(CuiCustomThemeContract.CreateDefault());
         _accentIndex = _fontIndex = 0;
+        _materialDetails = false;
         _open = true; _status = null; _presentationFailure = false;
         ValidateAndPreview(); Publish();
     }
@@ -72,7 +77,8 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
             "FocusName" => CanEdit,
             "Status" => Status,
             "AccentNames" => new[] { "Primary", "Secondary", "Tertiary" },
-            "FillKinds" => new[] { "Solid Colour", "Gradient", "Pattern" },
+            "BaseThemes" => BaseThemes.Select(theme => CuiThemeCatalog.Resolve(theme).DisplayName).ToArray(),
+            "FillKinds" => MaterialStyles,
             "GradientKinds" => new[] { "Linear", "Radial", "Conic" },
             "PatternKinds" => new[] { "Stripes", "Checkerboard", "Dots" },
             "PatternColourNames" => new[] { "Foreground", "Background" },
@@ -85,8 +91,25 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         value = key switch
         {
             "Name" => _draft.Name,
+            "BaseThemeIndex" => Array.IndexOf(BaseThemes, _draft.BaseTheme),
+            "EditingPrimary" => _accentIndex == 0,
+            "EditingSecondary" => _accentIndex == 1,
+            "EditingTertiary" => _accentIndex == 2,
+            "PrimaryStyle" => MaterialStyles[_draft.Accents[0].Kind],
+            "SecondaryStyle" => MaterialStyles[_draft.Accents[1].Kind],
+            "TertiaryStyle" => MaterialStyles[_draft.Accents[2].Kind],
             "AccentIndex" => _accentIndex,
             "FillKindIndex" => Accent.Kind,
+            "MaterialDetails" => _materialDetails,
+            "MaterialAction" => _materialDetails ? "Close editor" : Accent.Kind switch
+                { 1 => "Edit stops", 2 => "Edit pattern", _ => "Edit colour" },
+            "MaterialSummary" => Accent.Kind switch
+            {
+                1 => ((CuiCustomGradientKind)Accent.GradientKind).ToString() +
+                    (Accent.GradientKind == (int)CuiCustomGradientKind.Radial ? "" : $" · {Accent.GradientAngle}°"),
+                2 => ((CuiCustomPatternKind)Accent.PatternKind).ToString(),
+                _ => Accent.Solid.ValidHex
+            },
             "IsGradient" => Accent.Kind == 1,
             "IsPattern" => Accent.Kind == 2,
             "GradientKindIndex" => Accent.GradientKind,
@@ -132,8 +155,8 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     private string Status => (_status ?? (!_open ? string.Empty : !SameOwner
         ? CanUseCurrentRevision
             ? $"Saved appearance is now {_preferences.Current.Name}. Your draft is preserved. Review it, then use the current revision to save."
-            : "Your account changed. Your draft is still here; saving into another account is disabled. Close and reopen the creator for that account."
-        : _validation ?? "Preview only. Save theme applies it to your account."))
+            : "The active profile changed. Close and reopen the editor to create a theme for this profile."
+        : _validation ?? "Save theme applies this design to the current profile."))
         + (_presentationFailure ? " Some creator controls could not refresh." : string.Empty);
 
     public bool TrySetValue(string path, object? value)
@@ -150,7 +173,8 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         switch (key)
         {
             case "Name": _draft.Name = text; break;
-            case "AccentIndex": if (!Select(3, selected => _accentIndex = selected)) return false; break;
+            case "BaseThemeIndex": if (!Select(BaseThemes.Length, selected => _draft.BaseTheme = BaseThemes[selected])) return false; break;
+            case "AccentIndex": if (!Select(3, SelectMaterial)) return false; break;
             case "FillKindIndex": if (!Select(3, selected => Accent.Kind = selected)) return false; break;
             case "GradientKindIndex": if (!Select(3, selected => Accent.GradientKind = selected)) return false; break;
             case "GradientAngle": Accent.GradientAngle = text; break;
@@ -196,7 +220,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         "ThemeCreatorUseCurrentRevision" => CanUseCurrentRevision,
         "ThemeCreatorAddStop" => CanEdit && Accent.Stops.Count < 16,
         "ThemeCreatorRemoveStop" => CanEdit && Accent.StopIndex > 0 && Accent.StopIndex < Accent.Stops.Count - 1,
-        "ThemeCreatorSelectPrimary" or "ThemeCreatorSelectSecondary" or "ThemeCreatorSelectTertiary" => CanEdit,
+        "ThemeCreatorSelectPrimary" or "ThemeCreatorSelectSecondary" or "ThemeCreatorSelectTertiary" or "ThemeCreatorToggleMaterialDetails" => CanEdit,
         _ => _disposed ? false : (_actions as ICuiActionAvailability)?.IsActionAvailable(command)
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
@@ -221,9 +245,10 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         {
             case "ThemeCreatorCancel": Close(); return;
             case "ThemeCreatorUseCurrentRevision": _opening = _preferences.Current; break;
-            case "ThemeCreatorSelectPrimary": _accentIndex = 0; break;
-            case "ThemeCreatorSelectSecondary": _accentIndex = 1; break;
-            case "ThemeCreatorSelectTertiary": _accentIndex = 2; break;
+            case "ThemeCreatorToggleMaterialDetails": _materialDetails = !_materialDetails; break;
+            case "ThemeCreatorSelectPrimary": SelectMaterial(0); break;
+            case "ThemeCreatorSelectSecondary": SelectMaterial(1); break;
+            case "ThemeCreatorSelectTertiary": SelectMaterial(2); break;
             case "ThemeCreatorAddStop":
                 // Insert in the largest remaining interval, keeping endpoint stops intact.
                 var pairs = Accent.Stops.Zip(Accent.Stops.Skip(1), (left, right) => (left, right)).ToArray();
@@ -258,10 +283,17 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         _status = null; ValidateAndPreview(); Publish();
     }
 
+    private void SelectMaterial(int index)
+    {
+        if (_accentIndex == index) return;
+        _accentIndex = index;
+        _materialDetails = false;
+    }
+
     private CuiCustomTheme BuildValidated()
     {
         var result = _draft!.Build().Validate();
-        if (string.Equals(result.Name, PreviewThemeName, StringComparison.OrdinalIgnoreCase) || _preferences.Catalog.TryResolve(result.Name, out _))
+        if (string.Equals(result.Name, PreviewThemeName, StringComparison.OrdinalIgnoreCase) || _catalog.TryResolve(result.Name, out _))
             throw new CuiCustomThemeException("CUI_CUSTOM_NAME_COLLISION", "That theme name is already in use. Choose another name.");
         return result;
     }
@@ -276,7 +308,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
             var fingerprint = CuiCustomThemeContract.Serialize(preview);
             if (fingerprint != _previewFingerprint)
             {
-                _preferences.Catalog.UpsertCustomTheme(preview, ephemeral: true);
+                _catalog.UpsertCustomTheme(preview, ephemeral: true);
                 _previewFingerprint = fingerprint;
             }
         }
@@ -285,7 +317,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     private void Close()
     {
         _open = false; Publish(); // Remove visible consumers before the ephemeral named scope.
-        _preferences.Catalog.RemoveCustomTheme(_previewId);
+        _catalog.RemoveCustomTheme(_previewId);
         _previewFingerprint = null;
         _draft = new(CuiCustomThemeContract.CreateDefault()); _opening = null; _validation = null;
     }
@@ -304,7 +336,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         _open = false; _disposed = true;
         if (_bindings is INotifyPropertyChanged observable) observable.PropertyChanged -= OwnerChanged;
         _preferences.Changed -= PreferencesChanged;
-        _preferences.Catalog.RemoveCustomTheme(_previewId);
+        _catalog.RemoveCustomTheme(_previewId);
         PropertyChanged = null;
     }
 

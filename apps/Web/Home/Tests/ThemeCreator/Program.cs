@@ -19,7 +19,7 @@ object? Read(BrowserThemeCreator creator, string path) { Check(creator.TryGetVal
 void Set(BrowserThemeCreator creator, string path, object value) => Check(creator.TrySetValue("ThemeCreator" + path, value), "Draft edit rejected " + path);
 var sink = new EmptyOwner();
 var preferences = new ControlledPreferences();
-using (var creator = new BrowserThemeCreator(sink, sink, preferences, preferences.Save))
+using (var creator = new BrowserThemeCreator(sink, sink, preferences, preferences.Catalog, () => preferences.CanChange, preferences.Save))
 {
     var original = preferences.Current;
     creator.Open(); Check(Read(creator, "Open") is true, "Creator did not open");
@@ -66,7 +66,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
     await session.Dispatch<bool>(async () =>
     {
         var owner = new ControlledPreferences();
-        using var creator = new BrowserThemeCreator(sink, sink, owner, owner.Save);
+        using var creator = new BrowserThemeCreator(sink, sink, owner, owner.Catalog, () => owner.CanChange, owner.Save);
         creator.Open();
         using var theme = new CuiThemePreferenceContext(owner, owner.Catalog);
         using var loader = new CuiControlLoader(); loader.SetThemePreferenceContext(theme); loader.SetBindingContext(creator); loader.SetActionDispatcher(creator);
@@ -110,6 +110,10 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             var type = Find<ComboBox>("Accent type"); Click(type); window.KeyPress(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, null); window.KeyRelease(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, null); window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); Pump();
             Check(Read(creator, "IsGradient") is true, "Physical accent selector did not enter gradient builder");
             Check(Read(creator, "GradientHasAngle") is true && Read(creator, "GradientHasCentre") is false && Read(creator, "GradientHasRadius") is false, "Linear gradient exposed irrelevant geometry");
+            Check(!loaded.Root!.GetVisualDescendants().OfType<TextBox>().Any(field =>
+                field.IsEffectivelyVisible && AutomationProperties.GetName(field) == "Colour hexadecimal RGB"),
+                "The summary unexpectedly reveals the precision controls");
+            Click(Find<Button>("Edit material details"));
             Click(loaded.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "Add stop"));
             Check(((string[])Read(creator, "StopNames")!).Length == 3, "Physical Add stop failed");
             var colour = Find<TextBox>("Colour hexadecimal RGB"); Click(colour);
@@ -118,6 +122,11 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             Check((string?)Read(creator, "ColourHex") == "#CE3864", "Physical colour picker edits did not reach selected gradient stop");
             var preview = Find<Button>("Preview primary accent and edit it");
             Check(preview.Background is Avalonia.Media.IGradientBrush brush && brush.GradientStops.Count == 3 && brush.GradientStops[1].Color == Avalonia.Media.Color.Parse("#CE3864"), "Actual nested preview did not render the shared custom gradient");
+            Click(Find<Button>("Edit material details"));
+            Check((string?)Read(creator, "ColourHex") == "#CE3864" && Read(creator, "MaterialDetails") is false,
+                "Closing the material details changed the authored gradient stop");
+            Capture("summary", (int)window.Width, (int)window.Height);
+            Click(Find<Button>("Edit material details"));
             foreach (var (width, height) in new[] { (1200, 900), (800, 600), (390, 844) })
             {
                 window.Width = width; window.Height = height; Pump();
@@ -128,7 +137,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
                 colour.BringIntoView(); Pump(); Capture("colour", width, height);
                 Find<TextBox>("Colour Gaussian background blur").BringIntoView(); Pump(); Capture("material", width, height);
             }
-            Click(Find<Button>("Save custom theme to account")); await loader.WhenActionsIdleAsync(); Pump();
+            Click(Find<Button>("Save custom theme")); await loader.WhenActionsIdleAsync(); Pump();
             Check(owner.Writes == 1 && owner.Saved?.Name == "Native theme draf!t", "Actual CUI Save did not reach same account delegate");
             Check(Read(creator, "Open") is false, "Successful native save did not close draft");
             using var absentOwnerLoader = new CuiControlLoader();

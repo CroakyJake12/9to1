@@ -270,7 +270,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             {
                 var preferences = _themePreferences;
                 candidateAppearance = new(surface.Bindings, surface.Actions, preferences, () => candidateThemeCreator?.Open());
-                candidateThemeCreator = new(candidateAppearance, candidateAppearance, preferences,
+                candidateThemeCreator = new(candidateAppearance, candidateAppearance, preferences, preferences.Catalog, () => preferences.CanChange,
                     (theme, observed, token) => preferences.SaveCustomThemeAsync(theme, observed, token));
                 bindings = candidateThemeCreator;
                 actions = candidateThemeCreator;
