@@ -38,6 +38,10 @@ The theme toolbar and overflow invoke the same Save command from the selected ed
 
 [Cloud checks and captures](../evidence/atlas-20261122-cloud/README.md) · [Atlas and native visual comparison](../evidence/atlas-20261123-visual-review/README.md) · [Settings, appearance and New Tab continuation](../evidence/atlas-20261123-shell-completion/README.md)
 
+## 23 November continuation
+
+The three Haven keyboard routes show the current commands for moving focus, dismissing a popover and activating a control. Searching for each category and pressing Enter opens its map. The two tested window sizes were 1440 × 900 and 720 × 520. The current host has no shortcut reassignment store. [Keyboard comparisons and native receipts](../evidence/atlas-20261123-accessibility/README.md)
+
 ## Actual implementation map (code-observed 18 Nov)
 
 | Area | Real location | Notes |

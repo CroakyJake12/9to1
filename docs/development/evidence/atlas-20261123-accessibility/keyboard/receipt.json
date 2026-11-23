@@ -1,0 +1,110 @@
+{
+  "compiledParent": "8c21ec3c1409fecd7c54d6c5f8e1850cf7b7b61f",
+  "publishedPatch": "70a1f6e87d9db2c34bfeb3641941107614a5e310",
+  "renderer": "Real Linux X11 on private :74, keyboard-only production overlay from base and the exact published keyboard patch, with unchanged Stage16 dependencies.",
+  "runtimeHashes": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "a60aee08fa00458fbfb0023ec8d74c6d8f23b01cd91e810a73d45b6e77581e50",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
+    "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7"
+  },
+  "atlasSha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+  "journey": "Linux native Home Settings gear opens existing Settings. Keyboard search navigates to each keyboard map. Native compact captures scroll to show the keycaps if needed.",
+  "pairs": [
+    {
+      "route": "settings-haven-shortcuts",
+      "viewport": [
+        1440,
+        900
+      ],
+      "atlasRows": [
+        "Next control\nTab",
+        "Previous control\nShift + Tab",
+        "Close a popover\nEsc",
+        "Activate\nEnter / Space"
+      ],
+      "comparison": "compare-settings-haven-shortcuts-1440x900.png",
+      "comparisonSha256": "875f0e2eca784aa72476d20355a38d4ff688d97dc6386de4b41a8d8f56f913ed",
+      "atlasFrameSha256": "e0c4f617f0d2e6d5acc6e80997a12ca4b7bb481ae34c38a8a3ae3ce6ada80c7d",
+      "nativeFrameSha256": "28ff23f4a92977970ebf5b120567842f43f710cfff7986476474dee37b6ba3a6"
+    },
+    {
+      "route": "settings-haven-key-navigation",
+      "viewport": [
+        1440,
+        900
+      ],
+      "atlasRows": [
+        "Next control\nTab",
+        "Previous control\nShift + Tab"
+      ],
+      "comparison": "compare-settings-haven-key-navigation-1440x900.png",
+      "comparisonSha256": "626615d58e04d52c2b98916fe329e9c043aeec466505a60c6b0e7634a4f2c58f",
+      "atlasFrameSha256": "5aec7a269abde371841feec38f0c5c8916b4fe0da89e6494912b0b338092bef1",
+      "nativeFrameSha256": "b9c477186af53917f34037d98c317f96a90ef8c7072aa61fb5b50eadc31e7263"
+    },
+    {
+      "route": "settings-haven-key-menus",
+      "viewport": [
+        1440,
+        900
+      ],
+      "atlasRows": [
+        "Close a popover\nEsc",
+        "Activate\nEnter / Space"
+      ],
+      "comparison": "compare-settings-haven-key-menus-1440x900.png",
+      "comparisonSha256": "d9e71afe66b991e6c135396622dd8cad1f295e90b039b3fae015bc4ef1e3a949",
+      "atlasFrameSha256": "ddd3847a561fd0d47ae4cfb7f3f6d40e068184537ae11e8a8aeac025014928e8",
+      "nativeFrameSha256": "e99e169e801a7837c4a8fed730ddf84ce241c58336a2eeaf9677d651dbe7ff04"
+    },
+    {
+      "route": "settings-haven-shortcuts",
+      "viewport": [
+        720,
+        520
+      ],
+      "atlasRows": [
+        "Next control\nTab",
+        "Previous control\nShift + Tab",
+        "Close a popover\nEsc",
+        "Activate\nEnter / Space"
+      ],
+      "comparison": "compare-settings-haven-shortcuts-720x520.png",
+      "comparisonSha256": "5732a82f1778d990c7b567616426c6346169f5b32587ad556c881b4c80356371",
+      "atlasFrameSha256": "3ace9f0d0cc7a2402a542175f48290efbfaa8513eea2b649ae675d13ee712fa1",
+      "nativeFrameSha256": "afeb70bfce9728532152fa8341bd7fbda11c11d74f38c00b3e6b7bc064944856"
+    },
+    {
+      "route": "settings-haven-key-navigation",
+      "viewport": [
+        720,
+        520
+      ],
+      "atlasRows": [
+        "Next control\nTab",
+        "Previous control\nShift + Tab"
+      ],
+      "comparison": "compare-settings-haven-key-navigation-720x520.png",
+      "comparisonSha256": "a6b74b05e5135308f6e167a42710af2593ca6c3e0b88785ab9494521c9a97cd4",
+      "atlasFrameSha256": "94c6eaa0da13c9c02348e2519fb4d5e9852ef6f2c608bfe898a92adc6876014c",
+      "nativeFrameSha256": "6b6c17c52100effc5fda2667d46ab5a1344de764233817a5f2d46ada073c6647"
+    },
+    {
+      "route": "settings-haven-key-menus",
+      "viewport": [
+        720,
+        520
+      ],
+      "atlasRows": [
+        "Close a popover\nEsc",
+        "Activate\nEnter / Space"
+      ],
+      "comparison": "compare-settings-haven-key-menus-720x520.png",
+      "comparisonSha256": "59499b70c41bdd618f15d1703f35054af89a3cb5653e7bc395b28ad29a130cac",
+      "atlasFrameSha256": "7270aa3307acdf024b67d933d6d3074db54cbafd65753440686c08dde88f8e99",
+      "nativeFrameSha256": "468383e0a31c1af2aed2fd3ac9a77c49d96c2a1f2cb14ddac86128f489f5dffd"
+    }
+  ]
+}
