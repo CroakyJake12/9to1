@@ -541,6 +541,8 @@ public sealed partial class BrowseNativeUiTests
             var effort = FindVisual<TextBlock>("HavenModelEffort");
             Assert.True(effort.IsEffectivelyVisible);
             Assert.Equal("70%", effort.Text);
+            Assert.Equal(11d, effort.FontSize);
+            Assert.Equal((FontWeight)600, effort.FontWeight);
             var fullName = $"Choose {modelName}, reasoning effort 70%";
             Assert.Equal(fullName, AutomationProperties.GetName(model));
             Trace("wide:focus");

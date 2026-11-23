@@ -76,7 +76,7 @@
           <Button id="BrowsePrimaryPageCommand" Column="4" Action="RunPageCommand" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInBar}" Interactive="{Binding Can.RunPageCommand}" AccentRole="Primary" Padding="14 4" CornerRadius="16" Height="32">
             <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center" IsHitTestVisible="False">
               <Image id="BrowsePrimaryPageCommandIcon" Source="{Binding PageCommandIcon}" IsVisible="{Binding PageCommandHasIcon}" Width="16" Height="16" VerticalAlignment="Center" />
-              <Text Text="{Binding PageCommandLabel}" FontWeight="700" VerticalAlignment="Center" />
+              <Text Text="{Binding PageCommandLabel}" FontSize="13" FontWeight="750" VerticalAlignment="Center" />
             </Container>
           </Button>
           <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="5" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model and notifications">
@@ -85,7 +85,7 @@
                 <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" VerticalAlignment="Center" />
                 <Container Type="Horizontal Stack" CellGap="6" Margin="0 0 4 0" VerticalAlignment="Center" IsVisible="{Binding Haven.ModelDetailsVisible}">
                   <Text id="HavenModelLabel" Text="{Binding Haven.ModelDisplayName}" Foreground="{Resource CuiTextBrush}" FontSize="13" FontWeight="700" MaxWidth="144" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                  <Text id="HavenModelEffort" Text="{Binding Haven.EffortPercent}" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" FontWeight="700" IsVisible="{Binding Haven.EffortKnown}" VerticalAlignment="Center" />
+                  <Text id="HavenModelEffort" Text="{Binding Haven.EffortPercent}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" FontWeight="600" IsVisible="{Binding Haven.EffortKnown}" VerticalAlignment="Center" />
                   <Image id="HavenModelDisclosure" Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/model-disclosure.svg" Width="12" Height="12" VerticalAlignment="Center" />
                 </Container>
               </Container>
