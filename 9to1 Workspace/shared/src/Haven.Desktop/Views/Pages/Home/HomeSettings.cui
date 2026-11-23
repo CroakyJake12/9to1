@@ -7,19 +7,23 @@
     <Page AccessibleName="Home Settings">
       <Container Type="Grid" ColumnSizes="{Binding SettingsColumns}" RowSizes="{Binding SettingsRows}" Background="{Resource CuiWorkspaceBrush}">
         <Container id="home-settings-nav" Type="Grid" RowSizes="Auto 1fr" Role="navigation" AccessibleName="Settings categories"
-                   MaxHeight="{Binding SettingsNavHeight}" Padding="13 10" CellGap="10">
-          <Container Type="Vertical Stack" CellGap="10">
-            <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="10" Padding="8 0">
+                   MaxHeight="{Binding SettingsNavHeight}" Padding="{Binding SettingsNavPadding, fallback=13 10}" CellGap="{Binding SettingsNavGap, fallback=10}">
+          <Container id="home-settings-nav-header" Type="Grid" ColumnSizes="{Binding SettingsNavHeaderColumns, fallback=1fr}"
+                     RowSizes="{Binding SettingsNavHeaderRows, fallback=Auto Auto}" CellGap="{Binding SettingsNavGap, fallback=10}">
+            <Container id="home-settings-nav-heading" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="10" Padding="8 0" VerticalAlignment="Center">
               <Container Type="Overlay" Width="30" Height="30" CornerRadius="8" Background="{Resource CuiAccentSoftBrush}" VerticalAlignment="Center">
                 <Image Source="icon:settings" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
               </Container>
-              <Text Column="1" Text="Settings" FontSize="20" FontWeight="800" VerticalAlignment="Center" />
+              <Text id="home-settings-nav-title" Column="1" Text="Settings" FontSize="20" FontWeight="800" VerticalAlignment="Center"
+                    IsVisible="{Binding SettingsNavShowTitle, fallback=true}" />
               <Button id="home-settings-back" Column="2" Action="SettingsBack" AccessibleName="Back to Home" Tooltip="Back to Home"
                       Width="36" Height="36" Background="{Resource CuiTransparentBrush}" BorderWidth="0" Padding="8">
                 <Image Source="icon:chevron-left" Width="18" Height="18" />
               </Button>
             </Container>
-            <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8" Padding="12 0" CornerRadius="10" Background="{Resource CuiPanelBrush}">
+            <Container id="home-settings-nav-search-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8" Padding="12 0" CornerRadius="10"
+                       Background="{Resource CuiPanelBrush}" Row="{Binding SettingsNavSearchRow, fallback=1}"
+                       Column="{Binding SettingsNavSearchColumn, fallback=0}" VerticalAlignment="Center">
               <Image Source="icon:search" Width="16" Height="16" VerticalAlignment="Center" />
               <Input id="home-settings-search" Column="1" Type="Text" AccessibleName="Search settings" PlaceholderText="Search settings"
                      Height="38" MinWidth="0" Padding="0" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" />
@@ -163,7 +167,7 @@
                          MinHeight="64" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
                 <Container Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
                   <Text Text="Accessibility" FontSize="14" FontWeight="700" />
-                  <Text Text="Manage high contrast and reduced motion." FontSize="13" FontWeight="600" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text Text="Manage interface scale, high contrast and reduced motion." FontSize="13" FontWeight="600" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                 </Container>
                 <Button id="home-theme-options-accessibility" Action="SettingsOptionsAccessibility" AccessibleName="Open Accessibility settings"
                         Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
@@ -175,6 +179,94 @@
                 </Button>
               </Container>
             </Container>
+          </Container>
+          <Container id="home-settings-accessibility-page" Type="Vertical Stack" IsVisible="{Binding SettingsAccessibilitySelected}"
+                     MaxWidth="1120" Padding="{Binding SettingsAccessibilityPadding}" VerticalScrolling="True" HorizontalScrolling="False" CellGap="26">
+            <Container id="home-accessibility-heading" Type="Vertical Stack" CellGap="6" Margin="0 0 0 16">
+              <Text id="home-accessibility-scope" Text="Global" FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="home-accessibility-title" Text="Accessibility" FontSize="36" FontWeight="800" TextWrapping="Wrap" />
+            </Container>
+            <Container id="home-accessibility-display" Type="Vertical Stack" CellGap="4">
+              <Text id="home-accessibility-display-heading" Text="Display and reading" FontSize="18" FontWeight="750" Margin="0 0 0 8" />
+              <Container id="home-accessibility-scale-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="80" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-accessibility-scale-labels" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-accessibility-scale-label" Text="Interface scale" FontSize="14" FontWeight="700" />
+                  <Text id="home-accessibility-scale-description" Text="Change the interface size. Saved documents keep their own typography." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Input id="home-settings-interface-scale" Type="Select" AccessibleName="Interface scale" Width="{Binding SettingsInterfaceScaleWidth}" Height="42"
+                       Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                       IsEnabled="{Binding SettingsInterfaceScaleAvailable, fallback=false}" />
+              </Container>
+              <Container id="home-accessibility-preview" Type="Vertical Stack" CellGap="8" IsVisible="{Binding SettingsInterfaceScaleHasStatus, fallback=false}">
+                <Text id="home-settings-interface-scale-status" Text="{Binding SettingsInterfaceScaleStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                <Container id="home-accessibility-preview-actions" Type="Wrap" CellGap="8" HorizontalAlignment="Right">
+                  <Button id="home-settings-interface-scale-revert" Action="SettingsInterfaceScaleRevert" Content="Revert"
+                          AccessibleName="Revert interface scale" IsVisible="{Binding SettingsInterfaceScaleCanRevert, fallback=false}" />
+                  <Button id="home-settings-interface-scale-apply" Action="SettingsInterfaceScaleApply" Content="Apply"
+                          AccessibleName="Apply interface scale" IsVisible="{Binding SettingsInterfaceScaleCanApply, fallback=false}" />
+                </Container>
+              </Container>
+              <Container id="home-accessibility-contrast-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="80" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-accessibility-contrast-labels" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-accessibility-contrast-label" Text="High contrast" FontSize="14" FontWeight="700" />
+                  <Text id="home-accessibility-contrast-description" Text="Increase separation and preserve visible control states." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Input id="home-settings-high-contrast" Type="Switch" AccessibleName="High contrast"
+                       IsVisible="{Binding SettingsAccessibilitySwitchesAvailable, fallback=false}"
+                       Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <Text id="home-settings-high-contrast-unavailable" Text="Unavailable" AccessibleName="High contrast unavailable"
+                      IsVisible="{Binding SettingsAccessibilitySwitchesUnavailable, fallback=true}" Foreground="{Resource CuiTextSoftBrush}"
+                      Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Container>
+              <Container id="home-accessibility-text-contrast-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="80" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-accessibility-text-contrast-labels" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-accessibility-text-contrast-label" Text="Text contrast" FontSize="14" FontWeight="700" />
+                  <Text id="home-accessibility-text-contrast-description" Text="Uses the current theme’s accessible foreground treatment." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Text id="home-accessibility-text-contrast-state" Text="Automatic" Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="700" />
+              </Container>
+            </Container>
+            <Container id="home-accessibility-motion" Type="Vertical Stack" CellGap="4">
+              <Text id="home-accessibility-motion-heading" Text="Motion and focus" FontSize="18" FontWeight="750" Margin="0 0 0 8" />
+              <Container id="home-accessibility-motion-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="80" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-accessibility-motion-labels" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-accessibility-motion-label" Text="Reduced motion" FontSize="14" FontWeight="700" />
+                  <Text id="home-accessibility-motion-description" Text="Use minimal movement and stable transitions." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Input id="home-settings-reduced-motion" Type="Switch" AccessibleName="Reduced motion"
+                       IsVisible="{Binding SettingsAccessibilitySwitchesAvailable, fallback=false}"
+                       Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <Text id="home-settings-reduced-motion-unavailable" Text="Unavailable" AccessibleName="Reduced motion unavailable"
+                      IsVisible="{Binding SettingsAccessibilitySwitchesUnavailable, fallback=true}" Foreground="{Resource CuiTextSoftBrush}"
+                      Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Container>
+            </Container>
+            <Container id="home-accessibility-input" Type="Vertical Stack" CellGap="4">
+              <Text id="home-accessibility-input-heading" Text="Input" FontSize="18" FontWeight="750" Margin="0 0 0 8" />
+              <Container id="home-accessibility-pointer-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="80" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-accessibility-pointer-labels" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-accessibility-pointer-label" Text="Pointer size" FontSize="14" FontWeight="700" />
+                  <Text id="home-accessibility-pointer-description" Text="Change the system pointer size in your device’s accessibility settings." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Text id="home-accessibility-pointer-state" Text="Device controlled" Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="700" />
+              </Container>
+              <Container id="home-accessibility-keyboard-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}" MinHeight="80" CellGap="8" Padding="0 12">
+                <Container id="home-accessibility-keyboard-labels" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-accessibility-keyboard-label" Text="Keyboard navigation" FontSize="14" FontWeight="700" />
+                  <Text id="home-accessibility-keyboard-description" Text="Tab order follows the semantic reading order." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-settings-accessibility-shortcuts" Action="SettingsAccessibilityShortcuts" Content="View shortcuts"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Container>
+            </Container>
+            <Text id="home-accessibility-save-status" Text="{Binding HomeAppearanceStatus}" IsVisible="{Binding SettingsHasAppearanceStatus, fallback=false}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
           </Container>
           <Container id="home-settings-appearance-host" Type="Overlay" IsVisible="{Binding SettingsShowsAppearance}" />
           <Container id="home-settings-layout-page" Type="Vertical Stack" IsVisible="{Binding SettingsLayoutSelected}"
@@ -219,11 +311,11 @@
               <Container id="home-settings-layout-accessibility-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
                          MinHeight="72" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
                 <Container id="home-settings-layout-accessibility-details" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
-                  <Text id="home-settings-layout-accessibility-title" Text="Accessibility" FontSize="14" FontWeight="700" />
-                  <Text id="home-settings-layout-accessibility-description" Text="Manage high contrast and reduced motion."
+                  <Text id="home-settings-layout-accessibility-title" Text="Interface scale" FontSize="14" FontWeight="700" />
+                  <Text id="home-settings-layout-accessibility-description" Text="Display size and reading preferences."
                         TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
                 </Container>
-                <Button id="home-settings-layout-accessibility" Action="SettingsLayoutAccessibility" AccessibleName="Open Accessibility settings"
+                <Button id="home-settings-layout-accessibility" Action="SettingsLayoutAccessibility" AccessibleName="Open interface scale in Accessibility"
                         Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
                         HorizontalAlignment="Right" VerticalAlignment="Center" Chromeless="True" Padding="12 8">
                   <Container id="home-settings-layout-accessibility-action" Type="Horizontal Stack" CellGap="8">

@@ -59,6 +59,10 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
     private Task? _close;
     public CuiThemePreferenceSnapshot Current { get; private set; } =
         new("Professional", 0, "presentation-only", false, new());
+    internal HomeThemeAccessibility? SavedAccessibility
+    {
+        get { lock (_operationsGate) return _preference?.Accessibility; }
+    }
     public string? Diagnostic { get; private set; }
     public event EventHandler? Changed;
     public CuiThemePreferenceContext Context { get; }
@@ -550,11 +554,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             ["HomeInterfaceScaleText"] = available
                 ? (value!.Accessibility.DisplayScale * 100).ToString("0.######", CultureInfo.InvariantCulture) + "%" : "Unavailable",
             ["HomeHighContrastTarget"] = highContrast?["Target"],
-            ["HomeHighContrastEnabled"] = highContrast?["IsSelected"] is true,
-            ["HomeHighContrastState"] = highContrast is null ? "Unavailable" : value!.Accessibility.HighContrast ? "On" : "Off",
             ["HomeReduceMotionTarget"] = reduceMotion?["Target"],
-            ["HomeReduceMotionEnabled"] = reduceMotion?["IsSelected"] is true,
-            ["HomeReduceMotionState"] = reduceMotion is null ? "Unavailable" : value!.Accessibility.ReduceMotion ? "On" : "Off",
             ["HomeAccentModeChoices"] = available ? new[]
             {
                 AccentMode("Off", HomeThemeAccentOverrideMode.None), AccentMode("On", HomeThemeAccentOverrideMode.AllApps),

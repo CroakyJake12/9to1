@@ -18,6 +18,90 @@ public sealed partial class UnifiedHomeContentTests
     [AvaloniaTheory]
     [InlineData(1440, 900)]
     [InlineData(720, 520)]
+    public async Task Layout_interface_scale_focuses_the_selector_and_accessibility_uses_existing_preferences(int width, int height)
+    {
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var paths = new LayoutPaths();
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        var original = """{"havenUiThemeName":"Professional","defaultModel":"keep-model"}"""u8.ToArray();
+        Directory.CreateDirectory(paths.DataDirectory);
+        await File.WriteAllBytesAsync(file, original);
+        await using var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            settings: _ => new(source, _ => Task.CompletedTask)).CreateSession(Request("browse://home/settings/settings-layout")));
+        var window = new Window { Width = width, Height = height };
+        try
+        {
+            await session.InitializeAsync(lifetime.Token);
+            window.Content = session.OriginalNativeView;
+            window.Show();
+            SettleFixtureLayout(window);
+            var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
+            await Activate("home-settings-layout-accessibility");
+            Assert.Equal("Accessibility", settings.CategoryTitle);
+            var scale = SettingsControl<ComboBox>(settings, "home-settings-interface-scale");
+            Assert.True(scale.IsFocused, $"Scale focus after navigation: enabled={scale.IsEffectivelyEnabled}, " +
+                $"visible={scale.IsEffectivelyVisible}, value={scale.SelectedItem}, focused={window.FocusManager?.GetFocusedElement()}");
+            Assert.Equal(original, await File.ReadAllBytesAsync(file));
+
+            var contrast = SettingsControl<ToggleSwitch>(settings, "home-settings-high-contrast");
+            var revision = source.Current.Revision;
+            Assert.False(contrast.IsChecked);
+            contrast.BringIntoView();
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, contrast);
+            await settings.WhenActionsIdleAsync().WaitAsync(lifetime.Token);
+            Assert.True(contrast.IsChecked);
+            var contrastSave = settings.LastWrite?.ConfirmedWrite?.Value?.Preference;
+            Assert.NotNull(contrastSave);
+            Assert.True(contrastSave.Accessibility.HighContrast);
+            Assert.Equal(revision + 1, contrastSave.Revision);
+
+            var motion = SettingsControl<ToggleSwitch>(settings, "home-settings-reduced-motion");
+            Assert.False(motion.IsChecked);
+            motion.BringIntoView();
+            SettleFixtureLayout(window);
+            Assert.True(motion.Focus(NavigationMethod.Tab));
+            PressSettingsKey(window, PhysicalKey.Space);
+            await settings.WhenActionsIdleAsync().WaitAsync(lifetime.Token);
+            Assert.True(motion.IsChecked);
+            Assert.True(motion.IsFocused);
+            var motionSave = settings.LastWrite?.ConfirmedWrite?.Value?.Preference;
+            Assert.NotNull(motionSave);
+            Assert.True(motionSave.Accessibility.ReduceMotion);
+            Assert.Equal(revision + 2, motionSave.Revision);
+            var saved = await File.ReadAllBytesAsync(file);
+            using var profile = System.Text.Json.JsonDocument.Parse(saved);
+            Assert.Equal("keep-model", profile.RootElement.GetProperty("defaultModel").GetString());
+
+            await Activate("home-settings-accessibility-shortcuts");
+            Assert.Equal("Keyboard Shortcuts", settings.CategoryTitle);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-shortcuts").IsFocused);
+            Assert.Equal(saved, await File.ReadAllBytesAsync(file));
+
+            async Task Activate(string id)
+            {
+                var button = SettingsControl<Button>(settings, id);
+                button.BringIntoView();
+                SettleFixtureLayout(window);
+                Assert.True(button.Focus(NavigationMethod.Tab));
+                PressSettingsKey(window, PhysicalKey.Enter);
+                await settings.WhenActionsIdleAsync().WaitAsync(lifetime.Token);
+                SettleFixtureLayout(window);
+            }
+        }
+        finally
+        {
+            await session.CloseAndDrainAsync();
+            window.Close();
+            Directory.Delete(paths.DataDirectory, true);
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(1440, 900)]
+    [InlineData(720, 520)]
     public async Task Accent_palette_address_opens_the_dedicated_surface_and_uses_the_original_colour_owner(int width, int height)
     {
         using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -193,7 +277,7 @@ public sealed partial class UnifiedHomeContentTests
             Assert.True(accessibility.IsFocused);
             Assert.True(SettingsCategorySelected(accessibility));
             Assert.Equal(string.Empty, search.Text);
-            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-appearance-accessibility").IsEffectivelyVisible);
+            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-settings-accessibility-page").IsEffectivelyVisible);
 
             await SearchAsync("Accent palette");
             Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-theme-options")));

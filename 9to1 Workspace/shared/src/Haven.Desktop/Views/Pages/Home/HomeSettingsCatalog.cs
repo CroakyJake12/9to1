@@ -32,7 +32,7 @@ internal static class HomeSettingsCatalog
         new("theme", "appearance", "Theme", "palette", "Theme and accent preferences.", "brightness colour contrast override app accents high contrast"),
         new("theme-options", "appearance", "Theme Options", "palette", "Adjust the display mode and shared accent palette.", "light dark follow system custom theme"),
         new("layout", "appearance", "Layout", "layout", "Arrange your workspace.", "dashboard recover saved appearance"),
-        new("accessibility", "appearance", "Accessibility", "settings", "Accessibility across your workspace.", "high contrast reduce motion"),
+        new("accessibility", "appearance", "Accessibility", "settings", "Accessibility across your workspace.", "interface scale display size reading high contrast reduced motion keyboard shortcuts"),
         new("ai", "global", "AI", "sparkles", "Model routes and shared AI preferences.",
             Actions: [Panel("Model settings", "Review model roles and routes in the existing model picker.", HomeSettingsOwner.ModelPicker),
                 Open("Discover models", "Browse the model catalogue.", "browse://home/models"), Related("local-models")]),

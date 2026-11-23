@@ -84,9 +84,9 @@
     <Compile Include="LinuxWorkspaceBoundaryAbiTests.cs" />
     <Compile Include="UnifiedHomeContentTests.cs;UnifiedHomeContentTests.Accent.cs;UnifiedHomeContentTests.ThemeOptions.cs;DesktopOriginalShutdownSequenceTests.cs" />
     <Compile Include="NewTabBackgroundAssetsTests.cs" />
-    <Compile Include="UnifiedHomeContentTests.SettingsCatalog.cs;UnifiedHomeContentTests.NewTabCustomisation.cs;UnifiedHomeContentTests.NewTabShortcuts.cs;UnifiedHomeContentTests.NewTabWidgets.cs" />
+    <Compile Include="UnifiedHomeContentTests.SettingsCatalog.cs;UnifiedHomeContentTests.NewTabCustomisation.cs;UnifiedHomeContentTests.NewTabShortcuts.cs;UnifiedHomeContentTests.NewTabShortcutDrag.cs;UnifiedHomeContentTests.NewTabWidgets.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsKeyboard.cs" />
-    <Compile Include="UnifiedHomeContentTests.Rail.cs;UnifiedHomeContentTests.HomeInterfaceScale.cs" />
+    <Compile Include="UnifiedHomeContentTests.Rail.cs;UnifiedHomeContentTests.InterfaceScale.cs;UnifiedHomeContentTests.HomeInterfaceScale.cs" />
     <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />
     <Compile Include="OverlayControllerOriginalLifetimeTests.cs" />

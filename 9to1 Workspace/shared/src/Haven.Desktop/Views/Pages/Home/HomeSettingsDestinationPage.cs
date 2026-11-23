@@ -75,6 +75,8 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         _loader.SetThemePreferenceContext(source.Context);
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
         _loader.BindAuthoredControl("home-settings-search", _ => _search);
+        RegisterInterfaceScale();
+        RegisterAccessibilitySwitches();
         _loader.BindAuthoredControl("home-settings-directory-item", _ =>
         {
             var button = new Button();
@@ -111,7 +113,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(_loader.WhenActionsIdleAsync(), _creator.WhenIdleAsync(),
-        _accentEditor.WhenIdleAsync());
+        _accentEditor.WhenIdleAsync(), _interfaceScalePreview, _accessibilitySwitchWrite);
     internal NativeHomeThemePreferences.SettingsWriteOutcome? LastWrite { get; private set; }
     internal Func<bool, CancellationToken, Task>? NavigateHomeAsync { get; set; }
     internal Func<AppContentAddress, CancellationToken, Task<bool>>? NavigateContentAsync { get; set; }
@@ -175,11 +177,15 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         slot.HostChanged += OnCommandHostChanged;
         _creator.DraftChanged += OnDraftChanged;
         _creator.SetShellHosted(slot.IsHosted, slot.IsSelected);
+        RefreshInterfaceScaleHost();
         UpdatePageCommand();
     }
 
-    private void OnCommandHostChanged(object? sender, EventArgs args) =>
+    private void OnCommandHostChanged(object? sender, EventArgs args)
+    {
         _creator.SetShellHosted(_pageCommands!.IsHosted, _pageCommands.IsSelected);
+        RefreshInterfaceScaleHost();
+    }
     private void OnDraftChanged(object? sender, EventArgs args) => UpdatePageCommand();
     private void UpdatePageCommand()
     {
@@ -206,7 +212,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         return _work.RunAsync(original => RefreshAsync(original, token), actual => _initialization ??= actual);
     }
     internal void Deactivate()
-    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; UpdatePageCommand(); }
+    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; RefreshInterfaceScale(); UpdatePageCommand(); }
 
     private void OpenThemeCreator()
     {
@@ -246,6 +252,9 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         "SettingsOptionsCreateTheme" => _category == "theme-options" && !IsBusy && !_unavailable,
         "SettingsLayoutOpenNewTab" => _category == "layout" && LinkIsAvailable(LayoutNewTabLink),
         "SettingsLayoutAccessibility" => _category == "layout",
+        "SettingsAccessibilityShortcuts" => _category == "accessibility",
+        "SettingsInterfaceScaleApply" => CanApplyInterfaceScale,
+        "SettingsInterfaceScaleRevert" => CanRevertInterfaceScale,
         "SettingsOpenBrowseGeneral" => NavigateContentAsync is not null && _category == "haven-general",
         "SettingsOpenBrowseBookmarks" => NavigateContentAsync is not null && _category == "haven-bookmarks",
         "SettingsOpenBrowseHistory" => NavigateContentAsync is not null && _category == "haven-history",
@@ -258,8 +267,14 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Settings action is unavailable.");
+        var scale = command == "SettingsInterfaceScaleApply" ? InterfaceScaleWrite : null;
+        var scaleRequest = _interfaceScaleRequest;
+        var accessibilitySwitch = command == "ApplyHomeAppearance" && IsAccessibilitySwitchIntent(parameter);
         switch (command)
         {
+            case "SettingsInterfaceScaleRevert":
+                RevertInterfaceScale();
+                return ValueTask.CompletedTask;
             case "SettingsBack":
             case "SettingsOpenDashboard":
                 return new(NavigateHomeAsync!(command == "SettingsOpenDashboard", cancellationToken));
@@ -295,8 +310,11 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
                 return ValueTask.CompletedTask;
             case "SettingsLayoutOpenNewTab":
                 return OpenDirectoryLinkAsync(LayoutNewTabLink, cancellationToken);
+            case "SettingsAccessibilityShortcuts":
+                OpenRelatedCategory("haven-shortcuts");
+                return ValueTask.CompletedTask;
             case "SettingsLayoutAccessibility":
-                OpenRelatedCategory("accessibility");
+                OpenRelatedCategory("accessibility", focusInterfaceScale: true);
                 return ValueTask.CompletedTask;
             case "SettingsOptionsCreateTheme":
             case "HomeCreateTheme":
@@ -330,7 +348,17 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
                 if (!await original.AwaitAsync(IsAdmittedAsync(original.Token)))
                 { Deny(original, false); return; }
                 if (!original.IsAcceptedPublicationCurrent) return;
+                if (scale is not null && (!IsInterfaceScalePage || scaleRequest != _interfaceScaleRequest)) return;
                 cancellationToken.ThrowIfCancellationRequested();
+                if (scale is not null)
+                {
+                    parameter = CaptureInterfaceScaleWrite(scale);
+                    if (parameter is null)
+                    {
+                        original.RunAcceptedPublicationCallback(() => RejectInterfaceScaleWrite(scale));
+                        return;
+                    }
+                }
                 write = LastWrite = _source.CreateSettingsWriteOutcome();
                 // The preference owner retains its actual business lifetime. A tab's private
                 // retirement token is not permission to cancel a global atomic preference write.
@@ -342,6 +370,8 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
                 {
                     _status = receipt.Succeeded ? "Appearance saved." : receipt.Diagnostic ??
                         "Appearance changed. Refresh before choosing again.";
+                    if (accessibilitySwitch && receipt.Code == "PermissionDenied") _unavailable = true;
+                    if (scale is not null) CompleteInterfaceScaleWrite(scale, receipt);
                     RefreshBindings();
                 });
             }
@@ -469,16 +499,29 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
 
     private void ApplyResponsiveLayout(double width)
     {
+        var scale = _source.Context.Current.Accessibility.DisplayScale;
+        width = CuiInterfaceScale.LogicalWidth(width, scale);
+        var logicalHeight = CuiInterfaceScale.LogicalWidth(Bounds.Height, scale);
         var narrow = width < 790;
+        var shallow = narrow && scale > 1 && logicalHeight is > 0 and < 300;
         var orientationChanged = _narrowLayout.HasValue && _narrowLayout.Value != narrow;
         _narrowLayout = narrow;
         _bindings.Set("SettingsColumns", narrow ? "1fr" : width >= 1120 ? "276 1fr" : "232 1fr");
         _bindings.Set("SettingsRows", narrow ? "Auto 1fr" : "1fr");
         _bindings.Set("SettingsContentRow", narrow ? 1 : 0);
         _bindings.Set("SettingsContentColumn", narrow ? 0 : 1);
-        _bindings.Set("SettingsNavHeight", narrow ? 176d : double.PositiveInfinity);
-        _bindings.Set("SettingsOptionsPadding", narrow ? "14 20 14 24" : "48 25 36 32");
-        _bindings.Set("SettingsLayoutPadding", narrow ? "14 16 14 24" : "30 26 30 32");
+        _bindings.Set("SettingsNavHeight", shallow ? Math.Min(116d, logicalHeight * .46) : narrow ? 176d : double.PositiveInfinity);
+        _bindings.Set("SettingsNavPadding", shallow ? "8 5" : "13 10");
+        _bindings.Set("SettingsNavGap", shallow ? 5d : 10d);
+        _bindings.Set("SettingsNavHeaderColumns", shallow ? "Auto 1fr" : "1fr");
+        _bindings.Set("SettingsNavHeaderRows", shallow ? "Auto" : "Auto Auto");
+        _bindings.Set("SettingsNavShowTitle", !shallow || width >= 300);
+        _bindings.Set("SettingsNavSearchRow", shallow ? 0 : 1);
+        _bindings.Set("SettingsNavSearchColumn", shallow ? 1 : 0);
+        _bindings.Set("SettingsInterfaceScaleWidth", Math.Clamp(width - 44, 64, 300));
+        _bindings.Set("SettingsAccessibilityPadding", shallow ? "12 6 12 8" : narrow ? "14 12 14 16" : "30 25 42 32");
+        _bindings.Set("SettingsOptionsPadding", shallow ? "12 8 12 10" : narrow ? "14 20 14 24" : "48 25 36 32");
+        _bindings.Set("SettingsLayoutPadding", shallow ? "12 8 12 10" : narrow ? "14 16 14 24" : "30 26 30 32");
         _bindings.Set("SettingsOptionsRows", narrow ? "Auto Auto" : "Auto");
         _bindings.Set("SettingsOptionsColumns", narrow ? "1fr" : "1fr Auto");
         _bindings.Set("SettingsOptionsControlRow", narrow ? 1 : 0);
@@ -559,7 +602,8 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         }).ToArray());
         _bindings.Set("SettingsHasQuery", _query.Length != 0);
         _bindings.Set("SettingsNoMatches", rows.Count == 0);
-        _bindings.Set("SettingsShowsAppearance", _category is "theme" or "accessibility");
+        _bindings.Set("SettingsShowsAppearance", _category == "theme");
+        _bindings.Set("SettingsAccessibilitySelected", _category == "accessibility");
         _bindings.Set("SettingsLayoutSelected", _category == "layout");
         _bindings.Set("SettingsLayoutCustomiseAvailable", LinkIsAvailable(LayoutNewTabLink));
         _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
@@ -663,7 +707,7 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         button.BringIntoView();
     }
 
-    private void OpenRelatedCategory(string category, ThemePage page = ThemePage.Current)
+    private void OpenRelatedCategory(string category, ThemePage page = ThemePage.Current, bool focusInterfaceScale = false)
     {
         _search.Text = string.Empty;
         SelectCategory(category, page);
@@ -671,7 +715,9 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         {
             if (!_active || !IsAlive || _category != category || _themePage != page ||
                 _pageCommands is { IsHosted: true, IsSelected: false }) return;
-            if (page == ThemePage.Palette)
+            if (focusInterfaceScale && _interfaceScale.IsEffectivelyVisible && _interfaceScale.Focus(NavigationMethod.Tab))
+                _interfaceScale.BringIntoView();
+            else if (page == ThemePage.Palette)
                 this.GetVisualDescendants().OfType<Button>()
                     .SingleOrDefault(button => button.Name == "home-palette-back")?.Focus(NavigationMethod.Tab);
             else FocusDirectoryItem(category);
@@ -689,16 +735,16 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         _expanded[HomeSettingsCatalog.GroupFor(item).Key] = true;
         if (changed) SetBrowseStatus(string.Empty);
         PublishCategory();
+        RefreshInterfaceScale();
         if (changed && notify) CategoryChanged?.Invoke(this, EventArgs.Empty);
-        if (!scroll || category is not ("theme" or "accessibility")) return;
+        if (!scroll || category != "theme") return;
         Dispatcher.UIThread.Post(() =>
         {
             if (!_active || !IsAlive || _category != category || _themePage != page || !this.IsAttachedToVisualTree()) return;
             var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
                 .SingleOrDefault(control => control.Name == "home-appearance-settings");
             if (appearance is null) return;
-            var anchor = category == "accessibility" ? "home-appearance-accessibility"
-                : _query.Length == 0 || page != ThemePage.Current ? null
+            var anchor = _query.Length == 0 || page != ThemePage.Current ? null
                 : Matches("Accent palette") || Matches("Override app accents") ? "home-accent-settings"
                 : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null;
             if (anchor is null)
@@ -886,6 +932,10 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
             _bindings.Set("HomeModeChoices", Array.Empty<object>());
             _bindings.Set("HomeDisplayTarget", null);
             _bindings.Set("HomeAccessibilityChoices", Array.Empty<object>());
+            _bindings.Set("HomeHighContrastTarget", null);
+            _bindings.Set("HomeReduceMotionTarget", null);
+            _bindings.Set("HomeInterfaceScaleChoices", Array.Empty<object>());
+            _bindings.Set("HomeInterfaceScaleText", null);
             _bindings.Set("HomeAccentModeChoices", Array.Empty<object>());
             _bindings.Set("HomeGlobalAccentChoices", Array.Empty<object>());
             _bindings.Set("HomeAccentPerApp", false);
@@ -898,6 +948,8 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
         _bindings.Set("HomeAppearanceCanRefresh", available);
         _bindings.Set("SettingsHasAppearanceStatus", !string.IsNullOrWhiteSpace(_status));
         if (_status is not null) _bindings.Set("HomeAppearanceStatus", _status);
+        RefreshInterfaceScale();
+        RefreshAccessibilitySwitches();
         _loader.RefreshBindings();
     }
 
@@ -939,6 +991,8 @@ internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiAct
     private async Task StopAsync()
     {
         Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation;
+        RetireInterfaceScale();
+        RetireAccessibilitySwitches();
         _source.Changed -= OnSourceChanged;
         _bindings.PropertyChanged -= OnCreatorOpenChanged;
         if (_pageCommands is { } slot)

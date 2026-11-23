@@ -653,13 +653,14 @@ public sealed partial class UnifiedHomeContentTests
             Assert.True(SettingsCategorySelected(accessibility));
             Assert.Equal(backOrigin, back.TranslatePoint(default, window)!.Value);
             Assert.True(back.IsEffectivelyVisible && back.IsEnabled);
-            var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
-            Assert.Equal("Vertical Stack", fragment.LayoutType);
-            var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
-            var accessibilityPanel = SettingsControl<CuiContainerControl>(settings, "home-appearance-accessibility");
-            var accessibilityOrigin = accessibilityPanel.TranslatePoint(default, scroll)!.Value;
-            Assert.True(scroll.Offset.Y > 0);
-            Assert.InRange(accessibilityOrigin.Y, -accessibilityPanel.Bounds.Height + 1, scroll.Viewport.Height - 1);
+            var accessibilityPage = SettingsControl<CuiContainerControl>(settings, "home-settings-accessibility-page");
+            Assert.True(accessibilityPage.IsEffectivelyVisible);
+            Assert.False(SettingsControl<CuiContainerControl>(settings, "home-appearance-settings").IsEffectivelyVisible);
+            var scroll = Assert.IsType<ScrollViewer>(accessibilityPage.Child);
+            var scale = SettingsControl<ComboBox>(settings, "home-settings-interface-scale");
+            Assert.True(scale.IsEffectivelyVisible);
+            Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+            Assert.InRange(scale.TranslatePoint(default, scroll)!.Value.Y, 0, scroll.Extent.Height);
 
             PressSettingsKey(window, PhysicalKey.Home);
             var global = SettingsControl<Button>(settings, "home-settings-global");

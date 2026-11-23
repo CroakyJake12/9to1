@@ -119,7 +119,7 @@ public sealed partial class UnifiedHomeContentTests
             CaptureSettingsIfRequested(window, "creator-shell-title", source);
             await Activate(SettingsControl<Button>(settings, "home-settings-accessibility"));
             Title("Accessibility");
-            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-appearance-accessibility").IsEffectivelyVisible);
+            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-settings-accessibility-page").IsEffectivelyVisible);
             Assert.DoesNotContain(settings.GetVisualDescendants().OfType<TextBox>(), field =>
                 field.IsEffectivelyVisible && AutomationProperties.GetName(field) == "Theme name");
             await Activate(SettingsControl<Button>(settings, "home-settings-theme"));

@@ -46,8 +46,8 @@ public sealed class NativeInterfaceScalePreferenceTests
             {
                 var unavailable = source.SettingsBindings();
                 Assert.Equal("Unavailable", unavailable["HomeInterfaceScaleText"]);
-                Assert.Equal("Unavailable", unavailable["HomeReduceMotionState"]);
                 Assert.Null(unavailable["HomeHighContrastTarget"]);
+                Assert.Null(unavailable["HomeReduceMotionTarget"]);
                 await source.RefreshAsync();
                 var values = source.SettingsBindings();
                 var choices = Assert.IsType<Dictionary<string, object?>[]>(values["HomeInterfaceScaleChoices"]);
@@ -57,8 +57,8 @@ public sealed class NativeInterfaceScalePreferenceTests
                 var motion = Assert.IsType<Dictionary<string, object?>[]>(values["HomeAccessibilityChoices"]);
                 Assert.Same(values["HomeHighContrastTarget"], motion.Single(choice => Equals(choice["Name"], "High contrast"))["Target"]);
                 Assert.Same(values["HomeReduceMotionTarget"], motion.Single(choice => Equals(choice["Name"], "Reduce motion"))["Target"]);
-                Assert.Equal("Off", values["HomeHighContrastState"]);
-                Assert.Equal("On", values["HomeReduceMotionState"]);
+                Assert.False(source.Current.Accessibility.HighContrast);
+                Assert.True(source.Current.Accessibility.ReduceMotion);
 
                 var published = new List<double>();
                 var committedObservations = 0;
