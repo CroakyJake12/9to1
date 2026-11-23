@@ -1,0 +1,59 @@
+{
+  "observations": {
+    "before_upgrade": {
+      "legacy_theme": "Cinematic",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Cinematic",
+      "canonical_mode": "Dark",
+      "display": null,
+      "accent": {
+        "mode": 0,
+        "allAppsColour": null,
+        "individualApps": {}
+      }
+    },
+    "after_opening_gallery": {
+      "legacy_theme": "Cinematic",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Cinematic",
+      "canonical_mode": "Dark",
+      "display": null,
+      "accent": {
+        "mode": 0,
+        "allAppsColour": null,
+        "individualApps": {}
+      }
+    },
+    "after_explicit_comic_selection": {
+      "legacy_theme": "Comic",
+      "canonical": {
+        "themeName": "Comic",
+        "appearance": "Dark",
+        "accent": {
+          "mode": 0,
+          "allAppsColour": null,
+          "individualApps": {}
+        },
+        "themeMigration": {
+          "originalName": "Cinematic",
+          "canonicalId": "comic"
+        },
+        "revision": 3
+      }
+    }
+  },
+  "native_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "9a29d7ee3a7d878424419bd09d2ec215784a133b56958a6cb47fe43dbbef693e",
+    "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
+    "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+    "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+    "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+    "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+    "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+  }
+}
