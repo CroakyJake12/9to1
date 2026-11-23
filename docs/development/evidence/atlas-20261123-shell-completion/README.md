@@ -29,7 +29,7 @@ Each comparison shows the pinned Atlas on the left and the running Haven applica
 | Route | 1440 × 900 | 720 × 520 |
 | --- | --- | --- |
 | Settings → General | [Wide](comparisons/settings-general-wide.png) | [Narrow](comparisons/settings-general-narrow.png) |
-| Settings → Appearance | [Wide](comparisons/appearance-wide.png) | [Previous narrow comparison](../atlas-20261123-visual-review/appearance-dark-narrow.png) |
+| Settings → Appearance | [Wide](comparisons/appearance-wide.png) | [Narrow](comparisons/appearance-narrow.png) |
 | Create theme | [Wide](comparisons/create-theme-wide.png) | [Narrow](comparisons/create-theme-narrow.png) |
 
 ## Matched New Tab routes
@@ -41,3 +41,7 @@ Each comparison shows the pinned Atlas on the left and the running Haven applica
 | Add widgets | [Wide](comparisons/widgets-wide.png) | [Narrow](comparisons/widgets-narrow.png) |
 
 At 1440 × 900 both Customise panels measure 280 pixels tall. Add widget and Done share the heading row. The native catalogue has three preview columns at the wide width and two scrollable columns at 720 pixels. The reference thumbnails illustrate populated documents and calendars. The native thumbnails label the actual source type, and placed cards show the profile’s available data. A real GTK file choice previewed the image before any layout write. Explicit Use background recorded its profile-scoped content hash. [Native upload and widget receipts](journeys/upload-and-widget-journeys.json)
+
+## Ask AI and tab recovery
+
+On a fresh Linux profile, Ask AI kept the original New Tab open and displayed the exact typed prompt in the Spaces composer. Returning to New Tab recovered the same text. Returning to Spaces recovered the same draft. The database contained one conversation, one current branch and one composer draft. Message, turn and model usage counts remained zero throughout. [Spaces composer](journeys/stage10-ask-ai-spaces-draft.png) · [Original New Tab](journeys/stage10-ask-ai-source-recovered.png) · [Profile, SQLite and window receipts](journeys/refined-native-journeys.json)

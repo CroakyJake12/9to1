@@ -1,0 +1,259 @@
+{
+  "renderer": "Actual Linux Haven app on private X11. Native windows at 1:1 device scale. Distinct disposable profiles for independent flows.",
+  "stage8": {
+    "source_base_at_snapshot": "28e07df6d0ec9d484754b631926491b03dc086b2",
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "9a29d7ee3a7d878424419bd09d2ec215784a133b56958a6cb47fe43dbbef693e",
+      "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+    },
+    "ask_ai": "The physical New Tab action created and opened an exact unsent Spaces composer. This intermediate case took over the original tab. Physical Browse Back, Forward and Alt+Left did not recover it. Stage10 preserves the source tab.",
+    "ask_ai_before": {
+      "isolated_profile_counts": {
+        "conversations": 0,
+        "conversation_branches": 0,
+        "conversation_drafts": 0,
+        "messages": 0,
+        "conversation_branch_messages": 0,
+        "conversation_turns": 0,
+        "response_usage": 0
+      },
+      "matching_drafts": []
+    },
+    "ask_ai_after": {
+      "isolated_profile_counts": {
+        "conversations": 1,
+        "conversation_branches": 1,
+        "conversation_drafts": 1,
+        "messages": 0,
+        "conversation_branch_messages": 0,
+        "conversation_turns": 0,
+        "response_usage": 0
+      },
+      "matching_drafts": [
+        {
+          "conversation_id": "29b557d1-389f-40ab-bb60-888e44ee6aef",
+          "branch_id": "1649e478-b771-42c5-8ecf-8759c0a729bd",
+          "content": "9to1 native unsent draft proof",
+          "is_current": 1,
+          "title": "New chat",
+          "messages": 0,
+          "turns": 0,
+          "branch_messages": 0,
+          "usage": 0
+        }
+      ]
+    },
+    "comic": {
+      "reference_atlas_route": "theme-reference-comic",
+      "reference_raster_sha256": "025b173bca23df132745872c56e971db7064345e2435c85e3ee36c1a4019b574",
+      "before": {
+        "legacy_theme": "Cinematic",
+        "legacy_mode": 2,
+        "legacy_override_active": false,
+        "canonical_theme": "Cinematic",
+        "canonical_mode": "Dark",
+        "display": null,
+        "accent": {
+          "mode": 0,
+          "allAppsColour": null,
+          "individualApps": {}
+        }
+      },
+      "effective_appearance": "A genuine older app had physically selected the Cinematic card. The newer app rendered the same saved choice as selected Comic with ink, plum and teal surfaces and yellow standard actions. The stored preference remained identical on opening the gallery.",
+      "after_explicit_save": {
+        "legacy_theme": "Comic",
+        "canonical": {
+          "themeName": "Comic",
+          "appearance": "Dark",
+          "accent": {
+            "mode": 0,
+            "allAppsColour": null,
+            "individualApps": {}
+          },
+          "themeMigration": {
+            "originalName": "Cinematic",
+            "canonicalId": "comic"
+          },
+          "revision": 3
+        }
+      },
+      "after_light_selection": {
+        "legacy_theme": "Comic",
+        "legacy_mode": 1,
+        "legacy_override_active": false,
+        "canonical_theme": "Comic",
+        "canonical_mode": "Bright",
+        "display": {
+          "mode": 0,
+          "brightness": 50,
+          "colourContrast": 50
+        },
+        "accent": {
+          "mode": 0,
+          "allAppsColour": null,
+          "individualApps": {}
+        }
+      }
+    },
+    "saved_custom_theme": "A separate clone kept Cloud Native Proof selected and rendered its role colour swatches and panel preview. Extracted appearance fields were identical before and after opening.",
+    "shutdown": "Normal apphost exit 0 for independent profiles."
+  },
+  "stage9": {
+    "source_base_at_snapshot": "22c0fdad26fea3c20c8b4aa157d318dcf20b45aa",
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "fb74ec10997a9b4c07789fd2c9822de154d4ccc0961539ca3b5e34527360c74d",
+      "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+    },
+    "show_on_home": "The genuine disclosure rendered all widget toggle choices. Pointer Up next changed only its visibility. Pinned note remained visible and both sources retained their stable identities. A second pointer click restored Up next.",
+    "selected_visibility_state": {
+      "revision": 1,
+      "hidden": {
+        "Id": "up-next",
+        "SourceId": "planner:calendar",
+        "IsVisible": false,
+        "IsWide": false,
+        "IsPinned": false,
+        "IsLocked": false
+      },
+      "other": {
+        "Id": "pinned-note",
+        "SourceId": "boards:notebook",
+        "IsVisible": true,
+        "IsWide": false,
+        "IsPinned": false,
+        "IsLocked": false
+      }
+    },
+    "post_add_escape": "At 720\u00d7520 the real Focus timer card was found through widget search. Clicking it checked the card and refocused the search. A single physical Escape dismissed the modal and returned focus to header Add widget.",
+    "narrow_gallery": "Fresh appearance profile remained Professional Dark. At 720\u00d7520 the selected Theme rail stayed visible and wheel scrolling reached the ninth Comic card.",
+    "shutdown": "Normal apphost exit 0."
+  },
+  "stage10": {
+    "source_base_at_snapshot": "19f85f00547d9580e030718b0a21d4b63f020be3",
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "4222d23c27f3f1065ec5de17ff9468b6c1aabae492fc65d909648a44bc0a973b",
+      "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+      "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+      "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+      "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+    },
+    "ask_ai": "The physical action opened the exact unsent composer in a separate Spaces tab. The source New Tab remained in the strip. Real tab switches preserved both; the source clipboard returned the original exact text.",
+    "source_clipboard": "9to1 keep both draft tabs proof",
+    "before": {
+      "isolated_profile_counts": {
+        "conversations": 0,
+        "conversation_branches": 0,
+        "conversation_drafts": 0,
+        "messages": 0,
+        "conversation_branch_messages": 0,
+        "conversation_turns": 0,
+        "response_usage": 0
+      },
+      "matching_drafts": []
+    },
+    "after_action_and_roundtrip": {
+      "isolated_profile_counts": {
+        "conversations": 1,
+        "conversation_branches": 1,
+        "conversation_drafts": 1,
+        "messages": 0,
+        "conversation_branch_messages": 0,
+        "conversation_turns": 0,
+        "response_usage": 0
+      },
+      "matching_drafts": [
+        {
+          "conversation_id": "73775113-f47b-4f6d-8019-82498b09dbc5",
+          "branch_id": "5f4ac462-cfb7-4422-84d6-9f343d39ecd1",
+          "content": "9to1 keep both draft tabs proof",
+          "is_current": 1,
+          "title": "New chat",
+          "messages": 0,
+          "turns": 0,
+          "branch_messages": 0,
+          "usage": 0
+        }
+      ]
+    },
+    "shutdown": "Normal apphost exit 0."
+  },
+  "images": {
+    "stage8-comic-legacy-projection-dark.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "cea5ee370338409bc9d33e07e9cc0d8ad5eb1a1f9b836987d27dd8bf4919f15d"
+    },
+    "stage8-comic-light.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "13e6d1be44f2f9d66d0178ac259ad2ddc3b559519efa148d56fc281b9e58cbc3"
+    },
+    "stage8-saved-custom-preview.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "4d26608afb59da000bbaed7cfb6b3bab471d166dd086a57cf5d7e8a57544a294"
+    },
+    "stage9-appearance-narrow-ninth-theme.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "c026dca1d150a089c80c152bf471fb9d93161bbd9eb4f110bf82972a42543555"
+    },
+    "stage9-show-on-home-widget-visibility.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "b507d8e0ec057738df5ac9cb140b25badd44257073f0698b85ab2635e550bdec"
+    },
+    "stage9-widget-post-add-escape.png": {
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "35ce4bfe461e6c8205f74b618889a9f7d640937323313ee3e8d94d74389394b2"
+    },
+    "stage10-ask-ai-spaces-draft.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "e67f789d4cc9a08716a0d9ed242d94b0f8a5243e413a8b3487f2fe890ca7254f"
+    },
+    "stage10-ask-ai-source-recovered.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "ff55c79d21427c54485c93a4e343540d2f643cfb6344f1fb3fae0ea7b621cf7a"
+    }
+  }
+}
