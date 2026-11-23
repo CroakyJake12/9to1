@@ -45,8 +45,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private readonly TextBox _search = new();
     private string _category = "theme";
     private string _initialCategory = "theme";
-    private string? _initialAnchor;
-    private bool _initialAnchorPending;
+    // Explicit Back to appearance can show the gallery while keeping a previous editor draft.
+    private enum ThemePage { Current, Palette, Gallery }
+    private ThemePage _themePage, _initialThemePage;
     private bool _openInitialCreator;
     private bool _initialDirectoryReveal;
     private bool? _narrowLayout;
@@ -121,7 +122,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private bool CreatorOpen => _bindings.Get("HomeThemeCreatorOpen") is true;
     internal string CategoryTitle => _category switch
     {
-        "theme" when CreatorOpen => "Create theme",
+        "theme" when _themePage == ThemePage.Palette => "Accent palette",
+        "theme" when _themePage == ThemePage.Current && CreatorOpen => "Create theme",
         "theme" => "Theme and accent preferences",
         _ => HomeSettingsCatalog.Get(_category).Label
     };
@@ -154,7 +156,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         if (address.ResourceSegments is not ["settings", var route]) return;
         _initialCategory = HomeSettingsCatalog.ResolveRoute(route)
             ?? throw new InvalidOperationException("The requested Settings destination was not admitted.");
-        _initialAnchor = route == "appearance-palette" ? "home-accent-settings" : null;
+        _initialThemePage = route == "appearance-palette" ? ThemePage.Palette : ThemePage.Current;
         _openInitialCreator = route == "custom-theme";
     }
 
@@ -182,7 +184,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private void UpdatePageCommand()
     {
         if (_pageCommands is null) return;
-        if (_active && IsAlive && _category == "theme" && CreatorOpen)
+        if (_active && IsAlive && _category == "theme" && _themePage == ThemePage.Current && CreatorOpen)
             _saveTheme ??= new("Save theme", _creator.SaveFromShellAsync, "avares://HavenOS.Apps.Browse.NativeUI/Assets/check.svg");
         else _saveTheme = null;
         _pageCommands.Update(_saveTheme, _saveTheme is not null && _creator.CanSave);
@@ -197,9 +199,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             _search.Text = string.Empty;
             ResetExpansion();
             SetBrowseStatus(string.Empty);
-            _initialAnchorPending = _initialAnchor is not null;
             _initialDirectoryReveal = true;
-            SelectCategory(_initialCategory, scroll: false);
+            SelectCategory(_initialCategory, _initialThemePage, scroll: false);
         }
         _active = true;
         return _work.RunAsync(original => RefreshAsync(original, token), actual => _initialization ??= actual);
@@ -209,9 +210,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 
     private void OpenThemeCreator()
     {
-        if (_category != "theme")
+        if (_category != "theme" || _themePage != ThemePage.Current)
         {
-            _creatorReturnCategory = _category;
+            if (_category != "theme") _creatorReturnCategory = _category;
             _search.Text = string.Empty;
             SelectCategory("theme", scroll: false, notify: CreatorOpen);
         }
@@ -233,11 +234,6 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             _initialDirectoryReveal = false;
             RevealSelectedDirectoryItem();
         }
-        if (_active && _category == _initialCategory && _initialAnchorPending && _initialAnchor is { } anchor)
-        {
-            _initialAnchorPending = false;
-            SelectCategory(_category, anchor);
-        }
     }
 
     public bool? IsActionAvailable(string command) => IsAlive && _active && (command switch
@@ -246,6 +242,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         "SettingsDirectory" or "SettingsDirectoryLink" or "SettingsTheme" or "SettingsThemeOptions" or "SettingsLayout" or "SettingsAccessibility" => true,
         "SettingsClearSearch" => _query.Length != 0,
         "SettingsOptionsAccent" or "SettingsOptionsAccessibility" => _category == "theme-options",
+        "SettingsPaletteBack" => _category == "theme" && _themePage == ThemePage.Palette,
         "SettingsOptionsCreateTheme" => _category == "theme-options" && !IsBusy && !_unavailable,
         "SettingsLayoutOpenNewTab" => _category == "layout" && LinkIsAvailable(LayoutNewTabLink),
         "SettingsLayoutAccessibility" => _category == "layout",
@@ -288,7 +285,10 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 SelectCategory("theme-options");
                 return ValueTask.CompletedTask;
             case "SettingsOptionsAccent":
-                OpenRelatedCategory("theme", "home-accent-settings");
+                OpenRelatedCategory("theme", ThemePage.Palette);
+                return ValueTask.CompletedTask;
+            case "SettingsPaletteBack":
+                OpenRelatedCategory("theme", ThemePage.Gallery);
                 return ValueTask.CompletedTask;
             case "SettingsOptionsAccessibility":
                 OpenRelatedCategory("accessibility");
@@ -565,7 +565,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 
         var item = HomeSettingsCatalog.Get(_category);
         var scope = HomeSettingsCatalog.GroupFor(item).Scope;
-        AutomationProperties.SetName(this, $"{scope} settings, {item.Label}");
+        AutomationProperties.SetName(this, $"{scope} settings, {(_themePage == ThemePage.Palette ? CategoryTitle : item.Label)}");
         _bindings.Set("SettingsCatalogScope", scope);
         _bindings.Set("SettingsCatalogTitle", item.Label);
         _bindings.Set("SettingsCatalogDescription", item.Description);
@@ -656,22 +656,27 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         button.BringIntoView();
     }
 
-    private void OpenRelatedCategory(string category, string? anchor = null)
+    private void OpenRelatedCategory(string category, ThemePage page = ThemePage.Current)
     {
         _search.Text = string.Empty;
-        SelectCategory(category, anchor);
+        SelectCategory(category, page);
         Dispatcher.UIThread.Post(() =>
         {
-            if (!_active || !IsAlive || _category != category) return;
-            FocusDirectoryItem(category);
+            if (!_active || !IsAlive || _category != category || _themePage != page ||
+                _pageCommands is { IsHosted: true, IsSelected: false }) return;
+            if (page == ThemePage.Palette)
+                this.GetVisualDescendants().OfType<Button>()
+                    .SingleOrDefault(button => button.Name == "home-palette-back")?.Focus(NavigationMethod.Tab);
+            else FocusDirectoryItem(category);
         }, DispatcherPriority.Loaded);
     }
 
-    private void SelectCategory(string category, string? requestedAnchor = null, bool scroll = true, bool notify = true)
+    private void SelectCategory(string category, ThemePage page = ThemePage.Current, bool scroll = true, bool notify = true)
     {
-        var changed = _category != category;
+        var changed = _category != category || _themePage != page;
         _category = category;
-        _creator.SetCategoryPresentation(category == "theme");
+        _themePage = page;
+        _creator.SetCategoryPresentation(category == "theme" && page == ThemePage.Current, page == ThemePage.Palette);
         UpdatePageCommand();
         var item = HomeSettingsCatalog.Get(category);
         _expanded[HomeSettingsCatalog.GroupFor(item).Key] = true;
@@ -681,14 +686,14 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         if (!scroll || category is not ("theme" or "accessibility")) return;
         Dispatcher.UIThread.Post(() =>
         {
-            if (!_active || !IsAlive || _category != category || !this.IsAttachedToVisualTree()) return;
+            if (!_active || !IsAlive || _category != category || _themePage != page || !this.IsAttachedToVisualTree()) return;
             var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
                 .SingleOrDefault(control => control.Name == "home-appearance-settings");
             if (appearance is null) return;
-            var anchor = requestedAnchor ?? (category == "accessibility" ? "home-appearance-accessibility"
-                : _query.Length == 0 ? null
+            var anchor = category == "accessibility" ? "home-appearance-accessibility"
+                : _query.Length == 0 || page != ThemePage.Current ? null
                 : Matches("Accent palette") || Matches("Override app accents") ? "home-accent-settings"
-                : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null);
+                : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null;
             if (anchor is null)
                 appearance.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.ScrollToHome();
             else

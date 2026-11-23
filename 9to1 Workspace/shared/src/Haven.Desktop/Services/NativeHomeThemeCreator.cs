@@ -25,6 +25,7 @@ internal sealed class NativeHomeThemeCreator : IDisposable
     private readonly ContentControl _mount = new UserControl();
     private bool _open, _disposed;
     private bool _showInCategory = true;
+    private bool _showPalette;
     private Task? _retirement;
 
     internal NativeHomeThemeCreator(NativeHomeThemePreferences source, CuiViewModel host,
@@ -84,12 +85,17 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         }
     }
 
-    internal void SetCategoryPresentation(bool show)
+    internal void SetCategoryPresentation(bool show, bool palette = false)
     {
         _showInCategory = show;
-        _host.Set("HomeAppearanceMaxWidth", _open && show ? 1080d : 1000d);
-        _host.Set("HomeThemeCreatorVisible", _open && show);
-        _host.Set("HomeThemeGalleryVisible", !_open || !show);
+        _showPalette = palette;
+        var editing = _open && show;
+        _host.Set("HomeAppearanceMaxWidth", palette ? 682d : editing ? 1080d : 1000d);
+        _host.Set("HomeThemeCreatorVisible", editing);
+        _host.Set("HomeThemeGalleryVisible", !editing && !palette);
+        _host.Set("HomePaletteVisible", palette);
+        _host.Set("HomeAccentPanelVisible", !editing);
+        _host.Set("HomeAccentPanelPadding", palette ? "24" : "20");
     }
 
     private void SyncOpen(object? sender, PropertyChangedEventArgs args)
@@ -97,7 +103,7 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         if (!_editor.TryGetValue("ThemeCreatorOpen", out var value) || _open == (value is true)) return;
         _open = value is true;
         _host.Set("HomeThemeCreatorOpen", _open);
-        SetCategoryPresentation(_showInCategory);
+        SetCategoryPresentation(_showInCategory, _showPalette);
         if (!_open && !_disposed)
             Dispatcher.UIThread.Post(() => { if (!_open && !_disposed && _canRestoreFocus && _trigger?.IsEffectivelyVisible == true) _trigger.Focus(NavigationMethod.Tab); },
                 DispatcherPriority.Loaded);

@@ -16,6 +16,86 @@ namespace Haven.Desktop.Tests;
 public sealed partial class UnifiedHomeContentTests
 {
     [AvaloniaTheory]
+    [InlineData(1440, 900)]
+    [InlineData(720, 520)]
+    public async Task Accent_palette_address_opens_the_dedicated_surface_and_uses_the_original_colour_owner(int width, int height)
+    {
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var paths = new LayoutPaths();
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        var bytes = """{"havenUiThemeName":"Professional","havenUiAppearance":2,"defaultModel":"retained"}"""u8.ToArray();
+        Directory.CreateDirectory(paths.DataDirectory);
+        await File.WriteAllBytesAsync(file, bytes);
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "original-home-profile");
+        await using var source = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            settings: _ => new(source, _ => Task.CompletedTask)).CreateSession(Request("browse://home/settings/appearance-palette")));
+        var window = new Window { Width = width, Height = height };
+        try
+        {
+            await session.InitializeAsync(lifetime.Token);
+            window.Content = session.OriginalNativeView;
+            window.Show();
+            SettleFixtureLayout(window);
+            var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
+            var heading = SettingsControl<TextBlock>(settings, "home-palette-title");
+            var card = SettingsControl<CuiContainerControl>(settings, "home-accent-settings");
+            var back = SettingsControl<Button>(settings, "home-palette-back");
+            Assert.Equal("Accent palette", settings.CategoryTitle);
+            Assert.Equal(settings.CategoryTitle, heading.Text);
+            Assert.True(heading.IsEffectivelyVisible && back.IsEffectivelyVisible && card.IsEffectivelyVisible);
+            Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-theme")));
+            Assert.DoesNotContain(settings.GetVisualDescendants().OfType<CuiContainerControl>(), panel =>
+                panel.Name is "home-theme-gallery" or "home-display-settings" && panel.IsEffectivelyVisible && panel.IsAttachedToVisualTree());
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(file));
+            var start = card.TranslatePoint(default, window)!.Value;
+            Assert.InRange(start.X, 0, window.Bounds.Width);
+            Assert.InRange(start.X + card.Bounds.Width, 1, window.Bounds.Width);
+            if (width == 1440)
+            {
+                Assert.InRange(start.X, 515, 545);
+                Assert.InRange(card.Bounds.Width, 635, 677);
+            }
+            CaptureSettingsIfRequested(window, "appearance-palette", source);
+            var iris = Assert.Single(card.GetVisualDescendants().OfType<Button>(),
+                button => button.Name == "home-global-accent" && AutomationProperties.GetName(button) == "Iris");
+            iris.BringIntoView();
+            SettleFixtureLayout(window);
+            Assert.True(iris.Focus(NavigationMethod.Tab));
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(lifetime.Token);
+            SettleFixtureLayout(window);
+            var saved = HomeNativePreferenceFile.Read(file);
+            var choice = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+            Assert.Equal("#7145FF", choice.Accent!.AllAppsColour);
+            Assert.Equal(HomeThemeAccentOverrideMode.None, choice.Accent.Mode);
+            Assert.Equal("retained", saved["defaultModel"]!.GetValue<string>());
+            Assert.True(settings.LastWrite?.ConfirmedWrite?.Succeeded);
+            var feedback = SettingsControl<TextBlock>(settings, "home-palette-status");
+            Assert.True(feedback.IsEffectivelyVisible);
+            Assert.Equal("Appearance saved.", feedback.Text);
+            var afterChoice = await File.ReadAllBytesAsync(file);
+            back.BringIntoView();
+            SettleFixtureLayout(window);
+            Assert.True(back.Focus(NavigationMethod.Tab));
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(lifetime.Token);
+            SettleFixtureLayout(window);
+            Assert.Equal("Theme and accent preferences", settings.CategoryTitle);
+            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-theme-gallery").IsEffectivelyVisible);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-theme").IsFocused);
+            Assert.Equal(afterChoice, await File.ReadAllBytesAsync(file));
+        }
+        finally
+        {
+            await session.CloseAndDrainAsync();
+            window.Close();
+            Directory.Delete(paths.DataDirectory, recursive: true);
+        }
+    }
+
+    [AvaloniaTheory]
     [InlineData(520, 650)]
     [InlineData(1280, 900)]
     public async Task Theme_Options_navigation_reuses_the_live_appearance_controls_and_saved_preferences(int width, int height)
@@ -84,18 +164,28 @@ public sealed partial class UnifiedHomeContentTests
 
             await ActivateAsync(SettingsControl<Button>(optionsPage, "home-theme-options-palette"));
             var theme = SettingsControl<Button>(settings, "home-settings-theme");
-            Assert.True(theme.IsFocused);
+            var header = SettingsControl<CuiContainerControl>(settings, "home-palette-header");
+            var back = SettingsControl<Button>(settings, "home-palette-back");
+            Assert.True(header.IsVisible && back.IsFocused);
             Assert.True(SettingsCategorySelected(theme));
+            Assert.Equal("Accent palette", settings.CategoryTitle);
             Assert.Equal(string.Empty, search.Text);
-            Assert.Same(display, SettingsControl<CuiContainerControl>(settings, "home-display-settings"));
+            Assert.False(gallery.IsEffectivelyVisible);
+            Assert.False(display.IsEffectivelyVisible);
+            Assert.True(accents.IsEffectivelyVisible);
             Assert.Same(accents, SettingsControl<CuiContainerControl>(settings, "home-accent-settings"));
-            var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
-            var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
-            Assert.True(scroll.Offset.Y > 0);
-            var accentOrigin = accents.TranslatePoint(default, scroll)!.Value;
-            Assert.InRange(accentOrigin.Y, -accents.Bounds.Height + 1, scroll.Viewport.Height - 1);
+            var savedBeforeBack = await File.ReadAllBytesAsync(file);
+            await ActivateAsync(back);
+            Assert.True(theme.IsFocused);
+            Assert.True(gallery.IsEffectivelyVisible);
+            Assert.True(display.IsEffectivelyVisible);
+            Assert.False(header.IsVisible);
+            Assert.DoesNotContain(settings.GetVisualDescendants().OfType<Button>(),
+                item => item.Name == "home-palette-back" && item.IsEffectivelyVisible && item.IsAttachedToVisualTree());
+            Assert.False(settings.IsActionAvailable("SettingsPaletteBack"));
             Assert.Same(brightness, SettingsControl<Slider>(settings, "home-brightness"));
             Assert.Equal(pendingLevel, brightness.Value);
+            Assert.Equal(savedBeforeBack, await File.ReadAllBytesAsync(file));
 
             await SearchAsync("Theme Options");
             await ActivateAsync(SettingsControl<Button>(settings, "home-theme-options-accessibility"));

@@ -143,6 +143,21 @@ public sealed partial class UnifiedHomeContentTests
                 .Single(field => field.IsEffectivelyVisible && AutomationProperties.GetName(field) == "Theme name");
             name.Text = "Title restoration";
             SettleFixtureLayout(window);
+            await Activate(SettingsControl<Button>(settings, "home-settings-theme-options"));
+            await Activate(SettingsControl<Button>(settings, "home-theme-options-palette"));
+            Title("Accent palette");
+            Assert.False(workspace.IsActionAvailable("9to1.Browse.RunPageCommand"));
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "BrowsePrimaryPageCommand" && button.IsEffectivelyVisible);
+            await Activate(SettingsControl<Button>(settings, "home-palette-back"));
+            Title(appearance);
+            Assert.False(workspace.IsActionAvailable("9to1.Browse.RunPageCommand"));
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "BrowsePrimaryPageCommand" && button.IsEffectivelyVisible);
+            await Activate(SettingsControl<Button>(settings, "home-create-theme"));
+            Title("Create theme");
+            Assert.True(name.IsEffectivelyVisible);
+            Assert.Equal("Title restoration", name.Text);
             await Activate(SettingsControl<Button>(window, "BrowsePrimaryPageCommand"));
             Title("Theme Options");
             await WaitForAppliedThemeAsync(source, "Title restoration", token);
