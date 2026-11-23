@@ -59,7 +59,7 @@
             </Button>
           </Container>
         </Container>
-        <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="8" Padding="16">
+        <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="{Binding rail.pageGap}" Padding="{Binding rail.pagePadding}">
           <Text id="home-heading" Text="Apps" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
           <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="16" IsVisible="False"
                      VerticalAlignment="Top" MaxWidth="780" Padding="12 24 12 12" VerticalScrolling="True" HorizontalScrolling="False">

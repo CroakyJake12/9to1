@@ -21,11 +21,14 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 {
     private readonly NativeHomeThemePreferences _source;
     private readonly Func<CancellationToken, Task> _admit;
-    private readonly CuiControlLoader _loader = new();
+    private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly CuiViewModel _bindings = new();
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly Button[] _categoryButtons;
-    private string _category = "appearance";
+    private readonly TextBox _search = new();
+    private string _category = "theme";
+    private string _query = string.Empty;
+    private Avalonia.Vector _offsetBeforeSearch;
     private bool _globalExpanded = true;
     private Task? _initialization;
     private Task<bool>? _preparation;
@@ -46,6 +49,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _work = new(StopAsync, CleanupAsync);
         _loader.SetThemePreferenceContext(source.Context);
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
+        _loader.BindAuthoredControl("home-settings-search", _ => _search);
         NativeHomeThemePreferences.BindAppearanceLayout(_loader, _bindings);
         _categoryButtons = new[] { "global", "appearance", "theme", "layout", "accessibility" }
             .Select(category =>
@@ -64,6 +68,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         PublishCategory();
         SizeChanged += (_, args) => ApplyResponsiveLayout(args.NewSize.Width);
         AddHandler(KeyDownEvent, OnCategoryKeyDown, RoutingStrategies.Tunnel);
+        _search.TextChanged += (_, _) => FilterCategories();
         _bindings.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
         _source.Changed += OnSourceChanged;
         RefreshBindings();
@@ -75,13 +80,23 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
     internal NativeHomeThemePreferences.SettingsWriteOutcome? LastWrite { get; private set; }
     internal Func<bool, CancellationToken, Task>? NavigateHomeAsync { get; set; }
+    internal string CategoryTitle => _category switch
+    {
+        "theme" => "Theme and accent preferences",
+        "layout" => "Layout",
+        "accessibility" => "Accessibility",
+        _ => "Appearance"
+    };
+    internal event EventHandler? CategoryChanged;
 
     internal Task ActivateAsync(CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (!_active)
         {
-            _category = "appearance";
+            _category = "theme";
+            _query = string.Empty;
+            _search.Text = string.Empty;
             _globalExpanded = true;
             PublishCategory();
         }
@@ -91,7 +106,11 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal void Deactivate()
     { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
 
-    internal void FocusCategory() => _categoryButtons[1].Focus(NavigationMethod.Tab);
+    internal void FocusCategory()
+    {
+        _categoryButtons[2].Focus(NavigationMethod.Tab);
+        SelectCategory("theme");
+    }
 
     public bool? IsActionAvailable(string command) => IsAlive && _active && (command switch
     {
@@ -112,6 +131,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             case "SettingsOpenDashboard":
                 return new(NavigateHomeAsync!(command == "SettingsOpenDashboard", cancellationToken));
             case "SettingsGlobal":
+                if (_query.Length != 0) return ValueTask.CompletedTask;
                 _globalExpanded = !_globalExpanded;
                 PublishCategory();
                 return ValueTask.CompletedTask;
@@ -194,7 +214,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var parser = new CuiRichParser();
         var document = parser.Parse(reader.ReadToEnd(), "HomeSettings.cui");
         if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The Home Settings document is invalid.");
+            throw new InvalidDataException("The Home Settings document is invalid: " + string.Join("; ",
+                parser.Diagnostics.Diagnostics.Select(item => item.Code + " " + item.Message)));
         var home = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
         var appearance = home.Components
             .SelectMany(component => component.DescendantsAndSelf())
@@ -215,74 +236,128 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 
     private void ApplyResponsiveLayout(double width)
     {
-        var narrow = width < 720;
-        _bindings.Set("SettingsColumns", narrow ? "1fr" : "220 1fr");
+        var narrow = width < 790;
+        _bindings.Set("SettingsColumns", narrow ? "1fr" : width >= 1120 ? "276 1fr" : "232 1fr");
         _bindings.Set("SettingsRows", narrow ? "Auto 1fr" : "1fr");
         _bindings.Set("SettingsContentRow", narrow ? 1 : 0);
         _bindings.Set("SettingsContentColumn", narrow ? 0 : 1);
         _bindings.Set("SettingsNavHeight", narrow ? 176d : double.PositiveInfinity);
     }
 
+    private bool Matches(string terms) => terms.Contains(_query, StringComparison.OrdinalIgnoreCase);
+
+    private ScrollViewer? CategoryScroll() => this.GetVisualDescendants().OfType<CuiContainerControl>()
+        .FirstOrDefault(control => control.Name == "home-settings-categories")?.Child as ScrollViewer;
+
+    private void FilterCategories()
+    {
+        var query = _search.Text?.Trim() ?? string.Empty;
+        if (_query == query) return;
+        if (_query.Length == 0) _offsetBeforeSearch = CategoryScroll()?.Offset ?? default;
+        _query = query;
+        PublishCategory();
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (query == _query && CategoryScroll() is { } scroll)
+                scroll.Offset = query.Length == 0 ? _offsetBeforeSearch : default;
+        }, DispatcherPriority.Loaded);
+    }
+
     private void PublishCategory()
     {
-        _bindings.Set("SettingsGlobalExpanded", _globalExpanded);
-        _bindings.Set("SettingsGlobalLabel", _globalExpanded ? "▾  Global" : "▸  Global");
-        _bindings.Set("SettingsShowsAppearance", _category != "layout");
+        var parent = Matches("Global Settings") || Matches("Appearance");
+        var theme = parent || Matches("Theme and accent preferences") || Matches("Override app accents") || Matches("Brightness") || Matches("Colour contrast");
+        var layout = parent || Matches("Layout") || Matches("Dashboard") || Matches("Recover saved appearance");
+        var accessibility = parent || Matches("Accessibility") || Matches("High contrast") || Matches("Reduce motion");
+        var any = theme || layout || accessibility;
+        var expanded = (_query.Length > 0 || _globalExpanded) && any;
+        _bindings.Set("SettingsGlobalExpanded", expanded);
+        _bindings.Set("SettingsGlobalChevron", expanded ? "⌄" : "›");
+        _bindings.Set("SettingsMatchGlobal", any);
+        _bindings.Set("SettingsMatchChildren", any);
+        _bindings.Set("SettingsMatchTheme", theme);
+        _bindings.Set("SettingsMatchLayout", layout);
+        _bindings.Set("SettingsMatchAccessibility", accessibility);
+        _bindings.Set("SettingsNoMatches", !any);
+        _bindings.Set("SettingsShowsAppearance", _category is "theme" or "accessibility");
         _bindings.Set("SettingsLayoutSelected", _category == "layout");
         _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
         _bindings.Set("SettingsThemeSelected", _category == "theme");
         _bindings.Set("SettingsAccessibilitySelected", _category == "accessibility");
-        AutomationProperties.SetItemStatus(_categoryButtons[0], _globalExpanded ? "Expanded" : "Collapsed");
+        AutomationProperties.SetItemStatus(_categoryButtons[0], expanded ? "Expanded" : "Collapsed");
         foreach (var button in _categoryButtons.Skip(1))
             AutomationProperties.SetItemStatus(button, button.Name == "home-settings-" + _category ? "Current page" : null);
     }
 
     private void SelectCategory(string category)
     {
+        var changed = _category != category;
         _category = category;
         PublishCategory();
+        if (changed) CategoryChanged?.Invoke(this, EventArgs.Empty);
         Dispatcher.UIThread.Post(() =>
         {
-            if (!_active || !IsAlive || _category != category || category == "layout") return;
+            if (!_active || !IsAlive || _category != category || category is "layout" or "appearance") return;
             var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
                 .Single(control => control.Name == "home-appearance-settings");
-            if (category == "appearance")
-            {
+            var anchor = category == "accessibility" ? "home-appearance-accessibility"
+                : _query.Length == 0 ? null
+                : Matches("Accent") || Matches("Override app accents") ? "home-accent-settings"
+                : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null;
+            if (anchor is null)
                 appearance.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.ScrollToHome();
-                return;
-            }
-            var anchor = category == "theme" ? "home-theme-gallery" : "home-appearance-accessibility";
-            appearance.GetVisualDescendants().OfType<Control>().First(control => control.Name == anchor).BringIntoView();
+            else
+                appearance.GetVisualDescendants().OfType<Control>().First(control => control.Name == anchor).BringIntoView();
         }, DispatcherPriority.Loaded);
     }
 
     private void OnCategoryKeyDown(object? sender, KeyEventArgs args)
     {
-        if (!_active || args.KeyModifiers != KeyModifiers.None ||
-            TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not Button focused) return;
-        var index = Array.IndexOf(_categoryButtons, focused);
-        if (index < 0) return;
-        var last = _globalExpanded ? _categoryButtons.Length - 1 : 0;
-        var next = args.Key switch
+        if (!_active || args.KeyModifiers != KeyModifiers.None) return;
+        var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement();
+        var visible = _categoryButtons.Where(button => button.IsEffectivelyVisible && button.IsAttachedToVisualTree()).ToArray();
+        if (_query.Length > 0 && args.Key == Key.Escape && (focused == _search || focused is Button searchRow && visible.Contains(searchRow)))
         {
-            Key.Up => Math.Max(0, index - 1),
-            Key.Down => Math.Min(last, index + 1),
-            Key.Home => 0,
-            Key.End => last,
-            Key.Left when index > 0 => index == 1 ? 0 : 1,
-            Key.Left when _globalExpanded => CollapseGlobal(),
-            Key.Right when index == 0 && !_globalExpanded => ExpandGlobal(),
-            Key.Right when index == 0 => 1,
-            Key.Right when index == 1 => 2,
-            _ => -1
+            _search.Text = string.Empty;
+            _search.Focus(NavigationMethod.Tab);
+            args.Handled = true;
+            return;
+        }
+        if (focused == _search && args.Key is Key.Down or Key.Enter)
+        {
+            var result = visible.FirstOrDefault(button => _query.Equals(AutomationProperties.GetName(button), StringComparison.OrdinalIgnoreCase))
+                ?? visible.FirstOrDefault(button => Array.IndexOf(_categoryButtons, button) >= 2);
+            if (result is null) return;
+            args.Handled = true;
+            result.Focus(NavigationMethod.Directional);
+            result.BringIntoView();
+            if (args.Key == Key.Enter) result.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            return;
+        }
+        if (focused is not Button current) return;
+        var index = Array.IndexOf(visible, current);
+        if (index < 0) return;
+        var global = _categoryButtons[0];
+        var parent = _categoryButtons[1];
+        Button? next = args.Key switch
+        {
+            Key.Up => visible[Math.Max(0, index - 1)],
+            Key.Down => visible[Math.Min(visible.Length - 1, index + 1)],
+            Key.Home => visible[0],
+            Key.End => visible[^1],
+            Key.Left when current != global => current == parent ? global : parent,
+            Key.Left when _globalExpanded && _query.Length == 0 => SetExpanded(false),
+            Key.Right when current == global && !_globalExpanded && _query.Length == 0 => SetExpanded(true),
+            Key.Right when current == global => parent,
+            Key.Right when current == parent => visible.ElementAtOrDefault(index + 1),
+            _ => null
         };
-        if (next < 0) return;
+        if (next is null) return;
         args.Handled = true;
-        _categoryButtons[next].Focus(NavigationMethod.Directional);
-        _categoryButtons[next].BringIntoView();
+        next.Focus(NavigationMethod.Directional);
+        next.BringIntoView();
 
-        int CollapseGlobal() { _globalExpanded = false; PublishCategory(); return 0; }
-        int ExpandGlobal() { _globalExpanded = true; PublishCategory(); return 0; }
+        Button SetExpanded(bool value) { _globalExpanded = value; PublishCategory(); return global; }
     }
 
     private async Task<bool> IsAdmittedAsync(CancellationToken token)

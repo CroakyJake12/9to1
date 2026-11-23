@@ -129,6 +129,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     internal Task? OriginalInitialization => _initialization;
     internal Task? OriginalClose => _work.OriginalClose;
     internal bool IsAlive => !_work.IsRetiring && !_stopping;
+    internal string? SettingsTitle => _section == "settings" ? _settings?.CategoryTitle : null;
+    internal event EventHandler? SettingsTitleChanged;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(
         _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync());
 
@@ -247,6 +249,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 {
                     _settings = (_createSettings ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))();
                     _settings.NavigateHomeAsync = NavigateFromSettingsAsync;
+                    _settings.CategoryChanged += OnSettingsCategoryChanged;
                 });
             if (!original.IsAcceptedPublicationCurrent) return;
             var settings = _settings ?? throw new InvalidOperationException("The Home Settings owner was not acquired.");
@@ -269,6 +272,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (section != "events") _events?.Deactivate();
         if (section != "settings") _settings?.Deactivate();
         if (section != "library") _library?.Deactivate();
+        var settingsVisibilityChanged = (_section == "settings") != (section == "settings");
         _section = section;
         _railBindings.Refresh();
         if (focusRailButton is not null)
@@ -279,7 +283,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
         Set(_heading, "IsVisible", section != "settings");
+        Set(_status, "IsVisible", section != "settings");
         Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. Ask AI requires an available Spaces destination." : string.Empty);
+        if (settingsVisibilityChanged) SettingsTitleChanged?.Invoke(this, EventArgs.Empty);
         if (section == "apps")
         {
             _viewport.Child = prepared!;
@@ -342,6 +348,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (!IsAlive || generation != _selection) return;
         original.DemandPublication();
     }
+
+    private void OnSettingsCategoryChanged(object? sender, EventArgs args) =>
+        SettingsTitleChanged?.Invoke(this, EventArgs.Empty);
 
     private Task OpenDashboardAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token,
         string? focusRailButton = null)
@@ -597,7 +606,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (_dashboard is not null) Acquire(_dashboard.CloseAndDrainAsync);
         if (_discover is not null) Acquire(_discover.CloseAndDrainAsync);
         if (_events is not null) Acquire(_events.CloseAndDrainAsync);
-        if (_settings is not null) Acquire(_settings.CloseAndDrainAsync);
+        if (_settings is not null)
+        {
+            _settings.CategoryChanged -= OnSettingsCategoryChanged;
+            Acquire(_settings.CloseAndDrainAsync);
+        }
         if (_library is not null) Acquire(_library.CloseAndDrainAsync);
         Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
         foreach (var actual in _stopSources)

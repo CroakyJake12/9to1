@@ -44,6 +44,8 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
             "rail.modelsSelected" => section == "models",
             "rail.settingsSelected" => section == "settings",
             "rail.homeVisible" => section != "settings",
+            "rail.pageGap" => section == "settings" ? 0d : 8d,
+            "rail.pagePadding" => section == "settings" ? "0" : "16",
             "rail.eventsSelected" => section == "events",
             "rail.librarySelected" => section == "library",
             "rail.newtabSelected" => section == "newtab",

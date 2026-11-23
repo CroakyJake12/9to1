@@ -85,6 +85,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         private Task? _initialization;
         private Task<bool>? _preparation;
         private volatile bool _published;
+        private volatile string? _settingsTitle;
 
         internal Session(UnifiedHomeContentFactory owner, BrowseAppContentRequest request)
         {
@@ -92,12 +93,12 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
             _work = new(StopAsync, CleanupAsync);
         }
         public AppContentAddress Address => _request.Address;
-        public string Title => Address.Authority switch
+        public string Title => _settingsTitle ?? (Address.Authority switch
         {
             "home" when Address.ResourceSegments is ["dashboard"] => "Dashboard",
             "home" => "Home",
             _ => "New Tab"
-        };
+        });
         public string IconKey => "home";
         public event EventHandler? StateChanged;
         public Task? OriginalInitialization { get { lock (_gate) return _initialization; } }
@@ -147,13 +148,29 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         await original.AwaitAsync(CloudflareOriginalExecutionGuard.InvokeOriginal(this,
                             () => _owner._admit(_request, linked.Token)));
                         DemandCurrent(); linked.Token.ThrowIfCancellationRequested();
+                        _settingsTitle = page.SettingsTitle;
+                        page.SettingsTitleChanged += OnSettingsTitleChanged;
                         _published = true;
                         try { CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; }); }
-                        catch { _published = false; throw; }
+                        catch
+                        {
+                            _published = false;
+                            page.SettingsTitleChanged -= OnSettingsTitleChanged;
+                            throw;
+                        }
                     })).ConfigureAwait(false);
                 }, task => _initialization = task);
             }
         }
+        private void OnSettingsTitleChanged(object? sender, EventArgs args)
+        {
+            if (sender is not UnifiedHomePage page || !IsPublicationCurrent) return;
+            var title = page.SettingsTitle;
+            if (_settingsTitle == title) return;
+            _settingsTitle = title;
+            CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+        }
+
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
         {
             DemandExternalJoin();
@@ -192,7 +209,11 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         {
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             _published = false;
-            if (_page is { } page) await CloudflareOriginalExecutionGuard.InvokeOriginal(this, page.CloseAndDrainAsync);
+            if (_page is { } page)
+            {
+                page.SettingsTitleChanged -= OnSettingsTitleChanged;
+                await CloudflareOriginalExecutionGuard.InvokeOriginal(this, page.CloseAndDrainAsync);
+            }
         });
         private Task CleanupAsync() => OnUiAsync(async () =>
         {

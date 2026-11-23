@@ -459,6 +459,9 @@ public sealed class UnifiedHomeContentTests
         try
         {
             await session.InitializeAsync();
+            var publishedTitles = new List<string>();
+            session.StateChanged += (_, _) => publishedTitles.Add(session.Title);
+            Assert.Equal("Home", session.Title);
             var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
             window = Show(session.OriginalNativeView);
             var gear = HomeRailButton(page, "home-settings", "Settings");
@@ -467,11 +470,20 @@ public sealed class UnifiedHomeContentTests
             SettleFixtureLayout(window);
             Assert.NotNull(settings);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            var appearance = SettingsControl<Button>(settings!, "home-settings-appearance");
+            Assert.Equal("Theme and accent preferences", session.Title);
+            Assert.Equal("browse://home", session.Address.Value);
+            var theme = SettingsControl<Button>(settings!, "home-settings-theme");
+            var appearance = SettingsControl<Button>(settings, "home-settings-appearance");
             var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
             Assert.True(fragment.IsEffectivelyVisible);
-            Assert.True(appearance.IsFocused);
-            Assert.True(SettingsCategorySelected(appearance));
+            Assert.True(theme.IsFocused);
+            Assert.True(SettingsCategorySelected(theme));
+            Assert.False(SettingsCategorySelected(appearance));
+            var cards = fragment.GetVisualDescendants().OfType<Button>()
+                .Where(button => button.Name == "home-theme-option").ToArray();
+            Assert.Equal(new[] { 5, 4 }, cards.GroupBy(button => Math.Round(button.TranslatePoint(default, window)!.Value.Y)).Select(row => row.Count()));
+            Assert.All(cards, card => Assert.True(card.Bounds.Height >= 136));
+            Assert.Contains(cards.SelectMany(card => card.GetVisualDescendants().OfType<TextBlock>()), label => label.Text == "Amber Console");
             CaptureSettingsIfRequested(window, "appearance", source);
 
             AppearanceOption(settings, "Glow").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -494,19 +506,37 @@ public sealed class UnifiedHomeContentTests
             Assert.True(draftBrightness > savedBrightness);
 
             var layout = SettingsControl<Button>(settings, "home-settings-layout");
-            ClickSettingsButton(window, layout);
+            var searchSettings = SettingsControl<TextBox>(settings, "home-settings-search");
+            Assert.True(searchSettings.Focus());
+            searchSettings.Text = "layout";
+            SettleFixtureLayout(window);
+            Assert.True(layout.IsEffectivelyVisible && appearance.IsEffectivelyVisible);
+            Assert.False(theme.IsEffectivelyVisible && theme.IsAttachedToVisualTree());
+            PressSettingsKey(window, PhysicalKey.Enter);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.True(SettingsCategorySelected(layout));
+            Assert.Equal("Layout", session.Title);
             Assert.False(SettingsCategorySelected(appearance));
             Assert.True(SettingsControl<Button>(settings, "home-settings-open-dashboard").IsEffectivelyVisible);
             Assert.True(SettingsControl<Button>(settings, "home-settings-reload-appearance").IsEffectivelyVisible);
+            Assert.True(layout.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.True(searchSettings.IsFocused);
+            Assert.True(string.IsNullOrEmpty(searchSettings.Text));
+            Assert.True(theme.IsEffectivelyVisible);
             CaptureSettingsIfRequested(window, "layout", source);
 
             ClickSettingsButton(window, appearance);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.True(SettingsCategorySelected(appearance));
+            Assert.Equal("Appearance", session.Title);
+            Assert.True(SettingsControl<CuiContainerControl>(settings, "home-settings-appearance-overview").IsEffectivelyVisible);
+            ClickSettingsButton(window, theme);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
+            SettleFixtureLayout(window);
             Assert.Same(fragment, SettingsControl<CuiContainerControl>(settings, "home-appearance-settings"));
             Assert.Equal(draftBrightness, brightness.Value);
             Assert.Equal(savedBytes, await File.ReadAllBytesAsync(file, testToken));
@@ -518,13 +548,18 @@ public sealed class UnifiedHomeContentTests
             Assert.DoesNotContain(page.GetVisualDescendants(), control => ReferenceEquals(control, settings));
             Assert.True(gear.IsFocused);
             Assert.True(SettingsCategorySelected(HomeRailButton(page, "home-apps", "Apps")));
+            Assert.Equal("Home", session.Title);
+            Assert.Equal("browse://home", session.Address.Value);
+            Assert.Equal(new[] { "Theme and accent preferences", "Layout", "Appearance", "Theme and accent preferences", "Home" },
+                publishedTitles);
 
             PressSettingsKey(window, PhysicalKey.Enter);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
             SettleFixtureLayout(window);
             Assert.Same(settings, Assert.Single(page.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            Assert.True(SettingsControl<Button>(settings, "home-settings-appearance").IsFocused);
+            Assert.True(theme.IsFocused);
             Assert.Equal(draftBrightness, brightness.Value);
+            Assert.Equal("Theme and accent preferences", session.Title);
 
             ClickSettingsButton(window, layout);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), testToken);
@@ -635,6 +670,12 @@ public sealed class UnifiedHomeContentTests
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Layout();
             Assert.True(SettingsCategorySelected(appearance));
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            Assert.True(theme.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Layout();
+            Assert.True(SettingsCategorySelected(theme));
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
             Assert.Equal(global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.VerticalScrollBarVisibility);
             Assert.True(scroll.Viewport.Height > 0 && scroll.Viewport.Height <= 520);
@@ -709,6 +750,10 @@ public sealed class UnifiedHomeContentTests
             var actual = await chrome.NavigateAsync("browse://home/settings", lifetime.Token);
             Assert.Equal("browse://home/settings", actual.SelectedTab.Address.Value);
             Assert.Equal(BrowseEngineState.NativeApp, actual.SelectedTab.EngineState);
+            Assert.Equal("Theme and accent preferences", actual.SelectedTab.Title);
+            var pinnedHome = Assert.Single(actual.Tabs, tab => tab.IsHome);
+            Assert.False(pinnedHome.IsCloseable);
+            Assert.Equal("browse://home", pinnedHome.Address.Value);
             foreach (var invalid in new[] { "browse://newtab/settings", "browse://home/settings/nested" })
             {
                 var refused = await chrome.NavigateAsync(invalid, lifetime.Token);
@@ -1071,6 +1116,100 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
+    public async Task Settings_accent_controls_save_global_colour_while_off_and_retain_per_app_choices_after_reopen()
+    {
+        var directory = Directory.CreateTempSubdirectory("home-accent-");
+        var file = Path.Combine(directory.FullName, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "accent-profile");
+        var token = TestContext.Current.CancellationToken;
+        await File.WriteAllTextAsync(file, """{"defaultModel":"retained-model"}""", token);
+        var existing = HomeThemePreference.Default(scope) with
+        {
+            Revision = 1, Appearance = "Dark", Display = new(HomeDisplayMode.Dark, 60, 40),
+            Accent = new(HomeThemeAccentOverrideMode.None, "#123ABC", new Dictionary<string, string> { ["app.write"] = "#11AA77" })
+        };
+        Assert.True((await HomeNativePreferenceFile.CompareExchangeAsync(file, scope, 0, existing,
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), token)).Succeeded);
+        NativeHomeThemePreferences OpenOwner() => new(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            await using (var source = OpenOwner())
+            {
+                var settings = new HomeSettingsDestinationPage(source, _ => Task.CompletedTask);
+                Window? window = null;
+                try
+                {
+                    await settings.ActivateAsync(token);
+                    window = Show(settings);
+                    var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
+                    var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
+                    scroll.ScrollToEnd();
+                    SettleFixtureLayout(window);
+                    var panel = SettingsControl<CuiContainerControl>(settings, "home-accent-settings");
+                    // TestAppBuilder's fast drawing stub has no painted geometry for scrolled swatches.
+                    // The same controls always accept keyboard activation; Skia also exercises pointer targeting.
+                    var pointerRendering = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR"));
+                    Button Option(string name) => panel.GetVisualDescendants().OfType<Button>()
+                        .Single(button => AutomationProperties.GetName(button) == name);
+                    async Task<HomeThemePreference> Choose(string name, bool keyboard = false)
+                    {
+                        var button = Option(name);
+                        button.BringIntoView();
+                        SettleFixtureLayout(window);
+                        await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
+                        if (keyboard || !pointerRendering)
+                        {
+                            Assert.True(button.Focus());
+                            PressSettingsKey(window, PhysicalKey.Enter);
+                        }
+                        else
+                        {
+                            var center = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window)!.Value;
+                            window.MouseMove(center);
+                            var hit = window.InputHitTest(center) as Visual;
+                            Assert.True(hit == button || hit?.GetVisualAncestors().Contains(button) == true,
+                                $"Accent {name} at {center} hit {hit}; scroll {scroll.Offset}/{scroll.Extent}, viewport {scroll.Viewport}.");
+                            ClickSettingsButton(window, button);
+                        }
+                        await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
+                        SettleFixtureLayout(window);
+                        Assert.True(SettingsCategorySelected(Option(name)),
+                            $"Accent {name} failed to select; last receipt {settings.LastWrite?.ConfirmedWrite?.Code ?? "none"}.");
+                        return settings.LastWrite!.ConfirmedWrite!.Value!.Preference;
+                    }
+                    Assert.True(SettingsCategorySelected(Option("Off")));
+                    Assert.Contains(panel.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "#123ABC");
+                    var off = await Choose("Iris");
+                    Assert.Equal(2, off.Revision);
+                    Assert.Equal(HomeThemeAccentOverrideMode.None, off.Accent!.Mode);
+                    Assert.Equal("#7145FF", off.Accent.AllAppsColour);
+                    Assert.Null(off.Accent.ResolveColour("app.write"));
+                    var on = await Choose("On", keyboard: true);
+                    Assert.Equal("#7145FF", on.Accent!.ResolveColour("app.write"));
+                    var individual = await Choose("On per app");
+                    Assert.Equal(4, individual.Revision);
+                    Assert.Equal("#11AA77", individual.Accent!.ResolveColour("app.write"));
+                    Assert.Null(individual.Accent.ResolveColour("app.present"));
+                    await source.RefreshAsync(token);
+                    SettleFixtureLayout(window);
+                    CaptureSettingsIfRequested(window, "accent", source);
+                }
+                finally { window?.Close(); await settings.CloseAndDrainAsync(); }
+            }
+            await using var reopened = OpenOwner();
+            await reopened.RefreshAsync(token);
+            Assert.Equal(CuiAccentOverrideMode.IndividualApps, reopened.Current.EffectiveAccent.Mode);
+            Assert.Equal("#7145FF", reopened.Current.EffectiveAccent.AllAppsColour);
+            Assert.Equal("#11AA77", reopened.Current.EffectiveAccent.IndividualApps["app.write"]);
+            var saved = HomeNativePreferenceFile.Read(file);
+            Assert.Equal("retained-model", saved["defaultModel"]!.GetValue<string>());
+            Assert.Equal(existing.Display, HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme).Display);
+        }
+        finally { directory.Delete(recursive: true); }
+    }
+
+    [AvaloniaFact]
     public async Task Home_display_sliders_commit_once_preserve_legacy_settings_and_reject_a_stale_draft()
     {
         var root = Path.Combine(Path.GetTempPath(), "home-display-" + Guid.NewGuid().ToString("N"));
@@ -1144,97 +1283,6 @@ public sealed class UnifiedHomeContentTests
             await source.DisposeAsync();
             Directory.Delete(root, true);
         }
-    }
-
-    [AvaloniaFact]
-    public async Task Settings_accent_controls_save_global_colour_while_off_and_retain_per_app_choices_after_reopen()
-    {
-        var directory = Directory.CreateTempSubdirectory("home-accent-");
-        var file = Path.Combine(directory.FullName, "preferences.json");
-        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "accent-profile");
-        var token = TestContext.Current.CancellationToken;
-        await File.WriteAllTextAsync(file, """{"defaultModel":"retained-model"}""", token);
-        var existing = HomeThemePreference.Default(scope) with
-        {
-            Revision = 1, Appearance = "Dark", Display = new(HomeDisplayMode.Dark, 60, 40),
-            Accent = new(HomeThemeAccentOverrideMode.None, "#123ABC", new Dictionary<string, string> { ["app.write"] = "#11AA77" })
-        };
-        Assert.True((await HomeNativePreferenceFile.CompareExchangeAsync(file, scope, 0, existing,
-            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), token)).Succeeded);
-        NativeHomeThemePreferences OpenOwner() => new(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
-            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
-        try
-        {
-            await using (var source = OpenOwner())
-            {
-                var settings = new HomeSettingsDestinationPage(source, _ => Task.CompletedTask);
-                Window? window = null;
-                try
-                {
-                    await settings.ActivateAsync(token);
-                    window = Show(settings);
-                    var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
-                    var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
-                    scroll.ScrollToEnd();
-                    SettleFixtureLayout(window);
-                    var panel = SettingsControl<CuiContainerControl>(settings, "home-accent-settings");
-                    Button Option(string name) => panel.GetVisualDescendants().OfType<Button>()
-                        .Single(button => AutomationProperties.GetName(button) == name);
-                    async Task<HomeThemePreference> Choose(string name, bool keyboard = false)
-                    {
-                        var button = Option(name);
-                        button.BringIntoView();
-                        SettleFixtureLayout(window);
-                        await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
-                        if (keyboard)
-                        {
-                            Assert.True(button.Focus());
-                            PressSettingsKey(window, PhysicalKey.Enter);
-                        }
-                        else
-                        {
-                            var center = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window)!.Value;
-                            window.MouseMove(center);
-                            var hit = window.InputHitTest(center) as Visual;
-                            Assert.True(hit == button || hit?.GetVisualAncestors().Contains(button) == true,
-                                $"Accent {name} at {center} hit {hit}; scroll {scroll.Offset}/{scroll.Extent}, viewport {scroll.Viewport}.");
-                            ClickSettingsButton(window, button);
-                        }
-                        await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
-                        SettleFixtureLayout(window);
-                        Assert.True(SettingsCategorySelected(Option(name)),
-                            $"Accent {name} failed to select; last receipt {settings.LastWrite?.ConfirmedWrite?.Code ?? "none"}.");
-                        return settings.LastWrite!.ConfirmedWrite!.Value!.Preference;
-                    }
-                    Assert.True(SettingsCategorySelected(Option("Off")));
-                    Assert.Contains(panel.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "#123ABC");
-                    var off = await Choose("Iris");
-                    Assert.Equal(2, off.Revision);
-                    Assert.Equal(HomeThemeAccentOverrideMode.None, off.Accent!.Mode);
-                    Assert.Equal("#7145FF", off.Accent.AllAppsColour);
-                    Assert.Null(off.Accent.ResolveColour("app.write"));
-                    var on = await Choose("On", keyboard: true);
-                    Assert.Equal("#7145FF", on.Accent!.ResolveColour("app.write"));
-                    var individual = await Choose("On per app");
-                    Assert.Equal(4, individual.Revision);
-                    Assert.Equal("#11AA77", individual.Accent!.ResolveColour("app.write"));
-                    Assert.Null(individual.Accent.ResolveColour("app.present"));
-                    await source.RefreshAsync(token);
-                    SettleFixtureLayout(window);
-                    CaptureSettingsIfRequested(window, "accent", source);
-                }
-                finally { window?.Close(); await settings.CloseAndDrainAsync(); }
-            }
-            await using var reopened = OpenOwner();
-            await reopened.RefreshAsync(token);
-            Assert.Equal(CuiAccentOverrideMode.IndividualApps, reopened.Current.EffectiveAccent.Mode);
-            Assert.Equal("#7145FF", reopened.Current.EffectiveAccent.AllAppsColour);
-            Assert.Equal("#11AA77", reopened.Current.EffectiveAccent.IndividualApps["app.write"]);
-            var saved = HomeNativePreferenceFile.Read(file);
-            Assert.Equal("retained-model", saved["defaultModel"]!.GetValue<string>());
-            Assert.Equal(existing.Display, HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme).Display);
-        }
-        finally { directory.Delete(recursive: true); }
     }
 
     [AvaloniaFact]
