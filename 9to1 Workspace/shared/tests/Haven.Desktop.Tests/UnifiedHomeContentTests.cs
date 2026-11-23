@@ -35,7 +35,7 @@ using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 
 namespace Haven.Desktop.Tests;
 
-public sealed class UnifiedHomeContentTests
+public sealed partial class UnifiedHomeContentTests
 {
     private static BrowseAppContentRequest Request(string address = "browse://home") =>
         new(Guid.NewGuid(), AppContentAddress.Parse(address), "original-home-profile", BrowserTabPrivacy.Standard);
@@ -617,6 +617,9 @@ public sealed class UnifiedHomeContentTests
             CaptureSettingsIfRequested(window, "appearance", source);
             PressSettingsKey(window, PhysicalKey.Tab);
             Assert.True(theme.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowDown);
+            Layout();
+            Assert.True(SettingsControl<Button>(settings, "home-settings-theme-options").IsFocused);
             PressSettingsKey(window, PhysicalKey.ArrowDown);
             Layout();
             Assert.True(layout.IsFocused);

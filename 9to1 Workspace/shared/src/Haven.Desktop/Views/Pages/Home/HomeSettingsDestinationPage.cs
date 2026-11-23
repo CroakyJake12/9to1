@@ -57,7 +57,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _categoryRows = new (string Key, string? Parent)[]
         {
             ("global", null), ("appearance", "global"), ("theme", "appearance"),
-            ("layout", "appearance"), ("accessibility", "appearance"),
+            ("theme-options", "appearance"), ("layout", "appearance"), ("accessibility", "appearance"),
             ("haven", null), ("haven-general", "haven"), ("haven-bookmarks", "haven"), ("haven-history", "haven")
         }.Select(category =>
         {
@@ -92,6 +92,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal string CategoryTitle => _category switch
     {
         "theme" => "Theme and accent preferences",
+        "theme-options" => "Theme Options",
         "layout" => "Layout",
         "accessibility" => "Accessibility",
         "haven-general" => "General",
@@ -129,7 +130,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     public bool? IsActionAvailable(string command) => IsAlive && _active && (command switch
     {
         "SettingsBack" or "SettingsOpenDashboard" => NavigateHomeAsync is not null,
-        "SettingsGlobal" or "SettingsAppearance" or "SettingsTheme" or "SettingsLayout" or "SettingsAccessibility" => true,
+        "SettingsGlobal" or "SettingsAppearance" or "SettingsTheme" or "SettingsThemeOptions" or "SettingsLayout" or "SettingsAccessibility" => true,
+        "SettingsOptionsAccent" or "SettingsOptionsAccessibility" => _category == "theme-options",
         "SettingsHaven" or "SettingsHavenGeneral" or "SettingsHavenBookmarks" or "SettingsHavenHistory" => NavigateBrowseAsync is not null,
         "SettingsOpenBrowseGeneral" => NavigateBrowseAsync is not null && _category == "haven-general",
         "SettingsOpenBrowseBookmarks" => NavigateBrowseAsync is not null && _category == "haven-bookmarks",
@@ -161,6 +163,15 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             case "SettingsLayout":
             case "SettingsAccessibility":
                 SelectCategory(command["Settings".Length..].ToLowerInvariant());
+                return ValueTask.CompletedTask;
+            case "SettingsThemeOptions":
+                SelectCategory("theme-options");
+                return ValueTask.CompletedTask;
+            case "SettingsOptionsAccent":
+                OpenThemeOptionsLink("theme", "home-accent-settings");
+                return ValueTask.CompletedTask;
+            case "SettingsOptionsAccessibility":
+                OpenThemeOptionsLink("accessibility");
                 return ValueTask.CompletedTask;
             case "SettingsHavenGeneral":
             case "SettingsHavenBookmarks":
@@ -304,6 +315,11 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsContentRow", narrow ? 1 : 0);
         _bindings.Set("SettingsContentColumn", narrow ? 0 : 1);
         _bindings.Set("SettingsNavHeight", narrow ? 176d : double.PositiveInfinity);
+        _bindings.Set("SettingsOptionsPadding", narrow ? "14 20 14 24" : "48 25 36 32");
+        _bindings.Set("SettingsOptionsRows", narrow ? "Auto Auto" : "Auto");
+        _bindings.Set("SettingsOptionsColumns", narrow ? "1fr" : "1fr Auto");
+        _bindings.Set("SettingsOptionsControlRow", narrow ? 1 : 0);
+        _bindings.Set("SettingsOptionsControlColumn", narrow ? 0 : 1);
     }
 
     private bool Matches(string terms) => terms.Contains(_query, StringComparison.OrdinalIgnoreCase);
@@ -328,10 +344,12 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private void PublishCategory()
     {
         var parent = Matches("Global Settings") || Matches("Appearance");
-        var theme = parent || Matches("Theme and accent preferences") || Matches("Override app accents") || Matches("Brightness") || Matches("Colour contrast");
+        var theme = parent || Matches("Theme and accent preferences") || Matches("Brightness") ||
+            Matches("Colour contrast") || Matches("Override app accents");
+        var themeOptions = parent || Matches("Theme Options") || Matches("Light Dark Follow system") || Matches("Accent palette");
         var layout = parent || Matches("Layout") || Matches("Dashboard") || Matches("Recover saved appearance");
         var accessibility = parent || Matches("Accessibility") || Matches("High contrast") || Matches("Reduce motion");
-        var any = theme || layout || accessibility;
+        var any = theme || themeOptions || layout || accessibility;
         var expanded = (_query.Length > 0 || _globalExpanded) && any;
         var hasBrowse = NavigateBrowseAsync is not null;
         var havenGroup = Matches("9to1 Haven Tabs and browsing");
@@ -345,6 +363,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsMatchGlobal", any);
         _bindings.Set("SettingsMatchChildren", any);
         _bindings.Set("SettingsMatchTheme", theme);
+        _bindings.Set("SettingsMatchThemeOptions", themeOptions);
         _bindings.Set("SettingsMatchLayout", layout);
         _bindings.Set("SettingsMatchAccessibility", accessibility);
         _bindings.Set("SettingsMatchHaven", anyHaven);
@@ -358,6 +377,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsLayoutSelected", _category == "layout");
         _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
         _bindings.Set("SettingsThemeSelected", _category == "theme");
+        _bindings.Set("SettingsThemeOptionsSelected", _category == "theme-options");
         _bindings.Set("SettingsAccessibilitySelected", _category == "accessibility");
         _bindings.Set("SettingsHavenSelected", _category.StartsWith("haven-", StringComparison.Ordinal));
         _bindings.Set("SettingsHavenGeneralSelected", _category == "haven-general");
@@ -380,7 +400,20 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             });
     }
 
-    private void SelectCategory(string category)
+    private void OpenThemeOptionsLink(string category, string? anchor = null)
+    {
+        _search.Text = string.Empty;
+        SelectCategory(category, anchor);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_active || !IsAlive || _category != category) return;
+            var row = _categoryRows.Single(row => row.Key == category).Button;
+            row.Focus(NavigationMethod.Tab);
+            row.BringIntoView();
+        }, DispatcherPriority.Loaded);
+    }
+
+    private void SelectCategory(string category, string? requestedAnchor = null)
     {
         var changed = _category != category;
         _category = category;
@@ -394,10 +427,10 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             if (!_active || !IsAlive || _category != category || category is not ("theme" or "accessibility")) return;
             var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
                 .Single(control => control.Name == "home-appearance-settings");
-            var anchor = category == "accessibility" ? "home-appearance-accessibility"
+            var anchor = requestedAnchor ?? (category == "accessibility" ? "home-appearance-accessibility"
                 : _query.Length == 0 ? null
-                : Matches("Accent") || Matches("Override app accents") ? "home-accent-settings"
-                : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null;
+                : Matches("Accent palette") || Matches("Override app accents") ? "home-accent-settings"
+                : Matches("Brightness") || Matches("Colour contrast") ? "home-display-settings" : null);
             if (anchor is null)
                 appearance.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.ScrollToHome();
             else
@@ -564,6 +597,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var available = _active && IsAlive && !IsBusy && !_unavailable;
         _bindings.Set("HomeAppearanceAvailable", available);
         _bindings.Set("HomeAppearanceCanRefresh", available);
+        _bindings.Set("SettingsHasAppearanceStatus", !string.IsNullOrWhiteSpace(_status));
         if (_status is not null) _bindings.Set("HomeAppearanceStatus", _status);
         _loader.RefreshBindings();
     }

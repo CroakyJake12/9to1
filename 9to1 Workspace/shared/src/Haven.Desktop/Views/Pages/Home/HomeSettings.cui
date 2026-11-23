@@ -41,7 +41,10 @@
                 </Container>
               </Button>
               <Container id="home-settings-subcategories" Type="Vertical Stack" IsVisible="{Binding SettingsMatchChildren}" CellGap="2" Margin="20 0 0 0" Padding="14 0 0 0" BorderColor="{Resource CuiLineBrush}" BorderThickness="1 0 0 0">
-                <Button id="home-settings-theme" Action="SettingsTheme" Content="Theme" Selected="{Binding SettingsThemeSelected}" IsVisible="{Binding SettingsMatchTheme}"
+                <Button id="home-settings-theme" Action="SettingsTheme" Content="Theme" AccessibleName="Theme" Selected="{Binding SettingsThemeSelected}" IsVisible="{Binding SettingsMatchTheme}"
+                        Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
+                <Button id="home-settings-theme-options" Action="SettingsThemeOptions" Content="Theme Options" AccessibleName="Theme Options"
+                        Selected="{Binding SettingsThemeOptionsSelected}" IsVisible="{Binding SettingsMatchThemeOptions}"
                         Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
                 <Button id="home-settings-layout" Action="SettingsLayout" Content="Layout" Selected="{Binding SettingsLayoutSelected}" IsVisible="{Binding SettingsMatchLayout}"
                         Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
@@ -111,8 +114,68 @@
             </Container>
             <Container id="home-settings-overview-links" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="18" CellGap="4">
               <Button id="home-settings-overview-theme" Action="SettingsTheme" Content="Theme and accent preferences" HorizontalContentAlignment="Left" />
+              <Button id="home-settings-overview-theme-options" Action="SettingsThemeOptions" Content="Theme Options" HorizontalContentAlignment="Left" />
               <Button id="home-settings-overview-layout" Action="SettingsLayout" Content="Layout" HorizontalContentAlignment="Left" />
               <Button id="home-settings-overview-accessibility" Action="SettingsAccessibility" Content="Accessibility" HorizontalContentAlignment="Left" />
+            </Container>
+          </Container>
+          <Container id="home-settings-theme-options-page" Type="Vertical Stack" IsVisible="{Binding SettingsThemeOptionsSelected}"
+                     MaxWidth="1120" Padding="{Binding SettingsOptionsPadding}" VerticalScrolling="True" HorizontalScrolling="False" CellGap="24">
+            <Container Type="Vertical Stack" CellGap="6" Margin="0 0 0 10">
+              <Text Text="Global" FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="home-settings-theme-options-title" Text="Theme Options" FontSize="36" FontWeight="800" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="Theme options" FontSize="18" FontWeight="750" Margin="0 0 0 12" />
+              <Container Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="64" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Text Text="Light / dark" FontSize="14" FontWeight="700" VerticalAlignment="Center" />
+                <Container Type="Overlay" Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Role="group" AccessibleName="Appearance mode"
+                           Background="{Resource CuiInputSurfaceBrush}" CornerRadius="22" Padding="4">
+                  <Repeat id="home-theme-options-mode-choices" Source="{Binding HomeModeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
+                    <Button id="home-theme-options-mode-choice" Action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" AccessibleName="{Binding option.Name}"
+                            Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}"
+                            Background="Transparent" BorderWidth="0" MinHeight="34" Padding="12 6" CornerRadius="18" FontWeight="700" />
+                  </Repeat>
+                </Container>
+              </Container>
+              <Container Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="64" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text Text="Accent palette" FontSize="14" FontWeight="700" />
+                  <Text Text="Choose how app accents are applied across 9to1." FontSize="13" FontWeight="600" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-theme-options-palette" Action="SettingsOptionsAccent" AccessibleName="Open accent palette"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Padding="12 8" CornerRadius="20"
+                        BorderWidth="0" Background="{Resource CuiAccentSoftBrush}">
+                  <Container Type="Horizontal Stack" CellGap="8">
+                    <Text Text="Open palette" FontSize="13" FontWeight="700" VerticalAlignment="Center" />
+                    <Image id="home-theme-options-palette-chevron" Source="icon:chevron-right" Width="14" Height="14" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+              </Container>
+              <Text Text="{Binding HomeAppearanceStatus}" IsVisible="{Binding SettingsHasAppearanceStatus, fallback=false}"
+                    FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="Related settings" FontSize="18" FontWeight="750" Margin="0 0 0 12" />
+              <Container Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="64" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text Text="Accessibility" FontSize="14" FontWeight="700" />
+                  <Text Text="Manage high contrast and reduced motion." FontSize="13" FontWeight="600" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-theme-options-accessibility" Action="SettingsOptionsAccessibility" AccessibleName="Open Accessibility settings"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" Padding="12 8">
+                  <Container Type="Horizontal Stack" CellGap="8">
+                    <Text Text="Open" FontSize="13" FontWeight="700" VerticalAlignment="Center" />
+                    <Image id="home-theme-options-accessibility-chevron" Source="icon:chevron-right" Width="14" Height="14" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+              </Container>
             </Container>
           </Container>
           <Container id="home-settings-appearance-host" Type="Overlay" IsVisible="{Binding SettingsShowsAppearance}" />
