@@ -23,14 +23,14 @@ On 22 November the shared strip gained app artwork and heavier text (`8185046f4`
 
 | Surface | Classification | Current user flow |
 | --- | --- | --- |
-| Home gear → Settings → Appearance | Adaptation and partial coverage (SET-001–006, UI-001–017, IX-BASE-008) | The gear exposes labeled Global categories. Appearance, Theme and Accessibility share the original editor and draft. Layout links to Dashboard and offers explicit reload of saved appearance. Back returns to the previous Home section. Accent editing and the remaining Settings destinations are open. |
-| Dashboard and New Tab | Adaptation (HOME-001–005, SHELL-005) | The Dashboard opens through `browse://home/dashboard` with its own title and tab identity. New Tab keeps its search draft through Dashboard selection, close and reopen. Existing Dashboard widgets and New Tab actions retain their owners. |
-| Native Browse tab focus | Adaptation (UI-006, IX-HOST-001–002, SHELL-005) | Directional keys move focus through full tab titles. Enter selects, Close remains separately reachable, and successful close or reopen transfers focus through the existing workspace owner. An unrelated focused editor retains its draft. |
+| Home gear → Settings → Appearance | Adaptation and partial coverage (SET-001–006, UI-001–017, IX-BASE-008) | The gear opens Theme under Global → Appearance. Search filters the supported directory. The actual category sets the tab title and friendly address. Layout links to Dashboard. The 9to1 Haven group opens Browse settings, bookmarks and history. Back restores the prior Home section. Theme previews, display controls and four saved global accent presets use the original preference owner. Theme Options, the custom and per-app palette editor and other directories remain open. |
+| Dashboard and New Tab | Adaptation (HOME-001–005, SHELL-005) | The Dashboard opens through `browse://home/dashboard` with its own title and tab identity. New Tab shows the current local time and date above search. It keeps its search draft through Dashboard selection, close and reopen. Existing Dashboard widgets and New Tab actions retain their owners. |
+| Native Browse tab focus | Adaptation (UI-006, IX-HOST-001–002, SHELL-005) | The leading 9to1 mark, neutral selected tab, adjacent New Tab control and model disclosure follow the shared shell. Directional keys move focus through full tab titles. Enter selects, Close remains separately reachable, and successful close or reopen transfers focus through the existing workspace owner. An unrelated focused editor retains its draft. |
 | Home rail and compact Settings | Adaptation (HOME-001–005, SET-001/005) | Desktop rows show readable labels on the existing rail. Compact New Tab keeps Search, Go and its quick actions within the view. Back stays visible as Settings categories scroll. |
 | Main model picker | Adaptation and partial coverage (PICK-001–009) | The model button opens a compact view backed by the Home model source. More settings and Back share the same route editor and draft. The existing Save and new explicit Discard operate through the same owner. Runtime role switching and context Apply remain open. |
 | Spaces Chat Options | Adaptation (APP-SPACES-002, SPC-010, NCONV-010/012) | The conversation viewport keeps the popup below the shared chrome. Narrow mode scrolls to permitted actions and their Save and Cancel controls. Escape returns focus and preserves the draft. |
 
-[Cloud checks and captures](../evidence/atlas-20261122-cloud/README.md)
+[Cloud checks and captures](../evidence/atlas-20261122-cloud/README.md) · [Atlas and native visual comparison](../evidence/atlas-20261123-visual-review/README.md)
 
 ## Actual implementation map (code-observed 18 Nov)
 
