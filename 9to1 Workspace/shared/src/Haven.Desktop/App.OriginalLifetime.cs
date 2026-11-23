@@ -347,9 +347,12 @@ public sealed partial class App
     {
         primary.ClosingBehavior = Avalonia.Controls.WindowClosingBehavior.OwnerWindowOnly;
     }
+    private bool _dulcheUserCloseRequested;
+
     private void OnOriginalPrimaryWindowClosing(object? sender, Avalonia.Controls.WindowClosingEventArgs args)
     {
         if (_actualWindowClosure is not null) return; // Privately issued native-close original AFTER resource owners joined, never a clean-authority boolean.
+        _dulcheUserCloseRequested = args.CloseReason == Avalonia.Controls.WindowCloseReason.WindowClosing && !args.IsProgrammatic;
         args.Cancel = true;
         // The window silently refusing to close is the owner-reported symptom; without a
         // durable record of every preflight stage nobody can tell whether a hosted owner
@@ -438,6 +441,7 @@ public sealed partial class App
     {
         if (_actualShutdownSequence?.OriginalShutdown is { IsCompletedSuccessfully: true } &&
             _actualWindowClosure is { IsCompletedSuccessfully: true }) return;
+        _dulcheUserCloseRequested = false;
         args.Cancel = true;
         RequestOriginalDocumentClosePreflight();
     }
@@ -1216,6 +1220,8 @@ public sealed partial class App
             // final clean. OnExplicitShutdown kept the real dispatcher alive.
             if (_actualWindowClosure is not { IsCompletedSuccessfully: true })
                 throw new InvalidOperationException("The actual native window cohort has not supplied its terminal close witness.");
+            if (_dulcheUserCloseRequested && _localDulche is not null)
+                await _localDulche.RecordAcceptedUserExitAsync();
             var actualExit = Dispatcher.UIThread.InvokeAsync(() => desktop.TryShutdown()).GetTask();
             var exitFailures = new List<Exception>();
             await JoinOriginalAppTaskAsync(actualExit, exitFailures);

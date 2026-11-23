@@ -19,6 +19,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
 {
     private readonly HomeDiscoverCatalog _catalog;
     private readonly HomeHuggingFaceBrowser _huggingFace;
+    private readonly HomeDulchePanel? _dulche;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly CuiControlLoader _loader = new();
     private readonly TextBox _search = new();
@@ -35,7 +36,10 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private bool _disposed;
 
     public HomeDiscoverPage(HomeDiscoverCatalog catalog, IHuggingFaceModelService? huggingFace = null,
-        HomeLocalProfileIdentity? homeProfiles = null)
+        HomeLocalProfileIdentity? homeProfiles = null) : this(catalog, huggingFace, homeProfiles, null) { }
+
+    public HomeDiscoverPage(HomeDiscoverCatalog catalog, IHuggingFaceModelService? huggingFace,
+        HomeLocalProfileIdentity? homeProfiles, DulcheLocalClient? dulche)
     {
         _catalog = catalog;
         _work = new(StopDiscoverAsync, DetachDiscoverAsync);
@@ -60,6 +64,11 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         _loader.BindAuthoredControl("discover-manage", _ => _manage);
         _loader.BindAuthoredControl("discover-compare", _ => _compare);
         _loader.BindAuthoredControl("discover-huggingface-mount", _ => _huggingFace);
+        if (dulche is not null)
+        {
+            _dulche = new HomeDulchePanel(dulche, RunDiscoverAsync);
+            _loader.BindAuthoredControl("discover-dulche-mount", _ => _dulche);
+        }
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("Home Discover could not be rendered: " + string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
@@ -104,6 +113,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private async Task ActivateCoreAsync(CancellationToken cancellationToken)
     {
         if (_disposed) return;
+        _dulche?.Activate();
         var selected = SelectedModels().Select(model => model.Identity.StableKey).ToHashSet(StringComparer.Ordinal);
         var (generation, token) = StartRead(cancellationToken);
         _models.ItemsSource = Array.Empty<HomeDiscoverModel>();
@@ -176,7 +186,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
         $"Architecture: {model.Architecture ?? "Unknown"} · Parameters: {model.ParameterInformation ?? "Unknown"} · Format: {model.QuantizationOrFormat ?? "Unknown"}\n" +
         $"Context: {model.ContextLimit?.ToString() ?? "Unknown"} · Cost: {model.CostClass ?? "Unknown"} · Residency: {model.Residency ?? "Unknown"}\n" +
         $"Capabilities: {(model.Capabilities is { Count: > 0 } ? string.Join(", ", model.Capabilities.Order()) : "Unknown")}";
-    public void Deactivate() { _generation++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); }
+    public void Deactivate() { _generation++; _readCancellation?.Cancel(); _huggingFace.Deactivate(); _dulche?.Deactivate(); }
     public Task? OriginalClose => _work.OriginalClose;
     public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken)
     {
@@ -203,7 +213,7 @@ public sealed class HomeDiscoverPage : UserControl, IActivatablePage, IDisposabl
     private async Task DetachDiscoverAsync()
     {
         Task? actions = null;
-        await Dispatcher.UIThread.InvokeAsync(() => { _huggingFace.Dispose(); _loader.Dispose(); actions = _loader.WhenActionsIdleAsync(); });
+        await Dispatcher.UIThread.InvokeAsync(() => { _dulche?.Dispose(); _huggingFace.Dispose(); _loader.Dispose(); actions = _loader.WhenActionsIdleAsync(); });
         if (actions is not null) await actions.ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(() => { _readCancellation?.Dispose(); Content = null; });
     }

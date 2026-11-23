@@ -246,8 +246,21 @@
                     <Container id="home-appearance-settings" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1000" CellGap="16" Padding="12 12 12 24">
                       <Container Type="Vertical Stack" CellGap="3" Margin="0 0 0 8">
                         <Text Text="Global Settings" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
-                        <Text Text="Appearance" FontSize="32" FontWeight="800" />
                       </Container>
+                      <If Condition="{Binding HomeDulchePresent, fallback=false}">
+                        <Container id="home-dulche-lifecycle" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="8">
+                          <Text Text="Keep Models Loaded" FontSize="18" FontWeight="700" />
+                          <Text Text="Choose what Dulche does when you close 9to1." Foreground="{Resource CuiTextSoftBrush}" />
+                          <Container Type="Wrap" CellGap="8">
+                            <Button id="home-dulche-always" action="DulchePolicyAlways" Content="Always" Selected="{Binding DulchePolicy_always, fallback=false}" IsEnabled="{Binding HomeDulcheCanEdit, fallback=false}" />
+                            <Button id="home-dulche-resources" action="DulchePolicyResources" Content="While Resources are Free" Selected="{Binding DulchePolicy_resources, fallback=false}" IsEnabled="{Binding HomeDulcheCanEdit, fallback=false}" />
+                            <Button id="home-dulche-active" action="DulchePolicyActive" Content="While Active" Selected="{Binding DulchePolicy_active, fallback=false}" IsEnabled="{Binding HomeDulcheCanEdit, fallback=false}" />
+                            <Button id="home-dulche-never" action="DulchePolicyNever" Content="Never" Selected="{Binding DulchePolicy_never, fallback=false}" IsEnabled="{Binding HomeDulcheCanEdit, fallback=false}" />
+                          </Container>
+                          <Text Text="{Binding DulchePolicyStatus}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                        </Container>
+                      </If>
+                        <Text Text="Appearance" FontSize="32" FontWeight="800" />
                       <Container id="home-theme-gallery" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="14">
                         <Text Text="Theme" FontSize="18" FontWeight="750" />
                         <Repeat id="home-theme-options" Source="{Binding HomeThemeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">

@@ -1,0 +1,86 @@
+<Cui id="home.models.dulche" version="1">
+  <Theme Name="user_preference">
+    <Page AccessibleName="Dulche local inference">
+      <Container Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="16" Padding="16" CellGap="8">
+        <Text Text="Dulche" FontSize="22" FontWeight="700" />
+        <Text id="dulche-status" Text="Connecting to local service…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Wrap" CellGap="8">
+          <Input id="dulche-model" Type="Select" Width="280" AccessibleName="Installed inference model" />
+          <Button id="dulche-toggle" Content="Load" AccessibleName="Change selected model state" />
+          <Button id="dulche-unload" Content="Unload" />
+          <Button id="dulche-manage" Content="Manage models" />
+        </Container>
+        <Text id="dulche-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <Input id="dulche-prompt" Type="Text" PlaceholderText="Message the selected model" AccessibleName="Dulche prompt" />
+        <Container Type="Wrap" CellGap="8">
+          <Button id="dulche-generate" Content="Send" />
+          <Button id="dulche-new" Content="New conversation" />
+        </Container>
+        <Text id="dulche-output" TextWrapping="Wrap" AccessibleName="Dulche response" />
+        <Text id="dulche-message" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        <Container id="dulche-management" IsVisible="{Binding Manage, fallback=false}" Type="Vertical Stack" CellGap="8">
+          <Text id="dulche-resources" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text Text="Model management" FontSize="18" FontWeight="700" />
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-search" Type="Text" PlaceholderText="Model name or repository" AccessibleName="Find local or downloadable models" Width="255" />
+            <Button id="dulche-find" Content="Search catalogue" />
+            <Button id="dulche-installed" Content="Installed files" />
+          </Container>
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-filter-architecture" Type="Text" Width="165" PlaceholderText="Architecture or family" AccessibleName="Architecture filter" />
+            <Input id="dulche-filter-size" Type="Text" Width="155" PlaceholderText="Max parameters (B)" AccessibleName="Maximum billions of parameters" />
+            <Input id="dulche-filter-capability" Type="Text" Width="175" PlaceholderText="Capability" AccessibleName="Capability filter" />
+            <Input id="dulche-filter-quant" Type="Text" Width="150" PlaceholderText="Quantisation" AccessibleName="Quantisation filter" />
+          </Container>
+          <Input id="dulche-results" Type="Select" AccessibleName="Catalogue results" />
+          <Container Type="Wrap" CellGap="6">
+            <Button id="dulche-inspect" Content="Details and files" />
+            <Input id="dulche-files" Type="Select" Width="245" AccessibleName="Repository file" />
+            <Button id="dulche-download" Content="Download selected file" />
+            <Button id="dulche-remove" Content="Uninstall selected file" />
+          </Container>
+          <Text id="dulche-catalog-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-import-path" Type="Text" Width="250" PlaceholderText="Absolute file or model directory path" AccessibleName="Local model path" />
+            <Input id="dulche-import-base" Type="Text" Width="190" PlaceholderText="Base model for an adapter" AccessibleName="Adapter base model" />
+            <Button id="dulche-import" Content="Import local model" />
+          </Container>
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-jobs" Type="Select" Width="250" AccessibleName="Model transfers" />
+            <Button id="dulche-pause" Content="Pause transfer" />
+            <Button id="dulche-resume" Content="Resume transfer" />
+            <Button id="dulche-cancel" Content="Cancel transfer" />
+          </Container>
+          <Text Text="Inference profile" FontWeight="700" />
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-profiles" Type="Select" Width="220" AccessibleName="Inference profiles" />
+            <Button id="dulche-profile-select" Content="Select profile" />
+            <Input id="dulche-profile-name" Type="Text" Width="170" PlaceholderText="Profile name" AccessibleName="Profile name" />
+            <Button id="dulche-profile-save" Content="Save new profile" />
+            <Button id="dulche-profile-rename" Content="Rename profile" />
+          </Container>
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-profile-device" Type="Text" Width="155" PlaceholderText="GPU or CPU" AccessibleName="Profile execution device" />
+            <Input id="dulche-profile-context" Type="Text" Width="165" PlaceholderText="Context tokens" AccessibleName="Profile context length" />
+            <Button id="dulche-benchmarks" Content="Benchmark results" />
+            <Button id="dulche-benchmark-start" Content="Run local benchmark" />
+            <Button id="dulche-candidates" Content="Compare candidates" />
+            <Button id="dulche-training" Content="Training status" />
+          </Container>
+          <Input id="dulche-candidate" Type="Select" AccessibleName="Candidate checkpoints" IsVisible="{Binding CandidatesVisible, fallback=false}" />
+          <Text id="dulche-benchmark-results" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="dulche-profile-settings" Type="Text" PlaceholderText="Profile settings as JSON" AccessibleName="GPU, context and inference profile settings" />
+          <Text Text="Agents" FontWeight="700" />
+          <Container Type="Wrap" CellGap="6">
+            <Input id="dulche-agents" Type="Select" Width="250" AccessibleName="Dulche agents and saved runs" />
+            <Button id="dulche-recover" Content="Open saved run" />
+            <Button id="dulche-stop" Content="Stop selected agent" />
+            <Button id="dulche-stop-all" Content="Stop all agents" />
+            <Button id="dulche-agent-resume" Content="Resume selected agent" />
+            <Button id="dulche-allow" Content="Allow new agents" />
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

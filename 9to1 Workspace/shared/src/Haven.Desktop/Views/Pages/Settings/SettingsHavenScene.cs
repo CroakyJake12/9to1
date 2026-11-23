@@ -120,7 +120,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
     public HavenText StatusText { get; }
     public string ActiveSection { get; private set; } = "home";
 
-    public Toggle AlwaysLoadedToggle { get; private set; } = null!;
+    public Select ModelResidencySelect { get; private set; } = null!;
     public Select InstalledModelSelect { get; private set; } = null!;
     public Select EffortSelect { get; private set; } = null!;
     public HavenButton RefreshModelsButton { get; private set; } = null!;
@@ -228,7 +228,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
 
     public void LoadPreferences(UserPreferencesService preferences, MotionPreferencesService motionPreferences)
     {
-        AlwaysLoadedToggle.IsChecked = preferences.AlwaysLoaded;
+        ModelResidencySelect.SelectedIndex = Array.IndexOf(DulcheLocalClient.Policies, preferences.DulchePolicy);
         EffortSelect.SelectedIndex = Array.IndexOf(Enum.GetNames<EffortLevel>(), preferences.DefaultEffort.ToString());
         AppearanceSelect.SelectedIndex = preferences.Appearance switch
         {
@@ -440,8 +440,8 @@ internal sealed partial class SettingsHavenScene : IDisposable
     {
         var section = Section("Settings.Models");
         var residency = Card("Settings.Models.Residency");
-        AlwaysLoadedToggle = new Toggle { Name = "Settings.Models.AlwaysLoaded" };
-        residency.Add(SettingRow("Model residency", "Keep the configured local runtime loaded after 9to1 closes for faster startup at the cost of memory.", AlwaysLoadedToggle));
+        ModelResidencySelect = NewSelect("Settings.Models.Residency", DulcheLocalClient.PolicyNames);
+        residency.Add(SettingRow("Keep Models Loaded", "Local model policy after closing 9to1.", ModelResidencySelect));
         section.Add(residency);
 
         var defaults = Card("Settings.Models.Defaults");

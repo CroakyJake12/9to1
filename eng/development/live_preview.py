@@ -4,12 +4,14 @@ import argparse
 import contextlib
 import fcntl
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
 import platform
 import re
 import shutil
+import socket
 import stat
 import struct
 import subprocess
@@ -600,6 +602,29 @@ def window_matches(text, pid, title):
                 and "_NET_WM_WINDOW_TYPE_NORMAL" in text and not (transient and int(transient[1], 16)))
 
 
+def request_dulche_restart_lease(pid):
+    """Protect active Dulche work before a supervised preview issues an ordinary window close."""
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+    path = os.environ.get("DULCHE_SOCKET") or (str(Path(runtime_dir) / "9to1-dulche" / "api.sock") if runtime_dir else None)
+    if not path or not Path(path).exists():
+        return  # No running backend receives an exit.
+    connection = http.client.HTTPConnection("localhost", timeout=3)
+    try:
+        connection.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        connection.sock.settimeout(3)
+        connection.sock.connect(path)
+        body = json.dumps({"pid": pid, "reason": "restart", "ttl_seconds": 300})
+        connection.request("POST", "/v1/frontend/lease", body, {"Content-Type": "application/json"})
+        response = connection.getresponse()
+        payload = response.read(16384)
+        if response.status == 404:
+            return  # The current target was never registered as a Dulche frontend.
+        require(200 <= response.status < 300 and bool(json.loads(payload).get("lease_id")),
+                "Dulche did not grant the frontend restart lease")
+    finally:
+        connection.close()
+
+
 def request_normal_close(launch, title):
     owned_process(launch)
     require(launch.get("display") and os.environ.get("DISPLAY") == launch["display"], "Use the same X11 DISPLAY as the launched app")
@@ -611,6 +636,8 @@ def request_normal_close(launch, title):
     require(len(matches) == 1, "Exactly one normal main window with the owned PID and exact title is required")
     owned_process(launch)
     require(window_matches(command_output([xprop, "-id", matches[0], *properties]), launch["process"]["pid"], title), "Window identity changed before close")
+    request_dulche_restart_lease(launch["process"]["pid"])
+    owned_process(launch)
     command_output([wmctrl, "-ic", matches[0]])
     return matches[0]
 

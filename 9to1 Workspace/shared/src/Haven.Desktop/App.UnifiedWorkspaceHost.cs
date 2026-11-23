@@ -432,7 +432,7 @@ public sealed partial class App
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,
                 () => new Haven.Desktop.Views.Pages.Home.HomeDiscoverPage(new HomeDiscoverCatalog(catalogue.Providers.Select(provider =>
                     new HomeRegisteredModelCatalogueSource(catalogue, provider.Id, () => !privacy.Current.LocalOnlyMode, new HomeDulchePackagedModelEvidenceSource()))),
-                    _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles),
+                    _services.GetRequiredService<IHuggingFaceModelService>(), _home.Profiles, _services.GetRequiredService<DulcheLocalClient>()),
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
                 // Spaces owns the canonical draft. Create it through the shared conversation
                 // repository, then open the registered Spaces destination in the same tab.
@@ -457,7 +457,7 @@ public sealed partial class App
                         token => AdmitHomeAsync(request, token));
                 },
                 settings: request => new HomeSettingsDestinationPage(actualTheme,
-                    token => AdmitHomeSettingsAsync(request, token)),
+                    token => AdmitHomeSettingsAsync(request, token), _services.GetRequiredService<DulcheLocalClient>()),
                 library: request => CreateHomeLibraryPage(request, actualTheme.Context));
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM

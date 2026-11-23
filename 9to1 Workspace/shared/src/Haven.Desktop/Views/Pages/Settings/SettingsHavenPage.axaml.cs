@@ -95,13 +95,24 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
     {
         _route.RefreshModelsButton.Invoked += async (_, _) => await RefreshModelsAsync();
         _route.SaveModelDefaultsButton.Invoked += (_, _) => SaveModelDefaults();
-        _route.AlwaysLoadedToggle.CheckedChanged += (_, _) =>
+        _route.ModelResidencySelect.SelectionChanged += async (_, _) =>
         {
-            _preferences.SetAlwaysLoaded(_route.AlwaysLoadedToggle.IsChecked);
-            _route.SetStatus(_route.AlwaysLoadedToggle.IsChecked
-                ? "Local models will stay ready after 9to1 closes."
-                : "Local models will unload when 9to1 closes.");
-            _bus.Fire("Settings.Models.ResidencyChanged");
+            var index = _route.ModelResidencySelect.SelectedIndex;
+            if (index < 0 || index >= DulcheLocalClient.Policies.Length) return;
+            var policy = DulcheLocalClient.Policies[index];
+            if (_preferences.DulchePolicy == policy) return;
+            try
+            {
+                if (OperatingSystem.IsLinux() && App.Services?.GetService<DulcheLocalClient>() is { } client)
+                    await client.SelectPolicyAsync(policy, _lifetime.Token);
+                else _preferences.SetDulchePolicy(policy);
+                _bus.Fire("Settings.Models.ResidencyChanged");
+            }
+            catch (Exception error)
+            {
+                _route.ModelResidencySelect.SelectedIndex = Array.IndexOf(DulcheLocalClient.Policies, _preferences.DulchePolicy);
+                _route.SetStatus(error.Message);
+            }
         };
 
         _route.AppearanceSelect.SelectionChanged += (_, _) => ApplyAppearance();

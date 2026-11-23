@@ -531,12 +531,32 @@ int main(void) {
             if "-root" in arguments:
                 return "_NET_CLIENT_LIST(WINDOW): window id # 0x1, 0x2"
             return wrong if "0x1" in arguments else good
-        with mock.patch.dict(os.environ, DISPLAY=":fixture"), mock.patch.object(shutil, "which", side_effect=lambda name: "/fixture/" + name), mock.patch.object(preview, "command_output", side_effect=output):
+        with mock.patch.dict(os.environ, DISPLAY=":fixture"), mock.patch.object(shutil, "which", side_effect=lambda name: "/fixture/" + name), mock.patch.object(preview, "command_output", side_effect=output), mock.patch.object(preview, "request_dulche_restart_lease", side_effect=lambda pid: calls.append(["lease",pid])):
             self.assertEqual("0x2", preview.request_normal_close(launch, "9to1"))
+        self.assertEqual(["lease",pid],calls[-2])
         self.assertEqual(["/fixture/wmctrl", "-ic", "0x2"], calls[-1])
         self.assertFalse(preview.window_matches(good.replace("not found.", "window id # 0x9"), pid, "9to1"))
         self.assertFalse(preview.window_matches(good, pid, "helper"))
         self.assertFalse(preview.window_matches(wrong, pid, "9to1"))
+
+    def test_dulche_restart_requires_pid_binding_and_verified_backend_lease(self):
+        path = self.root / "fixture-api.sock"
+        path.touch()
+        conn = mock.MagicMock()
+        response = conn.getresponse.return_value
+        response.status = 200
+        response.read.return_value = b'{"lease_id":"fixture-lease"}'
+        with mock.patch.dict(os.environ, DULCHE_SOCKET=str(path)), mock.patch.object(preview.http.client, "HTTPConnection", return_value=conn), mock.patch.object(preview.socket, "socket"):
+            preview.request_dulche_restart_lease(123)
+            method, route, body, headers = conn.request.call_args.args
+            self.assertEqual(("POST", "/v1/frontend/lease"), (method, route))
+            self.assertEqual({"pid":123, "reason":"restart", "ttl_seconds":300}, preview.json.loads(body))
+            response.status = 503
+            with self.assertRaises(preview.Refusal):
+                preview.request_dulche_restart_lease(123)
+            response.status = 404
+            preview.request_dulche_restart_lease(123)  # A pre-integration frontend has no session.
+        conn.close.assert_called()
 
     def test_duplicate_guardian_cannot_launch_another_child(self):
         first = preview.start(self.state, self.manifest)

@@ -22,6 +22,7 @@ public sealed partial class App : Avalonia.Application
     private static int _developerToolsAttached;
 #endif
     private ServiceProvider? _services;
+    private DulcheLocalClient? _localDulche;
     private IStartupRecoveryCoordinator? _startupRecovery;
     private IProductionDiagnostics? _productionDiagnostics;
     private bool _exceptionHooksAttached;
@@ -58,6 +59,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<ScheduledTaskRunner>();
         collection.AddHavenOriginalTaskExecutionServices();
         collection.AddSingleton<UserPreferencesService>();
+        collection.AddSingleton<DulcheLocalClient>();
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();
         collection.AddSingleton<ProjectCreationService>();
@@ -130,6 +132,11 @@ public sealed partial class App : Avalonia.Application
             desktop.Exit += OnDesktopExit;
 
             var preferences = _services.GetRequiredService<UserPreferencesService>();
+            if (OperatingSystem.IsLinux())
+            {
+                _localDulche = _services.GetRequiredService<DulcheLocalClient>();
+                _ = _localDulche.ObserveInitialConnectionAsync();
+            }
             if (preferences.RecoveryState != UserPreferenceRecoveryState.None)
             {
                 var recoveryWindow = new Window

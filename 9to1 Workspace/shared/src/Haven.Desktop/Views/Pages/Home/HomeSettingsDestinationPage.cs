@@ -17,6 +17,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 {
     private readonly NativeHomeThemePreferences _source;
     private readonly Func<CancellationToken, Task> _admit;
+    private readonly DulcheLocalClient? _dulche;
+    private string? _dulcheStatus;
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
     private readonly DesktopOriginalWorkLifetime _work;
@@ -32,10 +34,14 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal IReadOnlyList<AdmissionObservation> AdmissionObservations => _admissionObservations.ToArray();
 
     internal HomeSettingsDestinationPage(NativeHomeThemePreferences source, Func<CancellationToken, Task> admit)
+        : this(source, admit, null) { }
+
+    internal HomeSettingsDestinationPage(NativeHomeThemePreferences source, Func<CancellationToken, Task> admit, DulcheLocalClient? dulche)
     {
         Dispatcher.UIThread.VerifyAccess();
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _admit = admit ?? throw new ArgumentNullException(nameof(admit));
+        _dulche = dulche;
         _work = new(StopAsync, CleanupAsync);
         var document = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
         var theme = document.Components.Single(component => component.IsThemeScope);
@@ -69,13 +75,40 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
 
     public bool? IsActionAvailable(string command) => IsAlive && _active && !IsBusy && !_unavailable &&
-        command is "ApplyHomeAppearance" or "RefreshHomeAppearance";
+        (command is "ApplyHomeAppearance" or "RefreshHomeAppearance" || (_dulche is not null && PolicyFor(command) is not null));
+
+    private static string? PolicyFor(string command) => command switch
+    {
+        "DulchePolicyAlways" => "always", "DulchePolicyResources" => "resources",
+        "DulchePolicyActive" => "active", "DulchePolicyNever" => "never", _ => null
+    };
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_work.IsRetiring) return ValueTask.CompletedTask; // Already queued presentation acquires no new business work.
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home Appearance action is unavailable.");
+        if (_dulche is not null && PolicyFor(command) is { } selected)
+        {
+            return new(_work.RunAsync(async original =>
+            {
+                var generation = _generation;
+                original.BindPublicationGuard(() => _active && IsAlive && generation == _generation);
+                _busyCount++;
+                try
+                {
+                    RefreshBindings();
+                    if (!await original.AwaitAsync(IsAdmittedAsync(original.Token))) { Deny(original, false); return; }
+                    if (!original.IsAcceptedPublicationCurrent) return;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await original.AwaitAsync(_dulche.SelectPolicyAsync(selected, original.Token));
+                    _dulcheStatus = "Saved.";
+                }
+                catch (Exception error) when (error is IOException or HttpRequestException or OperationCanceledException)
+                { _dulcheStatus = "Dulche could not confirm the change: " + error.Message; }
+                finally { _busyCount--; if (original.IsAcceptedPublicationCurrent) RefreshBindings(); }
+            }));
+        }
         parameter = NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _bindings);
         return new(_work.RunAsync(async original =>
         {
@@ -237,6 +270,16 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var available = _active && IsAlive && !IsBusy && !_unavailable;
         _bindings.Set("HomeAppearanceAvailable", available);
         _bindings.Set("HomeAppearanceCanRefresh", available);
+        _bindings.Set("HomeDulchePresent", _dulche is not null);
+        _bindings.Set("HomeDulcheCanEdit", available && _dulche is not null);
+        if (_dulche is not null)
+        {
+            foreach (var key in DulcheLocalClient.Policies)
+                _bindings.Set("DulchePolicy_" + key, key == _dulche.SavedPolicy);
+            var index = Array.IndexOf(DulcheLocalClient.Policies, _dulche.SavedPolicy);
+            _bindings.Set("DulchePolicyStatus", "Selected: " + (index < 0 ? _dulche.SavedPolicy : DulcheLocalClient.PolicyNames[index]) +
+                (string.IsNullOrEmpty(_dulcheStatus) ? "" : " · " + _dulcheStatus));
+        }
         if (_status is not null) _bindings.Set("HomeAppearanceStatus", _status);
         _loader.RefreshBindings();
     }

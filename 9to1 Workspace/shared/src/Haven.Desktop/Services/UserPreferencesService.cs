@@ -514,7 +514,15 @@ public sealed partial class UserPreferencesService
     
 
     /// <summary>Reports whether local models should stay loaded when Haven's main UI is closed.</summary>
-    public bool AlwaysLoaded => _preferences.AlwaysLoaded;
+    public bool AlwaysLoaded => DulchePolicy == "always";
+    public string DulchePolicy => _preferences.DulchePolicy ?? (_preferences.AlwaysLoaded ? "always" : "never");
+
+    public void SetDulchePolicy(string policy)
+    {
+        if (!DulcheLocalClient.Policies.Contains(policy)) throw new ArgumentOutOfRangeException(nameof(policy));
+        _preferences = _preferences with { DulchePolicy = policy, AlwaysLoaded = policy == "always" };
+        Save();
+    }
     /// <summary>Returns user-created Voice Profiles persisted in the local preference store.</summary>
     public IReadOnlyList<VoiceProfile> CustomVoiceProfiles => _preferences.CustomVoiceProfiles;
     /// <summary>
@@ -791,8 +799,7 @@ public sealed partial class UserPreferencesService
 
     public void SetAlwaysLoaded(bool alwaysLoaded)
     {
-        _preferences = _preferences with { AlwaysLoaded = alwaysLoaded };
-        Save();
+        SetDulchePolicy(alwaysLoaded ? "always" : "never");
     }
 
     public void UpsertCustomVoiceProfile(VoiceProfile profile)
@@ -991,6 +998,7 @@ public sealed partial class UserPreferencesService
         /// Enables faster reopen and background task continuity at the cost of memory.
         /// </summary>
         public bool AlwaysLoaded { get; init; }
+        public string? DulchePolicy { get; init; }
         public IReadOnlyList<VoiceProfile> CustomVoiceProfiles { get; init; } = [];
         /// <summary>
         /// Gets or updates temperature, the bindable or domain state represented by this property.
