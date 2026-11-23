@@ -18,6 +18,22 @@ namespace Haven.Desktop.Tests;
 
 public sealed partial class UnifiedHomeContentTests
 {
+    private static async Task WaitForAppliedThemeAsync(NativeHomeThemePreferences owner, string name, CancellationToken token)
+    {
+        var applied = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void Observe(object? sender, EventArgs args)
+        {
+            if (owner.Context.Current.Theme.Name == name) applied.TrySetResult();
+        }
+        owner.Context.Changed += Observe;
+        try
+        {
+            Observe(null, EventArgs.Empty);
+            await applied.Task.WaitAsync(TimeSpan.FromSeconds(20), token);
+        }
+        finally { owner.Context.Changed -= Observe; }
+    }
+
     [AvaloniaFact]
     public async Task Native_theme_creator_rejects_stale_scope_revision_and_unadmitted_drafts_without_saving()
     {
@@ -129,7 +145,7 @@ public sealed partial class UnifiedHomeContentTests
             SettleFixtureLayout(window);
             await Activate(ButtonByName("Save custom theme"));
             Title("Theme Options");
-            Assert.Equal("Title restoration", source.Context.Current.Theme.Name);
+            await WaitForAppliedThemeAsync(source, "Title restoration", token);
         }
         finally
         {
@@ -229,7 +245,8 @@ public sealed partial class UnifiedHomeContentTests
                     await Activate(Control<Button>("Save custom theme"));
                     Assert.True(settings.LastWrite?.ConfirmedWrite?.Succeeded, settings.LastWrite?.ConfirmedWrite?.Diagnostic);
                     Assert.True(trigger.IsEffectivelyVisible);
-                    Assert.Equal("Cobalt workshop", owner.Context.Current.Theme.Name);
+                    await WaitForAppliedThemeAsync(owner, "Cobalt workshop", token);
+                    SettleFixtureLayout(window);
                     Assert.Equal("#35728D", owner.Context.Current.Theme.CustomTheme!.PrimaryAccent.Colour.Hex);
                     Assert.Equal(CuiTheme.Metallic, owner.Context.Current.Theme.BaseTheme);
                     var card = Control<Button>("Cobalt workshop");
