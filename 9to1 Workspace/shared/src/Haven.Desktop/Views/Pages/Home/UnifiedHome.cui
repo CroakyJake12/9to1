@@ -4,6 +4,7 @@
     <Action name="OpenNewTabShortcut" command="home.newtab-shortcut-open" parameter="{Binding shortcut.Id}" />
     <Action name="EditNewTabShortcut" command="home.newtab-shortcut-edit" parameter="{Binding shortcut.Id}" />
     <Action name="ChooseNewTabShortcutTarget" command="home.newtab-shortcut-choose" parameter="{Binding target.Id}" />
+    <Action name="ChooseNewTabShortcutIcon" command="home.newtab-shortcut-icon-select" parameter="{Binding icon.Key}" />
   </Actions>
   <!-- At desktop widths the Home rail shows labels beside its icons. Compact widths keep the
        same actions, names and keyboard tooltips. Settings stays below the scrolling destinations. -->
@@ -165,7 +166,7 @@
                             HorizontalContentAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}"
                             BorderWidth="0" CornerRadius="14">
                       <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="10">
-                        <Image Source="{Binding shortcut.Icon}" Width="26" Height="26" VerticalAlignment="Center" />
+                        <Image id="home-newtab-shortcut-tile-icon" Source="{Binding shortcut.Icon}" Width="26" Height="26" VerticalAlignment="Center" />
                         <Text Column="1" Text="{Binding shortcut.Label}" FontWeight="750" TextWrapping="Wrap"
                               VerticalAlignment="Center" />
                       </Container>
@@ -200,22 +201,56 @@
                 <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
                   <Text Text="{Binding newTab.shortcut.EditorTitle}" FontWeight="800" FontSize="18" TextWrapping="Wrap" />
                   <Button id="home-newtab-shortcut-cancel" Column="1" Action="home.newtab-shortcut-cancel" Content="Cancel"
-                          IsEnabled="{Binding newTab.shortcut.CanEdit}" Chromeless="True" />
+                          IsVisible="{Binding newTab.shortcut.ShowFields}" IsEnabled="{Binding newTab.shortcut.CanEdit}" Chromeless="True" />
                 </Container>
-                <Container Type="Vertical Stack" CellGap="4">
+                <Container id="home-newtab-shortcut-icon-section" Type="Vertical Stack" CellGap="10" IsVisible="{Binding newTab.shortcut.HasIcon}">
+                  <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="10">
+                    <Image id="home-newtab-shortcut-icon-preview" Source="{Binding newTab.shortcut.IconPreview}" Width="30" Height="30"
+                           VerticalAlignment="Center" AccessibleName="Shortcut icon preview" />
+                    <Text Column="1" Text="Shortcut icon" FontWeight="750" VerticalAlignment="Center" />
+                    <Button id="home-newtab-shortcut-icon-open" Column="2" Action="home.newtab-shortcut-icon-open" Content="Change icon"
+                            IsVisible="{Binding newTab.shortcut.ShowFields}" IsEnabled="{Binding newTab.shortcut.CanEdit}" Chromeless="True" />
+                  </Container>
+                  <Container id="home-newtab-shortcut-icon-options" Type="Vertical Stack" CellGap="8"
+                             IsVisible="{Binding newTab.shortcut.IconOptionsOpen}">
+                    <Button id="home-newtab-shortcut-icon-default" Action="home.newtab-shortcut-icon-default" Content="Use destination icon"
+                            IsEnabled="{Binding newTab.shortcut.CanChooseIcon}" Selected="{Binding newTab.shortcut.IconDefaultSelected}"
+                            HorizontalAlignment="Left" />
+                    <Repeat Source="{Binding newTab.shortcut.IconChoices}" As="icon" Key="{Binding icon.Key}" Panel="Wrap">
+                      <Button id="home-newtab-shortcut-icon-choice" Action="ChooseNewTabShortcutIcon"
+                              AutomationId="{Binding icon.AutomationId}"
+                              AccessibleName="{Binding icon.Label}" IsEnabled="{Binding newTab.shortcut.CanChooseIcon}"
+                              Selected="{Binding icon.Selected}" Margin="0 0 8 6">
+                        <Container Type="Horizontal Stack" CellGap="7">
+                          <Image Source="{Binding icon.Source}" Width="19" Height="19" VerticalAlignment="Center" />
+                          <Text Text="{Binding icon.Label}" VerticalAlignment="Center" />
+                        </Container>
+                      </Button>
+                    </Repeat>
+                    <Container Type="Wrap" CellGap="8">
+                      <Button id="home-newtab-shortcut-icon-apply" Action="home.newtab-shortcut-icon-apply" Content="Use icon"
+                              IsEnabled="{Binding newTab.shortcut.CanApplyIcon}" AccentRole="Primary" />
+                      <Button id="home-newtab-shortcut-icon-cancel" Action="home.newtab-shortcut-icon-cancel" Content="Cancel icon"
+                              IsEnabled="{Binding newTab.shortcut.CanChooseIcon}" />
+                    </Container>
+                  </Container>
+                </Container>
+                <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding newTab.shortcut.ShowFields}">
                   <Text Text="Name" FontWeight="700" />
                   <Input id="home-newtab-shortcut-name" Type="Text" AccessibleName="Shortcut name" />
                 </Container>
-                <Container Type="Vertical Stack" CellGap="4">
+                <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding newTab.shortcut.ShowFields}">
                   <Text Text="Destination" FontWeight="700" />
                   <Input id="home-newtab-shortcut-target" Type="Text" AccessibleName="Shortcut destination"
                          PlaceholderText="https://example.com" />
                 </Container>
-                <Repeat Source="{Binding newTab.shortcut.Targets}" As="target" Key="{Binding target.Id}" Panel="Wrap">
-                  <Button id="home-newtab-shortcut-choose" Action="ChooseNewTabShortcutTarget" Content="{Binding target.Label}"
-                          AccessibleName="{Binding target.ChoiceLabel}" IsEnabled="{Binding newTab.shortcut.CanEdit}" Margin="0 0 8 6" />
-                </Repeat>
-                <Container Type="Wrap" CellGap="8" IsVisible="{Binding newTab.shortcut.Existing}">
+                <Container id="home-newtab-shortcut-destinations" Type="Vertical Stack" IsVisible="{Binding newTab.shortcut.ShowFields}">
+                  <Repeat Source="{Binding newTab.shortcut.Targets}" As="target" Key="{Binding target.Id}" Panel="Wrap">
+                    <Button id="home-newtab-shortcut-choose" Action="ChooseNewTabShortcutTarget" Content="{Binding target.Label}"
+                            AccessibleName="{Binding target.ChoiceLabel}" IsEnabled="{Binding newTab.shortcut.CanEdit}" Margin="0 0 8 6" />
+                  </Repeat>
+                </Container>
+                <Container Type="Wrap" CellGap="8" IsVisible="{Binding newTab.shortcut.ShowPlacementActions}">
                   <Button id="home-newtab-shortcut-move-up" Action="home.newtab-shortcut-move-up" Content="Move earlier"
                           IsEnabled="{Binding newTab.shortcut.CanMoveUp}" />
                   <Button id="home-newtab-shortcut-move-down" Action="home.newtab-shortcut-move-down" Content="Move later"
@@ -230,7 +265,8 @@
                   <Button id="home-newtab-shortcut-revert" Action="home.newtab-shortcut-revert" Content="Revert" />
                 </Container>
                 <Button id="home-newtab-shortcut-save" Action="home.newtab-shortcut-save" Content="Save shortcut"
-                        IsEnabled="{Binding newTab.shortcut.CanEdit}" AccentRole="Primary" HorizontalAlignment="Left" />
+                        IsVisible="{Binding newTab.shortcut.ShowFields}" IsEnabled="{Binding newTab.shortcut.CanEdit}"
+                        AccentRole="Primary" HorizontalAlignment="Left" />
               </Container>
             </Container>
             <Container id="home-newtab-widgets-mount" Type="Overlay" IsVisible="False" />

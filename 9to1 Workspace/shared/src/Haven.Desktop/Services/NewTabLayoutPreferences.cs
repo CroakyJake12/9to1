@@ -18,6 +18,12 @@ internal sealed record NewTabShortcutPlacement(string Id, string Label, string T
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Guid? AppId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? IconKey { get; init; }
+
+    internal static IReadOnlyList<(string Key, string Label)> IconChoices { get; } =
+        [("bookmark", "Bookmark"), ("globe", "Globe"), ("folder", "Folder"), ("calendar", "Calendar"),
+            ("file", "Document"), ("chat", "Chat")];
 
     internal const string Apps = "browse://home";
     internal const string Library = "browse://home/library";
@@ -40,6 +46,7 @@ internal sealed record NewTabShortcutPlacement(string Id, string Label, string T
     internal bool IsValid() =>
         Id is { Length: > 0 and <= 64 } && Id.All(character => char.IsAsciiLetterOrDigit(character) || character == '-') &&
         Label is { Length: > 0 and <= MaximumLabelLength } && !Label.Any(char.IsControl) && !string.IsNullOrWhiteSpace(Label) &&
+        (IconKey is null || IconChoices.Any(choice => choice.Key == IconKey)) &&
         (AppId is { } appId
             ? appId != Guid.Empty && AppContentAddress.TryParse(Target, out var app) &&
               app is { Namespace: AppContentNamespace.NativeApp, ResourceSegments.Count: 0 } && app.Value == Target

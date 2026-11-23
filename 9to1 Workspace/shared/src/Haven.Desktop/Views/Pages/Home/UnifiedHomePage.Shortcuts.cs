@@ -62,10 +62,11 @@ internal sealed partial class UnifiedHomePage
             "picker-retry" or "picker-revert" => _shortcutPickerOpen && !NewTabLayoutBusy &&
                 _retryNewTabLayout is not null && _shortcutPendingPick is not null,
             "retry" or "revert" => _shortcutEditorOpen && !NewTabLayoutBusy && _retryNewTabLayout is not null,
-            "cancel" or "save" or "choose" => _shortcutEditorOpen && CanEditShortcuts,
-            "move-up" => _shortcutEditorOpen && CanEditShortcuts && CanMoveShortcut(_editingShortcutId, -1),
-            "move-down" => _shortcutEditorOpen && CanEditShortcuts && CanMoveShortcut(_editingShortcutId, 1),
-            "remove" => _shortcutEditorOpen && CanEditShortcuts && _editingShortcutId is not null,
+            "cancel" or "save" or "choose" => _shortcutEditorOpen && CanEditShortcuts && !_shortcutIconsOpen,
+            "move-up" => _shortcutEditorOpen && CanEditShortcuts && !_shortcutIconsOpen && CanMoveShortcut(_editingShortcutId, -1),
+            "move-down" => _shortcutEditorOpen && CanEditShortcuts && !_shortcutIconsOpen && CanMoveShortcut(_editingShortcutId, 1),
+            "remove" or "icon-open" => _shortcutEditorOpen && CanEditShortcuts && !_shortcutIconsOpen && _editingShortcutId is not null,
+            "icon-select" or "icon-default" or "icon-apply" or "icon-cancel" => _shortcutIconsOpen && CanEditShortcuts,
             _ => false
         };
     }
@@ -109,6 +110,11 @@ internal sealed partial class UnifiedHomePage
                 if (SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == id) is { } selected)
                     OpenNewTabShortcutEditor(selected);
                 return;
+            case "icon-open": OpenShortcutIcons(); return;
+            case "icon-select": if (id is not null) SelectShortcutIcon(id); return;
+            case "icon-default": SelectShortcutIcon(null); return;
+            case "icon-apply": await ApplyShortcutIconAsync(original, token); return;
+            case "icon-cancel": CloseShortcutIcons(); return;
             case "choose":
                 var choice = ShortcutDestinations.FirstOrDefault(destination => destination.Target == id);
                 if (choice.Target is not null && IsShortcutTargetAvailable(choice.Target))
@@ -136,12 +142,20 @@ internal sealed partial class UnifiedHomePage
                 return;
             case "retry":
                 await RetryNewTabLayoutAsync(original, token);
-                if (original.IsAcceptedPublicationCurrent) CompleteNewTabShortcutChange(_shortcutCloseAfterRetry);
+                if (original.IsAcceptedPublicationCurrent)
+                {
+                    if (_shortcutIconPending) CompleteShortcutIconChange();
+                    else CompleteNewTabShortcutChange(_shortcutCloseAfterRetry);
+                }
                 return;
             case "revert":
                 _newTabLayoutPreview = null; _retryNewTabLayout = null; _newTabEditorStatus = null;
                 await RefreshNewTabLayoutAsync(original, token);
-                if (original.IsAcceptedPublicationCurrent) CloseNewTabShortcutEditor();
+                if (original.IsAcceptedPublicationCurrent)
+                {
+                    if (_shortcutIconsOpen) CloseShortcutIcons();
+                    else CloseNewTabShortcutEditor();
+                }
                 return;
         }
     }
@@ -187,6 +201,7 @@ internal sealed partial class UnifiedHomePage
         var previous = _editingShortcutId;
         var resumePicker = returnToPicker && _shortcutAddressFromPicker;
         _shortcutEditorOpen = false;
+        ClearShortcutIconDraft();
         _shortcutAddressFromPicker = false;
         _editingShortcutId = _shortcutStatus = null;
         _shortcutExpected = null;
@@ -244,7 +259,8 @@ internal sealed partial class UnifiedHomePage
             var index = FindShortcutIndex(layout.Shortcuts, editing);
             var duplicate = layout.Shortcuts.Any(shortcut => shortcut.Id != item.Id && shortcut.Target == item.Target);
             if (duplicate) return layout;
-            if (index >= 0) return layout with { Shortcuts = layout.Shortcuts.SetItem(index, item) };
+            if (index >= 0)
+                return layout with { Shortcuts = layout.Shortcuts.SetItem(index, item with { IconKey = layout.Shortcuts[index].IconKey }) };
             return editing is null && layout.Shortcuts.Length < NewTabShortcutPlacement.MaximumCount
                 ? layout with { Shortcuts = layout.Shortcuts.Add(item) }
                 : layout;
@@ -263,7 +279,7 @@ internal sealed partial class UnifiedHomePage
         _shortcutStatus = _retryNewTabLayout is null ? null : _newTabEditorStatus;
         if (close && _retryNewTabLayout is null)
         {
-            if (_shortcutExpected is { } expected && !SavedShortcuts.Contains(expected))
+            if (_shortcutExpected is { } expected && !SavedShortcuts.Any(saved => (saved with { IconKey = null }) == expected))
                 ShowShortcutValidation("Shortcuts changed in another tab. Review the destination and try again.", _shortcutAddress);
             else CloseNewTabShortcutEditor(returnToPicker: false);
         }
@@ -335,7 +351,11 @@ internal sealed partial class UnifiedHomePage
         {
             args.Handled = true;
             if (CanCloseShortcutPicker) CloseShortcutPicker();
-            else if (!_shortcutPickerOpen && CanEditShortcuts) CloseNewTabShortcutEditor();
+            else if (!_shortcutPickerOpen && CanEditShortcuts)
+            {
+                if (_shortcutIconsOpen) CloseShortcutIcons();
+                else CloseNewTabShortcutEditor();
+            }
             return;
         }
         if (!CanReorderNewTabShortcuts || _shortcutDrag is not null || args.KeyModifiers != KeyModifiers.Alt ||
@@ -382,13 +402,12 @@ internal sealed partial class UnifiedHomePage
             new Dictionary<string, object?> { ["Id"] = destination.Target, ["Label"] = destination.Label, ["ChoiceLabel"] = "Use " + destination.Label }).ToArray();
         var tiles = shortcuts.Select((shortcut, index) =>
         {
-            var destination = ShortcutDestinations.FirstOrDefault(destination => destination.Target == shortcut.Target);
             return new Dictionary<string, object?>
             {
                 ["Id"] = shortcut.Id, ["Label"] = IsShortcutAvailable(shortcut) ? shortcut.Label : shortcut.Label + " (unavailable)", ["EditLabel"] = "Edit " + shortcut.Label,
                 ["AutomationId"] = ShortcutAutomationPrefix + shortcut.Id, ["EditAutomationId"] = ShortcutEditAutomationPrefix + shortcut.Id,
                 ["DragLabel"] = "Drag " + shortcut.Label, ["DragAutomationId"] = ShortcutDragAutomationPrefix + shortcut.Id,
-                ["Icon"] = ShortcutIcon(shortcut.Target, destination.Icon ?? "link"),
+                ["Icon"] = CurrentShortcutIcon(shortcut, shortcut.IconKey),
                 ["CanOpen"] = !ShortcutSurfaceOpen && IsShortcutAvailable(shortcut),
                 ["HelpText"] = IsShortcutAvailable(shortcut) ? shortcut.Label : "This destination is unavailable. Use Customise to replace or remove the shortcut.",
                 ["Row"] = index / columns, ["Column"] = index % columns
@@ -402,16 +421,18 @@ internal sealed partial class UnifiedHomePage
         _railBindings.SetNewTabShortcut("AddColumn", shortcuts.Length % columns);
         _railBindings.SetNewTabShortcut("TileHeight", _shortcutTileHeight);
         _railBindings.SetNewTabShortcut("CanAdd", ShortcutProjectionCanAdd);
-        _railBindings.SetNewTabShortcut("CanEdit", CanEditShortcuts);
+        _railBindings.SetNewTabShortcut("CanEdit", CanEditShortcuts && !_shortcutIconsOpen);
         _railBindings.SetNewTabShortcut("Editing", IsNewTabCustomising);
         _railBindings.SetNewTabShortcut("EditorOpen", _shortcutEditorOpen);
-        _railBindings.SetNewTabShortcut("Existing", _editingShortcutId is not null);
+        _railBindings.SetNewTabShortcut("ShowFields", !_shortcutIconsOpen);
+        _railBindings.SetNewTabShortcut("ShowPlacementActions", _editingShortcutId is not null && !_shortcutIconsOpen);
         _railBindings.SetNewTabShortcut("EditorTitle", editorTitle);
-        _railBindings.SetNewTabShortcut("CanMoveUp", CanEditShortcuts && CanMoveShortcut(_editingShortcutId, -1));
-        _railBindings.SetNewTabShortcut("CanMoveDown", CanEditShortcuts && CanMoveShortcut(_editingShortcutId, 1));
+        _railBindings.SetNewTabShortcut("CanMoveUp", CanEditShortcuts && !_shortcutIconsOpen && CanMoveShortcut(_editingShortcutId, -1));
+        _railBindings.SetNewTabShortcut("CanMoveDown", CanEditShortcuts && !_shortcutIconsOpen && CanMoveShortcut(_editingShortcutId, 1));
         _railBindings.SetNewTabShortcut("CanRetry", _shortcutEditorOpen && _retryNewTabLayout is not null && !NewTabLayoutBusy);
         _railBindings.SetNewTabShortcut("Status", _shortcutStatus ?? string.Empty);
         _railBindings.SetNewTabShortcut("HasStatus", !string.IsNullOrEmpty(_shortcutStatus));
         PublishShortcutPicker();
+        PublishShortcutIcons();
     }
 }

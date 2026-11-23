@@ -282,6 +282,123 @@ public sealed partial class UnifiedHomeContentTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(1440, 900)]
+    [InlineData(720, 520)]
+    public async Task New_Tab_shortcuts_icon_preview_and_reset_keep_registered_identity_and_peer_edits(int width, int height)
+    {
+        var paths = new LayoutPaths();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(40));
+        var token = timeout.Token;
+        var request = Request("browse://newtab");
+        var boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
+        var pin = new NewTabShortcutPlacement("registered-boards", boards.Name, "9to1://boards") { AppId = boards.Id };
+        var preferences = CreatePreferences();
+        var peer = CreatePreferences();
+        var before = await preferences.ReadAsync(token);
+        Assert.True((await preferences.SaveAsync(before, before.Layout with { Shortcuts = before.Layout.Shortcuts.Add(pin) }, token)).Saved);
+        Assert.False((pin with { IconKey = "file:///not-a-catalogue-icon" }).IsValid());
+        var navigations = new List<BrowseNavigationIntent>();
+        var page = CreatePage(preferences);
+        var window = new Window { Width = width, Height = height, Content = page };
+        try
+        {
+            await page.InitializeAsync(token);
+            window.Show(); SettleFixtureLayout(window);
+            var seeded = await preferences.ReadAsync(token);
+            await OpenEditor(boards.Name);
+            SettingsControl<TextBox>(page, "home-newtab-shortcut-name").Text = "Uncommitted label";
+            await Click("home-newtab-shortcut-icon-open");
+            Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-icon-default").IsFocused);
+            Assert.False(SettingsControl<Button>(page, "home-newtab-shortcut-icon-apply").IsEnabled);
+            var bookmark = IconChoice("Bookmark");
+            bookmark.BringIntoView();
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, bookmark);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+            Assert.NotNull(SettingsControl<Image>(page, "home-newtab-shortcut-icon-preview").Source);
+            Assert.True(SettingsCategorySelected(IconChoice("Bookmark")));
+            Assert.True(IconChoice("Bookmark").IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-icon-open").IsFocused);
+            Assert.Equal("Uncommitted label", SettingsControl<TextBox>(page, "home-newtab-shortcut-name").Text);
+            Assert.Equal(seeded.Serialized, (await preferences.ReadAsync(token)).Serialized);
+
+            await Click("home-newtab-shortcut-icon-open");
+            await PickBookmark();
+            var peerPin = pin with { Label = "Peer name" };
+            var peerLayout = seeded.Layout with { Shortcuts = seeded.Layout.Shortcuts.SetItem(seeded.Layout.Shortcuts.Length - 1, peerPin) };
+            Assert.True((await peer.SaveAsync(seeded, peerLayout, token)).Saved);
+            await Click("home-newtab-shortcut-icon-apply");
+            Assert.Equal(peerPin, Assert.Single((await preferences.ReadAsync(token)).Layout.Shortcuts, item => item.Id == pin.Id));
+            await Click("home-newtab-shortcut-retry");
+            var saved = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(3, saved.Revision);
+            Assert.Equal(peerPin with { IconKey = "bookmark" }, Assert.Single(saved.Shortcuts, item => item.Id == pin.Id));
+            Assert.Equal("Uncommitted label", SettingsControl<TextBox>(page, "home-newtab-shortcut-name").Text);
+            await Click("home-newtab-shortcut-cancel");
+
+            await page.CloseAndDrainAsync();
+            preferences = CreatePreferences();
+            page = CreatePage(preferences);
+            window.Content = page;
+            await page.InitializeAsync(token);
+            SettleFixtureLayout(window);
+            var tile = Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "home-newtab-shortcut" && AutomationProperties.GetName(button) == peerPin.Label);
+            var tileIcon = Assert.Single(tile.GetVisualDescendants().OfType<Image>(), image => image.Name == "home-newtab-shortcut-tile-icon");
+            Assert.NotNull(tileIcon.Source);
+            await Activate(tile);
+            Assert.Equal(pin.Target, Assert.Single(navigations).Address.Value);
+
+            await OpenEditor(peerPin.Label);
+            await Click("home-newtab-shortcut-icon-open");
+            Assert.True(SettingsCategorySelected(IconChoice("Bookmark")));
+            await Click("home-newtab-shortcut-icon-default");
+            await Click("home-newtab-shortcut-icon-apply");
+            var reset = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(4, reset.Revision);
+            Assert.Equal(peerPin, Assert.Single(reset.Shortcuts, item => item.Id == pin.Id));
+            Assert.Equal(saved.Shortcuts.Take(saved.Shortcuts.Length - 1), reset.Shortcuts.Take(reset.Shortcuts.Length - 1));
+            Assert.Equal(saved.Widgets.AsEnumerable(), reset.Widgets.AsEnumerable());
+        }
+        finally
+        {
+            try { await page.CloseAndDrainAsync(); }
+            finally { window.Close(); Directory.Delete(paths.DataDirectory, recursive: true); }
+        }
+
+        NewTabLayoutPreferences CreatePreferences() => new(new VersionedAtomicSettingsStore(paths), request.ProfileId, _ => Task.CompletedTask);
+        UnifiedHomePage CreatePage(NewTabLayoutPreferences owner) => new(request, new Registry(),
+            () => throw new InvalidOperationException("Icon editing must not construct Dashboard."),
+            () => throw new InvalidOperationException("Icon editing must not construct model discovery."),
+            (intent, _) => { navigations.Add(intent); return true; },
+            (_, _) => throw new InvalidOperationException("Icon editing must not acquire a model."),
+            newTabLayout: owner, shortcutAppAvailable: mode => mode.Id == boards.Id);
+        Button IconChoice(string name) => Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+            button.Name == "home-newtab-shortcut-icon-choice" && AutomationProperties.GetName(button) == name);
+        Task PickBookmark() => Activate(IconChoice("Bookmark"));
+        Task Click(string id) => Activate(SettingsControl<Button>(page, id));
+
+        async Task OpenEditor(string name)
+        {
+            await Click("home-newtab-customise-open");
+            var edit = Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "home-newtab-shortcut-edit" && AutomationProperties.GetName(button) == "Edit " + name);
+            await Activate(edit);
+        }
+
+        async Task Activate(Button button)
+        {
+            Assert.True(button.IsEnabled && button.Focus(NavigationMethod.Tab), button.Name);
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+        }
+    }
+
     [Fact]
     public async Task New_Tab_shortcuts_legacy_defaults_and_saved_empty_are_distinct()
     {
