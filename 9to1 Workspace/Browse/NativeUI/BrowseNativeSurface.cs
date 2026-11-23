@@ -284,10 +284,13 @@ internal sealed class BrowseEngineViewport : ContentControl
     private void OnSceneSizeChanged(object? sender, SizeChangedEventArgs args) => _workspace.SetHostChromeWidth(args.NewSize.Width);
     private void OnSceneResourcesChanged(object? sender, ResourcesChangedEventArgs args) => RefreshHostTabColours();
 
-    private void OnAddressShortcut(object? sender, KeyEventArgs args)
+    private async void OnAddressShortcut(object? sender, KeyEventArgs args)
     {
-        if (args.Handled || args.Key != Key.L || args.KeyModifiers != KeyModifiers.Control ||
-            !_workspace.IsReady || _workspace.HasOpenTransientMenu || _findKeyScope is not { } scope ||
+        var focusAddress = args.Key == Key.L && args.KeyModifiers == KeyModifiers.Control;
+        var discardDraft = args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None &&
+            args.Source is TextBox { Name: "BrowseAddressBox", IsFocused: true };
+        if (args.Handled || !(focusAddress || discardDraft) || !_workspace.IsReady ||
+            _workspace.HasOpenTransientMenu || _findKeyScope is not { } scope ||
             args.Source is not Control source || !scope.IsVisualAncestorOf(source) ||
             TopLevel.GetTopLevel(scope)?.FocusManager?.GetFocusedElement() != source) return;
         // Bubble after child handlers. A popup can route events through its logical owner while
@@ -298,8 +301,17 @@ internal sealed class BrowseEngineViewport : ContentControl
             .FirstOrDefault(control => control.Name == "BrowseNavigationBar");
         var address = toolbar?.GetVisualDescendants().OfType<TextBox>()
             .FirstOrDefault(control => control.Name == "BrowseAddressBox");
-        if (address is not { IsEffectivelyVisible: true, IsEffectivelyEnabled: true, IsReadOnly: false } ||
-            !address.IsFocused && !address.Focus(NavigationMethod.Tab)) return;
+        if (address is not { IsEffectivelyVisible: true, IsEffectivelyEnabled: true, IsReadOnly: false }) return;
+        if (discardDraft)
+        {
+            const string discard = "9to1.Browse.DiscardAddress";
+            if (!ReferenceEquals(source, address) || _workspace.IsActionAvailable(discard) != true) return;
+            args.Handled = true;
+            try { await _workspace.DispatchAsync(discard, null); }
+            catch (Exception failure) { System.Diagnostics.Trace.TraceError("Browse could not discard the address draft: {0}", failure); }
+            return;
+        }
+        if (!address.IsFocused && !address.Focus(NavigationMethod.Tab)) return;
         // CUI reveals its editable value on focus. Select the real route or the retained draft.
         address.SelectAll();
         args.Handled = true;

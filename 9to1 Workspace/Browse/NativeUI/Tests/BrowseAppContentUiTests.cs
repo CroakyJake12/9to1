@@ -116,6 +116,16 @@ public sealed partial class BrowseNativeUiTests
             Press(Key.L, RawInputModifiers.Control);
             Assert.True(address.IsFocused);
             Assert.Equal("9to1://write/document", address.SelectedText);
+            window.KeyTextInput("https://unsent.example/");
+            Press(Key.Escape);
+            Assert.NotNull(workspace.OriginalCommand);
+            await Observe(workspace.OriginalCommand!, window);
+            Assert.Equal("9to1://write/document", address.Text);
+            Assert.Equal("9to1://write/document", chrome.State.SelectedTab.Address.Value);
+            Assert.Same(child, chrome.ObserveOriginalAppContent(chrome.State.SelectedTabId));
+            Assert.True(workspace.TryGetValue("HasAddressDraft", out var hasDraft));
+            Assert.Equal(false, hasDraft);
+            Press(Key.L, RawInputModifiers.Control);
             window.KeyTextInput("9to1://write/keyboard-destination");
             Press(Key.Enter);
             Assert.NotNull(workspace.OriginalCommand);
