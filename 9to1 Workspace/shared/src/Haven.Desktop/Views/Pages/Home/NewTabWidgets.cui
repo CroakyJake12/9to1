@@ -22,12 +22,17 @@
                   ItemRow="{Binding card.Row}" ItemColumn="{Binding card.Column}" ItemColumnSpan="{Binding card.Span}">
             <Container id="newtab-widget-card" Type="Vertical Stack" CellGap="10" Padding="18"
                        Background="{Resource CuiPanelBrush}" CornerRadius="18">
-              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+              <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="8">
                 <Container Type="Vertical Stack" CellGap="4">
                   <Text Text="{Binding card.Source}" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
                   <Text Text="{Binding card.Title}" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
                 </Container>
-                <Button id="newtab-widget-options" Column="1" Action="WidgetOptions" Content="Options"
+                <Button id="newtab-widget-drag" Column="1" Action="WidgetOptions"
+                        AccessibleName="{Binding card.DragName}" IsEnabled="{Binding card.CanDrag}"
+                        ToolTip="Drag to reorder. Press Enter for move options." Width="34" Chromeless="True">
+                  <Image id="newtab-widget-drag-grip" Source="icon:grip" Width="16" Height="16" IsHitTestVisible="False" />
+                </Button>
+                <Button id="newtab-widget-options" Column="2" Action="WidgetOptions" Content="Options"
                         AccessibleName="{Binding card.OptionsName}" IsEnabled="{Binding WidgetCanEdit}" Chromeless="True" />
               </Container>
               <Text Text="{Binding card.Status}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding card.HasStatus}" />
@@ -135,8 +140,8 @@
                       <Text id="newtab-widget-picker-card-source" Text="{Binding entry.Source}" FontSize="12" TextWrapping="Wrap"
                             Foreground="{Resource CuiTextSoftBrush}" />
                     </Container>
-                    <Text id="newtab-widget-picker-card-state" Column="1" Text="{Binding entry.State}" FontSize="19" FontWeight="650"
-                          Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Bottom" />
+                    <Image id="newtab-widget-picker-card-state" Column="1" Source="{Binding entry.StateIcon}"
+                           Width="15" Height="15" VerticalAlignment="Bottom" IsHitTestVisible="False" />
                   </Container>
                 </Container>
               </Button>

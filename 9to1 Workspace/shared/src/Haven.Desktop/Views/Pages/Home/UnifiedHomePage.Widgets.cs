@@ -42,6 +42,14 @@ internal sealed partial class UnifiedHomePage
     private TimeSpan _focusTimerRemaining;
     private TimeSpan _focusTimerDuration = TimeSpan.FromMinutes(25);
     private bool _focusTimerResetRequested;
+    private WidgetDrag? _widgetDrag;
+    private Task? _widgetDragCommit;
+
+    private sealed record WidgetDrag(IPointer Pointer, string SourceId, Control Source, Button Handle, Point Start,
+        bool IsDragging = false, Control? Target = null);
+    private sealed record WidgetReorder(string SourceId, string TargetId);
+
+    private const string WidgetDragPresentation = "New Tab widget drag";
 
     private void RegisterNewTabWidgets(NewTabWidgetSources? sources, bool layoutWritable)
     {
@@ -74,6 +82,10 @@ internal sealed partial class UnifiedHomePage
         SizeChanged += OnWidgetPickerPageSizeChanged;
         DetachedFromVisualTree += OnWidgetPickerDetached;
         AddHandler(KeyDownEvent, OnWidgetKeyDown, RoutingStrategies.Tunnel);
+        _newTabWidgetMount.AddHandler(PointerPressedEvent, OnWidgetPointerPressed, RoutingStrategies.Tunnel);
+        _newTabWidgetMount.AddHandler(PointerMovedEvent, OnWidgetPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _newTabWidgetMount.AddHandler(PointerReleasedEvent, OnWidgetPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _newTabWidgetMount.PointerCaptureLost += OnWidgetPointerCaptureLost;
     }
 
     private static CuiDocument WidgetDocumentFor(CuiDocument document, CuiComponent theme, string page)
@@ -182,8 +194,14 @@ internal sealed partial class UnifiedHomePage
 
     private void OnWidgetKeyDown(object? sender, KeyEventArgs args)
     {
-        if (_section != "newtab" || args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None ||
-            (!_widgetPickerOpen && _widgetOptionsId is null && !_focusTimerResetRequested)) return;
+        if (_section != "newtab" || args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None) return;
+        if (_widgetDrag is not null)
+        {
+            EndWidgetDrag();
+            args.Handled = true;
+            return;
+        }
+        if (!_widgetPickerOpen && _widgetOptionsId is null && !_focusTimerResetRequested) return;
         if (_focusTimerResetRequested)
         {
             _focusTimerResetRequested = false;
@@ -193,9 +211,116 @@ internal sealed partial class UnifiedHomePage
         args.Handled = true;
     }
 
+    private void OnWidgetPointerPressed(object? sender, PointerPressedEventArgs args)
+    {
+        if (_section != "newtab" || _widgetBusy || !CanEditWidgetLayout || _widgetDrag is not null ||
+            !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed || args.Source is not Visual hit)
+            return;
+        var lineage = hit.GetVisualAncestors().Prepend(hit).OfType<Control>().ToArray();
+        if (lineage.OfType<Button>().FirstOrDefault(control => control.Name == "newtab-widget-drag" && control.IsEffectivelyEnabled) is not { } handle ||
+            lineage.FirstOrDefault(control => control.Name == "newtab-widget-card") is not { } source ||
+            GetWidgetId(source) is not { } sourceId || FindWidget(sourceId) is not { IsLocked: false, IsVisible: true })
+            return;
+        _widgetDrag = new(args.Pointer, sourceId, source, handle, args.GetPosition(this));
+        handle.PointerCaptureLost += OnWidgetDragHandleCaptureLost;
+    }
+
+    private void OnWidgetPointerMoved(object? sender, PointerEventArgs args)
+    {
+        if (_widgetDrag is not { } drag || drag.Pointer != args.Pointer) return;
+        if (_section != "newtab" || _widgetBusy || !CanEditWidgetLayout) { EndWidgetDrag(); return; }
+        if (!drag.IsDragging)
+        {
+            var offset = args.GetPosition(this) - drag.Start;
+            if (Math.Abs(offset.X) < 6 && Math.Abs(offset.Y) < 6) return;
+            _widgetDrag = drag = drag with { IsDragging = true };
+            args.Pointer.Capture(_newTabWidgetMount);
+            CuiPropertyPresentation.Set(drag.Source, "Opacity", .66, CuiPropertyLevel.Instance, WidgetDragPresentation, order: 3);
+        }
+        var target = FindWidgetDropTarget(drag, args.GetPosition(this));
+        if (drag.Target != target)
+        {
+            ClearWidgetDropOutline(drag.Target);
+            if (target is not null)
+                CuiPropertyPresentation.Set(target, "Opacity", .78, CuiPropertyLevel.Instance, WidgetDragPresentation, order: 3);
+            _widgetDrag = drag with { Target = target };
+        }
+        args.Handled = true;
+    }
+
+    private void OnWidgetPointerReleased(object? sender, PointerReleasedEventArgs args)
+    {
+        if (_widgetDrag is not { } drag || drag.Pointer != args.Pointer) return;
+        var target = drag.IsDragging ? FindWidgetDropTarget(drag, args.GetPosition(this)) : null;
+        EndWidgetDrag();
+        if (!drag.IsDragging) return;
+        args.Handled = true;
+        if (IsAlive && _section == "newtab" && CanEditWidgetLayout && target is not null && GetWidgetId(target) is { } targetId)
+            _widgetDragCommit = DispatchAsync(widgetActionPrefix + "drag-reorder", new WidgetReorder(drag.SourceId, targetId)).AsTask();
+    }
+
+    private void OnWidgetPointerCaptureLost(object? sender, PointerCaptureLostEventArgs args)
+    {
+        if (_widgetDrag is { } drag && drag.Pointer == args.Pointer && ReferenceEquals(args.Source, _newTabWidgetMount))
+            EndWidgetDrag();
+    }
+
+    private void OnWidgetDragHandleCaptureLost(object? sender, PointerCaptureLostEventArgs args)
+    {
+        if (_widgetDrag is { IsDragging: false } drag && drag.Pointer == args.Pointer)
+            EndWidgetDrag();
+    }
+
+    private Control? FindWidgetDropTarget(WidgetDrag drag, Point point) =>
+        !new Rect(Bounds.Size).Contains(point) ? null :
+        _newTabWidgetMount?.GetVisualDescendants().OfType<Control>().FirstOrDefault(card =>
+            card.Name == "newtab-widget-card" && card.IsEffectivelyVisible && card != drag.Source &&
+            card.TranslatePoint(default, this) is { } origin && new Rect(origin, card.Bounds.Size).Contains(point) &&
+            GetWidgetId(card) is { } targetId && CanReorderWidget(_widgetLayout.Widgets, drag.SourceId, targetId));
+
+    private static string? GetWidgetId(Control card) =>
+        card.DataContext is ICuiBindingContext binding && binding.TryGetValue("card.Id", out var id) ? id as string : null;
+
+    private void EndWidgetDrag()
+    {
+        if (_widgetDrag is not { } drag) return;
+        _widgetDrag = null;
+        drag.Handle.PointerCaptureLost -= OnWidgetDragHandleCaptureLost;
+        ClearWidgetDropOutline(drag.Source);
+        ClearWidgetDropOutline(drag.Target);
+        if (ReferenceEquals(drag.Pointer.Captured, _newTabWidgetMount)) drag.Pointer.Capture(null);
+    }
+
+    private static void ClearWidgetDropOutline(Control? card)
+    {
+        if (card is not null)
+            CuiPropertyPresentation.Remove(card, "Opacity", CuiPropertyLevel.Instance, WidgetDragPresentation);
+    }
+
+    private static bool CanReorderWidget(ImmutableArray<NewTabWidgetPlacement> placements, string sourceId, string targetId)
+    {
+        var origin = FindWidgetIndex(placements, sourceId);
+        var target = FindWidgetIndex(placements, targetId);
+        if (origin < 0 || target < 0 || origin == target || placements[origin] is not { IsVisible: true, IsLocked: false } source ||
+            placements[target] is not { IsVisible: true, IsLocked: false } destination || destination.IsPinned != source.IsPinned)
+            return false;
+        var first = Math.Min(origin, target);
+        var count = Math.Abs(target - origin);
+        return !placements.Skip(first).Take(count).Any(widget => widget.IsVisible && widget.IsLocked && widget.IsPinned == source.IsPinned);
+    }
+
+    private static ImmutableArray<NewTabWidgetPlacement> ReorderWidget(ImmutableArray<NewTabWidgetPlacement> placements, WidgetReorder drag)
+    {
+        if (!CanReorderWidget(placements, drag.SourceId, drag.TargetId)) return placements;
+        var origin = FindWidgetIndex(placements, drag.SourceId);
+        var target = FindWidgetIndex(placements, drag.TargetId);
+        return placements.RemoveAt(origin).Insert(target, placements[origin]);
+    }
+
     partial void ApplyNewTabWidgets(NewTabLayoutPreference layout)
     {
         if (_newTabWidgetSources is null) return;
+        if (_widgetDrag is not null && !_widgetLayout.Widgets.SequenceEqual(layout.Widgets)) EndWidgetDrag();
         _widgetLayout = layout;
         foreach (var key in _widgetContent.Keys.Where(key => !layout.Widgets.Any(widget => widget.Id == key.Id && widget.SourceId == key.Source)).ToArray())
             _widgetContent.Remove(key);
@@ -246,6 +371,9 @@ internal sealed partial class UnifiedHomePage
         // Do not let a stale rendered control issue writes in a different view generation.
         var generation = _selection;
         original.BindPublicationGuard(() => IsAlive && _section == "newtab" && _selection == generation);
+        // Adding makes the focused card temporarily unavailable, then permanently checked.
+        // Keep the modal's keyboard focus on its search field before disabling the action rows.
+        if (action == "pick" && _widgetPickerOpen) FocusWidgetControlNow("newtab-widget-search");
         _widgetBusy = true;
         PublishNewTabWidgets();
         try
@@ -293,6 +421,14 @@ internal sealed partial class UnifiedHomePage
                     _widgetNotice = await original.AwaitAsync(_newTabWidgetSources!.CompleteTaskAsync(task.Placement.SourceId, taskId, token))
                         ?? "Planner completed the task.";
                     if (original.IsAcceptedPublicationCurrent) await RefreshNewTabWidgetsAsync(original, token, task.Placement.Id);
+                    return;
+                case "drag-reorder" when CanEditWidgetLayout && parameter is WidgetReorder drag:
+                    await ChangeNewTabLayoutAsync(layout => layout with { Widgets = ReorderWidget(layout.Widgets, drag) }, original, token);
+                    if (original.IsAcceptedPublicationCurrent)
+                    {
+                        var title = NewTabWidgetSources.Catalogue.FirstOrDefault(item => item.Id == drag.SourceId)?.Title ?? "Unavailable widget";
+                        FocusWidgetControl("newtab-widget-drag", "Reorder " + title);
+                    }
                     return;
                 case "retry" when FindWidget(key) is { IsVisible: true } retry:
                     await RefreshNewTabWidgetsAsync(original, token, retry.Id);
@@ -405,14 +541,17 @@ internal sealed partial class UnifiedHomePage
         else FocusWidgetControl(returnTrigger);
     }
 
-    private void FocusWidgetControl(string id, string? name = null) => Dispatcher.UIThread.Post(() =>
+    private void FocusWidgetControl(string id, string? name = null) => Dispatcher.UIThread.Post(
+        () => FocusWidgetControlNow(id, name), DispatcherPriority.Loaded);
+
+    private void FocusWidgetControlNow(string id, string? name = null)
     {
         if (!IsAlive || _section != "newtab") return;
         Control? scope = _widgetPickerOpen ? _widgetPickerBackdrop : this;
         var target = scope?.GetVisualDescendants().OfType<Control>().FirstOrDefault(control =>
             control.IsEffectivelyVisible && control.Name == id && (name is null || AutomationProperties.GetName(control) == name));
         target?.Focus(NavigationMethod.Tab);
-    }, DispatcherPriority.Loaded);
+    }
 
     private void PublishNewTabWidgets()
     {
@@ -467,7 +606,7 @@ internal sealed partial class UnifiedHomePage
             var source = placement is { Id: "continue-working", SourceId: NewTabWidgetSources.SpacesRecentSource }
                 ? "Spaces" : definition?.Source ?? "Saved layout";
             cards.Add(new(placement.Id, definition?.Title ?? "Unavailable widget", source,
-                row, column, span, status, isTimer, definition is not null && !isTimer, items));
+                row, column, span, status, isTimer, definition is not null && !isTimer, canEdit && !placement.IsLocked, items));
             column += span;
             if (column >= columns) { row++; column = 0; }
         }
@@ -496,11 +635,11 @@ internal sealed partial class UnifiedHomePage
     private static (string Text, string Icon, bool Large) WidgetPreviewFor(string id) => id switch
     {
         "up-next" => ("Upcoming events", "icon:calendar", false),
-        "pinned-note" => ("Notebook", "icon:file-text", false),
-        "focus-timer" => ("25:00", "icon:clock", true),
+        "pinned-note" => ("Notebook", "icon:notes", false),
+        "focus-timer" => ("25:00", "icon:history", true),
         "continue-working" => ("Recent work", "icon:folder", false),
-        "my-tasks" => ("Task list", "icon:list", false),
-        "study-progress" => ("Assignment progress", "icon:graduation-cap", false),
+        "my-tasks" => ("Task list", "icon:tasks", false),
+        "study-progress" => ("Assignment progress", "icon:study", false),
         _ => ("Widget", "icon:apps", false)
     };
 
@@ -515,7 +654,7 @@ internal sealed partial class UnifiedHomePage
             _ => Title + ", already shown"
         };
 
-        public string State => Placement is { IsVisible: true } ? "✓" : "+";
+        public string StateIcon => Placement is { IsVisible: true } ? "icon:check" : "icon:plus";
 
         public bool TryGetValue(string path, out object? value) => (value = path switch
         {
@@ -529,15 +668,16 @@ internal sealed partial class UnifiedHomePage
             nameof(Column) => Column,
             nameof(CanActivate) => CanActivate,
             nameof(ActionName) => ActionName,
-            nameof(State) => State,
+            nameof(StateIcon) => StateIcon,
             _ => null
         }) is not null;
     }
 
     private sealed record WidgetCard(string Id, string Title, string Source, int Row, int Column, int Span, string Status,
-        bool IsTimer, bool CanRefresh, IReadOnlyList<WidgetItemRow> Items) : ICuiBindingContext
+        bool IsTimer, bool CanRefresh, bool CanDrag, IReadOnlyList<WidgetItemRow> Items) : ICuiBindingContext
     {
         public string OptionsName => "Options for " + Title;
+        public string DragName => "Reorder " + Title;
         public bool HasStatus => Status.Length > 0;
 
         public bool TryGetValue(string path, out object? value) => (value = path switch
@@ -553,6 +693,8 @@ internal sealed partial class UnifiedHomePage
             nameof(CanRefresh) => CanRefresh,
             nameof(Items) => Items,
             nameof(OptionsName) => OptionsName,
+            nameof(DragName) => DragName,
+            nameof(CanDrag) => CanDrag,
             nameof(HasStatus) => HasStatus,
             _ => null
         }) is not null;
@@ -655,7 +797,15 @@ internal sealed partial class UnifiedHomePage
     {
         _focusTimerTicker?.Stop();
         if (_focusTimerTicker is not null) _focusTimerTicker.Tick -= OnFocusTimerTick;
-        if (_newTabWidgetMount is not null) _newTabWidgetMount.SizeChanged -= OnWidgetViewportChanged;
+        EndWidgetDrag();
+        if (_newTabWidgetMount is { } mount)
+        {
+            mount.SizeChanged -= OnWidgetViewportChanged;
+            mount.RemoveHandler(PointerPressedEvent, OnWidgetPointerPressed);
+            mount.RemoveHandler(PointerMovedEvent, OnWidgetPointerMoved);
+            mount.RemoveHandler(PointerReleasedEvent, OnWidgetPointerReleased);
+            mount.PointerCaptureLost -= OnWidgetPointerCaptureLost;
+        }
         _widgetBindings.PropertyChanged -= OnWidgetQueryChanged;
         SizeChanged -= OnWidgetPickerPageSizeChanged;
         DetachedFromVisualTree -= OnWidgetPickerDetached;
@@ -668,5 +818,6 @@ internal sealed partial class UnifiedHomePage
 
     private Task WhenWidgetActionsIdleAsync() => Task.WhenAll(
         _widgetLoader?.WhenActionsIdleAsync() ?? Task.CompletedTask,
-        _widgetPickerLoader?.WhenActionsIdleAsync() ?? Task.CompletedTask);
+        _widgetPickerLoader?.WhenActionsIdleAsync() ?? Task.CompletedTask,
+        _widgetDragCommit ?? Task.CompletedTask);
 }

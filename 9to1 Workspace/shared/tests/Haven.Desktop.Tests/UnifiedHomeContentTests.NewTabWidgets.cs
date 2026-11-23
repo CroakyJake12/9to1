@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -44,7 +45,8 @@ public sealed partial class UnifiedHomeContentTests
                     control.Name == id && control.IsEffectivelyVisible &&
                     (accessibleName is null || AutomationProperties.GetName(control) == accessibleName));
                 Assert.True(button.IsEnabled);
-                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                if (id == "newtab-widget-add") ClickSettingsButton(window, button);
+                else button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
                 SettleFixtureLayout(window);
             }
@@ -60,7 +62,28 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Equal(new[] { "up-next", "pinned-note" },
                 (await otherProfile.ReadAsync(token)).Layout.Widgets.Select(item => item.Id));
 
-            await ClickWidget("newtab-widget-picker-close");
+            Assert.True(query.IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.DoesNotContain(page.GetVisualDescendants(), control => control.Name == "newtab-widget-picker");
+            var pickerTrigger = SettingsControl<Button>(page, "newtab-widget-picker-open");
+            Assert.True(pickerTrigger.IsFocused);
+            Button DragHandle(string title) => Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+                button.Name == "newtab-widget-drag" && AutomationProperties.GetName(button) == "Reorder " + title);
+            var sourceHandle = DragHandle("Up next");
+            var targetHandle = DragHandle("Pinned note");
+            sourceHandle.BringIntoView();
+            SettleFixtureLayout(window);
+            var sourcePoint = sourceHandle.TranslatePoint(new Rect(sourceHandle.Bounds.Size).Center, window)!.Value;
+            var targetPoint = targetHandle.TranslatePoint(new Rect(targetHandle.Bounds.Size).Center, window)!.Value;
+            window.MouseMove(sourcePoint);
+            window.MouseDown(sourcePoint, MouseButton.Left);
+            window.MouseMove(targetPoint, RawInputModifiers.LeftMouseButton);
+            window.MouseUp(targetPoint, MouseButton.Left);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
+            Assert.Equal(new[] { "pinned-note", "up-next", "focus-timer" },
+                (await preferences.ReadAsync(token)).Layout.Widgets.Select(item => item.Id));
+
             Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), control => control.Text == "25:00");
             await ClickWidget("newtab-widget-timer-toggle");
             await ClickWidget("newtab-widget-timer-reset");
