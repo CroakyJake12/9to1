@@ -216,6 +216,12 @@ def verify_workflow(w):
             and 0 < limits["max_gpu_temperature_c"] <= 68,
             "GPU jobs require explicit memory and thermal limits",
         )
+    if "startup_timeout_seconds" in limits:
+        require(
+            type(limits["startup_timeout_seconds"]) is int
+            and 0 < limits["startup_timeout_seconds"] <= limits["wall_seconds"],
+            "Startup timeout must fit within the approved wall budget",
+        )
     return w
 
 
@@ -408,6 +414,21 @@ def inference_busy(state):
         )
 
 
+def cycle_owns(root, status, cycle):
+    if status.get("cycle") == cycle:
+        return True
+    marker = Path(root) / "jobs" / name(status["id"]) / "cycle-owner.json"
+    if not marker.is_file():
+        return False
+    bound = json_file(marker)
+    return (
+        bound.get("cycle") == cycle
+        and bound.get("attempt") == status["id"]
+        and bound.get("workflow_digest") == status.get("workflow_digest")
+        and bound.get("absolute_deadline") == status.get("absolute_deadline")
+    )
+
+
 class TrainingJobs:
     def __init__(self, state):
         self.state = Path(state).resolve()
@@ -451,8 +472,50 @@ class TrainingJobs:
         )
         return verify_workflow(rec["manifest"]), rec["digest"]
 
-    def launch(self, workflow, parent=None):
+    def launch(
+        self,
+        workflow,
+        parent=None,
+        *,
+        cycle=None,
+        attempt=None,
+        cutoff=None,
+        directives=None,
+    ):
         w, sha = self.workflow(workflow)
+        if cycle is not None:
+            name(cycle)
+            require(
+                isinstance(attempt, str) and re.fullmatch(r"[0-9a-f]{32}", attempt),
+                "A cycle requires an exact durable attempt identity",
+            )
+            existing = self.root / "jobs" / attempt / "status.json"
+            if existing.is_file():
+                current = json_file(existing)
+                require(
+                    current.get("cycle") == cycle
+                    and current["workflow_digest"] == sha
+                    and current.get("resume_of") == parent
+                    and current.get("absolute_deadline") == cutoff,
+                    "Cycle attempt identity conflict",
+                )
+                return current
+            require(
+                isinstance(cutoff, (float, int)) and time.time() < cutoff,
+                "The cycle training deadline has passed",
+            )
+            if directives:
+                verified_artifact(directives)
+        else:
+            require(
+                attempt is None and directives is None,
+                "Cycle admission fields require a cycle",
+            )
+        if cutoff is not None:
+            require(
+                type(cutoff) in (int, float) and time.time() < cutoff < 32_503_680_000,
+                "Use a future absolute training deadline",
+            )
         before = host_sample(self.state)
         require(
             before["available_disk_bytes"]
@@ -503,7 +566,15 @@ class TrainingJobs:
                 old = json_file(self.job(parent) / "status.json")
                 require(
                     old["workflow_digest"] == sha
-                    and old["phase"] in ("paused", "failed"),
+                    and (not cycle or cycle_owns(self.root, old, cycle))
+                    and (
+                        old["phase"] in ("paused", "failed")
+                        or (
+                            cycle
+                            and old["phase"] == "completed"
+                            and cycle_owns(self.root, old, cycle)
+                        )
+                    ),
                     "Attempt is not eligible for explicit resume",
                 )
                 previous = old.get("checkpoint")
@@ -512,8 +583,18 @@ class TrainingJobs:
                     previous and digest(previous["path"]) == previous["sha256"],
                     "No valid resume checkpoint",
                 )
-            id = uuid.uuid4().hex
+            id = attempt or uuid.uuid4().hex
             job = self.root / "jobs" / id
+            if cycle and (job / "status.json").exists():
+                current = json_file(job / "status.json")
+                require(
+                    current.get("cycle") == cycle
+                    and current["workflow_digest"] == sha
+                    and current.get("resume_of") == parent
+                    and current.get("absolute_deadline") == cutoff,
+                    "Cycle attempt identity conflict",
+                )
+                return current
             out = job / "output"
             (out / "checkpoints").mkdir(parents=True, mode=0o700)
             base = "dulche-training-" + id
@@ -536,6 +617,12 @@ class TrainingJobs:
                 "last_progress_epoch": None,
                 "mean_compute_pct": None,
             }
+            if cutoff is not None:
+                value["absolute_deadline"] = cutoff
+            if cycle:
+                value.update(
+                    cycle=cycle, absolute_deadline=cutoff, cycle_directives=directives
+                )
             atomic_json(job / "status.json", value)
             try:
                 run(
@@ -624,6 +711,15 @@ class TrainingJobs:
             "--setenv=CUDA_VISIBLE_DEVICES="
             + ("" if w["device"] == "cpu" else w["device"]),
         ]
+        if s.get("absolute_deadline"):
+            remaining = int(s["absolute_deadline"] - time.time()) - 5
+            require(remaining > 0, "Cycle deadline reached before worker launch")
+            args += ["-p", f"RuntimeMaxSec={remaining}s"]
+        if s.get("cycle_directives"):
+            args += [
+                "--setenv=DULCHE_CYCLE_DIRECTIVES="
+                + str(verified_artifact(s["cycle_directives"]))
+            ]
         if s["checkpoint"]:
             args += ["--setenv=DULCHE_RESUME_CHECKPOINT=" + s["checkpoint"]["path"]]
         if w["device"] == "cpu":
@@ -645,6 +741,8 @@ class TrainingJobs:
         if "dataset_root" in w:
             read_roots.append(w["dataset_root"])
         read_roots.extend(w.get("read_only_roots", []))
+        if s.get("cycle_directives"):
+            read_roots.append(str(verified_artifact(s["cycle_directives"])))
         if s.get("checkpoint"):
             read_roots.append(s["checkpoint"]["path"])
         minor = None
@@ -777,7 +875,7 @@ class TrainingJobs:
                         live or int(props.get("ExecMainPID") or 0) == pid,
                         "Unverified training process identity",
                     )
-                    s.update(started_epoch=started, phase="running")
+                    s.update(started_epoch=started, ready_epoch=wall, phase="running")
                     s["monitor"] = register_timer(self.state, id, started)
                     atomic_json(path, s)
                 if not live:
@@ -809,9 +907,21 @@ class TrainingJobs:
                         )
                     break
                 if s["started_epoch"] is None and wall - started > min(
-                    180, limits["wall_seconds"]
+                    limits.get("startup_timeout_seconds", 180), limits["wall_seconds"]
                 ):
                     pause_reason = pause_reason or "startup-handshake-timeout"
+                if s.get("absolute_deadline") is not None:
+                    if wall >= s["absolute_deadline"]:
+                        s.update(
+                            phase="failed",
+                            reason="Absolute training cutoff reached before terminal checkpoint",
+                        )
+                        break
+                    if (
+                        wall
+                        >= s["absolute_deadline"] - limits["checkpoint_grace_seconds"]
+                    ):
+                        pause_reason = pause_reason or "absolute-cycle-deadline"
                 if (job / "pause.json").exists():
                     pause_reason = pause_reason or "operator-pause"
                 if now >= deadline:
@@ -1094,6 +1204,12 @@ def health_report(s, job):
     }
 
 
+def cycle_summaries(training_root):
+    from training_cycle import list_cycles
+
+    return list_cycles(Path(training_root).parent)
+
+
 def training_status(state_dir):
     root = Path(state_dir) / "training"
     flows = []
@@ -1133,6 +1249,7 @@ def training_status(state_dir):
     return {
         "state": "unconfigured" if not flows else "configured",
         "registered_workflows": flows,
+        "cycles": cycle_summaries(root),
         "jobs": jobs,
         "monitor_registered": any(j.get("monitor") for j in jobs),
         "detail": "No independently configured training workflow is registered."
@@ -1156,16 +1273,28 @@ def main():
     r.add_argument("--sha256", required=True)
     for verb in ("launch", "supervise", "resume", "pause", "check", "hour-check"):
         sub.add_parser(verb).add_argument("id")
+    for action in ("launch", "resume"):
+        sub.choices[action].add_argument(
+            "--deadline", help="Absolute ISO wall-clock cutoff with timezone"
+        )
     opt = a.parse_args()
+    cutoff = None
+    if getattr(opt, "deadline", None):
+        from training_cycle import deadline
+
+        cutoff = deadline(opt.deadline)
+
     m = TrainingJobs(opt.state)
     if opt.action == "status":
         result = training_status(opt.state)
     elif opt.action == "register":
         result = m.register(opt.manifest, opt.sha256)
     elif opt.action == "launch":
-        result = m.launch(opt.id)
+        result = m.launch(opt.id, cutoff=cutoff)
     elif opt.action == "resume":
-        result = m.launch(json_file(m.job(opt.id) / "status.json")["workflow"], opt.id)
+        result = m.launch(
+            json_file(m.job(opt.id) / "status.json")["workflow"], opt.id, cutoff=cutoff
+        )
     elif opt.action == "supervise":
         result = m.supervise(opt.id)
     elif opt.action == "pause":
