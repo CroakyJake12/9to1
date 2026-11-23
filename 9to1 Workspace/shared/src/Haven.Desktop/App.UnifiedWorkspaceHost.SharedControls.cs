@@ -213,7 +213,7 @@ public sealed partial class App
             var theme = _homeTheme?.Context
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var shellBindings = new SharedPanelShellBindings(this);
-            var shellLoader = new CuiControlLoader();
+            var shellLoader = new CuiControlLoader(new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = true });
             try
             {
                 shellLoader.SetThemePreferenceContext(theme);
@@ -942,7 +942,7 @@ public sealed partial class App
             if (actor is null) return HavenSharedOpenResult.Denied;
             var generation = checked(++_sharedPanelGeneration);
             var bindings = new HavenNotificationsCuiBindings(this, service, generation, actor);
-            var loader = new CuiControlLoader();
+            var loader = new CuiControlLoader(new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = true });
             // Configure binding/theme/action context before loading so the authored Repeat
             // captures this panel's real notification source and the genuine Home theme.
             loader.SetThemePreferenceContext(theme);
@@ -1068,7 +1068,7 @@ public sealed partial class App
                 // Fence publication BEFORE the controller mutates its surface: a retired panel or
                 // actor switch must never publish. Preserves standalone callers (gate null).
                 controller.PublicationGate = () => IsPanelCurrent(generation, actor.ProfileId);
-                var loader = new CuiControlLoader();
+                var loader = new CuiControlLoader(new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = true });
                 loader.SetThemePreferenceContext(theme);
                 loader.SetBindingContext(controller.Surface);
                 loader.SetActionDispatcher(new HomeModelPickerDispatcher(controller, this, generation, actor));

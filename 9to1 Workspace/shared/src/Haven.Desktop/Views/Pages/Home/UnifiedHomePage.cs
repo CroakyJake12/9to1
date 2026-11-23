@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -38,8 +39,10 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private readonly bool _aiAvailable;
     private readonly bool _assistantsAvailable;
     private readonly DesktopOriginalWorkLifetime _work;
-    private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
-    private CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
+    private IDisposable? _interfaceScaleObservation;
+    private double _interfaceScale = 1;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
+    private readonly CuiControlLoader _loader, _appsLoader;
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
     private readonly TextBlock _newTabTime = new(), _newTabDate = new();
@@ -79,7 +82,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Func<HomeSettingsDestinationPage>? createSettings = null,
         Func<HomeLibraryDestinationPage>? createLibrary = null,
         NewTabLayoutPreferences? newTabLayout = null, NewTabWidgetSources? newTabWidgets = null,
-        bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null)
+        bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
@@ -98,12 +102,15 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             _newTabClock.Tick += OnNewTabClockTick;
         }
         _work = new(StopAsync, CleanupAsync);
+        _interfaceTheme = interfaceTheme;
+        _interfaceScale = interfaceTheme?.Current.Accessibility.DisplayScale ?? 1;
+        _loader = CreateHomeInterfaceLoader();
         _appsBindings = new(() => _appsState, DispatchAppsCommandAsync);
         // The apps surface uses a per-page captured registry: its image resolver reconciles each actual
         // rendered brand target against THIS page's bindings, so multiple Home/New Tab pages never
         // register each other's targets. The loader is ( after the bindings exist so the coordinator
         // can be captured. All brand observations are retired before loader teardown (see StopAsync).
-        _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry(_appsBindings));
+        _appsLoader = CreateHomeInterfaceLoader(_appsBindings);
         _assistantsAvailable = assistantsAvailable;
         _shortcutAppAvailable = shortcutAppAvailable;
         _railBindings = new(() => _section, _createSettings is not null, _createLibrary is not null, _assistantsAvailable);
@@ -141,11 +148,18 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Set(_newTabAiUnavailable, "IsVisible", !_aiAvailable);
         RefreshNewTabSearchActions();
         Content = loaded.Root;
-        SizeChanged += (_, args) => _railBindings.SetViewportWidth(args.NewSize.Width);
+        SizeChanged += (_, args) => RefreshInterfaceViewport(args.NewSize.Width);
         if (_newTabClock is not null && _newTabShortcuts is not null)
             _newTabShortcuts.SizeChanged += OnNewTabShortcutsSizeChanged;
         _search.TextChanged += OnSearchTextChanged;
         _search.KeyDown += OnSearchKey;
+    }
+
+    private CuiControlLoader CreateHomeInterfaceLoader(IHomeBrandObservationCoordinator? branding = null)
+    {
+        var loader = new CuiControlLoader(HomeAppsCuiDocument.CreateControlRegistry(branding));
+        if (_interfaceTheme is { } theme) loader.SetThemePreferenceContext(theme);
+        return loader;
     }
 
     internal Task? OriginalInitialization => _initialization;
@@ -580,24 +594,54 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs args)
     {
         base.OnAttachedToVisualTree(args);
+        _interfaceScaleObservation = this.GetResourceObservable(CuiInterfaceScale.ResourceKey)
+            .Subscribe(new NewTabResourceObserver(OnInterfaceScaleChanged));
         RefreshNewTabClock();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs args)
     {
         _newTabClock?.Stop();
+        _interfaceScaleObservation?.Dispose();
+        _interfaceScaleObservation = null;
         base.OnDetachedFromVisualTree(args);
     }
+
+    private void OnInterfaceScaleChanged()
+    {
+        if (!IsAlive) return;
+        var scale = CuiInterfaceScale.For(this);
+        if (_interfaceScale == scale) return;
+        _interfaceScale = scale;
+        RefreshInterfaceViewport(Bounds.Width);
+        if (_newTabShortcuts is { } shortcuts) RefreshNewTabShortcutViewport(shortcuts.Bounds.Width);
+        if (_widgetPickerOpen) ApplyPickerSize();
+        if (_newTabWidgetSources is not null) PublishNewTabWidgets();
+        if (_shortcutPickerOpen)
+        {
+            ApplyShortcutPickerSize();
+            PublishShortcutPicker();
+        }
+    }
+
+    private double InterfaceWidth(double width) => CuiInterfaceScale.LogicalWidth(width, _interfaceScale);
+
+    private void RefreshInterfaceViewport(double width) => _railBindings.SetViewportWidth(InterfaceWidth(width));
 
     private void OnNewTabClockTick(object? sender, EventArgs args) => RefreshNewTabClock();
 
     private void OnNewTabShortcutsSizeChanged(object? sender, SizeChangedEventArgs args)
     {
-        var width = args.NewSize.Width;
-        if (!args.WidthChanged || width <= 0) return;
-        UpdateNewTabShortcutWidth(width);
-        Set(_newTabTime, "FontSize",
-            EffectiveNewTabLayout.Preset == NewTabLayoutPreset.MoreWidgets ? 42d : width >= 520 ? 58d : 46d);
+        if (args.WidthChanged) RefreshNewTabShortcutViewport(args.NewSize.Width);
+    }
+
+    private void RefreshNewTabShortcutViewport(double width)
+    {
+        if (width <= 0) return;
+        var logicalWidth = InterfaceWidth(width);
+        UpdateNewTabShortcutWidth(logicalWidth);
+        Set(_newTabTime, "FontSize", (EffectiveNewTabLayout.Preset == NewTabLayoutPreset.MoreWidgets
+            ? 42d : logicalWidth >= 520 ? 58d : 46d) * _interfaceScale);
     }
 
     private void RefreshNewTabClock()
@@ -796,6 +840,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         // children they describe. Both are retired through the same retained-failure collection as the
         // loaders, so a later close failure cannot resurrect them.
         Attempt(_keyboardTooltips.Dispose);
+        Attempt(() => _interfaceScaleObservation?.Dispose());
         Attempt(_appsBindings.RetireAppearanceObservation);
         Attempt(StopNewTabCustomisation);
         Attempt(StopNewTabShortcutPicker);

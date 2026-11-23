@@ -24,7 +24,7 @@ internal static class HomeAppsCuiDocument
 
     public static CuiControlRegistry CreateControlRegistry(IHomeBrandObservationCoordinator? coordinator = null)
     {
-        var registry = new CuiControlRegistry();
+        var registry = new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = true };
         // The Home surface composes the filled-rounded packaged Home rail SVG family and the
         // owner-app brand PNG identity ahead of the shared stroke catalog, exactly like the Spaces
         // rail. The rail keys render as genuine filled, rounded SVG; a mapped built-in brand app

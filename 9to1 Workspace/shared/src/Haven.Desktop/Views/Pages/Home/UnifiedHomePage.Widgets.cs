@@ -99,7 +99,7 @@ internal sealed partial class UnifiedHomePage
 
     private CuiControlLoader CreateWidgetLoader()
     {
-        var loader = new CuiControlLoader(HomeAppsCuiDocument.CreateControlRegistry());
+        var loader = CreateHomeInterfaceLoader();
         loader.SetBindingContext(_widgetBindings);
         loader.SetActionDispatcher(this);
         return loader;
@@ -169,8 +169,8 @@ internal sealed partial class UnifiedHomePage
     private void ApplyPickerSize()
     {
         if (_widgetPickerFrame is not { } frame) return;
-        frame.Width = Math.Min(690, Math.Max(1, Bounds.Width - 40));
-        frame.Height = Math.Min(570, Math.Max(1, Bounds.Height - 40));
+        frame.Width = Math.Min(690 * _interfaceScale, Math.Max(1, Bounds.Width - 40));
+        frame.Height = Math.Min(570 * _interfaceScale, Math.Max(1, Bounds.Height - 40));
     }
 
     private void OnWidgetPickerDetached(object? sender, VisualTreeAttachmentEventArgs args) => HideWidgetPicker();
@@ -563,7 +563,8 @@ internal sealed partial class UnifiedHomePage
         var query = _widgetBindings.TryGetValue("WidgetQuery", out var currentQuery) ? currentQuery as string : null;
         var filter = query?.Trim() ?? string.Empty;
         var canEdit = CanEditWidgetLayout && !_widgetBusy;
-        var pickerColumns = Bounds.Width >= 760 || Bounds.Width <= 0 ? 3 : Bounds.Width >= 475 ? 2 : 1;
+        var viewportWidth = InterfaceWidth(Bounds.Width);
+        var pickerColumns = viewportWidth >= 760 || viewportWidth <= 0 ? 3 : viewportWidth >= 475 ? 2 : 1;
         var catalogue = NewTabWidgetSources.Catalogue.Select(entry => (Entry: entry, Preview: WidgetPreviewFor(entry.Id))).Where(item =>
             item.Entry.Title.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ||
             item.Entry.Source.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ||
@@ -575,13 +576,13 @@ internal sealed partial class UnifiedHomePage
         _widgetBindings.Set("WidgetCatalogueEmpty", catalogue.Length == 0);
         _widgetBindings.Set("WidgetPickerColumns", string.Join(" ", Enumerable.Repeat("1fr", pickerColumns)));
         _widgetBindings.Set("WidgetPickerRows", string.Join(" ", Enumerable.Repeat("Auto", Math.Max(1, (catalogue.Length + pickerColumns - 1) / pickerColumns))));
-        _widgetBindings.Set("WidgetPickerPadding", Bounds.Width >= 760 ? new Thickness(28, 25) : new Thickness(16));
+        _widgetBindings.Set("WidgetPickerPadding", viewportWidth >= 760 ? new Thickness(28, 25) : new Thickness(16));
         _widgetBindings.Set("WidgetCanEdit", canEdit);
         _widgetBindings.Set("WidgetCanRead", !_widgetBusy);
         _widgetBindings.Set("WidgetNotice", _widgetNotice);
         _widgetBindings.Set("WidgetHasNotice", _widgetNotice.Length > 0);
 
-        var width = _newTabWidgetMount?.Bounds.Width ?? 0;
+        var width = InterfaceWidth(_newTabWidgetMount?.Bounds.Width ?? 0);
         var columns = width >= 820 && _widgetLayout.Preset == NewTabLayoutPreset.MoreWidgets ? 3 : width >= 560 ? 2 : 1;
         var cards = new List<WidgetCard>();
         _widgetItems.Clear();

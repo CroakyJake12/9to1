@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -23,6 +24,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     private readonly bool _aiAvailable;
     private readonly bool _assistantsAvailable;
     private readonly Func<ModeDefinition, bool>? _shortcutAppAvailable;
+    private readonly CuiThemePreferenceContext? _interfaceTheme;
     private readonly Func<BrowseAppContentRequest, HomeEventsDestinationPage>? _events;
     private readonly Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? _settings;
     private readonly Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? _library;
@@ -39,7 +41,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? library = null,
         Func<BrowseAppContentRequest, NewTabLayoutPreferences>? newTabLayout = null,
         Func<BrowseAppContentRequest, NewTabWidgetSources>? newTabWidgets = null,
-        bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null)
+        bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null,
+        CuiThemePreferenceContext? interfaceTheme = null)
     {
         _modes = modes ?? throw new ArgumentNullException(nameof(modes));
         _dashboard = dashboard ?? throw new ArgumentNullException(nameof(dashboard));
@@ -54,6 +57,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         _newTabWidgets = newTabWidgets;
         _assistantsAvailable = assistantsAvailable;
         _shortcutAppAvailable = shortcutAppAvailable;
+        _interfaceTheme = interfaceTheme;
     }
 
     public bool RecognizesNestedCanvas(AppContentAddress address) =>
@@ -166,7 +170,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                                 _owner._library is null ? null : () => _owner._library(_request),
                                 newTabLayout: _request.Address.Authority == "newtab" ? _owner._newTabLayout?.Invoke(_request) : null,
                                 newTabWidgets: _request.Address.Authority == "newtab" ? _owner._newTabWidgets?.Invoke(_request) : null,
-                                assistantsAvailable: _owner._assistantsAvailable, shortcutAppAvailable: _owner._shortcutAppAvailable));
+                                assistantsAvailable: _owner._assistantsAvailable, shortcutAppAvailable: _owner._shortcutAppAvailable,
+                                interfaceTheme: _owner._interfaceTheme));
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));

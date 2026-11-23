@@ -20,7 +20,7 @@ internal sealed partial class UnifiedHomePage
     private string? _shortcutPickerStatus;
     private bool _shortcutPickerOpen, _shortcutAddressFromPicker;
 
-    private double ShortcutPickerWidth => Math.Min(690, Math.Max(1, Bounds.Width - 40));
+    private double ShortcutPickerWidth => Math.Min(690 * _interfaceScale, Math.Max(1, Bounds.Width - 40));
 
     private void OpenShortcutPicker(bool resume = false)
     {
@@ -37,7 +37,7 @@ internal sealed partial class UnifiedHomePage
             using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.NewTabShortcutPicker.cui")
                 ?? throw new InvalidDataException("The New Tab shortcut picker is missing.");
             using var reader = new StreamReader(stream);
-            var loader = new CuiControlLoader(HomeAppsCuiDocument.CreateControlRegistry());
+            var loader = CreateHomeInterfaceLoader();
             loader.SetActionDispatcher(this);
             loader.SetBindingContext(_shortcutPickerBindings);
             loader.BindAuthoredControl("home-newtab-shortcut-picker-search", _ => _shortcutPickerSearch);
@@ -123,7 +123,7 @@ internal sealed partial class UnifiedHomePage
     {
         if (_shortcutPickerFrame is not { } frame) return;
         frame.Width = ShortcutPickerWidth;
-        frame.MaxHeight = Math.Min(748, Math.Max(1, Bounds.Height - 40));
+        frame.MaxHeight = Math.Min(748 * _interfaceScale, Math.Max(1, Bounds.Height - 40));
     }
 
     private bool CanCloseShortcutPicker => _shortcutPickerOpen && !_checkingShortcutApp && !NewTabLayoutBusy && _retryNewTabLayout is null;
@@ -175,7 +175,9 @@ internal sealed partial class UnifiedHomePage
     {
         if (!_shortcutPickerOpen) return;
         var query = _shortcutPickerSearch.Text?.Trim() ?? string.Empty;
-        var columns = ShortcutPickerWidth >= 680 && Bounds.Width >= 900 ? 3 : ShortcutPickerWidth >= 420 ? 2 : 1;
+        var width = InterfaceWidth(ShortcutPickerWidth);
+        var viewportWidth = InterfaceWidth(Bounds.Width);
+        var columns = width >= 680 && viewportWidth >= 900 ? 3 : width >= 420 ? 2 : 1;
         var shortcuts = SavedShortcuts;
         var canAdd = CanEditShortcuts && ShortcutProjectionCanAdd;
         var candidates = EnumerateShortcutCandidates().Where(item =>
@@ -194,7 +196,7 @@ internal sealed partial class UnifiedHomePage
         _shortcutPickerBindings.Set("PickerEmpty", candidates.Length == 0);
         _shortcutPickerBindings.Set("PickerRows", string.Join(' ', Enumerable.Repeat("Auto", Math.Max(1, (candidates.Length + columns - 1) / columns))));
         _shortcutPickerBindings.Set("PickerColumns", string.Join(' ', Enumerable.Repeat("1fr", columns)));
-        _shortcutPickerBindings.Set("PickerPadding", Bounds.Width >= 900 ? new Thickness(28, 24) : new Thickness(16));
+        _shortcutPickerBindings.Set("PickerPadding", viewportWidth >= 900 ? new Thickness(28, 24) : new Thickness(16));
         _shortcutPickerBindings.Set("CanClose", CanCloseShortcutPicker);
         _shortcutPickerBindings.Set("CanAddCustom", canAdd);
         _shortcutPickerBindings.Set("CanRetry", !NewTabLayoutBusy && _retryNewTabLayout is not null && _shortcutPendingPick is not null);

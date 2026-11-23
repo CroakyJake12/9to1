@@ -321,13 +321,13 @@ internal sealed partial class UnifiedHomePage
             using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.NewTabCustomisation.cui")
                 ?? throw new InvalidDataException("The New Tab editor document is missing.");
             using var reader = new StreamReader(stream);
-            var loader = new CuiControlLoader(HomeAppsCuiDocument.CreateControlRegistry());
+            var loader = CreateHomeInterfaceLoader();
             loader.SetActionDispatcher(this);
             loader.SetBindingContext(_newTabEditor);
             loader.BindAuthoredControl("home-newtab-editor-fields", _ =>
             {
                 var fields = new CuiContainerControl("Grid");
-                fields.SizeChanged += (_, args) => SetNewTabEditorColumns(args.NewSize.Width);
+                fields.SizeChanged += (_, args) => SetNewTabEditorColumns(InterfaceWidth(args.NewSize.Width));
                 return fields;
             });
             SetNewTabEditorColumns(0);
@@ -419,7 +419,8 @@ internal sealed partial class UnifiedHomePage
         Set(_newTabShortcutsBlock, "IsVisible", layout.ShowShortcuts);
         Set(_newTabHero, "Margin", layout.Preset == NewTabLayoutPreset.Focus ? new Thickness(0, 26, 0, 10) : default(Thickness));
         Set(_newTabHero, "CellGap", layout.Preset == NewTabLayoutPreset.MoreWidgets ? 8d : 14d);
-        Set(_newTabTime, "FontSize", layout.Preset == NewTabLayoutPreset.MoreWidgets ? 42d : _newTabHero.Bounds.Width >= 520 ? 58d : 46d);
+        Set(_newTabTime, "FontSize", (layout.Preset == NewTabLayoutPreset.MoreWidgets
+            ? 42d : InterfaceWidth(_newTabHero.Bounds.Width) >= 520 ? 58d : 46d) * _interfaceScale);
         ApplyNewTabBackground();
         ApplyNewTabWidgets(layout);
         PublishNewTabShortcuts();
