@@ -83,6 +83,7 @@
     <Compile Include="UnifiedHomeContentTests.cs;UnifiedHomeContentTests.Accent.cs;UnifiedHomeContentTests.ThemeOptions.cs;DesktopOriginalShutdownSequenceTests.cs" />
     <Compile Include="NewTabBackgroundAssetsTests.cs" />
     <Compile Include="UnifiedHomeContentTests.SettingsCatalog.cs;UnifiedHomeContentTests.NewTabCustomisation.cs;UnifiedHomeContentTests.NewTabWidgets.cs" />
+    <Compile Include="UnifiedHomeContentTests.Rail.cs" />
     <Compile Include="FilesWorkspaceSetupTests.cs;OriginalTabTransientPresentationTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />
     <Compile Include="OverlayControllerOriginalLifetimeTests.cs" />

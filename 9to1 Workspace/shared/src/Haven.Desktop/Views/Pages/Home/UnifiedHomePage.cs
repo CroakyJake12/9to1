@@ -24,7 +24,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
 {
     private static readonly AppContentAddress DashboardAddress = AppContentAddress.Parse("browse://home/dashboard");
     private static readonly AppContentAddress AccountSettingsAddress = AppContentAddress.Parse("browse://home/settings/settings-account");
-    private static readonly AppContentAddress AssistantsAddress = AppContentAddress.Parse("9to1://spaces/assistants");
+    private static readonly AppContentAddress AssistantsAddress = SpacesBrowseAppContentSession.CreateAssistantRouteAddress(null);
 
     private readonly BrowseAppContentRequest _request;
     private readonly IModeRegistry _modes;
@@ -524,8 +524,9 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     }
     private void OnDashboardApp(object? sender, ModeDefinition mode)
     {
-        var path = mode.Key.Trim().Equals("assistants", StringComparison.OrdinalIgnoreCase) ? "spaces/assistants" : mode.Key;
-        StartNavigation(AppContentAddress.Parse("9to1://" + path));
+        var address = mode.Key.Trim().Equals("assistants", StringComparison.OrdinalIgnoreCase)
+            ? AssistantsAddress : AppContentAddress.Parse("9to1://" + mode.Key);
+        StartNavigation(address);
     }
     private void OnConversation(object? sender, Conversation conversation) =>
         StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversation.Id:D}"));
