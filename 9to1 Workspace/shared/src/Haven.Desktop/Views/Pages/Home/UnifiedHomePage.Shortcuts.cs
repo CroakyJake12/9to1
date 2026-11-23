@@ -27,7 +27,7 @@ internal sealed partial class UnifiedHomePage
     private readonly TextBox _shortcutName = new(), _shortcutAddress = new();
     private string? _editingShortcutId, _shortcutStatus;
     private NewTabShortcutPlacement? _shortcutExpected;
-    private Task _shortcutKeyboardAction = Task.CompletedTask;
+    private Task _shortcutReorderAction = Task.CompletedTask;
     private bool _shortcutEditorOpen, _shortcutCloseAfterRetry;
     private int _shortcutColumns = 1;
     private double _shortcutTileHeight = 80;
@@ -45,6 +45,7 @@ internal sealed partial class UnifiedHomePage
         _loader.BindAuthoredControl("home-newtab-shortcut-target", _ => _shortcutAddress);
         AddHandler(KeyDownEvent, OnNewTabShortcutKey, RoutingStrategies.Tunnel);
         SizeChanged += OnShortcutPickerSizeChanged;
+        RegisterNewTabShortcutDrag();
         PublishNewTabShortcuts();
     }
 
@@ -54,8 +55,8 @@ internal sealed partial class UnifiedHomePage
         return operation[NewTabShortcutPrefix.Length..] switch
         {
             "open" => !ShortcutSurfaceOpen,
-            "add" => CanEditShortcuts && ShortcutProjectionCanAdd && !ShortcutSurfaceOpen && !_widgetPickerOpen,
-            "edit" => CanEditShortcuts && IsNewTabCustomising && !ShortcutSurfaceOpen && !_widgetPickerOpen,
+            "add" => CanOpenNewTabShortcutEditor && ShortcutProjectionCanAdd,
+            "edit" => CanOpenNewTabShortcutEditor && IsNewTabCustomising,
             "picker-close" => CanCloseShortcutPicker,
             "picker-custom" or "pick" => _shortcutPickerOpen && CanEditShortcuts && ShortcutProjectionCanAdd,
             "picker-retry" or "picker-revert" => _shortcutPickerOpen && !NewTabLayoutBusy &&
@@ -131,7 +132,7 @@ internal sealed partial class UnifiedHomePage
             case "move-up": case "move-down":
                 if (_editingShortcutId is { } edited)
                     await MoveNewTabShortcutAsync(edited, operation.EndsWith("up", StringComparison.Ordinal) ? -1 : 1,
-                        original, token, focusTile: false);
+                        original, token, focusShortcut: null);
                 return;
             case "retry":
                 await RetryNewTabLayoutAsync(original, token);
@@ -270,17 +271,29 @@ internal sealed partial class UnifiedHomePage
     }
 
     private async Task MoveNewTabShortcutAsync(string id, int direction, DesktopOriginalWorkLifetime.Original original,
-        CancellationToken token, bool focusTile)
+        CancellationToken token, Action? focusShortcut)
     {
         if (!CanMoveShortcut(id, direction)) return;
-        await ChangeNewTabLayoutAsync(layout =>
+        if (!await SaveNewTabShortcutOrderAsync(id, layout =>
         {
             var index = FindShortcutIndex(layout.Shortcuts, id);
             var neighbor = index + direction;
             if (index < 0 || neighbor < 0 || neighbor >= layout.Shortcuts.Length) return layout;
             return layout with { Shortcuts = layout.Shortcuts.SetItem(index, layout.Shortcuts[neighbor]).SetItem(neighbor, layout.Shortcuts[index]) };
-        }, original, token);
-        if (!original.IsAcceptedPublicationCurrent) return;
+        }, original, token)) return;
+
+        if (focusShortcut is not null) focusShortcut();
+        else if (!CanMoveShortcut(id, direction))
+            FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
+                .FirstOrDefault(button => button.Name == (direction < 0 ? "home-newtab-shortcut-move-down" : "home-newtab-shortcut-move-up"))
+                ?.Focus(NavigationMethod.Tab));
+    }
+
+    private async Task<bool> SaveNewTabShortcutOrderAsync(string id, Func<NewTabLayoutPreference, NewTabLayoutPreference> change,
+        DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        await ChangeNewTabLayoutAsync(change, original, token);
+        if (!original.IsAcceptedPublicationCurrent) return false;
         if (_retryNewTabLayout is not null && !_shortcutEditorOpen)
         {
             _shortcutEditorOpen = true;
@@ -293,11 +306,7 @@ internal sealed partial class UnifiedHomePage
         if (_retryNewTabLayout is not null)
             FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
                 .FirstOrDefault(button => button.Name == "home-newtab-shortcut-retry")?.Focus(NavigationMethod.Tab));
-        else if (focusTile) FocusNewTabShortcut(id);
-        else if (!CanMoveShortcut(id, direction))
-            FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
-                .FirstOrDefault(button => button.Name == (direction < 0 ? "home-newtab-shortcut-move-down" : "home-newtab-shortcut-move-up"))
-                ?.Focus(NavigationMethod.Tab));
+        return _retryNewTabLayout is null;
     }
 
     private static int FindShortcutIndex(ImmutableArray<NewTabShortcutPlacement> shortcuts, string? id)
@@ -316,6 +325,12 @@ internal sealed partial class UnifiedHomePage
     private void OnNewTabShortcutKey(object? sender, KeyEventArgs args)
     {
         if (_section != "newtab" || args.Handled) return;
+        if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && _shortcutDrag is not null)
+        {
+            EndNewTabShortcutDrag();
+            args.Handled = true;
+            return;
+        }
         if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && ShortcutSurfaceOpen)
         {
             args.Handled = true;
@@ -323,14 +338,19 @@ internal sealed partial class UnifiedHomePage
             else if (!_shortcutPickerOpen && CanEditShortcuts) CloseNewTabShortcutEditor();
             return;
         }
-        if (!IsNewTabCustomising || !CanEditShortcuts || ShortcutSurfaceOpen || args.KeyModifiers != KeyModifiers.Alt ||
-            args.Key is not (Key.Up or Key.Down) || args.Source is not Button button ||
-            AutomationProperties.GetAutomationId(button) is not { } automation ||
-            !automation.StartsWith(ShortcutAutomationPrefix, StringComparison.Ordinal)) return;
+        if (!CanReorderNewTabShortcuts || _shortcutDrag is not null || args.KeyModifiers != KeyModifiers.Alt ||
+            args.Key is not (Key.Up or Key.Down or Key.Left or Key.Right) || args.Source is not Button button ||
+            AutomationProperties.GetAutomationId(button) is not { } automation) return;
+        var fromGrip = automation.StartsWith(ShortcutDragAutomationPrefix, StringComparison.Ordinal);
+        if (!fromGrip && (!automation.StartsWith(ShortcutAutomationPrefix, StringComparison.Ordinal) ||
+            args.Key is Key.Left or Key.Right)) return;
+        var prefix = fromGrip ? ShortcutDragAutomationPrefix : ShortcutAutomationPrefix;
+        var id = automation[prefix.Length..];
+        var direction = args.Key is Key.Up or Key.Left ? -1 : 1;
         args.Handled = true;
-        var direction = args.Key == Key.Up ? -1 : 1;
-        _ = _work.RunAsync(original => MoveNewTabShortcutAsync(automation[ShortcutAutomationPrefix.Length..],
-            direction, original, original.Token, focusTile: true), task => _shortcutKeyboardAction = task);
+        _ = _work.RunAsync(original => MoveNewTabShortcutAsync(id, direction, original, original.Token,
+            () => { if (fromGrip) FocusNewTabShortcutGrip(id); else FocusNewTabShortcut(id); }),
+            task => _shortcutReorderAction = task);
     }
 
     private void FocusNewTabShortcut(string id, bool edit = false) => FocusAfterSelection(() => this.GetVisualDescendants()
@@ -349,8 +369,10 @@ internal sealed partial class UnifiedHomePage
     {
         Set(_newTabCustomise, "IsEnabled", !ShortcutSurfaceOpen);
         Set(_newTabCustomiseDone, "IsEnabled", !NewTabLayoutBusy && _retryNewTabLayout is null && !ShortcutSurfaceOpen);
-        Set(_newTabCustomiseAddWidget, "IsEnabled", CanEditWidgetLayout && !ShortcutSurfaceOpen);
+        PublishNewTabEditorAvailability();
         var shortcuts = SavedShortcuts;
+        if (_shortcutDrag is { } drag && (!CanReorderNewTabShortcuts || shortcuts != drag.Order))
+            EndNewTabShortcutDrag();
         var columns = _shortcutColumns == 3 && ShortcutProjectionCanAdd ? 4 : _shortcutColumns;
         var count = shortcuts.Length + (ShortcutProjectionCanAdd ? 1 : 0);
         var rows = Math.Max(1, (count + columns - 1) / columns);
@@ -365,6 +387,7 @@ internal sealed partial class UnifiedHomePage
             {
                 ["Id"] = shortcut.Id, ["Label"] = IsShortcutAvailable(shortcut) ? shortcut.Label : shortcut.Label + " (unavailable)", ["EditLabel"] = "Edit " + shortcut.Label,
                 ["AutomationId"] = ShortcutAutomationPrefix + shortcut.Id, ["EditAutomationId"] = ShortcutEditAutomationPrefix + shortcut.Id,
+                ["DragLabel"] = "Drag " + shortcut.Label, ["DragAutomationId"] = ShortcutDragAutomationPrefix + shortcut.Id,
                 ["Icon"] = ShortcutIcon(shortcut.Target, destination.Icon ?? "link"),
                 ["CanOpen"] = !ShortcutSurfaceOpen && IsShortcutAvailable(shortcut),
                 ["HelpText"] = IsShortcutAvailable(shortcut) ? shortcut.Label : "This destination is unavailable. Use Customise to replace or remove the shortcut.",
@@ -380,7 +403,6 @@ internal sealed partial class UnifiedHomePage
         _railBindings.SetNewTabShortcut("TileHeight", _shortcutTileHeight);
         _railBindings.SetNewTabShortcut("CanAdd", ShortcutProjectionCanAdd);
         _railBindings.SetNewTabShortcut("CanEdit", CanEditShortcuts);
-        _railBindings.SetNewTabShortcut("CanOpenEditor", CanEditShortcuts && !ShortcutSurfaceOpen && !_widgetPickerOpen);
         _railBindings.SetNewTabShortcut("Editing", IsNewTabCustomising);
         _railBindings.SetNewTabShortcut("EditorOpen", _shortcutEditorOpen);
         _railBindings.SetNewTabShortcut("Existing", _editingShortcutId is not null);

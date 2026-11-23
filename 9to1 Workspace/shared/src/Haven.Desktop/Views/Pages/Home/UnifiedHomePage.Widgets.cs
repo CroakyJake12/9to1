@@ -142,6 +142,7 @@ internal sealed partial class UnifiedHomePage
             _widgetPickerBackdrop.PointerPressed += OnWidgetPickerBackdropPressed;
         }
         _widgetPickerOpen = true;
+        PublishNewTabEditorAvailability();
         _widgetPickerHost = home;
         home.Children.Add(_widgetPickerBackdrop);
         ApplyPickerSize();
@@ -213,7 +214,7 @@ internal sealed partial class UnifiedHomePage
 
     private void OnWidgetPointerPressed(object? sender, PointerPressedEventArgs args)
     {
-        if (_section != "newtab" || _widgetBusy || !CanEditWidgetLayout || _widgetDrag is not null ||
+        if (_section != "newtab" || _widgetBusy || !CanOpenNewTabWidgetEditor || _widgetDrag is not null ||
             !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed || args.Source is not Visual hit)
             return;
         var lineage = hit.GetVisualAncestors().Prepend(hit).OfType<Control>().ToArray();
@@ -380,16 +381,17 @@ internal sealed partial class UnifiedHomePage
         {
             switch (action)
             {
-                case "picker" when CanEditWidgetLayout && !_widgetPickerOpen:
+                case "picker" when CanOpenNewTabWidgetEditor:
                     _widgetOptionsId = null;
                     _widgetPickerTrigger = key == "header" && IsNewTabCustomising
                         ? "home-newtab-customise-add-widget" : "newtab-widget-picker-open";
                     _widgetBindings.Set("WidgetQuery", string.Empty);
                     OpenWidgetPicker();
                     return;
-                case "options" when CanEditWidgetLayout && FindWidget(key) is { IsVisible: true } selected:
+                case "options" when CanOpenNewTabWidgetEditor && FindWidget(key) is { IsVisible: true } selected:
                     HideWidgetPicker();
                     _widgetOptionsId = selected.Id;
+                    PublishNewTabEditorAvailability();
                     _widgetChoices = [];
                     _widgetSourceNotice = string.Empty;
                     try
@@ -555,6 +557,7 @@ internal sealed partial class UnifiedHomePage
 
     private void PublishNewTabWidgets()
     {
+        PublishNewTabEditorAvailability();
         if (_newTabWidgetMount is { } mount)
             Set(mount, "IsVisible", _widgetLayout.Preset != NewTabLayoutPreset.Focus || IsNewTabCustomising);
         var query = _widgetBindings.TryGetValue("WidgetQuery", out var currentQuery) ? currentQuery as string : null;

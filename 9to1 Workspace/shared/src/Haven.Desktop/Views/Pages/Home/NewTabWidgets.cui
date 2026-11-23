@@ -13,7 +13,7 @@
         <Container Type="Grid" ColumnSizes="1fr Auto">
           <Text Text="Widgets" FontSize="18" FontWeight="750" VerticalAlignment="Center" />
           <Button id="newtab-widget-picker-open" Column="1" Action="home.newtab-widget-picker" Content="Add widget"
-                  IsEnabled="{Binding WidgetCanEdit}" Chromeless="True" />
+                  IsEnabled="{Binding WidgetCanOpenEditor}" Chromeless="True" />
         </Container>
         <Text Text="{Binding WidgetNotice}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap"
               IsVisible="{Binding WidgetHasNotice}" />
@@ -27,13 +27,15 @@
                   <Text Text="{Binding card.Source}" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
                   <Text Text="{Binding card.Title}" FontSize="18" FontWeight="750" TextWrapping="Wrap" />
                 </Container>
-                <Button id="newtab-widget-drag" Column="1" Action="WidgetOptions"
-                        AccessibleName="{Binding card.DragName}" IsEnabled="{Binding card.CanDrag}"
-                        ToolTip="Drag to reorder. Press Enter for move options." Width="34" Chromeless="True">
-                  <Image id="newtab-widget-drag-grip" Source="icon:grip" Width="16" Height="16" IsHitTestVisible="False" />
-                </Button>
+                <Container Type="Vertical Stack" Column="1" IsEnabled="{Binding WidgetCanOpenEditor}">
+                  <Button id="newtab-widget-drag" Action="WidgetOptions"
+                          AccessibleName="{Binding card.DragName}" IsEnabled="{Binding card.CanDrag}"
+                          ToolTip="Drag to reorder. Press Enter for move options." Width="34" Chromeless="True">
+                    <Image id="newtab-widget-drag-grip" Source="icon:grip" Width="16" Height="16" IsHitTestVisible="False" />
+                  </Button>
+                </Container>
                 <Button id="newtab-widget-options" Column="2" Action="WidgetOptions" Content="Options"
-                        AccessibleName="{Binding card.OptionsName}" IsEnabled="{Binding WidgetCanEdit}" Chromeless="True" />
+                        AccessibleName="{Binding card.OptionsName}" IsEnabled="{Binding WidgetCanOpenEditor}" Chromeless="True" />
               </Container>
               <Text Text="{Binding card.Status}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" IsVisible="{Binding card.HasStatus}" />
               <Button id="newtab-widget-retry" Action="RetryWidget" Content="Refresh" IsVisible="{Binding card.CanRefresh}" IsEnabled="{Binding WidgetCanRead}"

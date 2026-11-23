@@ -387,7 +387,8 @@ internal sealed partial class UnifiedHomePage
     private void OnNewTabCustomisationKey(object? sender, KeyEventArgs args)
     {
         if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None || _section != "newtab" || !IsNewTabCustomising || ShortcutSurfaceOpen ||
-            _widgetPickerOpen || _widgetOptionsId is not null || _focusTimerResetRequested || _widgetDrag is not null) return;
+            _widgetPickerOpen || _widgetOptionsId is not null || _focusTimerResetRequested ||
+            _widgetDrag is not null || _shortcutDrag is not null) return;
         args.Handled = true;
         if (NewTabLayoutBusy || _retryNewTabLayout is not null) return;
         if (_newTabImageCandidate is not null) CancelNewTabBackgroundPreview();

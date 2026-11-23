@@ -170,10 +170,18 @@
                               VerticalAlignment="Center" />
                       </Container>
                     </Button>
-                    <Button id="home-newtab-shortcut-edit" Action="EditNewTabShortcut" Content="Edit"
-                            AccessibleName="{Binding shortcut.EditLabel}" AutomationId="{Binding shortcut.EditAutomationId}"
-                            Chromeless="True" HorizontalAlignment="Left" IsVisible="{Binding newTab.shortcut.Editing}"
-                            IsEnabled="{Binding newTab.shortcut.CanOpenEditor}" />
+                    <Container Type="Horizontal Stack" CellGap="4" IsVisible="{Binding newTab.shortcut.Editing}">
+                      <Button id="home-newtab-shortcut-drag" Action="EditNewTabShortcut"
+                              AccessibleName="{Binding shortcut.DragLabel}" AutomationId="{Binding shortcut.DragAutomationId}"
+                              ToolTip="Drag to reorder. Alt+arrow moves the shortcut. Enter opens edit and move options."
+                              Width="34" MinHeight="32" Padding="0" CornerRadius="8" Background="{Resource CuiPanelBrush}"
+                              BorderWidth="0" IsEnabled="{Binding newTab.shortcut.CanReorder}">
+                        <Image Source="icon:grip" Width="16" Height="16" IsHitTestVisible="False" />
+                      </Button>
+                      <Button id="home-newtab-shortcut-edit" Action="EditNewTabShortcut" Content="Edit"
+                              AccessibleName="{Binding shortcut.EditLabel}" AutomationId="{Binding shortcut.EditAutomationId}"
+                              Chromeless="True" IsEnabled="{Binding newTab.shortcut.CanOpenEditor}" />
+                    </Container>
                   </Container>
                 </Repeat>
                 <Button id="home-newtab-shortcut-add" Action="home.newtab-shortcut-add"
