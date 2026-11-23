@@ -662,7 +662,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             // Browse admission precedes mounting, which can fail while this source tab is retained.
             // Retrying the same query must open the already prepared draft.
             token.ThrowIfCancellationRequested();
-            if (original.IsAcceptedPublicationCurrent) Queue(draft.Address, original);
+            if (original.IsAcceptedPublicationCurrent) Queue(draft.Address, original, newTab: true);
         }
         finally
         {

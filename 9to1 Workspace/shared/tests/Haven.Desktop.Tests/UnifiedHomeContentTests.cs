@@ -2224,6 +2224,8 @@ public sealed partial class UnifiedHomeContentTests
             {
                 Assert.Equal(request, origin);
                 preparations++;
+                if (query == "Keep this text" && preparations == 3)
+                    throw new UnauthorizedAccessException("The test Space ceased to be available.");
                 entered.TrySetResult(query);
                 return preparations == 1 ? prepared.Task.WaitAsync(token) : Task.FromResult(nextRoute);
             }).CreateSession(request));
@@ -2256,7 +2258,7 @@ public sealed partial class UnifiedHomeContentTests
             await page.WhenActionsIdleAsync().WaitAsync(limit);
             Assert.Equal(1, preparations);
             Assert.Equal(2, navigation.Count);
-            Assert.Equal(new BrowseNavigationIntent(request.TabId, route, OpenInNewTab: false), navigation[^1]);
+            Assert.Equal(new BrowseNavigationIntent(request.TabId, route, OpenInNewTab: true), navigation[^1]);
             Assert.Equal(prompt, search.Text);
             ClickSettingsButton(window, askAi);
             await page.WhenActionsIdleAsync().WaitAsync(limit);
@@ -2272,6 +2274,19 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Equal(2, preparations);
             Assert.Equal(4, navigation.Count);
             Assert.Equal(nextRoute, navigation[^1].Address);
+
+            search.Text = "Keep this text";
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(4, navigation.Count);
+            Assert.Equal("Keep this text", search.Text);
+            Assert.Contains("Your text is still here", SettingsControl<TextBlock>(page, "home-status").Text);
+            Assert.True(askAi.IsEnabled);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(5, navigation.Count);
+            Assert.True(navigation[^1].OpenInNewTab);
         }
         finally
         {
