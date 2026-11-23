@@ -1,5 +1,22 @@
 # Haven Accessibility and keyboard controls
 
+## Home gear, Layout and Accessibility
+
+One primary click on the Home gear opened Appearance on Linux. In Layout, opening Interface scale reached the dedicated Accessibility page at both widths. Its selector previews 100%, 125%, 150% or 175%. A saved 125% reopened at that size in a new process. At 720 × 520, the 175% preview kept Revert and Apply reachable by Tab. Closing the window with that preview open preserved the saved 125%. [Gear before](native/home-gear-before.png) · [Appearance after one click](native/home-gear-opens-appearance.png) · [125% after restart](native/125-after-relaunch.png) · [Revert focused](native/scale-175-focus-revert.png) · [Apply focused](native/scale-175-focus-apply.png)
+
+| Atlas route | 1440 × 900 | 720 × 520 |
+| --- | --- | --- |
+| Layout | [Wide](native/settings-layout-1440x900.png) | [Narrow](native/settings-layout-720x520.png) |
+| Accessibility | [Wide](native/settings-accessibility-1440x900.png) | [Narrow](native/settings-accessibility-720x520.png) |
+
+Each image pairs the pinned Atlas route with a real Haven window at the same viewport. The native profile determines selection and switch state. The recorded High contrast pointer action and Reduced motion Space action each advanced the profile revision once. [Runtime hashes and native receipts](native/native-scale-and-shortcut.json) · [Switch gestures](native/switch-gestures.jsonl)
+
+## Dashboard and New Tab
+
+At a fixed 1024 × 900, a 150% preview stacked Today and Study and resized the existing widget cards. Revert returned identical pixels. The widget’s text, placement and saved profile survived the preview. [100%](dashboard/dashboard-100.png) · [150%](dashboard/dashboard-150.png)
+
+The New Tab tile menu offers Open, Open in new tab, Rename shortcut, Change icon, Move and Remove shortcut. Owning Skia tests exercised right-click, the Menu key, Shift+F10, Escape, and guarded removal at both widths. The X11 icon captures show an earlier build saving Bookmark on the registered Boards shortcut while retaining its identity. That build lost Escape focus after pointer selection. The later focused tests cover the correction. The pinned Atlas specifies Change icon without supplying an editable palette screen. [Saved icon](native/icon-bookmark-saved-earlier-build.png) · [Earlier Escape failure](native/icon-immediate-escape-earlier-build-failure.png)
+
 ## Keyboard reference
 
 From the Home gear, Settings search opens Keyboard Shortcuts, Navigation and Menus & focus. A disposable Linux profile retained byte-identical preferences throughout the two keyboard tests. The key labels describe the current default controls. Editing assignments requires a shortcut preference owner.
