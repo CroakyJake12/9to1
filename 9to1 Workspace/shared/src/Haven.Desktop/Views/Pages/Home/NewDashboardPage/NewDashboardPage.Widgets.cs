@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
@@ -25,7 +26,7 @@ public sealed partial class NewDashboardPage
     private IDashboardRepository? _widgetDashboard;
     private IDashboardLayoutRepository? _widgetLegacyLayout;
     private IReadOnlyList<IDashboardTileProvider> _widgetProviders = [];
-    private readonly DashboardWidgetCanvas _widgetCanvas = new();
+    private readonly DashboardWidgetCanvas _widgetCanvas;
     private readonly Dictionary<string, WidgetCacheEntry> _widgetCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _widgetSaveGate = new(1, 1);
     private DashboardWidgetLayoutState? _widgetLayoutState;
@@ -53,7 +54,13 @@ public sealed partial class NewDashboardPage
         IDashboardRepository dashboard,
         IDashboardLayoutRepository dashboardLayout,
         IEnumerable<IDashboardTileProvider> providers)
-        : this(bus, modes, usage, pins, conversations, settings)
+        : this(bus, modes, usage, pins, conversations, settings, dashboard, dashboardLayout, providers, null) { }
+
+    internal NewDashboardPage(HavenEventBus bus, IModeRegistry modes, IModeUsageRepository usage,
+        IPinRepository pins, IConversationRepository conversations, IVersionedSettingsStore settings,
+        IDashboardRepository dashboard, IDashboardLayoutRepository dashboardLayout,
+        IEnumerable<IDashboardTileProvider> providers, CuiThemePreferenceContext? interfaceTheme)
+        : this(bus, modes, usage, pins, conversations, settings, interfaceTheme)
     {
         _widgetDashboard = dashboard;
         _widgetLegacyLayout = dashboardLayout;

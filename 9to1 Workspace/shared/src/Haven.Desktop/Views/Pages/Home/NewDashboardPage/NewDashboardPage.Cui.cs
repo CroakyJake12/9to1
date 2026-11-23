@@ -3,6 +3,7 @@ using Avalonia.Layout;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -26,10 +27,10 @@ public sealed partial class NewDashboardPage
     private CuiContainerControl? _dashboardRoot;
     private readonly CuiViewModel _dashboardBindings = new();
 
-    private void LoadDashboardCui()
+    private void LoadDashboardCui(CuiThemePreferenceContext? interfaceTheme)
     {
         var document = DashboardCuiDocument.Fragment("home-dashboard");
-        var loader = _dashboardLoader = new CuiControlLoader();
+        var loader = _dashboardLoader = DashboardCuiDocument.CreateLoader(interfaceTheme);
         _dashboardBindings.Set("IsCustomizing", false);
         _dashboardBindings.Set("CustomiseLabel", "Customise");
         _dashboardBindings.Set("ShowPageTabs", false);
@@ -64,6 +65,31 @@ public sealed partial class NewDashboardPage
                 string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
         Content = loaded.Root;
         loader.WireBindings(loaded.Root);
+        SizeChanged += (_, args) => ApplyDashboardWidth(args.NewSize.Width);
+        if (interfaceTheme is not null)
+        {
+            _dashboardRoot!.ResourcesChanged += (_, _) => ApplyDashboardScale();
+            ApplyDashboardScale();
+        }
+    }
+
+    private void ApplyDashboardScale()
+    {
+        if (_disposed || _dashboardRoot is null) return;
+        var scale = CuiInterfaceScale.For(_dashboardRoot);
+        if (_widgetCanvas.InterfaceScale == scale) return;
+        _widgetCanvas.SetInterfaceScale(scale);
+        ApplyDashboardWidth(Bounds.Width);
+    }
+
+    private void ApplyDashboardWidth(double physicalWidth)
+    {
+        var width = CuiInterfaceScale.LogicalWidth(physicalWidth, _widgetCanvas.InterfaceScale);
+        if (_homeBriefingEnabled) ApplyBriefingWidth(width);
+        var columns = width >= 1000 ? 3 : width >= 680 ? 2 : 1;
+        if (columns == _modelColumns) return;
+        _modelColumns = columns;
+        PublishRecommendedModelRows();
     }
 
     private static void SetDashboardValue(Control control, string property, object? value) =>

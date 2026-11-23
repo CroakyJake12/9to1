@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -13,11 +14,101 @@ using Haven.Desktop.Events;
 using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Home;
 using Haven.Desktop.Services;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Tests;
 
 public sealed class HomeDashboardCuiRenderTests
 {
+    [AvaloniaFact]
+    public async Task Dashboard_interface_scale_reflows_the_briefing_and_custom_widget_without_writing_its_layout()
+    {
+        var token = TestContext.Current.CancellationToken;
+        const string layoutKey = "dashboard.widget-layouts.v1", customKey = "dashboard.custom-widgets.v1";
+        var directory = Directory.CreateTempSubdirectory("haven-dashboard-scale-");
+        try
+        {
+            var preferenceFile = Path.Combine(directory.FullName, "settings.json");
+            await File.WriteAllTextAsync(preferenceFile, "{}", token);
+            await using var owner = new NativeHomeThemePreferences(preferenceFile, new(HomeDataScope.DeviceLocal, "dashboard"),
+                UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), action => Avalonia.Threading.Dispatcher.UIThread.Post(action));
+            await owner.RefreshAsync();
+            var choices = Assert.IsType<Dictionary<string, object?>[]>(owner.SettingsBindings()["HomeInterfaceScaleChoices"]);
+            var scale150 = choices.Single(choice => Equals(choice["Name"], "150%"))["Target"];
+            using var bus = new HavenEventBus();
+            var settings = new TestSettings();
+            var widget = new DashboardCustomWidgetDefinition(Guid.NewGuid().ToString("N"), "Garden notes", "Water on Friday", "A saved detail");
+            var savedWidget = new DashboardCustomWidgetState(1, new() { ["home"] = [widget] });
+            var definitions = BuiltInDashboardTiles.Create().Select(provider => provider.Definition)
+                .Append(NewDashboardPage.ToCustomWidgetView(widget).Definition);
+            var canonical = DashboardWidgetLayoutEngine.EnsurePlacements(definitions, [new(widget.Key, 3, 5, 2, 2)]);
+            var savedLayout = new DashboardWidgetLayoutState(1, new() { ["home"] = canonical.ToList() }, UsesHomeBriefing: true);
+            await settings.SetAsync(customKey, savedWidget, token);
+            await settings.SetAsync(layoutKey, savedLayout, token);
+            using var page = new NewDashboardPage(bus, null!, null!, null!, null!, settings, new SnapshotRepository(),
+                new TestLayout(), [], owner.Context);
+            page.EnableHomeBriefing(null, null);
+            var window = new Window { Content = page, Width = 1024, Height = 900 };
+            void Capture(string state)
+            {
+                if (Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR") is not { Length: > 0 } captures) return;
+                using var bitmap = window.CaptureRenderedFrame();
+                Assert.NotNull(bitmap);
+                bitmap.Save(Path.Combine(captures, $"dashboard-interface-scale-{state}.png"));
+            }
+            try
+            {
+                window.Show();
+                await page.ActivateAsync(token);
+                SettleDashboardLayout(window);
+                var all = page.GetVisualDescendants().OfType<Control>().ToArray();
+                var today = all.Single(control => control.Name == "dashboard-today");
+                var study = all.Single(control => control.Name == "dashboard-study-week");
+                var heading = all.OfType<TextBlock>().Single(text => text.Name == "dashboard-briefing-title");
+                var canvas = Assert.Single(all.OfType<DashboardWidgetCanvas>());
+                var frame = canvas.Children.Single(child => child.GetVisualDescendants().OfType<TextBlock>().Any(text => text.Text == widget.Title));
+                var title = frame.GetVisualDescendants().OfType<TextBlock>().Single(text => text.Text == widget.Title);
+                var baselineFont = title.FontSize;
+                var baselineLeft = Canvas.GetLeft(frame);
+                var baselineHeight = frame.Height;
+                var placements = canvas.Placements.ToArray();
+                Assert.True(baselineLeft > 0 && baselineHeight > 0);
+                Assert.Equal(34, heading.FontSize);
+                Assert.True(study.TranslatePoint(default, page)!.Value.X > today.TranslatePoint(default, page)!.Value.X);
+                Capture("100");
+
+                var previewPage = new object();
+                Assert.True(owner.TryPreviewInterfaceScale(previewPage, scale150));
+                SettleDashboardLayout(window);
+                Assert.Equal(51, heading.FontSize);
+                Assert.Equal(baselineFont * 1.5, title.FontSize);
+                Assert.True(study.TranslatePoint(default, page)!.Value.Y > today.TranslatePoint(default, page)!.Value.Y);
+                Assert.Equal(today.TranslatePoint(default, page)!.Value.X, study.TranslatePoint(default, page)!.Value.X, 1);
+                Assert.Equal(0, Canvas.GetLeft(frame));
+                Assert.Equal(baselineHeight * 1.5, frame.Height);
+                Assert.Equal(canvas.Bounds.Width, frame.Width, 1);
+                Assert.Equal(placements, canvas.Placements);
+                Capture("150-preview");
+
+                owner.EndInterfaceScalePreview(previewPage);
+                SettleDashboardLayout(window);
+                Assert.Equal(34, heading.FontSize);
+                Assert.Equal(baselineFont, title.FontSize);
+                Assert.Equal(baselineLeft, Canvas.GetLeft(frame), 1);
+                Assert.Equal(baselineHeight, frame.Height);
+                Assert.Contains(frame, canvas.Children);
+                Assert.True(study.TranslatePoint(default, page)!.Value.X > today.TranslatePoint(default, page)!.Value.X);
+                Assert.Equal(placements, canvas.Placements);
+                Assert.Same(savedWidget, await settings.GetAsync<DashboardCustomWidgetState>(customKey, token));
+                Assert.Same(savedLayout, await settings.GetAsync<DashboardWidgetLayoutState>(layoutKey, token));
+                Assert.Equal("{}", await File.ReadAllTextAsync(preferenceFile, token));
+                Capture("reverted");
+            }
+            finally { window.Close(); await page.CloseAndDrainAsync(); }
+        }
+        finally { directory.Delete(recursive: true); }
+    }
+
     [AvaloniaTheory]
     [InlineData(1440, 900)]
     [InlineData(720, 520)]

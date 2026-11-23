@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
@@ -46,6 +47,11 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
         IPinRepository pins,
         IConversationRepository conversations,
         IVersionedSettingsStore settings)
+        : this(bus, modes, usage, pins, conversations, settings, null) { }
+
+    private NewDashboardPage(HavenEventBus bus, IModeRegistry modes, IModeUsageRepository usage,
+        IPinRepository pins, IConversationRepository conversations, IVersionedSettingsStore settings,
+        CuiThemePreferenceContext? interfaceTheme)
     {
         _homeWork = new(StopHomeWorkAsync, DetachHomeWorkAsync);
         _bus = bus;
@@ -55,7 +61,8 @@ public sealed partial class NewDashboardPage : UserControl, IActivatablePage, ID
         _conversations = conversations;
         _settings = settings;
         InitializeComponent();
-        LoadDashboardCui();
+        _widgetCanvas = new(interfaceTheme);
+        LoadDashboardCui(interfaceTheme);
 
         _clock = new DispatcherTimer(TimeSpan.FromMinutes(1), DispatcherPriority.Background, async (_, _) =>
         {

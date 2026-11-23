@@ -741,7 +741,8 @@ public sealed partial class App
                 _services.GetRequiredService<IModeRegistry>(), _services.GetRequiredService<IModeUsageRepository>(),
                 _services.GetRequiredService<IPinRepository>(), _services.GetRequiredService<IConversationRepository>(),
                 _services.GetRequiredService<IVersionedSettingsStore>(), _services.GetRequiredService<IDashboardRepository>(),
-                _services.GetRequiredService<IDashboardLayoutRepository>(), _services.GetServices<IDashboardTileProvider>());
+                _services.GetRequiredService<IDashboardLayoutRepository>(), _services.GetServices<IDashboardTileProvider>(),
+                _homeTheme?.Context);
             if (_services.GetService<IProviderModelClient>() is { } routedModels &&
                 _services.GetService<HomeModelSelectionSource>() is { } selection)
                 page.EnableDashboardAssistant(new DashboardEditPlanner(routedModels, selection));

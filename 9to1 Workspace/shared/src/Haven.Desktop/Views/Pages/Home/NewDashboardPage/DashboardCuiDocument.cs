@@ -1,5 +1,7 @@
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -7,6 +9,13 @@ namespace Haven.Desktop.Views.Pages.Home;
 internal static class DashboardCuiDocument
 {
     private static readonly Lazy<CuiDocument> Source = new(Read);
+
+    internal static CuiControlLoader CreateLoader(CuiThemePreferenceContext? interfaceTheme)
+    {
+        var loader = new CuiControlLoader(new CuiControlRegistry { ScaleAuthoredInterfaceMetrics = interfaceTheme is not null });
+        if (interfaceTheme is not null) loader.SetThemePreferenceContext(interfaceTheme);
+        return loader;
+    }
 
     internal static CuiDocument Fragment(string id)
     {

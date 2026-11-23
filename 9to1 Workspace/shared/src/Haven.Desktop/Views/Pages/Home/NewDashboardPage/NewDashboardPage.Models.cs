@@ -35,13 +35,6 @@ public sealed partial class NewDashboardPage
         _dashboardBindings.Set("ModelStatus", "Loading recommendations…");
         _dashboardBindings.Set("ModelColumns", "1fr");
         _dashboardBindings.Set("RecommendedModels", Array.Empty<Dictionary<string, object?>>());
-        SizeChanged += (_, _) =>
-        {
-            var columns = Bounds.Width >= 1000 ? 3 : Bounds.Width >= 680 ? 2 : 1;
-            if (columns == _modelColumns) return;
-            _modelColumns = columns;
-            PublishRecommendedModelRows();
-        };
     }
 
     private Task RefreshDeviceModelsAsync(CancellationToken token)

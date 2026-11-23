@@ -22,8 +22,7 @@ public sealed partial class NewDashboardPage
         _briefingStudy = study;
         _dashboardBindings.Set("HasBriefingTasks", planner is not null);
         _dashboardBindings.Set("HasBriefingStudy", study is not null);
-        SizeChanged += (_, args) => ApplyBriefingWidth(args.NewSize.Width);
-        ApplyBriefingWidth(Bounds.Width);
+        ApplyDashboardWidth(Bounds.Width);
     }
 
     internal void ConfigureHomeBriefingLibrary(bool available)
