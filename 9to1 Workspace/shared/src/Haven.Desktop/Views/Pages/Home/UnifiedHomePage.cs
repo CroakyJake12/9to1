@@ -1,3 +1,5 @@
+using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
@@ -37,8 +39,10 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
+    private readonly TextBlock _newTabTime = new(), _newTabDate = new();
     private readonly TextBox _search = new();
     private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "Ask AI" }, SelectedIndex = 0 };
+    private readonly DispatcherTimer? _newTabClock;
     private readonly HomeAppsCuiBindings _appsBindings;
     private readonly HomeRailCuiBindings _railBindings;
     private readonly CuiKeyboardTooltipHost _keyboardTooltips;
@@ -78,6 +82,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 request.Address.ResourceSegments[0] is "dashboard" or "models" or "events" or "settings" or "library" => request.Address.ResourceSegments[0],
             _ => "apps"
         };
+        if (_section == "newtab")
+        {
+            _newTabClock = new DispatcherTimer(DispatcherPriority.Background);
+            _newTabClock.Tick += OnNewTabClockTick;
+        }
         _work = new(StopAsync, CleanupAsync);
         _appsBindings = new(() => _appsState, DispatchAppsCommandAsync);
         // The apps surface uses a per-page captured registry: its image resolver reconciles each actual
@@ -101,6 +110,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _loader.BindAuthoredControl("home-status", _ => _status);
         _loader.BindAuthoredControl("home-search", _ => _search);
         _loader.BindAuthoredControl("home-search-mode", _ => _searchMode);
+        _loader.BindAuthoredControl("home-newtab-time", _ => _newTabTime);
+        _loader.BindAuthoredControl("home-newtab-date", _ => _newTabDate);
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The shared Home document could not be rendered.");
@@ -264,6 +275,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
                 .SingleOrDefault(button => button.Name == focusRailButton)?.Focus(NavigationMethod.Tab));
         Set(_searchRow!, "IsVisible", section == "newtab");
+        RefreshNewTabClock();
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
         Set(_heading, "IsVisible", section != "settings");
@@ -447,6 +459,40 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     {
         if (IsAlive) _ = _work.RunAsync(original => { Queue(address, original); return Task.CompletedTask; });
     }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs args)
+    {
+        base.OnAttachedToVisualTree(args);
+        RefreshNewTabClock();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs args)
+    {
+        _newTabClock?.Stop();
+        base.OnDetachedFromVisualTree(args);
+    }
+
+    private void OnNewTabClockTick(object? sender, EventArgs args) => RefreshNewTabClock();
+
+    private void RefreshNewTabClock()
+    {
+        if (_newTabClock is null) return;
+        if (!IsAlive || _section != "newtab" || !this.IsAttachedToVisualTree())
+        {
+            _newTabClock.Stop();
+            return;
+        }
+
+        var now = DateTimeOffset.Now;
+        var culture = CultureInfo.CurrentCulture;
+        Set(_newTabTime, "Text", now.ToString("t", culture));
+        Set(_newTabDate, "Text", now.ToString("D", culture));
+        // Avalonia schedules in whole milliseconds. Round past the minute boundary.
+        var ticksUntilNextMinute = TimeSpan.TicksPerMinute - now.Ticks % TimeSpan.TicksPerMinute;
+        _newTabClock.Interval = TimeSpan.FromTicks(ticksUntilNextMinute + TimeSpan.TicksPerMillisecond);
+        _newTabClock.Start();
+    }
+
     private void OnSearchKey(object? sender, KeyEventArgs args)
     {
         if (args.Key != Key.Enter || !IsAlive) return;
@@ -532,6 +578,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private async Task StopAsync()
     {
         Dispatcher.UIThread.VerifyAccess(); _stopping = true; ++_selection;
+        if (_newTabClock is not null)
+        {
+            _newTabClock.Stop();
+            _newTabClock.Tick -= OnNewTabClockTick;
+        }
         List<Exception> failures = [];
         void Attempt(Action action) { try { action(); } catch (Exception error) { failures.Add(error); } }
         void Acquire(Func<Task> action) => Attempt(() => _stopSources.Add(action()));

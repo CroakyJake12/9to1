@@ -1785,6 +1785,12 @@ public sealed class UnifiedHomeContentTests
         {
             window.Show();
             window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var clock = SettingsControl<TextBlock>(page, "home-newtab-time");
+            var date = SettingsControl<TextBlock>(page, "home-newtab-date");
+            var now = DateTimeOffset.Now;
+            var previousMinute = now.AddMinutes(-1);
+            Assert.Contains(clock.Text, new[] { now.ToString("t"), previousMinute.ToString("t") });
+            Assert.Contains(date.Text, new[] { now.ToString("D"), previousMinute.ToString("D") });
             var mode = page.GetVisualDescendants().OfType<ComboBox>().Single(item => item.Name == "home-search-mode");
             var askAi = Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1));
             Assert.False(askAi.IsEnabled);
@@ -1794,6 +1800,7 @@ public sealed class UnifiedHomeContentTests
             var searchOrigin = search.TranslatePoint(default, window)!.Value;
             var submitOrigin = submit.TranslatePoint(default, window)!.Value;
             var modeOrigin = mode.TranslatePoint(default, window)!.Value;
+            Assert.True(date.TranslatePoint(new Point(0, date.Bounds.Height), window)!.Value.Y <= searchOrigin.Y);
             Assert.True(searchOrigin.X + search.Bounds.Width <= submitOrigin.X + .5);
             Assert.True(searchOrigin.Y + search.Bounds.Height <= modeOrigin.Y + .5);
             Assert.True(search.Bounds.Width >= 150);
