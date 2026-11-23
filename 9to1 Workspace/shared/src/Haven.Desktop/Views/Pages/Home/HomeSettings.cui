@@ -61,6 +61,7 @@
               <Text Text="{Binding SettingsCatalogDescription}" IsVisible="{Binding SettingsShowCatalogDescription}"
                     TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
+            <Container id="home-settings-keyboard-host" Type="Overlay" IsVisible="{Binding SettingsCatalogHasKeyboard, fallback=false}" />
             <Container Type="Vertical Stack" CellGap="4">
               <Text id="home-settings-global-general-section" Text="Across 9to1" IsVisible="{Binding SettingsGlobalGeneralSelected}"
                     FontSize="18" FontWeight="750" Margin="12 16 0 12" />

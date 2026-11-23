@@ -22,7 +22,7 @@ internal sealed class HomeSettingsAuthorityRefusal(string message) : Exception(m
 
 /// <summary>The same canonical Home Appearance fragment and native preference owner used by
 /// standalone Home. This tab borrows the source/context; it never disposes either or owns a file.</summary>
-internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
+internal sealed partial class HomeSettingsDestinationPage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
 {
     private readonly NativeHomeThemePreferences _source;
     private readonly NativeHomeThemeCreator _creator;
@@ -447,15 +447,21 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var appearance = home.Components
             .SelectMany(component => component.DescendantsAndSelf())
             .Single(component => component.AuthoredId == "home-appearance-settings");
+        var keyboard = LoadKeyboardReference();
         return document with
         {
             Actions = home.Actions.Concat(document.Actions).ToDictionary(action => action.Key, action => action.Value, StringComparer.Ordinal),
-            Components = document.Components.Select(IncludeAppearance).ToArray()
+            Components = document.Components.Select(IncludeSettingsFragments).ToArray()
         };
 
-        CuiComponent IncludeAppearance(CuiComponent component) => new(component.Type, component.Name,
+        CuiComponent IncludeSettingsFragments(CuiComponent component) => new(component.Type, component.Name,
             component.Classes, component.Properties, component.Actions,
-            component.AuthoredId == "home-settings-appearance-host" ? [appearance] : component.Children.Select(IncludeAppearance).ToArray(),
+            component.AuthoredId switch
+            {
+                "home-settings-appearance-host" => [appearance],
+                "home-settings-keyboard-host" => [keyboard],
+                _ => component.Children.Select(IncludeSettingsFragments).ToArray()
+            },
             component.Condition, component.List, component.Span, component.DefaultTheme, component.Repeat,
             component.ElseChildren, component.Groups, component.IsDefinition, component.PropertyRegion)
         { Text = component.Text, TextParts = component.TextParts };
@@ -569,6 +575,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsCatalogScope", scope);
         _bindings.Set("SettingsCatalogTitle", item.Label);
         _bindings.Set("SettingsCatalogDescription", item.Description);
+        PublishKeyboardReference();
         var globalGeneral = item.Key == "global-general";
         _bindings.Set("SettingsGlobalGeneralSelected", globalGeneral);
         _bindings.Set("SettingsShowCatalogDescription", !globalGeneral);
