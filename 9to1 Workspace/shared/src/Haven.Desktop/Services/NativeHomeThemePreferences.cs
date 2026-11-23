@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls;
@@ -30,6 +31,10 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
     private readonly AsyncLocal<Operation?> _executing = new();
     private readonly List<Exception> _observerFailures = [];
     private readonly Dictionary<string, SettingTarget> _targets = new(StringComparer.Ordinal);
+    private static readonly int[] InterfaceScalePercentages = [100, 125, 150, 175];
+    private readonly ScalePresentation _presentation;
+    private sealed record ScalePreview(object? Owner, SettingTarget Target, double Scale);
+    private ScalePreview? _scalePreview;
     private static readonly (string Name, string Colour)[] AccentPresets =
     [
         ("Electric blue", "#2455FF"), ("Iris", "#7145FF"),
@@ -76,10 +81,84 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             _systemVariant = _platform.GetColorValues().ThemeVariant;
             _platform.ColorValuesChanged += SystemColoursChanged;
         }
-        Context = new(this);
+        _presentation = new(this);
+        Context = new(_presentation);
         if (_publishThemePresentation is not null) Context.Changed += ContextChanged;
         _service.Changed += Invalidated;
     }
+
+    // Theme consumers see the selected Settings page's transient scale. Persistence, draft
+    // revision checks and other owners always read the committed ICuiThemePreferenceSource.
+    private sealed class ScalePresentation(NativeHomeThemePreferences source) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current
+        {
+            get
+            {
+                lock (source._operationsGate)
+                {
+                    var saved = source.Current;
+                    return source._scalePreview is { } preview && preview.Target.Revision == saved.Revision
+                        ? saved with { Accessibility = saved.Accessibility with { DisplayScale = preview.Scale } }
+                        : saved;
+                }
+            }
+        }
+
+        public event EventHandler? Changed;
+        internal void Notify() => Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    internal bool TryPreviewInterfaceScale(object owner, object? issuedTarget)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        lock (_operationsGate)
+        {
+            if (_closing || issuedTarget is not SettingTarget { Key: "interface-scale" } target ||
+                !ReferenceEquals(target.Owner, this) || !_targets.Values.Any(candidate => ReferenceEquals(candidate, target)) ||
+                target.Revision != _preference?.Revision || target.Revision != Current.Revision || Current.ScopeId != "device:" + _scope.OwnerId ||
+                _scalePreview is { Owner: { } activeOwner } && !ReferenceEquals(activeOwner, owner))
+                return false;
+            var scale = InterfaceScale(target);
+            if (_scalePreview is { } current && current.Scale == scale && ReferenceEquals(current.Owner, owner)) return true;
+            _scalePreview = new(owner, target, scale);
+        }
+        _presentation.Notify();
+        return true;
+    }
+
+    internal object? CaptureInterfaceScaleDraft(object owner, object? issuedTarget)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        lock (_operationsGate)
+        {
+            return !_closing && _scalePreview is { } preview && ReferenceEquals(preview.Owner, owner) &&
+                ReferenceEquals(preview.Target, issuedTarget) && preview.Target.Revision == _preference?.Revision
+                ? preview : null;
+        }
+    }
+
+    internal void EndInterfaceScalePreview(object owner)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        lock (_operationsGate)
+        {
+            if (_scalePreview is not { } preview || !ReferenceEquals(preview.Owner, owner)) return;
+            // A successful CAS and the authorised re-read are separate observations. Release the
+            // page immediately but keep the confirmed scale on screen until that snapshot arrives.
+            if (_preference is { } saved && saved.Revision > preview.Target.Revision &&
+                saved.Accessibility.DisplayScale == preview.Scale && Current.Revision == preview.Target.Revision)
+            {
+                _scalePreview = preview with { Owner = null };
+                return;
+            }
+            _scalePreview = null;
+        }
+        _presentation.Notify();
+    }
+
+    private static double InterfaceScale(SettingTarget target) =>
+        int.Parse(target.Value, CultureInfo.InvariantCulture) / 100d;
 
     private void SystemColoursChanged(object? sender, PlatformColorValues colours)
     {
@@ -455,8 +534,27 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 ["IsSelected"] = savedColour == preset.Colour, ["Colour"] = preset.Colour
             };
         }
+        var highContrast = available ? Option("High contrast", "high-contrast", (!value!.Accessibility.HighContrast).ToString(), value.Accessibility.HighContrast) : null;
+        var reduceMotion = available ? Option("Reduce motion", "reduce-motion", (!value!.Accessibility.ReduceMotion).ToString(), value.Accessibility.ReduceMotion) : null;
+        Dictionary<string, object?> ScaleOption(int percent)
+        {
+            var scale = percent / 100d;
+            var number = percent.ToString(CultureInfo.InvariantCulture);
+            var choice = Option(number + "%", "interface-scale", number, value!.Accessibility.DisplayScale == scale);
+            choice["Scale"] = scale;
+            return choice;
+        }
         return new Dictionary<string, object?>
         {
+            ["HomeInterfaceScaleChoices"] = available ? InterfaceScalePercentages.Select(ScaleOption).ToArray() : Array.Empty<Dictionary<string, object?>>(),
+            ["HomeInterfaceScaleText"] = available
+                ? (value!.Accessibility.DisplayScale * 100).ToString("0.######", CultureInfo.InvariantCulture) + "%" : "Unavailable",
+            ["HomeHighContrastTarget"] = highContrast?["Target"],
+            ["HomeHighContrastEnabled"] = highContrast?["IsSelected"] is true,
+            ["HomeHighContrastState"] = highContrast is null ? "Unavailable" : value!.Accessibility.HighContrast ? "On" : "Off",
+            ["HomeReduceMotionTarget"] = reduceMotion?["Target"],
+            ["HomeReduceMotionEnabled"] = reduceMotion?["IsSelected"] is true,
+            ["HomeReduceMotionState"] = reduceMotion is null ? "Unavailable" : value!.Accessibility.ReduceMotion ? "On" : "Off",
             ["HomeAccentModeChoices"] = available ? new[]
             {
                 AccentMode("Off", HomeThemeAccentOverrideMode.None), AccentMode("On", HomeThemeAccentOverrideMode.AllApps),
@@ -486,11 +584,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             ["HomeThemeChoices"] = themeChoices,
             ["HomeAppearanceChoices"] = available ? new[] { "SuperBright", "Bright", "Dark", "SuperDark" }
                 .Select(name => Option(name is "SuperBright" ? "Super bright" : name is "SuperDark" ? "Super dark" : name, "appearance", name, name == value!.Appearance)).ToArray() : Array.Empty<Dictionary<string, object?>>(),
-            ["HomeAccessibilityChoices"] = available ? new[]
-            {
-                Option("Reduce motion", "reduce-motion", (!value!.Accessibility.ReduceMotion).ToString(), value.Accessibility.ReduceMotion),
-                Option("High contrast", "high-contrast", (!value.Accessibility.HighContrast).ToString(), value.Accessibility.HighContrast)
-            } : Array.Empty<Dictionary<string, object?>>()
+            ["HomeAccessibilityChoices"] = available ? new[] { reduceMotion!, highContrast! } : Array.Empty<Dictionary<string, object?>>()
         };
         }
     }
@@ -562,6 +656,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         if (displayChange is not null) issuedTarget = displayChange.Target;
         var accentChange = issuedTarget as AccentChange;
         if (accentChange is not null) issuedTarget = accentChange.Target;
+        var scaleChange = issuedTarget as ScalePreview;
+        if (scaleChange is not null) issuedTarget = scaleChange.Target;
         SettingTarget target;
         lock (_operationsGate)
         {
@@ -569,7 +665,9 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 !_targets.Values.Any(current => ReferenceEquals(current, observed)) || _preference is null ||
                 observed.Revision != _preference.Revision || (observed.Key == "display") != (displayChange is not null) ||
                 (observed.Key == "create-theme") != (creation is not null) ||
-                (observed.Key == "accent-draft") != (accentChange is not null))
+                (observed.Key == "accent-draft") != (accentChange is not null) ||
+                (observed.Key == "interface-scale") != (scaleChange is not null) ||
+                scaleChange is not null && !ReferenceEquals(_scalePreview, scaleChange))
                 return Task.FromResult(new HomeThemeOperationResult(false, "SettingsIntentRetired", Diagnostic: "Appearance changed. Refresh before choosing again."));
             target = observed;
         }
@@ -581,6 +679,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 return new(false, "RevisionConflict", Diagnostic: "Appearance changed. Refresh before choosing again.");
             var accessibility = target.Key switch
             {
+                "interface-scale" => prior.Accessibility with { DisplayScale = InterfaceScale(target) },
                 "reduce-motion" => prior.Accessibility with { ReduceMotion = bool.Parse(target.Value) },
                 "high-contrast" => prior.Accessibility with { HighContrast = bool.Parse(target.Value) },
                 _ => prior.Accessibility
@@ -679,7 +778,12 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             if (next.Revision < Current.Revision && next.ScopeId == Current.ScopeId) return;
             Diagnostic = resolved.Diagnostic;
             if (next == Current) return;
-            Current = next;
+            lock (_operationsGate)
+            {
+                Current = next;
+                if (_scalePreview is { } preview && preview.Target.Revision != next.Revision) _scalePreview = null;
+            }
+            _presentation.Notify();
             Changed?.Invoke(this, EventArgs.Empty);
         }
         finally { _refresh.Release(); }
@@ -726,13 +830,18 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             throw new InvalidOperationException("An appearance operation cannot join its own source close.");
         var start = new TaskCompletionSource();
         Task close;
+        bool hadPreview;
         lock (_operationsGate)
         {
             if (_close is not null) return new(_close);
             _closing = true;
+            hadPreview = _scalePreview is not null;
+            _scalePreview = null;
             close = _close = CloseAsync(start.Task, _operations.ToArray());
         }
-        start.SetResult(); return new(close);
+        try { if (hadPreview) _presentation.Notify(); }
+        finally { start.SetResult(); }
+        return new(close);
     }
     private async Task CloseAsync(Task start, Operation[] operations)
     {
