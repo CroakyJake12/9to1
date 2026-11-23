@@ -500,6 +500,48 @@ public sealed partial class ConversationProductionRepository(
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         await DeleteDraftCoreAsync(connection, transaction, draft.ConversationId, draft.BranchId, cancellationToken).ConfigureAwait(false);
+        await InsertDraftAsync(connection, transaction, draft, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public bool SupportsUnsentChatDraft => true;
+
+    /// <summary>Commits a newly owned saved Chat and its exact unsent composer together.</summary>
+    public async Task<ConversationDraft> CreateUnsentChatDraftAsync(Conversation conversation, string content,
+        Func<CancellationToken, Task> admit, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(conversation);
+        ArgumentException.ThrowIfNullOrWhiteSpace(content);
+        ArgumentNullException.ThrowIfNull(admit);
+        if (conversation.Id == Guid.Empty || conversation.Mode != HavenMode.Chat || conversation.Kind != ConversationKind.Chat ||
+            conversation.IsTemporary || conversation.IsArchived || conversation.ParentConversationId is not null ||
+            conversation.SpaceId is null || conversation.SpaceId == Guid.Empty)
+            throw new ArgumentException("A new saved Chat in an existing Space is required.", nameof(conversation));
+
+        await admit(cancellationToken).ConfigureAwait(false);
+        await EnsureSchemaAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        if (!await ConversationRepository.InsertConversationIfMissingAsync(connection, transaction, conversation, cancellationToken).ConfigureAwait(false))
+            throw new InvalidOperationException("That conversation already exists.");
+
+        var now = DateTimeOffset.UtcNow;
+        var branch = new ConversationBranch(Guid.NewGuid(), conversation.Id, null, null, "Main", ConversationBranchReason.Root, true, now, now);
+        await InsertBranchAsync(connection, transaction, branch, cancellationToken).ConfigureAwait(false);
+        var draft = new ConversationDraft(conversation.Id, branch.Id, content, "[]", now);
+        await InsertDraftAsync(connection, transaction, draft, cancellationToken).ConfigureAwait(false);
+
+        // Admission reads the original profile and Space outside the conversation store. A
+        // refused admission rolls back the whole pending record, including its branch/draft.
+        await admit(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        await transaction.CommitAsync(CancellationToken.None).ConfigureAwait(false);
+        return draft;
+    }
+
+    private static async Task InsertDraftAsync(SqliteConnection connection, SqliteTransaction transaction, ConversationDraft draft,
+        CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = "INSERT INTO conversation_drafts(conversation_id,branch_id,content,attachment_ids_json,updated_at) VALUES($conversationId,$branchId,$content,$attachments,$updatedAt);";
@@ -509,7 +551,6 @@ public sealed partial class ConversationProductionRepository(
         command.Parameters.AddWithValue("$attachments", draft.AttachmentIdsJson);
         command.Parameters.AddWithValue("$updatedAt", draft.UpdatedAt.ToString("O"));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

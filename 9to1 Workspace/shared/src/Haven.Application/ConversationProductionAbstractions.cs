@@ -70,6 +70,14 @@ public interface IConversationProductionRepository
 
     Task<ConversationDraft?> GetDraftAsync(Guid conversationId, Guid? branchId, CancellationToken cancellationToken);
     Task SaveDraftAsync(ConversationDraft draft, CancellationToken cancellationToken);
+    bool SupportsUnsentChatDraft => false;
+    /// <summary>
+    /// Atomically creates a saved Chat, its current branch and its unsent composer.
+    /// Admission runs again inside the write transaction and must only observe authority outside this store.
+    /// </summary>
+    Task<ConversationDraft> CreateUnsentChatDraftAsync(Conversation conversation, string content,
+        Func<CancellationToken, Task> admit, CancellationToken cancellationToken) =>
+        Task.FromException<ConversationDraft>(new NotSupportedException("Atomic unsent Chat creation is unavailable in this store."));
     Task DeleteDraftAsync(Guid conversationId, Guid? branchId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<MessageBookmark>> GetBookmarksAsync(Guid conversationId, CancellationToken cancellationToken);

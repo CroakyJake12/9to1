@@ -174,6 +174,57 @@ public sealed partial class ConversationProductionRepositoryTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task Unsent_chat_creation_preserves_exact_branch_draft_and_rolls_back_if_original_admission_changes()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = timeout.Token;
+        var database = await CreateDatabaseAsync();
+        var conversations = new ConversationRepository(database);
+        var production = CreateProduction(database, conversations);
+        var spaces = new SpaceRegistry(new VersionedAtomicSettingsStore(_paths));
+        Assert.True(production.SupportsUnsentChatDraft);
+        var chatSpace = Assert.IsType<SpaceDefinition>(await spaces.GetAsync(SpaceRegistry.ChatSpaceId, token));
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "New chat",
+            null, null, false, false, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
+        var denied = conversation with { Id = Guid.NewGuid() };
+        const string text = "  Keep this draft exactly.\nWithout sending.  ";
+
+        var admissions = 0;
+        async Task ObserveChatSpace(CancellationToken cancellationToken)
+        {
+            var current = Assert.IsType<SpaceDefinition>(await spaces.ReadExistingAsync(chatSpace.Id, cancellationToken));
+            Assert.Equal(chatSpace.Revision, current.Revision);
+            Assert.False(current.IsArchived);
+        }
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => production.CreateUnsentChatDraftAsync(denied, text, async cancellationToken =>
+        {
+            await ObserveChatSpace(cancellationToken);
+            if (++admissions == 2) throw new UnauthorizedAccessException("The original Home actor changed.");
+        }, token));
+        Assert.Equal(2, admissions);
+        Assert.Null(await conversations.GetAsync(denied.Id, token));
+        Assert.Empty(await production.GetBranchesAsync(denied.Id, token));
+
+        var receipt = await production.CreateUnsentChatDraftAsync(conversation, text, ObserveChatSpace, token);
+        var saved = Assert.IsType<Conversation>(await conversations.GetAsync(conversation.Id, token));
+        Assert.Equal(SpaceRegistry.ChatSpaceId, saved.SpaceId);
+        Assert.False(saved.IsTemporary);
+        var branch = Assert.IsType<ConversationBranch>(await production.GetCurrentBranchAsync(saved.Id, token));
+        Assert.Equal(receipt.BranchId, branch.Id);
+        var draft = Assert.IsType<ConversationDraft>(await production.GetDraftAsync(saved.Id, branch.Id, token));
+        Assert.Equal(text, draft.Content);
+        Assert.Equal("[]", draft.AttachmentIdsJson);
+        Assert.Empty(await conversations.GetMessagesAsync(saved.Id, token));
+        Assert.Empty(await production.GetTurnsAsync(saved.Id, branch.Id, token));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            production.CreateUnsentChatDraftAsync(conversation, "other text", _ => Task.CompletedTask, token));
+        Assert.Equal(text, (await production.GetDraftAsync(saved.Id, branch.Id, token))?.Content);
+    }
+
     /// <summary>
     /// Creates database async with the invariants required by its callers.
     /// </summary>
