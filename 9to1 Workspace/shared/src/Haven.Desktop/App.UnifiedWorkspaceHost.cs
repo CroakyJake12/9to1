@@ -456,7 +456,21 @@ public sealed partial class App
                         token => AdmitHomeAsync(request, token));
                 },
                 settings: request => new HomeSettingsDestinationPage(actualTheme,
-                    token => AdmitHomeSettingsAsync(request, token)),
+                    token => AdmitHomeSettingsAsync(request, token))
+                {
+                    NativeAppAvailable = apps.HasImplementation,
+                    OpenOwnerAsync = async (owner, token) =>
+                    {
+                        await AdmitHomeSettingsAsync(request, token);
+                        return await (owner switch
+                        {
+                            HomeSettingsOwner.ModelPicker => OpenModelPickerPanelAsync(token),
+                            HomeSettingsOwner.Profile => OpenProfilePanelAsync(token),
+                            HomeSettingsOwner.Notifications => OpenNotificationsPanelAsync(token),
+                            _ => throw new ArgumentOutOfRangeException(nameof(owner))
+                        });
+                    }
+                },
                 library: request => CreateHomeLibraryPage(request, actualTheme.Context));
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM

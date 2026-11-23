@@ -82,8 +82,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _section = request.Address.Authority switch
         {
             "newtab" => "newtab",
+            "home" when HomeSettingsCatalog.IsSettingsAddress(request.Address) => "settings",
             _ when request.Address.ResourceSegments.Count == 1 &&
-                request.Address.ResourceSegments[0] is "dashboard" or "models" or "events" or "settings" or "library" => request.Address.ResourceSegments[0],
+                request.Address.ResourceSegments[0] is "dashboard" or "models" or "events" or "library" => request.Address.ResourceSegments[0],
             _ => "apps"
         };
         if (_section == "newtab")
@@ -260,14 +261,28 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 original.RunAcceptedPublicationCallback(() =>
                 {
                     _settings = (_createSettings ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))();
+                    _settings.SetInitialRoute(_request.Address);
                     _settings.NavigateHomeAsync = NavigateFromSettingsAsync;
-                    _settings.NavigateBrowseAsync = NavigateBrowseFromSettingsAsync;
+                    _settings.NavigateContentAsync = NavigateContentFromSettingsAsync;
+                    _settings.ContentAvailable = address => address.Authority != "home" ||
+                        (address.ResourceSegments.FirstOrDefault() switch
+                        {
+                            "events" => _createEvents is not null,
+                            "library" => _createLibrary is not null,
+                            _ => true
+                        });
                     _settings.CategoryChanged += OnSettingsCategoryChanged;
                 });
             if (!original.IsAcceptedPublicationCurrent) return;
             var settings = _settings ?? throw new InvalidOperationException("The Home Settings owner was not acquired.");
             await original.AwaitAsync(settings.ActivateAsync(token));
             if (!original.IsAcceptedPublicationCurrent) return;
+            if (settings.NativeAppAvailable is not null)
+            {
+                var modes = await original.AwaitAsync(_modes.GetModesAsync(token));
+                if (!original.IsAcceptedPublicationCurrent) return;
+                original.RunAcceptedPublicationCallback(() => settings.SetNativeApps(modes));
+            }
             prepared = settings;
         }
         if (section == "library")
@@ -387,7 +402,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         });
     }
 
-    private Task<bool> NavigateBrowseFromSettingsAsync(BrowserNativePage page, CancellationToken token)
+    private Task<bool> NavigateContentFromSettingsAsync(AppContentAddress address, CancellationToken token)
     {
         if (!IsAlive || _section != "settings" || _settings is not { } settings) return Task.FromResult(false);
         var selection = _selection;
@@ -395,7 +410,6 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         {
             original.BindPublicationGuard(() => IsAlive && _section == "settings" && selection == _selection);
             token.ThrowIfCancellationRequested();
-            var address = AppContentAddress.Parse(BrowserNativePages.Address(page).AbsoluteUri);
             // The Browse driver, outside this callback, joins the click's owning Settings loader
             // before making a new tab visible. Settings remains the existing source tab.
             return Task.FromResult(Queue(address, original, newTab: true, additionalSettlement: settings.WhenActionsIdleAsync()));

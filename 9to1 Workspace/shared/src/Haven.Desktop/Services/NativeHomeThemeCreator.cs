@@ -21,6 +21,7 @@ internal sealed class NativeHomeThemeCreator : IDisposable
     private Button? _trigger;
     private readonly ContentControl _mount = new UserControl();
     private bool _open, _disposed;
+    private bool _showInCategory = true;
     private Task? _retirement;
 
     internal NativeHomeThemeCreator(NativeHomeThemePreferences source, CuiViewModel host,
@@ -39,7 +40,7 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         _editor.PropertyChanged += SyncOpen;
         _host.Set("HomeThemeCreatorOpen", false);
         _host.Set("HomeThemeCreationAvailable", true);
-        _host.Set("HomeThemeGalleryVisible", true);
+        SetCategoryPresentation(true);
     }
 
     internal void Register(CuiControlLoader outer)
@@ -79,12 +80,19 @@ internal sealed class NativeHomeThemeCreator : IDisposable
         }
     }
 
+    internal void SetCategoryPresentation(bool show)
+    {
+        _showInCategory = show;
+        _host.Set("HomeThemeCreatorVisible", _open && show);
+        _host.Set("HomeThemeGalleryVisible", !_open || !show);
+    }
+
     private void SyncOpen(object? sender, PropertyChangedEventArgs args)
     {
         if (!_editor.TryGetValue("ThemeCreatorOpen", out var value) || _open == (value is true)) return;
         _open = value is true;
         _host.Set("HomeThemeCreatorOpen", _open);
-        _host.Set("HomeThemeGalleryVisible", !_open);
+        SetCategoryPresentation(_showInCategory);
         if (!_open && !_disposed)
             Dispatcher.UIThread.Post(() => { if (!_open && !_disposed && _trigger?.IsEffectivelyVisible == true) _trigger.Focus(NavigationMethod.Tab); },
                 DispatcherPriority.Loaded);

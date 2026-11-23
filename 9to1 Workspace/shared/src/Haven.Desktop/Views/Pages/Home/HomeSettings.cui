@@ -1,4 +1,8 @@
 <Cui id="home.settings" version="1">
+  <Actions>
+    <Action name="SelectSettingsDirectoryItem" command="SettingsDirectory" parameter="{Binding entry.Key}" />
+    <Action name="OpenSettingsDirectoryLink" command="SettingsDirectoryLink" parameter="{Binding link.Target}" />
+  </Actions>
   <Theme Name="user_preference">
     <Page AccessibleName="Home Settings">
       <Container Type="Grid" ColumnSizes="{Binding SettingsColumns}" RowSizes="{Binding SettingsRows}" Background="{Resource CuiWorkspaceBrush}">
@@ -15,95 +19,77 @@
                 <Image Source="icon:chevron-left" Width="18" Height="18" />
               </Button>
             </Container>
-            <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="8" Padding="12 0" CornerRadius="10" Background="{Resource CuiPanelBrush}">
+            <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8" Padding="12 0" CornerRadius="10" Background="{Resource CuiPanelBrush}">
               <Image Source="icon:search" Width="16" Height="16" VerticalAlignment="Center" />
               <Input id="home-settings-search" Column="1" Type="Text" AccessibleName="Search settings" PlaceholderText="Search settings"
                      Height="38" MinWidth="0" Padding="0" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" />
+              <Button id="home-settings-clear-search" Column="2" Action="SettingsClearSearch" AccessibleName="Clear settings search"
+                      Tooltip="Clear settings search" IsVisible="{Binding SettingsHasQuery}" Background="Transparent" BorderWidth="0"
+                      Width="28" Height="28" Padding="4" VerticalAlignment="Center">
+                <Image Source="icon:close" Width="14" Height="14" />
+              </Button>
             </Container>
           </Container>
           <Container id="home-settings-categories" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="2">
-            <Button id="home-settings-global" Action="SettingsGlobal" AccessibleName="Global Settings" IsVisible="{Binding SettingsMatchGlobal}"
-                    Background="Transparent" BorderWidth="0" MinHeight="52" Padding="10 5" HorizontalContentAlignment="Stretch">
-              <Container Type="Grid" ColumnSizes="1fr Auto">
-                <Container Type="Vertical Stack" CellGap="2">
-                  <Text Text="Global" FontWeight="750" />
-                  <Text Text="{Binding HomeAppearanceScope}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                </Container>
-                <Text Column="1" Text="{Binding SettingsGlobalChevron}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+            <Repeat id="home-settings-directory" Source="{Binding SettingsDirectoryRows}" As="entry" Key="{Binding entry.Key}">
+              <Container Type="Overlay" Margin="{Binding entry.Indent}" BorderColor="{Resource CuiLineBrush}" BorderThickness="{Binding entry.Connector}">
+                <Button id="home-settings-directory-item" Action="SelectSettingsDirectoryItem"
+                        AccessibleName="{Binding entry.AccessibleName}" Selected="{Binding entry.Selected}"
+                        Background="Transparent" BorderWidth="0" MinHeight="{Binding entry.Height}" Padding="10 4"
+                        HorizontalContentAlignment="Stretch" CornerRadius="8">
+                  <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+                    <Image Source="{Binding entry.Icon}" IsVisible="{Binding entry.HasIcon}" Width="17" Height="17" VerticalAlignment="Center" />
+                    <Container Column="1" Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
+                      <Text Text="{Binding entry.Label}" FontWeight="{Binding entry.Weight}" TextWrapping="Wrap" />
+                      <Text Text="{Binding entry.Subtitle}" IsVisible="{Binding entry.IsGroup}" FontSize="12"
+                            Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                    </Container>
+                    <Image Column="2" Source="{Binding entry.Chevron}" IsVisible="{Binding entry.IsGroup}" Width="14" Height="14" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
               </Container>
-            </Button>
-            <Container Type="Vertical Stack" IsVisible="{Binding SettingsGlobalExpanded}" CellGap="2">
-              <Button id="home-settings-appearance" Action="SettingsAppearance" AccessibleName="Appearance" Selected="{Binding SettingsAppearanceSelected}"
-                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
-                <Container Type="Horizontal Stack" CellGap="10">
-                  <Image Source="icon:palette" Width="17" Height="17" VerticalAlignment="Center" />
-                  <Text Text="Appearance" FontWeight="700" VerticalAlignment="Center" />
-                </Container>
-              </Button>
-              <Container id="home-settings-subcategories" Type="Vertical Stack" IsVisible="{Binding SettingsMatchChildren}" CellGap="2" Margin="20 0 0 0" Padding="14 0 0 0" BorderColor="{Resource CuiLineBrush}" BorderThickness="1 0 0 0">
-                <Button id="home-settings-theme" Action="SettingsTheme" Content="Theme" AccessibleName="Theme" Selected="{Binding SettingsThemeSelected}" IsVisible="{Binding SettingsMatchTheme}"
-                        Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
-                <Button id="home-settings-theme-options" Action="SettingsThemeOptions" Content="Theme Options" AccessibleName="Theme Options"
-                        Selected="{Binding SettingsThemeOptionsSelected}" IsVisible="{Binding SettingsMatchThemeOptions}"
-                        Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
-                <Button id="home-settings-layout" Action="SettingsLayout" Content="Layout" Selected="{Binding SettingsLayoutSelected}" IsVisible="{Binding SettingsMatchLayout}"
-                        Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
-                <Button id="home-settings-accessibility" Action="SettingsAccessibility" Content="Accessibility" Selected="{Binding SettingsAccessibilitySelected}" IsVisible="{Binding SettingsMatchAccessibility}"
-                        Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
-              </Container>
-            </Container>
-            <Button id="home-settings-haven" Action="SettingsHaven" AccessibleName="9to1 Haven, tabs and browsing" IsVisible="{Binding SettingsMatchHaven}"
-                    Background="Transparent" BorderWidth="0" MinHeight="52" Margin="0 10 0 0" Padding="10 5" HorizontalContentAlignment="Stretch">
-              <Container Type="Grid" ColumnSizes="1fr Auto">
-                <Container Type="Vertical Stack" CellGap="2">
-                  <Text Text="9to1 Haven" FontWeight="750" />
-                  <Text Text="Tabs and browsing" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-                </Container>
-                <Text Column="1" Text="{Binding SettingsHavenChevron}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
-              </Container>
-            </Button>
-            <Container Type="Vertical Stack" IsVisible="{Binding SettingsHavenExpanded}" CellGap="2">
-              <Button id="home-settings-haven-general" Action="SettingsHavenGeneral" AccessibleName="General" Selected="{Binding SettingsHavenGeneralSelected}" IsVisible="{Binding SettingsMatchHavenGeneral}"
-                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
-                <Container Type="Horizontal Stack" CellGap="10">
-                  <Image Source="icon:layout" Width="17" Height="17" VerticalAlignment="Center" />
-                  <Text Text="General" FontWeight="700" VerticalAlignment="Center" />
-                </Container>
-              </Button>
-              <Button id="home-settings-haven-bookmarks" Action="SettingsHavenBookmarks" AccessibleName="Bookmarks" Selected="{Binding SettingsHavenBookmarksSelected}" IsVisible="{Binding SettingsMatchHavenBookmarks}"
-                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
-                <Container Type="Horizontal Stack" CellGap="10">
-                  <Image Source="icon:bookmark" Width="17" Height="17" VerticalAlignment="Center" />
-                  <Text Text="Bookmarks" FontWeight="700" VerticalAlignment="Center" />
-                </Container>
-              </Button>
-              <Button id="home-settings-haven-history" Action="SettingsHavenHistory" AccessibleName="History" Selected="{Binding SettingsHavenHistorySelected}" IsVisible="{Binding SettingsMatchHavenHistory}"
-                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
-                <Container Type="Horizontal Stack" CellGap="10">
-                  <Image Source="icon:history" Width="17" Height="17" VerticalAlignment="Center" />
-                  <Text Text="History" FontWeight="700" VerticalAlignment="Center" />
-                </Container>
-              </Button>
-            </Container>
+            </Repeat>
             <Text Text="No matching settings" IsVisible="{Binding SettingsNoMatches}" Margin="10 6" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           </Container>
         </Container>
         <Container Type="Overlay" Row="{Binding SettingsContentRow}" Column="{Binding SettingsContentColumn}">
-          <Container id="home-settings-haven-page" Type="Vertical Stack" IsVisible="{Binding SettingsHavenSelected}"
-                     VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1000" Padding="14 28" CellGap="20">
-            <Container Type="Vertical Stack" CellGap="4">
-              <Text Text="9TO1 HAVEN" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
-              <Text id="home-settings-haven-page-title" Text="{Binding SettingsHavenTitle}" FontSize="32" FontWeight="800" />
+          <Container id="home-settings-catalog-page" Type="Vertical Stack" IsVisible="{Binding SettingsCatalogSelected}"
+                     MaxWidth="1120" Padding="{Binding SettingsOptionsPadding}" VerticalScrolling="True" HorizontalScrolling="False" CellGap="24">
+            <Container Type="Vertical Stack" CellGap="6" Margin="0 0 0 10">
+              <Text id="home-settings-catalog-scope" Text="{Binding SettingsCatalogScope}" FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="home-settings-haven-page-title" Text="{Binding SettingsCatalogTitle}" FontSize="36" FontWeight="800" TextWrapping="Wrap" />
+              <Text Text="{Binding SettingsCatalogDescription}" IsVisible="{Binding SettingsShowCatalogDescription}"
+                    TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
-            <Container Type="Vertical Stack" Padding="0 0 0 16" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
-              <Text Text="{Binding SettingsHavenDescription}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-              <Button id="home-settings-open-browse-general" Action="SettingsOpenBrowseGeneral" Content="Open Browse settings" AccessibleName="Open Browse settings in a new tab"
-                      IsVisible="{Binding SettingsHavenGeneralSelected}" HorizontalAlignment="Left" />
-              <Button id="home-settings-open-browse-bookmarks" Action="SettingsOpenBrowseBookmarks" Content="Open Bookmarks" AccessibleName="Open Browse bookmarks in a new tab"
-                      IsVisible="{Binding SettingsHavenBookmarksSelected}" HorizontalAlignment="Left" />
-              <Button id="home-settings-open-browse-history" Action="SettingsOpenBrowseHistory" Content="Open History" AccessibleName="Open Browse history in a new tab"
-                      IsVisible="{Binding SettingsHavenHistorySelected}" HorizontalAlignment="Left" />
-              <Text Text="{Binding SettingsBrowseStatus}" IsVisible="{Binding SettingsHasBrowseStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text id="home-settings-global-general-section" Text="Across 9to1" IsVisible="{Binding SettingsGlobalGeneralSelected}"
+                    FontSize="18" FontWeight="750" Margin="12 16 0 12" />
+              <Button id="home-settings-open-browse-general" Action="SettingsOpenBrowseGeneral" Content="Open Browse settings"
+                      AccessibleName="Open Browse settings in a new tab" IsVisible="{Binding SettingsHavenGeneralSelected}" HorizontalAlignment="Left" />
+              <Button id="home-settings-open-browse-bookmarks" Action="SettingsOpenBrowseBookmarks" Content="Open Bookmarks"
+                      AccessibleName="Open Browse bookmarks in a new tab" IsVisible="{Binding SettingsHavenBookmarksSelected}" HorizontalAlignment="Left" />
+              <Button id="home-settings-open-browse-history" Action="SettingsOpenBrowseHistory" Content="Open History"
+                      AccessibleName="Open Browse history in a new tab" IsVisible="{Binding SettingsHavenHistorySelected}" HorizontalAlignment="Left" />
+              <Repeat id="home-settings-catalog-links" Source="{Binding SettingsCatalogLinks}" As="link" Key="{Binding link.Key}">
+                <Container Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                           MinHeight="{Binding SettingsCatalogRowHeight}" CellGap="8" Padding="0 12"
+                           BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                  <Container Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                    <Text Text="{Binding link.Label}" FontSize="14" FontWeight="700" />
+                    <Text Text="{Binding link.Description}" FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
+                  <Button id="home-settings-catalog-link" Action="OpenSettingsDirectoryLink" Content="{Binding link.Action}"
+                          AccessibleName="{Binding link.AccessibleName}" IsVisible="{Binding link.Available}"
+                          Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                          HorizontalAlignment="Left" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" Padding="12 8" />
+                  <Text Text="Unavailable" IsVisible="{Binding link.Unavailable}" Row="{Binding SettingsOptionsControlRow}"
+                        Column="{Binding SettingsOptionsControlColumn}" FontSize="13" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+              </Repeat>
+              <Text id="home-settings-catalog-availability" Text="{Binding SettingsCatalogAvailability}" Margin="10 8"
+                    IsVisible="{Binding SettingsHasCatalogAvailability}" FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text Text="{Binding SettingsBrowseStatus}" IsVisible="{Binding SettingsHasBrowseStatus}" Margin="10 8"
+                    TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
           </Container>
           <Container id="home-settings-appearance-overview" Type="Vertical Stack" IsVisible="{Binding SettingsAppearanceSelected}" VerticalScrolling="True" HorizontalScrolling="False"
@@ -155,6 +141,17 @@
                     <Image id="home-theme-options-palette-chevron" Source="icon:chevron-right" Width="14" Height="14" VerticalAlignment="Center" />
                   </Container>
                 </Button>
+              </Container>
+              <Container Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="64" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text Text="Custom themes" FontSize="14" FontWeight="700" />
+                  <Text Text="Create a theme from the active appearance." FontSize="13" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-theme-options-create" Action="SettingsOptionsCreateTheme" Content="Create theme"
+                        IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" Padding="12 8" />
               </Container>
               <Text Text="{Binding HomeAppearanceStatus}" IsVisible="{Binding SettingsHasAppearanceStatus, fallback=false}"
                     FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />

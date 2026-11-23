@@ -45,6 +45,9 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         _hostLifetime = hostLifetime; _aiAvailable = aiAvailable; _events = events; _settings = settings; _library = library;
     }
 
+    public bool RecognizesNestedCanvas(AppContentAddress address) =>
+        _settings is not null && HomeSettingsCatalog.IsSettingsAddress(address);
+
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
     {
         ArgumentNullException.ThrowIfNull(request); _hostLifetime.ThrowIfCancellationRequested();
@@ -59,9 +62,9 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         var admissibleSegments = segments.Count == 0 ||
             (isHome && _library is not null && BrowseOmniboxSearchRoute.TryParse(request.Address, out _, out _)) ||
             (isHome && _library is not null && segments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal)) ||
+            RecognizesNestedCanvas(request.Address) ||
             (isHome && segments.Count == 1 && (segments[0] is "dashboard" or "models" ||
                 _events is not null && segments[0].Equals("events", StringComparison.Ordinal) ||
-                _settings is not null && segments[0].Equals("settings", StringComparison.Ordinal) ||
                 _library is not null && segments[0].Equals("library", StringComparison.Ordinal)));
         if (!admissibleSegments)
             throw new NotSupportedException("This Home destination is unavailable or belongs to another authority.");

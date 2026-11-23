@@ -254,7 +254,7 @@
                                 IsVisible="{Binding HomeThemeCreationAvailable, fallback=false}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}"
                                 VerticalAlignment="Center" CornerRadius="18" Padding="14 8" FontWeight="700" />
                       </Container>
-                      <Container id="home-theme-creator-host" Type="Overlay" IsVisible="{Binding HomeThemeCreatorOpen, fallback=false}" />
+                      <Container id="home-theme-creator-host" Type="Overlay" IsVisible="{Binding HomeThemeCreatorVisible, fallback=false}" />
                       <Container id="home-theme-gallery" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="14">
                         <Text Text="Theme" FontSize="18" FontWeight="750" />
                         <Repeat id="home-theme-options" Source="{Binding HomeThemeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">

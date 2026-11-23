@@ -526,6 +526,7 @@ public sealed partial class UnifiedHomeContentTests
             SettleFixtureLayout(window);
             Assert.True(searchSettings.IsFocused);
             Assert.True(string.IsNullOrEmpty(searchSettings.Text));
+            theme = SettingsControl<Button>(settings, "home-settings-theme");
             Assert.True(theme.IsEffectivelyVisible);
             CaptureSettingsIfRequested(window, "layout", source);
 
@@ -641,9 +642,10 @@ public sealed partial class UnifiedHomeContentTests
 
             var accessibility = SettingsControl<Button>(settings, "home-settings-accessibility");
             PressSettingsKey(window, PhysicalKey.End);
-            Assert.True(SettingsControl<Button>(settings, "home-settings-haven").IsFocused);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-apps").IsFocused);
             PressSettingsKey(window, PhysicalKey.ArrowUp);
-            Assert.True(accessibility.IsFocused);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven").IsFocused);
+            Assert.True(accessibility.Focus());
             PressSettingsKey(window, PhysicalKey.Enter);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Layout();
@@ -668,10 +670,13 @@ public sealed partial class UnifiedHomeContentTests
             PressSettingsKey(window, PhysicalKey.ArrowRight);
             Layout();
             Assert.Equal("Expanded", AutomationProperties.GetItemStatus(global));
-            Assert.Contains(settings.GetVisualDescendants(), control => ReferenceEquals(control, theme));
+            theme = SettingsControl<Button>(settings, "home-settings-theme");
             Assert.True(theme.IsEffectivelyVisible);
             PressSettingsKey(window, PhysicalKey.ArrowRight);
-            Assert.True(appearance.IsFocused);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-global-general").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowDown);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-appearance").IsFocused);
+            appearance = SettingsControl<Button>(settings, "home-settings-appearance");
             PressSettingsKey(window, PhysicalKey.Enter);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Layout();
@@ -752,12 +757,17 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(group));
             Assert.True(theme.Focus());
             PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-apps").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowUp);
             Assert.True(group.IsFocused);
             PressSettingsKey(window, PhysicalKey.ArrowRight);
             await RenderAsync();
             Assert.Equal("Expanded", AutomationProperties.GetItemStatus(group));
             PressSettingsKey(window, PhysicalKey.End);
-            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-history").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowUp);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-storage-cache").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-performance").IsFocused);
             PressSettingsKey(window, PhysicalKey.ArrowLeft);
             Assert.True(group.IsFocused);
             PressSettingsKey(window, PhysicalKey.ArrowLeft);
@@ -774,7 +784,8 @@ public sealed partial class UnifiedHomeContentTests
             })
             {
                 Assert.True(search.Focus());
-                search.Text = label;
+                var query = nativePage == BrowserNativePage.Settings ? "Browse engine" : label;
+                search.Text = query;
                 await RenderAsync();
                 PressSettingsKey(window, PhysicalKey.Enter);
                 await settings.WhenActionsIdleAsync().WaitAsync(limit);
@@ -807,7 +818,7 @@ public sealed partial class UnifiedHomeContentTests
                 await chrome.SelectTabAsync(settingsTab.Id, lifetime.Token).WaitAsync(limit);
                 await RenderAsync();
                 Assert.Same(settings, Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-                Assert.Equal(label, search.Text);
+                Assert.Equal(query, search.Text);
                 Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-" + section)));
             }
             Assert.Equal(initial, await File.ReadAllBytesAsync(file));
@@ -836,8 +847,14 @@ public sealed partial class UnifiedHomeContentTests
         }
     }
 
-    private static T SettingsControl<T>(Control root, string id) where T : Control =>
-        Assert.Single(root.GetVisualDescendants().OfType<T>(), control => CuiRuntimeIdentity.GetStableId(control) == "id:" + id);
+    private static T SettingsControl<T>(Control root, string id) where T : Control
+    {
+        var directoryId = id.StartsWith("home-settings-", StringComparison.Ordinal)
+            ? HomeSettingsDestinationPage.DirectoryItemId(id["home-settings-".Length..])
+            : null;
+        return Assert.Single(root.GetVisualDescendants().OfType<T>(), control =>
+            CuiRuntimeIdentity.GetStableId(control) is { } stableId && (stableId == "id:" + id || stableId == directoryId));
+    }
 
     private static bool SettingsCategorySelected(Button button) =>
         Assert.IsType<bool>(CuiPropertyPresentation.For(button).Resolve("Selected").Value);
