@@ -87,6 +87,7 @@ internal sealed class NativeHomeThemeCreator : IDisposable
     internal void SetCategoryPresentation(bool show)
     {
         _showInCategory = show;
+        _host.Set("HomeAppearanceMaxWidth", _open && show ? 1080d : 1000d);
         _host.Set("HomeThemeCreatorVisible", _open && show);
         _host.Set("HomeThemeGalleryVisible", !_open || !show);
     }

@@ -1,17 +1,17 @@
 <Cui id="home.settings.theme-creator" version="1">
   <Prefab (Definition) id="ThemeMaterialEditor" Type="dynamic">
     <Container Type="Vertical Stack" CellGap="12" Padding="0 4 0 12">
-      <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12">
+      <Container Type="Grid" ColumnSizes="1fr 150" CellGap="12" MinHeight="64" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1" Padding="0 6">
         <Text Text="Style" VerticalAlignment="Center" FontWeight="600" />
         <Input Column="1" Type="Select" ItemsSource="{Binding ThemeCreatorFillKinds}" SelectedIndex="{Binding ThemeCreatorFillKindIndex, mode=TwoWay, type=int}" AccessibleName="Accent type" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>
-      <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
+      <Container Type="Grid" ColumnSizes="9fr 4fr" CellGap="12" MinHeight="106" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
         <Text Text="Colour" FontWeight="600" VerticalAlignment="Center" />
         <Container Column="1" Type="Vertical Stack" CellGap="4">
           <Theme Name="9to1 Draft Theme Preview">
-            <If condition="{Binding ThemeCreatorEditingPrimary, fallback=false}"><Button id="material-details-primary" Content="{Binding ThemeCreatorMaterialAction}" Action="ThemeCreatorToggleMaterialDetails" AccentRole="Primary" AccessibleName="Edit material details" Height="38" HorizontalAlignment="Stretch" /></If>
-            <If condition="{Binding ThemeCreatorEditingSecondary, fallback=false}"><Button id="material-details-secondary" Content="{Binding ThemeCreatorMaterialAction}" Action="ThemeCreatorToggleMaterialDetails" AccentRole="Secondary" AccessibleName="Edit material details" Height="38" HorizontalAlignment="Stretch" /></If>
-            <If condition="{Binding ThemeCreatorEditingTertiary, fallback=false}"><Button id="material-details-tertiary" Content="{Binding ThemeCreatorMaterialAction}" Action="ThemeCreatorToggleMaterialDetails" AccentRole="Tertiary" AccessibleName="Edit material details" Height="38" HorizontalAlignment="Stretch" /></If>
+            <If condition="{Binding ThemeCreatorEditingPrimary, fallback=false}"><Button id="material-details-primary" Content="{Binding ThemeCreatorMaterialAction}" Action="ThemeCreatorToggleMaterialDetails" AccentRole="Primary" AccessibleName="Edit material details" Height="50" HorizontalAlignment="Stretch" /></If>
+            <If condition="{Binding ThemeCreatorEditingSecondary, fallback=false}"><Button id="material-details-secondary" Content="{Binding ThemeCreatorMaterialAction}" Action="ThemeCreatorToggleMaterialDetails" AccentRole="Secondary" AccessibleName="Edit material details" Height="50" HorizontalAlignment="Stretch" /></If>
+            <If condition="{Binding ThemeCreatorEditingTertiary, fallback=false}"><Button id="material-details-tertiary" Content="{Binding ThemeCreatorMaterialAction}" Action="ThemeCreatorToggleMaterialDetails" AccentRole="Tertiary" AccessibleName="Edit material details" Height="50" HorizontalAlignment="Stretch" /></If>
           </Theme>
           <Text Text="{Binding ThemeCreatorMaterialSummary}" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" />
         </Container>
@@ -58,11 +58,11 @@
           </Container>
         </Container>
       </If>
-      <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
+      <Container Type="Grid" ColumnSizes="1fr 90" CellGap="12" MinHeight="62" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
         <Text Text="Transparency (%)" FontWeight="600" VerticalAlignment="Center" />
         <Input Column="1" Type="Text" Value="{Binding ThemeCreatorTransparency, mode=TwoWay, type=string}" AccessibleName="Colour transparency percent" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>
-      <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
+      <Container Type="Grid" ColumnSizes="1fr 90" CellGap="12" MinHeight="62" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1">
         <Text Text="Background blur (0–32)" FontWeight="600" VerticalAlignment="Center" />
         <Input Column="1" Type="Text" Value="{Binding ThemeCreatorBackgroundBlur, mode=TwoWay, type=string}" AccessibleName="Colour Gaussian background blur" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>
@@ -71,15 +71,15 @@
   <Prefab (Definition) id="ThemeCreatorPanel" Type="dynamic">
     <If condition="{Binding ThemeCreatorOpen, fallback=false}">
     <Container id="theme-creator" Active="{Binding ThemeCreatorOpen, fallback=false}" Type="Vertical Stack" CellGap="12" Margin="0 0 0 24">
-      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8" Margin="0 0 0 12">
-        <Text Text="Create theme" FontSize="32" FontWeight="800" TextWrapping="Wrap" />
+      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8" Margin="0 0 0 28">
+        <Text id="theme-creator-title" Text="Create theme" FontSize="36" FontWeight="800" TextWrapping="Wrap" />
         <Button Column="1" Action="ThemeCreatorSave" IsVisible="{Binding ShowInlineThemeSave, fallback=true}" Content="Save theme" AccentRole="Primary" Interactive="{Binding ThemeCreatorCanSave}" AccessibleName="Save custom theme" CornerRadius="18" Padding="14 8" VerticalAlignment="Center" />
       </Container>
-      <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1" Padding="0 12">
+      <Container id="theme-creator-name-row" Type="Grid" ColumnSizes="4fr 3fr" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1" MinHeight="62" Padding="0 12">
         <Text Text="Theme Name" FontWeight="600" VerticalAlignment="Center" />
         <Input id="theme-name" Column="1" Type="Text" Value="{Binding ThemeCreatorName, mode=TwoWay, type=string}" AccessibleName="Theme name" FocusRequested="{Binding ThemeCreatorFocusName}" SelectOnFocusRequest="True" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>
-      <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1" Padding="0 12">
+      <Container id="theme-creator-inherits-row" Type="Grid" ColumnSizes="4fr 3fr" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderWidth="0 0 0 1" MinHeight="62" Padding="0 12">
         <Text Text="Inherits" FontWeight="600" VerticalAlignment="Center" />
         <Input Column="1" Type="Select" ItemsSource="{Binding ThemeCreatorBaseThemes}" SelectedIndex="{Binding ThemeCreatorBaseThemeIndex, mode=TwoWay, type=int}" AccessibleName="Base theme" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>

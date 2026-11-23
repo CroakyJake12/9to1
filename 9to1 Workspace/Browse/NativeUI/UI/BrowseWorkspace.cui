@@ -73,7 +73,12 @@
             <Input Type="Text" id="BrowseAddressBox" Column="1" Interactive="{Binding CanEdit}" AccessibleName="{Binding AddressHint}" PlaceholderText="{Binding AddressHint}" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="30" MinHeight="30" MinWidth="64" Padding="0 4" FontSize="13" FontWeight="600" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="15" />
             <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="2" AccessibleName="Go to address or search" Tooltip="Go to address or search" Interactive="{Binding Can.Navigate}" Height="30" MinHeight="30" Width="30" MinWidth="30" Padding="6" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="15"><Image Source="avares://HavenOS.Apps.Browse.NativeUI/Assets/nav-forward.svg" Width="16" Height="16" /></Button>
           </Container>
-          <Button id="BrowsePrimaryPageCommand" Column="4" Action="RunPageCommand" Content="{Binding PageCommandLabel}" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInBar}" Interactive="{Binding Can.RunPageCommand}" AccentRole="Primary" Padding="14 4" CornerRadius="16" Height="32" />
+          <Button id="BrowsePrimaryPageCommand" Column="4" Action="RunPageCommand" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInBar}" Interactive="{Binding Can.RunPageCommand}" AccentRole="Primary" Padding="14 4" CornerRadius="16" Height="32">
+            <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center" IsHitTestVisible="False">
+              <Image id="BrowsePrimaryPageCommandIcon" Source="{Binding PageCommandIcon}" IsVisible="{Binding PageCommandHasIcon}" Width="16" Height="16" VerticalAlignment="Center" />
+              <Text Text="{Binding PageCommandLabel}" FontWeight="700" VerticalAlignment="Center" />
+            </Container>
+          </Button>
           <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="5" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model and notifications">
             <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="{Binding Haven.ModelAccessibleName}" Tooltip="{Binding Haven.ModelTooltip}" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiAccentSoftBrush}" BorderWidth="0" CornerRadius="16">
               <Container Type="Horizontal Stack" CellGap="6" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
@@ -202,7 +207,12 @@
 
     <Container id="BrowseProfileOverlay" Type="Overlay" IsVisible="{Binding ProfileMenuOpen}" AccessibleName="Profile menu" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 84 8 0">
       <Container id="BrowseProfileMenu" Type="Vertical Stack" Width="340" MaxHeight="560" CellGap="2" Padding="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12" VerticalScrolling="True" HorizontalScrolling="False" AccessibleName="Account and profile">
-        <Button id="BrowseOverflowPageCommand" Action="RunPageCommand" Content="{Binding PageCommandLabel}" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInOverflow}" Interactive="{Binding Can.RunPageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
+        <Button id="BrowseOverflowPageCommand" Action="RunPageCommand" AccessibleName="{Binding PageCommandLabel}" IsVisible="{Binding PageCommandInOverflow}" Interactive="{Binding Can.RunPageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+          <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center" IsHitTestVisible="False">
+            <Image id="BrowseOverflowPageCommandIcon" Source="{Binding PageCommandIcon}" IsVisible="{Binding PageCommandHasIcon}" Width="16" Height="16" VerticalAlignment="Center" />
+            <Text Text="{Binding PageCommandLabel}" FontWeight="700" VerticalAlignment="Center" />
+          </Container>
+        </Button>
         <Button id="BrowseProfileAccountButton" action="9to1.Haven.OpenProfile" Interactive="{Binding Haven.ProfileAvailable}" HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Padding="8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">
           <Container Type="Horizontal Stack" CellGap="10">
             <Image Source="avares://Haven/Assets/haven-profile.svg" Width="34" Height="34" />

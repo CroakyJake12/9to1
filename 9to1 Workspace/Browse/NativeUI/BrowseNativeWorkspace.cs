@@ -126,6 +126,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         {
             "PageCommandTarget" => _pageCommand,
             "PageCommandLabel" => _pageCommand?.Command.Label ?? string.Empty,
+            "PageCommandIcon" => _pageCommand?.Command.IconSource,
+            "PageCommandHasIcon" => _pageCommand?.Command.IconSource is not null,
             "PageCommandInBar" => _pageCommand is not null && _pageCommandFits,
             "PageCommandInOverflow" => _pageCommand is not null && !_pageCommandFits,
             "Tabs" => _tabRows,

@@ -1,9 +1,12 @@
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -222,8 +225,45 @@ public sealed partial class UnifiedHomeContentTests
             Press(SettingsControl<Button>(view, triggerId));
             await view.WhenActionsIdleAsync().WaitAsync(limit, token);
             await Render();
+            AssertCreatorLayout(view);
             Assert.DoesNotContain(view.GetVisualDescendants().OfType<Button>(), button =>
                 button.IsEffectivelyVisible && AutomationProperties.GetName(button) == "Save custom theme");
+        }
+
+        void AssertCreatorLayout(HomeSettingsDestinationPage view)
+        {
+            T VisibleControl<T>(string id) where T : Control =>
+                Assert.Single(view.GetVisualDescendants().OfType<T>(), control =>
+                    control.IsEffectivelyVisible && control.Name == id);
+
+            var heading = VisibleControl<TextBlock>("theme-creator-title");
+            var editor = VisibleControl<CuiContainerControl>("theme-creator");
+            var nameRow = VisibleControl<CuiContainerControl>("theme-creator-name-row");
+            var name = VisibleControl<TextBox>("theme-name");
+            if (width >= 800)
+            {
+                Assert.InRange(XInWindow(heading, 0), 313, 343);
+                Assert.InRange(XInWindow(nameRow, nameRow.Bounds.Width), 1358, 1388);
+                return;
+            }
+
+            var panel = SettingsControl<CuiContainerControl>(view, "home-appearance-settings");
+            var scroll = Assert.IsType<ScrollViewer>(panel.Child);
+            Assert.True(scroll.Viewport.Width > 0);
+            Assert.InRange(editor.Bounds.Width, 1, scroll.Viewport.Width + 2);
+            Assert.InRange(XInWindow(editor, 0), 0, window.Bounds.Width);
+            Assert.InRange(XInWindow(editor, editor.Bounds.Width), 1, window.Bounds.Width + 1);
+            var nameStart = name.TranslatePoint(default, editor);
+            Assert.NotNull(nameStart);
+            Assert.InRange(nameStart.Value.X, 0, editor.Bounds.Width);
+            Assert.InRange(nameStart.Value.X + name.Bounds.Width, 1, editor.Bounds.Width + 1);
+
+            double XInWindow(Control control, double x)
+            {
+                var point = control.TranslatePoint(new Point(x, 0), window);
+                Assert.NotNull(point);
+                return point.Value.X;
+            }
         }
 
         static TextBox NameField(HomeSettingsDestinationPage view) =>
@@ -258,6 +298,18 @@ public sealed partial class UnifiedHomeContentTests
             }
             var button = ShellButton(width < 800 ? "BrowseOverflowPageCommand" : "BrowsePrimaryPageCommand");
             Assert.Equal("Save theme", AutomationProperties.GetName(button));
+            var iconId = width < 800 ? "BrowseOverflowPageCommandIcon" : "BrowsePrimaryPageCommandIcon";
+            var icon = Assert.Single(button.GetVisualDescendants().OfType<Image>(), image =>
+                image.IsEffectivelyVisible && image.Name == iconId);
+            Assert.InRange(icon.Bounds.Width, 15, 17);
+            Assert.InRange(icon.Bounds.Height, 15, 17);
+            var drawing = Assert.IsType<DrawingImage>(icon.Source);
+            var visiblePath = Assert.IsType<DrawingGroup>(drawing.Drawing)
+                .Children.OfType<GeometryDrawing>().Single();
+            Assert.NotNull(visiblePath.Geometry);
+            Assert.True(visiblePath.Geometry!.Bounds.Width > 0 && visiblePath.Geometry.Bounds.Height > 0);
+            Assert.True(visiblePath.Brush is ISolidColorBrush { Color.A: > 0 } ||
+                visiblePath.Pen?.Brush is ISolidColorBrush { Color.A: > 0 });
             return button;
         }
 

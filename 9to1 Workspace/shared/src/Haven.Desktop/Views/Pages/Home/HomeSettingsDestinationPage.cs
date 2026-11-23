@@ -183,7 +183,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         if (_pageCommands is null) return;
         if (_active && IsAlive && _category == "theme" && CreatorOpen)
-            _saveTheme ??= new("Save theme", _creator.SaveFromShellAsync);
+            _saveTheme ??= new("Save theme", _creator.SaveFromShellAsync, "avares://HavenOS.Apps.Browse.NativeUI/Assets/check.svg");
         else _saveTheme = null;
         _pageCommands.Update(_saveTheme, _saveTheme is not null && _creator.CanSave);
     }

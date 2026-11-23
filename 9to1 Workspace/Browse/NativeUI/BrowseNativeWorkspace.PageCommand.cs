@@ -8,7 +8,7 @@ public interface IBrowseNativePageCommandSource : IBrowseNativeAppContentSession
     BrowsePageCommandSlot PageCommandSlot { get; }
 }
 
-public sealed record BrowsePageCommand(string Label, Func<CancellationToken, Task> Invoke);
+public sealed record BrowsePageCommand(string Label, Func<CancellationToken, Task> Invoke, string? IconSource = null);
 
 public sealed class BrowsePageCommandSlot
 {
