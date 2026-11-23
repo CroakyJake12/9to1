@@ -10,5 +10,5 @@ namespace Haven.Desktop.Views.Shell;
 public static class HavenStartupExperiencePolicy
 {
     public const HavenShellEdition Edition = HavenShellEdition.New;
-    public const HavenUiAppearance Appearance = HavenUiAppearance.SuperDark;
+    public const HavenUiAppearance Appearance = HavenUiAppearance.Dark;
 }

@@ -9,6 +9,7 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Views.Pages.Settings;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Tests;
 
@@ -23,14 +24,84 @@ public sealed class HavenUiAppearanceTests
     }
 
     [Fact]
-    public void Fresh_install_starts_in_the_mockup_defined_super_dark_appearance()
+    public void Fresh_install_reads_and_persists_professional_dark()
     {
         using var paths = new TemporaryPaths();
+        var path = Path.Combine(paths.DataDirectory, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "fresh-appearance");
+        var projected = HomeNativePreferenceFile.Resolve(HomeNativePreferenceFile.Read(path), scope,
+            UserPreferencesService.ProjectLegacyHomeTheme);
 
         var preferences = new UserPreferencesService(paths);
+        var saved = HomeNativePreferenceFile.Read(path);
 
-        Assert.Equal(HavenUiAppearance.SuperDark, preferences.Appearance);
+        Assert.Equal("Professional", projected.ThemeName);
+        Assert.Equal("Dark", projected.Appearance);
+        Assert.Equal(HomeDisplayMode.Dark, projected.EffectiveDisplay().Mode);
+        Assert.Equal(HavenUiAppearance.Dark, preferences.Appearance);
         Assert.Equal("haven-ui", preferences.ThemeId);
+        Assert.Equal("Professional", saved["havenUiThemeName"]!.GetValue<string>());
+        Assert.Equal(2, saved["havenUiAppearance"]!.GetValue<int>());
+        Assert.Equal(HavenUiAppearance.Dark, new UserPreferencesService(paths).Appearance);
+    }
+
+    [Theory]
+    [InlineData(HavenUiAppearance.SuperBright, 0)]
+    [InlineData(HavenUiAppearance.Bright, 1)]
+    [InlineData(HavenUiAppearance.Dark, 2)]
+    [InlineData(HavenUiAppearance.SuperDark, 3)]
+    public void Explicit_appearance_survives_versionless_legacy_theme_migration(HavenUiAppearance expected, int ordinal)
+    {
+        using var paths = new TemporaryPaths();
+        var path = Path.Combine(paths.DataDirectory, "preferences.json");
+        File.WriteAllText(path, $$"""
+            { "themeId": "light", "havenUiThemeName": "Glow", "havenUiAppearance": {{ordinal}}, "extra": "keep" }
+            """);
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "saved-appearance");
+
+        var preferences = new UserPreferencesService(paths);
+        var saved = HomeNativePreferenceFile.Read(path);
+        var projected = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+
+        Assert.Equal(expected, preferences.Appearance);
+        Assert.Equal(expected, new UserPreferencesService(paths).Appearance);
+        Assert.Equal(expected.ToString(), projected.Appearance);
+        Assert.Equal("Glow", projected.ThemeName);
+        Assert.Equal(ordinal, saved["havenUiAppearance"]!.GetValue<int>());
+        Assert.Equal("keep", saved["extra"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Legacy_startup_preserves_existing_native_display_and_accent()
+    {
+        using var paths = new TemporaryPaths();
+        var path = Path.Combine(paths.DataDirectory, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "native-display");
+        var display = new HomeDisplaySettings(HomeDisplayMode.FollowSystem, 61, 47);
+        var accent = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.AllApps, "#A1B2C3")
+            .WithAppColour("app.write", "#2455FF");
+        var committed = await HomeNativePreferenceFile.CompareExchangeAsync(path, scope, 0,
+            HomeThemePreference.Default(scope) with { Revision = 1, Display = display, Accent = accent },
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), CancellationToken.None);
+        Assert.True(committed.Succeeded);
+
+        var preferences = new UserPreferencesService(paths);
+        preferences.SetDefaultTabAppKey("personal.mode");
+        var saved = HomeNativePreferenceFile.Read(path);
+        var projected = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+
+        Assert.False(saved.ContainsKey("havenUiAppearance"));
+        Assert.Null(projected.Appearance);
+        Assert.Equal(display, projected.Display);
+        Assert.Equal(accent, projected.Accent);
+
+        preferences.ApplyAppearance(HavenUiAppearance.SuperDark);
+        saved = HomeNativePreferenceFile.Read(path);
+        projected = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+        Assert.Equal(3, saved["havenUiAppearance"]!.GetValue<int>());
+        Assert.Equal("SuperDark", projected.Appearance);
+        Assert.Equal(display with { Mode = HomeDisplayMode.Dark }, projected.Display);
+        Assert.Equal(accent, projected.Accent);
     }
 
     [Fact]

@@ -12,6 +12,7 @@ public static class HomeNativePreferenceFile
 {
     public const string ThemeKey = "homeThemePreference";
     private const string RevisionKey = "homeThemePreferenceRevision";
+    private const int DefaultLegacyAppearance = 2;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private static readonly string[] ThemeFields = ["havenUiThemeName", "havenUiAppearance", "fontFamilyName", "overrideAccentColour", "accentColourName"];
 
@@ -38,7 +39,7 @@ public static class HomeNativePreferenceFile
         Func<string?, int, string> resolveAccent)
     {
         var name = document["havenUiThemeName"]?.GetValue<string>() ?? "Professional";
-        var appearance = document["havenUiAppearance"]?.GetValue<int>() ?? 3;
+        var appearance = document["havenUiAppearance"]?.GetValue<int>() ?? DefaultLegacyAppearance;
         var appearanceName = appearance switch
         { 0 => "SuperBright", 1 => "Bright", 2 => "Dark", 3 => "SuperDark", _ => throw new InvalidDataException("The saved native appearance is unsupported and was preserved.") };
         var accent = HomeThemeAccentPreference.Default;
