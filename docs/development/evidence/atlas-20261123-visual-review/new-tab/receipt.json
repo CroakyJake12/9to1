@@ -1,0 +1,162 @@
+{
+  "source": {
+    "revision": "8e6b9cf333049374a3f769887bf8c26f7db7ce4d",
+    "parent_revision": "891eabb36abcb88820e9e8835344016b14b61f08",
+    "product_patch_sha256": "f26384d7be86bb839aedbfabcbfafc8bfeaa8ac1c5269134587579b0140943ef"
+  },
+  "atlas": {
+    "source": "b1009894406d984dfb7c453b60a61f2422fc22b8",
+    "html_sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+    "mode": "Professional Dark",
+    "renderer": "Chromium"
+  },
+  "native": {
+    "renderer": "Linux X11 / Avalonia at 1:1 device scale",
+    "route": "browse://newtab",
+    "mode": "Professional Dark",
+    "preferences": {
+      "legacy_theme": "Professional",
+      "legacy_mode": 2,
+      "legacy_override_active": false,
+      "canonical_theme": "Professional",
+      "canonical_mode": "Dark",
+      "display": {
+        "mode": 1,
+        "brightness": 50,
+        "colourContrast": 50
+      },
+      "accent": {
+        "mode": 0,
+        "allAppsColour": null,
+        "individualApps": {}
+      }
+    },
+    "assemblies": {
+      "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+      "Haven.dll": "38544b2f067a899226f6684743d0862794f76b8ab7568450945818b02da46956",
+      "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+      "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+      "UI/Home.cui": "ee6eec9d989f29b9cc67522730c794b2c2662cd6783a004371a0fbbfe5e94b79"
+    },
+    "observed_interaction": {
+      "native_layout": "Home is the body heading; New Tab remains the selected shell tab and displayed address. The local clock, search field, separate Go, Ask AI and All apps controls, and native Apps, Library and Dashboard cards render at both viewport sizes.",
+      "narrow_navigation": "A physical click on All apps opened the real catalogue in the same tab. Clicking the native New Tab rail button returned to the Home body. The private X11 clipboard copied exactly overnight-unsent-query from the retained input.",
+      "narrow_shortcuts": "A physical wheel scroll reached all three cards in a 2+1 arrangement at 720\u00d7520.",
+      "availability": "Go visibly became available after entering a disposable draft. Ask AI displayed an unavailable state and the dependency on a Spaces destination on this profile. Neither Go nor Ask AI was triggered.",
+      "atlas_differences": "The Atlas example renders a Customise action, Widgets and example workspace shortcuts. The native view exposes Apps, Library and Dashboard. The narrow Atlas viewport clips the fixed 1440-pixel canvas. Screenshots were taken at different times, so their actual clocks differ.",
+      "appearance_preferences_changed": false
+    },
+    "shutdown": [
+      "Window manager WM_DELETE_WINDOW",
+      "Haven apphost exit code 0"
+    ]
+  },
+  "comparisons": [
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "atlas_render": {
+        "route": "host-newtab",
+        "heading": "Home",
+        "selected_nodes": [],
+        "root_scroll_width": 1440,
+        "image": {
+          "file": "atlas-host-newtab-1440x900.png",
+          "size": [
+            1440,
+            900
+          ],
+          "sha256": "06e9e97b2a5d9425ce24148b0c364edc028ce7ac25a2eeab81e7fb06ea786ec8"
+        }
+      },
+      "native_raw": {
+        "file": "01-new-tab-hero-professional-dark-wide.png",
+        "size": [
+          1440,
+          900
+        ],
+        "sha256": "c3b0f7e6aecddecdf8a83f2ec929ec7322842b4a85876ae3d88d0f56cb6b8494"
+      },
+      "pair": {
+        "file": "comparison-new-tab-hero-final-professional-dark-1440x900.png",
+        "size": [
+          2934,
+          970
+        ],
+        "sha256": "639f57fe79c6d2c469edb4033b4655678f7c203ecd957e9e84fc21bb5264b0e2"
+      }
+    },
+    {
+      "viewport": [
+        720,
+        520
+      ],
+      "atlas_render": {
+        "route": "host-newtab",
+        "heading": "Home",
+        "selected_nodes": [],
+        "root_scroll_width": 1440,
+        "image": {
+          "file": "atlas-host-newtab-720x520.png",
+          "size": [
+            720,
+            520
+          ],
+          "sha256": "b9311c0602ca341cd7aa815c43ba3202623956b055523220a0fabbf802968f3c"
+        }
+      },
+      "native_raw": {
+        "file": "02-new-tab-hero-professional-dark-narrow.png",
+        "size": [
+          720,
+          520
+        ],
+        "sha256": "b94d0d6f9be132a49034f39c2ae0f9a44f0ae562acbbb9ea3e893f2589f2543c"
+      },
+      "pair": {
+        "file": "comparison-new-tab-hero-final-professional-dark-720x520.png",
+        "size": [
+          1494,
+          590
+        ],
+        "sha256": "6fea44937fd421f658797ee4fe29991599d1f825a665fb3e8b9f716e28ad4033"
+      }
+    }
+  ],
+  "additional_native_images": [
+    {
+      "file": "03-new-tab-narrow-unsent-draft.png",
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "3cd863ae6cde5ccf0be8fa39a33baf56addd3a7d52cad8160d36dfe10ee6af06"
+    },
+    {
+      "file": "04-all-apps-opened-in-new-tab.png",
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "ac9b477d24590d8e794f3f923866bb4c48069a1dd23990e9e7c6a1d4f029b7b7"
+    },
+    {
+      "file": "05-new-tab-returned-with-draft.png",
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "dc036cbf24553750986522a7b80a0d5867e9f37d12ba6b64d09a9198f46c7d19"
+    },
+    {
+      "file": "06-new-tab-narrow-shortcuts-scrolled.png",
+      "size": [
+        720,
+        520
+      ],
+      "sha256": "66e9cdb4918f0a1f8682935ad89c036ddf6fdec466d655db137a0b2d29078691"
+    }
+  ]
+}
