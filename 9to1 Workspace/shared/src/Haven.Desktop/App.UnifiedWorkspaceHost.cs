@@ -469,7 +469,7 @@ public sealed partial class App
                     _services.GetService<IPlannerRepository>(), _services.GetService<IConversationRepository>(),
                     _services.GetService<IContainerRepository>(), _services.GetService<IBoardsWorkspaceService>(),
                     token => AdmitHomeAsync(request, token), libraryAvailable: true),
-                assistantsAvailable: true);
+                assistantsAvailable: true, shortcutAppAvailable: apps.HasImplementation);
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM
             if (!OperatingSystem.IsWindows())

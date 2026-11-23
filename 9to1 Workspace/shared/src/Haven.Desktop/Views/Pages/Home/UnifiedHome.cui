@@ -159,6 +159,7 @@
                         ItemRow="{Binding shortcut.Row}" ItemColumn="{Binding shortcut.Column}">
                   <Container id="home-newtab-shortcut-card" Type="Vertical Stack" CellGap="4">
                     <Button id="home-newtab-shortcut" Action="OpenNewTabShortcut" AccessibleName="{Binding shortcut.Label}"
+                            AccessibleDescription="{Binding shortcut.HelpText}"
                             AutomationId="{Binding shortcut.AutomationId}"
                             Height="{Binding newTab.shortcut.TileHeight, fallback=80}" IsEnabled="{Binding shortcut.CanOpen}"
                             HorizontalContentAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}"

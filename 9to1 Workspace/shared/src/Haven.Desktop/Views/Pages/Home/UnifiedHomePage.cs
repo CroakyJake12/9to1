@@ -79,7 +79,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Func<HomeSettingsDestinationPage>? createSettings = null,
         Func<HomeLibraryDestinationPage>? createLibrary = null,
         NewTabLayoutPreferences? newTabLayout = null, NewTabWidgetSources? newTabWidgets = null,
-        bool assistantsAvailable = false)
+        bool assistantsAvailable = false, Func<ModeDefinition, bool>? shortcutAppAvailable = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
@@ -105,6 +105,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         // can be captured. All brand observations are retired before loader teardown (see StopAsync).
         _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry(_appsBindings));
         _assistantsAvailable = assistantsAvailable;
+        _shortcutAppAvailable = shortcutAppAvailable;
         _railBindings = new(() => _section, _createSettings is not null, _createLibrary is not null, _assistantsAvailable);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
@@ -370,6 +371,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             // New Tab owns its search surface and never creates or activates Dashboard.
             _viewport.Child = null;
             await RefreshNewTabLayoutAsync(original, token);
+            if (original.IsAcceptedPublicationCurrent && SavedShortcuts.Any(shortcut => shortcut.AppId.HasValue))
+                await RefreshShortcutAppsAsync(original, token);
             if (original.IsAcceptedPublicationCurrent) await RefreshNewTabWidgetsAsync(original, token);
         }
         else if (section == "models")

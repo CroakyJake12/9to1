@@ -50,7 +50,7 @@ internal sealed partial class UnifiedHomePage
 
     private bool NewTabShortcutActionAvailable(string operation)
     {
-        if (_section != "newtab") return false;
+        if (_section != "newtab" || _checkingShortcutApp) return false;
         return operation[NewTabShortcutPrefix.Length..] switch
         {
             "open" => !ShortcutSurfaceOpen,
@@ -80,7 +80,11 @@ internal sealed partial class UnifiedHomePage
                 if (SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == id) is { } target)
                     await OpenNewTabShortcutAsync(target, original, token);
                 return;
-            case "add": OpenShortcutPicker(); return;
+            case "add":
+                var visit = _selection;
+                await RefreshShortcutAppsAsync(original, token);
+                if (original.IsAcceptedPublicationCurrent && _selection == visit && NewTabShortcutActionAvailable(operation)) OpenShortcutPicker();
+                return;
             case "picker-close": CloseShortcutPicker(); return;
             case "picker-custom":
                 HideShortcutPicker();
@@ -144,15 +148,15 @@ internal sealed partial class UnifiedHomePage
     private async Task OpenNewTabShortcutAsync(NewTabShortcutPlacement shortcut,
         DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
-        if (!NewTabShortcutPlacement.TryParseTarget(shortcut.Target, out var target) || !IsShortcutTargetAvailable(shortcut.Target))
-            return;
+        if (!IsShortcutAvailable(shortcut) || !await IsShortcutAppCurrentAsync(shortcut, original, token)) return;
+        var target = AppContentAddress.Parse(shortcut.Target);
         token.ThrowIfCancellationRequested();
         switch (shortcut.Target)
         {
             case NewTabShortcutPlacement.Apps: await SelectAsync("apps", original, token); break;
             case NewTabShortcutPlacement.Events: await SelectAsync("events", original, token); break;
             case NewTabShortcutPlacement.Dashboard: await OpenDashboardAsync(original, token); break;
-            default: Queue(target!, original, newTab: false); break;
+            default: Queue(target, original, newTab: false); break;
         }
     }
 
@@ -204,18 +208,29 @@ internal sealed partial class UnifiedHomePage
             ShowShortcutValidation("Enter a shortcut name.", _shortcutName);
             return;
         }
-        if (!NewTabShortcutPlacement.TryParseTarget(_shortcutAddress.Text, out var target) || !IsShortcutTargetAvailable(target!.Value))
+        var input = _shortcutAddress.Text?.Trim() ?? string.Empty;
+        var app = _shortcutApps.GetValueOrDefault(input);
+        var isStandardTarget = NewTabShortcutPlacement.TryParseTarget(input, out var target) && IsShortcutTargetAvailable(target!.Value);
+        if (!isStandardTarget && app is null)
         {
             ShowShortcutValidation("Select an available destination or enter a complete http or https address.", _shortcutAddress);
             return;
         }
-        if (SavedShortcuts.Any(shortcut => shortcut.Id != _editingShortcutId && shortcut.Target == target.Value))
+        var address = isStandardTarget ? target!.Value : input;
+        if (SavedShortcuts.Any(shortcut => shortcut.Id != _editingShortcutId && shortcut.Target == address))
         {
             ShowShortcutValidation("This destination is already in Shortcuts.", _shortcutAddress);
             return;
         }
         var editing = _editingShortcutId;
-        var item = new NewTabShortcutPlacement(editing ?? Guid.NewGuid().ToString("N"), label, target.Value);
+        var previous = SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == editing);
+        var item = new NewTabShortcutPlacement(editing ?? Guid.NewGuid().ToString("N"), label, address)
+        { AppId = previous?.Target == address ? previous.AppId : app?.Id };
+        if (!await IsShortcutAppCurrentAsync(item, original, token))
+        {
+            if (original.IsAcceptedPublicationCurrent) ShowShortcutValidation("This app is no longer available. Choose a different destination.", _shortcutAddress);
+            return;
+        }
         _shortcutExpected = item;
         await SaveNewTabShortcutPlacementAsync(item, editing, original, token);
         if (original.IsAcceptedPublicationCurrent) CompleteNewTabShortcutChange(close: true);
@@ -348,10 +363,11 @@ internal sealed partial class UnifiedHomePage
             var destination = ShortcutDestinations.FirstOrDefault(destination => destination.Target == shortcut.Target);
             return new Dictionary<string, object?>
             {
-                ["Id"] = shortcut.Id, ["Label"] = shortcut.Label, ["EditLabel"] = "Edit " + shortcut.Label,
+                ["Id"] = shortcut.Id, ["Label"] = IsShortcutAvailable(shortcut) ? shortcut.Label : shortcut.Label + " (unavailable)", ["EditLabel"] = "Edit " + shortcut.Label,
                 ["AutomationId"] = ShortcutAutomationPrefix + shortcut.Id, ["EditAutomationId"] = ShortcutEditAutomationPrefix + shortcut.Id,
-                ["Icon"] = "icon:" + (destination.Icon ?? "link"),
-                ["CanOpen"] = !ShortcutSurfaceOpen && IsShortcutTargetAvailable(shortcut.Target),
+                ["Icon"] = ShortcutIcon(shortcut.Target, destination.Icon ?? "link"),
+                ["CanOpen"] = !ShortcutSurfaceOpen && IsShortcutAvailable(shortcut),
+                ["HelpText"] = IsShortcutAvailable(shortcut) ? shortcut.Label : "This destination is unavailable. Use Customise to replace or remove the shortcut.",
                 ["Row"] = index / columns, ["Column"] = index % columns
             };
         }).ToArray();

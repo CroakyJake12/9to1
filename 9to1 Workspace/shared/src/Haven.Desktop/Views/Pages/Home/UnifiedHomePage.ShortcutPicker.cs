@@ -28,7 +28,7 @@ internal sealed partial class UnifiedHomePage
         if (!resume)
         {
             _shortcutPickerSearch.Text = string.Empty;
-            _shortcutPickerStatus = null;
+            _shortcutPickerStatus = _shortcutCatalogueStatus;
         }
         _shortcutPickerOpen = true;
         PublishNewTabShortcuts();
@@ -126,19 +126,32 @@ internal sealed partial class UnifiedHomePage
         frame.MaxHeight = Math.Min(748, Math.Max(1, Bounds.Height - 40));
     }
 
-    private bool CanCloseShortcutPicker => _shortcutPickerOpen && !NewTabLayoutBusy && _retryNewTabLayout is null;
+    private bool CanCloseShortcutPicker => _shortcutPickerOpen && !_checkingShortcutApp && !NewTabLayoutBusy && _retryNewTabLayout is null;
 
     private async Task AddShortcutCandidateAsync(string? address, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
         var candidate = EnumerateShortcutCandidates().FirstOrDefault(item => item.Target == address);
         if (candidate.Target is null || SavedShortcuts.Any(item => item.Target == candidate.Target)) return;
-        _shortcutPendingPick = new(Guid.NewGuid().ToString("N"), candidate.Label, candidate.Target);
+        var pin = new NewTabShortcutPlacement(Guid.NewGuid().ToString("N"), candidate.Label, candidate.Target)
+        { AppId = _shortcutApps.GetValueOrDefault(candidate.Target)?.Id };
+        if (!await IsShortcutAppCurrentAsync(pin, original, token))
+        {
+            if (original.IsAcceptedPublicationCurrent)
+            {
+                _shortcutPickerStatus = "This app is no longer available in this profile.";
+                PublishShortcutPicker();
+                FocusShortcutPicker("home-newtab-shortcut-picker-search");
+            }
+            return;
+        }
+        _shortcutPendingPick = pin;
         await SaveNewTabShortcutPlacementAsync(_shortcutPendingPick, editing: null, original, token);
         if (original.IsAcceptedPublicationCurrent) CompleteShortcutPick();
     }
 
     private IEnumerable<(string Target, string Label, string Icon)> EnumerateShortcutCandidates() =>
-        ShortcutDestinations.Where(item => IsShortcutTargetAvailable(item.Target));
+        ShortcutDestinations.Where(item => IsShortcutTargetAvailable(item.Target))
+            .Concat(_shortcutApps.Select(entry => (entry.Key, entry.Value.Name, entry.Value.IconKey)));
 
     private void CompleteShortcutPick()
     {
@@ -172,7 +185,7 @@ internal sealed partial class UnifiedHomePage
             return new Dictionary<string, object?>
             {
                 ["Target"] = item.Target, ["Label"] = item.Label,
-                ["Icon"] = "icon:" + item.Icon, ["Mark"] = pinned ? "✓" : "+",
+                ["Icon"] = ShortcutIcon(item.Target, item.Icon), ["Mark"] = pinned ? "✓" : "+",
                 ["AccessibleName"] = pinned ? item.Label + ", already added" : "Add " + item.Label,
                 ["CanAdd"] = canAdd && !pinned, ["Row"] = index / columns, ["Column"] = index % columns
             };

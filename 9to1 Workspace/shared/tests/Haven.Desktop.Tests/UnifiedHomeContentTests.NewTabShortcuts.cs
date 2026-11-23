@@ -224,6 +224,64 @@ public sealed partial class UnifiedHomeContentTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task New_Tab_shortcuts_admit_registered_app_identity_and_keep_the_pin_when_unavailable()
+    {
+        var paths = new LayoutPaths();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(40));
+        var token = timeout.Token;
+        var request = Request("browse://newtab");
+        var preferences = new NewTabLayoutPreferences(new VersionedAtomicSettingsStore(paths), request.ProfileId, _ => Task.CompletedTask);
+        var boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
+        var admitted = true;
+        var navigations = new List<BrowseNavigationIntent>();
+        var page = new UnifiedHomePage(request, new Registry(), () => throw new InvalidOperationException(),
+            () => throw new InvalidOperationException(), (intent, _) => { navigations.Add(intent); return true; },
+            (_, _) => throw new InvalidOperationException(), newTabLayout: preferences,
+            shortcutAppAvailable: mode => admitted && mode.Id == boards.Id);
+        var window = new Window { Width = 1440, Height = 900, Content = page };
+        try
+        {
+            await page.InitializeAsync(token);
+            window.Show(); SettleFixtureLayout(window);
+            await Activate(SettingsControl<Button>(page, "home-newtab-shortcut-add"));
+            var candidates = page.GetVisualDescendants().OfType<Button>().Where(button =>
+                button.Name == "home-newtab-shortcut-picker-candidate" && button.IsEffectivelyVisible).ToArray();
+            Assert.DoesNotContain(candidates, button => AutomationProperties.GetName(button) == "Add Canvas");
+            await Activate(Assert.Single(candidates, button => AutomationProperties.GetName(button) == "Add " + boards.Name));
+            var saved = await preferences.ReadAsync(token);
+            var pin = Assert.Single(saved.Layout.Shortcuts, item => item.AppId == boards.Id);
+            Assert.Equal("9to1://boards", pin.Target);
+            Assert.Empty(navigations);
+            await Activate(SettingsControl<Button>(page, "home-newtab-shortcut-picker-close"));
+            await Activate(Tile());
+            Assert.Equal(pin.Target, Assert.Single(navigations).Address.Value);
+            admitted = false;
+            await Activate(Tile());
+            Assert.Single(navigations);
+            Assert.False(Tile().IsEnabled);
+            Assert.Contains("unavailable", AutomationProperties.GetName(Tile()));
+            Assert.Equal(saved.Serialized, (await preferences.ReadAsync(token)).Serialized);
+            Assert.False((pin with { Target = "9to1://boards/elsewhere" }).IsValid());
+            Assert.False((pin with { AppId = null }).IsValid());
+        }
+        finally
+        {
+            try { await page.CloseAndDrainAsync(); }
+            finally { window.Close(); Directory.Delete(paths.DataDirectory, recursive: true); }
+        }
+
+        Button Tile() => Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+            button.Name == "home-newtab-shortcut" && AutomationProperties.GetName(button)?.StartsWith(boards.Name, StringComparison.Ordinal) == true);
+        async Task Activate(Button button)
+        {
+            Assert.True(button.IsEnabled && button.Focus(NavigationMethod.Tab));
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+        }
+    }
+
     [Fact]
     public async Task New_Tab_shortcuts_legacy_defaults_and_saved_empty_are_distinct()
     {

@@ -16,6 +16,9 @@ internal sealed record NewTabWidgetPlacement(string Id, string SourceId, bool Is
 
 internal sealed record NewTabShortcutPlacement(string Id, string Label, string Target)
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? AppId { get; init; }
+
     internal const string Apps = "browse://home";
     internal const string Library = "browse://home/library";
     internal const string Dashboard = "browse://home/dashboard";
@@ -37,7 +40,10 @@ internal sealed record NewTabShortcutPlacement(string Id, string Label, string T
     internal bool IsValid() =>
         Id is { Length: > 0 and <= 64 } && Id.All(character => char.IsAsciiLetterOrDigit(character) || character == '-') &&
         Label is { Length: > 0 and <= MaximumLabelLength } && !Label.Any(char.IsControl) && !string.IsNullOrWhiteSpace(Label) &&
-        TryParseTarget(Target, out var address) && address!.Value == Target;
+        (AppId is { } appId
+            ? appId != Guid.Empty && AppContentAddress.TryParse(Target, out var app) &&
+              app is { Namespace: AppContentNamespace.NativeApp, ResourceSegments.Count: 0 } && app.Value == Target
+            : TryParseTarget(Target, out var address) && address!.Value == Target);
 }
 
 internal sealed record NewTabLayoutPreference(long Revision, NewTabLayoutPreset Preset,
