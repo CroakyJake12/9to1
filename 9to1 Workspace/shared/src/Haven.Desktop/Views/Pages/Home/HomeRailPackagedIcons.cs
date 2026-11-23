@@ -29,6 +29,8 @@ public static class HomeRailPackagedIcons
 
     private const string IconPrefix = "icon:";
     private const string SvgExtension = ".svg";
+    private const string HomeBrandAsset = "avares://Haven/Assets/haven-32.png";
+    private static readonly HavenAvaloniaImageResolver BrandImages = new();
 
     /// <summary>
     /// Symbolic icon keys that resolve to a filled, rounded packaged SVG asset on the Home rail.
@@ -64,6 +66,8 @@ public static class HomeRailPackagedIcons
     /// </summary>
     public static IImage? Resolve(string source, Control target)
     {
+        if (source == HomeBrandAsset)
+            return BrandImages.TryResolve(source, out var mark) ? mark : null;
         if (!source.StartsWith(IconPrefix, StringComparison.Ordinal))
             return null;
         var key = source.AsSpan(IconPrefix.Length).Trim();

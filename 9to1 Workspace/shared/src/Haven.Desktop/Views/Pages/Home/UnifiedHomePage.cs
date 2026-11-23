@@ -23,6 +23,8 @@ namespace Haven.Desktop.Views.Pages.Home;
 internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
 {
     private static readonly AppContentAddress DashboardAddress = AppContentAddress.Parse("browse://home/dashboard");
+    private static readonly AppContentAddress AccountSettingsAddress = AppContentAddress.Parse("browse://home/settings/settings-account");
+    private static readonly AppContentAddress AssistantsAddress = AppContentAddress.Parse("9to1://spaces/assistants");
 
     private readonly BrowseAppContentRequest _request;
     private readonly IModeRegistry _modes;
@@ -34,6 +36,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
     private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly bool _aiAvailable;
+    private readonly bool _assistantsAvailable;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
@@ -75,7 +78,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Func<HomeEventsDestinationPage>? createEvents = null,
         Func<HomeSettingsDestinationPage>? createSettings = null,
         Func<HomeLibraryDestinationPage>? createLibrary = null,
-        NewTabLayoutPreferences? newTabLayout = null, NewTabWidgetSources? newTabWidgets = null)
+        NewTabLayoutPreferences? newTabLayout = null, NewTabWidgetSources? newTabWidgets = null,
+        bool assistantsAvailable = false)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
@@ -100,7 +104,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         // register each other's targets. The loader is ( after the bindings exist so the coordinator
         // can be captured. All brand observations are retired before loader teardown (see StopAsync).
         _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry(_appsBindings));
-        _railBindings = new(() => _section);
+        _assistantsAvailable = assistantsAvailable;
+        _railBindings = new(() => _section, _createSettings is not null, _createLibrary is not null, _assistantsAvailable);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
         using var reader = new StreamReader(stream);
@@ -166,11 +171,12 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         command.StartsWith(NewTabCustomisationPrefix, StringComparison.Ordinal) ? NewTabCustomisationActionAvailable(command) :
         command.StartsWith(widgetActionPrefix, StringComparison.Ordinal) ? IsNewTabWidgetActionAvailable(command) :
         command == "home.events"
-        ? _createEvents is not null : command == "home.settings" ? _createSettings is not null :
+        ? _createEvents is not null : command is "home.settings" or "home.account" ? _createSettings is not null :
         command == "home.library" ? _createLibrary is not null :
+        command == "home.assistants" ? _assistantsAvailable :
         command == "home.ask-ai" ? _aiAvailable && _section == "newtab" : command is
         "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
-        "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or
+        "home.mesh" or
         "home.notifications" or "home.open-app" or "home.set-app-query" or "home.clear-app-query");
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -220,6 +226,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                     if (_request.Address.Authority == "newtab") await SelectAsync("newtab", original, linked.Token);
                     else Queue(AppContentAddress.Parse("browse://newtab"), original, true);
                     break;
+                case "home.account": Queue(AccountSettingsAddress, original, newTab: true); break;
+                case "home.assistants": Queue(AssistantsAddress, original, newTab: true); break;
                 case "home.submit": SubmitSearch(original, linked.Token); break;
                 case "home.ask-ai": await AskAiAsync(original, linked.Token); break;
                 case "home.open-app":

@@ -12,9 +12,12 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
     private long _revision;
     private bool _showLabels;
 
-    public HomeRailCuiBindings(Func<string> section)
+    public HomeRailCuiBindings(Func<string> section, bool settingsAvailable, bool libraryAvailable, bool assistantsAvailable)
     {
         _section = section ?? throw new ArgumentNullException(nameof(section));
+        _values.Set("rail.settingsAvailable", settingsAvailable);
+        _values.Set("rail.libraryAvailable", libraryAvailable);
+        _values.Set("rail.assistantsAvailable", assistantsAvailable);
         _values.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
         SetViewportWidth(0);
         Refresh();
@@ -40,9 +43,9 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
 
     private void UpdateRailDimensions()
     {
-        var desktopNewTab = _showLabels && _section() == "newtab";
-        _values.Set("rail.itemWidth", desktopNewTab ? 210d : _showLabels ? 196d : 44d);
-        _values.Set("rail.sidebarPadding", desktopNewTab ? "12 8 11 8" : "5 8 5 8");
+        _values.Set("rail.itemWidth", _showLabels ? 210d : 44d);
+        _values.Set("rail.brandWidth", _showLabels ? 122d : 44d);
+        _values.Set("rail.sidebarPadding", _showLabels ? "12 8 11 8" : "5 8 5 8");
     }
 
     public bool TryGetValue(string path, out object? value)

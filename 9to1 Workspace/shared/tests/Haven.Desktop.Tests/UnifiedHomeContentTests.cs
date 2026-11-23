@@ -550,7 +550,7 @@ public sealed partial class UnifiedHomeContentTests
             SettleFixtureLayout(window);
             Assert.DoesNotContain(page.GetVisualDescendants(), control => ReferenceEquals(control, settings));
             Assert.True(gear.IsFocused);
-            Assert.True(SettingsCategorySelected(HomeRailButton(page, "home-apps", "Apps")));
+            Assert.True(SettingsCategorySelected(HomeRailButton(page, "home-apps", "9to1 Apps")));
             Assert.Equal("Home", session.Title);
             Assert.Equal("browse://home", session.Address.Value);
             Assert.Equal(new[] { "Theme and accent preferences", "Layout", "Appearance", "Theme and accent preferences", "Home" },
@@ -2493,7 +2493,7 @@ public sealed partial class UnifiedHomeContentTests
             sourcePage = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(source.OriginalNativeView).OriginalContent);
             if (fromNewTab)
             {
-                HomeRailButton(sourcePage, "home-apps", "Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                HomeRailButton(sourcePage, "home-apps", "9to1 Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await sourcePage.WhenActionsIdleAsync().WaitAsync(limit);
             }
             SettleFixtureLayout(window);
@@ -2566,7 +2566,7 @@ public sealed partial class UnifiedHomeContentTests
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
         var window = Show(session.OriginalNativeView);
-        var button = HomeRailButton(page, "home-apps", "Apps");
+        var button = HomeRailButton(page, "home-apps", "9to1 Apps");
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await page.WhenActionsIdleAsync();
         Assert.Equal(2, source.Reads);
@@ -2658,7 +2658,7 @@ public sealed partial class UnifiedHomeContentTests
             // Preserve the actual frame/mode before checking the requested appearance.
             CaptureOptionalFrame(window, frame, $"home-apps-{width}-{appearance}", "UnifiedHome Apps layout fixture", appearance);
             Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
-            foreach (var (id, label) in new[] { ("home-apps", "Apps"), ("home-models", "Models / Discover"), ("home-newtab", "New Tab") })
+            foreach (var (id, label) in new[] { ("home-apps", "9to1 Apps"), ("home-models", "Models"), ("home-newtab", "New Tab") })
             {
                 var button = HomeRailButton(page, id, label);
                 Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
@@ -2835,18 +2835,25 @@ public sealed partial class UnifiedHomeContentTests
             var main = page.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "home-main");
             var sideOrigin = sidebar.TranslatePoint(default, window)!.Value;
             var mainOrigin = main.TranslatePoint(default, window)!.Value;
-            // Home keeps seven scrolling destinations plus a pinned Settings footer across widths.
+            // No Assistants owner is composed in this fixture. Existing destinations keep one scroll column.
             var nav = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-nav"));
             var footer = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-rail-footer"));
             var scroll = Assert.IsType<ScrollViewer>(nav.Child);
-            var buttons = nav.AuthoredChildren.OfType<Button>().ToArray();
+            var buttons = nav.AuthoredChildren.OfType<Button>().Where(button => button.IsEffectivelyVisible && button.IsAttachedToVisualTree()).ToArray();
             Assert.Equal(7, buttons.Length);
-            Assert.Equal(new[] { "home-apps", "home-dashboard", "home-models", "home-newtab", "home-library", "home-events", "home-mesh" },
+            Assert.Equal(new[] { "home-dashboard", "home-newtab", "home-library", "home-events", "home-apps", "home-models", "home-mesh" },
                 buttons.Select(button => button.Name));
-            var settings = Assert.Single(footer.AuthoredChildren.OfType<Button>());
-            Assert.Same(settings, HomeRailButton(page, "home-settings", "Settings"));
+            Assert.Equal(new[] { "home-account", "home-settings" }, footer.AuthoredChildren.OfType<Button>().Select(button => button.Name));
+            var settings = HomeRailButton(page, "home-settings", "Settings");
+            var brand = HomeRailButton(page, "home-brand", "Home");
+            Assert.NotNull(Assert.Single(brand.GetVisualDescendants().OfType<Image>()).Source);
+            var groupHeadings = nav.GetVisualDescendants().OfType<TextBlock>()
+                .Where(text => text.Name is "home-rail-explore" or "home-rail-workspace" or "home-rail-discover")
+                .Select(text => text.Text);
+            if (width >= 840) Assert.Equal(new[] { "Explore", "Workspace", "Discover" }, groupHeadings);
+            else Assert.Empty(groupHeadings);
             Assert.Equal(global::Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(nav.Layout).Orientation);
             Assert.True(sideOrigin.X + sidebar.Bounds.Width <= mainOrigin.X + .5);
             double previousBottom = -1;

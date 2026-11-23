@@ -479,7 +479,8 @@ public sealed partial class App
                 newTabWidgets: request => new NewTabWidgetSources(
                     _services.GetService<IPlannerRepository>(), _services.GetService<IConversationRepository>(),
                     _services.GetService<IContainerRepository>(), _services.GetService<IBoardsWorkspaceService>(),
-                    token => AdmitHomeAsync(request, token), libraryAvailable: true));
+                    token => AdmitHomeAsync(request, token), libraryAvailable: true),
+                assistantsAvailable: true);
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM
             if (!OperatingSystem.IsWindows())
