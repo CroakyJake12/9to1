@@ -47,6 +47,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private string _initialCategory = "theme";
     private string? _initialAnchor;
     private bool _initialAnchorPending;
+    private bool _openInitialCreator;
     private bool _initialDirectoryReveal;
     private bool? _narrowLayout;
     private long _directoryRevealVersion;
@@ -154,6 +155,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _initialCategory = HomeSettingsCatalog.ResolveRoute(route)
             ?? throw new InvalidOperationException("The requested Settings destination was not admitted.");
         _initialAnchor = route == "appearance-palette" ? "home-accent-settings" : null;
+        _openInitialCreator = route == "custom-theme";
     }
 
     internal void SetNativeApps(IEnumerable<ModeDefinition> modes)
@@ -205,11 +207,27 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal void Deactivate()
     { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; UpdatePageCommand(); }
 
+    private void OpenThemeCreator()
+    {
+        if (_category != "theme")
+        {
+            _creatorReturnCategory = _category;
+            _search.Text = string.Empty;
+            SelectCategory("theme", scroll: false, notify: CreatorOpen);
+        }
+        _creator.Open();
+    }
+
     internal void FocusCategory() => FocusDirectoryItem(_category);
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs args)
     {
         base.OnAttachedToVisualTree(args);
+        if (_openInitialCreator && _active && _category == _initialCategory)
+        {
+            _openInitialCreator = false;
+            if (IsActionAvailable("SettingsOptionsCreateTheme") == true) OpenThemeCreator();
+        }
         if (_active && _initialDirectoryReveal)
         {
             _initialDirectoryReveal = false;
@@ -275,14 +293,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 return ValueTask.CompletedTask;
             case "SettingsOptionsCreateTheme":
             case "HomeCreateTheme":
-                if (_category != "theme")
-                {
-                    _creatorReturnCategory = _category;
-                    _search.Text = string.Empty;
-                    // Opening a new draft issues its title; a retained draft only changes the shown category.
-                    SelectCategory("theme", scroll: false, notify: CreatorOpen);
-                }
-                _creator.Open();
+                OpenThemeCreator();
                 return ValueTask.CompletedTask;
             case "SettingsOpenBrowseGeneral":
                 return OpenDirectoryLinkAsync(BrowseLink(BrowserNativePage.Settings), cancellationToken);

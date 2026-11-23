@@ -19,6 +19,45 @@ namespace Haven.Desktop.Tests;
 public sealed partial class UnifiedHomeContentTests
 {
     [AvaloniaFact]
+    public async Task Settings_catalog_custom_theme_link_opens_the_draft_once_and_cancels_to_theme_options()
+    {
+        using var lifetime = new CancellationTokenSource();
+        var paths = new LayoutPaths();
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        var original = """{"havenUiThemeName":"Professional","havenUiAppearance":2,"defaultModel":"keep"}"""u8.ToArray();
+        Directory.CreateDirectory(paths.DataDirectory);
+        await File.WriteAllBytesAsync(file, original);
+        await using var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "original-home-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), action => Dispatcher.UIThread.Post(action));
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            settings: _ => new(source, _ => Task.CompletedTask)).CreateSession(Request("browse://home/settings/custom-theme")));
+        Window? window = null;
+        try
+        {
+            await session.InitializeAsync(lifetime.Token);
+            window = Show(session.OriginalNativeView);
+            SettleFixtureLayout(window);
+            var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
+            Assert.Equal("Create theme", settings.CategoryTitle);
+            var name = Assert.Single(settings.GetVisualDescendants().OfType<TextBox>(),
+                field => field.IsEffectivelyVisible && AutomationProperties.GetName(field) == "Theme name");
+            name.Text = "Discard this draft";
+            Assert.True(name.Focus());
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.Equal("Theme Options", settings.CategoryTitle);
+            Assert.True(SettingsControl<Button>(settings, "home-theme-options-create").IsEffectivelyVisible);
+            Assert.Equal(original, await File.ReadAllBytesAsync(file));
+        }
+        finally
+        {
+            await session.CloseAndDrainAsync();
+            window?.Close();
+            Directory.Delete(paths.DataDirectory, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Settings_catalog_opens_all_groups_and_retains_current_data_and_real_owner()
     {
         var limit = TimeSpan.FromSeconds(20);
