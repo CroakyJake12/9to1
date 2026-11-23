@@ -52,6 +52,10 @@ public abstract class BrowseNativeAdmissionRefusal : NotSupportedException
 /// This contract does not admit native-app or generic CUI namespaces.</summary>
 public interface IBrowseInternalContentFactory
 {
+    /// <summary>Recognizes a composed nested Home or New Tab route before Browse admits a
+    /// transition. This pure route check does not authorize a request or acquire an owner.</summary>
+    bool RecognizesNestedCanvas(AppContentAddress address) => false;
+
     IBrowseAppContentSession CreateSession(BrowseAppContentRequest request);
 }
 

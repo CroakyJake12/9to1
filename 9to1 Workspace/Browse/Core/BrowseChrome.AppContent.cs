@@ -84,10 +84,13 @@ public sealed partial class BrowseChrome
 
     private static bool IsHomeAddress(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
         && address.Authority == "home" && address.ResourceSegments.Count == 0;
-    private static bool IsOwnedCanvas(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
+    private bool IsOwnedCanvas(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
         && ((address.Authority is "home" or "newtab" && address.ResourceSegments.Count == 0)
             || BrowseOmniboxSearchRoute.TryParse(address, out _, out _)
             || (address.Authority == "home" && address.ResourceSegments.SequenceEqual(new[] { "library", "boards" }, StringComparer.Ordinal))
+            || ((address.Authority == "home" && address.ResourceSegments is ["settings", _] ||
+                 address.Authority == "newtab" && address.ResourceSegments is ["customise"]) &&
+                _internalContentFactory?.RecognizesNestedCanvas(address) == true)
             || (address.Authority == "home" && address.ResourceSegments.Count == 1
                 && address.ResourceSegments[0] is "dashboard" or "models" or "events" or "settings" or "library"));
     private static bool TryStoredAddress(string value, out AppContentAddress? address)
