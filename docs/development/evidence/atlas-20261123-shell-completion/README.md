@@ -1,4 +1,4 @@
-# Haven Settings and New Tab
+# Haven shell, Settings, Dashboard and New Tab
 
 The cloud checkout continued on `codex/overnight-haven-shell` from `83b330fe0778921b47e51dca19d02cf1cb5b7de4`. The starting handoff on main was `b1009894406d984dfb7c453b60a61f2422fc22b8`. All native observations used isolated Linux profiles and the real Haven apphost. Chromium rendered the repository’s pinned Atlas v4. [Owner reference](../../../specification/owner-references/2026-11-22-atlas-v4/README.md) · [Earlier native comparison](../atlas-20261123-visual-review/README.md)
 
@@ -34,17 +34,30 @@ Each comparison shows the pinned Atlas on the left and the running Haven applica
 | --- | --- | --- |
 | Settings → General | [Wide](comparisons/settings-general-wide.png) | [Narrow](comparisons/settings-general-narrow.png) |
 | Settings → Appearance | [Wide](comparisons/appearance-wide.png) | [Narrow](comparisons/appearance-narrow.png) |
+| Accent palette | [Wide](comparisons/accent-palette-wide.png) | [Narrow](comparisons/accent-palette-narrow.png) |
+| Global → Appearance → Layout | [Wide](comparisons/settings-layout-wide.png) | [Narrow](comparisons/settings-layout-narrow.png) |
 | Create theme | [Wide](comparisons/create-theme-wide.png) | [Narrow](comparisons/create-theme-narrow.png) |
+
+Layout opens Dashboard, the New Tab editor and Accessibility. Following Customise on the New Tab row opened the editor in its own tab and retained Layout. The global chat-bar position and interface-scale preferences still lack native owners. The current Accessibility destination controls high contrast and reduced motion.
+
+In Accent palette, the native panel and the Atlas panel share the same horizontal bounds at 1440 pixels. The native capture shows the profile’s actual saved-colour state. Following Back to appearance returned focus to Theme, and the original New Tab still had Customise open. The same colour controls serve Theme Options and the direct palette address. [Action and profile receipt](journeys/registered-shortcut-journey.json)
 
 ## Matched New Tab routes
 
 | Route | 1440 × 900 | 720 × 520 |
 | --- | --- | --- |
 | New Tab | [Wide](comparisons/new-tab-wide.png) | [Narrow](comparisons/new-tab-narrow.png) |
+| Customise → Add shortcut | [Wide](comparisons/add-shortcuts-wide.png) | [Narrow](comparisons/add-shortcuts-narrow.png) |
 | Customise | [Wide](comparisons/customise-wide.png) | [Narrow](comparisons/customise-narrow.png) |
 | Add widgets | [Wide](comparisons/widgets-wide.png) | [Narrow](comparisons/widgets-narrow.png) |
 
 At 1440 × 900 both Customise panels measure 280 pixels tall. Add widget and Done share the heading row. The native catalogue has three preview columns at the wide width and two scrollable columns at 720 pixels. The reference thumbnails illustrate populated documents and calendars. The native thumbnails label the actual source type, and placed cards show the profile’s available data. A real GTK file choice previewed the image before any layout write. Explicit Use background recorded its profile-scoped content hash. [Native upload and widget receipts](journeys/upload-and-widget-journeys.json)
+
+Add shortcuts opens a searchable grid. Existing pins show a check. At 720 pixels the grid has two columns. Typing Boards and pressing Tab then Enter pinned the registered app. After restart, the tile opened the real Boards home at `9to1://boards`. Custom address accepts a validated web address and Cancel restores the picker filter. [Native input, stored identity and restart](journeys/registered-shortcut-journey.json)
+
+## Dashboard
+
+An uncustomised Dashboard opens with one Dashboard heading, Continue working, Today and Study this week. The native comparison uses an empty profile. Today reads the profile’s agenda and Study reads recorded lesson time. View files, Open Tasks and View progress opened the existing Library, Tasks Space and Study Space. Device and model controls remain reachable below the activity section. A profile with its own Dashboard layout keeps its saved arrangement. The host has no cross-app list of recently opened documents, so Continue working links to Library. [Dashboard at 1440 × 900](comparisons/dashboard-wide.png) · [Dashboard at 720 × 520](comparisons/dashboard-narrow.png) · [Native Dashboard, Layout and Accent input receipts](journeys/layout-palette-dashboard.json)
 
 ## Ask AI and tab recovery
 
