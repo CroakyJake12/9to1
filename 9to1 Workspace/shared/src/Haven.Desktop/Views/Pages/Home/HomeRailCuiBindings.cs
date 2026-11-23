@@ -15,12 +15,14 @@ namespace Haven.Desktop.Views.Pages.Home;
 internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyPropertyChanged
 {
     private readonly Func<string> _section;
+    private readonly Func<bool> _settingsHasSidebar;
     private readonly CuiViewModel _values = new();
     private long _revision;
 
-    public HomeRailCuiBindings(Func<string> section)
+    public HomeRailCuiBindings(Func<string> section, Func<bool>? settingsHasSidebar=null)
     {
         _section = section ?? throw new ArgumentNullException(nameof(section));
+        _settingsHasSidebar=settingsHasSidebar??(()=>false);
         _values.PropertyChanged += (_, args) => PropertyChanged?.Invoke(this, args);
         Refresh();
     }
@@ -38,6 +40,8 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
         var section = _section();
         value = path switch
         {
+            "rail.visible" => section != "settings" || !_settingsHasSidebar(),
+            "rail.pagePadding" => section == "settings" && _settingsHasSidebar() ? "0" : "16",
             "rail.appsSelected" => section == "apps",
             "rail.dashboardSelected" => section == "dashboard",
             "rail.modelsSelected" => section == "models",

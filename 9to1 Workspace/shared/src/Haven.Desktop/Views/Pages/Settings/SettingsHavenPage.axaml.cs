@@ -88,6 +88,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
     }
 
     internal SettingsHavenScene Route => _route;
+    internal void ShowAtlasSection(string key) => _route.ShowAtlasSection(key);
     internal HavenSceneControl SceneHost => Scene;
     internal HavenElement SceneRoot => _route.Root;
 

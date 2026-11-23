@@ -38,13 +38,13 @@ internal sealed partial class HomeDulcheSwarm : UserControl, IDisposable
         using var reader = new StreamReader(resource);
         var parser = new CuiRichParser();
         var document = parser.Parse(reader.ReadToEnd(), "DulcheSwarm.cui");
-        foreach (var key in "runs tasks mentor-model mentor-profile mentor-reasoning partial-profile worker-model worker-profile worker-reasoning roles autonomy strategy preset milestones on-error on-conflict".Split(' '))
+        foreach (var key in "runs tasks mentor-model mentor-profile mentor-ram-preset mentor-reasoning partial-profile worker-model worker-profile worker-ram-preset worker-reasoning roles autonomy strategy preset milestones on-error on-conflict".Split(' '))
             Mount(key, new ComboBox());
         foreach (var key in "objective working-directory criteria references review-note mentor-context worker-context role specialization recipes verify seconds task-count token-count concurrency task-limit time-limit output review-limit min-ram min-disk max-gpu".Split(' '))
             Mount(key, new TextBox());
-        foreach (var key in "status progress rates resources task-detail comparisons decisions mentor-budget worker-budget worker-plan limits-readout".Split(' '))
+        foreach (var key in "status progress rates resources task-detail comparisons decisions mentor-budget worker-budget mentor-placement worker-placement worker-plan limits-readout".Split(' '))
             Mount(key, new TextBlock());
-        foreach (var key in "monitor configure new refresh benchmarks pause resume review stop stop-worker add-role remove-role create apply".Split(' '))
+        foreach (var key in "monitor configure new refresh find-presets mentor-apply-preset worker-apply-preset benchmarks pause resume review stop stop-worker add-role remove-role create apply".Split(' '))
         {
             var button = new Button();
             Mount(key, button);
@@ -167,6 +167,11 @@ internal sealed partial class HomeDulcheSwarm : UserControl, IDisposable
         if (runs.Length == 0 && !_configuring)
             Label("progress", "No Swarm runs. Select Configure to start one.");
         await ReadRunAsync(token);
+        if (_configuring)
+        {
+            await PreviewPlacementAsync("mentor",token);
+            await PreviewPlacementAsync("worker",token);
+        }
         UpdateBudgets();
     }
 
@@ -260,6 +265,9 @@ internal sealed partial class HomeDulcheSwarm : UserControl, IDisposable
                 ConfigureDefaults();
                 SetPage(true);
                 return;
+            case "find-presets": await FindPresetsAsync(token); return;
+            case "mentor-apply-preset": await ApplyPlacementPresetAsync("mentor", token); return;
+            case "worker-apply-preset": await ApplyPlacementPresetAsync("worker", token); return;
             case "benchmarks":
                 SetPage(false);
                 var results = await _client.GetAsync("swarms/benchmarks", token);

@@ -69,7 +69,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         CompactNavigation.Conditions.Add(new HavenScreenRangeCondition(HavenScreenAxis.Width, maximum: HavenLength.Px(719.999)));
         Content.Add(CompactNavigation);
 
-        var searchRow = new Container { Name = "Settings.SearchRow", Layout = HavenLayout.Grid, Columns = "1fr Auto", Rows = "48px" };
+        var searchRow = _searchRow = new Container { Name = "Settings.SearchRow", Layout = HavenLayout.Grid, Columns = "1fr Auto", Rows = "48px" };
         searchRow.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         searchRow.SetValue(HavenProperties.MaxWidth, HavenLength.Px(820));
         searchRow.SetValue(HavenProperties.Gap, HavenLength.Px(10));
@@ -110,6 +110,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
     }
 
     public Page Root { get; }
+    private readonly Container _searchRow;
     public Container Sidebar { get; }
     public Container CompactNavigation { get; }
     public Container Content { get; }
@@ -323,6 +324,15 @@ internal sealed partial class SettingsHavenScene : IDisposable
         NavigateTo(match.Definition.Key);
         SetStatus($"Opened {match.Definition.Title}.");
         return true;
+    }
+
+    internal void ShowAtlasSection(string key)
+    {
+        NavigateTo(key);
+        Root.Columns = "0 1fr";
+        foreach (var node in new HavenElement[] { Sidebar, CompactNavigation, PageTitle, PageDescription, _searchRow })
+            node.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        Content.SetValue(HavenProperties.Padding, HavenThickness.Parse("0"));
     }
 
     public void NavigateTo(string key)

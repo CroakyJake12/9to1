@@ -37,7 +37,9 @@ internal sealed partial class HomeDulcheSwarm
         var peak = run["resource_summary"];
         var sampled = peak?["gpus"] is JsonObject hardware ? hardware.Select(entry =>
             $"{entry.Key} peak {Str(entry.Value, "peak_used_mib")} MiB, {Str(entry.Value, "peak_temp_c")} °C · idle {Rate(entry.Value?["sampled_idle_seconds"])} of {Rate(entry.Value?["sampled_seconds"])} sampled s") : [];
-        Label("resources", string.Join("\n", new[] { mentorSummary }.Concat(capacity).Append(ram).Concat(devices).Concat(sampled)));
+        var placements = Rows(run["participant_placements"]).Select(row =>
+            $"{Str(row,"participant")} · {PlacementText(row)}");
+        Label("resources", string.Join("\n", new[] { mentorSummary }.Concat(capacity).Concat(placements).Append(ram).Concat(devices).Concat(sampled)));
         Label("rates", ThroughputText(run));
         var tasks = Rows(run["tasks"]).Select(t => new Choice(Str(t, "id"), $"{Str(t, "id")} · {Str(t, "role")} · {Pretty(t, "state")}", t)).ToArray();
         Choices("tasks", tasks);

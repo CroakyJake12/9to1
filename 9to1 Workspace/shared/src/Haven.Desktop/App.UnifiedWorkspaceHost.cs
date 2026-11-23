@@ -457,7 +457,8 @@ public sealed partial class App
                         token => AdmitHomeAsync(request, token));
                 },
                 settings: request => new HomeSettingsDestinationPage(actualTheme,
-                    token => AdmitHomeSettingsAsync(request, token), _services.GetRequiredService<DulcheLocalClient>()),
+                    token => AdmitHomeSettingsAsync(request, token), _services.GetRequiredService<DulcheLocalClient>(),
+                    () => ActivatorUtilities.CreateInstance<Haven.Desktop.Views.Pages.Settings.SettingsHavenPage>(_services)),
                 library: request => CreateHomeLibraryPage(request, actualTheme.Context));
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM

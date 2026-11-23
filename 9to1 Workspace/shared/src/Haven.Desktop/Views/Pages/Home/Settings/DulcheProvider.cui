@@ -1,0 +1,50 @@
+<Cui id="home.settings.dulche-provider" version="1">
+  <Theme Name="user_preference">
+    <Page AccessibleName="Dulche external provider">
+      <Container Type="Vertical Stack" CellGap="14">
+        <Text Text="Connections" FontSize="18" FontWeight="700" />
+        <Container Type="Grid" ColumnSizes="1fr Auto" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1" Padding="0 10 0 14">
+          <Container Type="Vertical Stack" CellGap="4"><Text Text="Dulche local endpoint" FontWeight="700" /><Text id="provider-state" Text="Checking local service…" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" /></Container>
+          <Button id="provider-enable" Column="1" Content="Enable" AccessibleName="Change external inference listener state" VerticalAlignment="Center" />
+        </Container>
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1" Padding="0 10 0 14">
+          <Container Type="Vertical Stack" CellGap="4"><Text Text="Base URL" FontWeight="700" /><Text id="provider-base" TextWrapping="Wrap" /></Container>
+          <Button id="provider-copy-base" Column="1" Content="Copy URL" VerticalAlignment="Center" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="6">
+          <Text Text="Model IDs" FontWeight="700" />
+          <Container Type="Wrap" CellGap="8"><Input id="provider-models" Type="Select" AccessibleName="External inference model IDs" Width="300" /><Button id="provider-copy-model" Content="Copy model ID" /></Container>
+        </Container>
+        <Text Text="OpenCode" FontSize="18" FontWeight="700" />
+        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1" Padding="0 10 0 14">
+          <Container Type="Vertical Stack" CellGap="4"><Text Text="This OpenCode installation" FontWeight="700" /><Text Text="Add Dulche as an optional provider and store a dedicated private credential for this account." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></Container>
+          <Button id="provider-connect" Column="1" Content="Connect OpenCode" VerticalAlignment="Center" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="5">
+          <Text Text="Manual configuration" FontWeight="700" />
+          <Text Text="Merge this provider into OpenCode’s configuration and supply its credential through DULCHE_API_KEY. Select Dulche and a supported model in OpenCode." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="provider-config" Type="Text" AcceptsReturn="True" AccessibleName="OpenCode provider configuration" MinHeight="86" MaxHeight="175" />
+          <Button id="provider-copy-config" Content="Copy configuration" HorizontalAlignment="Left" />
+        </Container>
+        <Text Text="Client credentials" FontSize="18" FontWeight="700" />
+        <Container Type="Wrap" CellGap="8">
+          <Input id="provider-client-name" Type="Text" AccessibleName="New external client name" PlaceholderText="Client name" Width="210" />
+          <Button id="provider-issue" Content="Create credential" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding HasOneTimeToken, fallback=false}">
+          <Text Text="New credential" FontWeight="700" />
+          <Text Text="This value is available until you leave this page. Store it in your client’s credential store." Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Wrap" CellGap="8">
+            <Input id="provider-token" Type="Text" AccessibleName="One-time client credential" Width="300" />
+            <Button id="provider-reveal" Content="Show" /><Button id="provider-copy-token" Content="Copy credential" />
+          </Container>
+        </Container>
+        <Container Type="Wrap" CellGap="8">
+          <Input id="provider-clients" Type="Select" AccessibleName="Issued external client credentials" Width="295" />
+          <Button id="provider-revoke" Content="Revoke selected credential" /><Button id="provider-refresh" Content="Refresh" />
+        </Container>
+        <Text id="provider-result" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

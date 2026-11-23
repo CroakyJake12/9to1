@@ -1,0 +1,61 @@
+<Cui id="home.settings.atlas" version="1">
+  <Actions>
+    <Action name="SelectSetting" command="settings.select" parameter="{Binding row.Key}" />
+    <Action name="RelatedSetting" command="settings.related" parameter="{Binding link.Key}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page AccessibleName="Settings">
+      <Container Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiWorkspaceBrush}">
+        <Container Type="Grid" Column="0" RowSizes="Auto Auto 1fr Auto" Width="{Binding SidebarWidth}" AccessibleName="Settings navigation"
+          Background="{Resource CuiChromeMaterial}" Padding="12 12 8 8" CellGap="9">
+          <Container Type="Horizontal Stack" CellGap="10" Margin="8 0 0 3">
+            <Button id="settings-home" AccessibleName="Back to Home" Tooltip="Back to Home" Padding="4" Width="28" Height="28"><Image Source="icon:settings" Width="18" Height="18" /></Button><Text Text="Settings" FontSize="18" FontWeight="700" />
+          </Container>
+          <Container Row="1" Type="Grid" ColumnSizes="1fr Auto" CellGap="4">
+            <Input id="settings-search" Type="Text" PlaceholderText="Search settings" AccessibleName="Search settings" />
+            <Button id="settings-clear-search" Column="1" Content="×" IsVisible="{Binding HasQuery, fallback=false}" AccessibleName="Clear settings search" />
+          </Container>
+          <Container Row="2" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="1">
+            <Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Key}" Panel="Vertical Stack">
+              <Button id="settings-nav-item" action="SelectSetting" AccessibleName="{Binding row.Accessible}" Tooltip="{Binding row.Accessible}"
+                Selected="{Binding row.Selected}" Padding="{Binding row.Padding}" BorderWidth="0" CornerRadius="6"
+                Margin="1 1 1 1" HorizontalContentAlignment="Stretch" Background="{Resource CuiTransparentBrush}">
+                <Container Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+                  <Image Source="{Binding row.IconSource}" IsVisible="{Binding row.HasIcon}" Width="16" Height="16" VerticalAlignment="Center" />
+                  <Text Text="{Binding row.Mark}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Container Column="1" Type="Vertical Stack" CellGap="2">
+                    <Text Text="{Binding row.Label}" FontSize="13" FontWeight="{Binding row.Weight}" TextWrapping="Wrap" />
+                    <Text Text="{Binding row.Description}" IsVisible="{Binding row.IsGroup}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  </Container>
+                  <Text Column="2" Text="{Binding row.Chevron}" VerticalAlignment="Center" />
+                </Container>
+              </Button>
+            </Repeat>
+            <Text Text="No matching settings." IsVisible="{Binding NoResults, fallback=false}" Margin="10" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Row="3" Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
+            <Button id="settings-profile" Content="Account" AccessibleName="Open account settings" Background="{Resource CuiTransparentBrush}" />
+            <Button id="settings-help" Column="1" Content="?" AccessibleName="Settings help" Background="{Resource CuiTransparentBrush}" />
+          </Container>
+        </Container>
+        <Container Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="34 24 36 32" CellGap="13">
+          <Text IsVisible="{Binding ShowTitle, fallback=true}" Text="{Binding Scope}" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text IsVisible="{Binding ShowTitle, fallback=true}" Text="{Binding Heading}" FontSize="32" FontWeight="800" TextWrapping="Wrap" />
+          <Text Text="{Binding Description}" IsVisible="{Binding HasDescription, fallback=false}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text Text="{Binding SectionTitle}" IsVisible="{Binding ShowSectionTitle, fallback=false}" FontSize="18" FontWeight="700" />
+          <Container id="settings-owner" Type="Vertical Stack" AccessibleName="Current settings controls" />
+          <Repeat Source="{Binding Links}" As="link" Key="{Binding link.Key}" Panel="Vertical Stack">
+            <Button action="RelatedSetting" AccessibleName="{Binding link.Accessible}" BorderThickness="0 0 0 1" BorderColor="{Resource CuiLineBrush}"
+              CornerRadius="0" Background="{Resource CuiTransparentBrush}" HorizontalContentAlignment="Stretch" Padding="4 13">
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+                <Container Type="Vertical Stack" CellGap="4"><Text Text="{Binding link.Label}" FontWeight="700" /><Text Text="{Binding link.Detail}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" /></Container>
+                <Text Column="1" Text="→" VerticalAlignment="Center" />
+              </Container>
+            </Button>
+          </Repeat>
+          <Text id="settings-navigation-status" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

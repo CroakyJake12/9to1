@@ -81,7 +81,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         // register each other's targets. The loader is ( after the bindings exist so the coordinator
         // can be captured. All brand observations are retired before loader teardown (see StopAsync).
         _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry(_appsBindings));
-        _railBindings = new(() => _section);
+        _railBindings = new(() => _section, () => _settings?.OwnsAtlasNavigation==true);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
         using var reader = new StreamReader(stream);
@@ -211,8 +211,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (section == "settings")
         {
             if (_settings is null)
-                original.RunAcceptedPublicationCallback(() => _settings = (_createSettings
-                    ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))());
+                original.RunAcceptedPublicationCallback(() =>
+                {
+                    _settings = (_createSettings ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))();
+                    _settings.NavigationRequested += OnSettingsNavigation;
+                });
             if (!original.IsAcceptedPublicationCurrent) return;
             var settings = _settings ?? throw new InvalidOperationException("The Home Settings owner was not acquired.");
             await original.AwaitAsync(settings.ActivateAsync(token));
@@ -378,7 +381,30 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     }
     private void OnConversation(object? sender, Conversation conversation) =>
         StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversation.Id:D}"));
-    private void OnManageProviders(object? sender, EventArgs args) => StartNavigation(AppContentAddress.Parse("9to1://home/settings"));
+    private async void OnManageProviders(object? sender, EventArgs args)
+    {
+        try
+        {
+            await DispatchAsync("home.settings",null,CancellationToken.None);
+            if(IsAlive) _settings?.OpenProviders();
+        }
+        catch(Exception error){if(IsAlive) Set(_status,"Text",error.Message);}
+    }
+    private async void OnSettingsNavigation(string destination)
+    {
+        if(destination=="native-account")
+        {
+            try
+            {
+                var owner=App.Services?.GetService(typeof(Haven.Desktop.Accounts.NativeCakeAccountUiOwner)) as Haven.Desktop.Accounts.NativeCakeAccountUiOwner;
+                if(owner is null) { Set(_status,"Text","The native account service is unavailable.");return; }
+                await _work.RunAsync(original=>original.AwaitAsync(owner.OpenAsync(TopLevel.GetTopLevel(this) as Window)));
+            }
+            catch(Exception error){if(IsAlive)Set(_status,"Text",error.Message);}
+            return;
+        }
+        StartNavigation(AppContentAddress.Parse(destination));
+    }
     private void OnManageApps(object? sender, EventArgs args) => StartSelection("apps");
     private void OnDiscover(object? sender, EventArgs args) => StartSelection("models");
     private void StartSelection(string section)

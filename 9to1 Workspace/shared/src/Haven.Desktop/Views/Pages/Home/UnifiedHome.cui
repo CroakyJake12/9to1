@@ -28,7 +28,7 @@
   <Theme Name="user_preference">
     <Page AccessibleName="9to1 Home">
       <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiWorkspaceBrush}">
-        <Container id="home-sidebar" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+        <Container id="home-sidebar" IsVisible="{Binding rail.visible, fallback=true}" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
           <Container id="home-rail-nav" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
             <Button id="home-apps" action="home.apps" accessible-name="Apps" Tooltip="Apps" Selected="{Binding rail.appsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="home-apps-icon" Source="icon:apps" Width="26" Height="26" />
@@ -59,7 +59,7 @@
             </Button>
           </Container>
         </Container>
-        <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="8" Padding="16">
+        <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="8" Padding="{Binding rail.pagePadding, fallback=16}">
           <Text id="home-heading" Text="Apps" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
           <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="20" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="760" Padding="24">
             <Text Text="Where would you like to go?" FontSize="32" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />

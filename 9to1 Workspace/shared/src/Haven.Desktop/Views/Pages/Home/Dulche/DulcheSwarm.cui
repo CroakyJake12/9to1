@@ -54,6 +54,7 @@
             <Text Text="Specification references" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
             <Input id="sw-references" Type="Text" AccessibleName="Specification references" Width="480" PlaceholderText="Comma-separated relative files or references" HorizontalAlignment="Left" />
           </Container>
+          <Button id="sw-find-presets" Content="Find RAM-backed presets" HorizontalAlignment="Left" />
           <Text Text="Mentor" TextWrapping="Wrap" FontWeight="700" FontSize="17" />
           <Container Type="Wrap" CellGap="8">
             <Container Type="Vertical Stack" CellGap="6">
@@ -74,6 +75,11 @@
             </Container>
           </Container>
           <Text id="sw-mentor-budget" TextWrapping="Wrap" AccessibleName="Mentor budget" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="sw-mentor-placement" TextWrapping="Wrap" AccessibleName="Mentor weight placement" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8">
+            <Input id="sw-mentor-ram-preset" Type="Select" Width="350" AccessibleName="Mentor RAM-backed presets" HorizontalAlignment="Left" />
+            <Button id="sw-mentor-apply-preset" Content="Use for mentor" />
+          </Container>
           <Container Type="Wrap" CellGap="8">
             <Container Type="Vertical Stack" CellGap="6">
               <Text Text="Mentor residency" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
@@ -104,6 +110,11 @@
             </Container>
           </Container>
           <Text id="sw-worker-budget" TextWrapping="Wrap" AccessibleName="Worker budget" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="sw-worker-placement" TextWrapping="Wrap" AccessibleName="Worker weight placement" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8">
+            <Input id="sw-worker-ram-preset" Type="Select" Width="350" AccessibleName="Worker RAM-backed presets" HorizontalAlignment="Left" />
+            <Button id="sw-worker-apply-preset" Content="Use for worker" />
+          </Container>
           <Container Type="Wrap" CellGap="8">
             <Container Type="Vertical Stack" CellGap="6">
               <Text Text="Worker role" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />

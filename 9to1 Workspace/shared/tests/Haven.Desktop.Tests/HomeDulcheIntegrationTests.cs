@@ -277,6 +277,63 @@ public sealed class HomeDulcheIntegrationTests
             """;
     }
 
+    [AvaloniaFact]
+    public async Task AtlasSettingsSearchRoutesToLiveMaskedProviderControls()
+    {
+        var root=Directory.CreateTempSubdirectory("dulche-settings-");
+        using var deadline=new CancellationTokenSource(TimeSpan.FromSeconds(9));
+        using var theme=new CakeOS.Cui.Themes.CuiThemePreferenceContext(new ThemeSource());
+        var handler=new ProviderHandler();
+        using var shell=new HomeAtlasSettingsView(new Border(),new Border(),
+            new DulcheLocalClient(new UserPreferencesService(new Paths(root.FullName)),handler),
+            ()=>throw new InvalidOperationException("Unexpected legacy destination."),
+            (op,token)=>op(token),theme);
+        var window=new Window {Width=1280,Height=900,Content=shell};window.Show();
+        try
+        {
+            shell.Activate();
+            T Named<T>(string label) where T:Control => shell.GetVisualDescendants().OfType<T>().Single(c=>AutomationProperties.GetName(c)==label);
+            Button ByText(string name)=>shell.GetVisualDescendants().OfType<Button>().Single(b=>b.Content?.ToString()==name);
+            var search=Named<TextBox>("Search settings");search.Text="Providers";
+            while(!shell.GetVisualDescendants().OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Global › AI › Providers"))
+                await Task.Delay(10,deadline.Token);
+            Named<Button>("Global › AI › Providers").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            while(!shell.GetVisualDescendants().OfType<ComboBox>().Any(c=>AutomationProperties.GetName(c)=="External inference model IDs"))
+                await Task.Delay(10,deadline.Token);
+            var ids=Named<ComboBox>("External inference model IDs");
+            while(ids.ItemCount==0)await Task.Delay(10,deadline.Token);
+            Assert.Equal("verified-id",ids.SelectedItem);
+            ByText("Create credential").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var token=Named<TextBox>("One-time client credential");
+            while(token.Text!="fixture-secret")await Task.Delay(10,deadline.Token);
+            Assert.False(token.RevealPassword);Assert.NotEqual('\0',token.PasswordChar);
+            ByText("Show").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            while(!token.RevealPassword)await Task.Delay(10,deadline.Token);
+            shell.Deactivate();Assert.Equal("",token.Text);Assert.False(token.RevealPassword);
+            Assert.Equal(1,handler.Issuances);
+        }
+        finally { window.Close();root.Delete(true); }
+    }
+
+    private sealed class ThemeSource : CakeOS.Cui.Themes.ICuiThemePreferenceSource
+    {
+        public CakeOS.Cui.Themes.CuiThemePreferenceSnapshot Current {get;} = new("Professional",1,"fixture",false,CakeOS.Cui.Themes.CuiAccessibilitySettings.Default);
+        public event EventHandler? Changed {add{} remove{}}
+    }
+    private sealed class ProviderHandler : HttpMessageHandler
+    {
+        public int Issuances {get;private set;}
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken token)
+        {
+            var route=request.RequestUri!.AbsolutePath;
+            string data;
+            if(route=="/v1/external/clients"&&request.Method==HttpMethod.Post)
+            {Issuances++;data="""{"id":"test","name":"Test fixture","token":"fixture-secret"}""";}
+            else data="""{"enabled":true,"listening":true,"base_url":"http://127.0.0.1:18740/v1","models":[{"id":"verified-id"}],"clients":[],"opencode_config":{"providers":{"dulche":{"settings":{"baseURL":"http://127.0.0.1:18740/v1"}}}}}""";
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(data,Encoding.UTF8,"application/json")});
+        }
+    }
+
     private sealed class Paths(string root) : IAppPaths
     {
         public string DataDirectory => root;

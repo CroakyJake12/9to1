@@ -1,0 +1,772 @@
+[
+  {
+    "key": "global",
+    "label": "Global",
+    "route": "",
+    "icon": "",
+    "group": "global",
+    "parent": "",
+    "description": "Follows across all 9to1",
+    "scope": "Global"
+  },
+  {
+    "key": "global-general",
+    "label": "General",
+    "route": "settings-general",
+    "icon": "Settings2",
+    "group": "global",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "appearance",
+    "label": "Appearance",
+    "route": "settings-appearance",
+    "icon": "Palette",
+    "group": "global",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "appearance-theme",
+    "label": "Theme",
+    "route": "appearance",
+    "icon": "Palette",
+    "group": "global",
+    "parent": "appearance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "appearance-options",
+    "label": "Theme Options",
+    "route": "settings-theme-options",
+    "icon": "SlidersHorizontal",
+    "group": "global",
+    "parent": "appearance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "appearance-layout",
+    "label": "Layout",
+    "route": "settings-layout",
+    "icon": "PanelsTopLeft",
+    "group": "global",
+    "parent": "appearance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "appearance-accessibility",
+    "label": "Accessibility",
+    "route": "settings-accessibility",
+    "icon": "Accessibility",
+    "group": "global",
+    "parent": "appearance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "ai",
+    "label": "AI",
+    "route": "settings-ai",
+    "icon": "Sparkles",
+    "group": "global",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "ai-personalisation",
+    "label": "Personalisation",
+    "route": "settings-personalisation",
+    "icon": "Brain",
+    "group": "global",
+    "parent": "ai",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "ai-plugins",
+    "label": "Plugins/MCPs",
+    "route": "settings-plugins",
+    "icon": "Plug",
+    "group": "global",
+    "parent": "ai",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "ai-skills",
+    "label": "Skills",
+    "route": "settings-skills",
+    "icon": "BookOpen",
+    "group": "global",
+    "parent": "ai",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "ai-providers",
+    "label": "Providers",
+    "route": "settings-providers",
+    "icon": "Cloud",
+    "group": "global",
+    "parent": "ai",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "ai-voice",
+    "label": "Voice",
+    "route": "settings-voice",
+    "icon": "AudioLines",
+    "group": "global",
+    "parent": "ai",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "security",
+    "label": "Security & Privacy",
+    "route": "settings-security",
+    "icon": "ShieldCheck",
+    "group": "global",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "security-general",
+    "label": "General",
+    "route": "settings-security-general",
+    "icon": "ShieldCheck",
+    "group": "global",
+    "parent": "security",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "security-permissions",
+    "label": "Permissions",
+    "route": "settings-permissions",
+    "icon": "KeyRound",
+    "group": "global",
+    "parent": "security",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "security-sandbox",
+    "label": "Sandbox",
+    "route": "settings-sandbox",
+    "icon": "Box",
+    "group": "global",
+    "parent": "security",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "security-privacy",
+    "label": "Privacy",
+    "route": "settings-privacy",
+    "icon": "LockKeyhole",
+    "group": "global",
+    "parent": "security",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "account",
+    "label": "Account",
+    "route": "settings-account",
+    "icon": "UserRound",
+    "group": "global",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "account-profile",
+    "label": "Profile",
+    "route": "settings-profile",
+    "icon": "UserRound",
+    "group": "global",
+    "parent": "account",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "account-subscriptions",
+    "label": "Subscriptions",
+    "route": "settings-subscriptions",
+    "icon": "Wallet",
+    "group": "global",
+    "parent": "account",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "account-storage",
+    "label": "Storage",
+    "route": "settings-account-storage",
+    "icon": "Cloud",
+    "group": "global",
+    "parent": "account",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "account-mesh",
+    "label": "Mesh",
+    "route": "settings-mesh",
+    "icon": "Network",
+    "group": "global",
+    "parent": "account",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "local",
+    "label": "Local",
+    "route": "",
+    "icon": "",
+    "group": "local",
+    "parent": "",
+    "description": "This device only",
+    "scope": "This device"
+  },
+  {
+    "key": "local-general",
+    "label": "General",
+    "route": "settings-local-general",
+    "icon": "Monitor",
+    "group": "local",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "local-apps",
+    "label": "Installed Apps",
+    "route": "settings-apps",
+    "icon": "Grid2X2",
+    "group": "local",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "local-models",
+    "label": "Installed Models",
+    "route": "settings-installed-models",
+    "icon": "Cpu",
+    "group": "local",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "local-notifications",
+    "label": "Notifications",
+    "route": "settings-notifications",
+    "icon": "Bell",
+    "group": "local",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven",
+    "label": "9to1 Haven",
+    "route": "",
+    "icon": "",
+    "group": "haven",
+    "parent": "",
+    "description": "Tabs and browsing",
+    "scope": "Haven"
+  },
+  {
+    "key": "haven-general",
+    "label": "General",
+    "route": "settings-haven-general",
+    "icon": "PanelsTopLeft",
+    "group": "haven",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-newtab",
+    "label": "New Tab",
+    "route": "settings-haven-newtab",
+    "icon": "SquarePlus",
+    "group": "haven",
+    "parent": "haven-general",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-tabs-address",
+    "label": "Tabs & address",
+    "route": "settings-haven-tabs-address",
+    "icon": "PanelsTopLeft",
+    "group": "haven",
+    "parent": "haven-general",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-bookmarks",
+    "label": "Bookmarks",
+    "route": "settings-haven-bookmarks",
+    "icon": "Bookmark",
+    "group": "haven",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-pinned",
+    "label": "Pinned destinations",
+    "route": "settings-haven-pinned",
+    "icon": "Pin",
+    "group": "haven",
+    "parent": "haven-bookmarks",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-shortcut-order",
+    "label": "Shortcut order",
+    "route": "settings-haven-shortcut-order",
+    "icon": "ListOrdered",
+    "group": "haven",
+    "parent": "haven-bookmarks",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-history",
+    "label": "History",
+    "route": "settings-haven-history",
+    "icon": "History",
+    "group": "haven",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-tab-history",
+    "label": "Back & forward",
+    "route": "settings-haven-tab-history",
+    "icon": "ArrowLeft",
+    "group": "haven",
+    "parent": "haven-history",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-recent-files",
+    "label": "Recent files",
+    "route": "settings-haven-recent-files",
+    "icon": "History",
+    "group": "haven",
+    "parent": "haven-history",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-shortcuts",
+    "label": "Keyboard Shortcuts",
+    "route": "settings-haven-shortcuts",
+    "icon": "Keyboard",
+    "group": "haven",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-key-navigation",
+    "label": "Navigation",
+    "route": "settings-haven-key-navigation",
+    "icon": "Keyboard",
+    "group": "haven",
+    "parent": "haven-shortcuts",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-key-menus",
+    "label": "Menus & focus",
+    "route": "settings-haven-key-menus",
+    "icon": "MousePointer2",
+    "group": "haven",
+    "parent": "haven-shortcuts",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-performance",
+    "label": "Performance",
+    "route": "settings-haven-performance",
+    "icon": "Activity",
+    "group": "haven",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-services",
+    "label": "Services",
+    "route": "settings-haven-services",
+    "icon": "Activity",
+    "group": "haven",
+    "parent": "haven-performance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-model-memory",
+    "label": "Models & memory",
+    "route": "settings-haven-model-memory",
+    "icon": "Cpu",
+    "group": "haven",
+    "parent": "haven-performance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "haven-storage-cache",
+    "label": "Storage & cache",
+    "route": "settings-haven-storage-cache",
+    "icon": "HardDrive",
+    "group": "haven",
+    "parent": "haven-performance",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "apps",
+    "label": "Apps",
+    "route": "",
+    "icon": "",
+    "group": "apps",
+    "parent": "",
+    "description": "Shared and individual app settings",
+    "scope": "App"
+  },
+  {
+    "key": "apps-shared",
+    "label": "Shared settings",
+    "route": "settings-apps-shared",
+    "icon": "Layers",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-spaces",
+    "label": "Spaces",
+    "route": "settings-app-spaces",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-boards",
+    "label": "Boards",
+    "route": "settings-app-boards",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-write",
+    "label": "Write",
+    "route": "settings-app-write",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-present",
+    "label": "Present",
+    "route": "settings-app-present",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-canvas",
+    "label": "Canvas",
+    "route": "settings-app-canvas",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-build",
+    "label": "Build",
+    "route": "settings-app-build",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-data",
+    "label": "Data",
+    "route": "settings-app-data",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-files",
+    "label": "Files",
+    "route": "settings-app-files",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-forms",
+    "label": "Forms",
+    "route": "settings-app-forms",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-planner",
+    "label": "Planner",
+    "route": "settings-app-planner",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-automations",
+    "label": "Automations",
+    "route": "settings-app-automations",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-picture",
+    "label": "Picture",
+    "route": "settings-app-picture",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-wave",
+    "label": "Wave",
+    "route": "settings-app-wave",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-motion",
+    "label": "Motion",
+    "route": "settings-app-motion",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-connect",
+    "label": "Connect",
+    "route": "settings-app-connect",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-maps",
+    "label": "Maps",
+    "route": "settings-app-maps",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-shelf",
+    "label": "Shelf",
+    "route": "settings-app-shelf",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-ai-studio",
+    "label": "AI Studio",
+    "route": "settings-app-ai-studio",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-terminal",
+    "label": "Terminal",
+    "route": "settings-app-terminal",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-vision-voice",
+    "label": "Vision & Voice",
+    "route": "settings-app-vision-voice",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-cards",
+    "label": "Cards",
+    "route": "settings-app-cards",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-play",
+    "label": "Play",
+    "route": "settings-app-play",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-games",
+    "label": "Games",
+    "route": "settings-app-games",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-link",
+    "label": "Link",
+    "route": "settings-app-link",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-prototype",
+    "label": "Prototype",
+    "route": "settings-app-prototype",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-paths",
+    "label": "Paths",
+    "route": "settings-app-paths",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-replay",
+    "label": "Replay",
+    "route": "settings-app-replay",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-mini-computer",
+    "label": "Mini Computer",
+    "route": "settings-app-mini-computer",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-admin",
+    "label": "Admin",
+    "route": "settings-app-admin",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  },
+  {
+    "key": "app-launcher",
+    "label": "Launcher",
+    "route": "settings-app-launcher",
+    "icon": "Grid2X2",
+    "group": "apps",
+    "parent": "",
+    "description": "",
+    "scope": ""
+  }
+]

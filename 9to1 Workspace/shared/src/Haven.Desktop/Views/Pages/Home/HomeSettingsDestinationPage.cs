@@ -18,6 +18,11 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private readonly NativeHomeThemePreferences _source;
     private readonly Func<CancellationToken, Task> _admit;
     private readonly DulcheLocalClient? _dulche;
+    private readonly HomeAtlasSettingsView? _atlas;
+    private readonly CuiControlLoader? _policyLoader;
+    internal event Action<string>? NavigationRequested;
+    internal void OpenProviders() => _atlas?.OpenProviders();
+    internal bool OwnsAtlasNavigation => _atlas is not null;
     private string? _dulcheStatus;
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
@@ -37,6 +42,10 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         : this(source, admit, null) { }
 
     internal HomeSettingsDestinationPage(NativeHomeThemePreferences source, Func<CancellationToken, Task> admit, DulcheLocalClient? dulche)
+        : this(source,admit,dulche,null) { }
+
+    internal HomeSettingsDestinationPage(NativeHomeThemePreferences source, Func<CancellationToken, Task> admit,
+        DulcheLocalClient? dulche, Func<Haven.Desktop.Views.Pages.Settings.SettingsHavenPage>? legacySettings)
     {
         Dispatcher.UIThread.VerifyAccess();
         _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -46,15 +55,29 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var document = HavenOS.Home.HomeCuiSurface.LoadDefault().Document;
         var theme = document.Components.Single(component => component.IsThemeScope);
         var fragment = Descendants(theme).Single(component => component.AuthoredId == "home-appearance-settings");
-        var scope = new CuiComponent(theme.Type, theme.Name, theme.Classes, theme.Properties, theme.Actions,
-            [fragment], theme.Condition, theme.List, theme.Span, theme.DefaultTheme, theme.Repeat,
+        CuiComponent Scope(CuiComponent content) => new(theme.Type, theme.Name, theme.Classes, theme.Properties, theme.Actions,
+            [content], theme.Condition, theme.List, theme.Span, theme.DefaultTheme, theme.Repeat,
             theme.ElseChildren, theme.Groups, theme.IsDefinition, theme.PropertyRegion);
         _loader.SetThemePreferenceContext(source.Context);
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
-        var loaded = _loader.TryLoad(document with { Components = [scope] });
+        var loaded = _loader.TryLoad(document with { Components = [Scope(fragment)] });
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The canonical Home Appearance fragment could not be rendered.");
-        _loader.WireBindings(loaded.Root); Content = loaded.Root;
+        _loader.WireBindings(loaded.Root);
+        if (dulche is not null && legacySettings is not null)
+        {
+            var lifecycle=Descendants(theme).Single(component=>component.AuthoredId=="home-dulche-lifecycle");
+            _policyLoader=new CuiControlLoader();_policyLoader.SetThemePreferenceContext(source.Context);
+            _policyLoader.SetBindingContext(_bindings);_policyLoader.SetActionDispatcher(this);
+            var policy=_policyLoader.TryLoad(document with {Components=[Scope(lifecycle)]});
+            if(policy.Root is null || policy.Diagnostics.Any(item=>item.Severity==CuiDiagnosticSeverity.Error))
+                throw new InvalidDataException("The shared model residency controls are unavailable.");
+            _policyLoader.WireBindings(policy.Root);
+            _atlas=new HomeAtlasSettingsView(loaded.Root,policy.Root,dulche,legacySettings,RunAuthorizedAsync,source.Context);
+            _atlas.Navigate+=destination=>NavigationRequested?.Invoke(destination);
+            Content=_atlas;
+        }
+        else Content=loaded.Root;
         _bindings.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
         _source.Changed += OnSourceChanged;
         RefreshBindings();
@@ -68,11 +91,18 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 
     internal Task ActivateAsync(CancellationToken token)
     {
-        Dispatcher.UIThread.VerifyAccess(); _active = true;
+        Dispatcher.UIThread.VerifyAccess(); _active = true; _atlas?.Activate();
         return _work.RunAsync(original => RefreshAsync(original, token), actual => _initialization ??= actual);
     }
     internal void Deactivate()
-    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; }
+    { Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation; _atlas?.Deactivate(); }
+
+    private Task RunAuthorizedAsync(Func<CancellationToken,Task> body,CancellationToken token) => _work.RunAsync(async original =>
+    {
+        if(!_active || _work.IsRetiring || !await IsAdmittedAsync(original.Token)) return;
+        using var linked=CancellationTokenSource.CreateLinkedTokenSource(original.Token,token);
+        await body(linked.Token);
+    });
 
     public bool? IsActionAvailable(string command) => IsAlive && _active && !IsBusy && !_unavailable &&
         (command is "ApplyHomeAppearance" or "RefreshHomeAppearance" || (_dulche is not null && PolicyFor(command) is not null));
@@ -270,7 +300,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var available = _active && IsAlive && !IsBusy && !_unavailable;
         _bindings.Set("HomeAppearanceAvailable", available);
         _bindings.Set("HomeAppearanceCanRefresh", available);
-        _bindings.Set("HomeDulchePresent", _dulche is not null);
+        _bindings.Set("HomeDulchePresent", _dulche is not null && _atlas is null);
         _bindings.Set("HomeDulcheCanEdit", available && _dulche is not null);
         if (_dulche is not null)
         {
@@ -323,6 +353,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         Dispatcher.UIThread.VerifyAccess(); _active = false; ++_generation;
         _source.Changed -= OnSourceChanged;
+        _atlas?.Dispose();
+        _policyLoader?.Dispose();
         // Seal page admission first. Let admitted CUI actions acknowledge their same global
         // writes before disposing this loader's caller token. The shared source remains live.
         var failures = new List<Exception>();
