@@ -28,3 +28,11 @@ Each comparison pairs the committed Atlas HTML in Chromium with the running Linu
 | Keyboard Shortcuts | [Wide](keyboard/compare-settings-haven-shortcuts-1440x900.png) | [Narrow](keyboard/compare-settings-haven-shortcuts-720x520.png) |
 | Navigation | [Wide](keyboard/compare-settings-haven-key-navigation-1440x900.png) | [Narrow](keyboard/compare-settings-haven-key-navigation-720x520.png) |
 | Menus & focus | [Wide](keyboard/compare-settings-haven-key-menus-1440x900.png) | [Narrow](keyboard/compare-settings-haven-key-menus-720x520.png) |
+
+## Continuation checkpoint
+
+Work stopped at the owner’s request. The last product change is `295b19d7c674c4f356640ca091e5fcf3adebe736` on `codex/overnight-haven-shell`. The original local handoff and its evidence are preserved. Allowance telemetry was unavailable. Each batch was pushed and its branch revision checked against GitHub.
+
+Two preview edge cases remain. Rapid arrow input during a slow profile check can snap back to the earlier choice. An unexpected error during that check can leave the previous preview active without a specific message. The final change also hides both accessibility switches if the profile becomes unavailable. A native profile-refusal check is still pending. The broader outstanding Atlas work includes contextual chat placement, shortcut remapping, cross-app recent documents and the onboarding route choice.
+
+The final Linux Release build finished with zero warnings and zero errors. All four final Skia checks passed, covering Layout → Accessibility, native switch writes, shortcut icon preview and reset, and preservation of unknown saved icon keys at 1440 × 900 and 720 × 520. [Final build and test receipt](verification.json) The native image receipts name the exact earlier build used for each gesture. [Earlier capture and failure receipts](native/interim-native-receipt.json)
