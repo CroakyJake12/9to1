@@ -55,5 +55,28 @@
     "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
     "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
     "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+  },
+  "rendered_control_samples": {
+    "Comic-dark.png": {
+      "size": [
+        680,
+        400
+      ],
+      "sha256": "635dafd5570f95620894734dd2277f8fe0c26f8ce23fb2621d8a6c905d7a6d2e"
+    },
+    "Comic-high-contrast.png": {
+      "size": [
+        680,
+        400
+      ],
+      "sha256": "0dce66f6e0c402ef5fdf0ef04071f67d57f0dcc24933d4133e36b444a7995104"
+    },
+    "Comic-light.png": {
+      "size": [
+        680,
+        400
+      ],
+      "sha256": "0c192cadffc646aba54dcb6e1b0496d04b36b9d15c0e97b6a7c452317c5f766d"
+    }
   }
 }

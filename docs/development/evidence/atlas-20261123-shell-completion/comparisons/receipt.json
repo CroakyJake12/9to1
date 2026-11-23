@@ -157,17 +157,17 @@
       "atlas_route": "host-newtab",
       "atlas_image": "atlas-host-newtab-1440x900.png",
       "atlas_image_sha256": "92c4ad544448911c6df033ad7190c4e33eb175b642ee81a6e1731a74c78e6e61",
-      "native_image": "09-host-newtab-baseline-wide.png",
-      "native_image_sha256": "f43de9c7355021d4b924aac4ce81c4e2cc1b75e8e64dc9f46415f7c7018a928a",
+      "native_image": "01-new-tab-fresh-baseline-wide.png",
+      "native_image_sha256": "0261b454a7cc65f9451030f1b780f66fb41ef8cc02d004a65661ee35e96f14ed",
       "native_renderer": "Haven Linux apphost, X11",
       "native_assemblies": {
         "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
-        "Haven.dll": "9a29d7ee3a7d878424419bd09d2ec215784a133b56958a6cb47fe43dbbef693e",
+        "Haven.dll": "adaec2b83beb9bcca471e5dabaa1d3060e38807540c8dfe9daade31b64102827",
         "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
-        "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+        "HavenOS.Apps.Browse.NativeUI.dll": "88e2c4f86e45951690ac658d028fd21eee8eca1892fca8329149380950c50f80",
         "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
         "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
-        "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+        "CakeOS.Cui.Runtime.dll": "43a488a142fe8f9eaf42226a9e24f2f30535b41a0b65e65ea7c778100ecde6eb",
         "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
         "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
         "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
@@ -176,7 +176,7 @@
         1440,
         900
       ],
-      "comparison_sha256": "dd02ff570e4555b89013224ff80481142b84787cdadbdac08ae991e5c1e86b03"
+      "comparison_sha256": "1d10f2c9e84c0d5c157556317d89a6be0ac8a82fdd1f190c8550a90348942671"
     },
     "customise-wide": {
       "atlas_route": "host-newtab-customise",
@@ -232,17 +232,17 @@
       "atlas_route": "host-newtab",
       "atlas_image": "atlas-host-newtab-720x520.png",
       "atlas_image_sha256": "b9311c0602ca341cd7aa815c43ba3202623956b055523220a0fabbf802968f3c",
-      "native_image": "10-host-newtab-baseline-narrow.png",
-      "native_image_sha256": "03b3684690fd1a250749dbdf50235c15e33e2ceb9e4820604c762b8aa2b1ccf4",
+      "native_image": "02-new-tab-fresh-baseline-narrow.png",
+      "native_image_sha256": "76e30665aa15aeff8382e8eb218ae47be5483dc8c6aab0da471cf8bb694fd8d5",
       "native_renderer": "Haven Linux apphost, X11",
       "native_assemblies": {
         "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
-        "Haven.dll": "9a29d7ee3a7d878424419bd09d2ec215784a133b56958a6cb47fe43dbbef693e",
+        "Haven.dll": "adaec2b83beb9bcca471e5dabaa1d3060e38807540c8dfe9daade31b64102827",
         "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
-        "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+        "HavenOS.Apps.Browse.NativeUI.dll": "88e2c4f86e45951690ac658d028fd21eee8eca1892fca8329149380950c50f80",
         "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
         "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
-        "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+        "CakeOS.Cui.Runtime.dll": "43a488a142fe8f9eaf42226a9e24f2f30535b41a0b65e65ea7c778100ecde6eb",
         "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
         "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
         "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
@@ -251,7 +251,7 @@
         720,
         520
       ],
-      "comparison_sha256": "7217a30058994dd4d72fd4e069e2f4b6f01ee5d0e3fbb2c25e5870504c9f99be"
+      "comparison_sha256": "a959fa99c64184cffd868e87fb0b0026a0a71cb8db8d287122ff77b0d9eb98eb"
     },
     "customise-narrow": {
       "atlas_route": "host-newtab-customise",

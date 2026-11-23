@@ -14,6 +14,8 @@ Create theme opens the shared editor from Appearance and Theme Options. Its draf
 
 Focus, Balanced and More widgets use a layout scoped to the current profile. Changing a preset and background survived a full restart. A separate in-session keyboard check recovered the exact unsent search text after closing Customise. The Linux Upload button opened the native file chooser, and Escape returned to the editor. [Compact background choice](journeys/stage5-customise-horizon-narrow.png) · [Layout after restart](journeys/stage5-new-tab-after-relaunch.png) · [Retained search text](journeys/stage5-new-tab-draft-after-escape.png)
 
+Apps, Library and Dashboard are the three initial shortcuts. In the native app, adding a fourth shortcut to Settings survived a full restart. Moving and renaming it kept the same placement ID and destination. Removing it restored the original three in order. Every other stored layout field stayed equal across those edits. Attempting to add Dashboard a second time showed validation before the first layout write. [After restart](journeys/stage11-shortcut-relaunch.png) · [After moving and renaming](journeys/stage11-shortcut-move-rename.png) · [After removal](journeys/stage11-shortcut-remove.png) · [Stored revisions and image hashes](journeys/shortcut-lifecycle.json)
+
 Early integrated launches exposed a gear crash, colliding control IDs in Customise, and a widget picker action that initially still addressed the older inline UI. Separate private profiles retained those failures and the successful follow-up journeys. Only the early failed profile needed forced shutdown. Both subsequent Settings and custom-theme sessions and their relaunches closed normally. [Intermediate runs and image hashes](journeys/intermediate-journeys.json)
 
 ## Comic
@@ -24,7 +26,7 @@ The shared CUI renderer exercised the Comic primary, disabled, hovered and press
 
 ## Matched Settings routes
 
-Each comparison shows the pinned Atlas on the left and the running Haven application on the right at the same viewport. The 720-pixel Atlas can clip its fixed desktop canvas. Haven gives the rail and content separate vertical scrolling at that width. The Atlas creator example uses an authored gradient. The captured native creator starts from its actual solid default. [Rendered image and assembly hashes](comparisons/receipt.json)
+Each comparison shows the pinned Atlas on the left and the running Haven application on the right at the same viewport. The 720-pixel Atlas can clip its fixed desktop canvas. Haven gives the rail and content separate vertical scrolling at that width. The Atlas creator example uses an authored gradient. The captured native creator starts from its actual solid default. The combined PNGs are stored here. The receipt identifies the original cloud captures and the native assemblies used for each pair. [Rendered image and assembly hashes](comparisons/receipt.json)
 
 | Route | 1440 × 900 | 720 × 520 |
 | --- | --- | --- |
