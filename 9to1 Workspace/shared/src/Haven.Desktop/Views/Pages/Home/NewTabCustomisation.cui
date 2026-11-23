@@ -1,0 +1,140 @@
+<Cui id="home.new-tab.customisation" version="1">
+  <Page AccessibleName="Customise New Tab">
+    <Container id="home-newtab-editor" Type="Vertical Stack" CellGap="12" Padding="20" CornerRadius="16" Background="{Resource CuiPanelBrush}">
+      <Container id="home-newtab-editor-fields" Type="Grid" ColumnSizes="{Binding EditorColumns, fallback=1fr}"
+                 RowSizes="{Binding EditorRows, fallback=Auto Auto}" CellGap="16">
+        <Container Type="Vertical Stack" CellGap="8">
+          <Text Text="Layout" MinHeight="34" VerticalAlignment="Center" FontWeight="750" />
+          <Container id="home-newtab-layout-choices" Type="Grid" ColumnSizes="{Binding ChoiceColumns, fallback=1fr}"
+                     RowSizes="{Binding ChoiceRows, fallback=Auto Auto Auto}" CellGap="8">
+            <Button id="home-newtab-layout-focus" Action="home.newtab-customise-focus" AccessibleName="Focus layout"
+                    Selected="{Binding FocusSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" MinHeight="106">
+              <Container id="home-newtab-focus-preview" Type="Vertical Stack" CellGap="6">
+                <Container id="home-newtab-focus-diagram" Type="Vertical Stack" Height="48" Width="78" CellGap="5" Padding="6" CornerRadius="5" Background="{Resource CuiBackgroundBrush}">
+                  <Container id="home-newtab-focus-preview-clock" Type="Overlay" Width="18" Height="5" HorizontalAlignment="Center" Background="{Resource CuiAccentBrush}" CornerRadius="2" />
+                  <Container Type="Overlay" Height="6" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                </Container>
+                <Text Text="Focus" FontWeight="700" TextAlignment="Center" />
+              </Container>
+            </Button>
+            <Button id="home-newtab-layout-balanced" Action="home.newtab-customise-balanced" AccessibleName="Balanced layout"
+                    Column="{Binding SecondChoiceColumn, fallback=0}" Row="{Binding SecondChoiceRow, fallback=1}"
+                    Selected="{Binding BalancedSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" MinHeight="106">
+              <Container id="home-newtab-balanced-preview" Type="Vertical Stack" CellGap="6">
+                <Container id="home-newtab-balanced-diagram" Type="Vertical Stack" Height="48" Width="78" CellGap="4" Padding="6" CornerRadius="5" Background="{Resource CuiBackgroundBrush}">
+                  <Container id="home-newtab-balanced-preview-clock" Type="Overlay" Width="18" Height="5" HorizontalAlignment="Center" Background="{Resource CuiAccentBrush}" CornerRadius="2" />
+                  <Container Type="Overlay" Height="5" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                  <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="3" Height="12">
+                    <Container Type="Overlay" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                    <Container Type="Overlay" Column="1" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                  </Container>
+                </Container>
+                <Text Text="Balanced" FontWeight="700" TextAlignment="Center" />
+              </Container>
+            </Button>
+            <Button id="home-newtab-layout-more" Action="home.newtab-customise-more-widgets" AccessibleName="More widgets layout"
+                    Column="{Binding ThirdChoiceColumn, fallback=0}" Row="{Binding ThirdChoiceRow, fallback=2}"
+                    Selected="{Binding MoreWidgetsSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" MinHeight="106">
+              <Container id="home-newtab-more-preview" Type="Vertical Stack" CellGap="6">
+                <Container id="home-newtab-more-diagram" Type="Vertical Stack" Height="48" Width="78" CellGap="4" Padding="6" CornerRadius="5" Background="{Resource CuiBackgroundBrush}">
+                  <Container id="home-newtab-more-preview-clock" Type="Overlay" Width="15" Height="4" HorizontalAlignment="Center" Background="{Resource CuiAccentBrush}" CornerRadius="2" />
+                  <Container Type="Overlay" Height="4" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                  <Container Type="Grid" ColumnSizes="1fr 1fr 1fr" CellGap="3" Height="14">
+                    <Container id="home-newtab-more-preview-widget-left" Type="Overlay" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                    <Container id="home-newtab-more-preview-widget-centre" Type="Overlay" Column="1" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                    <Container Type="Overlay" Column="2" Background="{Resource CuiAccentSoftBrush}" CornerRadius="2" />
+                  </Container>
+                </Container>
+                <Text Text="More widgets" FontWeight="700" TextAlignment="Center" TextWrapping="Wrap" />
+              </Container>
+            </Button>
+          </Container>
+        </Container>
+        <Container Type="Vertical Stack" Row="{Binding BackgroundRow, fallback=1}" Column="{Binding BackgroundColumn, fallback=0}" CellGap="8">
+          <Container id="home-newtab-image-drop" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" MinHeight="34"
+                     Background="Transparent" AccessibleName="Background image upload and drop area">
+            <Text Text="Background" FontWeight="750" VerticalAlignment="Center" />
+            <Button id="home-newtab-upload" Column="1" Action="home.newtab-customise-upload" Content="Upload"
+                    AccessibleName="Choose a New Tab background image" ToolTip="Choose an image or drop one on the Background heading"
+                    IsVisible="{Binding CanUpload, fallback=false}" IsEnabled="{Binding CanPickImage, fallback=false}" Chromeless="True" />
+          </Container>
+          <Container id="home-newtab-background-choices" Type="Grid" ColumnSizes="{Binding ChoiceColumns, fallback=1fr}"
+                     RowSizes="{Binding ChoiceRows, fallback=Auto Auto Auto}" CellGap="8">
+            <Button id="home-newtab-background-neutral" Action="home.newtab-customise-neutral" AccessibleName="Neutral background"
+                    Content="Neutral" MinHeight="106" Background="{Resource CuiBackgroundBrush}"
+                    HorizontalContentAlignment="Left" VerticalContentAlignment="Bottom" FontWeight="700"
+                    Selected="{Binding NeutralSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+            <Button id="home-newtab-background-horizon" Action="home.newtab-customise-horizon" AccessibleName="Horizon background"
+                    Column="{Binding SecondChoiceColumn, fallback=0}" Row="{Binding SecondChoiceRow, fallback=1}"
+                    Content="Horizon" MinHeight="106" Background="{Binding HorizonPreview}"
+                    HorizontalContentAlignment="Left" VerticalContentAlignment="Bottom" FontWeight="700"
+                    Selected="{Binding HorizonSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+            <Button id="home-newtab-background-paper" Action="home.newtab-customise-paper" AccessibleName="Paper background"
+                    Column="{Binding ThirdChoiceColumn, fallback=0}" Row="{Binding ThirdChoiceRow, fallback=2}"
+                    Content="Paper" MinHeight="106" Background="{Binding PaperPreview}"
+                    HorizontalContentAlignment="Left" VerticalContentAlignment="Bottom" FontWeight="700"
+                    Selected="{Binding PaperSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasImagePreview, fallback=false}">
+            <Text Text="Image preview" FontWeight="750" />
+            <Container Type="Wrap" CellGap="8">
+              <Button id="home-newtab-use-image" Action="home.newtab-customise-use-image" Content="Use background" AccentRole="Primary"
+                      IsEnabled="{Binding CanConfirm, fallback=false}" />
+              <Button Action="home.newtab-customise-cancel-image" Content="Cancel" IsEnabled="{Binding CanConfirm, fallback=false}" />
+            </Container>
+          </Container>
+          <Container Type="Wrap" CellGap="6" IsVisible="{Binding HasSavedImage, fallback=false}">
+            <Button id="home-newtab-background-custom" Action="home.newtab-customise-custom" Content="Your image"
+                    Selected="{Binding CustomSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+            <Button id="home-newtab-background-fit" Action="home.newtab-customise-fit" Content="Fit"
+                    Selected="{Binding FitSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+            <Button id="home-newtab-background-fill" Action="home.newtab-customise-fill" Content="Fill"
+                    Selected="{Binding FillSelected, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+            <Button id="home-newtab-background-remove" Action="home.newtab-customise-remove-image" Content="Remove image"
+                    IsEnabled="{Binding CanEdit, fallback=false}" />
+          </Container>
+        </Container>
+      </Container>
+      <Container Type="Vertical Stack" CellGap="8">
+        <Button id="home-newtab-visibility" Action="home.newtab-customise-visibility" AccessibleName="Show on Home"
+                IsEnabled="{Binding CanEdit, fallback=false}" Chromeless="True" HorizontalContentAlignment="Stretch" Padding="0">
+          <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+            <Text Text="Show on Home" FontWeight="750" VerticalAlignment="Center" />
+            <Image Column="1" Width="14" Height="14" Source="{Binding VisibilityChevron, fallback=icon:chevron-down}" VerticalAlignment="Center" />
+          </Container>
+        </Button>
+        <Container Type="Wrap" CellGap="8" IsVisible="{Binding VisibilityOpen, fallback=false}">
+          <Button id="home-newtab-visibility-clock" Action="home.newtab-customise-clock" Content="Clock and date"
+                  Selected="{Binding ClockVisible, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+          <Button id="home-newtab-visibility-shortcuts" Action="home.newtab-customise-shortcuts" Content="Shortcuts"
+                  Selected="{Binding ShortcutsVisible, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+        </Container>
+      </Container>
+      <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding ResetRequested, fallback=false}">
+        <Text Text="Reset the preset, visibility, widget order, sizes, pins and locks. Your background and widget sources will be kept."
+              TextWrapping="Wrap" />
+        <Container Type="Wrap" CellGap="8">
+          <Button id="home-newtab-reset-confirm" Action="home.newtab-customise-confirm-reset" Content="Reset New Tab"
+                  IsEnabled="{Binding CanConfirm, fallback=false}" />
+          <Button id="home-newtab-reset-cancel" Action="home.newtab-customise-cancel-reset" Content="Keep layout"
+                  IsEnabled="{Binding CanConfirm, fallback=false}" />
+        </Container>
+      </Container>
+      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+        <Button id="home-newtab-background-accent" Action="home.newtab-customise-accent" Content="Accent"
+                AccessibleName="Open shared accent settings" HorizontalAlignment="Left" Chromeless="True"
+                IsEnabled="{Binding CanOpenAccent, fallback=false}" />
+        <Button id="home-newtab-reset" Column="1" Action="home.newtab-customise-reset" Content="Reset layout"
+                Chromeless="True" IsEnabled="{Binding CanEdit, fallback=false}" />
+      </Container>
+      <Text id="home-newtab-editor-status" Text="{Binding EditorStatus}" IsVisible="{Binding HasEditorStatus, fallback=false}"
+            TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+      <Container Type="Wrap" CellGap="8" IsVisible="{Binding HasFailedChange, fallback=false}">
+        <Button id="home-newtab-retry" Action="home.newtab-customise-retry" Content="Retry"
+                IsEnabled="{Binding CanConfirm, fallback=false}" />
+        <Button id="home-newtab-revert" Action="home.newtab-customise-revert" Content="Revert"
+                IsEnabled="{Binding CanConfirm, fallback=false}" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

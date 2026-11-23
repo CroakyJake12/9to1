@@ -20,7 +20,7 @@ namespace Haven.Desktop.Views.Pages.Home;
 
 /// <summary>The same Home views serve Home and New Tab. This is a content page,
 /// not another shell or tab/session authority. Services remain owned by composition.</summary>
-internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
+internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
 {
     private static readonly AppContentAddress DashboardAddress = AppContentAddress.Parse("browse://home/dashboard");
 
@@ -74,7 +74,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft, bool aiAvailable = true,
         Func<HomeEventsDestinationPage>? createEvents = null,
         Func<HomeSettingsDestinationPage>? createSettings = null,
-        Func<HomeLibraryDestinationPage>? createLibrary = null)
+        Func<HomeLibraryDestinationPage>? createLibrary = null,
+        NewTabLayoutPreferences? newTabLayout = null, NewTabWidgetSources? newTabWidgets = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
@@ -120,10 +121,13 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _loader.BindAuthoredControl("home-newtab-time", _ => _newTabTime);
         _loader.BindAuthoredControl("home-newtab-date", _ => _newTabDate);
         _loader.BindAuthoredControl("home-newtab-shortcuts", _ => _newTabShortcuts = new("Wrap"));
+        RegisterNewTabCustomisation(newTabLayout);
+        RegisterNewTabWidgets(newTabWidgets, newTabLayout?.CanEdit == true);
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The shared Home document could not be rendered. " + string.Join(" ", loaded.Diagnostics));
         _loader.WireBindings(loaded.Root);
+        MountNewTabWidgets();
         // Bounded canonical CUI keyboard-focus tooltip capability: authored rail tooltips gain real
         // keyboard-focus visibility (same retained popup/transparency seam) for this Home surface.
         _keyboardTooltips = CuiKeyboardTooltipHost.Attach(loaded.Root);
@@ -143,16 +147,25 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     internal string? SettingsTitle => _section == "settings" ? _settings?.CategoryTitle : null;
     internal event EventHandler? SettingsTitleChanged;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(
-        _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync());
+        _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync(),
+        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync());
 
     internal Task InitializeAsync(CancellationToken cancellationToken)
     {
         Dispatcher.UIThread.VerifyAccess();
-        return _initialization ?? _work.RunAsync(original => SelectAsync(_section, original, cancellationToken),
-            task => _initialization = task);
+        return _initialization ?? _work.RunAsync(async original =>
+        {
+            await SelectAsync(_section, original, cancellationToken);
+            if (original.IsAcceptedPublicationCurrent && HomeSettingsCatalog.IsNewTabCustomisationAddress(_request.Address) &&
+                NewTabCustomisationActionAvailable(NewTabCustomisationPrefix + "open"))
+                OpenNewTabCustomisation();
+        }, task => _initialization = task);
     }
 
-    public bool? IsActionAvailable(string command) => IsAlive && (command == "home.events"
+    public bool? IsActionAvailable(string command) => IsAlive && (
+        command.StartsWith(NewTabCustomisationPrefix, StringComparison.Ordinal) ? NewTabCustomisationActionAvailable(command) :
+        command.StartsWith(widgetActionPrefix, StringComparison.Ordinal) ? IsNewTabWidgetActionAvailable(command) :
+        command == "home.events"
         ? _createEvents is not null : command == "home.settings" ? _createSettings is not null :
         command == "home.library" ? _createLibrary is not null :
         command == "home.ask-ai" ? _aiAvailable && _section == "newtab" : command is
@@ -169,6 +182,10 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
             switch (command)
             {
+                case var _ when command.StartsWith(NewTabCustomisationPrefix, StringComparison.Ordinal):
+                    await DispatchNewTabCustomisationAsync(command, parameter, original, linked.Token); break;
+                case var _ when command.StartsWith(widgetActionPrefix, StringComparison.Ordinal):
+                    await DispatchNewTabWidgetAsync(command, parameter, original, linked.Token); break;
                 case "home.dashboard":
                     await OpenDashboardAsync(original, linked.Token);
                     break;
@@ -302,6 +319,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (section != "library") _library?.Deactivate();
         var settingsVisibilityChanged = (_section == "settings") != (section == "settings");
         _section = section;
+        ApplyNewTabBackground();
         _railBindings.Refresh();
         if (focusRailButton is not null)
             FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
@@ -339,6 +357,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         {
             // New Tab owns its search surface and never creates or activates Dashboard.
             _viewport.Child = null;
+            await RefreshNewTabLayoutAsync(original, token);
+            if (original.IsAcceptedPublicationCurrent) await RefreshNewTabWidgetsAsync(original, token);
         }
         else if (section == "models")
         {
@@ -534,7 +554,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         var columns = width >= 660 ? 3 : width >= 312 ? 2 : 1;
         shortcuts.ItemWidth = Math.Floor((width - (columns - 1) * shortcuts.ItemSpacing) / columns);
         shortcuts.ItemHeight = columns == 3 ? 94 : 80;
-        Set(_newTabTime, "FontSize", width >= 520 ? 58d : 46d);
+        Set(_newTabTime, "FontSize",
+            EffectiveNewTabLayout.Preset == NewTabLayoutPreset.MoreWidgets ? 42d : width >= 520 ? 58d : 46d);
     }
 
     private void RefreshNewTabClock()
@@ -707,6 +728,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         // loaders, so a later close failure cannot resurrect them.
         Attempt(_keyboardTooltips.Dispose);
         Attempt(_appsBindings.RetireAppearanceObservation);
+        Attempt(StopNewTabCustomisation);
+        Attempt(StopNewTabWidgets);
         Attempt(_loader.Dispose); Attempt(_appsLoader.Dispose);
         // Start child retirement before joining admitted page actions.
         if (_dashboard is not null) Acquire(_dashboard.CloseAndDrainAsync);
@@ -719,6 +742,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         }
         if (_library is not null) Acquire(_library.CloseAndDrainAsync);
         Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
+        Acquire(WhenNewTabCustomisationActionsIdleAsync); Acquire(WhenWidgetActionsIdleAsync);
         foreach (var actual in _stopSources)
             try { await actual; }
             catch (Exception error)
@@ -736,6 +760,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         // The scoped-appearance observation was retired in StopAsync before the loaders tore down.
         _search.KeyDown -= OnSearchKey;
         _search.TextChanged -= OnSearchTextChanged;
+        CleanUpNewTabCustomisation();
         if (_dashboard is not null)
         {
             _dashboard.ModeRequested -= OnDashboardApp; _dashboard.ManageAppsRequested -= OnManageApps;

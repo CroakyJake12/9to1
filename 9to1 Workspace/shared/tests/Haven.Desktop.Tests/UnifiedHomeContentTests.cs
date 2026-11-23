@@ -46,12 +46,13 @@ public sealed partial class UnifiedHomeContentTests
         Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
         Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null,
-        Func<string, CancellationToken, Task<AppContentAddress>>? prepareAiDraft = null) => new(source,
+        Func<string, CancellationToken, Task<AppContentAddress>>? prepareAiDraft = null,
+        Func<BrowseAppContentRequest, NewTabLayoutPreferences>? newTabLayout = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
             prepareAiDraft ?? ((_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI.")),
-            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings);
+            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings, newTabLayout: newTabLayout);
 
     // Merge inside the existing UnifiedHomeContentTests class. This is a component
     // control over the real Home/source-authority seam and real Browse retirement;

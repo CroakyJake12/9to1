@@ -212,4 +212,93 @@ public sealed partial class UnifiedHomeContentTests
             }
         }
     }
+
+    [AvaloniaFact]
+    public async Task Settings_catalog_new_tab_customise_opens_the_existing_editor_and_keeps_its_source()
+    {
+        var limit = TimeSpan.FromSeconds(20);
+        var paths = new LayoutPaths();
+        const string profile = "original-home-profile";
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, profile),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        using var lifetime = new CancellationTokenSource();
+        var store = new VersionedAtomicSettingsStore(paths);
+        var layout = new NewTabLayoutPreferences(store, profile, _ => Task.CompletedTask);
+        BrowseNativeWorkspace? workspace = null;
+        Task? navigation = null;
+        BrowseNavigationIntent? intent = null;
+        var factory = Factory(new(), lifetime.Token, navigation: (admitted, settlement) =>
+        {
+            intent = admitted;
+            return workspace!.TryQueueNavigationOriginal(admitted, settlement, out navigation);
+        }, settings: _ => new(source, _ => Task.CompletedTask),
+            newTabLayout: request => new NewTabLayoutPreferences(store, request.ProfileId, _ => Task.CompletedTask));
+        var chrome = await BrowseChrome.CreateAsync(paths, internalContentFactory: factory,
+            homeProfileId: profile, cancellationToken: lifetime.Token);
+        workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        window.Width = 1440;
+        window.Height = 900;
+        try
+        {
+            RegisterProductionImageResolver(window);
+            window.Show();
+            await window.InitializeAsync(lifetime.Token).WaitAsync(limit);
+            await chrome.NavigateAsync("browse://home/settings/settings-haven-newtab", lifetime.Token).WaitAsync(limit);
+            await RenderAsync();
+            var settingsTab = chrome.State.SelectedTab.Id;
+            var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
+            CaptureSettingsIfRequested(window, "settings-haven-newtab", source);
+            var action = Assert.Single(settings.GetVisualDescendants().OfType<Button>(), button =>
+                button.IsEffectivelyVisible && AutomationProperties.GetName(button) == "Customise New Tab layout");
+            action.BringIntoView();
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, action);
+            await settings.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.NotNull(navigation);
+            await navigation!.WaitAsync(limit);
+            await RenderAsync();
+
+            var address = AppContentAddress.Parse("browse://newtab/customise");
+            Assert.Equal(new BrowseNavigationIntent(settingsTab, address, true), intent);
+            Assert.Equal(address, chrome.State.SelectedTab.Address);
+            Assert.Equal("New Tab", chrome.State.SelectedTab.Title);
+            var focusLayout = SettingsControl<Button>(window, "home-newtab-layout-focus");
+            Assert.True(focusLayout.IsEffectivelyVisible && focusLayout.IsEnabled);
+            focusLayout.BringIntoView();
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, focusLayout);
+            var page = Assert.Single(focusLayout.GetVisualAncestors().OfType<UnifiedHomePage>());
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(NewTabLayoutPreset.Focus, (await layout.ReadAsync(lifetime.Token)).Layout.Preset);
+
+            await chrome.SelectTabAsync(settingsTab, lifetime.Token).WaitAsync(limit);
+            await RenderAsync();
+            Assert.Same(settings, Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+            Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-newtab")));
+        }
+        finally
+        {
+            try
+            {
+                window.Close();
+                if (window.OriginalClosePreparation is { } preparation) Assert.True(await preparation.WaitAsync(limit));
+                Dispatcher.UIThread.RunJobs();
+                Assert.NotNull(window.OriginalClose);
+                await window.OriginalClose!.WaitAsync(limit);
+            }
+            finally
+            {
+                await source.DisposeAsync();
+                Directory.Delete(paths.DataDirectory, recursive: true);
+            }
+        }
+
+        async Task RenderAsync()
+        {
+            await Task.WhenAll(workspace.OriginalNotifications).WaitAsync(limit);
+            SettleFixtureLayout(window);
+        }
+    }
 }

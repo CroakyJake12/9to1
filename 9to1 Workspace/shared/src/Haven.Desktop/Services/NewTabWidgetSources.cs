@@ -15,14 +15,18 @@ internal sealed class NewTabWidgetSources(
     IConversationRepository? conversations,
     IContainerRepository? studyContainers,
     IBoardsWorkspaceService? boards,
-    Func<CancellationToken, Task> admit)
+    Func<CancellationToken, Task> admit,
+    bool libraryAvailable = false)
 {
+    internal const string LibrarySource = "library:recent";
+    internal const string SpacesRecentSource = "spaces:recent";
+
     internal static IReadOnlyList<NewTabWidgetDefinition> Catalogue { get; } =
     [
         new("up-next", "Up next", "Planner", "planner:calendar"),
         new("pinned-note", "Pinned note", "Boards", "boards:notebook"),
         new("focus-timer", "Focus timer", "Haven", "timer:25"),
-        new("continue-working", "Continue working", "Spaces", "spaces:recent"),
+        new("continue-working", "Continue working", "Library", LibrarySource),
         new("my-tasks", "My tasks", "Planner", "planner:tasks"),
         new("study-progress", "Study progress", "Study", "study:subject")
     ];
@@ -36,7 +40,7 @@ internal sealed class NewTabWidgetSources(
             {
                 "up-next" => await LoadCalendarAsync(placement.SourceId, token).ConfigureAwait(false),
                 "pinned-note" => await LoadNoteAsync(placement.SourceId, token).ConfigureAwait(false),
-                "continue-working" => await LoadRecentAsync(token).ConfigureAwait(false),
+                "continue-working" => await LoadContinueWorkingAsync(placement.SourceId, token).ConfigureAwait(false),
                 "my-tasks" => await LoadTasksAsync(placement.SourceId, token).ConfigureAwait(false),
                 "study-progress" => await LoadStudyAsync(placement.SourceId, token).ConfigureAwait(false),
                 _ => new NewTabWidgetContent("The saved widget type is unavailable.", [])
@@ -73,7 +77,7 @@ internal sealed class NewTabWidgetSources(
                     .Where(subject => !subject.IsArchived).Select(subject => Choice("subject", subject.Id, subject.Name))],
             "focus-timer" => new[] { 5, 10, 15, 25, 45, 60 }.Select(minutes =>
                 new NewTabWidgetSourceChoice($"timer:{minutes}", $"{minutes} minutes")).ToArray(),
-            "continue-working" when conversations is not null => [new("spaces:recent", "Recent saved conversations")],
+            "continue-working" => ContinueWorkingChoices(),
             _ => []
         };
         await admit(token).ConfigureAwait(false);
@@ -137,8 +141,26 @@ internal sealed class NewTabWidgetSources(
             : new(string.Empty, [new(note.Title, "Open Boards notebook", AppContentAddress.Parse($"9to1://boards/notebooks/{note.Id:D}"))]);
     }
 
-    private async Task<NewTabWidgetContent> LoadRecentAsync(CancellationToken token)
+    private IReadOnlyList<NewTabWidgetSourceChoice> ContinueWorkingChoices()
     {
+        var choices = new List<NewTabWidgetSourceChoice>();
+        if (libraryAvailable) choices.Add(new(LibrarySource, "Home Library"));
+        if (conversations is not null) choices.Add(new(SpacesRecentSource, "Recent saved conversations"));
+        return choices;
+    }
+
+    private async Task<NewTabWidgetContent> LoadContinueWorkingAsync(string sourceId, CancellationToken token)
+    {
+        if (sourceId == LibrarySource)
+        {
+            // Library authorizes every row and opens exact owner links itself. Its current
+            // sources do not publish recently opened documents, so link to the actual owner.
+            return libraryAvailable
+                ? new("Recently opened documents are unavailable here.",
+                    [new("View Library", "Find files and notebooks", AppContentAddress.Parse("browse://home/library"))])
+                : new("Home Library is unavailable in this host.", []);
+        }
+        if (sourceId != SpacesRecentSource) return new("The saved source is unavailable. Choose another source.", []);
         if (conversations is null) return new("Spaces is unavailable in this host.", []);
         var items = await conversations.GetRecentAsync(null, 12, token).ConfigureAwait(false);
         var rows = items.Where(item => !item.IsTemporary && !item.IsArchived && item.Id != Guid.Empty)

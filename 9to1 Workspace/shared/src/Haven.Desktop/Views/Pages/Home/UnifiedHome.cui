@@ -1,4 +1,7 @@
 <Cui id="home.unified" version="1">
+  <Actions>
+    <Action name="OpenCustomiseWidgetPicker" command="home.newtab-widget-picker" parameter="header" />
+  </Actions>
   <!-- At desktop widths the Home rail shows labels beside its icons. Compact widths keep the
        same actions, names and keyboard tooltips. Settings stays below the scrolling destinations. -->
   <Theme Name="user_preference">
@@ -64,9 +67,25 @@
           <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="24" IsVisible="False"
                      VerticalAlignment="Top" MaxWidth="1120" Padding="{Binding newTab.contentPadding, fallback=12 16 12 16}"
                      VerticalScrolling="True" HorizontalScrolling="False">
-            <Text id="home-newtab-heading" Text="Home" FontSize="36" FontWeight="800" />
-            <Container Type="Vertical Stack" MaxWidth="780" CellGap="14">
-              <Container Type="Vertical Stack" CellGap="6" Margin="0 0 0 8">
+            <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="8">
+              <Text id="home-newtab-heading" Text="Home" FontSize="36" FontWeight="800" />
+              <Button id="home-newtab-customise-open" Column="2" Action="home.newtab-customise-open" Content="Customise"
+                      VerticalAlignment="Center" MinHeight="36" CornerRadius="18" />
+              <Button id="home-newtab-customise-add-widget" Column="1" Action="OpenCustomiseWidgetPicker"
+                      AccessibleName="Add widget" Tooltip="Add widget" AccentRole="Secondary"
+                      IsVisible="False" VerticalAlignment="Center" MinHeight="36" MinWidth="36" CornerRadius="18">
+                <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center">
+                  <Image Source="icon:plus" Width="15" Height="15" VerticalAlignment="Center" />
+                  <Text Text="Add widget" FontWeight="700" VerticalAlignment="Center"
+                        IsVisible="{Binding newTab.showActionLabels, fallback=false}" />
+                </Container>
+              </Button>
+              <Button id="home-newtab-customise-done" Column="2" Action="home.newtab-customise-done" Content="Done" AccentRole="Primary"
+                      IsVisible="False" VerticalAlignment="Center" MinHeight="36" CornerRadius="18" />
+            </Container>
+            <Container id="home-newtab-customise-mount" Type="Overlay" IsVisible="False" />
+            <Container id="home-newtab-hero" Type="Vertical Stack" MaxWidth="780" CellGap="14">
+              <Container id="home-newtab-clock" Type="Vertical Stack" CellGap="6" Margin="0 0 0 8">
                 <Text id="home-newtab-time" FontSize="46" FontWeight="800" TextAlignment="Center" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
                 <Text id="home-newtab-date" FontSize="14" FontWeight="600" TextAlignment="Center" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
               </Container>
@@ -97,7 +116,7 @@
               <Text id="home-newtab-ai-unavailable" Text="Ask AI requires an available Spaces destination." FontSize="12" FontWeight="600"
                     TextWrapping="Wrap" TextAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
-            <Container Type="Vertical Stack" CellGap="12">
+            <Container id="home-newtab-shortcuts-section" Type="Vertical Stack" CellGap="12">
               <Text id="home-newtab-shortcuts-heading" Text="Shortcuts" FontSize="18" FontWeight="750" />
               <Container id="home-newtab-shortcuts" Type="Wrap" CellGap="12" HorizontalAlignment="Stretch">
                 <Button id="home-newtab-shortcut-apps" Action="home.apps" AccessibleName="Apps" MinHeight="80"
@@ -123,6 +142,7 @@
                 </Button>
               </Container>
             </Container>
+            <Container id="home-newtab-widgets-mount" Type="Overlay" IsVisible="False" />
           </Container>
           <Container id="home-content" Row="2" Type="Overlay" />
           <Text id="home-status" Row="3" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />

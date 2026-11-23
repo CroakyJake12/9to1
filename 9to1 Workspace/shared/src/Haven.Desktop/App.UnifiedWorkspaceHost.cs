@@ -471,7 +471,15 @@ public sealed partial class App
                         });
                     }
                 },
-                library: request => CreateHomeLibraryPage(request, actualTheme.Context));
+                library: request => CreateHomeLibraryPage(request, actualTheme.Context),
+                newTabLayout: request => new NewTabLayoutPreferences(
+                    _services.GetRequiredService<IVersionedSettingsStore>(), request.ProfileId,
+                    token => AdmitHomeAsync(request, token),
+                    new NewTabBackgroundAssets(_services.GetRequiredService<IAppPaths>().DataDirectory, request.ProfileId)),
+                newTabWidgets: request => new NewTabWidgetSources(
+                    _services.GetService<IPlannerRepository>(), _services.GetService<IConversationRepository>(),
+                    _services.GetService<IContainerRepository>(), _services.GetService<IBoardsWorkspaceService>(),
+                    token => AdmitHomeAsync(request, token), libraryAvailable: true));
             IBrowseEngineHostFactory? engines = null;
 #if HAVEN_LINUX_CHROMIUM
             if (!OperatingSystem.IsWindows())

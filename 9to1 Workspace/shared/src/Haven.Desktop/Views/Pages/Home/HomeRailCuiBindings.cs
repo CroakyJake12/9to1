@@ -35,6 +35,7 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
         _values.Set("rail.showLabels", _showLabels);
         UpdateRailDimensions();
         _values.Set("newTab.contentPadding", _showLabels ? "34 26 34 24" : "12 16 12 16");
+        _values.Set("newTab.showActionLabels", width >= 470);
     }
 
     private void UpdateRailDimensions()

@@ -24,6 +24,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     private readonly Func<BrowseAppContentRequest, HomeEventsDestinationPage>? _events;
     private readonly Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? _settings;
     private readonly Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? _library;
+    private readonly Func<BrowseAppContentRequest, NewTabLayoutPreferences>? _newTabLayout;
+    private readonly Func<BrowseAppContentRequest, NewTabWidgetSources>? _newTabWidgets;
 
     internal UnifiedHomeContentFactory(IModeRegistry modes, Func<NewDashboardPage> dashboard,
         Func<HomeDiscoverPage> discover, Func<BrowseNavigationIntent, Task, bool> queue,
@@ -32,7 +34,9 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         Func<bool> hostIsCurrent, CancellationToken hostLifetime, bool aiAvailable = true,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
         Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null,
-        Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? library = null)
+        Func<BrowseAppContentRequest, HomeLibraryDestinationPage>? library = null,
+        Func<BrowseAppContentRequest, NewTabLayoutPreferences>? newTabLayout = null,
+        Func<BrowseAppContentRequest, NewTabWidgetSources>? newTabWidgets = null)
     {
         _modes = modes ?? throw new ArgumentNullException(nameof(modes));
         _dashboard = dashboard ?? throw new ArgumentNullException(nameof(dashboard));
@@ -43,10 +47,13 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         _hostIsCurrent = hostIsCurrent ?? throw new ArgumentNullException(nameof(hostIsCurrent));
         if (!hostLifetime.CanBeCanceled) throw new ArgumentException("Retain the original host lifetime.", nameof(hostLifetime));
         _hostLifetime = hostLifetime; _aiAvailable = aiAvailable; _events = events; _settings = settings; _library = library;
+        _newTabLayout = newTabLayout;
+        _newTabWidgets = newTabWidgets;
     }
 
     public bool RecognizesNestedCanvas(AppContentAddress address) =>
-        _settings is not null && HomeSettingsCatalog.IsSettingsAddress(address);
+        _settings is not null && HomeSettingsCatalog.IsSettingsAddress(address) ||
+        _newTabLayout is not null && HomeSettingsCatalog.IsNewTabCustomisationAddress(address);
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
     {
@@ -73,6 +80,13 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         if (request.Privacy != BrowserTabPrivacy.Standard)
             throw new NotSupportedException("The personal Home canvas is unavailable in a private tab.");
         return new Session(this, request);
+    }
+
+    private HomeSettingsDestinationPage CreateSettings(BrowseAppContentRequest request)
+    {
+        var page = _settings!(request);
+        page.NewTabCustomisationAvailable = _newTabLayout is not null;
+        return page;
     }
 
     private sealed class Session : IBrowseNativeAppContentSession, IOriginalTabTransientPresentationOwner
@@ -141,8 +155,10 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                                     ? _request with { Address = AppContentAddress.Parse("browse://home/library") } : _request, _owner._modes, _owner._dashboard,
                                 _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable,
                                 _owner._events is null ? null : () => _owner._events(_request),
-                                _owner._settings is null ? null : () => _owner._settings(_request),
-                            _owner._library is null ? null : () => _owner._library(_request)));
+                                _owner._settings is null ? null : () => _owner.CreateSettings(_request),
+                                _owner._library is null ? null : () => _owner._library(_request),
+                                newTabLayout: _request.Address.Authority == "newtab" ? _owner._newTabLayout?.Invoke(_request) : null,
+                                newTabWidgets: _request.Address.Authority == "newtab" ? _owner._newTabWidgets?.Invoke(_request) : null));
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));
