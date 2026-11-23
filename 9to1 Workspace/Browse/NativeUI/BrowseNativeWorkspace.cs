@@ -57,6 +57,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private string _groupName = "Research";
     private string _address, _find = string.Empty, _historyQuery = string.Empty, _status;
     private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen, _profileMenuOpen, _manageUsersOpen;
+    private bool _wideHostChrome;
+    private (Color Text, Color SecondaryText, Color SelectedSurface, Color SelectedText)? _hostTabColours;
     private volatile bool _retiring;
     private Task? _originalCommand, _originalClose, _originalChromeClose, _pendingCloseAttempt;
     private readonly List<Task> _closeAttempts = [];
@@ -123,6 +125,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         value = path switch
         {
             "Tabs" => _tabRows,
+            "Browse.TabStripMinimumHeight" => _wideHostChrome ? 48d : 38d,
+            "Browse.TabControlHeight" => _wideHostChrome ? 36d : 32d,
+            "Browse.NavigationMinimumHeight" => _wideHostChrome ? 52d : 42d,
             "TabGroups" => _tabGroupRows,
             "GroupName" => _groupName,
             "CanManageTabGroups" => _chrome.CanManageTabGroups,
@@ -188,11 +193,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "HasHistoryQuery" => _historyQuery.Length > 0,
             "HistoryResultSummary" => $"Showing {_historyRows.Length.ToString("N0", CultureInfo.CurrentCulture)} of {_snapshot.History.Count.ToString("N0", CultureInfo.CurrentCulture)} visits",
             "Downloads" => _downloadRows,
-            "Haven.Embedded" => _hostContext?.IsEmbedded == true,
+            "Haven.Embedded" => IsEmbeddedHost,
+            "Haven.ModelDetailsVisible" => _wideHostChrome,
+            "Haven.HostMarkVisible" => _wideHostChrome,
             "Haven.ModelAvailable" => _hostContext?.ModelSupported == true,
             "Haven.NotificationsAvailable" => _hostContext?.NotificationsSupported == true,
             "Haven.ProfileAvailable" => _hostContext?.ProfileSupported == true,
             "Haven.ModelName" => model?.Name ?? string.Empty,
+            "Haven.ModelDisplayName" => string.IsNullOrWhiteSpace(model?.Name) ? "Choose model" : model.Name,
             "Haven.EffortLabel" => ModelDisplayPercent(model),
             "Haven.EffortPercent" => ModelDisplayPercent(model),
             "Haven.EffortKnown" => !string.IsNullOrEmpty(ModelDisplayPercent(model)),
@@ -1063,8 +1071,35 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
 
     public sealed record UsageWindowRow(string Key, string Label, double UsedUnits, double LimitUnits);
     public bool TrySetItemValue(object item, string path, object? value) => false;
-    private static (Color Background, Color Foreground, Color CloseForeground) TabAppearance(bool selected)
+    internal bool IsEmbeddedHost => _hostContext?.IsEmbedded == true;
+
+    internal void SetHostChromeWidth(double width)
     {
+        var wide = IsEmbeddedHost && width >= 640;
+        if (_wideHostChrome == wide) return;
+        _wideHostChrome = wide;
+        Changed();
+    }
+
+    internal void SetHostTabColours(Color chrome, Color text, Color secondary, bool highContrast)
+    {
+        var channel = (byte)Math.Max(230, (text.R + text.G + text.B) / 3);
+        var neutral = Color.FromRgb(channel, channel, channel);
+        var surface = CuiContrast.EnsureForegroundContrast(neutral, chrome, highContrast ? 3 : 1.35);
+        var ink = CuiContrast.Ratio(Colors.Black, surface) >= (highContrast ? 7 : 4.5) ? Colors.Black : Colors.White;
+        if (highContrast) surface = CuiContrast.EnsureForegroundContrast(surface, ink, 7);
+        var colours = (text, secondary, surface, ink);
+        if (_hostTabColours == colours) return;
+        _hostTabColours = colours;
+        IssueCurrentRows();
+        Changed();
+    }
+
+    private (Color Background, Color Foreground, Color CloseForeground) TabAppearance(bool selected)
+    {
+        if (_hostTabColours is { } host)
+            return selected ? (host.SelectedSurface, host.SelectedText, host.SelectedText) :
+                (Colors.Transparent, host.Text, host.SecondaryText);
         var appearance = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ||
             Application.Current?.RequestedThemeVariant == ThemeVariant.Dark ? CuiAppearance.SuperDark : CuiAppearance.SuperBright;
         var palette = CuiSurfacePaletteCatalog.For("Browse", appearance, CuiSurfacePaletteCatalog.ActiveTheme);

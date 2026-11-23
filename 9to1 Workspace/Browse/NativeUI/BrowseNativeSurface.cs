@@ -6,7 +6,9 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.LogicalTree;
+using Avalonia.Platform;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 
@@ -30,6 +32,12 @@ public interface IBrowseNativeEngineTab : IBrowseEngineTab
 
 public static class BrowseNativeSurface
 {
+    private static readonly Lazy<Bitmap> HostMark = new(() =>
+    {
+        using var source = AssetLoader.Open(new Uri("avares://HavenOS.Apps.Browse.NativeUI/Assets/9to1-logo.png"));
+        return new Bitmap(source);
+    });
+
     public static CuiNativeScene CreateScene(BrowseNativeWorkspace workspace, ICuiSceneReadiness originalReadiness, CuiAppearance? appearance = null)
         => CreateScene(workspace, originalReadiness, appearance, themePreference: null);
 
@@ -39,6 +47,7 @@ public static class BrowseNativeSurface
         ArgumentNullException.ThrowIfNull(workspace); ArgumentNullException.ThrowIfNull(originalReadiness);
         var registry = new CuiControlRegistry();
         registry.RegisterObjectRenderer("browse.engine", _ => new BrowseEngineViewport(workspace));
+        registry.BindAuthoredControl("HavenHostMark", _ => new Image { Source = HostMark.Value });
         return new("browse", "Browse", "Browse", BrowseNativeWorkspace.LoadDocument(), workspace, workspace, originalReadiness)
             { ControlRegistry = registry, Appearance = appearance, ThemePreference = themePreference, IsPublicationCurrent = () => workspace.IsOriginalPublicationCurrent };
     }
@@ -230,6 +239,13 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
         if (_findKeyScope is not null)
         {
+            _findKeyScope.SizeChanged += OnSceneSizeChanged;
+            _workspace.SetHostChromeWidth(_findKeyScope.Bounds.Width);
+            if (_workspace.IsEmbeddedHost)
+            {
+                _findKeyScope.ResourcesChanged += OnSceneResourcesChanged;
+                RefreshHostTabColours();
+            }
             _workspace.CaptureTabTransitionFocus = CaptureTabTransitionFocus;
             _findKeyScope.AddHandler(KeyDownEvent, OnTabStripKeyDown, RoutingStrategies.Tunnel);
             _findKeyScope.AddHandler(GotFocusEvent, OnTabStripGotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
@@ -252,6 +268,11 @@ internal sealed class BrowseEngineViewport : ContentControl
         _workspace.DismissTransientMenus();
         if (_menuWindow is not null) _menuWindow.PropertyChanged -= OnMenuWindowChanged;
         _menuWindow = null;
+        if (_findKeyScope is not null)
+        {
+            _findKeyScope.SizeChanged -= OnSceneSizeChanged;
+            _findKeyScope.ResourcesChanged -= OnSceneResourcesChanged;
+        }
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTransientMenuPointerPressed);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnTabStripKeyDown);
@@ -263,6 +284,19 @@ internal sealed class BrowseEngineViewport : ContentControl
         _tabStrip = null;
         _findKeyScope = null;
     }
+    private void OnSceneSizeChanged(object? sender, SizeChangedEventArgs args) => _workspace.SetHostChromeWidth(args.NewSize.Width);
+    private void OnSceneResourcesChanged(object? sender, ResourcesChangedEventArgs args) => RefreshHostTabColours();
+
+    private void RefreshHostTabColours()
+    {
+        if (_findKeyScope is not { } scope ||
+            !scope.TryFindResource("CuiPanelBrush", out var chrome) || chrome is not ISolidColorBrush backing ||
+            !scope.TryFindResource("CuiTextBrush", out var text) || text is not ISolidColorBrush ink ||
+            !scope.TryFindResource("CuiTextSoftBrush", out var secondary) || secondary is not ISolidColorBrush softInk) return;
+        var highContrast = scope.TryFindResource("CuiHighContrast", out var contrast) && contrast is true;
+        _workspace.SetHostTabColours(backing.Color, ink.Color, softInk.Color, highContrast);
+    }
+
     private Action<Guid?>? CaptureTabTransitionFocus(Guid? closingTab)
     {
         if (_findKeyScope is not { } scope || TopLevel.GetTopLevel(scope) is not { } topLevel ||

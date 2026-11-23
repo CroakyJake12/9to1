@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls;
@@ -10,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Headless.XUnit;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -228,6 +230,7 @@ public sealed partial class BrowseNativeUiTests
         public bool NotificationsSupported => notifications;
         public bool ProfileSupported => profile;
         public IHavenSharedControlGateway? SharedControls => gateway;
+        public HavenTopBarModelInfo? ModelInfo { get; set; }
     }
 
     private sealed class UnsettledGateway(TaskCompletionSource<HavenSharedOpenResult> pending) : IHavenSharedControlGateway
@@ -496,6 +499,80 @@ public sealed partial class BrowseNativeUiTests
             await Retire(window);
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Embedded_model_pill_displays_the_live_name_and_retains_one_keyboard_target_at_narrow_width()
+    {
+        using var trace = new FixtureTraceScope(nameof(Embedded_model_pill_displays_the_live_name_and_retains_one_keyboard_target_at_narrow_width));
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), internalContentFactory: new TabSurfaceInternalFixtureFactory(),
+            homeProfileId: "model-pill-fixture");
+        var gateway = new SharedControlsFakeGateway();
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Settle(window);
+            var model = FindMounted(window, "HavenModelButton");
+            var label = FindVisual<TextBlock>("HavenModelLabel");
+            var disclosure = FindVisual<Image>("HavenModelDisclosure");
+            var mark = FindVisual<Image>("HavenHostMark");
+            Assert.True(label.IsEffectivelyVisible);
+            Assert.Equal("Choose model", label.Text);
+            Assert.Equal("Choose AI model", AutomationProperties.GetName(model));
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<TextBlock>(), control =>
+                control.Name == "HavenModelEffort" && control.IsEffectivelyVisible);
+            Assert.True(disclosure.IsEffectivelyVisible);
+            Assert.NotNull(disclosure.Source);
+            Assert.True(mark.IsEffectivelyVisible);
+            Assert.IsType<Bitmap>(mark.Source);
+            var firstTab = TabButton(window, workspace, chrome.State.SelectedTabId.ToString("D"));
+            Assert.True(mark.TranslatePoint(new Point(mark.Bounds.Width, 0), window)!.Value.X <=
+                firstTab.TranslatePoint(default, window)!.Value.X + .5);
+
+            const string modelName = "An unusually long installed model display name that reaches the compact toolbar limit";
+            context.ModelInfo = new(modelName, true, 3, "70%", true, false, null, null, false, null, EffortLevelOrdinal: 1);
+            workspace.PublishModelProjectionChanged(); Settle(window);
+            Assert.Equal(modelName, label.Text);
+            Assert.Equal(TextTrimming.CharacterEllipsis, label.TextTrimming);
+            Assert.InRange(label.Bounds.Width, 1, 144.5);
+            var effort = FindVisual<TextBlock>("HavenModelEffort");
+            Assert.True(effort.IsEffectivelyVisible);
+            Assert.Equal("70%", effort.Text);
+            var fullName = $"Choose {modelName}, reasoning effort 70%";
+            Assert.Equal(fullName, AutomationProperties.GetName(model));
+            Trace("wide:focus");
+            Assert.True(model.Focus(NavigationMethod.Tab));
+
+            Trace("narrow:resize");
+            window.Width = 360; Settle(window);
+            Assert.Same(model, FindMounted(window, "HavenModelButton"));
+            Assert.True(model.IsFocused);
+            Assert.InRange(model.Bounds.Width, 32, 34);
+            Assert.Equal(fullName, AutomationProperties.GetName(model));
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Control>(), control => control.IsEffectivelyVisible &&
+                control.Name is "HavenModelLabel" or "HavenModelEffort" or "HavenModelDisclosure" or "HavenHostMark");
+            Assert.True(FindVisual<TextBox>("BrowseAddressBox").Bounds.Width >= 63.5);
+            Trace("narrow:activate");
+            window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.None, null);
+            window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.None, null);
+            await Observe(Loader(window).WhenActionsIdleAsync(), window);
+            Assert.Equal(1, gateway.ModelOpens);
+
+            Trace("wide:restore");
+            window.Width = 1180; Settle(window);
+            Assert.Same(model, FindMounted(window, "HavenModelButton"));
+            Assert.True(FindVisual<TextBlock>("HavenModelLabel").IsEffectivelyVisible);
+            Assert.True(FindVisual<Image>("HavenModelDisclosure").IsEffectivelyVisible);
+            Assert.Equal(fullName, AutomationProperties.GetName(model));
+            Assert.True(FindVisual<Image>("HavenHostMark").IsEffectivelyVisible);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        T FindVisual<T>(string name) where T : Control => window.GetVisualDescendants().OfType<T>().Single(control => control.Name == name);
     }
 
     /// <summary>Observe the actual authored shared-open pipeline and the SAME original operation

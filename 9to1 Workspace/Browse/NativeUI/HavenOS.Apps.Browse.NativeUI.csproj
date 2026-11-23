@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
     <EmbeddedResource Include="UI\*.cui" LogicalName="HavenOS.Apps.Browse.NativeUI.UI.%(Filename)%(Extension)" />
     <AvaloniaResource Include="Assets\*.svg" />
+    <AvaloniaResource Include="../../../cloud/public-sites/public/9to1-logo.png" Link="Assets/9to1-logo.png" />
   </ItemGroup>
   <!-- Project references provide runtime types, not resource-build targets.
        Use the same pinned source-build asset pipeline as CUI and Desktop. -->

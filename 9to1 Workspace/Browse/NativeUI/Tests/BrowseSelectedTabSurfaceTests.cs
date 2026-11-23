@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Browser;
 using Haven.Core;
 using Xunit;
@@ -16,6 +17,91 @@ namespace HavenOS.Apps.Browse.Tests;
 
 public sealed partial class BrowseNativeUiTests
 {
+    [AvaloniaTheory]
+    [InlineData(360, 38, 42)]
+    [InlineData(1180, 48, 52)]
+    public async Task Embedded_tab_strip_keeps_new_tab_adjacent_until_overflow_and_uses_scoped_neutral_selection(
+        int width, int tabStripHeight, int toolbarHeight)
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(),
+            internalContentFactory: new TabSurfaceInternalFixtureFactory(), homeProfileId: "chrome-layout-fixture");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: new SharedControlsFakeContext(new SharedControlsFakeGateway()));
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        window.Width = width;
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Layout(window);
+            var strip = Authored(window, "BrowseTabStrip");
+            var toolbar = Authored(window, "BrowseNavigationBar");
+            Assert.InRange(strip.Bounds.Height, tabStripHeight - .5, tabStripHeight + .5);
+            Assert.InRange(toolbar.Bounds.Height, toolbarHeight - .5, toolbarHeight + .5);
+            var add = Find(window, "BrowseNewTabButton");
+            var tab = Tabs(window).Single();
+            var tabEnd = tab.TranslatePoint(new Point(tab.Bounds.Width, 0), window)!.Value.X;
+            var addOrigin = add.TranslatePoint(default, window)!.Value.X;
+            Assert.InRange(addOrigin - tabEnd, -.5, 12);
+            Capture("sparse");
+
+            var scopedChrome = Color.Parse("#FF29272D");
+            window.SceneHost.Resources["CuiPanelBrush"] = new SolidColorBrush(scopedChrome);
+            window.SceneHost.Resources["CuiTextBrush"] = new SolidColorBrush(Color.Parse("#FFEAE8F0"));
+            window.SceneHost.Resources["CuiAccentBrush"] = Brushes.DodgerBlue;
+            Layout(window);
+            AssertSelection(tab, scopedChrome, 1.35, 4.5);
+
+            scopedChrome = Color.Parse("#FFF3F2EF");
+            window.SceneHost.Resources["CuiPanelBrush"] = new SolidColorBrush(scopedChrome);
+            window.SceneHost.Resources["CuiTextBrush"] = new SolidColorBrush(Colors.Black);
+            window.SceneHost.Resources["CuiHighContrast"] = true;
+            Layout(window);
+            AssertSelection(tab, scopedChrome, 3, 7);
+
+            for (var index = 0; index < 9; index++)
+            {
+                await Pointer(window, workspace, add);
+                Layout(window);
+                Assert.Equal(index + 2, chrome.State.Tabs.Count);
+            }
+            var viewport = Authored(window, "BrowseTabViewport");
+            var scroll = viewport.GetVisualDescendants().OfType<ScrollViewer>().Single();
+            Assert.True(scroll.Extent.Width > scroll.Viewport.Width);
+            var viewportEnd = viewport.TranslatePoint(new Point(viewport.Bounds.Width, 0), window)!.Value.X;
+            addOrigin = add.TranslatePoint(default, window)!.Value.X;
+            Assert.InRange(addOrigin - viewportEnd, -.5, 2);
+            Assert.InRange(addOrigin + add.Bounds.Width, 0, width + .5);
+            var selected = chrome.State.SelectedTabId;
+            Assert.True(add.Focus(NavigationMethod.Tab));
+            window.KeyPress(Key.Tab, RawInputModifiers.Shift, PhysicalKey.None, null);
+            window.KeyRelease(Key.Tab, RawInputModifiers.Shift, PhysicalKey.None, null);
+            Layout(window);
+            Assert.Contains(viewport.GetVisualDescendants().OfType<Button>(), button => button.IsFocused &&
+                button.Name is "CuiOverflowLeft" or "CuiOverflowRight");
+            Assert.Equal(selected, chrome.State.SelectedTabId);
+            Capture("overflow-high-contrast");
+        }
+        finally { await Retire(window); }
+
+        static void AssertSelection(CuiContainerControl tab, Color chrome, double surfaceRatio, double inkRatio)
+        {
+            var fill = Assert.IsAssignableFrom<ISolidColorBrush>(tab.Background).Color;
+            var ink = Assert.IsAssignableFrom<ISolidColorBrush>(Title(tab).Foreground).Color;
+            Assert.Equal(fill.R, fill.G);
+            Assert.Equal(fill.G, fill.B);
+            Assert.True(CuiContrast.Ratio(fill, chrome) >= surfaceRatio - .03);
+            Assert.True(CuiContrast.Ratio(ink, fill) >= inkRatio - .03);
+        }
+
+        void Capture(string state)
+        {
+            if (Environment.GetEnvironmentVariable("BROWSE_EVIDENCE_DIRECTORY") is not { Length: > 0 } directory) return;
+            Directory.CreateDirectory(directory);
+            using var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+            frame.Save(Path.Combine(directory, $"embedded-shell-{state}-{width}x{window.Bounds.Height:0}.png"));
+        }
+    }
+
     /// <summary>The owner-latest selected-tab correction: the active tab's highlight must be ONE
     /// rounded surface that includes both the title and the close control, with quiet transparent
     /// inner buttons. This test asserts real rendered control/surface bounds and brushes, not
