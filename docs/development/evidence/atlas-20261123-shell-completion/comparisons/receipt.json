@@ -182,51 +182,51 @@
       "atlas_route": "host-newtab-customise",
       "atlas_image": "atlas-host-newtab-customise-1440x900.png",
       "atlas_image_sha256": "f4bcd9c35f7f0a0371655157b399ab2455455d3008d35795e737b39c6fa12295",
-      "native_image": "03-customise-balanced-neutral-wide.png",
-      "native_image_sha256": "8ef04aa3a5eb13f7a70eba43c557018c760927afa69a8348dd13f8ae6e083095",
+      "native_image": "02-customise-new-tab-final-1440x900.png",
+      "native_image_sha256": "d9cd7c65aa201ec49144d9d51d5231145bfda201a7b750718c9bf61060801868",
       "native_renderer": "Haven Linux apphost, X11",
       "native_assemblies": {
         "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
-        "Haven.dll": "fb74ec10997a9b4c07789fd2c9822de154d4ccc0961539ca3b5e34527360c74d",
-        "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
-        "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+        "Haven.dll": "49a7cafa0edbd161accfc1dce5f0c7e79a4c9b0ed429db6718443e046efc6091",
+        "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+        "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
         "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
         "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
-        "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+        "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
         "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
         "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
-        "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+        "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
       },
       "viewport": [
         1440,
         900
       ],
-      "comparison_sha256": "f6a2a0bfc15d709e459f42c25cee9ecac6ec7a6119a22519fe5d2cf833de970e"
+      "comparison_sha256": "98cfc6cae300c5c68433ec18de7ef9bed1effcfa1c0eead8e9f131539f358e8a"
     },
     "widgets-wide": {
       "atlas_route": "host-newtab-widgets",
       "atlas_image": "atlas-host-newtab-widgets-1440x900.png",
       "atlas_image_sha256": "36d3d7c0ce017b70e49c507771d8245c5b27745e6efbc0f4593b62edc0d77d26",
-      "native_image": "07-widget-modal-default-wide.png",
-      "native_image_sha256": "aa8065f7722e766902f504a05d90319b36a61d46646396d1820ec67d38977464",
+      "native_image": "03-add-widgets-final-1440x900.png",
+      "native_image_sha256": "a981fd6dd08d051208202a3f1c1ee31a466c90cdbf79dbf3a2b6f4aa3263fdc8",
       "native_renderer": "Haven Linux apphost, X11",
       "native_assemblies": {
         "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
-        "Haven.dll": "fb74ec10997a9b4c07789fd2c9822de154d4ccc0961539ca3b5e34527360c74d",
-        "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
-        "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+        "Haven.dll": "49a7cafa0edbd161accfc1dce5f0c7e79a4c9b0ed429db6718443e046efc6091",
+        "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+        "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
         "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
         "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
-        "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+        "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
         "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
         "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
-        "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+        "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
       },
       "viewport": [
         1440,
         900
       ],
-      "comparison_sha256": "7944a54a832f0c9c90b56e4314a34c1d4c5ac558925b0a4d0cd2f8472928369d"
+      "comparison_sha256": "307bbbe41b8ac08b3d508677690cc710750e213fded9d51f022a75fc22921b38"
     },
     "new-tab-narrow": {
       "atlas_route": "host-newtab",
@@ -257,51 +257,51 @@
       "atlas_route": "host-newtab-customise",
       "atlas_image": "atlas-host-newtab-customise-720x520.png",
       "atlas_image_sha256": "fbb309db011db58d14787a1b8768b6c2ac48f4c19c61f450aeee5b3600afb9de",
-      "native_image": "04-customise-balanced-neutral-narrow.png",
-      "native_image_sha256": "35ed65bec84b09b13bf4fc5baba79891bcbb7b8e60d9c8b9e6c86f5c48b992c5",
+      "native_image": "04-customise-new-tab-final-720x520.png",
+      "native_image_sha256": "abcd151eb3d7e3704d3dbb482238233f298d169ee6f73b4f8e78684328406e79",
       "native_renderer": "Haven Linux apphost, X11",
       "native_assemblies": {
         "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
-        "Haven.dll": "fb74ec10997a9b4c07789fd2c9822de154d4ccc0961539ca3b5e34527360c74d",
-        "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
-        "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+        "Haven.dll": "49a7cafa0edbd161accfc1dce5f0c7e79a4c9b0ed429db6718443e046efc6091",
+        "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+        "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
         "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
         "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
-        "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+        "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
         "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
         "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
-        "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+        "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
       },
       "viewport": [
         720,
         520
       ],
-      "comparison_sha256": "a3113164d0f5cd382214775a98edd0ac0fc4949b5cfdba7a771d4fd9b909a0e5"
+      "comparison_sha256": "57592494d390516147764b0cdedb99128b84bcc6f5f85d01f6a00828296262cf"
     },
     "widgets-narrow": {
       "atlas_route": "host-newtab-widgets",
       "atlas_image": "atlas-host-newtab-widgets-720x520.png",
       "atlas_image_sha256": "011d83ed6ff7e2a12123729b5f5694b0a80afc13cf09f750d87e30c9716e3b4d",
-      "native_image": "08-widget-modal-default-narrow.png",
-      "native_image_sha256": "d29fc55f48a14f027838ae0cd0e51fffdb804dc0c733c412b1fc32f0a5632a59",
+      "native_image": "05-add-widgets-final-720x520.png",
+      "native_image_sha256": "d29c49149d55967853dabd3f460918b8be8a848bfde6130de4134ac3557bc674",
       "native_renderer": "Haven Linux apphost, X11",
       "native_assemblies": {
         "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
-        "Haven.dll": "fb74ec10997a9b4c07789fd2c9822de154d4ccc0961539ca3b5e34527360c74d",
-        "HavenOS.Home.dll": "2fe73c6e7243043ccaad9f2d142d1498d433c8c4a8c974a230c214b44983bca3",
-        "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+        "Haven.dll": "49a7cafa0edbd161accfc1dce5f0c7e79a4c9b0ed429db6718443e046efc6091",
+        "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+        "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
         "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
         "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
-        "CakeOS.Cui.Runtime.dll": "52286a359ef981dcacf353e5526189f304e82f976132d527995a3f114d902e97",
+        "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
         "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
         "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
-        "UI/Home.cui": "5d31878e9a67b8819b94177a8d1bf94024aa5bad2f0d0144c930c3bccb0d25db"
+        "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
       },
       "viewport": [
         720,
         520
       ],
-      "comparison_sha256": "ca823d7d6cecef850168ebfd03c1c09d8e04e5d2b5c7c4ec07c0016e28a8bf9d"
+      "comparison_sha256": "d3735fab86095c6f50e8b5b92a53723fb8f25155a1402ad0d68fd7ecfb9fa9ec"
     },
     "appearance-narrow": {
       "atlas_route": "appearance",

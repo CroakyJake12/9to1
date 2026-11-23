@@ -1,0 +1,270 @@
+{
+  "source_sha": "9d332d71bf5055d00e05e433bf96d0ed85c1b796",
+  "render": "Normal isolated Linux X11 Haven Release apphost at actual window sizes with Professional Dark. Comparison frames pair actual CUI with independently rendered pinned Atlas v4.",
+  "assembly_sha256": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "49a7cafa0edbd161accfc1dce5f0c7e79a4c9b0ed429db6718443e046efc6091",
+    "HavenOS.Home.dll": "f1fb8ccfe1c9ef3e807ed6497ff668ace7d31b7a2279b793d9a18045a9de9e29",
+    "HavenOS.Apps.Browse.NativeUI.dll": "44b24e2946f8becac9741cfaf4283c5dcf74a519830a0f35b861aa06a29698ae",
+    "HavenOS.Apps.Browse.Core.dll": "a4fc7eed39a0f90b0e8760696e34665de4756641a7c813082bcc1c57a1609243",
+    "Haven.Infrastructure.dll": "5f8cdd7835b725872fee0afd7ebe10d2741aca29ff9b1ec861225d1db099d827",
+    "CakeOS.Cui.Runtime.dll": "822c755bc0cbb8c629831c4dbc1d6dbcc980eef3b92a457f1d250dc5afe366a7",
+    "CakeOS.Cui.Themes.dll": "6bf459092d7faee6d7f2af4ec0c801d8c825b43b3b816e5537dd3583878210c8",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "UI/Home.cui": "4a172563f0d4e279e0835ec797892444661b4d204c5ff9153eb5d4bc97340a49"
+  },
+  "shortcut_grip": {
+    "workflow": [
+      "Opened the real New Tab Customise page in a disposable clone with the previously proven Boards registration and all three defaults.",
+      "Used the mouse on the Boards grip at 1440×900 and released on the Apps card body. Boards moved to first, focus returned to its grip, and the profile persisted revision 2.",
+      "Resized to 720×520 and scrolled to all four real cards. While the Boards grip was held over Dashboard, pressed Escape then released. The edit stayed open and the previous layout readback was byte-identical.",
+      "Dragged Boards from the first row to Dashboard in the second row at 720×520. Boards moved to last, focus returned to its grip, and the profile persisted revision 3.",
+      "Pressed Alt+Left with the same grip focused. Boards moved one position earlier at revision 4. Both saved placement IDs and registered targets remained unchanged throughout.",
+      "After a normal close and same-profile restart, actual New Tab displayed the revision 4 order and the layout readback matched it byte-for-byte."
+    ],
+    "persistence": {
+      "before-drag": {
+        "revision": 1,
+        "shortcuts": [
+          "Apps",
+          "Library",
+          "Dashboard",
+          "Boards"
+        ]
+      },
+      "after-wide-drag": {
+        "revision": 2,
+        "shortcuts": [
+          "Boards",
+          "Apps",
+          "Library",
+          "Dashboard"
+        ]
+      },
+      "after-escape-cancel": {
+        "revision": 2,
+        "shortcuts": [
+          "Boards",
+          "Apps",
+          "Library",
+          "Dashboard"
+        ]
+      },
+      "after-narrow-drag": {
+        "revision": 3,
+        "shortcuts": [
+          "Apps",
+          "Library",
+          "Dashboard",
+          "Boards"
+        ]
+      },
+      "after-keyboard-reorder": {
+        "revision": 4,
+        "shortcuts": [
+          "Apps",
+          "Library",
+          "Boards",
+          "Dashboard"
+        ]
+      },
+      "after-relaunch": {
+        "revision": 4,
+        "shortcuts": [
+          "Apps",
+          "Library",
+          "Boards",
+          "Dashboard"
+        ]
+      }
+    },
+    "raw_frames": [
+      {
+        "file": "stage16-shortcut-drag/02-edit-grip-wide-before.png",
+        "sha256": "3ef8f2860aff3a132c0b4a799c2825c75c6f0a71e4ffc0ab62d1f04602e22fd7",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/03-edit-grip-wide-after.png",
+        "sha256": "c41fc53cb2823a509b1be5a7bcd5a931306f52f3ae87b8999ae0789bc761ec37",
+        "dimensions": [
+          1440,
+          900
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/04-edit-grip-narrow-before.png",
+        "sha256": "06f40c804367c4ffc878c2a28e958b55cbf10386edc77fa54a7ac88f7a0d6d22",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/05-edit-grip-narrow-cancel-in-flight.png",
+        "sha256": "cadd83e4d22742ed62ca782f2dcf0639396ab0342588a3656d508f5803ebbc94",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/06-edit-grip-narrow-escape-cancelled.png",
+        "sha256": "a9ef4d229701520cf4570f4dc6a94f1be817d5a70b0c343304a2aed48a9cd8f0",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/07-edit-grip-narrow-after.png",
+        "sha256": "bfea3225d2d8566c91cc6205580cd6c0a7dd8f5b69d6b03434ecc84938c01e22",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/08-edit-grip-narrow-keyboard-reorder.png",
+        "sha256": "496867357ed5fc777b08ece29c06c638fc99007521ff63a26cc985f1dacdbe0e",
+        "dimensions": [
+          720,
+          520
+        ]
+      },
+      {
+        "file": "stage16-shortcut-drag/09-new-tab-after-relaunch.png",
+        "sha256": "a4edf7c187d82578f9cffc01c8ede9acb431171096ec542a4bf175bd4329b074",
+        "dimensions": [
+          1440,
+          900
+        ]
+      }
+    ],
+    "normal_exit_statuses": [
+      0,
+      0
+    ]
+  },
+  "customise_and_widgets": {
+    "workflow": "A separate disposable Professional Dark profile started with default New Tab placement. Used real plus, Customise and Add widget controls. The 720×520 Customise frame was obtained after actual Done and reopen, with the pointer outside all controls. Verified preference readback stayed identical and closed normally.",
+    "comparisons": [
+      {
+        "route": "host-newtab-customise",
+        "viewport": "1440x900",
+        "raw_native": {
+          "file": "stage16-final-home-surfaces/02-customise-new-tab-final-1440x900.png",
+          "sha256": "d9cd7c65aa201ec49144d9d51d5231145bfda201a7b750718c9bf61060801868",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        "raw_atlas": {
+          "file": "atlas/atlas-host-newtab-customise-1440x900.png",
+          "sha256": "f4bcd9c35f7f0a0371655157b399ab2455455d3008d35795e737b39c6fa12295",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        "comparison": {
+          "file": "stage16-final-home-surfaces/comparison-customise-new-tab-1440x900.png",
+          "sha256": "43426e9c9ab57ec2f2b9dd629245110cc9108bac3c7c3759e0c156c14f8c53c4",
+          "dimensions": [
+            2934,
+            970
+          ]
+        }
+      },
+      {
+        "route": "host-newtab-customise",
+        "viewport": "720x520",
+        "raw_native": {
+          "file": "stage16-final-home-surfaces/04-customise-new-tab-final-720x520.png",
+          "sha256": "abcd151eb3d7e3704d3dbb482238233f298d169ee6f73b4f8e78684328406e79",
+          "dimensions": [
+            720,
+            520
+          ]
+        },
+        "raw_atlas": {
+          "file": "atlas/atlas-host-newtab-customise-720x520.png",
+          "sha256": "fbb309db011db58d14787a1b8768b6c2ac48f4c19c61f450aeee5b3600afb9de",
+          "dimensions": [
+            720,
+            520
+          ]
+        },
+        "comparison": {
+          "file": "stage16-final-home-surfaces/comparison-customise-new-tab-720x520.png",
+          "sha256": "d2ee932982f6fc93c226e448c43260659e83ae04f932338b79b3e4e68d9ae9f4",
+          "dimensions": [
+            1494,
+            590
+          ]
+        }
+      },
+      {
+        "route": "host-newtab-widgets",
+        "viewport": "1440x900",
+        "raw_native": {
+          "file": "stage16-final-home-surfaces/03-add-widgets-final-1440x900.png",
+          "sha256": "a981fd6dd08d051208202a3f1c1ee31a466c90cdbf79dbf3a2b6f4aa3263fdc8",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        "raw_atlas": {
+          "file": "atlas/atlas-host-newtab-widgets-1440x900.png",
+          "sha256": "36d3d7c0ce017b70e49c507771d8245c5b27745e6efbc0f4593b62edc0d77d26",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        "comparison": {
+          "file": "stage16-final-home-surfaces/comparison-add-widgets-1440x900.png",
+          "sha256": "85afe6aa7bb69d3cb4ace3af54cb7fced0d36849d021f217a58edbe23007c1c5",
+          "dimensions": [
+            2934,
+            970
+          ]
+        }
+      },
+      {
+        "route": "host-newtab-widgets",
+        "viewport": "720x520",
+        "raw_native": {
+          "file": "stage16-final-home-surfaces/05-add-widgets-final-720x520.png",
+          "sha256": "d29c49149d55967853dabd3f460918b8be8a848bfde6130de4134ac3557bc674",
+          "dimensions": [
+            720,
+            520
+          ]
+        },
+        "raw_atlas": {
+          "file": "atlas/atlas-host-newtab-widgets-720x520.png",
+          "sha256": "011d83ed6ff7e2a12123729b5f5694b0a80afc13cf09f750d87e30c9716e3b4d",
+          "dimensions": [
+            720,
+            520
+          ]
+        },
+        "comparison": {
+          "file": "stage16-final-home-surfaces/comparison-add-widgets-720x520.png",
+          "sha256": "fac386066af41ecfa1e094f321447784109594f4b5ba942331b389c589acbfd3",
+          "dimensions": [
+            1494,
+            590
+          ]
+        }
+      }
+    ],
+    "normal_exit_status": 0
+  }
+}

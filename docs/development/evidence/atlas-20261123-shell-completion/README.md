@@ -55,6 +55,8 @@ At 1440 × 900 both Customise panels measure 280 pixels tall. Add widget and Don
 
 Add shortcuts opens a searchable grid. Existing pins show a check. At 720 pixels the grid has two columns. Typing Boards and pressing Tab then Enter pinned the registered app. After restart, the tile opened the real Boards home at `9to1://boards`. Custom address accepts a validated web address and Cancel restores the picker filter. [Native input, stored identity and restart](journeys/registered-shortcut-journey.json)
 
+The edit-mode grip moved Boards from fourth to first at 1440 pixels. At 720 pixels, Escape during a drag preserved the exact stored layout. A completed drag and Alt+Left then moved the same Boards pin to third. Restarting Haven recovered Apps, Library, Boards and Dashboard in that order. [Keyboard focus after moving Boards](journeys/shortcut-grip-keyboard-720.png) · [Restored order after restart](journeys/stage16-grip-keyboard-order-relaunch.png) · [Drag operations, hashes and stored revisions](journeys/final-home-drag-and-surfaces.json)
+
 ## Dashboard
 
 An uncustomised Dashboard opens with one Dashboard heading, Continue working, Today and Study this week. The native comparison uses an empty profile. Today reads the profile’s agenda and Study reads recorded lesson time. View files, Open Tasks and View progress opened the existing Library, Tasks Space and Study Space. Device and model controls remain reachable below the activity section. A profile with its own Dashboard layout keeps its saved arrangement. The host has no cross-app list of recently opened documents, so Continue working links to Library. [Dashboard at 1440 × 900](comparisons/dashboard-wide.png) · [Dashboard at 720 × 520](comparisons/dashboard-narrow.png) · [Native Dashboard, Layout and Accent input receipts](journeys/layout-palette-dashboard.json)
@@ -62,3 +64,13 @@ An uncustomised Dashboard opens with one Dashboard heading, Continue working, To
 ## Ask AI and tab recovery
 
 On a fresh Linux profile, Ask AI kept the original New Tab open and displayed the exact typed prompt in the Spaces composer. Returning to New Tab recovered the same text. Returning to Spaces recovered the same draft. The database contained one conversation, one current branch and one composer draft. Message, turn and model usage counts remained zero throughout. [Spaces composer](journeys/stage10-ask-ai-spaces-draft.png) · [Original New Tab](journeys/stage10-ask-ai-source-recovered.png) · [Profile, SQLite and window receipts](journeys/refined-native-journeys.json)
+
+## Verification
+
+The final Linux Release build completed with zero warnings and zero errors. All 87 focused Desktop cases passed with Skia. The 20 Browse keyboard and overflow cases and 15 infrastructure persistence cases also passed. The comparison receipts identify the renderer, source and viewport for each image. [Test cases, filters and binary hashes](verification.json)
+
+## Cloud checkout and continuation
+
+The handoff on `main` was `b1009894406d984dfb7c453b60a61f2422fc22b8`. The final implementation commit on `codex/overnight-haven-shell` is `9d332d71bf5055d00e05e433bf96d0ed85c1b796`. Later evidence commits can be picked up from that same branch. Codex allowance telemetry was unavailable. Each reviewed batch was pushed through the cloud checkout and checked against the remote branch.
+
+The real application owns the profile state. The remaining Atlas differences that require additional implementation include an authorised cross-app recent-document source, file or artifact selection and icon editing for shortcuts, global chat-bar position and interface scale, and the Local versus Local + Cloud onboarding choice. The current Settings catalogue identifies prerequisites for unavailable account, policy and app-management services. Verification used Linux x64, Skia and a private X11 display. The original local pass and its evidence remain in the repository. [Feature inventory](../../refactor-2026-11-18/feature-inventory.md) · [Cloud handoff](../../CLOUD-HANDOFF-2026-11-22.md)
