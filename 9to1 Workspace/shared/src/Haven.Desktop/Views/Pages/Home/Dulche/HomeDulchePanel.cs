@@ -18,6 +18,8 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     }
 
     private readonly DulcheLocalClient _client;
+    private readonly HomeDulcheSwarm _swarm;
+    private bool _showSwarm;
     private readonly Func<Func<CancellationToken, Task>, CancellationToken, Task> _run;
     private readonly CuiControlLoader _loader = new();
     private readonly CuiViewModel _bindings = new();
@@ -36,6 +38,8 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     {
         _client = client;
         _run = run;
+        _swarm = new HomeDulcheSwarm(client,run);
+        _loader.BindAuthoredControl("dulche-swarm-mount",_=>_swarm);
         using var stream = typeof(HomeDulchePanel).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Dulche.cui")
             ?? throw new InvalidDataException("Missing Dulche CUI resource.");
         using var reader = new StreamReader(stream);
@@ -47,7 +51,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
             Mount(id, new TextBox());
         foreach (var id in new[] { "status", "detail", "output", "message", "catalog-detail", "resources", "benchmark-results" })
             Mount(id, new TextBlock());
-        foreach (var id in new[] { "toggle", "unload", "generate", "new", "manage", "find", "installed", "inspect", "remove", "download", "import", "pause", "resume", "cancel", "profile-select", "profile-save", "profile-rename", "recover", "stop", "stop-all", "agent-resume", "allow", "benchmarks", "benchmark-start", "candidates", "training" })
+        foreach (var id in new[] { "toggle", "unload", "generate", "new", "manage", "swarm", "find", "installed", "inspect", "remove", "download", "import", "pause", "resume", "cancel", "profile-select", "profile-save", "profile-rename", "recover", "stop", "stop-all", "agent-resume", "allow", "benchmarks", "benchmark-start", "candidates", "training" })
         {
             var button = new Button();
             Mount(id, button);
@@ -168,6 +172,12 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
                     $"{Value(gpu, "name")} {Value(gpu, "used_mib")}/{Value(gpu, "total_mib")} MiB · {Value(gpu, "temperature_c")} °C");
                 Text("resources", string.Join("\n", devices));
                 Text("status", $"Connected · {models.Length} configured model{(models.Length == 1 ? "" : "s")}" + (free.Length > 0 ? $" · {free} MiB RAM available" : ""));
+                if (_showSwarm)
+                {
+                    try { await _swarm.RefreshAsync(status,token); }
+                    catch(Exception error) when(error is IOException or HttpRequestException)
+                    { _swarm.ReportFailure(error.Message); }
+                }
                 if (_managing && !_operating)
                 {
                     try { await RefreshManagementAsync(token); }
@@ -194,8 +204,23 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     {
         if (!_active || _lifetime.IsCancellationRequested)
             return;
+        if (command == "swarm")
+        {
+            _showSwarm=!_showSwarm;
+            _managing=false;
+            _bindings.Set("Manage",false);
+            _bindings.Set("SwarmVisible",_showSwarm);
+            _bindings.Set("SingleVisible",!_showSwarm);
+            State(_controls["swarm"],"Content",_showSwarm ? "Back to chat" : "Swarm Mode");
+            if (_showSwarm) await PollAsync();
+            return;
+        }
         if (command == "manage")
         {
+            _showSwarm=false;
+            _bindings.Set("SwarmVisible",false);
+            _bindings.Set("SingleVisible",true);
+            State(_controls["swarm"],"Content","Swarm Mode");
             _managing = !_managing;
             _bindings.Set("Manage", _managing);
             if (_managing)
@@ -338,6 +363,7 @@ internal sealed partial class HomeDulchePanel : UserControl, IDisposable
     {
         Deactivate();
         _lifetime.Cancel();
+        _swarm.Dispose();
         _loader.Dispose();
         _lifetime.Dispose();
         Content = null;

@@ -1,0 +1,219 @@
+<Cui id="home.models.swarm" version="1">
+  <Theme Name="user_preference">
+    <Page AccessibleName="Dulche Swarm Mode">
+      <Container Type="Vertical Stack" CellGap="8">
+        <Text Text="Swarm Mode" TextWrapping="Wrap" FontWeight="700" FontSize="17" />
+        <Container Type="Wrap" CellGap="8">
+          <Button id="sw-monitor" Content="Monitor" />
+          <Button id="sw-configure" Content="Configure" />
+          <Button id="sw-new" Content="New swarm" />
+          <Button id="sw-refresh" Content="Refresh" />
+          <Button id="sw-benchmarks" Content="Strategy benchmarks" />
+        </Container>
+        <Text id="sw-status" TextWrapping="Wrap" AccessibleName="Status" Foreground="{Resource CuiTextSoftBrush}" />
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding Monitor, fallback=true}">
+          <Container Type="Vertical Stack" CellGap="6">
+            <Text Text="Swarm runs" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Input id="sw-runs" Type="Select" AccessibleName="Swarm runs" Width="440" HorizontalAlignment="Left" />
+          </Container>
+          <Container Type="Wrap" CellGap="8">
+            <Button id="sw-pause" Content="Pause" />
+            <Button id="sw-resume" Content="Resume" />
+            <Input id="sw-review-note" Type="Text" AccessibleName="Optional escalation for mentor" PlaceholderText="Optional escalation note" Width="215" />
+              <Button id="sw-review" Content="Request mentor check-in" />
+            <Button id="sw-stop" Content="Stop swarm" />
+          </Container>
+          <Text id="sw-progress" TextWrapping="Wrap" AccessibleName="Progress" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="sw-rates" TextWrapping="Wrap" AccessibleName="Rates" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="sw-resources" TextWrapping="Wrap" AccessibleName="Resources" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Worker tasks" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-tasks" Type="Select" AccessibleName="Worker tasks" Width="300" HorizontalAlignment="Left" />
+            </Container>
+            <Button id="sw-stop-worker" Content="Stop selected worker" />
+          </Container>
+          <Text id="sw-task-detail" TextWrapping="Wrap" AccessibleName="Task detail" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text id="sw-comparisons" TextWrapping="Wrap" AccessibleName="Swarm strategy benchmark results" />
+          <Text id="sw-decisions" TextWrapping="Wrap" AccessibleName="Decisions" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding Configuration, fallback=false}">
+          <Container Type="Vertical Stack" CellGap="6">
+            <Text Text="Objective" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Input id="sw-objective" Type="Text" AccessibleName="Objective" Width="480" HorizontalAlignment="Left" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="6">
+            <Text Text="Working directory" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Input id="sw-working-directory" Type="Text" AccessibleName="Working directory" Width="480" PlaceholderText="Absolute local project path" HorizontalAlignment="Left" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="6">
+            <Text Text="Completion criteria" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Input id="sw-criteria" Type="Text" AccessibleName="Completion criteria" Width="480" HorizontalAlignment="Left" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="6">
+            <Text Text="Specification references" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Input id="sw-references" Type="Text" AccessibleName="Specification references" Width="480" PlaceholderText="Comma-separated relative files or references" HorizontalAlignment="Left" />
+          </Container>
+          <Text Text="Mentor" TextWrapping="Wrap" FontWeight="700" FontSize="17" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Mentor model and device" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-mentor-model" Type="Select" AccessibleName="Mentor model and device" Width="250" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Mentor performance profile" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-mentor-profile" Type="Select" AccessibleName="Mentor performance profile" Width="210" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Mentor context (tokens)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-mentor-context" Type="Text" AccessibleName="Mentor context (tokens)" Width="160" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Mentor reasoning" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-mentor-reasoning" Type="Select" AccessibleName="Mentor reasoning" Width="140" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Text id="sw-mentor-budget" TextWrapping="Wrap" AccessibleName="Mentor budget" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Mentor residency" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-strategy" Type="Select" AccessibleName="Mentor residency" Width="210" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Partial mentor profile" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-partial-profile" Type="Select" AccessibleName="Partial mentor profile" Width="220" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Text Text="Worker" TextWrapping="Wrap" FontWeight="700" FontSize="17" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Worker model and device" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-worker-model" Type="Select" AccessibleName="Worker model and device" Width="250" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Worker performance profile" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-worker-profile" Type="Select" AccessibleName="Worker performance profile" Width="210" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Worker context (tokens)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-worker-context" Type="Text" AccessibleName="Worker context (tokens)" Width="160" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Worker reasoning" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-worker-reasoning" Type="Select" AccessibleName="Worker reasoning" Width="140" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Text id="sw-worker-budget" TextWrapping="Wrap" AccessibleName="Worker budget" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Worker role" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-role" Type="Text" AccessibleName="Worker role" Width="165" PlaceholderText="e.g. reviewer" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Specialisation" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-specialization" Type="Text" AccessibleName="Specialisation" Width="270" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Autonomy" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-autonomy" Type="Select" AccessibleName="Autonomy" Width="180" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Permitted recipe IDs" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-recipes" Type="Text" AccessibleName="Permitted recipe IDs" Width="240" PlaceholderText="Comma-separated approved recipes" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Verification recipe" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-verify" Type="Text" AccessibleName="Verification recipe" Width="200" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Container Type="Wrap" CellGap="8">
+            <Button id="sw-add-role" Content="Add worker role" />
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Configured worker roles" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-roles" Type="Select" AccessibleName="Configured worker roles" Width="310" HorizontalAlignment="Left" />
+            </Container>
+            <Button id="sw-remove-role" Content="Remove selected role" />
+          </Container>
+          <Text id="sw-worker-plan" TextWrapping="Wrap" AccessibleName="Worker plan" Foreground="{Resource CuiTextSoftBrush}" />
+          <Text Text="Check-ins" TextWrapping="Wrap" FontWeight="700" FontSize="17" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Scheduling preset" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-preset" Type="Select" AccessibleName="Scheduling preset" Width="155" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Interval (seconds)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-seconds" Type="Text" AccessibleName="Interval (seconds)" Width="125" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Completed tasks" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-task-count" Type="Text" AccessibleName="Completed tasks" Width="120" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Generated tokens" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-token-count" Type="Text" AccessibleName="Generated tokens" Width="135" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="On milestones" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-milestones" Type="Select" AccessibleName="On milestones" Width="135" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="On worker error" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-on-error" Type="Select" AccessibleName="On worker error" Width="135" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="On conflict" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-on-conflict" Type="Select" AccessibleName="On conflict" Width="135" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Text Text="Resource limits and stop conditions" TextWrapping="Wrap" FontWeight="700" FontSize="17" />
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Concurrent workers" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-concurrency" Type="Text" AccessibleName="Concurrent workers" Width="140" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Task limit" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-task-limit" Type="Text" AccessibleName="Task limit" Width="120" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Time limit (seconds)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-time-limit" Type="Text" AccessibleName="Time limit (seconds)" Width="150" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Output per request (tokens)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-output" Type="Text" AccessibleName="Output per request (tokens)" Width="170" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Check-in limit" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-review-limit" Type="Text" AccessibleName="Check-in limit" Width="130" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Container Type="Wrap" CellGap="8">
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Minimum free RAM (MiB)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-min-ram" Type="Text" AccessibleName="Minimum free RAM (MiB)" Width="170" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Minimum free storage (GiB)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-min-disk" Type="Text" AccessibleName="Minimum free storage (GiB)" Width="170" HorizontalAlignment="Left" />
+            </Container>
+            <Container Type="Vertical Stack" CellGap="6">
+              <Text Text="Maximum GPU use (MiB)" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="sw-max-gpu" Type="Text" AccessibleName="Maximum GPU use (MiB)" Width="180" PlaceholderText="0 uses existing limits" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Text id="sw-limits-readout" TextWrapping="Wrap" AccessibleName="Limits readout" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="sw-create" Content="Start swarm" />
+            <Button id="sw-apply" Content="Apply schedule and residency to selected swarm" />
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

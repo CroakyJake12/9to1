@@ -102,6 +102,7 @@
     <EmbeddedResource Include="DynamicUI\**\*.hui" />
     <EmbeddedResource Include="Views/Pages/Automations/UI/OriginalAutomationLibrary.cui" LogicalName="Haven.Desktop.OriginalAutomationLibrary.cui" />
     <EmbeddedResource Include="Views/Pages/Home/Dashboard.cui" LogicalName="Haven.Desktop.Home.Dashboard.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/Dulche/DulcheSwarm.cui" LogicalName="Haven.Desktop.Home.DulcheSwarm.cui" />
     <EmbeddedResource Include="Views/Pages/Home/Dulche/Dulche.cui" LogicalName="Haven.Desktop.Home.Dulche.cui" />
     <EmbeddedResource Include="Views/Pages/Home/Discover.cui" LogicalName="Haven.Desktop.Home.Discover.cui" />
     <EmbeddedResource Include="Views/Pages/Home/HuggingFace/HomeHuggingFace.cui" LogicalName="Haven.Desktop.Home.HuggingFace.cui" />

@@ -9,15 +9,19 @@
           <Button id="dulche-toggle" Content="Load" AccessibleName="Change selected model state" />
           <Button id="dulche-unload" Content="Unload" />
           <Button id="dulche-manage" Content="Manage models" />
+          <Button id="dulche-swarm" Content="Swarm Mode" />
         </Container>
-        <Text id="dulche-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-        <Input id="dulche-prompt" Type="Text" PlaceholderText="Message the selected model" AccessibleName="Dulche prompt" />
-        <Container Type="Wrap" CellGap="8">
-          <Button id="dulche-generate" Content="Send" />
-          <Button id="dulche-new" Content="New conversation" />
+        <Container id="dulche-swarm-mount" Type="Vertical Stack" IsVisible="{Binding SwarmVisible, fallback=false}" AccessibleName="Swarm configuration and monitoring" />
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding SingleVisible, fallback=true}">
+          <Text id="dulche-detail" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Input id="dulche-prompt" Type="Text" PlaceholderText="Message the selected model" AccessibleName="Dulche prompt" />
+          <Container Type="Wrap" CellGap="8">
+            <Button id="dulche-generate" Content="Send" />
+            <Button id="dulche-new" Content="New conversation" />
+          </Container>
+          <Text id="dulche-output" TextWrapping="Wrap" AccessibleName="Dulche response" />
+          <Text id="dulche-message" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
         </Container>
-        <Text id="dulche-output" TextWrapping="Wrap" AccessibleName="Dulche response" />
-        <Text id="dulche-message" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
         <Container id="dulche-management" IsVisible="{Binding Manage, fallback=false}" Type="Vertical Stack" CellGap="8">
           <Text id="dulche-resources" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
           <Text Text="Model management" FontSize="18" FontWeight="700" />

@@ -16,7 +16,7 @@ public sealed class DulcheLocalClient
     private readonly UserPreferencesService _preferences;
     private volatile bool _registered;
 
-    public DulcheLocalClient(UserPreferencesService preferences) : this(preferences, null) { }
+    public DulcheLocalClient(UserPreferencesService preferences) : this(preferences, (string?)null) { }
 
     internal DulcheLocalClient(UserPreferencesService preferences, string? socketPath)
     {
@@ -49,6 +49,12 @@ public sealed class DulcheLocalClient
                 catch { socket.Dispose(); throw; }
             }
         };
+        _http = new HttpClient(handler) { BaseAddress = new Uri("http://localhost/"), Timeout = Timeout.InfiniteTimeSpan };
+    }
+
+    internal DulcheLocalClient(UserPreferencesService preferences, HttpMessageHandler handler)
+    {
+        _preferences = preferences;
         _http = new HttpClient(handler) { BaseAddress = new Uri("http://localhost/"), Timeout = Timeout.InfiniteTimeSpan };
     }
 
@@ -124,9 +130,13 @@ public sealed class DulcheLocalClient
         return await ReadAsync(request, token);
     }
 
-    public async Task<JsonNode> PostAsync(string route, object body, CancellationToken token)
+    public Task<JsonNode> PostAsync(string route, object body, CancellationToken token) =>
+        PostAsync(route, body, token, null);
+
+    public async Task<JsonNode> PostAsync(string route, object body, CancellationToken token, string? idempotencyKey)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/" + route) { Content = JsonContent.Create(body) };
+        if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);
         return await ReadAsync(request, token);
     }
 
