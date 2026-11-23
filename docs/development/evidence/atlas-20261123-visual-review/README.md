@@ -18,6 +18,12 @@ A fresh installation starts in legacy Professional SuperDark. Its Settings mode 
 
 The directory still lacks much of the Atlas taxonomy, including Theme Options. The theme builder, Comic migration, custom colour input and per-app palette editor remain open. The current app exposes the existing Cinematic theme. Atlas account, model and workspace examples were kept out of user data.
 
+## New Tab
+
+The first comparison with working shortcut cards shows the Professional Dark New Tab at 1440 × 900 and 720 × 520 on source `fd7b0d0b8`. The clock displays local time and the date. Apps, Library and Dashboard open their existing destinations. At the narrow width the cards wrap into two rows. Scrolling and activating Dashboard opened it in a separate tab and preserved New Tab. [Wide comparison](new-tab-shortcuts-wide.png) · [Narrow comparison](new-tab-shortcuts-narrow.png) · [Wrapped cards](new-tab-narrow-scrolled.png) · [Dashboard after activation](new-tab-opened-dashboard.png) · [Capture receipt](new-tab-shortcuts-receipt.json)
+
+The Atlas uses a wider content column, a Home heading above the clock, separate Ask AI and All apps actions, Customise and a Widgets section. The early native capture shows a New Tab heading, a search-mode selector and three shortcuts. The narrow Atlas browser clips its fixed 1440-pixel canvas.
+
 ## Verification
 
 The Linux Release build uses .NET SDK 10.0.401. The 23 focused Desktop cases passed using the real Skia headless renderer on the source for the Settings captures, `ef50cd393d4ad00f65ec703da2c8ea3e2eb2848b`. Cases cover category focus, filtering, scroll reachability, canonical native destinations, guarded writes, the saved and pending display state, accent preservation across reopen, Dashboard identity and New Tab search. Ten focused Browse cases passed, including the model button, wide and compact row dimensions, physical close/reopen keys and overflow. The shell uses the repository’s original 9to1 mark.

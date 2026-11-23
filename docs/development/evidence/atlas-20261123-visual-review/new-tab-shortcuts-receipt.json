@@ -1,0 +1,90 @@
+{
+  "source": "fd7b0d0b84f3b833a44d83388d1611060953919f",
+  "source_patch_sha256": "fdba534d0aab3fea86fc60c43f7e52c2be22f75065b7a476187ee35c2ece6954",
+  "atlas_sha256": "612a9aa9fdc01b1c8a71e82532b191614992e1a6b78602fe5100aee9fa8bf4d2",
+  "atlas_render": {
+    "1440": {
+      "route": "host-newtab",
+      "heading": "Home",
+      "viewport": [
+        1440,
+        900
+      ],
+      "rootScrollWidth": 1440,
+      "sha256": "59098442b81db9f18b3d606734b01c49890ba3af3181b1f0b895a71d3caee5c0"
+    },
+    "720": {
+      "route": "host-newtab",
+      "heading": "Home",
+      "viewport": [
+        720,
+        520
+      ],
+      "rootScrollWidth": 1440,
+      "sha256": "b9311c0602ca341cd7aa815c43ba3202623956b055523220a0fabbf802968f3c"
+    }
+  },
+  "native": "Linux X11 / Avalonia, 1:1 DIP to pixel",
+  "native_route": "browse://newtab",
+  "native_wide_utc": "2026-11-23T07:56:15Z",
+  "native_narrow_utc": "2026-11-23T07:56:15Z",
+  "actual_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "cee95497d100db5b3060011de759fc43ccf0b8cf9ad5c3c3b7ea01899670f10d",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f",
+    "Home.cui": "ee6eec9d989f29b9cc67522730c794b2c2662cd6783a004371a0fbbfe5e94b79",
+    "HavenOS.Apps.Browse.NativeUI.dll": "e3638a7a063ac8b4a6d4c50f34136718287b100bf45009e7aaa7e4b681cf707e"
+  },
+  "observed_preferences": {
+    "legacy_theme": "Professional",
+    "legacy_mode": 2,
+    "legacy_override_active": false,
+    "canonical_theme": "Professional",
+    "canonical_mode": "Dark",
+    "display": {
+      "mode": 1,
+      "brightness": 50,
+      "colourContrast": 50
+    },
+    "accent": {
+      "mode": 0,
+      "allAppsColour": "#7145FF",
+      "individualApps": {}
+    }
+  },
+  "images": {
+    "new-tab-shortcuts-wide.png": {
+      "sha256": "fd4c1512733d091f1a056555c37da4efbc57e38b29ca4ef2d20315d5ebfec0ff",
+      "size": [
+        2934,
+        970
+      ]
+    },
+    "new-tab-shortcuts-narrow.png": {
+      "sha256": "65ff68a1babb963d52909573eccf8c79c7af2c3a44a9e05486bf9519c96ef2b9",
+      "size": [
+        1494,
+        590
+      ]
+    },
+    "new-tab-narrow-scrolled.png": {
+      "sha256": "68fc33faf036455c4add1c94b9a87fef79989bb8dd56b4cb4ea7feec95528ccf",
+      "size": [
+        720,
+        520
+      ]
+    },
+    "new-tab-opened-dashboard.png": {
+      "sha256": "156f96469c6b78a613cc03df043f7b7e76272aa0a34c97c422a74bfa49c688a0",
+      "size": [
+        720,
+        520
+      ]
+    }
+  },
+  "observed_interaction": "Scrolled to the wrapped Dashboard shortcut at 720 x 520. Clicking it opened the existing Dashboard in a separate tab. New Tab remained in the strip.",
+  "shutdown": [
+    "Window manager WM_DELETE_WINDOW",
+    "Haven apphost exit code 0"
+  ]
+}
