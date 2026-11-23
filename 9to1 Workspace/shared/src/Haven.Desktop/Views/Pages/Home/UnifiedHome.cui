@@ -24,7 +24,7 @@
             </Container>
           </Button>
           <Container id="home-rail-nav" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="2">
-            <Text id="home-rail-explore" Text="Explore" FontSize="13" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}"
+            <Text id="home-rail-explore" Text="Explore" FontSize="13" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}"
                   Margin="12 3 0 3" IsVisible="{Binding rail.showLabels, fallback=false}" />
             <Button id="home-dashboard" action="home.dashboard" accessible-name="Dashboard" Tooltip="Dashboard" Selected="{Binding rail.dashboardSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
@@ -38,7 +38,7 @@
                 <Text Text="New Tab" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Text id="home-rail-workspace" Text="Workspace" FontSize="13" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}"
+            <Text id="home-rail-workspace" Text="Workspace" FontSize="13" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}"
                   Margin="12 14 0 3" IsVisible="{Binding rail.showLabels, fallback=false}" />
             <Button id="home-library" IsEnabled="{Binding rail.libraryAvailable, fallback=false}" action="home.library" accessible-name="Files" Tooltip="Files" Selected="{Binding rail.librarySelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
@@ -60,7 +60,7 @@
                 <Text Text="Events" FontWeight="700" VerticalAlignment="Center" IsVisible="{Binding rail.showLabels, fallback=false}" />
               </Container>
             </Button>
-            <Text id="home-rail-discover" Text="Discover" FontSize="13" FontWeight="650" Foreground="{Resource CuiTextSoftBrush}"
+            <Text id="home-rail-discover" Text="Discover" FontSize="13" FontWeight="750" Foreground="{Resource CuiTextSoftBrush}"
                   Margin="12 14 0 3" IsVisible="{Binding rail.showLabels, fallback=false}" />
             <Button id="home-apps" action="home.apps" accessible-name="9to1 Apps" Tooltip="9to1 Apps" Selected="{Binding rail.appsSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
