@@ -1,8 +1,13 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
@@ -13,6 +18,127 @@ namespace HavenOS.Apps.Browse.Tests;
 
 public sealed partial class BrowseNativeUiTests
 {
+    [AvaloniaFact]
+    public async Task Embedded_Ctrl_L_selects_the_native_route_or_unsent_draft_after_the_nested_owner()
+    {
+        var factory = new AppUiFixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), appContentFactory: factory, homeProfileId: "omni-fixture");
+        var route = AppContentAddress.Parse("9to1://write/document");
+        await chrome.NavigateAsync(route.Value);
+        var owner = Assert.Single(factory.Sessions);
+        var tabId = chrome.State.SelectedTabId;
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: new SharedControlsFakeContext(null));
+        var scene = BrowseNativeSurface.CreateScene(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(scene.ControlRegistry!);
+        var host = new CuiSceneHost(scene.ControlRegistry);
+        var window = new Window { Width = 1180, Height = 800, Content = host };
+        var popup = new Popup { ShouldUseOverlayLayer = true, Child = new TextBox { Text = "Popup draft", Width = 180 } };
+        try
+        {
+            var token = TestContext.Current.CancellationToken;
+            window.Show();
+            workspace.ObserveReadiness(await host.ShowAsync(scene, token).WaitAsync(TimeSpan.FromSeconds(20), token));
+            Layout();
+            var button = Assert.IsType<Button>(owner.OpenButton);
+            var address = host.GetVisualDescendants().OfType<TextBox>().Single(item => item.Name == "BrowseAddressBox");
+            Assert.Equal(owner.Title, address.Text);
+            Assert.True(button.Focus(NavigationMethod.Tab));
+            var reservesShortcut = true;
+            button.KeyDown += (_, args) =>
+            {
+                if (reservesShortcut && args.Key == Key.L && args.KeyModifiers == KeyModifiers.Control)
+                    args.Handled = true;
+            };
+            CtrlL();
+            Assert.True(button.IsFocused);
+            Assert.Equal(owner.Title, address.Text);
+
+            reservesShortcut = false;
+            CtrlL();
+            Assert.True(address.IsFocused);
+            Assert.Equal(route.Value, address.SelectedText);
+            const string draft = "An unsent location draft";
+            window.KeyTextInput(draft);
+            Assert.True(button.Focus(NavigationMethod.Tab));
+            Assert.Equal(owner.Title, address.Text);
+            CtrlL();
+            Assert.True(address.IsFocused);
+            Assert.Equal(draft, address.SelectedText);
+
+            popup.PlacementTarget = button;
+            Assert.IsAssignableFrom<Panel>(owner.OriginalNativeView).Children.Add(popup);
+            popup.IsOpen = true; Layout();
+            var popupEditor = Assert.IsType<TextBox>(popup.Child);
+            Assert.True(popupEditor.Focus(NavigationMethod.Tab));
+            CtrlL();
+            Assert.True(popupEditor.IsFocused);
+            Assert.True(popup.IsOpen);
+            Assert.Equal("Popup draft", popupEditor.Text);
+            Assert.Equal(tabId, chrome.State.SelectedTabId);
+            Assert.Equal(route, chrome.State.SelectedTab.Address);
+            Assert.Same(owner, chrome.ObserveOriginalAppContent(tabId));
+            Assert.True(workspace.TryGetValue("Address", out var retained));
+            Assert.Equal(draft, retained);
+            Assert.Null(workspace.OriginalCommand);
+        }
+        finally
+        {
+            popup.IsOpen = false;
+            await workspace.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(20));
+            await host.CloseOriginalAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            window.Close();
+        }
+
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+        void CtrlL()
+        {
+            window.KeyPress(Key.L, RawInputModifiers.Control, PhysicalKey.None, null);
+            window.KeyRelease(Key.L, RawInputModifiers.Control, PhysicalKey.None, null);
+            Layout();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Standalone_address_keeps_Enter_and_Go_on_the_real_navigation_command()
+    {
+        var factory = new AppUiFixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), appContentFactory: factory, homeProfileId: "omni-submit-fixture");
+        await chrome.NavigateAsync("9to1://write/document");
+        var child = Assert.Single(factory.Sessions);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window); Settle(window);
+            var address = Assert.IsType<TextBox>(Authored(window, "BrowseAddressBox"));
+            Assert.True(child.OpenButton!.Focus(NavigationMethod.Tab));
+            Press(Key.L, RawInputModifiers.Control);
+            Assert.True(address.IsFocused);
+            Assert.Equal("9to1://write/document", address.SelectedText);
+            window.KeyTextInput("9to1://write/keyboard-destination");
+            Press(Key.Enter);
+            Assert.NotNull(workspace.OriginalCommand);
+            await Observe(workspace.OriginalCommand!, window);
+            Assert.Equal("9to1://write/keyboard-destination", chrome.State.SelectedTab.Address.Value);
+
+            Assert.True(address.Focus(NavigationMethod.Tab));
+            address.SelectAll();
+            window.KeyTextInput("9to1://write/go-destination");
+            await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+            Assert.Equal("9to1://write/go-destination", chrome.State.SelectedTab.Address.Value);
+            await CloseAppWindow(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+
+        void Press(Key key, RawInputModifiers modifiers = RawInputModifiers.None)
+        {
+            window.KeyPress(key, modifiers, PhysicalKey.None, null);
+            window.KeyRelease(key, modifiers, PhysicalKey.None, null);
+            Settle(window);
+        }
+    }
+
     [AvaloniaFact]
     public void Navigation_vector_assets_are_packaged_in_the_real_NativeUI_assembly()
     {

@@ -3,7 +3,6 @@ using CakeOS.Apps.Boards.App;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -1394,11 +1393,6 @@ public sealed partial class App
         {
             if (OriginalClose is not null || _workspace is not { IsReady: true } workspace || args.Handled) return;
             using var callback = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-            if (args.KeyModifiers.HasFlag(KeyModifiers.Control) && args.Key == Key.L)
-            {
-                var address = this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox");
-                address?.Focus(); address?.SelectAll(); args.Handled = true; return;
-            }
             var command = args.Key switch
             {
                 Key.T when args.KeyModifiers.HasFlag(KeyModifiers.Control) && !args.KeyModifiers.HasFlag(KeyModifiers.Alt) => args.KeyModifiers.HasFlag(KeyModifiers.Shift) ? "9to1.Browse.ReopenClosedTab" : "9to1.Browse.NewTab",
@@ -1407,7 +1401,7 @@ public sealed partial class App
                 Key.R when args.KeyModifiers.HasFlag(KeyModifiers.Control) => "9to1.Browse.Reload",
                 Key.Left when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Back",
                 Key.Right when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Forward",
-                Key.Enter when this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox")?.IsFocused == true => "9to1.Browse.Navigate",
+                Key.Enter when args.Source is TextBox { Name: "BrowseAddressBox", IsFocused: true } => "9to1.Browse.Navigate",
                 _ => null
             };
             if (command is null || workspace.IsActionAvailable(command) != true) return;

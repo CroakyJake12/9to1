@@ -158,13 +158,8 @@ public sealed class BrowseNativeWindow : Window
     }
     private async void OnKeyDown(object? sender, KeyEventArgs args)
     {
-        if (_originalClose is not null || _initialization is not { IsCompletedSuccessfully: true } ||
+        if (args.Handled || _originalClose is not null || _initialization is not { IsCompletedSuccessfully: true } ||
             _initialization.Result.State != CuiSceneAvailabilityState.Ready) return;
-        if (args.KeyModifiers.HasFlag(KeyModifiers.Control) && args.Key == Key.L)
-        {
-            var address = this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox");
-            address?.Focus(); address?.SelectAll(); args.Handled = true; return;
-        }
         if (args.Key == Key.Escape && _workspace.TryGetValue("ProfileMenuOpen", out var open) && open is true)
         {
             args.Handled = true;
@@ -188,7 +183,7 @@ public sealed class BrowseNativeWindow : Window
                 _workspace.State.SplitOrientation == Haven.Core.SplitOrientation.Horizontal => "9to1.Browse.NarrowPrimaryPane",
             Key.Left when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Back",
             Key.Right when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Forward",
-            Key.Enter when this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox")?.IsFocused == true => "9to1.Browse.Navigate",
+            Key.Enter when args.Source is TextBox { Name: "BrowseAddressBox", IsFocused: true } => "9to1.Browse.Navigate",
             _ => null
         };
         if (command is null || _workspace.IsActionAvailable(command) != true) return;
@@ -248,6 +243,7 @@ internal sealed class BrowseEngineViewport : ContentControl
             }
             _workspace.CaptureTabTransitionFocus = CaptureTabTransitionFocus;
             _findKeyScope.AddHandler(KeyDownEvent, OnTabStripKeyDown, RoutingStrategies.Tunnel);
+            _findKeyScope.AddHandler(KeyDownEvent, OnAddressShortcut, RoutingStrategies.Bubble);
             _findKeyScope.AddHandler(GotFocusEvent, OnTabStripGotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
             UpdateTabStops(CurrentSceneFocus());
         }
@@ -276,6 +272,7 @@ internal sealed class BrowseEngineViewport : ContentControl
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTransientMenuPointerPressed);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
         _findKeyScope?.RemoveHandler(KeyDownEvent, OnTabStripKeyDown);
+        _findKeyScope?.RemoveHandler(KeyDownEvent, OnAddressShortcut);
         _findKeyScope?.RemoveHandler(GotFocusEvent, OnTabStripGotFocus);
         _findKeyScope?.RemoveHandler(InputElement.PointerPressedEvent, OnTabPointerPressed);
         _findKeyScope?.RemoveHandler(InputElement.PointerMovedEvent, OnTabPointerMoved);
@@ -286,6 +283,27 @@ internal sealed class BrowseEngineViewport : ContentControl
     }
     private void OnSceneSizeChanged(object? sender, SizeChangedEventArgs args) => _workspace.SetHostChromeWidth(args.NewSize.Width);
     private void OnSceneResourcesChanged(object? sender, ResourcesChangedEventArgs args) => RefreshHostTabColours();
+
+    private void OnAddressShortcut(object? sender, KeyEventArgs args)
+    {
+        if (args.Handled || args.Key != Key.L || args.KeyModifiers != KeyModifiers.Control ||
+            !_workspace.IsReady || _workspace.HasOpenTransientMenu || _findKeyScope is not { } scope ||
+            args.Source is not Control source || !scope.IsVisualAncestorOf(source) ||
+            TopLevel.GetTopLevel(scope)?.FocusManager?.GetFocusedElement() != source) return;
+        // Bubble after child handlers. A popup can route events through its logical owner while
+        // keeping the real focus outside this scene or in an independent focus scope.
+        if (source.GetSelfAndVisualAncestors().TakeWhile(ancestor => !ReferenceEquals(ancestor, scope))
+            .Any(ancestor => ancestor is IFocusScope or OverlayPopupHost)) return;
+        var toolbar = scope.GetVisualDescendants().OfType<CuiContainerControl>()
+            .FirstOrDefault(control => control.Name == "BrowseNavigationBar");
+        var address = toolbar?.GetVisualDescendants().OfType<TextBox>()
+            .FirstOrDefault(control => control.Name == "BrowseAddressBox");
+        if (address is not { IsEffectivelyVisible: true, IsEffectivelyEnabled: true, IsReadOnly: false } ||
+            !address.IsFocused && !address.Focus(NavigationMethod.Tab)) return;
+        // CUI reveals its editable value on focus. Select the real route or the retained draft.
+        address.SelectAll();
+        args.Handled = true;
+    }
 
     private void RefreshHostTabColours()
     {
