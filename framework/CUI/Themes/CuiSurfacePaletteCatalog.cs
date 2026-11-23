@@ -370,23 +370,22 @@ public static class CuiSurfacePaletteCatalog
         var deep = appearance == CuiAppearance.SuperDark;
         var white = appearance == CuiAppearance.SuperBright;
         var accent = palette.Accent;
-        var background = Color.Parse(dark ? deep ? "#FF171819" : "#FF202122" : white ? "#FFFCFCFD" : "#FFF0F1F3");
-        // Deliberate charcoal surface depth. The contextual working surface sits one neutral step
-        // above the shell/background, and the content/card/floating surface sits one step higher
-        // again, so shell/rail, contextual and content/card roles read as distinct layers without
-        // breaking Professional's quiet hierarchy or per-app accent neutrality.
-        var panel = Color.Parse(dark ? deep ? "#FF1C1C1E" : "#FF262627" : white ? "#FFFFFFFF" : "#FFF5F5F7");
-        var panel2 = Color.Parse(dark ? deep ? "#FF232324" : "#FF2D2D30" : white ? "#FFFFFFFF" : "#FFFFFFFF");
+        var background = Color.Parse(dark ? deep ? "#FF171819" : "#FF18191C" : white ? "#FFFCFCFD" : "#FFF0F1F3");
+        // Atlas v4 Professional Dark uses a neutral workspace, matching chrome and card tints,
+        // and a raised panel. The legacy SuperDark palette retains its deeper surface hierarchy.
+        var panel = Color.Parse(dark ? deep ? "#FF1C1C1E" : "#FF212329" : white ? "#FFFFFFFF" : "#FFF5F5F7");
+        var panel2 = Color.Parse(dark ? deep ? "#FF232324" : "#FF2B2E35" : "#FFFFFFFF");
         return palette with
         {
             TideBase = background,
-            TideColour = Color.Parse(dark ? deep ? "#FF090B0E" : "#FF111419" : white ? "#FFFFFFFF" : "#FFFAFAFC"),
+            TideColour = Color.Parse(dark ? deep ? "#FF090B0E" : "#FF17181B" : white ? "#FFFFFFFF" : "#FFFAFAFC"),
             Accent = accent, AccentSecondary = accent, AccentStrong = accent,
             AccentSoft = Blend(panel, accent, dark ? .16 : .10),
             AccentInk = CuiContrast.Ratio(Colors.Black, accent) >= CuiContrast.Ratio(Colors.White, accent) ? Colors.Black : Colors.White,
-            Text = Color.Parse(dark ? "#FFE5E5E7" : "#FF252628"),
-            TextSoft = Color.Parse(dark ? "#FFC3C4C7" : "#FF55575D"),
-            Muted = Color.Parse(dark ? "#FFA0A1A6" : "#FF696B72"), Muted2 = Color.Parse(dark ? "#FF929399" : "#FF75777E"),
+            Text = Color.Parse(dark ? deep ? "#FFE5E5E7" : "#FFF5F6FA" : "#FF252628"),
+            TextSoft = Color.Parse(dark ? deep ? "#FFC3C4C7" : "#FFADB4C3" : "#FF55575D"),
+            Muted = Color.Parse(dark ? "#FFA0A1A6" : "#FF696B72"),
+            Muted2 = Color.Parse(dark ? deep ? "#FF929399" : "#FF95969C" : "#FF75777E"),
             Panel = panel, Panel2 = panel2,
             Panel3 = Color.Parse(dark ? deep ? "#FF2B2B2E" : "#FF353537" : white ? "#FFF2F2F4" : "#FFEBEBED"),
             PanelHover = Color.Parse(dark ? deep ? "#FF313133" : "#FF3B3B3E" : white ? "#FFEAEAEC" : "#FFE2E2E5"),
