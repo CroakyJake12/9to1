@@ -1,4 +1,7 @@
 <Cui id="home.new-tab.customisation" version="1">
+  <Actions>
+    <Action name="ChangeWidgetVisibility" command="home.newtab-customise-widget-visibility" parameter="{Binding widget.Id}" />
+  </Actions>
   <Page AccessibleName="Customise New Tab">
     <Container id="home-newtab-editor" Type="Vertical Stack" CellGap="12" Padding="20" CornerRadius="16" Background="{Resource CuiPanelBrush}">
       <Container id="home-newtab-editor-fields" Type="Grid" ColumnSizes="{Binding EditorColumns, fallback=1fr}"
@@ -108,6 +111,12 @@
                   Selected="{Binding ClockVisible, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
           <Button id="home-newtab-visibility-shortcuts" Action="home.newtab-customise-shortcuts" Content="Shortcuts"
                   Selected="{Binding ShortcutsVisible, fallback=false}" IsEnabled="{Binding CanEdit, fallback=false}" />
+          <Repeat id="home-newtab-widget-visibility-choices" Source="{Binding WidgetVisibility}" As="widget"
+                  Key="{Binding widget.Id}" Panel="Wrap">
+            <Button id="home-newtab-widget-visibility" Action="ChangeWidgetVisibility" Content="{Binding widget.Title}"
+                    AccessibleName="{Binding widget.Title}" Selected="{Binding widget.IsShown, fallback=false}"
+                    IsEnabled="{Binding widget.CanEdit, fallback=false}" Margin="0 0 8 6" />
+          </Repeat>
         </Container>
       </Container>
       <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding ResetRequested, fallback=false}">

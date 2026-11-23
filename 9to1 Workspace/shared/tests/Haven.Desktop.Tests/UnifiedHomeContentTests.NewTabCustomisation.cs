@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -147,6 +148,77 @@ public sealed partial class UnifiedHomeContentTests
                 Assert.True(placement.Value.Y > layoutChoices.Bounds.Height);
                 Assert.True(backgroundChoices.Bounds.Width <= editor.Bounds.Width);
             }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task New_Tab_customisation_disclosure_preserves_hidden_widget_configuration()
+    {
+        var paths = new LayoutPaths();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+        var token = timeout.Token;
+        var request = Request("browse://newtab");
+        var settings = new VersionedAtomicSettingsStore(paths);
+        var preferences = new NewTabLayoutPreferences(settings, request.ProfileId, _ => Task.CompletedTask);
+        var otherProfile = new NewTabLayoutPreferences(settings, "other-profile", _ => Task.CompletedTask);
+        var sources = new NewTabWidgetSources(null, null, null, null, _ => Task.CompletedTask);
+        var before = await preferences.ReadAsync(token);
+        var existing = new NewTabWidgetPlacement("up-next", "planner:calendar", IsWide: true, IsPinned: true, IsLocked: true);
+        Assert.True((await preferences.SaveAsync(before, before.Layout with { Widgets = [existing] }, token)).Saved);
+        var page = new UnifiedHomePage(request, new Registry(),
+            () => throw new InvalidOperationException("Widget visibility must not construct Dashboard."),
+            () => throw new InvalidOperationException("Widget visibility must not construct model discovery."),
+            (_, _) => throw new InvalidOperationException("Visibility must not navigate."),
+            (_, _) => throw new InvalidOperationException("Visibility must not acquire a model."), aiAvailable: false,
+            newTabLayout: preferences, newTabWidgets: sources);
+        var window = new Window { Width = 720, Height = 650, Content = page };
+        try
+        {
+            await page.InitializeAsync(token);
+            window.Show(); SettleFixtureLayout(window);
+            await Activate(SettingsControl<Button>(page, "home-newtab-customise-open"));
+            Assert.Empty(VisibleWidgets());
+            await Activate(SettingsControl<Button>(page, "home-newtab-visibility"));
+            Assert.Equal(NewTabWidgetSources.Catalogue.Count, VisibleWidgets().Count());
+            var upNext = Visibility("Up next");
+            Assert.True(SettingsCategorySelected(upNext));
+            await Activate(upNext);
+            var hidden = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(2, hidden.Revision);
+            Assert.Equal(existing with { IsVisible = false }, Assert.Single(hidden.Widgets));
+
+            await Activate(SettingsControl<Button>(page, "home-newtab-visibility"));
+            Assert.Empty(VisibleWidgets());
+            await Activate(SettingsControl<Button>(page, "home-newtab-visibility"));
+            Assert.False(SettingsCategorySelected(Visibility("Up next")));
+            Assert.Equal(hidden.Revision, (await preferences.ReadAsync(token)).Layout.Revision);
+            await Activate(Visibility("Up next"));
+            Assert.Equal(existing, Assert.Single((await preferences.ReadAsync(token)).Layout.Widgets));
+            await Activate(Visibility("Focus timer"));
+            var shown = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(4, shown.Revision);
+            Assert.Equal(new NewTabWidgetPlacement("focus-timer", "timer:25"),
+                Assert.Single(shown.Widgets, widget => widget.Id == "focus-timer"));
+            Assert.Equal(existing, Assert.Single(shown.Widgets, widget => widget.Id == "up-next"));
+            Assert.Equal(0, (await otherProfile.ReadAsync(token)).Layout.Revision);
+        }
+        finally
+        {
+            try { await page.CloseAndDrainAsync(); }
+            finally { window.Close(); Directory.Delete(paths.DataDirectory, recursive: true); }
+        }
+
+        Button Visibility(string label) => Assert.Single(VisibleWidgets(), control => AutomationProperties.GetName(control) == label);
+
+        IEnumerable<Button> VisibleWidgets() => page.GetVisualDescendants().OfType<Button>()
+            .Where(control => control.Name == "home-newtab-widget-visibility" && control.IsEffectivelyVisible);
+
+        async Task Activate(Button button)
+        {
+            Assert.True(button.IsEnabled && button.Focus(NavigationMethod.Tab));
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
         }
     }
 

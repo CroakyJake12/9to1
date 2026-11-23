@@ -103,7 +103,7 @@
               <Button id="home-newtab-customise-open" Column="2" Action="home.newtab-customise-open" Content="Customise"
                       VerticalAlignment="Center" MinHeight="36" CornerRadius="18" />
               <Button id="home-newtab-customise-add-widget" Column="1" Action="OpenCustomiseWidgetPicker"
-                      AccessibleName="Add widget" Tooltip="Add widget" AccentRole="Secondary"
+                      AccessibleName="Add widget" Tooltip="Add widget" Background="{Resource CuiAccentSoftBrush}"
                       IsVisible="False" VerticalAlignment="Center" MinHeight="36" MinWidth="36" CornerRadius="18">
                 <Container Type="Horizontal Stack" CellGap="7" VerticalAlignment="Center">
                   <Image Source="icon:plus" Width="15" Height="15" VerticalAlignment="Center" />

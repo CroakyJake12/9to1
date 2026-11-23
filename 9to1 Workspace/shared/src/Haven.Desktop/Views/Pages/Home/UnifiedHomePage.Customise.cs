@@ -144,6 +144,7 @@ internal sealed partial class UnifiedHomePage
             "retry" or "revert" => _retryNewTabLayout is not null,
             "done" => _retryNewTabLayout is null,
             "visibility" => CanChangeNewTabLayout,
+            "widget-visibility" => _newTabVisibilityOpen && _newTabWidgetSources is not null && CanEditWidgetLayout,
             "accent" => _createSettings is not null && CanChangeNewTabLayout,
             "upload" => CanAcceptNewTabImage && TopLevel.GetTopLevel(this)?.StorageProvider.CanOpen == true,
             "use-image" or "cancel-image" => _newTabImageCandidate is not null,
@@ -165,6 +166,9 @@ internal sealed partial class UnifiedHomePage
             case "open": OpenNewTabCustomisation(); return;
             case "done": CloseNewTabCustomisation(); return;
             case "visibility": _newTabVisibilityOpen = !_newTabVisibilityOpen; PublishNewTabLayout(); return;
+            case "widget-visibility":
+                if (parameter is string id) await ToggleNewTabWidgetVisibilityAsync(id, original, token);
+                return;
             case "accent":
                 if (!Queue(AppContentAddress.Parse("browse://home/settings/appearance-palette"), original, newTab: true))
                 {
@@ -219,6 +223,23 @@ internal sealed partial class UnifiedHomePage
         };
     }
 
+    private async Task ToggleNewTabWidgetVisibilityAsync(string id, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        if (NewTabWidgetSources.Catalogue.FirstOrDefault(widget => widget.Id == id) is not { } definition) return;
+        var show = FindWidget(id) is not { IsVisible: true };
+        await ChangeNewTabLayoutAsync(layout =>
+        {
+            var settings = layout.Widgets;
+            var placement = settings.FirstOrDefault(widget => widget.Id == id);
+            var updated = show
+                ? EditWidgetVisibility(settings, definition, placement is null ? "add" : "show")
+                : EditWidgetOptions(settings, id, "hide", null);
+            return layout with { Widgets = updated };
+        }, original, token);
+        if (show && _retryNewTabLayout is null && original.IsAcceptedPublicationCurrent)
+            await RefreshNewTabWidgetsAsync(original, token, id);
+    }
+
     private async Task RetryNewTabLayoutAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
         if (_retryNewTabLayout is not { } change || _newTabLayoutPreferences is not { } owner) return;
@@ -238,7 +259,13 @@ internal sealed partial class UnifiedHomePage
             _newTabLayoutSaving = false;
             if (original.IsAcceptedPublicationCurrent) PublishNewTabLayout();
         }
-        if (original.IsAcceptedPublicationCurrent) await ChangeNewTabLayoutAsync(change, original, token);
+        if (original.IsAcceptedPublicationCurrent && _newTabSavedLayout is { } persisted)
+        {
+            await ChangeNewTabLayoutAsync(change, original, token);
+            if (_retryNewTabLayout is null && original.IsAcceptedPublicationCurrent &&
+                _newTabSavedLayout is { } refreshed && !persisted.Layout.Widgets.SequenceEqual(refreshed.Layout.Widgets))
+                await RefreshNewTabWidgetsAsync(original, token);
+        }
     }
 
     private async Task ChangeNewTabLayoutAsync(Func<NewTabLayoutPreference, NewTabLayoutPreference> change,
@@ -355,7 +382,7 @@ internal sealed partial class UnifiedHomePage
     private void OnNewTabCustomisationKey(object? sender, KeyEventArgs args)
     {
         if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None || _section != "newtab" || !IsNewTabCustomising ||
-            _widgetPickerOpen || _widgetOptionsId is not null || _focusTimerResetRequested) return;
+            _widgetPickerOpen || _widgetOptionsId is not null || _focusTimerResetRequested || _widgetDrag is not null) return;
         args.Handled = true;
         if (NewTabLayoutBusy || _retryNewTabLayout is not null) return;
         if (_newTabImageCandidate is not null) CancelNewTabBackgroundPreview();
@@ -410,6 +437,15 @@ internal sealed partial class UnifiedHomePage
         _newTabEditor.Set("HasEditorStatus", status.Length != 0);
         _newTabEditor.Set("VisibilityOpen", _newTabVisibilityOpen);
         _newTabEditor.Set("VisibilityChevron", _newTabVisibilityOpen ? "icon:chevron-up" : "icon:chevron-down");
+        _newTabEditor.Set("WidgetVisibility", _newTabWidgetSources is null ? Array.Empty<Dictionary<string, object?>>() : NewTabWidgetSources.Catalogue
+            .Select(widget => new Dictionary<string, object?>
+            {
+                ["Id"] = widget.Id,
+                ["Title"] = widget.Title,
+                ["IsShown"] = layout.Widgets.Any(placement => placement.Id == widget.Id && placement.IsVisible),
+                ["CanEdit"] = CanEditWidgetLayout
+            })
+            .ToArray());
         _newTabEditor.Set("CanUpload", _newTabLayoutPreferences?.Assets is not null);
         _newTabEditor.Set("CanPickImage", NewTabCustomisationActionAvailable(NewTabCustomisationPrefix + "upload") && _newTabImageCandidate is null);
         _newTabEditor.Set("HasImagePreview", _newTabImageCandidate is not null);
@@ -575,4 +611,5 @@ internal sealed partial class UnifiedHomePage
         public void OnCompleted() { }
         public void OnError(Exception error) { }
     }
+
 }
