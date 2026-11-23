@@ -8,6 +8,7 @@ using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Core;
+using Haven.Desktop.Dashboard;
 using Haven.Desktop.Events;
 using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Home;
@@ -17,6 +18,86 @@ namespace Haven.Desktop.Tests;
 
 public sealed class HomeDashboardCuiRenderTests
 {
+    [AvaloniaTheory]
+    [InlineData(1440, 900)]
+    [InlineData(720, 520)]
+    public async Task Home_dashboard_briefing_renders_real_agenda_and_preserves_saved_widget_preferences(int width, int height)
+    {
+        const string layoutKey = "dashboard.widget-layouts.v1";
+        var token = TestContext.Current.CancellationToken;
+        var snapshot = Snapshot() with
+        {
+            Agenda = [new("fixture-task", "task", "Submit seminar notes", string.Empty, DateTimeOffset.Now, false, "plan")]
+        };
+        using var bus = new HavenEventBus();
+        var settings = new TestSettings();
+        using var page = new NewDashboardPage(bus, null!, null!, null!, null!, settings, new SnapshotRepository(snapshot: snapshot), new TestLayout(), []);
+        page.EnableHomeBriefing(null, null);
+        page.ConfigureHomeBriefingLibrary(true);
+        var choice = new TaskCompletionSource<DashboardBriefingDestination>();
+        page.BriefingDestinationRequested += (_, value) => choice.TrySetResult(value);
+        var window = new Window { Content = page, Width = width, Height = height };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(token);
+            window.Measure(new Size(width, height));
+            window.Arrange(new Rect(0, 0, width, height));
+            SettleDashboardLayout(window);
+            var controls = page.GetVisualDescendants().OfType<Control>().ToArray();
+            var briefing = Assert.Single(controls, control => control.Name == "dashboard-home-briefing");
+            Assert.True(briefing.IsVisible && briefing.Bounds.Width > 0);
+            Assert.DoesNotContain(controls, control => control.Name == "dashboard-legacy-heading" && control.IsEffectivelyVisible);
+            var heading = Assert.IsAssignableFrom<TextBlock>(Assert.Single(controls, control => control.Name == "dashboard-briefing-title"));
+            Assert.Equal("Dashboard", heading.Text);
+            Assert.Contains(controls.OfType<TextBlock>(), control => control.IsEffectivelyVisible && control.Text == "Pick up where you left off.");
+            var todayDate = Assert.IsAssignableFrom<TextBlock>(Assert.Single(controls, control => control.Name == "dashboard-briefing-date"));
+            Assert.Contains("·", todayDate.Text);
+            var customise = Assert.Single(controls.OfType<Button>(), control => control.Name == "dashboard-arrange-widgets");
+            Assert.True(customise.IsEffectivelyVisible && customise.IsEnabled);
+            Assert.Contains(controls.OfType<TextBlock>(), control => control.Text == "Submit seminar notes");
+            Assert.Contains(controls.OfType<TextBlock>(), control => control.Text == "Recorded Study time is unavailable.");
+            var today = Assert.Single(controls, control => control.Name == "dashboard-today");
+            var study = Assert.Single(controls, control => control.Name == "dashboard-study-week");
+            var todayPosition = today.TranslatePoint(default, briefing)!.Value;
+            var studyPosition = study.TranslatePoint(default, briefing)!.Value;
+            if (width >= 800)
+            {
+                Assert.True(studyPosition.X > todayPosition.X);
+                Assert.Equal(todayPosition.Y, studyPosition.Y, 1);
+            }
+            else
+            {
+                Assert.Equal(todayPosition.X, studyPosition.X, 1);
+                Assert.True(studyPosition.Y > todayPosition.Y);
+            }
+            var library = Assert.IsAssignableFrom<Button>(Assert.Single(controls, control => control.Name == "dashboard-briefing-library"));
+            library.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(DashboardBriefingDestination.Library, await choice.Task.WaitAsync(TimeSpan.FromSeconds(5), token));
+            Assert.True((await settings.GetAsync<DashboardWidgetLayoutState>(layoutKey, token))!.UsesHomeBriefing);
+        }
+        finally { window.Close(); }
+
+        var saved = (await settings.GetAsync<DashboardWidgetLayoutState>(layoutKey, token))!;
+        var first = saved.Pages["home"][0];
+        var hidden = first with { IsVisible = false };
+        saved.Pages["home"][0] = hidden;
+        await settings.SetAsync(layoutKey, saved with { UsesHomeBriefing = false }, token);
+        using var restored = new NewDashboardPage(bus, null!, null!, null!, null!, settings, new SnapshotRepository(), new TestLayout(), []);
+        restored.EnableHomeBriefing(null, null);
+        var restoredWindow = new Window { Content = restored, Width = width, Height = height };
+        try
+        {
+            restoredWindow.Show();
+            await restored.ActivateAsync(token);
+            SettleDashboardLayout(restoredWindow);
+            Assert.False(Assert.Single(AuthoredDashboardControls(restored), control => control.Name == "dashboard-home-briefing").IsVisible);
+            Assert.True(Assert.Single(AuthoredDashboardControls(restored), control => control.Name == "dashboard-legacy-heading").IsVisible);
+            Assert.Equal(hidden, (await settings.GetAsync<DashboardWidgetLayoutState>(layoutKey, token))!.Pages["home"][0]);
+        }
+        finally { restoredWindow.Close(); }
+    }
+
     [AvaloniaTheory]
     [InlineData(340)]
     [InlineData(760)]
@@ -344,7 +425,7 @@ public sealed class HomeDashboardCuiRenderTests
     private static DashboardSnapshot Snapshot(int tasksDueToday = 3) =>
         new(DateTimeOffset.UtcNow, 0, 0, 0, 0, 0, tasksDueToday, 0, 0, 0, 0, 0, TimeSpan.Zero, [], []);
 
-    private sealed class SnapshotRepository(bool blockFirstRead = false) : IDashboardRepository
+    private sealed class SnapshotRepository(bool blockFirstRead = false, DashboardSnapshot? snapshot = null) : IDashboardRepository
     {
         public int Reads { get; private set; }
         public TaskCompletionSource FirstReadEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -354,7 +435,7 @@ public sealed class HomeDashboardCuiRenderTests
             Reads++;
             if (Reads == 1) FirstReadEntered.TrySetResult();
             // Deliberately ignore cancellation for the first read to exercise stale-result rejection.
-            return blockFirstRead && Reads == 1 ? FirstRead.Task : Task.FromResult(Snapshot());
+            return blockFirstRead && Reads == 1 ? FirstRead.Task : Task.FromResult(snapshot ?? Snapshot());
         }
     }
 

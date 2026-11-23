@@ -341,7 +341,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         RefreshNewTabClock();
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
-        Set(_heading, "IsVisible", section is not ("settings" or "newtab"));
+        UpdateHeaderVisibilityForDashboardBriefing();
         Set(_status, "IsVisible", section != "settings");
         Set(_status, "Text", string.Empty);
         if (settingsVisibilityChanged) SettingsTitleChanged?.Invoke(this, EventArgs.Empty);
@@ -401,6 +401,9 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
                     _dashboard.ManageAppsRequested += OnManageApps;
                     _dashboard.DiscoverRequested += OnDiscover;
                     _dashboard.ConversationRequested += OnConversation;
+                    _dashboard.ConfigureHomeBriefingLibrary(_createLibrary is not null);
+                    _dashboard.BriefingDestinationRequested += OnDashboardBriefingDestination;
+                    _dashboard.HomeBriefingVisibilityChanged += OnDashboardBriefingVisibilityChanged;
                 });
             }
             if (!original.IsAcceptedPublicationCurrent) return;
@@ -529,6 +532,28 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         address = HomeLaunchRouteResolver.Resolve(app.Key);
         return true;
     }
+    private void UpdateHeaderVisibilityForDashboardBriefing() =>
+        Set(_heading, "IsVisible", _section is not ("settings" or "newtab") &&
+            (_section != "dashboard" || _dashboard?.ShowsHomeBriefing != true));
+
+    private void OnDashboardBriefingVisibilityChanged(object? sender, EventArgs args)
+    {
+        if (ReferenceEquals(sender, _dashboard) && _section == "dashboard") UpdateHeaderVisibilityForDashboardBriefing();
+    }
+
+    private void OnDashboardBriefingDestination(object? sender, DashboardBriefingDestination destination)
+    {
+        if (!ReferenceEquals(sender, _dashboard) || _section != "dashboard") return;
+        var address = destination switch
+        {
+            DashboardBriefingDestination.Library when _createLibrary is not null => AppContentAddress.Parse("browse://home/library"),
+            DashboardBriefingDestination.Tasks => AppContentAddress.Parse($"9to1://spaces/selected/{SpaceRegistry.TasksSpaceId:D}"),
+            DashboardBriefingDestination.Study => AppContentAddress.Parse($"9to1://spaces/selected/{SpaceRegistry.StudySpaceId:D}"),
+            _ => null
+        };
+        if (address is not null) StartNavigation(address);
+    }
+
     private void OnDashboardApp(object? sender, ModeDefinition mode)
     {
         var address = mode.Key.Trim().Equals("assistants", StringComparison.OrdinalIgnoreCase)
@@ -806,6 +831,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         {
             _dashboard.ModeRequested -= OnDashboardApp; _dashboard.ManageAppsRequested -= OnManageApps;
             _dashboard.DiscoverRequested -= OnDiscover; _dashboard.ConversationRequested -= OnConversation;
+            _dashboard.BriefingDestinationRequested -= OnDashboardBriefingDestination;
+            _dashboard.HomeBriefingVisibilityChanged -= OnDashboardBriefingVisibilityChanged;
         }
         if (_discover is not null) _discover.ManageProvidersRequested -= OnManageProviders;
         _viewport.Child = null; Content = null;

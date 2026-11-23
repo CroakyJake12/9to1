@@ -14,7 +14,8 @@ namespace Haven.Desktop.Views.Pages.Home;
 
 internal sealed record DashboardWidgetLayoutState(
     int Version,
-    Dictionary<string, List<DashboardWidgetPlacement>> Pages);
+    Dictionary<string, List<DashboardWidgetPlacement>> Pages,
+    bool UsesHomeBriefing = false);
 
 public sealed partial class NewDashboardPage
 {
@@ -102,6 +103,7 @@ public sealed partial class NewDashboardPage
         if (_widgetDashboard is null || !_widgetWorkspaceConfigured) return;
         RebuildPageTabs();
         RefreshClock();
+        PublishHomeBriefingVisibility();
         var placements = GetCurrentWidgetPlacements();
         var providerViews = _widgetViews
             .Where(view => !view.Definition.ProviderKey.Equals("custom-local", StringComparison.OrdinalIgnoreCase))
@@ -152,8 +154,10 @@ public sealed partial class NewDashboardPage
         {
             await EnsureCustomWidgetStateLoadedAsync(token);
             await EnsureWidgetLayoutStateLoadedAsync(token);
-            var snapshot = await AwaitHomeSourceAsync(_widgetDashboard!.GetSnapshotAsync(DateTimeOffset.UtcNow, token));
+            PublishHomeBriefingVisibility();
+            var snapshot = await AwaitHomeSourceAsync(_widgetDashboard!.GetSnapshotAsync(DateTimeOffset.Now, token));
             token.ThrowIfCancellationRequested();
+            await RefreshHomeBriefingAsync(snapshot, token);
             var staleSnapshot = DateTimeOffset.UtcNow - snapshot.CapturedAt > WidgetStaleAfter;
             var loaded = await Task.WhenAll(_widgetProviders.Select(provider => LoadWidgetAsync(provider, snapshot, staleSnapshot, token)));
             token.ThrowIfCancellationRequested();
@@ -181,6 +185,7 @@ public sealed partial class NewDashboardPage
                     return new DashboardWidgetViewState(provider.Definition, cached.Data, DashboardWidgetDataState.Stale, ex.Message);
                 return new DashboardWidgetViewState(provider.Definition, null, DashboardWidgetDataState.Error, ex.Message);
             }));
+            ReportBriefingSnapshotUnavailable();
             finalStatus = _widgetCache.Count > 0
                 ? "Dashboard refresh failed; last known values are marked stale."
                 : "Dashboard data is unavailable. No values have been invented.";
@@ -225,16 +230,23 @@ public sealed partial class NewDashboardPage
     {
         if (_widgetLayoutState is not null) return;
         var stored = await AwaitHomeSourceAsync(_settings.GetAsync<DashboardWidgetLayoutState>(WidgetLayoutStateKey, token));
-        _widgetLayoutState = stored is { Version: 1 }
-            ? new DashboardWidgetLayoutState(1, new Dictionary<string, List<DashboardWidgetPlacement>>(stored.Pages, StringComparer.OrdinalIgnoreCase))
+        var layout = stored is { Version: 1 }
+            ? new DashboardWidgetLayoutState(1, new Dictionary<string, List<DashboardWidgetPlacement>>(stored.Pages, StringComparer.OrdinalIgnoreCase),
+                stored.UsesHomeBriefing)
             : new DashboardWidgetLayoutState(1, new Dictionary<string, List<DashboardWidgetPlacement>>(StringComparer.OrdinalIgnoreCase));
 
-        if (_widgetLayoutState.Pages.ContainsKey(HomePageId)) return;
+        if (layout.Pages.ContainsKey(HomePageId))
+        {
+            _widgetLayoutState = layout;
+            return;
+        }
         IReadOnlyList<DashboardTileLayout> legacy = [];
+        var legacyReadSucceeded = true;
         if (_widgetLegacyLayout is not null)
         {
             try { legacy = await AwaitHomeSourceAsync(_widgetLegacyLayout.GetAsync(token)); }
-            catch { legacy = []; }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+            catch { legacyReadSucceeded = false; }
         }
         var legacyByKey = legacy.ToDictionary(item => item.Key, StringComparer.OrdinalIgnoreCase);
         var seedDefinitions = GetAllWidgetDefinitions().Select(definition =>
@@ -246,7 +258,10 @@ public sealed partial class NewDashboardPage
         IReadOnlyList<DashboardWidgetPlacement> seeded = DashboardWidgetLayoutEngine.EnsurePlacements(seedDefinitions);
         foreach (var hidden in legacy.Where(item => !item.IsVisible))
             seeded = DashboardWidgetLayoutEngine.SetVisibility(seeded, hidden.Key, false);
-        _widgetLayoutState.Pages[HomePageId] = seeded.ToList();
+        if (stored is null && legacyReadSucceeded && legacy.Count == 0 && _homeBriefingEnabled)
+            layout = layout with { UsesHomeBriefing = true };
+        layout.Pages[HomePageId] = seeded.ToList();
+        _widgetLayoutState = layout;
         await SaveWidgetLayoutStateAsync(syncLegacyHome: false);
     }
 
@@ -275,6 +290,11 @@ public sealed partial class NewDashboardPage
         if (_widgetLayoutState is null)
             _widgetLayoutState = new DashboardWidgetLayoutState(1, new Dictionary<string, List<DashboardWidgetPlacement>>(StringComparer.OrdinalIgnoreCase));
         _widgetLayoutState.Pages[_selectedPageId] = layout.ToList();
+        if (_selectedPageId == HomePageId && _widgetLayoutState.UsesHomeBriefing)
+        {
+            _widgetLayoutState = _widgetLayoutState with { UsesHomeBriefing = false };
+            PublishHomeBriefingVisibility();
+        }
         RebuildHiddenWidgetPalette();
         RefreshWidgetToolbar();
         _ = SaveWidgetLayoutStateAsync(_selectedPageId.Equals(HomePageId, StringComparison.OrdinalIgnoreCase));
@@ -293,7 +313,8 @@ public sealed partial class NewDashboardPage
                 _widgetLayoutState.Pages.ToDictionary(
                     pair => pair.Key,
                     pair => pair.Value.ToList(),
-                    StringComparer.OrdinalIgnoreCase));
+                    StringComparer.OrdinalIgnoreCase),
+                _widgetLayoutState.UsesHomeBriefing);
             await AwaitHomeSourceAsync(_settings.SetAsync(WidgetLayoutStateKey, snapshot, CancellationToken.None));
 
             if (syncLegacyHome && _widgetLegacyLayout is not null && snapshot.Pages.TryGetValue(HomePageId, out var home))

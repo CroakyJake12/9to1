@@ -748,6 +748,7 @@ public sealed partial class App
             page.EnableDeviceModelRecommendations(new HomeDashboardModelSource(new Haven.Infrastructure.LocalModelHardwareProbe(),
                 _services.GetRequiredService<IHuggingFaceModelService>(), async token => await ObserveActorAsync(token),
                 () => !_services.GetRequiredService<IPrivacyPreferenceStore>().Current.LocalOnlyMode));
+            page.EnableHomeBriefing(_services.GetService<IPlannerRepository>(), _services.GetService<IContainerRepository>());
             return page;
         }
 
