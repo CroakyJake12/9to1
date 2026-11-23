@@ -29,6 +29,8 @@ internal sealed partial class HomeApp
     private AuthenticatedResourceActor? _workspaceActor;
     private Window? _workspaceWindow;
     private NativeHomeThemePreferences? _homeTheme;
+    private NativeHomeThemeCreator? _homeThemeCreator;
+    private NativeHomeAccentEditor? _homeAccentEditor;
     private Task? _homeAppearanceClose;
     private bool _homeAppearanceClosing;
     private string? _homeAppearanceStatus;
@@ -158,7 +160,10 @@ internal sealed partial class HomeApp
         if (_homeAppearanceClose is not null) return _homeAppearanceClose;
         _homeAppearanceClosing = true;
         if (_homeTheme is { } source) source.Changed -= OnHomeAppearanceChanged;
-        return _homeAppearanceClose = _homeTheme?.DisposeAsync().AsTask() ?? Task.CompletedTask;
+        var closeSource = _homeTheme?.DisposeAsync().AsTask() ?? Task.CompletedTask;
+        var closeEditor = _homeThemeCreator?.CloseAndDrainAsync() ?? Task.CompletedTask;
+        var closeAccent = _homeAccentEditor?.CloseAndDrainAsync() ?? Task.CompletedTask;
+        return _homeAppearanceClose = Task.WhenAll(closeSource, closeEditor, closeAccent);
     }
 
     private Task RunHomeAppearanceActionAsync(object? target)
@@ -202,6 +207,7 @@ internal sealed partial class HomeApp
         RegisterWorkspaceAction("RefreshHomePermissions", RefreshWorkspacePermissionsAsync);
         RegisterWorkspaceAction("RefreshHomeAppearance", RefreshHomeAppearanceAsync);
         _viewModel.PropertyChanged += NativeHomeThemePreferences.UpdateDisplayReadout;
+        _viewModel.On("HomeCreateTheme", _ => _homeThemeCreator?.Open());
         _viewModel.On("ApplyHomeAppearance", parameter => _ = RunOriginalNativeWork(() =>
             RunHomeAppearanceActionAsync(NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _viewModel))));
         RegisterWorkspaceAction("RefreshHomeWorkspace", RefreshWorkspaceAsync);
@@ -445,6 +451,21 @@ internal sealed partial class HomeApp
     {
         _workspaceWindow = window;
         NativeHomeThemePreferences.BindAppearanceLayout(loader, _viewModel);
+        if (_homeTheme is { } source)
+        {
+            var creator = new NativeHomeThemeCreator(source, _viewModel,
+                () => ReferenceEquals(_workspaceWindow, window) && window.IsVisible && !_homeAppearanceClosing &&
+                    _controller.Surface.CurrentRoute == HomeRoute.Settings && _viewModel.Get("HomeAppearanceAvailable") is true,
+                (change, _) => RunOriginalNativeWork(() => RunHomeAppearanceActionAsync(change)) ?? Task.CompletedTask);
+            _homeThemeCreator = creator;
+            creator.Register(loader);
+            window.Closed += (_, _) => { _ = RunOriginalNativeWork(creator.CloseAndDrainAsync); };
+            var accent = new NativeHomeAccentEditor(source, _viewModel,
+                (change, _) => RunOriginalNativeWork(() => RunHomeAppearanceActionAsync(change)) ?? Task.CompletedTask);
+            _homeAccentEditor = accent;
+            accent.Register(loader);
+            window.Closed += (_, _) => { _ = RunOriginalNativeWork(accent.CloseAndDrainAsync); };
+        }
         _workspaceReviewButtons.Clear();
         Func<CakeOS.Cui.CuiComponent, Control> dashboardTiles = component =>
         {
@@ -586,7 +607,10 @@ internal sealed partial class HomeApp
             _viewModel.Set("HomeAccessibilityChoices", Array.Empty<object>());
             _viewModel.Set("HomeAccentModeChoices", Array.Empty<object>());
             _viewModel.Set("HomeGlobalAccentChoices", Array.Empty<object>());
-            _viewModel.Set("HomeSavedGlobalColour", null);
+            _viewModel.Set("HomeAccentPerApp", false);
+            _viewModel.Set("HomeAccentEditorTarget", null);
+            _viewModel.Set("HomeAccentResetTarget", null);
+            _viewModel.Set("HomeAccentCanReset", false);
         }
         var canEditAppearance = _homeTheme is not null && _workspaceInitialized && !_workspaceBusy && !_homeAppearanceClosing && !_homeAppearanceProjectionUnavailable;
         _viewModel.Set("HomeAppearanceAvailable", canEditAppearance);
@@ -594,6 +618,7 @@ internal sealed partial class HomeApp
         if (_homeAppearanceStatus is not null) _viewModel.Set("HomeAppearanceStatus", _homeAppearanceStatus);
         _viewModel.SetActionAvailability("ApplyHomeAppearance", canEditAppearance);
         _viewModel.SetActionAvailability("RefreshHomeAppearance", canEditAppearance);
+        _viewModel.SetActionAvailability("HomeCreateTheme", canEditAppearance && _homeThemeCreator is not null);
         _viewModel.Set("HomeProfileSummary", _workspaceActor is null ? "Local profile is unavailable." :
             $"Device profile {_workspaceActor.ProfileId}. CAKE ID sign-in is separate from Home permissions. Open CAKE ID account to connect your session.");
         _viewModel.Set("HomeLayoutSummary", surface.Layout is null ? "Dashboard preferences have not loaded." :

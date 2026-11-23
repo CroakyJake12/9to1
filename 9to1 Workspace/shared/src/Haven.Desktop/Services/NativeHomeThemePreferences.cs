@@ -35,8 +35,17 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         ("Electric blue", "#2455FF"), ("Iris", "#7145FF"),
         ("Lagoon", "#00B89C"), ("Sunset", "#FF6847")
     ];
+    private static readonly string[] AccentAppNames = CuiAppAccentCatalog.Defaults.Select(app => app.Surface).ToArray();
     private HomeThemePreference? _preference;
-    private sealed record SettingTarget(NativeHomeThemePreferences Owner, long Revision, string Key, string Value);
+    private sealed record SettingTarget(NativeHomeThemePreferences Owner, long Revision, string Key, string Value, string? AppId = null);
+    private sealed record AccentChange(SettingTarget Target, string Colour)
+    {
+        internal HomeThemeOperationResult? Receipt { get; set; }
+    }
+    private sealed record ThemeCreation(SettingTarget Target, CuiCustomTheme Theme, string Library)
+    {
+        internal HomeThemeOperationResult? Receipt { get; set; }
+    }
     internal Task? OriginalClose => _close;
     internal sealed record AuthorityObservation(Task? Source, Exception Cause, CancellationToken RequestedToken);
     internal IReadOnlyList<AuthorityObservation> AuthorityObservations => _backend.AuthorityObservations;
@@ -324,7 +333,7 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
 
     internal void ApplyEditorBindings(CuiViewModel model)
     {
-        var bindings = SettingsBindings();
+        var bindings = SettingsBindings(model.Get("HomeAccentAppIndex") is int index ? index : 0);
         var conflict = model.Get("HomeDisplayConflict") is true;
         foreach (var key in new[] { "HomeBrightness", "HomeColourContrast" })
         {
@@ -371,18 +380,12 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         return new DisplayChange(target, (int)Math.Round(brightness), (int)Math.Round(contrast));
     }
 
-    internal IReadOnlyDictionary<string, object?> SettingsBindings()
+    internal IReadOnlyDictionary<string, object?> SettingsBindings(int accentAppIndex = 0)
     {
         lock (_operationsGate)
         {
         var value = _preference;
-        object Target(string key, string next)
-        {
-            var cache = key + "\0" + next;
-            if (!_targets.TryGetValue(cache, out var target) || target.Revision != value!.Revision)
-                _targets[cache] = target = new(this, value!.Revision, key, next);
-            return target;
-        }
+        object Target(string key, string next, string? appId = null) => IssueTarget(value!.Revision, key, next, appId);
         Dictionary<string, object?> Option(string name, string key, string next, bool selected) => new()
         { ["Name"] = name, ["Key"] = key is "reduce-motion" or "high-contrast" ? key : key + ":" + next,
           ["Target"] = Target(key, next), ["IsSelected"] = selected };
@@ -414,13 +417,20 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             try { names.AddRange(CuiCustomThemeContract.DeserializeLibrary(custom).Select(theme => theme.Name)); }
             catch (ArgumentException) { }
         var savedAccent = value?.Accent ?? HomeThemeAccentPreference.Default;
+        var perApp = savedAccent.Mode == HomeThemeAccentOverrideMode.IndividualApps;
+        var apps = CuiAppAccentCatalog.Defaults;
+        var app = perApp ? apps[Math.Clamp(accentAppIndex, 0, apps.Count - 1)] : null;
+        var savedColour = app is null ? savedAccent.AllAppsColour : savedAccent.IndividualApps.GetValueOrDefault(app.AppId);
         Dictionary<string, object?> AccentMode(string name, HomeThemeAccentOverrideMode mode) =>
             Option(name, "accent-mode", mode.ToString(), savedAccent.Mode == mode);
         Dictionary<string, object?> AccentSwatch((string Name, string Colour) preset)
         {
-            var option = Option(preset.Name, "global-accent", preset.Colour, savedAccent.AllAppsColour == preset.Colour);
-            option["Colour"] = preset.Colour;
-            return option;
+            return new()
+            {
+                ["Name"] = preset.Name, ["Key"] = "accent-preset:" + preset.Colour,
+                ["Target"] = Target("accent-preset", preset.Colour, app?.AppId),
+                ["IsSelected"] = savedColour == preset.Colour, ["Colour"] = preset.Colour
+            };
         }
         return new Dictionary<string, object?>
         {
@@ -430,7 +440,16 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 AccentMode("On per app", HomeThemeAccentOverrideMode.IndividualApps)
             } : Array.Empty<Dictionary<string, object?>>(),
             ["HomeGlobalAccentChoices"] = available ? AccentPresets.Select(AccentSwatch).ToArray() : Array.Empty<Dictionary<string, object?>>(),
-            ["HomeSavedGlobalColour"] = !available ? null : savedAccent.AllAppsColour ?? "No global colour saved",
+            ["HomeAccentPerApp"] = available && perApp,
+            ["HomeAccentAppNames"] = AccentAppNames,
+            ["HomeAccentColourLabel"] = app is null ? "Saved global colour" : "App colour",
+            ["HomeAccentScopeName"] = app?.Surface,
+            ["HomeAccentSampleColour"] = savedColour ?? app?.Colour ?? HomeThemeAccentPreference.InitialAllAppsColour,
+            ["HomeAccentSavedColour"] = savedColour ?? (app is null ? "No global colour saved" : "Uses the app default"),
+            ["HomeAccentEditorTarget"] = available ? Target("accent-draft", "colour", app?.AppId) : null,
+            ["HomeAccentResetTarget"] = available && app is not null && savedColour is not null
+                ? Target("accent-reset", "default", app.AppId) : null,
+            ["HomeAccentCanReset"] = available && app is not null && savedColour is not null,
             ["HomeAppearanceAvailable"] = available,
             ["HomeBrightness"] = (double)display.Brightness,
             ["HomeColourContrast"] = (double)display.ColourContrast,
@@ -454,16 +473,81 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         }
     }
 
-    internal Task<HomeThemeOperationResult> ApplySettingsAsync(object? issuedTarget, CancellationToken token = default)
+    private SettingTarget IssueTarget(long revision, string key, string next, string? appId = null)
     {
+        var cache = key + "\0" + next + "\0" + appId;
+        if (!_targets.TryGetValue(cache, out var target) || target.Revision != revision)
+            _targets[cache] = target = new(this, revision, key, next, appId);
+        return target;
+    }
+
+    internal async Task<HomeThemeOperationResult> SaveThemeDraftAsync(CuiCustomTheme theme, CuiThemePreferenceSnapshot opening,
+        Func<object, CancellationToken, Task> dispatch, CancellationToken token)
+    {
+        ThemeCreation change;
+        lock (_operationsGate)
+        {
+            if (_closing || _preference is null || opening.ScopeId != "device:" + _scope.OwnerId || opening.Revision != _preference.Revision)
+                return new(false, "RevisionConflict", Diagnostic: "Appearance changed. Review the current revision before saving this draft.");
+            try
+            {
+                theme = theme.Validate();
+                var existing = _preference.CustomThemesJson is { } library
+                    ? CuiCustomThemeContract.DeserializeLibrary(library) : Array.Empty<CuiCustomTheme>();
+                change = new(IssueTarget(opening.Revision, "create-theme", "new"), theme,
+                    CuiCustomThemeContract.SerializeLibrary(existing.Append(theme)));
+            }
+            catch (ArgumentException error) { return new(false, "InvalidTheme", Diagnostic: error.Message); }
+        }
+        await dispatch(change, token);
+        return change.Receipt ?? new(false, "SettingsUnavailable", Diagnostic: "Reopen Home for the current profile before saving.");
+    }
+
+    internal Task<HomeThemeOperationResult> ApplySettingsAsync(object? issuedTarget, CancellationToken token = default) =>
+        issuedTarget switch
+        {
+            ThemeCreation creation => ApplyCreationAsync(creation, token),
+            AccentChange accent => ApplyAccentChangeAsync(accent, token),
+            _ => ApplySettingsCoreAsync(issuedTarget, token)
+        };
+
+    private async Task<HomeThemeOperationResult> ApplyCreationAsync(ThemeCreation creation, CancellationToken token) =>
+        creation.Receipt = await ApplySettingsCoreAsync(creation, token);
+
+    internal async Task<HomeThemeOperationResult> SaveAccentDraftAsync(object? openingTarget, string colour,
+        Func<object, CancellationToken, Task> dispatch, CancellationToken token)
+    {
+        if (openingTarget is not SettingTarget { Key: "accent-draft" } target)
+            return new(false, "SettingsUnavailable", Diagnostic: "Accent settings are unavailable.");
+        try { colour = HomeThemeAccentPreference.CanonicalColour(colour.Trim()); }
+        catch (ArgumentException) { return new(false, "InvalidColour", Diagnostic: "Enter a colour in #RRGGBB format."); }
+        var change = new AccentChange(target, colour);
+        await dispatch(change, token);
+        return change.Receipt ?? new(false, "SettingsUnavailable", Diagnostic: "Reopen Home for the current profile before saving.");
+    }
+
+    private async Task<HomeThemeOperationResult> ApplyAccentChangeAsync(AccentChange change, CancellationToken token) =>
+        change.Receipt = await ApplySettingsCoreAsync(change, token);
+
+    private static HomeThemeAccentPreference SetTargetAccent(HomeThemeAccentPreference saved, SettingTarget target, string? colour) =>
+        target.AppId is { } appId ? saved.WithAppColour(appId, colour) : saved.WithAllAppsColour(colour);
+
+    private Task<HomeThemeOperationResult> ApplySettingsCoreAsync(object? issuedTarget, CancellationToken token)
+    {
+        var creation = issuedTarget as ThemeCreation;
+        if (creation is not null) issuedTarget = creation.Target;
         var displayChange = issuedTarget as DisplayChange;
         if (displayChange is not null) issuedTarget = displayChange.Target;
+        var accentChange = issuedTarget as AccentChange;
+        if (accentChange is not null) issuedTarget = accentChange.Target;
         SettingTarget target;
         lock (_operationsGate)
         {
             if (issuedTarget is not SettingTarget observed || !ReferenceEquals(observed.Owner, this) ||
                 !_targets.Values.Any(current => ReferenceEquals(current, observed)) || _preference is null ||
-                observed.Revision != _preference.Revision || (observed.Key == "display") != (displayChange is not null))
+                observed.Revision != _preference.Revision || (observed.Key == "display") != (displayChange is not null) ||
+                (observed.Key == "create-theme") != (creation is not null) ||
+                (observed.Key == "accent-draft") != (accentChange is not null))
                 return Task.FromResult(new HomeThemeOperationResult(false, "SettingsIntentRetired", Diagnostic: "Appearance changed. Refresh before choosing again."));
             target = observed;
         }
@@ -485,20 +569,30 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 : display with { Brightness = displayChange.Brightness, ColourContrast = displayChange.ColourContrast };
             var compatibleAppearance = target.Key == "mode" ? ResolveMode(updatedDisplay!.Mode).ToString() : prior.Appearance;
             var savedAccent = prior.Accent ?? HomeThemeAccentPreference.Default;
-            var accent = target.Key switch
+            HomeThemeAccentPreference? accent;
+            try
             {
-                "accent-mode" => savedAccent.WithMode(Enum.Parse<HomeThemeAccentOverrideMode>(target.Value)),
-                "global-accent" => savedAccent.WithAllAppsColour(target.Value),
-                _ => prior.Accent
-            };
+                accent = target.Key switch
+                {
+                    "accent-mode" => savedAccent.WithMode(Enum.Parse<HomeThemeAccentOverrideMode>(target.Value)),
+                    "accent-preset" => SetTargetAccent(savedAccent, target, target.Value),
+                    "accent-draft" => SetTargetAccent(savedAccent, target, accentChange!.Colour),
+                    "accent-reset" => SetTargetAccent(savedAccent, target, null),
+                    _ => prior.Accent
+                };
+            }
+            catch (ArgumentException error)
+            {
+                return new(false, "InvalidAccent", Diagnostic: error.Message);
+            }
             if (accent is { Mode: HomeThemeAccentOverrideMode.AllApps, AllAppsColour: null } && target.Key == "accent-mode")
                 accent = accent.WithAllAppsColour(HomeThemeAccentPreference.InitialAllAppsColour);
             var actual = updatedDisplay is not null
                 ? _service.SetDisplayAsync(prior, updatedDisplay, compatibleAppearance, current)
-                : _service.SetAsync(_scope, target.Key == "theme" ? target.Value : prior.ThemeName,
+                : _service.SetAsync(_scope, creation?.Theme.Name ?? (target.Key == "theme" ? target.Value : prior.ThemeName),
                 accessibility, target.Revision, current,
                 appearance: target.Key == "appearance" ? target.Value : prior.Appearance,
-                accent: accent, customThemesJson: prior.CustomThemesJson);
+                accent: accent, customThemesJson: creation?.Library ?? prior.CustomThemesJson);
             HomeThemeOperationResult result;
             try { result = await actual; }
             catch (OperationCanceledException error) when (_closing && actual.IsCanceled &&

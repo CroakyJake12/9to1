@@ -97,6 +97,7 @@
     <PackageReference Include="KokoroSharp.CPU" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../../../../apps/Web/Home/BrowserThemeCreator.cs" Link="Home/BrowserThemeCreator.cs" />
     <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="Prefabs\**\*.hui" />
     <EmbeddedResource Include="DynamicUI\**\*.hui" />

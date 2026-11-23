@@ -2,6 +2,7 @@
   <Actions>
     <Action name="ApplyDisplayLevels" command="ApplyHomeAppearance" parameter="{Binding HomeDisplayTarget}" />
     <Action name="ApplyHomeAppearanceOption" command="ApplyHomeAppearance" parameter="{Binding option.Target}" />
+    <Action name="ResetHomeAppAccent" command="ApplyHomeAppearance" parameter="{Binding HomeAccentResetTarget}" />
     <Action name="OpenHomeLibraryArtifact" command="OpenHomeLibraryArtifact" parameter="{Binding artifact.Target}" />
     <Action name="ToggleHomeLibraryPin" command="ToggleHomeLibraryPin" parameter="{Binding artifact.Target}" />
     <Action name="SelectHomeEvent" command="SelectEventObject" parameter="{Binding activity.EventId}" />
@@ -244,11 +245,17 @@
                 <If Condition="{Binding IsSettings}">
                   <Container id="home-settings-page" Type="Vertical Stack">
                     <Container id="home-appearance-settings" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1000" CellGap="20" Padding="{Binding HomeAppearancePadding, fallback=12 12 12 24}">
-                      <Container Type="Vertical Stack" CellGap="3" Margin="0 0 0 8">
-                        <Text Text="GLOBAL SETTINGS" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
-                        <Text Text="Appearance" FontSize="32" FontWeight="800" />
+                      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="10" Margin="0 0 0 8" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}">
+                        <Container Type="Vertical Stack" CellGap="3">
+                          <Text Text="GLOBAL SETTINGS" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+                          <Text Text="Appearance" FontSize="32" FontWeight="800" />
+                        </Container>
+                        <Button id="home-create-theme" Column="1" Action="HomeCreateTheme" Content="Create theme" AccessibleName="Create theme"
+                                IsVisible="{Binding HomeThemeCreationAvailable, fallback=false}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}"
+                                VerticalAlignment="Center" CornerRadius="18" Padding="14 8" FontWeight="700" />
                       </Container>
-                      <Container id="home-theme-gallery" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="14">
+                      <Container id="home-theme-creator-host" Type="Overlay" IsVisible="{Binding HomeThemeCreatorOpen, fallback=false}" />
+                      <Container id="home-theme-gallery" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="14">
                         <Text Text="Theme" FontSize="18" FontWeight="750" />
                         <Repeat id="home-theme-options" Source="{Binding HomeThemeChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
                           <Button id="home-theme-option" action="ApplyHomeAppearanceOption" AccessibleName="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Width="172" MinHeight="136" Padding="9" Margin="0 0 12 8" CornerRadius="14" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Top" Background="{Resource CuiWorkspaceBrush}" BorderWidth="2">
@@ -266,7 +273,7 @@
                           </Button>
                         </Repeat>
                       </Container>
-                      <Container id="home-display-settings" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="8">
+                      <Container id="home-display-settings" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="8">
                         <Text Text="Display" FontSize="18" FontWeight="750" />
                         <Container Type="Grid" RowSizes="{Binding HomeDisplayRows, fallback=Auto}" ColumnSizes="{Binding HomeDisplayColumns, fallback=1fr 280}" CellGap="10" MinHeight="70" Padding="0 8" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
                           <Container Type="Vertical Stack" CellGap="3" VerticalAlignment="Center">
@@ -306,13 +313,13 @@
                         </Container>
                         <Button id="home-display-apply" action="ApplyDisplayLevels" Content="Apply display settings" IsEnabled="{Binding HomeCanApplyLevels, fallback=false}" HorizontalAlignment="Right" FontWeight="750" />
                       </Container>
-                      <Container id="home-appearance-accessibility" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="12">
+                      <Container id="home-appearance-accessibility" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="18" Padding="20" CellGap="12">
                         <Text Text="Accessibility" FontSize="18" FontWeight="750" />
                         <Repeat id="home-accessibility-options" Source="{Binding HomeAccessibilityChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
                           <Button id="home-accessibility-option" action="ApplyHomeAppearanceOption" Content="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" FontWeight="700" Padding="14 8" Margin="0 0 6 4" />
                         </Repeat>
                       </Container>
-                      <Container id="home-accent-settings" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="12">
+                      <Container id="home-accent-settings" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}" Type="Vertical Stack" Background="{Resource CuiSurfaceMaterial}" CornerRadius="20" Padding="20" CellGap="12">
                         <Text Text="Accent" FontSize="18" FontWeight="750" />
                         <Container Type="Grid" ColumnSizes="{Binding HomeDisplayColumns, fallback=1fr 280}" RowSizes="{Binding HomeDisplayRows, fallback=Auto}" CellGap="12" MinHeight="64" Padding="0 0 0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
                           <Container Type="Vertical Stack" VerticalAlignment="Center" CellGap="4">
@@ -327,10 +334,20 @@
                         </Container>
                         <Container Type="Grid" ColumnSizes="{Binding HomeDisplayColumns, fallback=1fr 280}" RowSizes="{Binding HomeDisplayRows, fallback=Auto}" CellGap="12" MinHeight="64">
                           <Container Type="Vertical Stack" VerticalAlignment="Center" CellGap="4">
-                            <Text Text="Saved global colour" FontWeight="700" TextWrapping="Wrap" />
+                            <Text Text="{Binding HomeAccentColourLabel, fallback=Saved global colour}" FontWeight="700" TextWrapping="Wrap" />
                             <Text Text="Saved colours stay here when the override is off." FontSize="13" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                           </Container>
-                          <Text Row="{Binding HomeDisplayControlRow, fallback=0}" Column="{Binding HomeDisplayControlColumn, fallback=1}" HorizontalAlignment="{Binding HomeDisplayControlAlignment, fallback=Right}" VerticalAlignment="Center" Text="{Binding HomeSavedGlobalColour}" FontWeight="700" TextWrapping="Wrap" />
+                          <Container Type="Wrap" Row="{Binding HomeDisplayControlRow, fallback=0}" Column="{Binding HomeDisplayControlColumn, fallback=1}" HorizontalAlignment="{Binding HomeDisplayControlAlignment, fallback=Right}" VerticalAlignment="Center" CellGap="8">
+                            <If Condition="{Binding HomeAccentPerApp, fallback=false}">
+                              <Input id="home-accent-app" Type="Select" MinWidth="94" ItemsSource="{Binding HomeAccentAppNames}" SelectedIndex="{Binding HomeAccentAppIndex, mode=TwoWay, type=int}" AccessibleName="App accent target" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" />
+                            </If>
+                            <Button id="home-edit-accent" AccessibleName="Accent colour" ToolTip="Edit exact accent colour" Padding="8" CornerRadius="9" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}">
+                              <Container Type="Horizontal Stack" CellGap="8">
+                                <Container Type="Overlay" Width="22" Height="22" CornerRadius="5" Background="{Binding HomeAccentSampleColour}" />
+                                <Text Text="{Binding HomeAccentSavedColour}" FontSize="13" VerticalAlignment="Center" />
+                              </Container>
+                            </Button>
+                          </Container>
                         </Container>
                         <Repeat id="home-global-accent-swatches" Source="{Binding HomeGlobalAccentChoices}" As="option" Key="{Binding option.Key}" Panel="Wrap">
                           <Button id="home-global-accent" action="ApplyHomeAppearanceOption" AccessibleName="{Binding option.Name}" Selected="{Binding option.IsSelected}" IsEnabled="{Binding HomeAppearanceAvailable, fallback=false}" Padding="12 8" CornerRadius="18" Margin="0 0 6 4">
@@ -340,8 +357,11 @@
                             </Container>
                           </Button>
                         </Repeat>
+                        <If Condition="{Binding HomeAccentPerApp, fallback=false}">
+                          <Button id="home-accent-reset" Action="ResetHomeAppAccent" Content="Use this app’s default" HorizontalAlignment="Left" IsEnabled="{Binding HomeAccentCanReset, fallback=false}" />
+                        </If>
                       </Container>
-                      <Container Type="Wrap" CellGap="12">
+                      <Container Type="Wrap" CellGap="12" IsVisible="{Binding HomeThemeGalleryVisible, fallback=true}">
                         <Button id="home-appearance-refresh" action="RefreshHomeAppearance" Content="Refresh" AccessibleName="Refresh appearance" IsEnabled="{Binding HomeAppearanceCanRefresh, fallback=false}" FontWeight="700" />
                         <Text Text="{Binding HomeAppearanceStatus}" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
                         <Text Text="{Binding HomeAppearanceScope}" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
