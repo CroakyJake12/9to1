@@ -262,9 +262,9 @@
                             <Container Type="Vertical Stack" CellGap="5">
                               <If Condition="{Binding option.HasPreview}">
                                 <Container id="home-theme-preview" Type="Grid" ColumnSizes="Auto 1fr Auto" Height="62" Padding="10 6" CornerRadius="{Binding option.PreviewPanelRadius, fallback=9}" Background="{Binding option.PreviewPanel}">
-                                  <Container Type="Overlay" Width="26" Height="38" CornerRadius="{Binding option.PreviewTileRadius, fallback=4}" VerticalAlignment="Center" Background="{Binding option.PreviewTile}" />
+                                  <Container id="home-theme-secondary-sample" Type="Overlay" Width="26" Height="38" CornerRadius="{Binding option.PreviewTileRadius, fallback=4}" VerticalAlignment="Center" Background="{Binding option.PreviewTile}" />
                                   <Text Column="1" Text="Aa" FontSize="19" FontWeight="800" FontFamily="{Binding option.PreviewFont}" TextAlignment="Center" VerticalAlignment="Center" Foreground="{Binding option.PreviewInk}" />
-                                  <Container Type="Overlay" Column="2" Width="34" Height="16" CornerRadius="8" VerticalAlignment="Center" Background="{Binding option.PreviewAccent}" />
+                                  <Container id="home-theme-primary-sample" Type="Overlay" Column="2" Width="34" Height="16" CornerRadius="{Binding option.PreviewAccentRadius, fallback=8}" VerticalAlignment="Center" Background="{Binding option.PreviewAccent}" />
                                 </Container>
                               </If>
                               <Text Text="{Binding option.Name}" FontSize="14" FontWeight="750" TextTrimming="CharacterEllipsis" />

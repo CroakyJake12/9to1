@@ -217,7 +217,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         GradientStops = [new(start, 0), new(middle, .5), new(end, 1)]
     };
 
-    private static void ApplyPresetPreview(Dictionary<string, object?> option, CuiPalette source, CuiAccessibilitySettings accessibility)
+    private static void ApplyPresetPreview(Dictionary<string, object?> option, CuiPalette source, CuiAccessibilitySettings accessibility,
+        CuiCustomTheme? custom = null)
     {
         var palette = CuiAccessibilityPalette.Resolve(source, accessibility);
         var dark = palette.TideBase.ToHsl().L < .5;
@@ -239,11 +240,20 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         };
         IBrush background = new SolidColorBrush(panel);
         IBrush accentBrush = new SolidColorBrush(accent);
+        IBrush? customTile = null;
+        var resources = new ResourceDictionary();
+        if (!accessibility.HighContrast || custom is not null)
+        {
+            CuiThemeResourceApplier.ApplyToResources(resources, source, accessibility);
+            if (custom is not null)
+            {
+                CuiCustomThemeResourceApplier.ApplyToResources(resources, custom, accessibility);
+                customTile = (IBrush)resources["CuiAccentSecondaryBrush"]!;
+            }
+            accentBrush = (IBrush)resources["CuiAccentPrimaryBrush"]!;
+        }
         if (!accessibility.HighContrast)
         {
-            var resources = new ResourceDictionary();
-            CuiThemeResourceApplier.ApplyToResources(resources, source, accessibility);
-            accentBrush = (IBrush)resources["CuiAccentPrimaryBrush"]!;
             switch (palette.Theme)
             {
                 case CuiTheme.Professional:
@@ -282,17 +292,20 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                     break;
             }
         }
-        option["Caption"] = caption;
+        option["Caption"] = custom is null ? caption : $"Custom · {CuiThemeCatalog.Resolve(custom.BaseTheme).DisplayName}";
         option["PreviewPanel"] = background;
-        option["PreviewTile"] = new SolidColorBrush(tile);
+        option["PreviewTile"] = customTile ?? new SolidColorBrush(tile);
         option["PreviewInk"] = new SolidColorBrush(ink);
         option["PreviewAccent"] = accentBrush;
+        option["PreviewAccentRadius"] = custom is null ? 8d : 8d * custom.ButtonRoundnessPercent / 100;
         option["PreviewPanelRadius"] = panelRadius;
         option["PreviewTileRadius"] = tileRadius;
-        option["PreviewFont"] = palette.Theme switch
+        option["PreviewFont"] = (custom, palette.Theme) switch
         {
-            CuiTheme.Retro => "monospace",
-            CuiTheme.Western => "serif",
+            (not null, _) when string.IsNullOrWhiteSpace(accessibility.InterfaceFontFamilyOverride) =>
+                CuiCustomThemeFonts.ResourceFamily(custom.Fonts.Main.Family),
+            (null, CuiTheme.Retro) => "monospace",
+            (null, CuiTheme.Western) => "serif",
             _ => CuiTypography.ResolveInterfaceFontFamily(accessibility.InterfaceFontFamilyOverride)
         };
     }
@@ -397,25 +410,25 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             CuiTheme.FrostedGlass => 3, CuiTheme.Bubble => 4, CuiTheme.Metallic => 5,
             CuiTheme.Retro => 6, CuiTheme.Western => 7, _ => 8
         }).ToArray();
-        var names = themes.Select(theme => theme.DisplayName).ToList();
+        IReadOnlyList<CuiCustomTheme> savedThemes = [];
+        if (value?.CustomThemesJson is { } library)
+            try { savedThemes = CuiCustomThemeContract.DeserializeLibrary(library); }
+            catch (ArgumentException) { }
+        var names = themes.Select(theme => theme.DisplayName).Concat(savedThemes.Select(theme => theme.Name));
         Dictionary<string, object?> ThemeOption(string name)
         {
             var option = Option(name, "theme", name, string.Equals(name, value!.ThemeName, StringComparison.OrdinalIgnoreCase));
             var theme = themes.FirstOrDefault(item => item.DisplayName == name);
-            option["HasPreview"] = theme is not null;
-            if (theme is null)
-            {
-                option["Caption"] = "Custom theme";
-                return option;
-            }
+            var custom = theme is null
+                ? savedThemes.First(item => string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase)) : null;
+            option["HasPreview"] = true;
             var appearance = Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
             var accent = Current.EffectiveAccent.ResolveColour("app.home");
-            ApplyPresetPreview(option, CuiSurfacePaletteCatalog.For("Home", appearance, theme.Theme, accent), Current.Accessibility);
+            var palette = CuiSurfacePaletteCatalog.For("Home", appearance, theme?.Theme ?? custom!.BaseTheme, accent);
+            ApplyPresetPreview(option, palette, Current.Accessibility,
+                custom is null ? null : CuiCustomThemeAccentResolver.Resolve(custom, accent));
             return option;
         }
-        if (value?.CustomThemesJson is { } custom)
-            try { names.AddRange(CuiCustomThemeContract.DeserializeLibrary(custom).Select(theme => theme.Name)); }
-            catch (ArgumentException) { }
         var savedAccent = value?.Accent ?? HomeThemeAccentPreference.Default;
         var perApp = savedAccent.Mode == HomeThemeAccentOverrideMode.IndividualApps;
         var apps = CuiAppAccentCatalog.Defaults;
