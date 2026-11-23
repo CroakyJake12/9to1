@@ -49,10 +49,60 @@
                         Background="Transparent" BorderWidth="0" MinHeight="35" Padding="10 5" CornerRadius="9" HorizontalContentAlignment="Left" FontWeight="700" />
               </Container>
             </Container>
+            <Button id="home-settings-haven" Action="SettingsHaven" AccessibleName="9to1 Haven, tabs and browsing" IsVisible="{Binding SettingsMatchHaven}"
+                    Background="Transparent" BorderWidth="0" MinHeight="52" Margin="0 10 0 0" Padding="10 5" HorizontalContentAlignment="Stretch">
+              <Container Type="Grid" ColumnSizes="1fr Auto">
+                <Container Type="Vertical Stack" CellGap="2">
+                  <Text Text="9to1 Haven" FontWeight="750" />
+                  <Text Text="Tabs and browsing" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                </Container>
+                <Text Column="1" Text="{Binding SettingsHavenChevron}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Button>
+            <Container Type="Vertical Stack" IsVisible="{Binding SettingsHavenExpanded}" CellGap="2">
+              <Button id="home-settings-haven-general" Action="SettingsHavenGeneral" AccessibleName="General" Selected="{Binding SettingsHavenGeneralSelected}" IsVisible="{Binding SettingsMatchHavenGeneral}"
+                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
+                <Container Type="Horizontal Stack" CellGap="10">
+                  <Image Source="icon:layout" Width="17" Height="17" VerticalAlignment="Center" />
+                  <Text Text="General" FontWeight="700" VerticalAlignment="Center" />
+                </Container>
+              </Button>
+              <Button id="home-settings-haven-bookmarks" Action="SettingsHavenBookmarks" AccessibleName="Bookmarks" Selected="{Binding SettingsHavenBookmarksSelected}" IsVisible="{Binding SettingsMatchHavenBookmarks}"
+                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
+                <Container Type="Horizontal Stack" CellGap="10">
+                  <Image Source="icon:bookmark" Width="17" Height="17" VerticalAlignment="Center" />
+                  <Text Text="Bookmarks" FontWeight="700" VerticalAlignment="Center" />
+                </Container>
+              </Button>
+              <Button id="home-settings-haven-history" Action="SettingsHavenHistory" AccessibleName="History" Selected="{Binding SettingsHavenHistorySelected}" IsVisible="{Binding SettingsMatchHavenHistory}"
+                      Background="Transparent" BorderWidth="0" MinHeight="40" Padding="10 5" HorizontalContentAlignment="Left">
+                <Container Type="Horizontal Stack" CellGap="10">
+                  <Image Source="icon:history" Width="17" Height="17" VerticalAlignment="Center" />
+                  <Text Text="History" FontWeight="700" VerticalAlignment="Center" />
+                </Container>
+              </Button>
+            </Container>
             <Text Text="No matching settings" IsVisible="{Binding SettingsNoMatches}" Margin="10 6" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           </Container>
         </Container>
         <Container Type="Overlay" Row="{Binding SettingsContentRow}" Column="{Binding SettingsContentColumn}">
+          <Container id="home-settings-haven-page" Type="Vertical Stack" IsVisible="{Binding SettingsHavenSelected}"
+                     VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1000" Padding="14 28" CellGap="20">
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="9TO1 HAVEN" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="home-settings-haven-page-title" Text="{Binding SettingsHavenTitle}" FontSize="32" FontWeight="800" />
+            </Container>
+            <Container Type="Vertical Stack" Padding="0 0 0 16" CellGap="12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+              <Text Text="{Binding SettingsHavenDescription}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="home-settings-open-browse-general" Action="SettingsOpenBrowseGeneral" Content="Open Browse settings" AccessibleName="Open Browse settings in a new tab"
+                      IsVisible="{Binding SettingsHavenGeneralSelected}" HorizontalAlignment="Left" />
+              <Button id="home-settings-open-browse-bookmarks" Action="SettingsOpenBrowseBookmarks" Content="Open Bookmarks" AccessibleName="Open Browse bookmarks in a new tab"
+                      IsVisible="{Binding SettingsHavenBookmarksSelected}" HorizontalAlignment="Left" />
+              <Button id="home-settings-open-browse-history" Action="SettingsOpenBrowseHistory" Content="Open History" AccessibleName="Open Browse history in a new tab"
+                      IsVisible="{Binding SettingsHavenHistorySelected}" HorizontalAlignment="Left" />
+              <Text Text="{Binding SettingsBrowseStatus}" IsVisible="{Binding SettingsHasBrowseStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+          </Container>
           <Container id="home-settings-appearance-overview" Type="Vertical Stack" IsVisible="{Binding SettingsAppearanceSelected}" VerticalScrolling="True" HorizontalScrolling="False"
                      MaxWidth="1000" Padding="14 28" CellGap="20">
             <Container Type="Vertical Stack" CellGap="4">

@@ -637,6 +637,8 @@ public sealed class UnifiedHomeContentTests
 
             var accessibility = SettingsControl<Button>(settings, "home-settings-accessibility");
             PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowUp);
             Assert.True(accessibility.IsFocused);
             PressSettingsKey(window, PhysicalKey.Enter);
             await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
@@ -699,6 +701,134 @@ public sealed class UnifiedHomeContentTests
         {
             try { await session.CloseAndDrainAsync(); }
             finally { try { window?.Close(); } finally { await source.DisposeAsync(); Directory.Delete(root, true); } }
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(720)]
+    [InlineData(1180)]
+    public async Task Settings_Haven_group_keeps_source_settings_and_opens_existing_native_Browse_destinations(int width)
+    {
+        var limit = TimeSpan.FromSeconds(20);
+        using var lifetime = new CancellationTokenSource();
+        var paths = new LayoutPaths();
+        const string profile = "original-home-profile";
+        var file = Path.Combine(paths.DataDirectory, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"havenUiAppearance\":2}");
+        var initial = await File.ReadAllBytesAsync(file);
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, profile),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        BrowseNativeWorkspace? workspace = null;
+        Task? navigation = null;
+        BrowseNavigationIntent? intent = null;
+        var allow = true;
+        var home = Factory(new Registry(), lifetime.Token, navigation: (admitted, settlement) =>
+        {
+            intent = admitted;
+            return workspace!.TryQueueNavigationOriginal(admitted, settlement, out navigation);
+        }, settings: _ => new(source, _ => allow ? Task.CompletedTask : Task.FromException(new HomeSettingsAuthorityRefusal("Profile changed."))));
+        var chrome = await BrowseChrome.CreateAsync(paths, internalContentFactory: home,
+            homeProfileId: profile, cancellationToken: lifetime.Token);
+        workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        window.Width = width;
+        window.Height = 720;
+        try
+        {
+            RegisterProductionImageResolver(window);
+            window.Show();
+            await window.InitializeAsync(lifetime.Token).WaitAsync(limit);
+            await chrome.OpenContentAsync(AppContentAddress.Parse("browse://home/settings"), cancellationToken: lifetime.Token).WaitAsync(limit);
+            await RenderAsync();
+            var settingsTab = chrome.State.SelectedTab;
+            var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
+            var search = SettingsControl<TextBox>(settings, "home-settings-search");
+            var theme = SettingsControl<Button>(settings, "home-settings-theme");
+            var group = SettingsControl<Button>(settings, "home-settings-haven");
+            Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(group));
+            Assert.True(theme.Focus());
+            PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(group.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowRight);
+            await RenderAsync();
+            Assert.Equal("Expanded", AutomationProperties.GetItemStatus(group));
+            PressSettingsKey(window, PhysicalKey.End);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-haven-history").IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            Assert.True(group.IsFocused);
+            PressSettingsKey(window, PhysicalKey.ArrowLeft);
+            await RenderAsync();
+            Assert.Equal("Collapsed", AutomationProperties.GetItemStatus(group));
+            PressSettingsKey(window, PhysicalKey.Home);
+            Assert.True(SettingsControl<Button>(settings, "home-settings-global").IsFocused);
+
+            foreach (var (section, label, nativePage, control) in new[]
+            {
+                ("general", "General", BrowserNativePage.Settings, "BrowseSettingsPage"),
+                ("bookmarks", "Bookmarks", BrowserNativePage.Bookmarks, "BrowseBookmarksPage"),
+                ("history", "History", BrowserNativePage.History, "BrowseHistoryPage")
+            })
+            {
+                Assert.True(search.Focus());
+                search.Text = label;
+                await RenderAsync();
+                PressSettingsKey(window, PhysicalKey.Enter);
+                await settings.WhenActionsIdleAsync().WaitAsync(limit);
+                await RenderAsync();
+                Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-" + section)));
+                Assert.Equal(label, SettingsControl<TextBlock>(settings, "home-settings-haven-page-title").Text);
+                Assert.Equal(settingsTab.Id, chrome.State.SelectedTabId);
+                var open = SettingsControl<Button>(settings, "home-settings-open-browse-" + section);
+                if (nativePage == BrowserNativePage.Settings)
+                {
+                    allow = false;
+                    ClickSettingsButton(window, open);
+                    await settings.WhenActionsIdleAsync().WaitAsync(limit);
+                    Assert.Null(intent);
+                    Assert.Equal(settingsTab.Id, chrome.State.SelectedTabId);
+                    allow = true;
+                }
+                CaptureSettingsIfRequested(window, "haven-" + section, source);
+                ClickSettingsButton(window, open);
+                await settings.WhenActionsIdleAsync().WaitAsync(limit);
+                Assert.NotNull(navigation);
+                await navigation!.WaitAsync(limit);
+                await RenderAsync();
+                var address = AppContentAddress.Parse(BrowserNativePages.Address(nativePage).AbsoluteUri);
+                Assert.Equal(new BrowseNavigationIntent(settingsTab.Id, address, true), intent);
+                Assert.NotEqual(settingsTab.Id, chrome.State.SelectedTabId);
+                Assert.Equal(address, chrome.State.SelectedTab.Address);
+                Assert.Equal(BrowseEngineState.NativePage, chrome.State.SelectedTab.EngineState);
+                Assert.True(SettingsControl<CuiContainerControl>(window, control).IsEffectivelyVisible);
+                await chrome.SelectTabAsync(settingsTab.Id, lifetime.Token).WaitAsync(limit);
+                await RenderAsync();
+                Assert.Same(settings, Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
+                Assert.Equal(label, search.Text);
+                Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-" + section)));
+            }
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+        }
+        finally
+        {
+            try
+            {
+                window.Close();
+                if (window.OriginalClosePreparation is { } preparation) Assert.True(await preparation.WaitAsync(limit));
+                Dispatcher.UIThread.RunJobs();
+                Assert.NotNull(window.OriginalClose);
+                await window.OriginalClose!.WaitAsync(limit);
+            }
+            finally
+            {
+                await source.DisposeAsync();
+                Directory.Delete(paths.DataDirectory, recursive: true);
+            }
+        }
+
+        async Task RenderAsync()
+        {
+            await Task.WhenAll(workspace!.OriginalNotifications).WaitAsync(limit);
+            SettleFixtureLayout(window);
         }
     }
 

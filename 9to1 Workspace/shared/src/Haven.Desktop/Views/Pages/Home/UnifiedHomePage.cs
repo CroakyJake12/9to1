@@ -249,6 +249,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 {
                     _settings = (_createSettings ?? throw new InvalidOperationException("The Home Settings owner is unavailable."))();
                     _settings.NavigateHomeAsync = NavigateFromSettingsAsync;
+                    _settings.NavigateBrowseAsync = NavigateBrowseFromSettingsAsync;
                     _settings.CategoryChanged += OnSettingsCategoryChanged;
                 });
             if (!original.IsAcceptedPublicationCurrent) return;
@@ -371,6 +372,21 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
             if (openDashboard) await OpenDashboardAsync(original, linked.Token, focusRailButton: "home-dashboard");
             else await SelectAsync(_settingsReturnSection, original, linked.Token, focusRailButton: "home-settings");
+        });
+    }
+
+    private Task<bool> NavigateBrowseFromSettingsAsync(BrowserNativePage page, CancellationToken token)
+    {
+        if (!IsAlive || _section != "settings" || _settings is not { } settings) return Task.FromResult(false);
+        var selection = _selection;
+        return _work.RunAsync(original =>
+        {
+            original.BindPublicationGuard(() => IsAlive && _section == "settings" && selection == _selection);
+            token.ThrowIfCancellationRequested();
+            var address = AppContentAddress.Parse(BrowserNativePages.Address(page).AbsoluteUri);
+            // The Browse driver, outside this callback, joins the click's owning Settings loader
+            // before making a new tab visible. Settings remains the existing source tab.
+            return Task.FromResult(Queue(address, original, newTab: true, additionalSettlement: settings.WhenActionsIdleAsync()));
         });
     }
 
@@ -545,12 +561,13 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         }
         Queue(address, original);
     }
-    private void Queue(AppContentAddress address, DesktopOriginalWorkLifetime.Original original, bool? newTab = null)
+    private bool Queue(AppContentAddress address, DesktopOriginalWorkLifetime.Original original, bool? newTab = null,
+        Task? additionalSettlement = null)
     {
         original.Token.ThrowIfCancellationRequested();
         // App tiles belong to the nested Apps loader, while rail/search actions
         // belong to the outer loader. Retire neither until the actual sender has settled.
-        var settlement = Task.WhenAll(original.Task, WhenActionsIdleAsync());
+        var settlement = Task.WhenAll(original.Task, WhenActionsIdleAsync(), additionalSettlement ?? Task.CompletedTask);
         var accepted = false;
         original.RunAcceptedPublicationCallback(() => accepted = _queue(
             new(_request.TabId, address, newTab ?? _request.Address.Authority == "home"), settlement));
@@ -563,6 +580,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             Set(_status, "Text", retry);
             if (_section == "apps") UpdateAppsState(retry);
         }
+        return accepted;
     }
 
     internal Task<bool> TryPrepareToCloseAsync(CancellationToken token)

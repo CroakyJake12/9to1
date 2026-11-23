@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using Haven.Browser;
 using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Views.Pages.Home;
@@ -24,12 +25,14 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly CuiViewModel _bindings = new();
     private readonly DesktopOriginalWorkLifetime _work;
-    private readonly Button[] _categoryButtons;
+    private sealed record CategoryRow(string Key, string? Parent, Button Button);
+    private readonly CategoryRow[] _categoryRows;
     private readonly TextBox _search = new();
     private string _category = "theme";
     private string _query = string.Empty;
     private Avalonia.Vector _offsetBeforeSearch;
     private bool _globalExpanded = true;
+    private bool _havenExpanded;
     private Task? _initialization;
     private Task<bool>? _preparation;
     private bool _active, _unavailable, _stopped;
@@ -51,13 +54,18 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
         _loader.BindAuthoredControl("home-settings-search", _ => _search);
         NativeHomeThemePreferences.BindAppearanceLayout(_loader, _bindings);
-        _categoryButtons = new[] { "global", "appearance", "theme", "layout", "accessibility" }
-            .Select(category =>
-            {
-                var button = new Button();
-                _loader.BindAuthoredControl("home-settings-" + category, _ => button);
-                return button;
-            }).ToArray();
+        _categoryRows = new (string Key, string? Parent)[]
+        {
+            ("global", null), ("appearance", "global"), ("theme", "appearance"),
+            ("layout", "appearance"), ("accessibility", "appearance"),
+            ("haven", null), ("haven-general", "haven"), ("haven-bookmarks", "haven"), ("haven-history", "haven")
+        }.Select(category =>
+        {
+            var button = new Button();
+            _loader.BindAuthoredControl("home-settings-" + category.Key, _ => button);
+            return new CategoryRow(category.Key, category.Parent, button);
+        }).ToArray();
+        SetBrowseStatus(string.Empty);
         PublishCategory();
         ApplyResponsiveLayout(double.PositiveInfinity);
         var loaded = _loader.TryLoad(LoadSettingsDocument());
@@ -80,11 +88,15 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
     internal NativeHomeThemePreferences.SettingsWriteOutcome? LastWrite { get; private set; }
     internal Func<bool, CancellationToken, Task>? NavigateHomeAsync { get; set; }
+    internal Func<BrowserNativePage, CancellationToken, Task<bool>>? NavigateBrowseAsync { get; set; }
     internal string CategoryTitle => _category switch
     {
         "theme" => "Theme and accent preferences",
         "layout" => "Layout",
         "accessibility" => "Accessibility",
+        "haven-general" => "General",
+        "haven-bookmarks" => "Bookmarks",
+        "haven-history" => "History",
         _ => "Appearance"
     };
     internal event EventHandler? CategoryChanged;
@@ -98,6 +110,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             _query = string.Empty;
             _search.Text = string.Empty;
             _globalExpanded = true;
+            _havenExpanded = false;
+            SetBrowseStatus(string.Empty);
             PublishCategory();
         }
         _active = true;
@@ -108,7 +122,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
 
     internal void FocusCategory()
     {
-        _categoryButtons[2].Focus(NavigationMethod.Tab);
+        _categoryRows.Single(row => row.Key == "theme").Button.Focus(NavigationMethod.Tab);
         SelectCategory("theme");
     }
 
@@ -116,6 +130,10 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         "SettingsBack" or "SettingsOpenDashboard" => NavigateHomeAsync is not null,
         "SettingsGlobal" or "SettingsAppearance" or "SettingsTheme" or "SettingsLayout" or "SettingsAccessibility" => true,
+        "SettingsHaven" or "SettingsHavenGeneral" or "SettingsHavenBookmarks" or "SettingsHavenHistory" => NavigateBrowseAsync is not null,
+        "SettingsOpenBrowseGeneral" => NavigateBrowseAsync is not null && _category == "haven-general",
+        "SettingsOpenBrowseBookmarks" => NavigateBrowseAsync is not null && _category == "haven-bookmarks",
+        "SettingsOpenBrowseHistory" => NavigateBrowseAsync is not null && _category == "haven-history",
         "ApplyHomeAppearance" or "RefreshHomeAppearance" => !IsBusy && !_unavailable,
         _ => false
     });
@@ -131,9 +149,12 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             case "SettingsOpenDashboard":
                 return new(NavigateHomeAsync!(command == "SettingsOpenDashboard", cancellationToken));
             case "SettingsGlobal":
-                if (_query.Length != 0) return ValueTask.CompletedTask;
-                _globalExpanded = !_globalExpanded;
-                PublishCategory();
+            case "SettingsHaven":
+                if (_query.Length == 0)
+                {
+                    var group = command == "SettingsGlobal" ? "global" : "haven";
+                    SetGroupExpanded(group, !IsGroupExpanded(group));
+                }
                 return ValueTask.CompletedTask;
             case "SettingsAppearance":
             case "SettingsTheme":
@@ -141,6 +162,17 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             case "SettingsAccessibility":
                 SelectCategory(command["Settings".Length..].ToLowerInvariant());
                 return ValueTask.CompletedTask;
+            case "SettingsHavenGeneral":
+            case "SettingsHavenBookmarks":
+            case "SettingsHavenHistory":
+                SelectCategory("haven-" + command["SettingsHaven".Length..].ToLowerInvariant());
+                return ValueTask.CompletedTask;
+            case "SettingsOpenBrowseGeneral":
+                return OpenBrowsePageAsync(BrowserNativePage.Settings, cancellationToken);
+            case "SettingsOpenBrowseBookmarks":
+                return OpenBrowsePageAsync(BrowserNativePage.Bookmarks, cancellationToken);
+            case "SettingsOpenBrowseHistory":
+                return OpenBrowsePageAsync(BrowserNativePage.History, cancellationToken);
         }
         parameter = NativeHomeThemePreferences.CaptureDisplayDraft(parameter, _bindings);
         return new(_work.RunAsync(async original =>
@@ -204,6 +236,36 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                     }
             }
         }));
+    }
+
+    private ValueTask OpenBrowsePageAsync(BrowserNativePage page, CancellationToken token)
+    {
+        var navigate = NavigateBrowseAsync!;
+        var generation = _generation;
+        var category = _category;
+        return new(_work.RunAsync(async original =>
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, token);
+            original.BindPublicationGuard(() => _active && IsAlive && generation == _generation && category == _category);
+            linked.Token.ThrowIfCancellationRequested();
+            var admitted = await original.AwaitAsync(IsAdmittedAsync(linked.Token));
+            if (!original.IsAcceptedPublicationCurrent) return;
+            if (!admitted)
+            {
+                original.RunAcceptedPublicationCallback(() => SetBrowseStatus("Reopen Settings for the current profile."));
+                return;
+            }
+            linked.Token.ThrowIfCancellationRequested();
+            var accepted = await original.AwaitAsync(navigate(page, linked.Token));
+            original.RunAcceptedPublicationCallback(() => SetBrowseStatus(accepted ? string.Empty
+                : "Browse could not open this page. Try again."));
+        }));
+    }
+
+    private void SetBrowseStatus(string status)
+    {
+        _bindings.Set("SettingsBrowseStatus", status);
+        _bindings.Set("SettingsHasBrowseStatus", status.Length != 0);
     }
 
     private static CuiDocument LoadSettingsDocument()
@@ -271,6 +333,13 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         var accessibility = parent || Matches("Accessibility") || Matches("High contrast") || Matches("Reduce motion");
         var any = theme || layout || accessibility;
         var expanded = (_query.Length > 0 || _globalExpanded) && any;
+        var hasBrowse = NavigateBrowseAsync is not null;
+        var havenGroup = Matches("9to1 Haven Tabs and browsing");
+        var general = hasBrowse && (havenGroup || Matches("General Browse settings engine privacy startup restore tabs"));
+        var bookmarks = hasBrowse && (havenGroup || Matches("Bookmarks saved destinations"));
+        var history = hasBrowse && (havenGroup || Matches("History previous web visits"));
+        var anyHaven = general || bookmarks || history;
+        var havenExpanded = (_query.Length > 0 || _havenExpanded) && anyHaven;
         _bindings.Set("SettingsGlobalExpanded", expanded);
         _bindings.Set("SettingsGlobalChevron", expanded ? "⌄" : "›");
         _bindings.Set("SettingsMatchGlobal", any);
@@ -278,26 +347,51 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsMatchTheme", theme);
         _bindings.Set("SettingsMatchLayout", layout);
         _bindings.Set("SettingsMatchAccessibility", accessibility);
-        _bindings.Set("SettingsNoMatches", !any);
+        _bindings.Set("SettingsMatchHaven", anyHaven);
+        _bindings.Set("SettingsHavenExpanded", havenExpanded);
+        _bindings.Set("SettingsHavenChevron", havenExpanded ? "⌄" : "›");
+        _bindings.Set("SettingsMatchHavenGeneral", general);
+        _bindings.Set("SettingsMatchHavenBookmarks", bookmarks);
+        _bindings.Set("SettingsMatchHavenHistory", history);
+        _bindings.Set("SettingsNoMatches", !any && !anyHaven);
         _bindings.Set("SettingsShowsAppearance", _category is "theme" or "accessibility");
         _bindings.Set("SettingsLayoutSelected", _category == "layout");
         _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
         _bindings.Set("SettingsThemeSelected", _category == "theme");
         _bindings.Set("SettingsAccessibilitySelected", _category == "accessibility");
-        AutomationProperties.SetItemStatus(_categoryButtons[0], expanded ? "Expanded" : "Collapsed");
-        foreach (var button in _categoryButtons.Skip(1))
-            AutomationProperties.SetItemStatus(button, button.Name == "home-settings-" + _category ? "Current page" : null);
+        _bindings.Set("SettingsHavenSelected", _category.StartsWith("haven-", StringComparison.Ordinal));
+        _bindings.Set("SettingsHavenGeneralSelected", _category == "haven-general");
+        _bindings.Set("SettingsHavenBookmarksSelected", _category == "haven-bookmarks");
+        _bindings.Set("SettingsHavenHistorySelected", _category == "haven-history");
+        _bindings.Set("SettingsHavenTitle", CategoryTitle);
+        _bindings.Set("SettingsHavenDescription", _category switch
+        {
+            "haven-general" => "Manage your default browser engine, history recording and whether Haven restores tabs at startup.",
+            "haven-bookmarks" => "Open or remove bookmarks saved in Browse.",
+            "haven-history" => "Search previous web visits and manage local browsing history.",
+            _ => string.Empty
+        });
+        foreach (var row in _categoryRows)
+            AutomationProperties.SetItemStatus(row.Button, row.Key switch
+            {
+                "global" => expanded ? "Expanded" : "Collapsed",
+                "haven" => havenExpanded ? "Expanded" : "Collapsed",
+                _ => row.Key == _category ? "Current page" : null
+            });
     }
 
     private void SelectCategory(string category)
     {
         var changed = _category != category;
         _category = category;
+        if (category.StartsWith("haven-", StringComparison.Ordinal)) _havenExpanded = true;
+        else _globalExpanded = true;
+        if (changed) SetBrowseStatus(string.Empty);
         PublishCategory();
         if (changed) CategoryChanged?.Invoke(this, EventArgs.Empty);
         Dispatcher.UIThread.Post(() =>
         {
-            if (!_active || !IsAlive || _category != category || category is "layout" or "appearance") return;
+            if (!_active || !IsAlive || _category != category || category is not ("theme" or "accessibility")) return;
             var appearance = this.GetVisualDescendants().OfType<CuiContainerControl>()
                 .Single(control => control.Name == "home-appearance-settings");
             var anchor = category == "accessibility" ? "home-appearance-accessibility"
@@ -315,8 +409,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
     {
         if (!_active || args.KeyModifiers != KeyModifiers.None) return;
         var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement();
-        var visible = _categoryButtons.Where(button => button.IsEffectivelyVisible && button.IsAttachedToVisualTree()).ToArray();
-        if (_query.Length > 0 && args.Key == Key.Escape && (focused == _search || focused is Button searchRow && visible.Contains(searchRow)))
+        var visible = _categoryRows.Where(row => row.Button.IsEffectivelyVisible && row.Button.IsAttachedToVisualTree()).ToArray();
+        var index = Array.FindIndex(visible, row => ReferenceEquals(row.Button, focused));
+        if (_query.Length > 0 && args.Key == Key.Escape && (focused == _search || index >= 0))
         {
             _search.Text = string.Empty;
             _search.Focus(NavigationMethod.Tab);
@@ -325,8 +420,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         }
         if (focused == _search && args.Key is Key.Down or Key.Enter)
         {
-            var result = visible.FirstOrDefault(button => _query.Equals(AutomationProperties.GetName(button), StringComparison.OrdinalIgnoreCase))
-                ?? visible.FirstOrDefault(button => Array.IndexOf(_categoryButtons, button) >= 2);
+            var result = (visible.FirstOrDefault(row => row.Parent is not null &&
+                    _query.Equals(AutomationProperties.GetName(row.Button), StringComparison.OrdinalIgnoreCase))
+                ?? visible.FirstOrDefault(row => row.Parent is not null && row.Key != "appearance"))?.Button;
             if (result is null) return;
             args.Handled = true;
             result.Focus(NavigationMethod.Directional);
@@ -334,30 +430,38 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             if (args.Key == Key.Enter) result.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             return;
         }
-        if (focused is not Button current) return;
-        var index = Array.IndexOf(visible, current);
         if (index < 0) return;
-        var global = _categoryButtons[0];
-        var parent = _categoryButtons[1];
-        Button? next = args.Key switch
+        var current = visible[index];
+        if (current.Parent is null && _query.Length == 0 &&
+            (args.Key == Key.Left && IsGroupExpanded(current.Key) || args.Key == Key.Right && !IsGroupExpanded(current.Key)))
+        {
+            SetGroupExpanded(current.Key, args.Key == Key.Right);
+            args.Handled = true;
+            return;
+        }
+        var next = args.Key switch
         {
             Key.Up => visible[Math.Max(0, index - 1)],
             Key.Down => visible[Math.Min(visible.Length - 1, index + 1)],
             Key.Home => visible[0],
             Key.End => visible[^1],
-            Key.Left when current != global => current == parent ? global : parent,
-            Key.Left when _globalExpanded && _query.Length == 0 => SetExpanded(false),
-            Key.Right when current == global && !_globalExpanded && _query.Length == 0 => SetExpanded(true),
-            Key.Right when current == global => parent,
-            Key.Right when current == parent => visible.ElementAtOrDefault(index + 1),
+            Key.Left => visible.FirstOrDefault(row => row.Key == current.Parent),
+            Key.Right => visible.FirstOrDefault(row => row.Parent == current.Key),
             _ => null
         };
         if (next is null) return;
         args.Handled = true;
-        next.Focus(NavigationMethod.Directional);
-        next.BringIntoView();
+        next.Button.Focus(NavigationMethod.Directional);
+        next.Button.BringIntoView();
+    }
 
-        Button SetExpanded(bool value) { _globalExpanded = value; PublishCategory(); return global; }
+    private bool IsGroupExpanded(string group) => group == "global" ? _globalExpanded : _havenExpanded;
+
+    private void SetGroupExpanded(string group, bool expanded)
+    {
+        if (group == "global") _globalExpanded = expanded;
+        else _havenExpanded = expanded;
+        PublishCategory();
     }
 
     private async Task<bool> IsAdmittedAsync(CancellationToken token)
@@ -529,6 +633,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         Dispatcher.UIThread.VerifyAccess();
         if (!_stopped) throw new InvalidOperationException("The original Settings actions must settle before detachment.");
         NavigateHomeAsync = null;
+        NavigateBrowseAsync = null;
         Content = null; return Task.CompletedTask;
     }
 }
