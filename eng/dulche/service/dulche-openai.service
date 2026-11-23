@@ -1,0 +1,16 @@
+[Unit]
+Description=Dulche loopback OpenAI-compatible inference gateway
+Requires=dulche-openai.socket dulche-backend.socket
+After=dulche-openai.socket dulche-backend.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -B "%h/.local/share/9to1/dulche-service/current/openai_gateway.py"
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+UMask=0077
+NoNewPrivileges=yes
+MemoryMax=384M
+MemorySwapMax=0
+TasksMax=96

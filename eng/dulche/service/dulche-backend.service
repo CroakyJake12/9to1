@@ -1,0 +1,16 @@
+[Unit]
+Description=Dulche local model and task service
+Requires=dulche-backend.socket
+After=dulche-backend.socket
+StartLimitIntervalSec=2min
+StartLimitBurst=4
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -B "%h/.local/share/9to1/dulche-service/current/daemon.py"
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=50
+UMask=0077
+NoNewPrivileges=yes
+KillMode=control-group

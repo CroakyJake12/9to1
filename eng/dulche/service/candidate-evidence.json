@@ -1,0 +1,1304 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-11-23T16:13:28+00:00",
+  "items": [
+    {
+      "id": "Qwen/Qwen3.8-27B",
+      "name": "Qwen3.8-27B",
+      "family": "Qwen",
+      "generation": "Qwen3.8",
+      "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/37561816e66b5b9153b1b64c10968c18c1e6f4a0/README.md",
+      "config_source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/37561816e66b5b9153b1b64c10968c18c1e6f4a0/config.json",
+      "repository_created_at": "2026-08-05T08:22:59.000Z",
+      "license": "apache-2.0",
+      "license_source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/37561816e66b5b9153b1b64c10968c18c1e6f4a0/LICENSE",
+      "parameters": 27781427952,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 27781427952,
+      "active_parameters": 27000000000,
+      "architecture": "qwen3_5_text",
+      "publisher_context_tokens": 262144,
+      "status": "baseline",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Single V100 llama.cpp RPC baseline retains text quality checks and actual throughput measurements. All tested rows use the installed IQ4_XS profile.",
+      "quantizations": [
+        {
+          "quantization": "UD-IQ4_XS",
+          "publisher": "unsloth",
+          "repo": "unsloth/Qwen3.8-27B-GGUF",
+          "revision": "4af51b3542f775b0a8e4b310bfb3f17e01c306c9",
+          "license": "apache-2.0",
+          "bytes": 14352911264,
+          "files": [
+            {
+              "path": "Qwen3.8-27B-UD-IQ4_XS.gguf",
+              "bytes": 14352911264,
+              "sha256": "4b194b34ecec99fdfb74caef84445ccd01c987de87d96ae8ca50dc434b4b0a38"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/tree/4af51b3542f775b0a8e4b310bfb3f17e01c306c9",
+          "local_identity": "Published byte count and installed filename/size matched. A fresh local SHA-256 comparison was not performed.",
+          "minimum_cpu_offload_bytes_at_16gib": 0,
+          "minimum_additional_disk_bytes_if_absent": 14352911264
+        },
+        {
+          "quantization": "UD-Q4_K_M",
+          "publisher": "unsloth",
+          "repo": "unsloth/Qwen3.8-27B-GGUF",
+          "revision": "4af51b3542f775b0a8e4b310bfb3f17e01c306c9",
+          "license": "apache-2.0",
+          "bytes": 16564259744,
+          "files": [
+            {
+              "path": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+              "bytes": 16564259744,
+              "sha256": "1bce504dfecd84153666928a41d8a66706f0158d3a317bc5196b72819d7dc529"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/tree/4af51b3542f775b0a8e4b310bfb3f17e01c306c9",
+          "minimum_cpu_offload_bytes_at_16gib": 1531874208,
+          "minimum_additional_disk_bytes_if_absent": 16564259744
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 931146432,
+          "sha256": "83ee4f4f205fa514161778c41df1ea14144faa0f713510893b63c2395f5c2d53"
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "bytes": 927607488,
+          "sha256": "cbb841a9ee0636b2ec172f5bb8df2ea8dfeb01e90fe7c6126581d662a0b4e43e"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 2147483648,
+      "kv_assumption": "FP16 dense K+V for the full-attention layers only; sparse indices, recurrent state and MTP are extra.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "SWE-bench Pro",
+          "candidate_score": 61.7,
+          "opus_4_6_score": 53.4,
+          "settings": "Same Qwen comparison as Flash-Next. Full released checkpoints, long-horizon agent harness; the installed IQ4_XS was not tested by this source.",
+          "source": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/812d96e10a0dd82b69d749e68693698cf6c36daa/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [
+        "qwen3.8-27b-v100",
+        "qwen3.8-27b-cpu"
+      ],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "qwen35",
+        "registered_name_in_installed_library": true,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "preserve_existing",
+      "experiment_gate": "Keep the currently selected deployment; use its actual acceptance/throughput record as calibration."
+    },
+    {
+      "id": "Qwen/Qwen3.8-Flash-Next",
+      "name": "Qwen3.8-Flash-Next",
+      "family": "Qwen",
+      "generation": "Qwen3.8",
+      "revision": "812d96e10a0dd82b69d749e68693698cf6c36daa",
+      "source": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/812d96e10a0dd82b69d749e68693698cf6c36daa/README.md",
+      "config_source": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/812d96e10a0dd82b69d749e68693698cf6c36daa/config.json",
+      "repository_created_at": "2026-08-24T08:24:59.000Z",
+      "license": "qwen-community-1.0",
+      "license_source": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/812d96e10a0dd82b69d749e68693698cf6c36daa/LICENSE",
+      "parameters": 179999981459,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 179999981459,
+      "active_parameters": 6000000000,
+      "architecture": "qwen4_exp_text",
+      "publisher_context_tokens": 262144,
+      "status": "baseline",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Existing RTX 5080 Strata deployment uses CPU/RAM expert placement. The 125B core, 51B n-gram table and 4B MTP together explain the installed footprint.",
+      "quantizations": [
+        {
+          "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+          "revision": "766911a6b7369840a91dbcd95f9f997acaab6cd6",
+          "files": [
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+              "bytes": 10946624,
+              "sha256": "5ce89370720f8bf90890f439361282104c1aa1482d4013bb9a50923e758e71a4"
+            },
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+              "bytes": 49835229856,
+              "sha256": "577a38a2392b40ca2193cea502e1d92f60b8cd370675d308e0ec21885d9daaa7"
+            },
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf",
+              "bytes": 43836407744,
+              "sha256": "d4634e6d84f0ebb0940be15c90d3790bf6464e3dea3a1cddc567dc0e83ad8833"
+            }
+          ],
+          "quantization": "UD-IQ4_XS (installed three-shard revision)",
+          "publisher": "unsloth",
+          "license": "qwen-community-1.0",
+          "bytes": 93682584224,
+          "source": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/tree/766911a6b7369840a91dbcd95f9f997acaab6cd6",
+          "local_identity": "Three prior installer SHA-256 receipts matched this Hub manifest. No new full-file hash pass.",
+          "minimum_cpu_offload_bytes_at_16gib": 77308021408,
+          "minimum_additional_disk_bytes_if_absent": 93682584224
+        },
+        {
+          "quantization": "UD-IQ4_XS",
+          "publisher": "unsloth",
+          "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+          "revision": "f5d175de2cf7f720d45d6064019a81fcf056e986",
+          "license": "qwen-community-1.0",
+          "bytes": 93672359738,
+          "files": [
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00004.gguf",
+              "bytes": 10946618,
+              "sha256": "93ff23a08e5cd7501f24fa16f5b415d5807d0175e04edd3ed6a7a41b601a4eef"
+            },
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00004.gguf",
+              "bytes": 49604491008,
+              "sha256": "13d5dc8b93d039e4cfade5a9af7037f10c97f7ec4e53f75bd2e9ae34aae54aeb"
+            },
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00004.gguf",
+              "bytes": 15256783680,
+              "sha256": "f6b9b5934908a2043732269dd740155d0f921d0763a1dcdd3452246311651f87"
+            },
+            {
+              "path": "UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00004-of-00004.gguf",
+              "bytes": 28800138432,
+              "sha256": "5de8b5dbf89409acc39468decafd4a4a95b13c29d88a14b0356107897829ec36"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/tree/f5d175de2cf7f720d45d6064019a81fcf056e986",
+          "minimum_cpu_offload_bytes_at_16gib": 77297796922,
+          "minimum_additional_disk_bytes_if_absent": 93672359738
+        },
+        {
+          "quantization": "UD-Q4_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+          "revision": "f5d175de2cf7f720d45d6064019a81fcf056e986",
+          "license": "qwen-community-1.0",
+          "bytes": 111334654778,
+          "files": [
+            {
+              "path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+              "bytes": 10946618,
+              "sha256": "acc44040f74d0e55fb89c3967056cce5dbda1bcc52e909c3ba6fc72b5e9c0858"
+            },
+            {
+              "path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+              "bytes": 49720539552,
+              "sha256": "45792ae869072d8229384c51c7c73dd959e191505252b41dd71852d9746f5ce4"
+            },
+            {
+              "path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+              "bytes": 32803030176,
+              "sha256": "8c76e79d444b16a663d9c8db54e585ed3b1da13eebd2619c37b0c355da803c82"
+            },
+            {
+              "path": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+              "bytes": 28800138432,
+              "sha256": "5de8b5dbf89409acc39468decafd4a4a95b13c29d88a14b0356107897829ec36"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/tree/f5d175de2cf7f720d45d6064019a81fcf056e986",
+          "minimum_cpu_offload_bytes_at_16gib": 94960091962,
+          "minimum_additional_disk_bytes_if_absent": 111334654778
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 907542944,
+          "sha256": "2e788f8c511d8093c7b43cb87b2fd7e14228340318057f8fb20c86df2efe2355"
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "bytes": 904004000,
+          "sha256": "1f7b7f0b984cf065c604360c29c8098362ed61b290db0ff12c6f360bb1a8a980"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 805306368,
+      "kv_assumption": "FP16 dense K+V for the full-attention layers only; sparse indices, recurrent state and MTP are extra.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "SWE-bench Pro",
+          "candidate_score": 62.5,
+          "opus_4_6_score": 53.4,
+          "settings": "Publisher compared Claude Code at temperature 1.0, top_p .95, 256K context against an externally reported Opus 4.6 Max score. Qwen corrected problematic tasks; identical harness/data across both scores is unverified.",
+          "source": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/812d96e10a0dd82b69d749e68693698cf6c36daa/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [
+        "unsloth-ud-iq4_xs",
+        "qwen3.8-flash-next-unsloth-ud-iq4_xs"
+      ],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "qwen4exp",
+        "registered_name_in_installed_library": true,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "preserve_existing",
+      "experiment_gate": "Keep the currently selected deployment; use its actual acceptance/throughput record as calibration."
+    },
+    {
+      "id": "google/gemma-4-26B-A4B-it",
+      "name": "gemma-4-26B-A4B-it",
+      "family": "Gemma",
+      "generation": "Gemma 4",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+      "source": "https://huggingface.co/google/gemma-4-26B-A4B-it/blob/4d7ae4984b7db7de8f8457170b3f1a419ee76d52/README.md",
+      "config_source": "https://huggingface.co/google/gemma-4-26B-A4B-it/blob/4d7ae4984b7db7de8f8457170b3f1a419ee76d52/config.json",
+      "repository_created_at": "2026-03-11T21:25:57.000Z",
+      "license": "apache-2.0",
+      "license_source": "https://ai.google.dev/gemma/docs/gemma_4_license",
+      "parameters": 25805936206,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 25805936206,
+      "active_parameters": 3800000000,
+      "architecture": "gemma4_text",
+      "publisher_context_tokens": 262144,
+      "status": "candidate",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Official QAT weights are a plausible single-card test after reserving KV and scratch space. Text-only comparison excludes the vision projector. Kernel support and tool quality require a probe on this V100.",
+      "quantizations": [
+        {
+          "quantization": "q4_0",
+          "publisher": "google",
+          "repo": "google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+          "revision": "d1c082be9cf3c8a514acf63b8761f4b41935842e",
+          "license": "apache-2.0",
+          "bytes": 14439363584,
+          "files": [
+            {
+              "path": "gemma-4-26B_q4_0-it.gguf",
+              "bytes": 14439363584,
+              "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d"
+            }
+          ],
+          "source": "https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/tree/d1c082be9cf3c8a514acf63b8761f4b41935842e",
+          "minimum_cpu_offload_bytes_at_16gib": 0,
+          "minimum_additional_disk_bytes_if_absent": 14439363584
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "gemma-4-26B-it-mmproj.gguf",
+          "bytes": 1194828160,
+          "sha256": "a359953a076b877db30c31dbbb4c6d93b4a6e017ee5db5784247e4d4c0dd4f3b"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 880803840,
+      "kv_assumption": "Separate FP16 K and V, compact 1,024-token sliding windows, one context. Backend-specific sharing can lower allocation; full-window allocation increases it.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "LiveCodeBench v6",
+          "candidate_score": 77.1,
+          "opus_4_6_score": null,
+          "settings": "Publisher table for Gemma 4. No matched Opus score in the table.",
+          "source": "https://huggingface.co/google/gemma-4-26B-A4B-it/blob/4d7ae4984b7db7de8f8457170b3f1a419ee76d52/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "gemma4",
+        "registered_name_in_installed_library": true,
+        "header_probe": {
+          "model": "google/gemma-4-26B-A4B-it",
+          "artifact": "gemma-4-26B_q4_0-it.gguf",
+          "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+          "revision": "d1c082be9cf3c8a514acf63b8761f4b41935842e",
+          "architecture": "gemma4",
+          "tensor_count": 658,
+          "logical_parameters": 25233142046,
+          "header_bytes_parsed": 15823921,
+          "response_range": "bytes 0-16777215/14439363584",
+          "model_bytes_retained": 0
+        },
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "first_single_gpu_candidate",
+      "experiment_gate": "Reserve an idle V100 window after P0 handoff. Start one slot, 4K, text-only and upstream QAT. Confirm actual GPU placement, output, tool handling, thermal guard and free RAM. Then test fixed workloads at 16K and 32K; preserve the owner-selected primary and restore existing V100 profile afterward."
+    },
+    {
+      "id": "google/gemma-4-31B-it",
+      "name": "gemma-4-31B-it",
+      "family": "Gemma",
+      "generation": "Gemma 4",
+      "revision": "842da3794eaa0b77d5f08bae87a17459d91ff475",
+      "source": "https://huggingface.co/google/gemma-4-31B-it/blob/842da3794eaa0b77d5f08bae87a17459d91ff475/README.md",
+      "config_source": "https://huggingface.co/google/gemma-4-31B-it/blob/842da3794eaa0b77d5f08bae87a17459d91ff475/config.json",
+      "repository_created_at": "2026-03-11T18:22:36.000Z",
+      "license": "apache-2.0",
+      "license_source": "https://ai.google.dev/gemma/docs/gemma_4_license",
+      "parameters": 31273088876,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 31273088876,
+      "active_parameters": 30700000000,
+      "architecture": "gemma4_text",
+      "publisher_context_tokens": 262144,
+      "status": "candidate",
+      "deployment_decision": "owner_selects",
+      "execution_note": "The official 4-bit weights exceed the physical 16 GiB card before KV, scratch or a vision projector. CPU offload requires a measured quality and performance trial.",
+      "quantizations": [
+        {
+          "quantization": "q4_0",
+          "publisher": "google",
+          "repo": "google/gemma-4-31B-it-qat-q4_0-gguf",
+          "revision": "59dde24573e7e61570dba08b18a2e1fe246955ed",
+          "license": "apache-2.0",
+          "bytes": 17651001568,
+          "files": [
+            {
+              "path": "gemma-4-31B_q4_0-it.gguf",
+              "bytes": 17651001568,
+              "sha256": "179cfb99212709597eae5929112cfca677e1bbf566178b479ae1da0c4772874b"
+            }
+          ],
+          "source": "https://huggingface.co/google/gemma-4-31B-it-qat-q4_0-gguf/tree/59dde24573e7e61570dba08b18a2e1fe246955ed",
+          "minimum_cpu_offload_bytes_at_16gib": 3994347744,
+          "minimum_additional_disk_bytes_if_absent": 17651001568
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "gemma-4-31B-it-mmproj.gguf",
+          "bytes": 1200726368,
+          "sha256": "6bd60bdb958548b4093196d38744b0f2290c12503a3fddd7486bffa9c5eb07a4"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 3523215360,
+      "kv_assumption": "Separate FP16 K and V, compact 1,024-token sliding windows, one context. Backend-specific sharing can lower allocation; full-window allocation increases it.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "LiveCodeBench v6",
+          "candidate_score": 80,
+          "opus_4_6_score": null,
+          "settings": "Publisher table for Gemma 4. No matched Opus score in the table.",
+          "source": "https://huggingface.co/google/gemma-4-31B-it/blob/842da3794eaa0b77d5f08bae87a17459d91ff475/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "gemma4",
+        "registered_name_in_installed_library": true,
+        "header_probe": {
+          "model": "google/gemma-4-31B-it",
+          "artifact": "gemma-4-31B_q4_0-it.gguf",
+          "sha256": "179cfb99212709597eae5929112cfca677e1bbf566178b479ae1da0c4772874b",
+          "revision": "59dde24573e7e61570dba08b18a2e1fe246955ed",
+          "architecture": "gemma4",
+          "tensor_count": 833,
+          "logical_parameters": 30697345596,
+          "header_bytes_parsed": 15833434,
+          "response_range": "bytes 0-16777215/17651001568",
+          "model_bytes_retained": 0
+        },
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "partial_offload_only",
+      "experiment_gate": "Known architecture; 16.44 GiB weights alone exceed the card. Advance only if measured RAM headroom, CPU bandwidth and the single-GPU 26B baseline justify an offload trial."
+    },
+    {
+      "id": "thinkingmachines/Inkling-2-Mini",
+      "name": "Inkling-2-Mini",
+      "family": "Inkling",
+      "generation": "Inkling 2",
+      "revision": "7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6",
+      "source": "https://huggingface.co/thinkingmachines/Inkling-2-Mini/blob/7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6/README.md",
+      "config_source": "https://huggingface.co/thinkingmachines/Inkling-2-Mini/blob/7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6/config.json",
+      "repository_created_at": "2026-11-17T00:26:57.000Z",
+      "license": "apache-2.0",
+      "license_source": "https://huggingface.co/thinkingmachines/Inkling-2-Mini/blob/7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6/README.md",
+      "parameters": 26400000000,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 26388646440,
+      "active_parameters": 3400000000,
+      "architecture": "inkling2_loop_text",
+      "publisher_context_tokens": 1048576,
+      "status": "candidate",
+      "deployment_decision": "owner_selects",
+      "execution_note": "The official mixed NVFP4/MXFP8 footprint is about 20 GB. Three passes through the central blocks give 5.4B effective weight uses/token. GGUF requires loop-aware kernels; narrow quantizations need independent quality checks.",
+      "quantizations": [
+        {
+          "quantization": "UD-IQ4_XS",
+          "publisher": "unsloth",
+          "repo": "unsloth/Inkling-2-Mini-GGUF",
+          "revision": "7005eb3bf10e03aca23449baac79fdd0d105dd31",
+          "license": "apache-2.0",
+          "bytes": 15733756512,
+          "files": [
+            {
+              "path": "Inkling-2-Mini-UD-IQ4_XS.gguf",
+              "bytes": 15733756512,
+              "sha256": "374970bf6f151fc50da49419751c3e77b82e373a3b9445ded617bd386cd12163"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/tree/7005eb3bf10e03aca23449baac79fdd0d105dd31",
+          "minimum_cpu_offload_bytes_at_16gib": 0,
+          "minimum_additional_disk_bytes_if_absent": 15733756512
+        },
+        {
+          "quantization": "UD-Q3_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/Inkling-2-Mini-GGUF",
+          "revision": "7005eb3bf10e03aca23449baac79fdd0d105dd31",
+          "license": "apache-2.0",
+          "bytes": 13631779296,
+          "files": [
+            {
+              "path": "Inkling-2-Mini-UD-Q3_K_XL.gguf",
+              "bytes": 13631779296,
+              "sha256": "e2d03e8c92ac21cff0e3309b95f40dfd27d1825184f0d2bc09db249797273639"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/tree/7005eb3bf10e03aca23449baac79fdd0d105dd31",
+          "minimum_cpu_offload_bytes_at_16gib": 0,
+          "minimum_additional_disk_bytes_if_absent": 13631779296
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 641805760,
+          "sha256": "2c165c78790e78a3f45a2d1e9e931083e52ee69d45ff2a0dc9c281fdf1a666e7"
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "bytes": 639348160,
+          "sha256": "3bff75ffeb2d6e0371ba7bd42e30d26a7d98aea681fa44b03b5a20891cfa2c5f"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 1241513984,
+      "kv_assumption": "Assumes the 12 central layers execute three times and each effective pass has independent K/V: 40 sliding and 8 global layers, 8 heads \u00d7 128, FP16. Check the installed kernel.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "DeepSWE v1.1",
+          "candidate_score": 48.2,
+          "opus_4_6_score": null,
+          "settings": "Thinking Machines used mini-swe-agent v2.4.6. Their table reports Qwen3.8-27B at 42.2.",
+          "source": "https://thinkingmachines.ai/news/inkling-2-mini/"
+        },
+        {
+          "origin": "publisher",
+          "benchmark": "Terminal-Bench 2.1",
+          "candidate_score": 71.6,
+          "opus_4_6_score": null,
+          "settings": "Publisher run with pi v0.83.0. Terminal-Bench measured Opus separately under different harnesses.",
+          "source": "https://thinkingmachines.ai/news/inkling-2-mini/"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "inkling2_loop",
+        "registered_name_in_installed_library": false,
+        "header_probe": {
+          "model": "thinkingmachines/Inkling-2-Mini",
+          "artifact": "Inkling-2-Mini-UD-IQ4_XS.gguf",
+          "sha256": "374970bf6f151fc50da49419751c3e77b82e373a3b9445ded617bd386cd12163",
+          "revision": "7005eb3bf10e03aca23449baac79fdd0d105dd31",
+          "architecture": "inkling2_loop",
+          "tensor_count": 744,
+          "logical_parameters": 26070390272,
+          "header_bytes_parsed": 11979984,
+          "response_range": "bytes 0-16777215/15733756512",
+          "model_bytes_retained": 0
+        },
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "blocked_runtime",
+      "experiment_gate": "The checked binary lacks the inkling2_loop architecture. A separate verified loop-capable runtime is required. Approximate 32K KV leaves little headroom at IQ4_XS."
+    },
+    {
+      "id": "zai-org/GLM-5.3-Flash",
+      "name": "GLM-5.3-Flash",
+      "family": "GLM",
+      "generation": "GLM-5.3",
+      "revision": "46a050bec13002ad29ee795c16e61cf4fa3c4a9c",
+      "source": "https://huggingface.co/zai-org/GLM-5.3-Flash/blob/46a050bec13002ad29ee795c16e61cf4fa3c4a9c/README.md",
+      "config_source": "https://huggingface.co/zai-org/GLM-5.3-Flash/blob/46a050bec13002ad29ee795c16e61cf4fa3c4a9c/config.json",
+      "repository_created_at": "2026-08-25T06:43:14.000Z",
+      "license": "mit",
+      "license_source": "https://huggingface.co/zai-org/GLM-5.3-Flash/blob/46a050bec13002ad29ee795c16e61cf4fa3c4a9c/LICENSE",
+      "parameters": 321323031390,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 321323031390,
+      "active_parameters": 18000000000,
+      "architecture": "glm5_next_text",
+      "publisher_context_tokens": 1048576,
+      "status": "memory_infeasible",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Even the inspected IQ4_XS weights exceed 96 GiB host RAM plus 32 GiB nominal dual VRAM. Storage fits separately; SSD demand paging is unsuitable for this operating profile.",
+      "quantizations": [
+        {
+          "quantization": "UD-IQ4_XS",
+          "publisher": "unsloth",
+          "repo": "unsloth/GLM-5.3-Flash-GGUF",
+          "revision": "a38483c8cd5df544f53d70fb281afe97369d5ab6",
+          "license": "mit",
+          "bytes": 156822111200,
+          "files": [
+            {
+              "path": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00001-of-00005.gguf",
+              "bytes": 9429984,
+              "sha256": "c2f3b6ab98d3df844f322ea376059202d2eaeedcee1f0eff455345b86a137dbd"
+            },
+            {
+              "path": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00002-of-00005.gguf",
+              "bytes": 49989334176,
+              "sha256": "7d64cf0395672c4322012841abec502ea7e20518299bb5e3069003f06f9e6de9"
+            },
+            {
+              "path": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00003-of-00005.gguf",
+              "bytes": 49607025280,
+              "sha256": "7c2c63c9c30f8060428fdf2ac935dbf2ee9ad8f771d62b6ae47a7f7f2c1520e7"
+            },
+            {
+              "path": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00004-of-00005.gguf",
+              "bytes": 49486530144,
+              "sha256": "06c90f191871317c92dd9d25a353b687aed44c50f3ac6c713e9fe410bc2d26dd"
+            },
+            {
+              "path": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00005-of-00005.gguf",
+              "bytes": 7729791616,
+              "sha256": "66ebf9ec85e04d3f44af674ae4f694acbc89cc53db75e42f2f4d3646bf321c0d"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/GLM-5.3-Flash-GGUF/tree/a38483c8cd5df544f53d70fb281afe97369d5ab6",
+          "minimum_cpu_offload_bytes_at_16gib": 139642242016,
+          "minimum_additional_disk_bytes_if_absent": 156822111200
+        },
+        {
+          "quantization": "UD-Q4_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/GLM-5.3-Flash-GGUF",
+          "revision": "a38483c8cd5df544f53d70fb281afe97369d5ab6",
+          "license": "mit",
+          "bytes": 199707321472,
+          "files": [
+            {
+              "path": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00001-of-00006.gguf",
+              "bytes": 9429984,
+              "sha256": "b59c030090f012b38213bc8c4f78ce10767f2693d730d0dbcd3dc16a5f69e2bc"
+            },
+            {
+              "path": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00002-of-00006.gguf",
+              "bytes": 49198039200,
+              "sha256": "d3ecb6ff3957a99878f9a0352676a0913748a431a9a4a1b1ffa5ade9b8947a74"
+            },
+            {
+              "path": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00003-of-00006.gguf",
+              "bytes": 49988626304,
+              "sha256": "328073c004e7c5395b208247feed26089db247b94dd8fa4ab0f2569d86c1d770"
+            },
+            {
+              "path": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00004-of-00006.gguf",
+              "bytes": 48700701344,
+              "sha256": "6803ab7effa6da4a0b02c9c7865952fdd6c5b2e10e53903348da369e90bd13f9"
+            },
+            {
+              "path": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00005-of-00006.gguf",
+              "bytes": 49026026752,
+              "sha256": "852f3df9dacde3d196796f9fe738468e80c8701555ff0a8c30bc010fb8974dd8"
+            },
+            {
+              "path": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00006-of-00006.gguf",
+              "bytes": 2784497888,
+              "sha256": "c6ba510fafc1e12cc0addbc361a329c0c592ab96980098e7e25e107d8faa983e"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/GLM-5.3-Flash-GGUF/tree/a38483c8cd5df544f53d70fb281afe97369d5ab6",
+          "minimum_cpu_offload_bytes_at_16gib": 182527452288,
+          "minimum_additional_disk_bytes_if_absent": 199707321472
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 1164010176,
+          "sha256": "82b7adb44411dbb298b1c689567804e5ed0790d80f308ed8b5b6b8ac0527d2ac"
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "bytes": 1128047296,
+          "sha256": "922b809664d6a89cc1e40bfeaa63618000edc6651baf4082ce0718a784adf947"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": null,
+      "kv_assumption": "Sparse/looped attention or excluded checkpoint. A full runtime allocation measurement is needed.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "external_publisher",
+          "benchmark": "SWE-bench Pro",
+          "candidate_score": 59.7,
+          "opus_4_6_score": null,
+          "settings": "NVIDIA comparative results; compare settings before drawing parity conclusions.",
+          "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/blob/fb0ee0bc6b3f70342afd8d84cb80dbadbaa8a1fe/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "glm5-next",
+        "registered_name_in_installed_library": false,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "excluded_memory",
+      "experiment_gate": "Q4 text weights exceed even nominal combined memory before essential runtime allocations."
+    },
+    {
+      "id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "name": "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "family": "Nemotron",
+      "generation": "Nemotron 3.5 Super VL",
+      "revision": "fb0ee0bc6b3f70342afd8d84cb80dbadbaa8a1fe",
+      "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/blob/fb0ee0bc6b3f70342afd8d84cb80dbadbaa8a1fe/README.md",
+      "config_source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/blob/fb0ee0bc6b3f70342afd8d84cb80dbadbaa8a1fe/config.json",
+      "repository_created_at": "2026-10-12T15:32:06.000Z",
+      "license": "openmdw-1.1",
+      "license_source": "https://openmdw.ai/license/1-1/",
+      "parameters": 124453395976,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 124453395976,
+      "active_parameters": 12000000000,
+      "architecture": "nemotron_h",
+      "publisher_context_tokens": 1048576,
+      "status": "memory_pressure",
+      "deployment_decision": "owner_selects",
+      "execution_note": "The Q4 text weights require substantial host RAM. Existing primary memory occupancy precludes assuming they coexist. Hybrid Mamba/attention state and optional vision encoder need independent validation.",
+      "quantizations": [
+        {
+          "quantization": "UD-Q4_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+          "revision": "75a5829055f69a0359085ae6bbd0a81b60bc05c6",
+          "license": "openmdw-1.1",
+          "bytes": 86907243432,
+          "files": [
+            {
+              "path": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q4_K_XL-00001-of-00003.gguf",
+              "bytes": 7874568,
+              "sha256": "04e0b45e70ab5c86c6b5d3b0133cc35fc10861015bac7dcff867dcf115dc81c5"
+            },
+            {
+              "path": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q4_K_XL-00002-of-00003.gguf",
+              "bytes": 49851272832,
+              "sha256": "868a7fa360ff10bc7e072e4bb4f8771b280ca35a087a55125bc21f7ebb9962b7"
+            },
+            {
+              "path": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q4_K_XL-00003-of-00003.gguf",
+              "bytes": 37048096032,
+              "sha256": "684abb5b5306b18a046ee69e3375a0e863d14d265e0ffa52c33442d375d08b7d"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/tree/75a5829055f69a0359085ae6bbd0a81b60bc05c6",
+          "minimum_cpu_offload_bytes_at_16gib": 69995809704,
+          "minimum_additional_disk_bytes_if_absent": 86907243432
+        },
+        {
+          "quantization": "UD-Q3_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+          "revision": "75a5829055f69a0359085ae6bbd0a81b60bc05c6",
+          "license": "openmdw-1.1",
+          "bytes": 65761541032,
+          "files": [
+            {
+              "path": "UD-Q3_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q3_K_XL-00001-of-00003.gguf",
+              "bytes": 7874568,
+              "sha256": "b2a570b4fc2e2e0ef3657937d6d4689c5d9647125e5fe22e31426789cf4e02fa"
+            },
+            {
+              "path": "UD-Q3_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q3_K_XL-00002-of-00003.gguf",
+              "bytes": 49225290592,
+              "sha256": "94827cf22f98854a68127fd4a18cca136951d1181bba8c21a7d9dcd6d3c68674"
+            },
+            {
+              "path": "UD-Q3_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q3_K_XL-00003-of-00003.gguf",
+              "bytes": 16528375872,
+              "sha256": "c2245a2faa51dc1aabcb6b58b7c311bc06ebada10345057e106ac94fcfcef8ce"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF/tree/75a5829055f69a0359085ae6bbd0a81b60bc05c6",
+          "minimum_cpu_offload_bytes_at_16gib": 48850107304,
+          "minimum_additional_disk_bytes_if_absent": 65761541032
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 1733695840,
+          "sha256": "9c09381a5744d0ea9a30048c94922f6f25ee0d63842de9c45779eca4fb5924d9"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 268435456,
+      "kv_assumption": "FP16 K and V in standard attention layers; excludes Mamba recurrent buffers, MoE scratch, MTP, vision and concurrency.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "SWE-bench Pro",
+          "candidate_score": 51.78,
+          "opus_4_6_score": null,
+          "settings": "NVIDIA model card comparison table, BF16 checkpoint. No identical local quantized/Opus run.",
+          "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/blob/fb0ee0bc6b3f70342afd8d84cb80dbadbaa8a1fe/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "nemotron_h_moe",
+        "registered_name_in_installed_library": true,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "defer_host_ram_and_kernel_validation",
+      "experiment_gate": "Weight residency exceeds one V100. A separate resource window is needed for this architecture and offload mix; do not take memory from the live 5080 lane."
+    },
+    {
+      "id": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+      "name": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+      "family": "Nemotron",
+      "generation": "Nemotron 3.5 Lightning",
+      "revision": "a9904d24bcc1d289a1950fa9d2b978c47cf903b9",
+      "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16/blob/a9904d24bcc1d289a1950fa9d2b978c47cf903b9/README.md",
+      "config_source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16/blob/a9904d24bcc1d289a1950fa9d2b978c47cf903b9/config.json",
+      "repository_created_at": "2026-08-01T06:55:21.000Z",
+      "license": "openmdw-1.1",
+      "license_source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16/blob/a9904d24bcc1d289a1950fa9d2b978c47cf903b9/LICENSE",
+      "parameters": 31577937344,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 31577937344,
+      "active_parameters": 3000000000,
+      "architecture": "nemotron_h",
+      "publisher_context_tokens": 262144,
+      "status": "candidate",
+      "deployment_decision": "owner_selects",
+      "execution_note": "The Q4 checkpoint exceeds 16 GiB before KV. Requires partial CPU placement and Nemotron-H hybrid kernels. Agentic coding quality remains an open local test.",
+      "quantizations": [
+        {
+          "quantization": "UD-Q4_K_M",
+          "publisher": "unsloth",
+          "repo": "unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF",
+          "revision": "f2d3fe3694501008786e81e5f20360cbf715496a",
+          "license": "openmdw-1.1",
+          "bytes": 25266255936,
+          "files": [
+            {
+              "path": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q4_K_M.gguf",
+              "bytes": 25266255936,
+              "sha256": "edcb5d4650796ed2fb412498de6f83b585862312c747ddb74f0ea04b22206181"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/tree/f2d3fe3694501008786e81e5f20360cbf715496a",
+          "minimum_cpu_offload_bytes_at_16gib": 8287713344,
+          "minimum_additional_disk_bytes_if_absent": 25266255936
+        },
+        {
+          "quantization": "UD-Q3_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF",
+          "revision": "f2d3fe3694501008786e81e5f20360cbf715496a",
+          "license": "openmdw-1.1",
+          "bytes": 21235202112,
+          "files": [
+            {
+              "path": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-UD-Q3_K_XL.gguf",
+              "bytes": 21235202112,
+              "sha256": "b7b30d1f27e34be3757808840bb2daf9e465e99a9bbdc50d649a31ade219bc82"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF/tree/f2d3fe3694501008786e81e5f20360cbf715496a",
+          "minimum_cpu_offload_bytes_at_16gib": 4256659520,
+          "minimum_additional_disk_bytes_if_absent": 21235202112
+        }
+      ],
+      "optional_vision_projectors": [],
+      "fp16_attention_kv_32k_bytes": 201326592,
+      "kv_assumption": "FP16 K and V in standard attention layers; excludes Mamba recurrent buffers, MoE scratch, MTP, vision and concurrency.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [
+        {
+          "origin": "publisher",
+          "benchmark": "Terminal-Bench 2.1",
+          "candidate_score": 24.58,
+          "opus_4_6_score": null,
+          "settings": "NVIDIA model card, released BF16 model. Agent harnesses differ from the independent Opus reference.",
+          "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16/blob/a9904d24bcc1d289a1950fa9d2b978c47cf903b9/README.md"
+        }
+      ],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "nemotron_h_moe",
+        "registered_name_in_installed_library": true,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "defer_host_ram_and_kernel_validation",
+      "experiment_gate": "Weight residency exceeds one V100. A separate resource window is needed for this architecture and offload mix; do not take memory from the live 5080 lane."
+    },
+    {
+      "id": "mistralai/Mistral-Small-4-119B-2603",
+      "name": "Mistral-Small-4-119B-2603",
+      "family": "Mistral",
+      "generation": "Mistral Small 4",
+      "revision": "a11f36bebf709121056b1dbcc943d1c6afbe494d",
+      "source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603/blob/a11f36bebf709121056b1dbcc943d1c6afbe494d/README.md",
+      "config_source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603/blob/a11f36bebf709121056b1dbcc943d1c6afbe494d/config.json",
+      "repository_created_at": "2026-01-23T13:14:14.000Z",
+      "license": "apache-2.0",
+      "license_source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603/blob/a11f36bebf709121056b1dbcc943d1c6afbe494d/README.md",
+      "parameters": 119401317376,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 119401317376,
+      "active_parameters": 6500000000,
+      "architecture": "mistral4",
+      "publisher_context_tokens": 262144,
+      "status": "memory_pressure",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Separate current Small branch. Its Q4 weights need substantial system RAM and unavailable benchmark evidence for an additional frontier candidate. Medium 3.5 was deprecated in favour of Large 4.",
+      "quantizations": [
+        {
+          "quantization": "UD-Q4_K_M",
+          "publisher": "unsloth",
+          "repo": "unsloth/Mistral-Small-4-119B-2603-GGUF",
+          "revision": "bd93c721735aa32c035c0f19e738cb3371fd56ff",
+          "license": "apache-2.0",
+          "bytes": 73763180544,
+          "files": [
+            {
+              "path": "UD-Q4_K_M/Mistral-Small-4-119B-2603-UD-Q4_K_M-00001-of-00003.gguf",
+              "bytes": 7875616,
+              "sha256": "fd3cc46082e4e64eb623eea4611b02583d1de4c20a59411bf1820925d5117dfe"
+            },
+            {
+              "path": "UD-Q4_K_M/Mistral-Small-4-119B-2603-UD-Q4_K_M-00002-of-00003.gguf",
+              "bytes": 49299298464,
+              "sha256": "f357d8dc029824fa4515ae60d7a8b7e108546763614f16c00a1b4ea0cd94145c"
+            },
+            {
+              "path": "UD-Q4_K_M/Mistral-Small-4-119B-2603-UD-Q4_K_M-00003-of-00003.gguf",
+              "bytes": 24456006464,
+              "sha256": "9dc960d67fb1ef23029d24878b4cf6c63b743ab26cf9137402549591bd770c50"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Mistral-Small-4-119B-2603-GGUF/tree/bd93c721735aa32c035c0f19e738cb3371fd56ff",
+          "minimum_cpu_offload_bytes_at_16gib": 57338286080,
+          "minimum_additional_disk_bytes_if_absent": 73763180544
+        },
+        {
+          "quantization": "UD-IQ4_XS",
+          "publisher": "unsloth",
+          "repo": "unsloth/Mistral-Small-4-119B-2603-GGUF",
+          "revision": "bd93c721735aa32c035c0f19e738cb3371fd56ff",
+          "license": "apache-2.0",
+          "bytes": 58126815232,
+          "files": [
+            {
+              "path": "UD-IQ4_XS/Mistral-Small-4-119B-2603-UD-IQ4_XS-00001-of-00003.gguf",
+              "bytes": 7875616,
+              "sha256": "71bf2aea96ca44e5c33010fe7c6574c58f287b2019a05ccd2a9225e5380fe815"
+            },
+            {
+              "path": "UD-IQ4_XS/Mistral-Small-4-119B-2603-UD-IQ4_XS-00002-of-00003.gguf",
+              "bytes": 49768759616,
+              "sha256": "743d5b1361149be0b03bcf5eaa6894505bf56f38f13bbc5a45e73ab05d21e291"
+            },
+            {
+              "path": "UD-IQ4_XS/Mistral-Small-4-119B-2603-UD-IQ4_XS-00003-of-00003.gguf",
+              "bytes": 8350180000,
+              "sha256": "589f0c738163c05690afd0fdbfed6c5180ead05a50eda04dce12e0b442f88e4f"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/Mistral-Small-4-119B-2603-GGUF/tree/bd93c721735aa32c035c0f19e738cb3371fd56ff",
+          "minimum_cpu_offload_bytes_at_16gib": 41701920768,
+          "minimum_additional_disk_bytes_if_absent": 58126815232
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 866671328,
+          "sha256": "2f1f27544c4b4074b28edb8413af92a9111d7166bbc0944fd27db56adc054d0b"
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "bytes": 857078496,
+          "sha256": "8afb53096537664e248a0b4a9240c25677bb0f8a8cb5a5aad3cd1d608776a4e7"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": 754974720,
+      "kv_assumption": "One FP16 compressed MLA cache per token per layer, assuming 256 latent + 64 rotary values in all 36 layers. Backend expansion may use more.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "mistral4",
+        "registered_name_in_installed_library": true,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "defer_host_ram_and_kernel_validation",
+      "experiment_gate": "Weight residency exceeds one V100. A separate resource window is needed for this architecture and offload mix; do not take memory from the live 5080 lane."
+    },
+    {
+      "id": "MiniMaxAI/MiniMax-M3.1-Flash",
+      "name": "MiniMax-M3.1-Flash",
+      "family": "MiniMax",
+      "generation": "MiniMax M3.1",
+      "revision": "ce7f4df87d2e05262f5775f373dac4772f134041",
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash/blob/ce7f4df87d2e05262f5775f373dac4772f134041/README.md",
+      "config_source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash/blob/ce7f4df87d2e05262f5775f373dac4772f134041/config.json",
+      "repository_created_at": "2026-10-17T06:37:50.000Z",
+      "license": "minimax-community",
+      "license_source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash/blob/ce7f4df87d2e05262f5775f373dac4772f134041/LICENSE",
+      "parameters": 428000000000,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 220490854016,
+      "active_parameters": 23000000000,
+      "architecture": "minimax_m3_vl",
+      "publisher_context_tokens": 1000000,
+      "status": "memory_infeasible",
+      "deployment_decision": "owner_selects",
+      "execution_note": "The publisher reports approximately 428B logical parameters; its packed tensors occupy fewer stored elements. The inspected Q4/Q3 footprints exceed combined nominal host and GPU RAM.",
+      "quantizations": [
+        {
+          "quantization": "UD-Q4_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/MiniMax-M3.1-Flash-GGUF",
+          "revision": "b17b7f5459c0b8f127ea12ee774409b282521d6a",
+          "license": "minimax-community",
+          "bytes": 249402105310,
+          "files": [
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00001-of-00007.gguf",
+              "bytes": 8243070,
+              "sha256": "33859402ee4d2e195ca0a2556310db7b8da0a14f6104917cd5203288f73f3030"
+            },
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00002-of-00007.gguf",
+              "bytes": 48922385120,
+              "sha256": "bbd9f034daeeb857c2435da1153c6f3b9e11e28e0325a3048c428f26f53d0c00"
+            },
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00003-of-00007.gguf",
+              "bytes": 48922385152,
+              "sha256": "18cfd1957e6593af07e0c8045d1e37825bb6c1413ff50d99aea5a060ace537f4"
+            },
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00004-of-00007.gguf",
+              "bytes": 48922385152,
+              "sha256": "520e886b521cb0f77cfdcdc88e8934be0cd55de01209cad92667bf85cfdf595e"
+            },
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00005-of-00007.gguf",
+              "bytes": 48922385152,
+              "sha256": "c761ad19c980a67946a963faebd0175d5751cd64ccdec1bb6274810d3156013f"
+            },
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00006-of-00007.gguf",
+              "bytes": 49985658336,
+              "sha256": "367e01f928ed33c9d994b7fe22cb5e623b2bda9b67984b418f4367873c082436"
+            },
+            {
+              "path": "UD-Q4_K_XL/MiniMax-M3.1-Flash-UD-Q4_K_XL-00007-of-00007.gguf",
+              "bytes": 3718663328,
+              "sha256": "4d67d5144fb734820da7ba78aa58bfb0408dacfcf8601507b71e3e60310f74ef"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/MiniMax-M3.1-Flash-GGUF/tree/b17b7f5459c0b8f127ea12ee774409b282521d6a",
+          "minimum_cpu_offload_bytes_at_16gib": 232222236126,
+          "minimum_additional_disk_bytes_if_absent": 249402105310
+        },
+        {
+          "quantization": "UD-Q3_K_XL",
+          "publisher": "unsloth",
+          "repo": "unsloth/MiniMax-M3.1-Flash-GGUF",
+          "revision": "b17b7f5459c0b8f127ea12ee774409b282521d6a",
+          "license": "minimax-community",
+          "bytes": 193951346788,
+          "files": [
+            {
+              "path": "UD-Q3_K_XL/MiniMax-M3.1-Flash-UD-Q3_K_XL-00001-of-00005.gguf",
+              "bytes": 8243332,
+              "sha256": "e57b63c9ee901a1f4ed4a0b552da99361249142f9522806e5f7539193a525d92"
+            },
+            {
+              "path": "UD-Q3_K_XL/MiniMax-M3.1-Flash-UD-Q3_K_XL-00002-of-00005.gguf",
+              "bytes": 49990172448,
+              "sha256": "335ff380d2b424e6306535c665ad81ad6dd4fda8e648ed4828c39a3495f8c185"
+            },
+            {
+              "path": "UD-Q3_K_XL/MiniMax-M3.1-Flash-UD-Q3_K_XL-00003-of-00005.gguf",
+              "bytes": 49998407168,
+              "sha256": "d0c1d0f037ff6125fd6d23eef2711616b8e3de66a431c06c0b2e94cad058bf34"
+            },
+            {
+              "path": "UD-Q3_K_XL/MiniMax-M3.1-Flash-UD-Q3_K_XL-00004-of-00005.gguf",
+              "bytes": 49888108768,
+              "sha256": "5d95351a2d858ff6dfeee4c4bbe10b029060ce69b8719474837a34ef7a0e97e2"
+            },
+            {
+              "path": "UD-Q3_K_XL/MiniMax-M3.1-Flash-UD-Q3_K_XL-00005-of-00005.gguf",
+              "bytes": 44066415072,
+              "sha256": "a9efe4231eaca97d87c5882cfe8e8685864be5f91613c066e730588bece3fb5b"
+            }
+          ],
+          "source": "https://huggingface.co/unsloth/MiniMax-M3.1-Flash-GGUF/tree/b17b7f5459c0b8f127ea12ee774409b282521d6a",
+          "minimum_cpu_offload_bytes_at_16gib": 176771477604,
+          "minimum_additional_disk_bytes_if_absent": 193951346788
+        }
+      ],
+      "optional_vision_projectors": [
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 1735294720,
+          "sha256": "8aae10398d53fa7a726199877a07f04f3d371274ae4ce7a1a639af3f0d5124ca"
+        },
+        {
+          "path": "mmproj-F32.gguf",
+          "bytes": 3462299392,
+          "sha256": "071dfe31af3dbdf869674148bcc55ea8e2a0e6010cdfb9412a9fa3f06a75ed98"
+        }
+      ],
+      "fp16_attention_kv_32k_bytes": null,
+      "kv_assumption": "Sparse/looped attention or excluded checkpoint. A full runtime allocation measurement is needed.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": {
+        "gguf_architecture": "minimax-m3",
+        "registered_name_in_installed_library": true,
+        "header_probe": null,
+        "runtime_load_tested_for_this_candidate": false
+      },
+      "experiment_stage": "excluded_memory",
+      "experiment_gate": "Q4 text weights exceed even nominal combined memory before essential runtime allocations."
+    },
+    {
+      "id": "thinkingmachines/Inkling-2-Small",
+      "name": "Inkling-2-Small",
+      "family": "Inkling",
+      "generation": "Inkling 2",
+      "revision": "885d78bfca61a7e9a498e33cfa7ad35850533b8c",
+      "source": "https://huggingface.co/thinkingmachines/Inkling-2-Small/blob/885d78bfca61a7e9a498e33cfa7ad35850533b8c/README.md",
+      "config_source": "https://huggingface.co/thinkingmachines/Inkling-2-Small/blob/885d78bfca61a7e9a498e33cfa7ad35850533b8c/config.json",
+      "repository_created_at": "2026-11-04T19:51:05.000Z",
+      "license": "apache-2.0",
+      "license_source": "https://huggingface.co/thinkingmachines/Inkling-2-Small/blob/885d78bfca61a7e9a498e33cfa7ad35850533b8c/README.md",
+      "parameters": 594050672720,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 594050672720,
+      "active_parameters": null,
+      "architecture": "inkling2",
+      "publisher_context_tokens": 1048576,
+      "status": "over_500b",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Exceeds the ceiling even before generating or loading a local quantization.",
+      "quantizations": [],
+      "optional_vision_projectors": [],
+      "fp16_attention_kv_32k_bytes": null,
+      "kv_assumption": "Sparse/looped attention or excluded checkpoint. A full runtime allocation measurement is needed.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": null,
+      "experiment_stage": "excluded_parameter_limit",
+      "experiment_gate": "No artifact download, weight header probe, or execution."
+    },
+    {
+      "id": "zai-org/GLM-5.3",
+      "name": "GLM-5.3",
+      "family": "GLM",
+      "generation": "GLM-5.3",
+      "revision": "ba32f8c19c8738e2c57c71798c601d477a7bf844",
+      "source": "https://huggingface.co/zai-org/GLM-5.3/blob/ba32f8c19c8738e2c57c71798c601d477a7bf844/README.md",
+      "config_source": "https://huggingface.co/zai-org/GLM-5.3/blob/ba32f8c19c8738e2c57c71798c601d477a7bf844/config.json",
+      "repository_created_at": "2026-08-25T06:42:50.000Z",
+      "license": "glm-5.3",
+      "license_source": "https://huggingface.co/zai-org/GLM-5.3/blob/ba32f8c19c8738e2c57c71798c601d477a7bf844/LICENSE",
+      "parameters": 753329940480,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 753329940480,
+      "active_parameters": 40000000000,
+      "architecture": "glm_moe_dsa",
+      "publisher_context_tokens": 1048576,
+      "status": "over_500b",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Use the separately screened Flash branch for the size-eligible GLM family entry.",
+      "quantizations": [],
+      "optional_vision_projectors": [],
+      "fp16_attention_kv_32k_bytes": null,
+      "kv_assumption": "Sparse/looped attention or excluded checkpoint. A full runtime allocation measurement is needed.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": null,
+      "experiment_stage": "excluded_parameter_limit",
+      "experiment_gate": "No artifact download, weight header probe, or execution."
+    },
+    {
+      "id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "name": "DeepSeek-V4.1-Flash-1017",
+      "family": "DeepSeek",
+      "generation": "DeepSeek V4.1 Flash 1017",
+      "revision": "08c8657f02291e11b6f6b63e0e16014f8e748518",
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/08c8657f02291e11b6f6b63e0e16014f8e748518/README.md",
+      "config_source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/08c8657f02291e11b6f6b63e0e16014f8e748518/config.json",
+      "repository_created_at": "2026-10-17T02:40:38.000Z",
+      "license": "mit",
+      "license_source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/08c8657f02291e11b6f6b63e0e16014f8e748518/LICENSE",
+      "parameters": 763205315794,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": 763205315794,
+      "active_parameters": null,
+      "architecture": "deepseek_v41_text",
+      "publisher_context_tokens": 1048576,
+      "status": "over_500b",
+      "deployment_decision": "owner_selects",
+      "execution_note": "The latest verified Flash 1017 repository already records over 500B stored elements. Its smaller active subset does not satisfy the total-size rule.",
+      "quantizations": [],
+      "optional_vision_projectors": [],
+      "fp16_attention_kv_32k_bytes": null,
+      "kv_assumption": "Sparse/looped attention or excluded checkpoint. A full runtime allocation measurement is needed.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": null,
+      "experiment_stage": "excluded_parameter_limit",
+      "experiment_gate": "No artifact download, weight header probe, or execution."
+    },
+    {
+      "id": "mistralai/Mistral-Large-4-1T-A52B",
+      "name": "Mistral-Large-4-1T-A52B",
+      "family": "Mistral",
+      "generation": "Mistral Large 4",
+      "revision": "af26e7869af601441d5cdf75a1272469ddc3d059",
+      "source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B/blob/af26e7869af601441d5cdf75a1272469ddc3d059/README.md",
+      "config_source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B/blob/af26e7869af601441d5cdf75a1272469ddc3d059/config.json",
+      "repository_created_at": "2026-09-30T18:35:13.000Z",
+      "license": "Mistral Ecosystem Open-Weight License",
+      "license_source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B/blob/af26e7869af601441d5cdf75a1272469ddc3d059/LICENSE",
+      "parameters": 1000000000000,
+      "parameters_source": "Hub tensor index or publisher full-model count; rounded product totals are indicated in the model card. Packed storage counts do not set eligibility.",
+      "hub_stored_tensor_elements": null,
+      "active_parameters": 52000000000,
+      "architecture": "mistral_large4_text",
+      "publisher_context_tokens": 1048576,
+      "status": "over_500b",
+      "deployment_decision": "owner_selects",
+      "execution_note": "Publisher reports around one trillion total parameters and 52B active including embedding/output layers.",
+      "quantizations": [],
+      "optional_vision_projectors": [],
+      "fp16_attention_kv_32k_bytes": null,
+      "kv_assumption": "Sparse/looped attention or excluded checkpoint. A full runtime allocation measurement is needed.",
+      "expected_output_tps": null,
+      "expected_throughput_basis": "Measure the exact engine, quantization, prompt and batching on the workstation. Disk size and active-parameter count alone cannot establish a speed estimate.",
+      "quality_evidence": [],
+      "opus_4_6_parity": "unverified",
+      "local_model_aliases": [],
+      "workstation_runtime_probe": null,
+      "experiment_stage": "excluded_parameter_limit",
+      "experiment_gate": "No artifact download, weight header probe, or execution."
+    }
+  ],
+  "reference_measurements": [
+    {
+      "origin": "benchmark_organizer",
+      "benchmark": "SWE-bench Pro Public",
+      "checkpoint": "Claude Opus 4.6 thinking",
+      "score": 51.9,
+      "reported_uncertainty": 3.61,
+      "settings": "mini-swe-agent per Scale asterisk; separate public benchmark evaluation.",
+      "source": "https://labs.scale.com/leaderboard/swe_bench_pro?tab=public"
+    },
+    {
+      "origin": "benchmark_organizer",
+      "benchmark": "Terminal-Bench 2.1",
+      "checkpoint": "Claude Opus 4.6",
+      "score": 70.1,
+      "settings": "Claude Code. Organizer reports 63.8 under Terminus 2 for the same checkpoint.",
+      "source": "https://www.tbench.ai/news/terminal-bench-2-1"
+    },
+    {
+      "origin": "publisher",
+      "benchmark": "SWE-bench Verified",
+      "checkpoint": "Claude Opus 4.6",
+      "score": 80.8,
+      "settings": "Anthropic system card; 25 trials, adaptive thinking and max effort. Distinct benchmark from SWE-bench Pro.",
+      "source": "https://www-cdn.anthropic.com/0816a4f29610cb87da10f40c6f78b499a7bf722f.pdf"
+    }
+  ],
+  "discovery_notes": [
+    {
+      "observation": "The official Qwen Hub search returned no Qwen4-named downloadable checkpoint. Hosted API availability is separate.",
+      "source": "https://huggingface.co/Qwen/models?search=Qwen4"
+    },
+    {
+      "observation": "Official Google Hub searches for Gemma 4.1 and Gemma 5 returned no matching released weight IDs in this audit.",
+      "source": "https://huggingface.co/google/models?search=gemma"
+    },
+    {
+      "observation": "The published Mistral Large 4 checkpoint exceeds the total-size rule. Medium 3.5 has been deprecated; Small 4 is a distinct branch.",
+      "source": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04"
+    },
+    {
+      "observation": "The separately published Nemotron 3.5 Bolt 74B-A9B 24GB GGUF has a 20.51 GiB weight file. Its fully resident text path exceeds either GPU and no equivalent local/Opus role test was established. It remains a discovery observation.",
+      "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF"
+    }
+  ],
+  "fit_assumption": "16 GiB is the nominal total per card. Offload minima use artifact size plus estimated one-sequence FP16 attention KV when available. CUDA workspaces, image projectors, recurrent state, reservations, exact tensor placement and live memory pressure require measurement. GGUF downloads stage in place on one filesystem and use rename on commit. Unit GiB = 2^30 bytes.",
+  "eligibility_note": "Explicit shortlist candidates may be assessed before demonstrating parity. No extra model is approved for deployment and none is certified Opus-equivalent by these figures.",
+  "experiment_matrix_observed_utc": "2026-11-23T16:23:04+00:00",
+  "runtime_probe_scope": {
+    "libllama_sha256": "336c19963fe4c3a694bf8747c8b98406d96de15beff19ba93713aad3433172e8",
+    "library": "libllama.so.0.4.1, 2026-11-19 workstation RPC build",
+    "method": "Read GGUF architecture metadata and checked name in the actual compiled library. A registered name alone does not prove tensor/kernel compatibility or target speed. No model load.",
+    "priority": "Single candidate, single GPU, single slot first; all allocation or deployment changes remain owner-controlled."
+  }
+}

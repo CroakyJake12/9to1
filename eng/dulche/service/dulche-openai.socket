@@ -1,0 +1,10 @@
+[Unit]
+Description=Dulche inference-only HTTP on 127.0.0.1
+
+[Socket]
+ListenStream=127.0.0.1:18740
+Backlog=32
+NoDelay=true
+
+[Install]
+WantedBy=sockets.target

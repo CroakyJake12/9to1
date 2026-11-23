@@ -1,0 +1,11 @@
+[Unit]
+Description=Dulche private per-user API socket
+
+[Socket]
+ListenStream=%t/9to1-dulche/api.sock
+SocketMode=0600
+DirectoryMode=0700
+RemoveOnStop=true
+
+[Install]
+WantedBy=sockets.target

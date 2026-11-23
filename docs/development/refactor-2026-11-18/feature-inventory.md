@@ -6,6 +6,10 @@ Evidence levels: `code` (source inspected) · `test` (focused check passes) · `
 
 The [22 November source register](../../specification/owner-references/2026-11-22-atlas-v4/README.md) governs new work. Earlier entries in this inventory refer to their dated specification and runtime.
 
+## Dulche integration · 23 November 2026
+
+At `b10098944`, Home's published model picker and Discover route exist. The checked-in runtime has agent execution, a canonical model registry and a GGUF Unix-socket worker broker. The development profile stores a Boolean residency preference. **Incomplete** (RT-001–005, ARC-001, MODEL-001–006 and the owner's 23 November brief). A user must be able to open the existing Dulche route, connect to the independently supervised service, select an installed model and stream a verified reply. The model picker must resolve actual lifecycle state, support manual suspension and connect to the same import, download and job owners as the service. The four-mode close policy and the independent emergency stop need native and resource-reclamation evidence. Initial classification is source inspection only.
+
 ## Current pass · 22 November 2026
 
 The owner’s 22 November v4 Atlas and bundled four-volume specification govern current product work. The 18 November map and dated observations below describe their original revisions.
