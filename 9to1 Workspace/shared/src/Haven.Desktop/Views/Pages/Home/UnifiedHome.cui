@@ -3,6 +3,7 @@
     <Action name="OpenCustomiseWidgetPicker" command="home.newtab-widget-picker" parameter="header" />
     <Action name="OpenNewTabShortcut" command="home.newtab-shortcut-open" parameter="{Binding shortcut.Id}" />
     <Action name="EditNewTabShortcut" command="home.newtab-shortcut-edit" parameter="{Binding shortcut.Id}" />
+    <Action name="OpenNewTabShortcutOptions" command="home.newtab-shortcut-options" parameter="{Binding shortcut.Id}" />
     <Action name="ChooseNewTabShortcutTarget" command="home.newtab-shortcut-choose" parameter="{Binding target.Id}" />
     <Action name="ChooseNewTabShortcutIcon" command="home.newtab-shortcut-icon-select" parameter="{Binding icon.Key}" />
   </Actions>
@@ -171,6 +172,10 @@
                               VerticalAlignment="Center" />
                       </Container>
                     </Button>
+                    <Button id="home-newtab-shortcut-options" Action="OpenNewTabShortcutOptions" Content="Options"
+                            IsVisible="{Binding shortcut.Unavailable}" IsEnabled="{Binding newTab.shortcut.CanOpenEditor}"
+                            AutomationId="{Binding shortcut.OptionsAutomationId}" AccessibleName="{Binding shortcut.OptionsLabel}"
+                            HorizontalAlignment="Left" Chromeless="True" />
                     <Container Type="Horizontal Stack" CellGap="4" IsVisible="{Binding newTab.shortcut.Editing}">
                       <Button id="home-newtab-shortcut-drag" Action="EditNewTabShortcut"
                               AccessibleName="{Binding shortcut.DragLabel}" AutomationId="{Binding shortcut.DragAutomationId}"

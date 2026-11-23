@@ -155,7 +155,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     internal event EventHandler? SettingsTitleChanged;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(
         _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync(),
-        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), WhenShortcutPickerActionsIdleAsync(), _shortcutReorderAction);
+        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), WhenShortcutPickerActionsIdleAsync(), _shortcutReorderAction, _shortcutContextAction);
 
     internal Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -332,7 +332,11 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         if (section != "library") _library?.Deactivate();
         var settingsVisibilityChanged = (_section == "settings") != (section == "settings");
         _section = section;
-        if (section != "newtab") EndNewTabShortcutDrag();
+        if (section != "newtab")
+        {
+            EndNewTabShortcutDrag();
+            _shortcutContextMenu?.Close();
+        }
         ApplyNewTabBackground();
         _railBindings.Refresh();
         if (focusRailButton is not null)
@@ -795,6 +799,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Attempt(_appsBindings.RetireAppearanceObservation);
         Attempt(StopNewTabCustomisation);
         Attempt(StopNewTabShortcutPicker);
+        Attempt(StopNewTabShortcutContextMenu);
         Attempt(StopNewTabWidgets);
         Attempt(StopNewTabShortcutDrag);
         Attempt(_loader.Dispose); Attempt(_appsLoader.Dispose);

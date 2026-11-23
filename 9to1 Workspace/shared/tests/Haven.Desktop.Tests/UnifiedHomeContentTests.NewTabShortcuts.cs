@@ -6,6 +6,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
+using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -394,6 +395,121 @@ public sealed partial class UnifiedHomeContentTests
         {
             Assert.True(button.IsEnabled && button.Focus(NavigationMethod.Tab), button.Name);
             PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(1440, 900)]
+    [InlineData(720, 520)]
+    public async Task New_Tab_shortcuts_context_menu_reuses_editor_and_opens_the_exact_pin_in_new_tab(int width, int height)
+    {
+        var paths = new LayoutPaths();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(40));
+        var token = timeout.Token;
+        var request = Request("browse://newtab");
+        var boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
+        var pin = new NewTabShortcutPlacement("registered-boards", boards.Name, "9to1://boards") { AppId = boards.Id };
+        var preferences = new NewTabLayoutPreferences(new VersionedAtomicSettingsStore(paths), request.ProfileId, _ => Task.CompletedTask);
+        var initial = await preferences.ReadAsync(token);
+        Assert.True((await preferences.SaveAsync(initial, initial.Layout with { Shortcuts = initial.Layout.Shortcuts.Add(pin) }, token)).Saved);
+        var navigations = new List<BrowseNavigationIntent>();
+        var page = new UnifiedHomePage(request, new Registry(),
+            () => throw new InvalidOperationException("Shortcut options must not construct Dashboard."),
+            () => throw new InvalidOperationException("Shortcut options must not construct model discovery."),
+            (intent, _) => { navigations.Add(intent); return true; },
+            (_, _) => throw new InvalidOperationException("Shortcut options must not acquire a model."),
+            newTabLayout: preferences, shortcutAppAvailable: mode => mode.Id == boards.Id);
+        var window = new Window { Width = width, Height = height, Content = page };
+        try
+        {
+            await page.InitializeAsync(token);
+            window.Show(); SettleFixtureLayout(window);
+            var before = await preferences.ReadAsync(token);
+            var tile = Tile();
+            if (tile.FindAncestorOfType<ScrollViewer>() is { } scroll &&
+                tile.TranslatePoint(new Rect(tile.Bounds.Size).Center, scroll) is { } center)
+            {
+                var maxOffset = Math.Max(0, scroll.Extent.Height - scroll.Viewport.Height);
+                var offset = Math.Clamp(scroll.Offset.Y + center.Y - scroll.Viewport.Height / 2, 0, maxOffset);
+                scroll.Offset = new Vector(scroll.Offset.X, offset);
+            }
+            SettleFixtureLayout(window);
+            window.MouseMove(new Point(3, 3));
+            var point = tile.TranslatePoint(new Rect(tile.Bounds.Size).Center, window)!.Value;
+            var hit = Assert.IsAssignableFrom<Visual>(window.InputHitTest(point));
+            Assert.True(ReferenceEquals(hit, tile) || tile.IsVisualAncestorOf(hit),
+                $"Shortcut tile at {point} hit {(hit as Control)?.Name ?? hit.GetType().Name}.");
+            window.MouseMove(point);
+            window.MouseDown(point, MouseButton.Right);
+            window.MouseUp(point, MouseButton.Right);
+            SettleFixtureLayout(window);
+            var pointerMenu = OpenMenu();
+            Assert.Equal(new[] { "Open", "Open in new tab", "Rename shortcut", "Change icon", "Move", "Remove shortcut" },
+                pointerMenu.Items.OfType<MenuItem>().Select(item => item.Header as string));
+            Assert.Empty(navigations);
+            var popup = TopLevel.GetTopLevel(pointerMenu) ?? window;
+            popup.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            popup.KeyReleaseQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            SettleFixtureLayout(window);
+            Assert.False(pointerMenu.IsOpen);
+            Assert.True(Tile().IsFocused);
+            PressSettingsKey(window, PhysicalKey.ContextMenu);
+            SettleFixtureLayout(window);
+            await Choose(OpenMenu(), "Change icon");
+            Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-icon-default").IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-icon-open").IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.True(Tile().IsFocused);
+            Assert.Equal(before.Serialized, (await preferences.ReadAsync(token)).Serialized);
+
+            PressSettingsKey(window, PhysicalKey.ContextMenu);
+            SettleFixtureLayout(window);
+            await Choose(OpenMenu(), "Open in new tab");
+            var opened = Assert.Single(navigations);
+            Assert.True(opened.OpenInNewTab);
+            Assert.Equal(request.TabId, opened.SourceTabId);
+            Assert.Equal(pin.Target, opened.Address.Value);
+
+            Assert.True(Tile().Focus(NavigationMethod.Tab));
+            window.KeyPressQwerty(PhysicalKey.F10, RawInputModifiers.Shift);
+            window.KeyReleaseQwerty(PhysicalKey.F10, RawInputModifiers.Shift);
+            SettleFixtureLayout(window);
+            await Choose(OpenMenu(), "Remove shortcut");
+            Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-remove").IsFocused);
+            Assert.Equal(before.Serialized, (await preferences.ReadAsync(token)).Serialized);
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+            var after = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(before.Layout.Revision + 1, after.Revision);
+            Assert.Equal(before.Layout.Shortcuts.Where(shortcut => shortcut.Id != pin.Id), after.Shortcuts.AsEnumerable());
+            Assert.Equal(before.Layout.Widgets.AsEnumerable(), after.Widgets.AsEnumerable());
+        }
+        finally
+        {
+            try { await page.CloseAndDrainAsync(); }
+            finally { window.Close(); Directory.Delete(paths.DataDirectory, recursive: true); }
+        }
+
+        Button Tile() => Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+            button.Name == "home-newtab-shortcut" && AutomationProperties.GetName(button) == pin.Label);
+        ContextMenu OpenMenu()
+        {
+            var menu = Assert.IsType<ContextMenu>(Tile().ContextMenu);
+            Assert.True(menu.IsOpen);
+            return menu;
+        }
+        async Task Choose(ContextMenu menu, string header)
+        {
+            var item = Assert.Single(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, header));
+            Assert.True(item.IsEnabled);
+            item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            menu.Close();
             await page.WhenActionsIdleAsync().WaitAsync(token);
             SettleFixtureLayout(window);
         }

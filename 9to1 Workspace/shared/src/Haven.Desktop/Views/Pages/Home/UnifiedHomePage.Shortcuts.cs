@@ -44,6 +44,7 @@ internal sealed partial class UnifiedHomePage
         _loader.BindAuthoredControl("home-newtab-shortcut-name", _ => _shortcutName);
         _loader.BindAuthoredControl("home-newtab-shortcut-target", _ => _shortcutAddress);
         AddHandler(KeyDownEvent, OnNewTabShortcutKey, RoutingStrategies.Tunnel);
+        RegisterNewTabShortcutContextMenu();
         SizeChanged += OnShortcutPickerSizeChanged;
         RegisterNewTabShortcutDrag();
         PublishNewTabShortcuts();
@@ -54,9 +55,10 @@ internal sealed partial class UnifiedHomePage
         if (_section != "newtab" || _checkingShortcutApp) return false;
         return operation[NewTabShortcutPrefix.Length..] switch
         {
-            "open" => !ShortcutSurfaceOpen,
+            "open" => !ShortcutSurfaceOpen && _shortcutContextMenu is null,
             "add" => CanOpenNewTabShortcutEditor && ShortcutProjectionCanAdd,
             "edit" => CanOpenNewTabShortcutEditor && IsNewTabCustomising,
+            "options" => CanOpenNewTabShortcutEditor,
             "picker-close" => CanCloseShortcutPicker,
             "picker-custom" or "pick" => _shortcutPickerOpen && CanEditShortcuts && ShortcutProjectionCanAdd,
             "picker-retry" or "picker-revert" => _shortcutPickerOpen && !NewTabLayoutBusy &&
@@ -110,6 +112,10 @@ internal sealed partial class UnifiedHomePage
                 if (SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == id) is { } selected)
                     OpenNewTabShortcutEditor(selected);
                 return;
+            case "options":
+                if (id is not null && FindShortcutContextAnchor(id) is { } anchor)
+                    ShowShortcutContextMenu(anchor, id, fromPointer: false);
+                return;
             case "icon-open": OpenShortcutIcons(); return;
             case "icon-select": if (id is not null) SelectShortcutIcon(id); return;
             case "icon-default": SelectShortcutIcon(null); return;
@@ -161,11 +167,16 @@ internal sealed partial class UnifiedHomePage
     }
 
     private async Task OpenNewTabShortcutAsync(NewTabShortcutPlacement shortcut,
-        DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+        DesktopOriginalWorkLifetime.Original original, CancellationToken token, bool openInNewTab = false)
     {
         if (!IsShortcutAvailable(shortcut) || !await IsShortcutAppCurrentAsync(shortcut, original, token)) return;
         var target = AppContentAddress.Parse(shortcut.Target);
         token.ThrowIfCancellationRequested();
+        if (openInNewTab)
+        {
+            Queue(target, original, newTab: true);
+            return;
+        }
         switch (shortcut.Target)
         {
             case NewTabShortcutPlacement.Apps: await SelectAsync("apps", original, token); break;
@@ -199,8 +210,10 @@ internal sealed partial class UnifiedHomePage
     private void CloseNewTabShortcutEditor(bool returnToPicker = true)
     {
         var previous = _editingShortcutId;
+        var fromMenu = _shortcutEditorFromMenu;
         var resumePicker = returnToPicker && _shortcutAddressFromPicker;
         _shortcutEditorOpen = false;
+        _shortcutEditorFromMenu = false;
         ClearShortcutIconDraft();
         _shortcutAddressFromPicker = false;
         _editingShortcutId = _shortcutStatus = null;
@@ -212,7 +225,11 @@ internal sealed partial class UnifiedHomePage
             return;
         }
         PublishNewTabShortcuts();
-        if (previous is not null && SavedShortcuts.Any(shortcut => shortcut.Id == previous)) FocusNewTabShortcut(previous, edit: true);
+        if (previous is not null && SavedShortcuts.Any(shortcut => shortcut.Id == previous))
+        {
+            if (fromMenu) FocusShortcutContextAnchor(previous);
+            else FocusNewTabShortcut(previous, edit: true);
+        }
         else FocusAddShortcut();
     }
 
@@ -341,6 +358,7 @@ internal sealed partial class UnifiedHomePage
     private void OnNewTabShortcutKey(object? sender, KeyEventArgs args)
     {
         if (_section != "newtab" || args.Handled) return;
+        if (DismissShortcutContextMenu(args)) return;
         if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && _shortcutDrag is not null)
         {
             EndNewTabShortcutDrag();
@@ -402,14 +420,19 @@ internal sealed partial class UnifiedHomePage
             new Dictionary<string, object?> { ["Id"] = destination.Target, ["Label"] = destination.Label, ["ChoiceLabel"] = "Use " + destination.Label }).ToArray();
         var tiles = shortcuts.Select((shortcut, index) =>
         {
+            var available = IsShortcutAvailable(shortcut);
             return new Dictionary<string, object?>
             {
-                ["Id"] = shortcut.Id, ["Label"] = IsShortcutAvailable(shortcut) ? shortcut.Label : shortcut.Label + " (unavailable)", ["EditLabel"] = "Edit " + shortcut.Label,
+                ["Id"] = shortcut.Id, ["Label"] = available ? shortcut.Label : shortcut.Label + " (unavailable)", ["EditLabel"] = "Edit " + shortcut.Label,
                 ["AutomationId"] = ShortcutAutomationPrefix + shortcut.Id, ["EditAutomationId"] = ShortcutEditAutomationPrefix + shortcut.Id,
                 ["DragLabel"] = "Drag " + shortcut.Label, ["DragAutomationId"] = ShortcutDragAutomationPrefix + shortcut.Id,
                 ["Icon"] = CurrentShortcutIcon(shortcut, shortcut.IconKey),
-                ["CanOpen"] = !ShortcutSurfaceOpen && IsShortcutAvailable(shortcut),
-                ["HelpText"] = IsShortcutAvailable(shortcut) ? shortcut.Label : "This destination is unavailable. Use Customise to replace or remove the shortcut.",
+                ["CanOpen"] = !ShortcutSurfaceOpen && available,
+                ["Unavailable"] = !available && CanCustomiseNewTab,
+                ["OptionsLabel"] = "Options for " + shortcut.Label,
+                ["OptionsAutomationId"] = ShortcutContextAutomationPrefix + shortcut.Id,
+                ["HelpText"] = available ? "Open " + shortcut.Label + ". Open the context menu for shortcut actions." :
+                    "This destination is unavailable. Open shortcut options to replace or remove it.",
                 ["Row"] = index / columns, ["Column"] = index % columns
             };
         }).ToArray();
