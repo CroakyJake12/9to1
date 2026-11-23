@@ -154,7 +154,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     internal event EventHandler? SettingsTitleChanged;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(
         _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync(),
-        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), _shortcutKeyboardAction);
+        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), WhenShortcutPickerActionsIdleAsync(), _shortcutKeyboardAction);
 
     internal Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -765,6 +765,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         Attempt(_keyboardTooltips.Dispose);
         Attempt(_appsBindings.RetireAppearanceObservation);
         Attempt(StopNewTabCustomisation);
+        Attempt(StopNewTabShortcutPicker);
         Attempt(StopNewTabWidgets);
         Attempt(_loader.Dispose); Attempt(_appsLoader.Dispose);
         // Start child retirement before joining admitted page actions.
@@ -779,6 +780,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         if (_library is not null) Acquire(_library.CloseAndDrainAsync);
         Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
         Acquire(WhenNewTabCustomisationActionsIdleAsync); Acquire(WhenWidgetActionsIdleAsync);
+        Acquire(WhenShortcutPickerActionsIdleAsync);
         foreach (var actual in _stopSources)
             try { await actual; }
             catch (Exception error)

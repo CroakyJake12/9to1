@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -6,6 +7,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -40,22 +42,21 @@ public sealed partial class UnifiedHomeContentTests
             Assert.Equal(new[] { "Apps", "Library", "Dashboard" }, Tiles().Select(AutomationProperties.GetName));
 
             await Activate("home-newtab-shortcut-add");
+            await Activate("home-newtab-shortcut-picker-custom");
             Target().Text = "file:///tmp/unsupported";
             Name().Text = "Blocked";
             await Activate("home-newtab-shortcut-save");
             Assert.Contains("complete http or https address", SettingsControl<TextBlock>(page, "home-newtab-shortcut-status").Text);
             Assert.Null((await preferences.ReadAsync(token)).Serialized);
             await Activate("home-newtab-shortcut-cancel");
+            Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-picker-custom").IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
             Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-add").IsFocused);
             Assert.Null((await preferences.ReadAsync(token)).Serialized);
 
             await Activate("home-newtab-shortcut-add");
-            await Activate("home-newtab-shortcut-choose", "Use Models / Discover");
-            Assert.Equal(NewTabShortcutPlacement.Models, Target().Text);
-            await Activate("home-newtab-shortcut-cancel");
-            Assert.Null((await preferences.ReadAsync(token)).Serialized);
-
-            await Activate("home-newtab-shortcut-add");
+            await Activate("home-newtab-shortcut-picker-custom");
             Name().Text = "Docs";
             Target().Text = "https://example.test/docs";
             await Activate("home-newtab-shortcut-save");
@@ -130,6 +131,94 @@ public sealed partial class UnifiedHomeContentTests
                 control.Name == id && control.IsEffectivelyVisible && (name is null || AutomationProperties.GetName(control) == name));
             Assert.True(button.IsEnabled && button.Focus(NavigationMethod.Tab), $"Shortcut control {id} was unavailable.");
             PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(token);
+            SettleFixtureLayout(window);
+        }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(1440, 900, 3)]
+    [InlineData(720, 520, 2)]
+    public async Task New_Tab_shortcuts_picker_centres_filters_admitted_destinations_and_pins_once(int width, int height, int columns)
+    {
+        var paths = new LayoutPaths();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = timeout.Token;
+        var request = Request("browse://newtab");
+        var preferences = new NewTabLayoutPreferences(new VersionedAtomicSettingsStore(paths), request.ProfileId,
+            _ => Task.CompletedTask);
+        var page = new UnifiedHomePage(request, new Registry(),
+            () => throw new InvalidOperationException("Adding a shortcut must not construct Dashboard."),
+            () => throw new InvalidOperationException("Adding a shortcut must not construct model discovery."),
+            (_, _) => throw new InvalidOperationException("Adding a shortcut must not navigate."),
+            (_, _) => throw new InvalidOperationException("Adding a shortcut must not acquire a model."),
+            createLibrary: () => throw new InvalidOperationException("Adding a shortcut must not construct Library."),
+            newTabLayout: preferences);
+        var window = new Window { Width = width, Height = height, Content = page };
+        try
+        {
+            await page.InitializeAsync(token);
+            window.Show(); SettleFixtureLayout(window);
+            var add = SettingsControl<Button>(page, "home-newtab-shortcut-add");
+            await Activate(add);
+            var search = SettingsControl<TextBox>(page, "home-newtab-shortcut-picker-search");
+            var picker = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcut-picker");
+            Assert.True(search.IsFocused);
+            var center = picker.TranslatePoint(new Rect(picker.Bounds.Size).Center, page)!.Value;
+            Assert.InRange(center.X, page.Bounds.Width / 2 - 1, page.Bounds.Width / 2 + 1);
+            Assert.InRange(center.Y, page.Bounds.Height / 2 - 1, page.Bounds.Height / 2 + 1);
+            Assert.Equal(columns, Candidates().GroupBy(button => Math.Round(button.TranslatePoint(default, picker)!.Value.Y))
+                .OrderBy(group => group.Key).First().Count());
+            var scrollHost = SettingsControl<CuiContainerControl>(picker, "home-newtab-shortcut-picker-scroll");
+            Assert.Single(scrollHost.GetVisualDescendants().OfType<ScrollViewer>());
+            Assert.False(Candidate("Apps, already added").IsEnabled);
+            Assert.False(Candidate("Library, already added").IsEnabled);
+            Assert.False(Candidate("Dashboard, already added").IsEnabled);
+            Assert.DoesNotContain(Candidates(), button => AutomationProperties.GetName(button) is "Add Events" or "Add Settings");
+            Assert.Null((await preferences.ReadAsync(token)).Serialized);
+
+            search.Text = "unavailable query";
+            SettleFixtureLayout(window);
+            Assert.Empty(Candidates());
+            Assert.True(SettingsControl<Button>(picker, "home-newtab-shortcut-picker-custom").IsEnabled);
+            search.Text = "mOdElS";
+            SettleFixtureLayout(window);
+            var model = Assert.Single(Candidates());
+            Assert.Equal("Add Models / Discover", AutomationProperties.GetName(model));
+            await Activate(model, pointer: true);
+            Assert.True(search.IsFocused);
+            Assert.False(Candidate("Models / Discover, already added").IsEnabled);
+            var layout = (await preferences.ReadAsync(token)).Layout;
+            Assert.Equal(1, layout.Revision);
+            Assert.Single(layout.Shortcuts, placement => placement.Target == NewTabShortcutPlacement.Models);
+
+            var custom = SettingsControl<Button>(picker, "home-newtab-shortcut-picker-custom");
+            await Activate(custom);
+            Assert.True(SettingsControl<TextBox>(page, "home-newtab-shortcut-name").IsFocused);
+            PressSettingsKey(window, PhysicalKey.Escape);
+            SettleFixtureLayout(window);
+            Assert.True(custom.IsFocused);
+            Assert.Equal("mOdElS", search.Text);
+            await Activate(SettingsControl<Button>(picker, "home-newtab-shortcut-picker-close"));
+            Assert.True(add.IsFocused);
+            Assert.Equal(1, (await preferences.ReadAsync(token)).Layout.Revision);
+        }
+        finally
+        {
+            try { await page.CloseAndDrainAsync(); }
+            finally { window.Close(); Directory.Delete(paths.DataDirectory, recursive: true); }
+        }
+
+        IEnumerable<Button> Candidates() => page.GetVisualDescendants().OfType<Button>()
+            .Where(button => button.Name == "home-newtab-shortcut-picker-candidate" && button.IsEffectivelyVisible);
+        Button Candidate(string name) => Assert.Single(Candidates(), button => AutomationProperties.GetName(button) == name);
+
+        async Task Activate(Button button, bool pointer = false)
+        {
+            Assert.True(button.IsEnabled && button.Focus(NavigationMethod.Tab));
+            if (pointer && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR")))
+                ClickSettingsButton(window, button);
+            else PressSettingsKey(window, PhysicalKey.Enter);
             await page.WhenActionsIdleAsync().WaitAsync(token);
             SettleFixtureLayout(window);
         }

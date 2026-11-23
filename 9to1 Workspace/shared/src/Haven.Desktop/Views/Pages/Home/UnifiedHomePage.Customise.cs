@@ -137,12 +137,12 @@ internal sealed partial class UnifiedHomePage
     private bool NewTabCustomisationActionAvailable(string command)
     {
         if (!IsAlive || !CanCustomiseNewTab || _section != "newtab" || NewTabLayoutBusy) return false;
-        if (command == NewTabCustomisationPrefix + "open") return !IsNewTabCustomising && !_shortcutEditorOpen;
+        if (command == NewTabCustomisationPrefix + "open") return !IsNewTabCustomising && !ShortcutSurfaceOpen;
         if (!IsNewTabCustomising) return false;
         return command[NewTabCustomisationPrefix.Length..] switch
         {
             "retry" or "revert" => _retryNewTabLayout is not null,
-            "done" => _retryNewTabLayout is null && !_shortcutEditorOpen,
+            "done" => _retryNewTabLayout is null && !ShortcutSurfaceOpen,
             "visibility" => CanChangeNewTabLayout,
             "widget-visibility" => _newTabVisibilityOpen && _newTabWidgetSources is not null && CanEditWidgetLayout,
             "accent" => _createSettings is not null && CanChangeNewTabLayout,
@@ -386,7 +386,7 @@ internal sealed partial class UnifiedHomePage
 
     private void OnNewTabCustomisationKey(object? sender, KeyEventArgs args)
     {
-        if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None || _section != "newtab" || !IsNewTabCustomising || _shortcutEditorOpen ||
+        if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None || _section != "newtab" || !IsNewTabCustomising || ShortcutSurfaceOpen ||
             _widgetPickerOpen || _widgetOptionsId is not null || _focusTimerResetRequested || _widgetDrag is not null) return;
         args.Handled = true;
         if (NewTabLayoutBusy || _retryNewTabLayout is not null) return;

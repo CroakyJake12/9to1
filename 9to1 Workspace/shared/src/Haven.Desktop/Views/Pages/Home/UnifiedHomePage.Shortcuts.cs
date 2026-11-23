@@ -36,6 +36,7 @@ internal sealed partial class UnifiedHomePage
         _newTabSavedLayout?.Layout.Shortcuts ?? NewTabShortcutPlacement.Defaults;
     private bool CanEditShortcuts => IsAlive && _section == "newtab" && CanCustomiseNewTab && CanChangeNewTabLayout;
     private bool ShortcutProjectionCanAdd => CanCustomiseNewTab && SavedShortcuts.Length < NewTabShortcutPlacement.MaximumCount;
+    private bool ShortcutSurfaceOpen => _shortcutEditorOpen || _shortcutPickerOpen;
 
     private void RegisterNewTabShortcuts()
     {
@@ -43,6 +44,7 @@ internal sealed partial class UnifiedHomePage
         _loader.BindAuthoredControl("home-newtab-shortcut-name", _ => _shortcutName);
         _loader.BindAuthoredControl("home-newtab-shortcut-target", _ => _shortcutAddress);
         AddHandler(KeyDownEvent, OnNewTabShortcutKey, RoutingStrategies.Tunnel);
+        SizeChanged += OnShortcutPickerSizeChanged;
         PublishNewTabShortcuts();
     }
 
@@ -51,9 +53,13 @@ internal sealed partial class UnifiedHomePage
         if (_section != "newtab") return false;
         return operation[NewTabShortcutPrefix.Length..] switch
         {
-            "open" => !_shortcutEditorOpen,
-            "add" => CanEditShortcuts && ShortcutProjectionCanAdd && !_shortcutEditorOpen,
-            "edit" => CanEditShortcuts && IsNewTabCustomising && !_shortcutEditorOpen,
+            "open" => !ShortcutSurfaceOpen,
+            "add" => CanEditShortcuts && ShortcutProjectionCanAdd && !ShortcutSurfaceOpen && !_widgetPickerOpen,
+            "edit" => CanEditShortcuts && IsNewTabCustomising && !ShortcutSurfaceOpen && !_widgetPickerOpen,
+            "picker-close" => CanCloseShortcutPicker,
+            "picker-custom" or "pick" => _shortcutPickerOpen && CanEditShortcuts && ShortcutProjectionCanAdd,
+            "picker-retry" or "picker-revert" => _shortcutPickerOpen && !NewTabLayoutBusy &&
+                _retryNewTabLayout is not null && _shortcutPendingPick is not null,
             "retry" or "revert" => _shortcutEditorOpen && !NewTabLayoutBusy && _retryNewTabLayout is not null,
             "cancel" or "save" or "choose" => _shortcutEditorOpen && CanEditShortcuts,
             "move-up" => _shortcutEditorOpen && CanEditShortcuts && CanMoveShortcut(_editingShortcutId, -1),
@@ -74,7 +80,26 @@ internal sealed partial class UnifiedHomePage
                 if (SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == id) is { } target)
                     await OpenNewTabShortcutAsync(target, original, token);
                 return;
-            case "add": OpenNewTabShortcutEditor(null); return;
+            case "add": OpenShortcutPicker(); return;
+            case "picker-close": CloseShortcutPicker(); return;
+            case "picker-custom":
+                HideShortcutPicker();
+                _shortcutAddressFromPicker = true;
+                OpenNewTabShortcutEditor(null);
+                return;
+            case "pick": await AddShortcutCandidateAsync(id, original, token); return;
+            case "picker-retry":
+                await RetryNewTabLayoutAsync(original, token);
+                if (original.IsAcceptedPublicationCurrent) CompleteShortcutPick();
+                return;
+            case "picker-revert":
+                _newTabLayoutPreview = null;
+                _retryNewTabLayout = null;
+                _newTabEditorStatus = _shortcutPickerStatus = null;
+                _shortcutPendingPick = null;
+                await RefreshNewTabLayoutAsync(original, token);
+                if (original.IsAcceptedPublicationCurrent) FocusShortcutPicker("home-newtab-shortcut-picker-search");
+                return;
             case "edit":
                 if (SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == id) is { } selected)
                     OpenNewTabShortcutEditor(selected);
@@ -152,17 +177,23 @@ internal sealed partial class UnifiedHomePage
         FocusAfterSelection(() => _shortcutName.Focus(NavigationMethod.Tab));
     }
 
-    private void CloseNewTabShortcutEditor()
+    private void CloseNewTabShortcutEditor(bool returnToPicker = true)
     {
         var previous = _editingShortcutId;
+        var resumePicker = returnToPicker && _shortcutAddressFromPicker;
         _shortcutEditorOpen = false;
+        _shortcutAddressFromPicker = false;
         _editingShortcutId = _shortcutStatus = null;
         _shortcutExpected = null;
         _shortcutCloseAfterRetry = false;
+        if (resumePicker)
+        {
+            OpenShortcutPicker(resume: true);
+            return;
+        }
         PublishNewTabShortcuts();
         if (previous is not null && SavedShortcuts.Any(shortcut => shortcut.Id == previous)) FocusNewTabShortcut(previous, edit: true);
-        else FocusAfterSelection(() => this.GetVisualDescendants().OfType<Button>()
-            .FirstOrDefault(button => button.Name == "home-newtab-shortcut-add")?.Focus(NavigationMethod.Tab));
+        else FocusAddShortcut();
     }
 
     private async Task SaveNewTabShortcutAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
@@ -186,7 +217,13 @@ internal sealed partial class UnifiedHomePage
         var editing = _editingShortcutId;
         var item = new NewTabShortcutPlacement(editing ?? Guid.NewGuid().ToString("N"), label, target.Value);
         _shortcutExpected = item;
-        await ChangeNewTabLayoutAsync(layout =>
+        await SaveNewTabShortcutPlacementAsync(item, editing, original, token);
+        if (original.IsAcceptedPublicationCurrent) CompleteNewTabShortcutChange(close: true);
+    }
+
+    private Task SaveNewTabShortcutPlacementAsync(NewTabShortcutPlacement item, string? editing,
+        DesktopOriginalWorkLifetime.Original original, CancellationToken token) =>
+        ChangeNewTabLayoutAsync(layout =>
         {
             var index = FindShortcutIndex(layout.Shortcuts, editing);
             var duplicate = layout.Shortcuts.Any(shortcut => shortcut.Id != item.Id && shortcut.Target == item.Target);
@@ -196,8 +233,6 @@ internal sealed partial class UnifiedHomePage
                 ? layout with { Shortcuts = layout.Shortcuts.Add(item) }
                 : layout;
         }, original, token);
-        if (original.IsAcceptedPublicationCurrent) CompleteNewTabShortcutChange(close: true);
-    }
 
     private void ShowShortcutValidation(string message, TextBox input)
     {
@@ -214,7 +249,7 @@ internal sealed partial class UnifiedHomePage
         {
             if (_shortcutExpected is { } expected && !SavedShortcuts.Contains(expected))
                 ShowShortcutValidation("Shortcuts changed in another tab. Review the destination and try again.", _shortcutAddress);
-            else CloseNewTabShortcutEditor();
+            else CloseNewTabShortcutEditor(returnToPicker: false);
         }
         else PublishNewTabShortcuts();
     }
@@ -266,13 +301,14 @@ internal sealed partial class UnifiedHomePage
     private void OnNewTabShortcutKey(object? sender, KeyEventArgs args)
     {
         if (_section != "newtab" || args.Handled) return;
-        if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && _shortcutEditorOpen)
+        if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && ShortcutSurfaceOpen)
         {
             args.Handled = true;
-            if (CanEditShortcuts) CloseNewTabShortcutEditor();
+            if (CanCloseShortcutPicker) CloseShortcutPicker();
+            else if (!_shortcutPickerOpen && CanEditShortcuts) CloseNewTabShortcutEditor();
             return;
         }
-        if (!IsNewTabCustomising || !CanEditShortcuts || _shortcutEditorOpen || args.KeyModifiers != KeyModifiers.Alt ||
+        if (!IsNewTabCustomising || !CanEditShortcuts || ShortcutSurfaceOpen || args.KeyModifiers != KeyModifiers.Alt ||
             args.Key is not (Key.Up or Key.Down) || args.Source is not Button button ||
             AutomationProperties.GetAutomationId(button) is not { } automation ||
             !automation.StartsWith(ShortcutAutomationPrefix, StringComparison.Ordinal)) return;
@@ -296,9 +332,9 @@ internal sealed partial class UnifiedHomePage
 
     private void PublishNewTabShortcuts()
     {
-        Set(_newTabCustomise, "IsEnabled", !_shortcutEditorOpen);
-        Set(_newTabCustomiseDone, "IsEnabled", !NewTabLayoutBusy && _retryNewTabLayout is null && !_shortcutEditorOpen);
-        Set(_newTabCustomiseAddWidget, "IsEnabled", CanEditWidgetLayout && !_shortcutEditorOpen);
+        Set(_newTabCustomise, "IsEnabled", !ShortcutSurfaceOpen);
+        Set(_newTabCustomiseDone, "IsEnabled", !NewTabLayoutBusy && _retryNewTabLayout is null && !ShortcutSurfaceOpen);
+        Set(_newTabCustomiseAddWidget, "IsEnabled", CanEditWidgetLayout && !ShortcutSurfaceOpen);
         var shortcuts = SavedShortcuts;
         var columns = _shortcutColumns == 3 && ShortcutProjectionCanAdd ? 4 : _shortcutColumns;
         var count = shortcuts.Length + (ShortcutProjectionCanAdd ? 1 : 0);
@@ -315,7 +351,7 @@ internal sealed partial class UnifiedHomePage
                 ["Id"] = shortcut.Id, ["Label"] = shortcut.Label, ["EditLabel"] = "Edit " + shortcut.Label,
                 ["AutomationId"] = ShortcutAutomationPrefix + shortcut.Id, ["EditAutomationId"] = ShortcutEditAutomationPrefix + shortcut.Id,
                 ["Icon"] = "icon:" + (destination.Icon ?? "link"),
-                ["CanOpen"] = !_shortcutEditorOpen && IsShortcutTargetAvailable(shortcut.Target),
+                ["CanOpen"] = !ShortcutSurfaceOpen && IsShortcutTargetAvailable(shortcut.Target),
                 ["Row"] = index / columns, ["Column"] = index % columns
             };
         }).ToArray();
@@ -328,7 +364,7 @@ internal sealed partial class UnifiedHomePage
         _railBindings.SetNewTabShortcut("TileHeight", _shortcutTileHeight);
         _railBindings.SetNewTabShortcut("CanAdd", ShortcutProjectionCanAdd);
         _railBindings.SetNewTabShortcut("CanEdit", CanEditShortcuts);
-        _railBindings.SetNewTabShortcut("CanOpenEditor", CanEditShortcuts && !_shortcutEditorOpen);
+        _railBindings.SetNewTabShortcut("CanOpenEditor", CanEditShortcuts && !ShortcutSurfaceOpen && !_widgetPickerOpen);
         _railBindings.SetNewTabShortcut("Editing", IsNewTabCustomising);
         _railBindings.SetNewTabShortcut("EditorOpen", _shortcutEditorOpen);
         _railBindings.SetNewTabShortcut("Existing", _editingShortcutId is not null);
@@ -338,5 +374,6 @@ internal sealed partial class UnifiedHomePage
         _railBindings.SetNewTabShortcut("CanRetry", _shortcutEditorOpen && _retryNewTabLayout is not null && !NewTabLayoutBusy);
         _railBindings.SetNewTabShortcut("Status", _shortcutStatus ?? string.Empty);
         _railBindings.SetNewTabShortcut("HasStatus", !string.IsNullOrEmpty(_shortcutStatus));
+        PublishShortcutPicker();
     }
 }

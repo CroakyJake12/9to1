@@ -107,6 +107,7 @@
     <EmbeddedResource Include="Views/Pages/Home/HuggingFace/HomeHuggingFace.cui" LogicalName="Haven.Desktop.Home.HuggingFace.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
     <EmbeddedResource Include="Views/Pages/Home/NewTabCustomisation.cui" LogicalName="Haven.Desktop.Home.NewTabCustomisation.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/NewTabShortcutPicker.cui" LogicalName="Haven.Desktop.Home.NewTabShortcutPicker.cui" />
     <EmbeddedResource Include="Views/Pages/Home/NewTabWidgets.cui" LogicalName="Haven.Desktop.Home.NewTabWidgets.cui" />
     <EmbeddedResource Include="Views/Pages/Home/HomeSettings.cui" LogicalName="Haven.Desktop.Home.Settings.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
