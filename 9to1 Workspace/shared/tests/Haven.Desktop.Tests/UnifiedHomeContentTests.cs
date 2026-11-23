@@ -1147,6 +1147,97 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
+    public async Task Settings_accent_controls_save_global_colour_while_off_and_retain_per_app_choices_after_reopen()
+    {
+        var directory = Directory.CreateTempSubdirectory("home-accent-");
+        var file = Path.Combine(directory.FullName, "preferences.json");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "accent-profile");
+        var token = TestContext.Current.CancellationToken;
+        await File.WriteAllTextAsync(file, """{"defaultModel":"retained-model"}""", token);
+        var existing = HomeThemePreference.Default(scope) with
+        {
+            Revision = 1, Appearance = "Dark", Display = new(HomeDisplayMode.Dark, 60, 40),
+            Accent = new(HomeThemeAccentOverrideMode.None, "#123ABC", new Dictionary<string, string> { ["app.write"] = "#11AA77" })
+        };
+        Assert.True((await HomeNativePreferenceFile.CompareExchangeAsync(file, scope, 0, existing,
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), token)).Succeeded);
+        NativeHomeThemePreferences OpenOwner() => new(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            await using (var source = OpenOwner())
+            {
+                var settings = new HomeSettingsDestinationPage(source, _ => Task.CompletedTask);
+                Window? window = null;
+                try
+                {
+                    await settings.ActivateAsync(token);
+                    window = Show(settings);
+                    var fragment = SettingsControl<CuiContainerControl>(settings, "home-appearance-settings");
+                    var scroll = Assert.IsType<ScrollViewer>(fragment.Child);
+                    scroll.ScrollToEnd();
+                    SettleFixtureLayout(window);
+                    var panel = SettingsControl<CuiContainerControl>(settings, "home-accent-settings");
+                    Button Option(string name) => panel.GetVisualDescendants().OfType<Button>()
+                        .Single(button => AutomationProperties.GetName(button) == name);
+                    async Task<HomeThemePreference> Choose(string name, bool keyboard = false)
+                    {
+                        var button = Option(name);
+                        button.BringIntoView();
+                        SettleFixtureLayout(window);
+                        await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
+                        if (keyboard)
+                        {
+                            Assert.True(button.Focus());
+                            PressSettingsKey(window, PhysicalKey.Enter);
+                        }
+                        else
+                        {
+                            var center = button.TranslatePoint(new Rect(button.Bounds.Size).Center, window)!.Value;
+                            window.MouseMove(center);
+                            var hit = window.InputHitTest(center) as Visual;
+                            Assert.True(hit == button || hit?.GetVisualAncestors().Contains(button) == true,
+                                $"Accent {name} at {center} hit {hit}; scroll {scroll.Offset}/{scroll.Extent}, viewport {scroll.Viewport}.");
+                            ClickSettingsButton(window, button);
+                        }
+                        await settings.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20), token);
+                        SettleFixtureLayout(window);
+                        Assert.True(SettingsCategorySelected(Option(name)),
+                            $"Accent {name} failed to select; last receipt {settings.LastWrite?.ConfirmedWrite?.Code ?? "none"}.");
+                        return settings.LastWrite!.ConfirmedWrite!.Value!.Preference;
+                    }
+                    Assert.True(SettingsCategorySelected(Option("Off")));
+                    Assert.Contains(panel.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "#123ABC");
+                    var off = await Choose("Iris");
+                    Assert.Equal(2, off.Revision);
+                    Assert.Equal(HomeThemeAccentOverrideMode.None, off.Accent!.Mode);
+                    Assert.Equal("#7145FF", off.Accent.AllAppsColour);
+                    Assert.Null(off.Accent.ResolveColour("app.write"));
+                    var on = await Choose("On", keyboard: true);
+                    Assert.Equal("#7145FF", on.Accent!.ResolveColour("app.write"));
+                    var individual = await Choose("On per app");
+                    Assert.Equal(4, individual.Revision);
+                    Assert.Equal("#11AA77", individual.Accent!.ResolveColour("app.write"));
+                    Assert.Null(individual.Accent.ResolveColour("app.present"));
+                    await source.RefreshAsync(token);
+                    SettleFixtureLayout(window);
+                    CaptureSettingsIfRequested(window, "accent", source);
+                }
+                finally { window?.Close(); await settings.CloseAndDrainAsync(); }
+            }
+            await using var reopened = OpenOwner();
+            await reopened.RefreshAsync(token);
+            Assert.Equal(CuiAccentOverrideMode.IndividualApps, reopened.Current.EffectiveAccent.Mode);
+            Assert.Equal("#7145FF", reopened.Current.EffectiveAccent.AllAppsColour);
+            Assert.Equal("#11AA77", reopened.Current.EffectiveAccent.IndividualApps["app.write"]);
+            var saved = HomeNativePreferenceFile.Read(file);
+            Assert.Equal("retained-model", saved["defaultModel"]!.GetValue<string>());
+            Assert.Equal(existing.Display, HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme).Display);
+        }
+        finally { directory.Delete(recursive: true); }
+    }
+
+    [AvaloniaFact]
     public async Task Home_appearance_changes_preserve_custom_library_per_app_accents_and_additive_saved_fields()
     {
         var root = Path.Combine(Path.GetTempPath(), "home-settings-additive-" + Guid.NewGuid().ToString("N"));

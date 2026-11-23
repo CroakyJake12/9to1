@@ -46,6 +46,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _work = new(StopAsync, CleanupAsync);
         _loader.SetThemePreferenceContext(source.Context);
         _loader.SetBindingContext(_bindings); _loader.SetActionDispatcher(this);
+        NativeHomeThemePreferences.BindAppearanceLayout(_loader, _bindings);
         _categoryButtons = new[] { "global", "appearance", "theme", "layout", "accessibility" }
             .Select(category =>
             {
@@ -377,6 +378,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             _bindings.Set("HomeModeChoices", Array.Empty<object>());
             _bindings.Set("HomeDisplayTarget", null);
             _bindings.Set("HomeAccessibilityChoices", Array.Empty<object>());
+            _bindings.Set("HomeAccentModeChoices", Array.Empty<object>());
+            _bindings.Set("HomeGlobalAccentChoices", Array.Empty<object>());
+            _bindings.Set("HomeSavedGlobalColour", null);
         }
         var available = _active && IsAlive && !IsBusy && !_unavailable;
         _bindings.Set("HomeAppearanceAvailable", available);

@@ -444,6 +444,7 @@ internal sealed partial class HomeApp
     private void RegisterWorkspaceControls(CuiControlLoader loader, Window window)
     {
         _workspaceWindow = window;
+        NativeHomeThemePreferences.BindAppearanceLayout(loader, _viewModel);
         _workspaceReviewButtons.Clear();
         Func<CakeOS.Cui.CuiComponent, Control> dashboardTiles = component =>
         {
@@ -583,6 +584,9 @@ internal sealed partial class HomeApp
             _viewModel.Set("HomeModeChoices", Array.Empty<object>());
             _viewModel.Set("HomeDisplayTarget", null);
             _viewModel.Set("HomeAccessibilityChoices", Array.Empty<object>());
+            _viewModel.Set("HomeAccentModeChoices", Array.Empty<object>());
+            _viewModel.Set("HomeGlobalAccentChoices", Array.Empty<object>());
+            _viewModel.Set("HomeSavedGlobalColour", null);
         }
         var canEditAppearance = _homeTheme is not null && _workspaceInitialized && !_workspaceBusy && !_homeAppearanceClosing && !_homeAppearanceProjectionUnavailable;
         _viewModel.Set("HomeAppearanceAvailable", canEditAppearance);

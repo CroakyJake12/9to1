@@ -1,5 +1,8 @@
 using System.ComponentModel;
 using System.Text.Json.Nodes;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Platform;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
@@ -27,6 +30,11 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
     private readonly AsyncLocal<Operation?> _executing = new();
     private readonly List<Exception> _observerFailures = [];
     private readonly Dictionary<string, SettingTarget> _targets = new(StringComparer.Ordinal);
+    private static readonly (string Name, string Colour)[] AccentPresets =
+    [
+        ("Electric blue", "#2455FF"), ("Iris", "#7145FF"),
+        ("Lagoon", "#00B89C"), ("Sunset", "#FF6847")
+    ];
     private HomeThemePreference? _preference;
     private sealed record SettingTarget(NativeHomeThemePreferences Owner, long Revision, string Key, string Value);
     internal Task? OriginalClose => _close;
@@ -187,10 +195,116 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
 
     internal SettingsWriteOutcome CreateSettingsWriteOutcome() => new(this);
 
-    private static Avalonia.Media.Color PreviewSurface(Avalonia.Media.Color canvas, Avalonia.Media.Color layer)
+    private static Color PreviewSurface(Color canvas, Color layer)
     {
         byte Channel(byte lower, byte upper) => (byte)Math.Round(lower + (upper - lower) * layer.A / 255d);
-        return Avalonia.Media.Color.FromRgb(Channel(canvas.R, layer.R), Channel(canvas.G, layer.G), Channel(canvas.B, layer.B));
+        return Color.FromRgb(Channel(canvas.R, layer.R), Channel(canvas.G, layer.G), Channel(canvas.B, layer.B));
+    }
+
+    private static IBrush PreviewGradient(Color start, Color middle, Color end) => new LinearGradientBrush
+    {
+        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+        EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+        GradientStops = [new(start, 0), new(middle, .5), new(end, 1)]
+    };
+
+    private static void ApplyPresetPreview(Dictionary<string, object?> option, CuiPalette source, CuiAccessibilitySettings accessibility)
+    {
+        var palette = CuiAccessibilityPalette.Resolve(source, accessibility);
+        var dark = palette.TideBase.ToHsl().L < .5;
+        var panel = PreviewSurface(palette.TideBase, palette.Panel2);
+        var tile = PreviewSurface(palette.TideBase, palette.PanelHover);
+        var ink = palette.Text;
+        var accent = palette.Accent;
+        var (caption, panelRadius, tileRadius) = palette.Theme switch
+        {
+            CuiTheme.Professional => ("Quiet, confident surfaces", 9, 4),
+            CuiTheme.Glow => ("One ambient field of light", 9, 4),
+            CuiTheme.Playful => ("Softly frosted tonal layers", 19, 12),
+            CuiTheme.FrostedGlass => ("Soft translucent layers", 19, 12),
+            CuiTheme.Bubble => ("Soft raised surfaces", 15, 8),
+            CuiTheme.Metallic => ("Titanium", 4, 4),
+            CuiTheme.Retro => ("Amber Console", 3, 4),
+            CuiTheme.Western => ("Leather & Copper", 9, 4),
+            _ => ("Layered light and depth", 9, 4)
+        };
+        IBrush background = new SolidColorBrush(panel);
+        IBrush accentBrush = new SolidColorBrush(accent);
+        if (!accessibility.HighContrast)
+        {
+            var resources = new ResourceDictionary();
+            CuiThemeResourceApplier.ApplyToResources(resources, source, accessibility);
+            accentBrush = (IBrush)resources["CuiAccentPrimaryBrush"]!;
+            switch (palette.Theme)
+            {
+                case CuiTheme.Professional:
+                    background = new SolidColorBrush(palette.Panel3);
+                    tile = palette.LineStrong;
+                    break;
+                case CuiTheme.Glow:
+                    background = (IBrush)resources["CuiSurfaceMaterial"]!;
+                    tile = palette.TideBase;
+                    break;
+                case CuiTheme.Playful:
+                    background = PreviewGradient(palette.TideBase, palette.Panel, palette.Panel3);
+                    tile = palette.Panel2;
+                    break;
+                case CuiTheme.FrostedGlass:
+                    background = PreviewGradient(palette.TideBase, palette.TideColour, panel);
+                    break;
+                case CuiTheme.Bubble:
+                    background = PreviewGradient(panel, PreviewSurface(palette.TideBase, palette.Panel), palette.TideBase);
+                    break;
+                case CuiTheme.Metallic:
+                    background = PreviewGradient(palette.Line, palette.LineStrong, panel);
+                    ink = CuiContrast.EnsureForegroundContrast(ink, palette.LineStrong, 4.5);
+                    tile = palette.PanelHover;
+                    break;
+                case CuiTheme.Retro:
+                    background = new SolidColorBrush(Color.Parse(dark ? "#241A0B" : "#EBD7AD"));
+                    tile = Color.Parse(dark ? "#3F3526" : "#D4B77A");
+                    ink = Color.Parse(dark ? "#FFD685" : "#482E0D");
+                    break;
+                case CuiTheme.Western:
+                    background = (IBrush)resources["CuiPanel2Brush"]!;
+                    break;
+                case CuiTheme.Cinematic:
+                    background = PreviewGradient(palette.TideBase, panel, palette.Panel3);
+                    break;
+            }
+        }
+        option["Caption"] = caption;
+        option["PreviewPanel"] = background;
+        option["PreviewTile"] = new SolidColorBrush(tile);
+        option["PreviewInk"] = new SolidColorBrush(ink);
+        option["PreviewAccent"] = accentBrush;
+        option["PreviewPanelRadius"] = panelRadius;
+        option["PreviewTileRadius"] = tileRadius;
+        option["PreviewFont"] = palette.Theme switch
+        {
+            CuiTheme.Retro => "monospace",
+            CuiTheme.Western => "serif",
+            _ => CuiTypography.ResolveInterfaceFontFamily(accessibility.InterfaceFontFamilyOverride)
+        };
+    }
+
+    internal static void BindAppearanceLayout(CuiControlLoader loader, CuiViewModel model)
+    {
+        loader.BindAuthoredControl("home-appearance-settings", _ =>
+        {
+            var fragment = new CuiContainerControl("Vertical Stack");
+            fragment.SizeChanged += (_, args) =>
+            {
+                var compact = args.NewSize.Width < 640;
+                model.Set("HomeAppearancePadding", compact ? "12 12 12 24" : "12 32 12 24");
+                model.Set("HomeDisplayRows", compact ? "Auto Auto" : "Auto");
+                model.Set("HomeDisplayColumns", compact ? "1fr" : "1fr 280");
+                model.Set("HomeDisplayControlRow", compact ? 1 : 0);
+                model.Set("HomeDisplayControlColumn", compact ? 0 : 1);
+                model.Set("HomeDisplayControlAlignment", compact ? "Stretch" : "Right");
+            };
+            return fragment;
+        });
     }
 
     internal static void UpdateDisplayReadout(object? sender, PropertyChangedEventArgs args)
@@ -286,21 +400,37 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             var option = Option(name, "theme", name, string.Equals(name, value!.ThemeName, StringComparison.OrdinalIgnoreCase));
             var theme = themes.FirstOrDefault(item => item.DisplayName == name);
             option["HasPreview"] = theme is not null;
-            if (theme is null) return option;
+            if (theme is null)
+            {
+                option["Caption"] = "Custom theme";
+                return option;
+            }
             var appearance = Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
             var accent = Current.EffectiveAccent.ResolveColour("app.home");
-            var palette = CuiAccessibilityPalette.Resolve(CuiSurfacePaletteCatalog.For("Home", appearance, theme.Theme, accent), Current.Accessibility);
-            option["PreviewPanel"] = PreviewSurface(palette.TideBase, palette.Panel2).ToString();
-            option["PreviewTile"] = PreviewSurface(palette.TideBase, palette.PanelHover).ToString();
-            option["PreviewInk"] = palette.Text.ToString();
-            option["PreviewAccent"] = palette.Accent.ToString();
+            ApplyPresetPreview(option, CuiSurfacePaletteCatalog.For("Home", appearance, theme.Theme, accent), Current.Accessibility);
             return option;
         }
         if (value?.CustomThemesJson is { } custom)
             try { names.AddRange(CuiCustomThemeContract.DeserializeLibrary(custom).Select(theme => theme.Name)); }
             catch (ArgumentException) { }
+        var savedAccent = value?.Accent ?? HomeThemeAccentPreference.Default;
+        Dictionary<string, object?> AccentMode(string name, HomeThemeAccentOverrideMode mode) =>
+            Option(name, "accent-mode", mode.ToString(), savedAccent.Mode == mode);
+        Dictionary<string, object?> AccentSwatch((string Name, string Colour) preset)
+        {
+            var option = Option(preset.Name, "global-accent", preset.Colour, savedAccent.AllAppsColour == preset.Colour);
+            option["Colour"] = preset.Colour;
+            return option;
+        }
         return new Dictionary<string, object?>
         {
+            ["HomeAccentModeChoices"] = available ? new[]
+            {
+                AccentMode("Off", HomeThemeAccentOverrideMode.None), AccentMode("On", HomeThemeAccentOverrideMode.AllApps),
+                AccentMode("On per app", HomeThemeAccentOverrideMode.IndividualApps)
+            } : Array.Empty<Dictionary<string, object?>>(),
+            ["HomeGlobalAccentChoices"] = available ? AccentPresets.Select(AccentSwatch).ToArray() : Array.Empty<Dictionary<string, object?>>(),
+            ["HomeSavedGlobalColour"] = !available ? null : savedAccent.AllAppsColour ?? "No global colour saved",
             ["HomeAppearanceAvailable"] = available,
             ["HomeBrightness"] = (double)display.Brightness,
             ["HomeColourContrast"] = (double)display.ColourContrast,
@@ -354,12 +484,21 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 : displayChange is null ? null
                 : display with { Brightness = displayChange.Brightness, ColourContrast = displayChange.ColourContrast };
             var compatibleAppearance = target.Key == "mode" ? ResolveMode(updatedDisplay!.Mode).ToString() : prior.Appearance;
+            var savedAccent = prior.Accent ?? HomeThemeAccentPreference.Default;
+            var accent = target.Key switch
+            {
+                "accent-mode" => savedAccent.WithMode(Enum.Parse<HomeThemeAccentOverrideMode>(target.Value)),
+                "global-accent" => savedAccent.WithAllAppsColour(target.Value),
+                _ => prior.Accent
+            };
+            if (accent is { Mode: HomeThemeAccentOverrideMode.AllApps, AllAppsColour: null } && target.Key == "accent-mode")
+                accent = accent.WithAllAppsColour(HomeThemeAccentPreference.InitialAllAppsColour);
             var actual = updatedDisplay is not null
                 ? _service.SetDisplayAsync(prior, updatedDisplay, compatibleAppearance, current)
                 : _service.SetAsync(_scope, target.Key == "theme" ? target.Value : prior.ThemeName,
                 accessibility, target.Revision, current,
                 appearance: target.Key == "appearance" ? target.Value : prior.Appearance,
-                accent: prior.Accent, customThemesJson: prior.CustomThemesJson);
+                accent: accent, customThemesJson: prior.CustomThemesJson);
             HomeThemeOperationResult result;
             try { result = await actual; }
             catch (OperationCanceledException error) when (_closing && actual.IsCanceled &&
