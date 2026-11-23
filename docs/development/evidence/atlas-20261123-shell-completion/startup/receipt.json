@@ -1,0 +1,68 @@
+{
+  "change_source": "4391312ac",
+  "integration_candidate_assemblies": {
+    "Haven": "cd87ec00e7d4ed51df28460ef59529dfcd0f52132a8ffbccf6e5779bbc6fe463",
+    "Haven.dll": "b888764dac3c5ce8fda2a334b9d623abcfcf32d32121ff93125109602b8fdfc2",
+    "HavenOS.Home.dll": "54b600224eea449ef853ee72e1226473f481c8225a88dfbce7cd3325c92d180f",
+    "HavenOS.Apps.Browse.NativeUI.dll": "06bb0711a1e21245a60c20838cbad52bec937a2d65273e9f58e5e5a0d313d4b3",
+    "Haven.runtimeconfig.json": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  },
+  "scope": "Only the startup appearance change was verified in this integration candidate. Existing fixture came from a prior real startup that persisted mode 3.",
+  "renderer": "Genuine Linux apphost on private X11, 1:1, no account login or model download",
+  "observations": [
+    {
+      "profile": "fresh-dark-fresh",
+      "capture": "fresh-dark-fresh.png",
+      "size": [
+        1440,
+        900
+      ],
+      "sampled_role_colors": {
+        "body canvas": "#17181B",
+        "rail canvas": "#212329",
+        "tab strip": "#212329"
+      },
+      "sha256": "cca09ca864a7c97c9e2981abab35b8ceed04a2d2f6b8040b1f3e98f98a87eec2",
+      "post_close_preference": {
+        "legacy_theme": "Professional",
+        "legacy_mode": 2,
+        "legacy_override_active": false,
+        "canonical_theme": null,
+        "canonical_mode": null,
+        "display": null,
+        "accent": null
+      },
+      "termination": [
+        "Window manager WM_DELETE_WINDOW",
+        "Haven apphost exit code 0"
+      ]
+    },
+    {
+      "profile": "fresh-dark-existing",
+      "capture": "fresh-dark-existing.png",
+      "size": [
+        1440,
+        900
+      ],
+      "sampled_role_colors": {
+        "body canvas": "#090B0E",
+        "rail canvas": "#1C1C1E",
+        "tab strip": "#1C1C1E"
+      },
+      "sha256": "1866ef26f868219996cb8bbfd5d10c853953eb4756de5c87842a80cf284ea6bc",
+      "post_close_preference": {
+        "legacy_theme": "Professional",
+        "legacy_mode": 3,
+        "legacy_override_active": false,
+        "canonical_theme": null,
+        "canonical_mode": null,
+        "display": null,
+        "accent": null
+      },
+      "termination": [
+        "Window manager WM_DELETE_WINDOW",
+        "Haven apphost exit code 0"
+      ]
+    }
+  ]
+}
