@@ -10,6 +10,7 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
     private readonly Func<string> _section;
     private readonly CuiViewModel _values = new();
     private long _revision;
+    private bool _showLabels;
 
     public HomeRailCuiBindings(Func<string> section)
     {
@@ -23,15 +24,24 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
 
     public void Refresh()
     {
+        UpdateRailDimensions();
         _values.Set("Revision", _revision++);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
     public void SetViewportWidth(double width)
     {
-        var showLabels = width >= 840;
-        _values.Set("rail.showLabels", showLabels);
-        _values.Set("rail.itemWidth", showLabels ? 196d : 44d);
+        _showLabels = width >= 840;
+        _values.Set("rail.showLabels", _showLabels);
+        UpdateRailDimensions();
+        _values.Set("newTab.contentPadding", _showLabels ? "34 26 34 24" : "12 16 12 16");
+    }
+
+    private void UpdateRailDimensions()
+    {
+        var desktopNewTab = _showLabels && _section() == "newtab";
+        _values.Set("rail.itemWidth", desktopNewTab ? 210d : _showLabels ? 196d : 44d);
+        _values.Set("rail.sidebarPadding", desktopNewTab ? "12 8 11 8" : "5 8 5 8");
     }
 
     public bool TryGetValue(string path, out object? value)
@@ -44,8 +54,8 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
             "rail.modelsSelected" => section == "models",
             "rail.settingsSelected" => section == "settings",
             "rail.homeVisible" => section != "settings",
-            "rail.pageGap" => section == "settings" ? 0d : 8d,
-            "rail.pagePadding" => section == "settings" ? "0" : "16",
+            "rail.pageGap" => section is "settings" or "newtab" ? 0d : 8d,
+            "rail.pagePadding" => section is "settings" or "newtab" ? "0" : "16",
             "rail.eventsSelected" => section == "events",
             "rail.librarySelected" => section == "library",
             "rail.newtabSelected" => section == "newtab",

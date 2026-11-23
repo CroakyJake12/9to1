@@ -40,8 +40,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
     private readonly TextBlock _newTabTime = new(), _newTabDate = new();
+    private readonly TextBlock _newTabAiUnavailable = new();
     private readonly TextBox _search = new();
-    private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "Ask AI" }, SelectedIndex = 0 };
+    private readonly Button _newTabGo = new(), _newTabAskAi = new();
     private readonly DispatcherTimer? _newTabClock;
     private readonly HomeAppsCuiBindings _appsBindings;
     private readonly HomeRailCuiBindings _railBindings;
@@ -50,6 +51,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private IReadOnlyList<HomeAppItem> _appsCatalogue = [];
     private CuiContainerControl? _searchRow;
     private CuiContainerControl? _newTabShortcuts;
+    private (string Query, AppContentAddress Address)? _preparedAiDraft;
+    private bool _preparingAiDraft;
     private NewDashboardPage? _dashboard;
     private HomeDiscoverPage? _discover;
     private HomeEventsDestinationPage? _events;
@@ -102,7 +105,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         var parser = new CuiRichParser();
         var document = parser.Parse(reader.ReadToEnd(), "UnifiedHome.cui");
         if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The shared Home document is invalid.");
+            throw new InvalidDataException("The shared Home document is invalid. " + string.Join(" ", parser.Diagnostics.Diagnostics));
         _loader.SetActionDispatcher(this);
         _loader.SetBindingContext(_railBindings);
         _loader.BindAuthoredControl("home-search-row", _ => _searchRow = new("Vertical Stack"));
@@ -110,23 +113,26 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _loader.BindAuthoredControl("home-heading", _ => _heading);
         _loader.BindAuthoredControl("home-status", _ => _status);
         _loader.BindAuthoredControl("home-search", _ => _search);
-        _loader.BindAuthoredControl("home-search-mode", _ => _searchMode);
+        _loader.BindAuthoredControl("home-submit", _ => _newTabGo);
+        _loader.BindAuthoredControl("home-newtab-ask-ai", _ => _newTabAskAi);
+        _loader.BindAuthoredControl("home-newtab-ai-unavailable", _ => _newTabAiUnavailable);
         _loader.BindAuthoredControl("home-newtab-time", _ => _newTabTime);
         _loader.BindAuthoredControl("home-newtab-date", _ => _newTabDate);
         _loader.BindAuthoredControl("home-newtab-shortcuts", _ => _newTabShortcuts = new("Wrap"));
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The shared Home document could not be rendered.");
+            throw new InvalidDataException("The shared Home document could not be rendered. " + string.Join(" ", loaded.Diagnostics));
         _loader.WireBindings(loaded.Root);
         // Bounded canonical CUI keyboard-focus tooltip capability: authored rail tooltips gain real
         // keyboard-focus visibility (same retained popup/transparency seam) for this Home surface.
         _keyboardTooltips = CuiKeyboardTooltipHost.Attach(loaded.Root);
-        if (!_aiAvailable)
-            Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "Ask AI (unavailable)", IsEnabled = false } });
+        Set(_newTabAiUnavailable, "IsVisible", !_aiAvailable);
+        RefreshNewTabSearchActions();
         Content = loaded.Root;
         SizeChanged += (_, args) => _railBindings.SetViewportWidth(args.NewSize.Width);
         if (_newTabClock is not null && _newTabShortcuts is not null)
             _newTabShortcuts.SizeChanged += OnNewTabShortcutsSizeChanged;
+        _search.TextChanged += OnSearchTextChanged;
         _search.KeyDown += OnSearchKey;
     }
 
@@ -147,7 +153,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
 
     public bool? IsActionAvailable(string command) => IsAlive && (command == "home.events"
         ? _createEvents is not null : command == "home.settings" ? _createSettings is not null :
-        command == "home.library" ? _createLibrary is not null : command is
+        command == "home.library" ? _createLibrary is not null :
+        command == "home.ask-ai" ? _aiAvailable && _section == "newtab" : command is
         "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
         "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or
         "home.notifications" or "home.open-app" or "home.set-app-query" or "home.clear-app-query");
@@ -195,7 +202,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                     if (_request.Address.Authority == "newtab") await SelectAsync("newtab", original, linked.Token);
                     else Queue(AppContentAddress.Parse("browse://newtab"), original, true);
                     break;
-                case "home.submit": await SubmitAsync(original, linked.Token); break;
+                case "home.submit": SubmitSearch(original, linked.Token); break;
+                case "home.ask-ai": await AskAiAsync(original, linked.Token); break;
                 case "home.open-app":
                     if (TryResolveAppRoute(parameter as string, out var appAddress)) Queue(appAddress, original);
                     else UpdateAppsState("That app is no longer in this profile. Open it again from the current list.");
@@ -287,9 +295,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         RefreshNewTabClock();
         _viewport.IsVisible = section != "newtab";
         Set(_heading, "Text", HeadingFor(section));
-        Set(_heading, "IsVisible", section != "settings");
+        Set(_heading, "IsVisible", section is not ("settings" or "newtab"));
         Set(_status, "IsVisible", section != "settings");
-        Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. Ask AI requires an available Spaces destination." : string.Empty);
+        Set(_status, "Text", string.Empty);
         if (settingsVisibilityChanged) SettingsTitleChanged?.Invoke(this, EventArgs.Empty);
         if (section == "apps")
         {
@@ -511,7 +519,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         // Keep three cards on a desktop row and leave room for each icon and label as it narrows.
         var columns = width >= 660 ? 3 : width >= 312 ? 2 : 1;
         shortcuts.ItemWidth = Math.Floor((width - (columns - 1) * shortcuts.ItemSpacing) / columns);
-        Set(_newTabTime, "FontSize", width >= 520 ? 56d : 46d);
+        shortcuts.ItemHeight = columns == 3 ? 94 : 80;
+        Set(_newTabTime, "FontSize", width >= 520 ? 58d : 46d);
     }
 
     private void RefreshNewTabClock()
@@ -533,30 +542,33 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _newTabClock.Start();
     }
 
+    private void OnSearchTextChanged(object? sender, TextChangedEventArgs args) => RefreshNewTabSearchActions();
+
+    private void RefreshNewTabSearchActions()
+    {
+        var hasQuery = !string.IsNullOrWhiteSpace(_search.Text);
+        Set(_newTabGo, "IsEnabled", hasQuery);
+        Set(_newTabAskAi, "IsEnabled", hasQuery && _aiAvailable && !_preparingAiDraft);
+    }
+
     private void OnSearchKey(object? sender, KeyEventArgs args)
     {
-        if (args.Key != Key.Enter || !IsAlive) return;
-        args.Handled = true; _ = _work.RunAsync(original => SubmitAsync(original, original.Token));
-    }
-    private async Task SubmitAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
-    {
-        var text = _search.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(text)) return;
-        AppContentAddress address;
-        if (_searchMode.SelectedIndex == 1)
+        if (args.Key != Key.Enter || !IsAlive || _section != "newtab") return;
+        args.Handled = true;
+        _ = _work.RunAsync(original =>
         {
-            if (!_aiAvailable)
-            {
-                Set(_status, "Text", "AI is unavailable in this host. Choose Search to continue.");
-                return; // Expected availability refusal: retain input and a healthy owner.
-            }
-            // This callback saves the draft through the canonical conversation owner.
-            // Opening an AI destination never submits a model turn implicitly.
-            address = await original.AwaitAsync(_prepareAiDraft(text, token));
-            if (address.Namespace != AppContentNamespace.NativeApp || address.Authority != "spaces")
-                throw new InvalidOperationException("The canonical AI draft must open within Spaces.");
-        }
-        else if (AppContentAddress.IsReserved(text))
+            SubmitSearch(original, original.Token);
+            return Task.CompletedTask;
+        });
+    }
+
+    private void SubmitSearch(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var text = _search.Text?.Trim();
+        if (_section != "newtab" || string.IsNullOrWhiteSpace(text)) return;
+        AppContentAddress address;
+        if (AppContentAddress.IsReserved(text))
         {
             if (!AppContentAddress.TryParse(text, out var parsed) || parsed!.Namespace == AppContentNamespace.Cui)
             {
@@ -576,6 +588,52 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         }
         Queue(address, original);
     }
+
+    private async Task AskAiAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        var query = _search.Text;
+        if (_section != "newtab" || _preparingAiDraft || string.IsNullOrWhiteSpace(query)) return;
+
+        var generation = _selection;
+        original.BindPublicationGuard(() => IsAlive && _selection == generation &&
+            string.Equals(_search.Text, query, StringComparison.Ordinal));
+        _preparingAiDraft = true;
+        RefreshNewTabSearchActions();
+        try
+        {
+            if (_preparedAiDraft is not { } draft || draft.Query != query)
+            {
+                // The Spaces owner prepares an unsent draft and returns its own exact route.
+                var address = await original.AwaitAsync(_prepareAiDraft(query, token));
+                if (address.Namespace != AppContentNamespace.NativeApp || address.Authority != "spaces" || !HasConversationIdentity(address))
+                    throw new InvalidOperationException("The canonical AI draft must identify its conversation in Spaces.");
+                draft = (query, address);
+                _preparedAiDraft = draft;
+            }
+            // Browse admission precedes mounting, which can fail while this source tab is retained.
+            // Retrying the same query must open the already prepared draft.
+            token.ThrowIfCancellationRequested();
+            if (original.IsAcceptedPublicationCurrent) Queue(draft.Address, original);
+        }
+        finally
+        {
+            _preparingAiDraft = false;
+            if (IsAlive) RefreshNewTabSearchActions();
+        }
+    }
+
+    private static bool HasConversationIdentity(AppContentAddress address)
+    {
+        return address.ResourceSegments switch
+        {
+            ["chat", var conversation] => IsNonemptyId(conversation),
+            ["selected", var space, "chat", var conversation] => IsNonemptyId(space) && IsNonemptyId(conversation),
+            _ => false
+        };
+
+        static bool IsNonemptyId(string value) => Guid.TryParseExact(value, "D", out var id) && id != Guid.Empty;
+    }
+
     private bool Queue(AppContentAddress address, DesktopOriginalWorkLifetime.Original original, bool? newTab = null,
         Task? additionalSettlement = null)
     {
@@ -663,6 +721,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (!_stopped) throw new InvalidOperationException("The original Home children must finish closing before detachment.");
         // The scoped-appearance observation was retired in StopAsync before the loaders tore down.
         _search.KeyDown -= OnSearchKey;
+        _search.TextChanged -= OnSearchTextChanged;
         if (_dashboard is not null)
         {
             _dashboard.ModeRequested -= OnDashboardApp; _dashboard.ManageAppsRequested -= OnManageApps;

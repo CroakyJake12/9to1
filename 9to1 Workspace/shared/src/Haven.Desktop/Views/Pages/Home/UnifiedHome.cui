@@ -4,7 +4,7 @@
   <Theme Name="user_preference">
     <Page AccessibleName="9to1 Home">
       <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiWorkspaceBrush}">
-        <Container id="home-sidebar" MinWidth="56" IsVisible="{Binding rail.homeVisible, fallback=true}" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+        <Container id="home-sidebar" MinWidth="56" IsVisible="{Binding rail.homeVisible, fallback=true}" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="{Binding rail.sidebarPadding}" CellGap="8" Background="{Resource CuiChromeMaterial}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
           <Container id="home-rail-nav" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
             <Button id="home-apps" action="home.apps" accessible-name="Apps" Tooltip="Apps" Selected="{Binding rail.appsSelected}" Width="{Binding rail.itemWidth, fallback=44}" Height="44" Padding="8" HorizontalAlignment="Center" HorizontalContentAlignment="Left" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
@@ -61,39 +61,61 @@
         </Container>
         <Container id="home-main" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" CellGap="{Binding rail.pageGap}" Padding="{Binding rail.pagePadding}">
           <Text id="home-heading" Text="Apps" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
-          <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="16" IsVisible="False"
-                     VerticalAlignment="Top" MaxWidth="780" Padding="12 24 12 12" VerticalScrolling="True" HorizontalScrolling="False">
-            <Container Type="Vertical Stack" CellGap="4" Margin="0 0 0 8">
-              <Text id="home-newtab-time" FontSize="46" FontWeight="800" TextAlignment="Center" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
-              <Text id="home-newtab-date" FontSize="14" FontWeight="600" TextAlignment="Center" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="home-search-row" Row="2" Type="Vertical Stack" CellGap="24" IsVisible="False"
+                     VerticalAlignment="Top" MaxWidth="1120" Padding="{Binding newTab.contentPadding, fallback=12 16 12 16}"
+                     VerticalScrolling="True" HorizontalScrolling="False">
+            <Text id="home-newtab-heading" Text="Home" FontSize="36" FontWeight="800" />
+            <Container Type="Vertical Stack" MaxWidth="780" CellGap="14">
+              <Container Type="Vertical Stack" CellGap="6" Margin="0 0 0 8">
+                <Text id="home-newtab-time" FontSize="46" FontWeight="800" TextAlignment="Center" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+                <Text id="home-newtab-date" FontSize="14" FontWeight="600" TextAlignment="Center" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+              <Container id="home-search-entry" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8" Padding="16 8 12 8"
+                         Height="68" Background="{Resource CuiPanelBrush}" CornerRadius="22">
+                <Image Source="icon:search" Width="18" Height="18" VerticalAlignment="Center" IsHitTestVisible="False" />
+                <Input id="home-search" Column="1" Type="Text" PlaceholderText="Search or enter an address" AccessibleName="New Tab search or prompt"
+                       MinWidth="0" Height="48" CornerRadius="18" Background="{Resource CuiTransparentBrush}" VerticalContentAlignment="Center" />
+                <Button id="home-submit" Column="2" Action="home.submit" Content="→" AccessibleName="Go" Tooltip="Submit New Tab search"
+                        Width="44" Height="44" Padding="0" FontSize="20" VerticalAlignment="Center" CornerRadius="22" AccentRole="Primary" />
+              </Container>
+              <Container Type="Wrap" CellGap="8" HorizontalAlignment="Center">
+                <Button id="home-newtab-ask-ai" Action="home.ask-ai" AccessibleName="Ask AI"
+                        MinHeight="36" CornerRadius="18" AccentRole="Secondary">
+                  <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+                    <Image Source="icon:sparkles" Width="16" Height="16" />
+                    <Text Text="Ask AI" FontWeight="700" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+                <Button id="home-newtab-all-apps" Action="home.apps" AccessibleName="All apps"
+                        MinHeight="36" CornerRadius="18" Chromeless="True">
+                  <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+                    <Image Source="icon:apps" Width="16" Height="16" />
+                    <Text Text="All apps" FontWeight="700" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+              </Container>
+              <Text id="home-newtab-ai-unavailable" Text="Ask AI requires an available Spaces destination." FontSize="12" FontWeight="600"
+                    TextWrapping="Wrap" TextAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
-            <Container id="home-search-entry" Type="Grid" ColumnSizes="1fr Auto" CellGap="8" Padding="6"
-                       Background="{Resource CuiPanelBrush}" CornerRadius="22">
-              <Input id="home-search" Type="Text" PlaceholderText="Search or enter an address" AccessibleName="New Tab search or prompt"
-                     MinWidth="0" Height="48" CornerRadius="18" Background="{Resource CuiTransparentBrush}" VerticalContentAlignment="Center" />
-              <Button id="home-submit" Column="1" action="home.submit" Content="Go" AccessibleName="Submit New Tab search or prompt"
-                      MinWidth="48" Height="44" VerticalAlignment="Center" CornerRadius="18" AccentRole="Primary" />
-            </Container>
-            <Input id="home-search-mode" Type="Select" AccessibleName="Search or Ask AI" Width="156" HorizontalAlignment="Center" />
-            <Container Type="Vertical Stack" CellGap="12" Margin="0 12 0 0">
+            <Container Type="Vertical Stack" CellGap="12">
               <Text id="home-newtab-shortcuts-heading" Text="Shortcuts" FontSize="18" FontWeight="750" />
               <Container id="home-newtab-shortcuts" Type="Wrap" CellGap="12" HorizontalAlignment="Stretch">
-                <Button id="home-newtab-shortcut-apps" Action="home.apps" AccessibleName="Apps" Height="80"
-                        HorizontalContentAlignment="Left" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
+                <Button id="home-newtab-shortcut-apps" Action="home.apps" AccessibleName="Apps" MinHeight="80"
+                        HorizontalContentAlignment="Left" VerticalAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
                   <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
                     <Image Source="icon:apps" Width="26" Height="26" />
                     <Text Text="Apps" FontWeight="750" VerticalAlignment="Center" />
                   </Container>
                 </Button>
-                <Button id="home-newtab-shortcut-library" Action="home.library" AccessibleName="Library" Height="80"
-                        HorizontalContentAlignment="Left" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
+                <Button id="home-newtab-shortcut-library" Action="home.library" AccessibleName="Library" MinHeight="80"
+                        HorizontalContentAlignment="Left" VerticalAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
                   <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
                     <Image Source="icon:folder" Width="26" Height="26" />
                     <Text Text="Library" FontWeight="750" VerticalAlignment="Center" />
                   </Container>
                 </Button>
-                <Button id="home-newtab-shortcut-dashboard" Action="home.dashboard" AccessibleName="Dashboard" Height="80"
-                        HorizontalContentAlignment="Left" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
+                <Button id="home-newtab-shortcut-dashboard" Action="home.dashboard" AccessibleName="Dashboard" MinHeight="80"
+                        HorizontalContentAlignment="Left" VerticalAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
                   <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
                     <Image Source="icon:dashboard" Width="26" Height="26" />
                     <Text Text="Dashboard" FontWeight="750" VerticalAlignment="Center" />

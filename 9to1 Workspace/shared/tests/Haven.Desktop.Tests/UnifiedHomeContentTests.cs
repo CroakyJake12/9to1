@@ -45,11 +45,12 @@ public sealed partial class UnifiedHomeContentTests
         Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true,
         Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null,
         Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null,
-        Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null) => new(source,
+        Func<BrowseAppContentRequest, HomeSettingsDestinationPage>? settings = null,
+        Func<string, CancellationToken, Task<AppContentAddress>>? prepareAiDraft = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
-            (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
+            prepareAiDraft ?? ((_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI.")),
             admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events, settings);
 
     // Merge inside the existing UnifiedHomeContentTests class. This is a component
@@ -2038,11 +2039,12 @@ public sealed partial class UnifiedHomeContentTests
     }
 
     [AvaloniaTheory]
-    [InlineData(360, 1)]
-    [InlineData(430, null)]
-    [InlineData(720, 2)]
-    [InlineData(1180, 3)]
-    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable(int width, int? expectedShortcutColumns)
+    [InlineData(360, 760, 1)]
+    [InlineData(430, 760, null)]
+    [InlineData(720, 520, 2)]
+    [InlineData(1180, 760, 3)]
+    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable(
+        int width, int height, int? expectedShortcutColumns)
     {
         using var lifetime = new CancellationTokenSource();
         using var bus = new HavenEventBus();
@@ -2053,33 +2055,52 @@ public sealed partial class UnifiedHomeContentTests
                 new EmptyDashboard(), new EmptyDashboardLayout(), [])).CreateSession(Request("browse://newtab")));
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
-        var window = new Window { Width = width, Height = 760, Content = session.OriginalNativeView };
+        var window = new Window { Width = width, Height = height, Content = session.OriginalNativeView };
         try
         {
             window.Show();
+            Assert.Equal("New Tab", session.Title);
             window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var heading = SettingsControl<TextBlock>(page, "home-newtab-heading");
+            Assert.Equal("Home", heading.Text);
+            if (width >= 1180)
+            {
+                var rail = SettingsControl<CuiContainerControl>(page, "home-sidebar");
+                Assert.InRange(rail.Bounds.Width, 233, 235);
+                Assert.Equal(210, HomeRailButton(page, "home-newtab", "New Tab").Bounds.Width, 1);
+            }
             var clock = SettingsControl<TextBlock>(page, "home-newtab-time");
             var date = SettingsControl<TextBlock>(page, "home-newtab-date");
             var now = DateTimeOffset.Now;
             var previousMinute = now.AddMinutes(-1);
             Assert.Contains(clock.Text, new[] { now.ToString("t"), previousMinute.ToString("t") });
             Assert.Contains(date.Text, new[] { now.ToString("D"), previousMinute.ToString("D") });
-            var mode = page.GetVisualDescendants().OfType<ComboBox>().Single(item => item.Name == "home-search-mode");
-            var askAi = Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1));
+            var askAi = SettingsControl<Button>(page, "home-newtab-ask-ai");
+            var allApps = SettingsControl<Button>(page, "home-newtab-all-apps");
+            var help = SettingsControl<TextBlock>(page, "home-newtab-ai-unavailable");
             Assert.False(askAi.IsEnabled);
-            Assert.Equal("Ask AI (unavailable)", askAi.Content);
+            Assert.True(help.IsEffectivelyVisible);
+            Assert.Equal("Ask AI requires an available Spaces destination.", help.Text);
+            Assert.Equal(false, page.IsActionAvailable("home.ask-ai"));
             var search = page.GetVisualDescendants().OfType<TextBox>().Single(item => item.Name == "home-search");
             var submit = page.GetVisualDescendants().OfType<Button>().Single(item => item.Name == "home-submit");
+            Assert.Equal("Go", AutomationProperties.GetName(submit));
+            Assert.False(submit.IsEnabled);
+            var searchEntry = SettingsControl<CuiContainerControl>(page, "home-search-entry");
+            Assert.Equal(68, searchEntry.Bounds.Height, 1);
+            Assert.InRange(searchEntry.Bounds.Width, 0, 780.5);
             var searchOrigin = search.TranslatePoint(default, window)!.Value;
             var submitOrigin = submit.TranslatePoint(default, window)!.Value;
-            var modeOrigin = mode.TranslatePoint(default, window)!.Value;
+            var allAppsOrigin = allApps.TranslatePoint(default, window)!.Value;
             Assert.True(date.TranslatePoint(new Point(0, date.Bounds.Height), window)!.Value.Y <= searchOrigin.Y);
             Assert.True(searchOrigin.X + search.Bounds.Width <= submitOrigin.X + .5);
-            Assert.True(searchOrigin.Y + search.Bounds.Height <= modeOrigin.Y + .5);
+            Assert.True(searchOrigin.Y + search.Bounds.Height <= allAppsOrigin.Y + .5);
             Assert.True(search.Bounds.Width >= 150);
             var shortcutsHeading = SettingsControl<TextBlock>(page, "home-newtab-shortcuts-heading");
             Assert.Equal("Shortcuts", shortcutsHeading.Text);
-            Assert.True(modeOrigin.Y + mode.Bounds.Height <= shortcutsHeading.TranslatePoint(default, window)!.Value.Y);
+            var shortcutsHeadingOrigin = shortcutsHeading.TranslatePoint(default, window)!.Value;
+            Assert.True(allAppsOrigin.Y + allApps.Bounds.Height <= shortcutsHeadingOrigin.Y);
+            Assert.Equal(heading.TranslatePoint(default, window)!.Value.X, shortcutsHeadingOrigin.X, 1);
             var shortcuts = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcuts");
             var shortcutButtons = shortcuts.AuthoredChildren.OfType<Button>().ToArray();
             Assert.Equal(new[] { "Apps", "Library", "Dashboard" }, shortcutButtons.Select(AutomationProperties.GetName));
@@ -2088,10 +2109,11 @@ public sealed partial class UnifiedHomeContentTests
                 Assert.Equal(expected, positions.GroupBy(position => Math.Round(position.Y)).Max(row => row.Count()));
             Assert.All(shortcutButtons.Zip(positions), pair =>
             {
-                Assert.True(pair.First.IsEffectivelyVisible && pair.First.Bounds.Height >= 64);
+                Assert.True(pair.First.IsEffectivelyVisible);
+                Assert.Equal(width >= 1180 ? 94 : 80, pair.First.Bounds.Height, 1);
                 Assert.InRange(pair.Second.X, -.5, shortcuts.Bounds.Width - pair.First.Bounds.Width + .5);
             });
-            foreach (var control in new Control[] { search, submit, mode })
+            foreach (var control in new Control[] { search, allApps })
             {
                 Assert.True(control.IsEffectivelyVisible && control.Focus());
                 var origin = control.TranslatePoint(default, window)!.Value;
@@ -2105,12 +2127,17 @@ public sealed partial class UnifiedHomeContentTests
                 CaptureOptionalFrame(window, frame, $"home-newtab-{width}", "UnifiedHome New Tab fixture with unavailable Ask AI");
             }
             search.Text = "charging diagnosis";
-            mode.SelectedIndex = 1; // Programmatic/late action must also refuse harmlessly.
-            await page.DispatchAsync("home.submit", null);
+            SettleFixtureLayout(window);
+            Assert.True(submit.IsEnabled && submit.Focus());
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.Equal("charging diagnosis", search.Text);
             Assert.Null(navigation);
-            Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item => item.Text?.Contains("AI is unavailable") == true);
-            mode.SelectedIndex = 0;
+            ClickSettingsButton(window, submit);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.NotNull(navigation);
+            Assert.True(navigation.Address.IsWeb);
+            navigation = null;
             Assert.True(search.Focus());
             window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
             window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
@@ -2119,17 +2146,119 @@ public sealed partial class UnifiedHomeContentTests
             Assert.True(navigation.Address.IsWeb);
 
             navigation = null;
-            Assert.True(shortcutButtons[^1].Focus());
+            var dashboard = shortcutButtons[^1];
+            ScrollViewer? contentScroll = null;
+            if (height == 520)
+            {
+                contentScroll = Assert.IsType<ScrollViewer>(SettingsControl<CuiContainerControl>(page, "home-search-row").Child);
+                Assert.True(contentScroll.Extent.Height > contentScroll.Viewport.Height);
+                contentScroll.ScrollToEnd();
+                SettleFixtureLayout(window);
+                Assert.True(contentScroll.Offset.Y > 0);
+                var dashboardOrigin = dashboard.TranslatePoint(default, contentScroll)!.Value;
+                Assert.InRange(dashboardOrigin.Y, -.5, contentScroll.Viewport.Height - dashboard.Bounds.Height + .5);
+            }
+            Assert.True(dashboard.Focus());
             PressSettingsKey(window, PhysicalKey.Enter);
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.NotNull(navigation);
             Assert.True(navigation.OpenInNewTab);
             Assert.Equal("browse://home/dashboard", navigation.Address.Value);
             Assert.Equal("charging diagnosis", search.Text);
+
+            contentScroll?.ScrollToHome();
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, allApps);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            SettleFixtureLayout(window);
+            var appsHeading = SettingsControl<TextBlock>(page, "home-heading");
+            Assert.True(appsHeading.IsEffectivelyVisible);
+            Assert.Equal("Apps", appsHeading.Text);
+            Assert.True(SettingsControl<CuiContainerControl>(page, "home-apps-search-row").IsEffectivelyVisible);
+            Assert.False(search.IsAttachedToVisualTree() && search.IsEffectivelyVisible);
+            await page.DispatchAsync("home.newtab", null);
+            SettleFixtureLayout(window);
+            Assert.True(search.IsEffectivelyVisible);
+            Assert.Equal("charging diagnosis", search.Text);
             Assert.True(await session.TryPrepareToCloseAsync());
         }
         finally { await session.CloseAndDrainAsync(); window.Close(); }
         Assert.True(session.CanRetireOriginalView);
+    }
+
+    [AvaloniaFact]
+    public async Task New_Tab_Ask_AI_opens_the_prepared_unsent_Spaces_draft_and_reuses_it_on_Browse_retry()
+    {
+        using var lifetime = new CancellationTokenSource();
+        var limit = TimeSpan.FromSeconds(20);
+        var entered = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var prepared = new TaskCompletionSource<AppContentAddress>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var route = AppContentAddress.Parse("9to1://spaces/chat/" + Guid.NewGuid().ToString("D"));
+        var nextRoute = AppContentAddress.Parse($"9to1://spaces/selected/{Guid.NewGuid():D}/chat/{Guid.NewGuid():D}");
+        const string prompt = "  A draft for Spaces  ";
+        var navigation = new List<BrowseNavigationIntent>();
+        var request = Request("browse://newtab");
+        var preparations = 0;
+        var canNavigate = false;
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            (intent, _) => { navigation.Add(intent); return canNavigate; },
+            prepareAiDraft: (query, token) =>
+            {
+                preparations++;
+                entered.TrySetResult(query);
+                return preparations == 1 ? prepared.Task.WaitAsync(token) : Task.FromResult(nextRoute);
+            }).CreateSession(request));
+        await session.InitializeAsync();
+        var page = Assert.IsType<UnifiedHomePage>(Assert.IsType<OriginalTabTransientPresentation>(session.OriginalNativeView).OriginalContent);
+        var window = Show(session.OriginalNativeView);
+        try
+        {
+            var search = SettingsControl<TextBox>(page, "home-search");
+            var askAi = SettingsControl<Button>(page, "home-newtab-ask-ai");
+            Assert.False(askAi.IsEnabled);
+            search.Text = prompt;
+            SettleFixtureLayout(window);
+            Assert.True(askAi.IsEnabled);
+            Assert.Equal(0, preparations);
+            ClickSettingsButton(window, askAi);
+            Assert.Equal(prompt, await entered.Task.WaitAsync(limit));
+            Assert.False(askAi.IsEnabled);
+            await page.DispatchAsync("home.ask-ai", null);
+            Assert.Empty(navigation);
+            Assert.Equal(1, preparations);
+            prepared.TrySetResult(route);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(route, Assert.Single(navigation).Address);
+            Assert.Equal(prompt, search.Text);
+
+            canNavigate = true;
+            Assert.True(askAi.Focus());
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(1, preparations);
+            Assert.Equal(2, navigation.Count);
+            Assert.Equal(new BrowseNavigationIntent(request.TabId, route, OpenInNewTab: false), navigation[^1]);
+            Assert.Equal(prompt, search.Text);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            // Admission alone does not retire the source, as with a late Browse mount failure.
+            Assert.Equal(1, preparations);
+            Assert.Equal(3, navigation.Count);
+            Assert.Equal(route, navigation[^1].Address);
+
+            search.Text = "A different draft";
+            SettleFixtureLayout(window);
+            ClickSettingsButton(window, askAi);
+            await page.WhenActionsIdleAsync().WaitAsync(limit);
+            Assert.Equal(2, preparations);
+            Assert.Equal(4, navigation.Count);
+            Assert.Equal(nextRoute, navigation[^1].Address);
+        }
+        finally
+        {
+            prepared.TrySetCanceled();
+            try { await session.CloseAndDrainAsync(); } finally { window.Close(); }
+        }
     }
 
     [AvaloniaTheory]
