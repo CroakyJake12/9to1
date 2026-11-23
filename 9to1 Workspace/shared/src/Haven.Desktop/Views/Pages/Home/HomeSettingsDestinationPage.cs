@@ -247,6 +247,8 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         "SettingsClearSearch" => _query.Length != 0,
         "SettingsOptionsAccent" or "SettingsOptionsAccessibility" => _category == "theme-options",
         "SettingsOptionsCreateTheme" => _category == "theme-options" && !IsBusy && !_unavailable,
+        "SettingsLayoutOpenNewTab" => _category == "layout" && LinkIsAvailable(LayoutNewTabLink),
+        "SettingsLayoutAccessibility" => _category == "layout",
         "SettingsOpenBrowseGeneral" => NavigateContentAsync is not null && _category == "haven-general",
         "SettingsOpenBrowseBookmarks" => NavigateContentAsync is not null && _category == "haven-bookmarks",
         "SettingsOpenBrowseHistory" => NavigateContentAsync is not null && _category == "haven-history",
@@ -289,6 +291,11 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
                 OpenRelatedCategory("theme", "home-accent-settings");
                 return ValueTask.CompletedTask;
             case "SettingsOptionsAccessibility":
+                OpenRelatedCategory("accessibility");
+                return ValueTask.CompletedTask;
+            case "SettingsLayoutOpenNewTab":
+                return OpenDirectoryLinkAsync(LayoutNewTabLink, cancellationToken);
+            case "SettingsLayoutAccessibility":
                 OpenRelatedCategory("accessibility");
                 return ValueTask.CompletedTask;
             case "SettingsOptionsCreateTheme":
@@ -365,6 +372,9 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
             }
         }));
     }
+
+    private static readonly HomeSettingsCatalog.Link LayoutNewTabLink = new("New Tab", string.Empty, "Customise",
+        Address: AppContentAddress.Parse("browse://newtab/customise"));
 
     private static HomeSettingsCatalog.Link BrowseLink(BrowserNativePage page) =>
         new(string.Empty, string.Empty, string.Empty, Address: AppContentAddress.Parse(BrowserNativePages.Address(page).AbsoluteUri));
@@ -462,6 +472,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsContentColumn", narrow ? 0 : 1);
         _bindings.Set("SettingsNavHeight", narrow ? 176d : double.PositiveInfinity);
         _bindings.Set("SettingsOptionsPadding", narrow ? "14 20 14 24" : "48 25 36 32");
+        _bindings.Set("SettingsLayoutPadding", narrow ? "14 16 14 24" : "30 26 30 32");
         _bindings.Set("SettingsOptionsRows", narrow ? "Auto Auto" : "Auto");
         _bindings.Set("SettingsOptionsColumns", narrow ? "1fr" : "1fr Auto");
         _bindings.Set("SettingsOptionsControlRow", narrow ? 1 : 0);
@@ -544,6 +555,7 @@ internal sealed class HomeSettingsDestinationPage : UserControl, ICuiActionDispa
         _bindings.Set("SettingsNoMatches", rows.Count == 0);
         _bindings.Set("SettingsShowsAppearance", _category is "theme" or "accessibility");
         _bindings.Set("SettingsLayoutSelected", _category == "layout");
+        _bindings.Set("SettingsLayoutCustomiseAvailable", LinkIsAvailable(LayoutNewTabLink));
         _bindings.Set("SettingsAppearanceSelected", _category == "appearance");
         _bindings.Set("SettingsThemeOptionsSelected", _category == "theme-options");
         _bindings.Set("SettingsHavenGeneralSelected", _category == "haven-general" && NavigateContentAsync is not null);

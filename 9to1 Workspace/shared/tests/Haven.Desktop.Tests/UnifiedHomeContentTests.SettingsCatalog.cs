@@ -253,10 +253,13 @@ public sealed partial class UnifiedHomeContentTests
     }
 
     [AvaloniaTheory]
-    [InlineData("haven-newtab", "Customise New Tab layout")]
-    [InlineData("haven-pinned", "Edit shortcuts New Tab shortcuts")]
-    [InlineData("haven-shortcut-order", "Arrange shortcuts Shortcut order")]
-    public async Task Settings_catalog_new_tab_customise_opens_the_existing_editor_and_keeps_its_source(string category, string actionName)
+    [InlineData("haven-newtab", "Customise New Tab layout", 1440, 900)]
+    [InlineData("haven-pinned", "Edit shortcuts New Tab shortcuts", 1440, 900)]
+    [InlineData("haven-shortcut-order", "Arrange shortcuts Shortcut order", 1440, 900)]
+    [InlineData("layout", "Customise New Tab", 1440, 900)]
+    [InlineData("layout", "Customise New Tab", 720, 520)]
+    public async Task Settings_catalog_new_tab_customise_opens_the_existing_editor_and_keeps_its_source(
+        string category, string actionName, int width, int height)
     {
         var limit = TimeSpan.FromSeconds(20);
         var paths = new LayoutPaths();
@@ -280,8 +283,8 @@ public sealed partial class UnifiedHomeContentTests
             homeProfileId: profile, cancellationToken: lifetime.Token);
         workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
-        window.Width = 1440;
-        window.Height = 900;
+        window.Width = width;
+        window.Height = height;
         try
         {
             RegisterProductionImageResolver(window);

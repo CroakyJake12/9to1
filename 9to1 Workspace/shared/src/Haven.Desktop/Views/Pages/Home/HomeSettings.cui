@@ -177,22 +177,75 @@
           </Container>
           <Container id="home-settings-appearance-host" Type="Overlay" IsVisible="{Binding SettingsShowsAppearance}" />
           <Container id="home-settings-layout-page" Type="Vertical Stack" IsVisible="{Binding SettingsLayoutSelected}"
-                     VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1000" Padding="12 12 12 24" CellGap="16">
-            <Container Type="Vertical Stack" CellGap="3" Margin="0 0 0 8">
-              <Text id="home-settings-layout-eyebrow" Text="GLOBAL SETTINGS" FontSize="12" FontWeight="700" Foreground="{Resource CuiTextSoftBrush}" />
-              <Text Text="Layout" FontSize="32" FontWeight="800" />
+                     VerticalScrolling="True" HorizontalScrolling="False" MaxWidth="1120" Padding="{Binding SettingsLayoutPadding}" CellGap="26">
+            <Container id="home-settings-layout-heading" Type="Vertical Stack" CellGap="6" Margin="0 0 0 8">
+              <Text id="home-settings-layout-eyebrow" Text="Global" FontSize="13" FontWeight="600" Foreground="{Resource CuiTextSoftBrush}" />
+              <Text id="home-settings-layout-title" Text="Layout" FontSize="36" FontWeight="800" />
             </Container>
-            <Container Type="Vertical Stack" CellGap="8" Padding="0 0 0 14" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
-              <Text Text="Dashboard layout" FontSize="18" FontWeight="750" />
-              <Text Text="Open Dashboard and choose Customise to arrange its widgets." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-              <Button id="home-settings-open-dashboard" Action="SettingsOpenDashboard" Content="Open Dashboard" HorizontalAlignment="Left" />
+            <Container id="home-settings-layout-workspace" Type="Vertical Stack" CellGap="12">
+              <Text id="home-settings-layout-workspace-title" Text="Workspace" FontSize="18" FontWeight="750" />
+              <Container id="home-settings-layout-dashboard-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="72" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-settings-layout-dashboard-details" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-settings-layout-dashboard-title" Text="Dashboard layout" FontSize="14" FontWeight="700" />
+                  <Text id="home-settings-layout-dashboard-description" Text="Arrange Dashboard widgets in its Customise view."
+                        TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-settings-open-dashboard" Action="SettingsOpenDashboard" Content="Open Dashboard"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Chromeless="True" Padding="12 8" />
+              </Container>
             </Container>
-            <Container Type="Vertical Stack" CellGap="8">
-              <Text Text="Recover saved appearance" FontSize="18" FontWeight="750" />
-              <Text Text="Reload the saved appearance preferences for this device. This replaces any unapplied display adjustments." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-              <Button id="home-settings-reload-appearance" Action="RefreshHomeAppearance" Content="Reload saved appearance"
-                      IsEnabled="{Binding HomeAppearanceCanRefresh, fallback=false}" HorizontalAlignment="Left" />
-              <Text Text="{Binding HomeAppearanceStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container id="home-settings-layout-related" Type="Vertical Stack" CellGap="4">
+              <Text id="home-settings-layout-related-title" Text="Related layouts" FontSize="18" FontWeight="750" Margin="0 0 0 8" />
+              <Container id="home-settings-layout-newtab-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="72" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-settings-layout-newtab-details" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-settings-layout-newtab-title" Text="New Tab" FontSize="14" FontWeight="700" />
+                  <Text id="home-settings-layout-newtab-description" Text="Manage widgets, shortcuts and the New Tab layout."
+                        TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-settings-layout-newtab" Action="SettingsLayoutOpenNewTab" AccessibleName="Customise New Tab"
+                        IsEnabled="{Binding SettingsLayoutCustomiseAvailable, fallback=false}"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Chromeless="True" Padding="12 8">
+                  <Container id="home-settings-layout-newtab-action" Type="Horizontal Stack" CellGap="8">
+                    <Text id="home-settings-layout-newtab-action-label" Text="Customise" FontSize="13" FontWeight="700" VerticalAlignment="Center" />
+                    <Image id="home-settings-layout-newtab-arrow" Source="icon:chevron-right" Width="14" Height="14" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+              </Container>
+              <Container id="home-settings-layout-accessibility-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="72" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Container id="home-settings-layout-accessibility-details" Type="Vertical Stack" CellGap="4" VerticalAlignment="Center">
+                  <Text id="home-settings-layout-accessibility-title" Text="Accessibility" FontSize="14" FontWeight="700" />
+                  <Text id="home-settings-layout-accessibility-description" Text="Manage high contrast and reduced motion."
+                        TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+                <Button id="home-settings-layout-accessibility" Action="SettingsLayoutAccessibility" AccessibleName="Open Accessibility settings"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Chromeless="True" Padding="12 8">
+                  <Container id="home-settings-layout-accessibility-action" Type="Horizontal Stack" CellGap="8">
+                    <Text id="home-settings-layout-accessibility-action-label" Text="Open" FontSize="13" FontWeight="700" VerticalAlignment="Center" />
+                    <Image id="home-settings-layout-accessibility-arrow" Source="icon:chevron-right" Width="14" Height="14" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
+              </Container>
+              <Text id="home-settings-layout-navigation-status" Text="{Binding SettingsBrowseStatus}" IsVisible="{Binding SettingsHasBrowseStatus}" Margin="0 8"
+                    TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            </Container>
+            <Container id="home-settings-layout-recovery" Type="Vertical Stack" CellGap="12">
+              <Text id="home-settings-layout-recovery-title" Text="Recover saved appearance" FontSize="18" FontWeight="750" />
+              <Container id="home-settings-layout-recovery-row" Type="Grid" ColumnSizes="{Binding SettingsOptionsColumns}" RowSizes="{Binding SettingsOptionsRows}"
+                         MinHeight="72" CellGap="8" Padding="0 12" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 0 1">
+                <Text id="home-settings-layout-recovery-description" Text="Reload the saved display preferences for this device. Unapplied adjustments are discarded." TextWrapping="Wrap"
+                      Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
+                <Button id="home-settings-reload-appearance" Action="RefreshHomeAppearance" Content="Reload saved appearance"
+                        IsEnabled="{Binding HomeAppearanceCanRefresh, fallback=false}"
+                        Row="{Binding SettingsOptionsControlRow}" Column="{Binding SettingsOptionsControlColumn}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Chromeless="True" Padding="12 8" />
+              </Container>
+              <Text id="home-settings-layout-appearance-status" Text="{Binding HomeAppearanceStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
             </Container>
           </Container>
         </Container>
