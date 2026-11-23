@@ -25,6 +25,8 @@ internal sealed record NewTabShortcutPlacement(string Id, string Label, string T
         [("bookmark", "Bookmark"), ("globe", "Globe"), ("folder", "Folder"), ("calendar", "Calendar"),
             ("file", "Document"), ("chat", "Chat")];
 
+    internal static bool IsKnownIconKey(string key) => IconChoices.Any(choice => choice.Key == key);
+
     internal const string Apps = "browse://home";
     internal const string Library = "browse://home/library";
     internal const string Dashboard = "browse://home/dashboard";
@@ -46,7 +48,8 @@ internal sealed record NewTabShortcutPlacement(string Id, string Label, string T
     internal bool IsValid() =>
         Id is { Length: > 0 and <= 64 } && Id.All(character => char.IsAsciiLetterOrDigit(character) || character == '-') &&
         Label is { Length: > 0 and <= MaximumLabelLength } && !Label.Any(char.IsControl) && !string.IsNullOrWhiteSpace(Label) &&
-        (IconKey is null || IconChoices.Any(choice => choice.Key == IconKey)) &&
+        (IconKey is null || IconKey is { Length: > 0 and <= 64 } &&
+            IconKey.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.')) &&
         (AppId is { } appId
             ? appId != Guid.Empty && AppContentAddress.TryParse(Target, out var app) &&
               app is { Namespace: AppContentNamespace.NativeApp, ResourceSegments.Count: 0 } && app.Value == Target

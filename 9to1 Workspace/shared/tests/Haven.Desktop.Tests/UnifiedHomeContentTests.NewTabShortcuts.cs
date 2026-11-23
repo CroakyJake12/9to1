@@ -293,7 +293,11 @@ public sealed partial class UnifiedHomeContentTests
         var token = timeout.Token;
         var request = Request("browse://newtab");
         var boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
-        var pin = new NewTabShortcutPlacement("registered-boards", boards.Name, "9to1://boards") { AppId = boards.Id };
+        var pin = new NewTabShortcutPlacement("registered-boards", boards.Name, "9to1://boards")
+        {
+            AppId = boards.Id,
+            IconKey = "future.brand-outline-v2"
+        };
         var preferences = CreatePreferences();
         var peer = CreatePreferences();
         var before = await preferences.ReadAsync(token);
@@ -306,8 +310,14 @@ public sealed partial class UnifiedHomeContentTests
         {
             await page.InitializeAsync(token);
             window.Show(); SettleFixtureLayout(window);
-            var seeded = await preferences.ReadAsync(token);
+            Assert.NotNull(TileArtwork(boards.Name).Source);
             await OpenEditor(boards.Name);
+            var renamed = pin with { Label = "Label changed in editor" };
+            SettingsControl<TextBox>(page, "home-newtab-shortcut-name").Text = renamed.Label;
+            await Click("home-newtab-shortcut-save");
+            var seeded = await preferences.ReadAsync(token);
+            Assert.Equal(renamed, Assert.Single(seeded.Layout.Shortcuts, item => item.Id == pin.Id));
+            await OpenEditor(renamed.Label, alreadyCustomising: true);
             SettingsControl<TextBox>(page, "home-newtab-shortcut-name").Text = "Uncommitted label";
             await Click("home-newtab-shortcut-icon-open");
             Assert.True(SettingsControl<Button>(page, "home-newtab-shortcut-icon-default").IsFocused);
@@ -329,14 +339,14 @@ public sealed partial class UnifiedHomeContentTests
 
             await Click("home-newtab-shortcut-icon-open");
             await PickBookmark();
-            var peerPin = pin with { Label = "Peer name" };
+            var peerPin = renamed with { Label = "Peer name" };
             var peerLayout = seeded.Layout with { Shortcuts = seeded.Layout.Shortcuts.SetItem(seeded.Layout.Shortcuts.Length - 1, peerPin) };
             Assert.True((await peer.SaveAsync(seeded, peerLayout, token)).Saved);
             await Click("home-newtab-shortcut-icon-apply");
             Assert.Equal(peerPin, Assert.Single((await preferences.ReadAsync(token)).Layout.Shortcuts, item => item.Id == pin.Id));
             await Click("home-newtab-shortcut-retry");
             var saved = (await preferences.ReadAsync(token)).Layout;
-            Assert.Equal(3, saved.Revision);
+            Assert.Equal(4, saved.Revision);
             Assert.Equal(peerPin with { IconKey = "bookmark" }, Assert.Single(saved.Shortcuts, item => item.Id == pin.Id));
             Assert.Equal("Uncommitted label", SettingsControl<TextBox>(page, "home-newtab-shortcut-name").Text);
             await Click("home-newtab-shortcut-cancel");
@@ -347,10 +357,8 @@ public sealed partial class UnifiedHomeContentTests
             window.Content = page;
             await page.InitializeAsync(token);
             SettleFixtureLayout(window);
-            var tile = Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
-                button.Name == "home-newtab-shortcut" && AutomationProperties.GetName(button) == peerPin.Label);
-            var tileIcon = Assert.Single(tile.GetVisualDescendants().OfType<Image>(), image => image.Name == "home-newtab-shortcut-tile-icon");
-            Assert.NotNull(tileIcon.Source);
+            var tile = FindTile(peerPin.Label);
+            Assert.NotNull(TileArtwork(peerPin.Label).Source);
             await Activate(tile);
             Assert.Equal(pin.Target, Assert.Single(navigations).Address.Value);
 
@@ -360,8 +368,8 @@ public sealed partial class UnifiedHomeContentTests
             await Click("home-newtab-shortcut-icon-default");
             await Click("home-newtab-shortcut-icon-apply");
             var reset = (await preferences.ReadAsync(token)).Layout;
-            Assert.Equal(4, reset.Revision);
-            Assert.Equal(peerPin, Assert.Single(reset.Shortcuts, item => item.Id == pin.Id));
+            Assert.Equal(5, reset.Revision);
+            Assert.Equal(peerPin with { IconKey = null }, Assert.Single(reset.Shortcuts, item => item.Id == pin.Id));
             Assert.Equal(saved.Shortcuts.Take(saved.Shortcuts.Length - 1), reset.Shortcuts.Take(reset.Shortcuts.Length - 1));
             Assert.Equal(saved.Widgets.AsEnumerable(), reset.Widgets.AsEnumerable());
         }
@@ -380,12 +388,16 @@ public sealed partial class UnifiedHomeContentTests
             newTabLayout: owner, shortcutAppAvailable: mode => mode.Id == boards.Id);
         Button IconChoice(string name) => Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
             button.Name == "home-newtab-shortcut-icon-choice" && AutomationProperties.GetName(button) == name);
+        Button FindTile(string name) => Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
+            button.Name == "home-newtab-shortcut" && AutomationProperties.GetName(button) == name);
+        Image TileArtwork(string name) => Assert.Single(FindTile(name).GetVisualDescendants().OfType<Image>(),
+            image => image.Name == "home-newtab-shortcut-tile-icon");
         Task PickBookmark() => Activate(IconChoice("Bookmark"));
         Task Click(string id) => Activate(SettingsControl<Button>(page, id));
 
-        async Task OpenEditor(string name)
+        async Task OpenEditor(string name, bool alreadyCustomising = false)
         {
-            await Click("home-newtab-customise-open");
+            if (!alreadyCustomising) await Click("home-newtab-customise-open");
             var edit = Assert.Single(page.GetVisualDescendants().OfType<Button>(), button =>
                 button.Name == "home-newtab-shortcut-edit" && AutomationProperties.GetName(button) == "Edit " + name);
             await Activate(edit);

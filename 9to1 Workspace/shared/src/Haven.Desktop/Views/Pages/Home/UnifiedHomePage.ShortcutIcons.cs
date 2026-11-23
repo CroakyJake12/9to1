@@ -12,10 +12,11 @@ internal sealed partial class UnifiedHomePage
     private string? _shortcutIconDraft;
 
     private NewTabShortcutPlacement? EditedShortcut => SavedShortcuts.FirstOrDefault(shortcut => shortcut.Id == _editingShortcutId);
+    private static bool CanWriteShortcutIcon(string? key) => key is null || NewTabShortcutPlacement.IsKnownIconKey(key);
 
     private string CurrentShortcutIcon(NewTabShortcutPlacement shortcut, string? overrideKey)
     {
-        if (overrideKey is not null) return "icon:" + overrideKey;
+        if (overrideKey is not null && NewTabShortcutPlacement.IsKnownIconKey(overrideKey)) return "icon:" + overrideKey;
         var destination = ShortcutDestinations.FirstOrDefault(entry => entry.Target == shortcut.Target);
         return ShortcutIcon(shortcut.Target, destination.Icon ?? "globe");
     }
@@ -32,7 +33,7 @@ internal sealed partial class UnifiedHomePage
 
     private void SelectShortcutIcon(string? key)
     {
-        if (key is not null && !NewTabShortcutPlacement.IconChoices.Any(choice => choice.Key == key)) return;
+        if (!CanWriteShortcutIcon(key)) return;
         _shortcutIconDraft = key;
         _shortcutStatus = null;
         PublishNewTabShortcuts();
@@ -60,7 +61,7 @@ internal sealed partial class UnifiedHomePage
 
     private async Task ApplyShortcutIconAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
-        if (EditedShortcut is not { } shortcut || shortcut.IconKey == _shortcutIconDraft) return;
+        if (EditedShortcut is not { } shortcut || shortcut.IconKey == _shortcutIconDraft || !CanWriteShortcutIcon(_shortcutIconDraft)) return;
         var id = shortcut.Id;
         var key = _shortcutIconDraft;
         _shortcutIconPending = true;
@@ -95,7 +96,8 @@ internal sealed partial class UnifiedHomePage
         _railBindings.SetNewTabShortcut("IconOptionsOpen", _shortcutIconsOpen);
         _railBindings.SetNewTabShortcut("CanChooseIcon", canChoose);
         _railBindings.SetNewTabShortcut("IconDefaultSelected", _shortcutIconDraft is null);
-        _railBindings.SetNewTabShortcut("CanApplyIcon", canChoose && shortcut is not null && shortcut.IconKey != _shortcutIconDraft);
+        _railBindings.SetNewTabShortcut("CanApplyIcon",
+            canChoose && shortcut is not null && shortcut.IconKey != _shortcutIconDraft && CanWriteShortcutIcon(_shortcutIconDraft));
         _railBindings.SetNewTabShortcut("IconPreview", shortcut is null ? null :
             CurrentShortcutIcon(shortcut, _shortcutIconsOpen ? _shortcutIconDraft : shortcut.IconKey));
         _railBindings.SetNewTabShortcut("IconChoices", _shortcutIconsOpen
