@@ -16,7 +16,15 @@ At 1440 × 900 the desktop Settings rail occupies 276 DIP. The theme gallery has
 
 A fresh installation starts in legacy Professional SuperDark. Its Settings mode is labelled Dark. Choosing Dark explicitly through the running app selects Professional Dark. In the matched Professional Dark comparison, the canvas sample is `#17181B` and the tab-strip sample is `#212329` in both products. Fresh-profile captures preserve the darker original startup choice. At 720 × 520 the native directory stacks above the scrollable page. The desktop reference uses a fixed 1440-pixel canvas and clips when viewed at that width.
 
-The directory still lacks much of the Atlas taxonomy, including Theme Options. The theme builder, Comic migration, custom colour input and per-app palette editor remain open. The current app exposes the existing Cinematic theme. Atlas account, model and workspace examples were kept out of user data.
+The directory still lacks many Atlas categories. The theme builder, Comic migration, custom colour input and per-app palette editor remain open. The current app exposes the existing Cinematic theme. Atlas account, model and workspace examples were kept out of user data.
+
+## Theme Options
+
+The Home gear opens Appearance with Theme selected. The next child, Theme Options, opens a separate page with Light, Dark and Follow system. Open palette leads to the live Accent controls, and Open under Accessibility leads to its settings. An unapplied brightness adjustment survives those trips and a saved appearance mode change. The source was `0d921b4cc`. Seventeen focused Settings cases passed with Skia. The running Linux app rendered the route at 1440 × 900 and 720 × 520. The custom theme editor remains open.
+
+[Wide comparison](theme-options/comparison-theme-options-final-professional-dark-1440x900.png) · [Narrow comparison](theme-options/comparison-theme-options-final-professional-dark-720x520.png) · [Narrow palette destination](theme-options/06-native-palette-opened-from-theme-options.png) · [Accessibility destination](theme-options/10-native-accessibility-opened-from-theme-options.png) · [Capture receipt](theme-options/receipt.json)
+
+From Theme Options, Ctrl+L selected the original Home address. Typing a draft followed by Escape restored `browse://home` in the same tab. Copying the restored address confirmed the exact value. The isolated profile retained its appearance preferences and the application exited normally. The focused Browse test failed with the draft still visible on `b5fd1c410` and passed with the fix in `bc027a831`. [Typed native draft](theme-options/08-theme-options-address-unsent-draft.png) · [Address restored by Escape](theme-options/09-theme-options-address-escape-restored.png)
 
 ## New Tab
 
