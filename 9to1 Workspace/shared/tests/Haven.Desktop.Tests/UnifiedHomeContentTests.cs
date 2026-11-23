@@ -2035,10 +2035,11 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaTheory]
-    [InlineData(360)]
-    [InlineData(430)]
-    [InlineData(1180)]
-    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable(int width)
+    [InlineData(360, 1)]
+    [InlineData(430, null)]
+    [InlineData(720, 2)]
+    [InlineData(1180, 3)]
+    public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable(int width, int? expectedShortcutColumns)
     {
         using var lifetime = new CancellationTokenSource();
         using var bus = new HavenEventBus();
@@ -2073,6 +2074,20 @@ public sealed class UnifiedHomeContentTests
             Assert.True(searchOrigin.X + search.Bounds.Width <= submitOrigin.X + .5);
             Assert.True(searchOrigin.Y + search.Bounds.Height <= modeOrigin.Y + .5);
             Assert.True(search.Bounds.Width >= 150);
+            var shortcutsHeading = SettingsControl<TextBlock>(page, "home-newtab-shortcuts-heading");
+            Assert.Equal("Shortcuts", shortcutsHeading.Text);
+            Assert.True(modeOrigin.Y + mode.Bounds.Height <= shortcutsHeading.TranslatePoint(default, window)!.Value.Y);
+            var shortcuts = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcuts");
+            var shortcutButtons = shortcuts.AuthoredChildren.OfType<Button>().ToArray();
+            Assert.Equal(new[] { "Apps", "Library", "Dashboard" }, shortcutButtons.Select(AutomationProperties.GetName));
+            var positions = shortcutButtons.Select(button => button.TranslatePoint(default, shortcuts)!.Value).ToArray();
+            if (expectedShortcutColumns is { } expected)
+                Assert.Equal(expected, positions.GroupBy(position => Math.Round(position.Y)).Max(row => row.Count()));
+            Assert.All(shortcutButtons.Zip(positions), pair =>
+            {
+                Assert.True(pair.First.IsEffectivelyVisible && pair.First.Bounds.Height >= 64);
+                Assert.InRange(pair.Second.X, -.5, shortcuts.Bounds.Width - pair.First.Bounds.Width + .5);
+            });
             foreach (var control in new Control[] { search, submit, mode })
             {
                 Assert.True(control.IsEffectivelyVisible && control.Focus());
@@ -2099,6 +2114,15 @@ public sealed class UnifiedHomeContentTests
             Dispatcher.UIThread.RunJobs();
             Assert.NotNull(navigation);
             Assert.True(navigation.Address.IsWeb);
+
+            navigation = null;
+            Assert.True(shortcutButtons[^1].Focus());
+            PressSettingsKey(window, PhysicalKey.Enter);
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.NotNull(navigation);
+            Assert.True(navigation.OpenInNewTab);
+            Assert.Equal("browse://home/dashboard", navigation.Address.Value);
+            Assert.Equal("charging diagnosis", search.Text);
             Assert.True(await session.TryPrepareToCloseAsync());
         }
         finally { await session.CloseAndDrainAsync(); window.Close(); }

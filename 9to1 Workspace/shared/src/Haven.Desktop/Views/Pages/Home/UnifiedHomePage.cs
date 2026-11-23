@@ -49,6 +49,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private HomeAppsViewState _appsState = HomeAppsViewState.Empty;
     private IReadOnlyList<HomeAppItem> _appsCatalogue = [];
     private CuiContainerControl? _searchRow;
+    private CuiContainerControl? _newTabShortcuts;
     private NewDashboardPage? _dashboard;
     private HomeDiscoverPage? _discover;
     private HomeEventsDestinationPage? _events;
@@ -112,6 +113,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _loader.BindAuthoredControl("home-search-mode", _ => _searchMode);
         _loader.BindAuthoredControl("home-newtab-time", _ => _newTabTime);
         _loader.BindAuthoredControl("home-newtab-date", _ => _newTabDate);
+        _loader.BindAuthoredControl("home-newtab-shortcuts", _ => _newTabShortcuts = new("Wrap"));
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The shared Home document could not be rendered.");
@@ -123,6 +125,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "Ask AI (unavailable)", IsEnabled = false } });
         Content = loaded.Root;
         SizeChanged += (_, args) => _railBindings.SetViewportWidth(args.NewSize.Width);
+        if (_newTabClock is not null && _newTabShortcuts is not null)
+            _newTabShortcuts.SizeChanged += OnNewTabShortcutsSizeChanged;
         _search.KeyDown += OnSearchKey;
     }
 
@@ -499,6 +503,17 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
 
     private void OnNewTabClockTick(object? sender, EventArgs args) => RefreshNewTabClock();
 
+    private void OnNewTabShortcutsSizeChanged(object? sender, SizeChangedEventArgs args)
+    {
+        var width = args.NewSize.Width;
+        if (!args.WidthChanged || width <= 0 || _newTabShortcuts?.Layout is not WrapPanel shortcuts) return;
+
+        // Keep three cards on a desktop row and leave room for each icon and label as it narrows.
+        var columns = width >= 660 ? 3 : width >= 312 ? 2 : 1;
+        shortcuts.ItemWidth = Math.Floor((width - (columns - 1) * shortcuts.ItemSpacing) / columns);
+        Set(_newTabTime, "FontSize", width >= 520 ? 56d : 46d);
+    }
+
     private void RefreshNewTabClock()
     {
         if (_newTabClock is null) return;
@@ -609,6 +624,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         {
             _newTabClock.Stop();
             _newTabClock.Tick -= OnNewTabClockTick;
+            if (_newTabShortcuts is not null) _newTabShortcuts.SizeChanged -= OnNewTabShortcutsSizeChanged;
         }
         List<Exception> failures = [];
         void Attempt(Action action) { try { action(); } catch (Exception error) { failures.Add(error); } }
