@@ -1,7 +1,7 @@
 <Cui id="home.settings.account" product="9-1" version="1">
   <Import Source="framework/CUI/Components/ThemeCreator.cui" />
   <Actions>
-    <Action name="ChooseHomeTheme" command="AppearanceSelectTheme" parameter="{Binding theme.Name}" />
+    <Action name="ChooseHomeTheme" command="AppearanceSelectTheme" parameter="{Binding theme.Key}" />
     <Action name="ChooseAccentColour" command="AppearanceAccentColour" parameter="{Binding accent.Colour}" />
     <Action name="SelectSession" command="SelectSession" parameter="{Binding session}" />
   </Actions>
@@ -15,7 +15,7 @@
   <Text Text="{Binding AppearanceThemeName}" AccessibleName="Current CUI theme" />
   <Text Text="{Binding AppearanceScope}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
   <Container Type="Wrap" CellGap="8">
-    <Repeat Panel="Wrap" Source="{Binding AppearanceThemeChoices}" As="theme" Key="{Binding theme.Name}">
+    <Repeat Panel="Wrap" Source="{Binding AppearanceThemeChoices}" As="theme" Key="{Binding theme.Key}">
       <Button Action="ChooseHomeTheme" Content="{Binding theme.Name}" AccessibleName="{Binding theme.AccessibleName}" Interactive="{Binding AppearanceCanChange}" Margin="0,0,8,8" />
     </Repeat>
     <Button Action="CreateTheme" Content="+ Create Theme" Interactive="{Binding AppearanceCanCreateTheme}" />

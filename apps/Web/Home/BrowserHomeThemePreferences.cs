@@ -164,7 +164,8 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
             new() {ReduceMotion=a.ReduceMotion,HighContrast=a.HighContrast,DisplayScale=a.DisplayScale,
                 InterfaceFontFamilyOverride=a.InterfaceFontFamily,CodeFontFamilyOverride=a.CodeFontFamily},
             stored.Appearance is null ? null : Enum.Parse<CuiAppearance>(stored.Appearance),
-            stored.Accent is { } accent ? new CuiAccentPreference((CuiAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps) : null,stored.CustomThemesJson);
+            stored.Accent is { } accent ? new CuiAccentPreference((CuiAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps) : null,stored.CustomThemesJson)
+        { SavedMigration = stored.ThemeMigration is { } migration ? new(migration.OriginalName, migration.CanonicalId) : null };
         Diagnostic=value.Diagnostic;
         if(next==Current)return;
         Current=next; Publish();
@@ -237,7 +238,12 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
     private sealed class CatalogAdapter:IHomeCustomThemeCatalog
     {
         public bool TryResolve(string requestedName,out string canonicalName)
-        { var theme=CuiThemeCatalog.All.FirstOrDefault(theme=>string.Equals(theme.DisplayName,requestedName,StringComparison.OrdinalIgnoreCase)); canonicalName=theme?.DisplayName??"Professional";return theme is not null; }
+        {
+            var theme = CuiThemeCatalog.FindBuiltIn(requestedName);
+            canonicalName = CuiThemeCatalog.IsQualifiedComicKey(requestedName.Trim())
+                ? requestedName.Trim() : theme?.DisplayName ?? "Professional";
+            return theme is not null;
+        }
         public bool TryResolve(string requestedName,string customThemesJson,out string canonicalName)
         {
             canonicalName="Professional";
@@ -247,8 +253,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
                 var selected=library.FirstOrDefault(theme=>string.Equals(theme.Name,requestedName,StringComparison.OrdinalIgnoreCase));
                 if(selected is not null) { canonicalName=selected.Name;return true; }
                 // Custom names from a previous account never qualify a new scope.
-                var builtin=CuiThemeCatalog.All.FirstOrDefault(theme=>string.Equals(theme.DisplayName,requestedName,StringComparison.OrdinalIgnoreCase));
-                if(builtin is not null) {canonicalName=builtin.DisplayName;return true;}
+                return TryResolve(requestedName, out canonicalName);
             }
             catch(ArgumentException) { }
             return false;

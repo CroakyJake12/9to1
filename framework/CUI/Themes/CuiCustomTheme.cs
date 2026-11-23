@@ -134,7 +134,9 @@ public static class CuiCustomThemeContract
         if (!Guid.TryParseExact(theme.Id, "D", out var id)) throw Error("ID", "Custom themes require a stable UUID.");
         var name = theme.Name?.Trim();
         if (string.IsNullOrWhiteSpace(name) || name.Length > 64 || name.Any(char.IsControl)) throw Error("NAME", "Theme names must contain 1–64 printable characters.");
-        if (CuiThemeCatalog.All.Any(item => string.Equals(item.DisplayName, name, StringComparison.OrdinalIgnoreCase)))
+        // Comic was added after custom names were supported. Existing libraries
+        // can retain the same caption without shadowing the built-in selection.
+        if (CuiThemeCatalog.FindBuiltIn(name, acceptLegacyAlias: false) is { Theme: not CuiTheme.Cinematic })
             throw Error("NAME", "A custom theme cannot replace a built-in theme.");
         if (!Enum.IsDefined(theme.BaseTheme)) throw Error("BASE", "Unknown base theme.");
         RequireRange(theme.ButtonRoundnessPercent, 0, 100, "Button roundness");

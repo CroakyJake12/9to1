@@ -38,7 +38,8 @@ internal sealed class CuiButtonFeedback
         _owner.PropertyChanged += OwnerChanged;
         _store.Changed += EffectiveChanged;
         foreach (var key in new[] { "CuiTheme", "CuiReduceMotion", "CuiHighContrast", "CuiButtonMotionDuration",
-            "CuiAccentPrimaryHoverEffect", "CuiAccentSecondaryHoverEffect", "CuiAccentTertiaryHoverEffect", "CuiAccentNegativeHoverEffect" })
+            "CuiAccentPrimaryHoverEffect", "CuiAccentSecondaryHoverEffect", "CuiAccentTertiaryHoverEffect",
+            "CuiAccentNegativeHoverEffect", "CuiComicPrimaryShadow", "CuiComicPrimaryHoverShadow", "CuiComicPrimaryPressedShadow" })
             _subscriptions.Add(_owner.GetResourceObservable(key).Subscribe(new Observer(_ => Refresh())));
         Refresh();
     }
@@ -52,12 +53,12 @@ internal sealed class CuiButtonFeedback
         foreach (var subscription in _subscriptions) subscription.Dispose();
         _subscriptions.Clear();
         _frame.Transitions = null; _duration = TimeSpan.Zero;
-        _frame.Effect = null; _frame.RenderTransform = null;
+        _frame.Effect = null; _frame.RenderTransform = null; _frame.BoxShadow = new();
     }
 
     private void OwnerChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
     {
-        if (change.Property.Name is "IsPointerOver" or "IsPressed" or "IsEnabled" or "IsEffectivelyEnabled") Refresh();
+        if (change.Property.Name is "IsPointerOver" or "IsPressed" or "IsEnabled" or "IsEffectivelyEnabled" or "Content") Refresh();
     }
     private void EffectiveChanged(object? sender, CuiEffectiveProperty property)
     {
@@ -69,6 +70,25 @@ internal sealed class CuiButtonFeedback
     {
         var store = _store;
         var role = store.Resolve("AccentRole").Value is CuiAccentRole value ? value : CuiAccentRole.None;
+        var comic = Resource("CuiTheme") is CuiTheme.Cinematic && role == CuiAccentRole.Primary &&
+            Resource("CuiHighContrast") is not true && store.Resolve("Chromeless").Value is not true && _owner.IsEffectivelyEnabled;
+        var shadowResource = _owner.IsPressed ? "CuiComicPrimaryPressedShadow"
+            : _owner.IsPointerOver ? "CuiComicPrimaryHoverShadow" : "CuiComicPrimaryShadow";
+        _frame.BoxShadow = comic && Resource(shadowResource) is BoxShadows shadow ? shadow : new();
+        // Render typography on the existing template. Authored Control content is untouched.
+        if (_frame.Child is Avalonia.Controls.Presenters.ContentPresenter presenter)
+        {
+            if (comic && _owner.Content is string)
+            {
+                presenter.FontStyle = FontStyle.Italic;
+                presenter.FontWeight = FontWeight.Bold;
+            }
+            else
+            {
+                presenter.ClearValue(Avalonia.Controls.Presenters.ContentPresenter.FontStyleProperty);
+                presenter.ClearValue(Avalonia.Controls.Presenters.ContentPresenter.FontWeightProperty);
+            }
+        }
         var decorated = role is CuiAccentRole.Primary or CuiAccentRole.Secondary or CuiAccentRole.Tertiary or CuiAccentRole.Negative;
         var enabled = Resource("CuiTheme") is CuiTheme.Glow && Resource("CuiReduceMotion") is not true &&
             Resource("CuiHighContrast") is not true && store.Resolve("Chromeless").Value is not true && decorated;
@@ -206,7 +226,7 @@ internal sealed class CuiHoverFeedback : IDisposable
 
     private void OwnerChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
     {
-        if (change.Property.Name is "IsPointerOver" or "IsPressed" or "IsEnabled" or "IsEffectivelyEnabled") Refresh();
+        if (change.Property.Name is "IsPointerOver" or "IsPressed" or "IsEnabled" or "IsEffectivelyEnabled" or "Content") Refresh();
     }
 
     private void DragStarted(object? sender, VectorEventArgs e) { _dragging = true; Refresh(); }

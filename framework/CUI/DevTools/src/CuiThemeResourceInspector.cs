@@ -200,7 +200,7 @@ public sealed class CuiThemeResourceInspector
     public const string PrecedenceStyleOverlay = "active style overlay";
 
     private static readonly string[] SpecBuiltInThemes =
-        ["Professional", "Glow", "Playful", "Bubble", "Cinematic"];
+        ["Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western", CuiThemeCatalog.ComicName];
 
     private static readonly CuiThemeResourceRule ThemeNameResolution = new(
         "CUIT001", "A theme scope name must resolve to a built-in, declared custom theme or the reserved user_preference reference",
@@ -340,13 +340,17 @@ public sealed class CuiThemeResourceInspector
             return (builtIn.DisplayName, "built-in");
         }
 
-        if (customThemes is not null && customThemes.TryResolve(name, out var resolved) && resolved is not null)
+        if (customThemes is not null && customThemes.TryResolve(name, out var resolved) && resolved is not null &&
+            !(CuiThemeCatalog.IsLegacyComicName(name) && resolved.Name == CuiThemeCatalog.ComicName))
         {
             findings.Add(Finding(CustomThemeInScope, scope.Span,
                 $"Theme scope '{name}' resolves through the custom theme definition catalogue, but compiler theme validation accepts built-in names only.",
                 "Extend compiler theme validation to accept declared custom themes, or use a built-in name in this scope."));
             return (resolved.Name, "custom-theme-definition");
         }
+
+        if (CuiThemeCatalog.IsLegacyComicName(name))
+            return (CuiThemeCatalog.ComicName, "built-in-migration");
 
         findings.Add(Finding(ThemeNameResolution, scope.Span,
             $"Theme scope '{name}' is unavailable or incompatible, so it falls back to Professional.",

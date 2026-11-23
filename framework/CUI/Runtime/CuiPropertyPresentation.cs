@@ -234,6 +234,11 @@ public static class CuiPropertyPresentation
             }
             foreach (var key in new[] { "CuiButtonHoverBrush", "CuiButtonPressedBrush", "CuiButtonHoverForegroundBrush", "CuiButtonPressedForegroundBrush",
                 "CuiFocusBrush", "CuiValidationBrush", "CuiDisabledOpacity", "CuiFocusIndicatorThickness" }) Watch(key, null);
+            if (control is Button)
+            {
+                Watch("CuiComicDisabledBrush", null);
+                Watch("CuiComicDisabledForegroundBrush", null);
+            }
             if (control is TextBox)
             {
                 Watch("CuiTextBrush", "CaretBrush"); Watch("CuiTextSoftBrush", "PlaceholderForeground");
@@ -490,7 +495,16 @@ public static class CuiPropertyPresentation
                 State("BorderColor", "CuiFocusBrush");
             }
             if (CuiInputValidationProperties.GetHasError(_control)) State("BorderColor", "CuiValidationBrush");
-            if (!_control.IsEffectivelyEnabled) State("Opacity", "CuiDisabledOpacity");
+            if (!_control.IsEffectivelyEnabled)
+            {
+                if (!rail && !_chromeless && _control is Button && _accentRole == CuiAccentRole.Primary &&
+                    _resources.GetValueOrDefault("CuiComicDisabledBrush") is IBrush)
+                {
+                    State("Background", "CuiComicDisabledBrush");
+                    State("Foreground", "CuiComicDisabledForegroundBrush");
+                }
+                else State("Opacity", "CuiDisabledOpacity");
+            }
             // Reconcile each final value once. Removing and reapplying an
             // unchanged hover/focus state exposes the base style and invalidates
             // layout/rendering for every unrelated palette notification.

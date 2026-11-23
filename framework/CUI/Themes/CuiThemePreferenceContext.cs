@@ -5,6 +5,7 @@ public sealed record CuiThemePreferenceSnapshot(string Name, long Revision, stri
     CuiAccessibilitySettings Accessibility, CuiAppearance? Appearance = null, CuiAccentPreference? Accent = null, string? CustomThemesJson = null)
 {
     public CuiAccentPreference EffectiveAccent => Accent ?? CuiAccentPreference.Default;
+    public CuiThemeIdentityMigration? SavedMigration { get; init; }
 }
 
 /// <summary>Home owns storage, authorisation and synchronisation. CUI only borrows this typed observation.</summary>
@@ -14,11 +15,17 @@ public interface ICuiThemePreferenceSource
     event EventHandler? Changed;
 }
 
+public sealed record CuiThemeIdentityMigration(string OriginalName, string CanonicalId);
+
 public sealed record CuiThemeResolution(CuiResolvedTheme Theme, string RequestedName, string? Diagnostic, bool UsedFallback,
     CuiAccessibilitySettings Accessibility, long Revision = 0, string? ScopeId = null, bool FromCache = false,
     CuiAppearance? Appearance = null, CuiAccentPreference? Accent = null)
 {
     public CuiAccentPreference EffectiveAccent => Accent ?? CuiAccentPreference.Default;
+    public CuiThemeIdentityMigration? SavedMigration { get; init; }
+    public CuiThemeIdentityMigration? Migration => SavedMigration ??
+        (!UsedFallback && Theme.Name == CuiThemeCatalog.ComicName && CuiThemeCatalog.IsLegacyComicName(RequestedName)
+            ? new(RequestedName, CuiThemeCatalog.ComicId) : null);
 }
 
 /// <summary>Per-host, nonpersistent interpretation of one authorised Home preference source.</summary>
@@ -80,7 +87,8 @@ public sealed class CuiThemePreferenceContext : IDisposable
         _ = CuiTypography.ResolveCodeFontFamily(accessibility.CodeFontFamilyOverride);
         var name = snapshot.Name?.Trim() ?? string.Empty;
         if (_catalog.TryResolve(name, out var theme) && theme is not null)
-            return new(theme, name, null, false, accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache, snapshot.Appearance, snapshot.Accent);
+            return new(theme, name, null, false, accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache, snapshot.Appearance, snapshot.Accent)
+            { SavedMigration = snapshot.SavedMigration };
         return new(_catalog.Resolve("Professional"), name,
             $"The preferred CUI theme '{name}' is unavailable or incompatible. Professional is being used.", true,
             accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache, snapshot.Appearance, snapshot.Accent);

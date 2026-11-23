@@ -288,7 +288,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                     background = (IBrush)resources["CuiPanel2Brush"]!;
                     break;
                 case CuiTheme.Cinematic:
-                    background = PreviewGradient(palette.TideBase, panel, palette.Panel3);
+                    background = PreviewGradient(palette.Panel3, palette.TideBase, palette.Panel2);
+                    tile = palette.Panel3;
                     break;
             }
         }
@@ -414,21 +415,30 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
         if (value?.CustomThemesJson is { } library)
             try { savedThemes = CuiCustomThemeContract.DeserializeLibrary(library); }
             catch (ArgumentException) { }
-        var names = themes.Select(theme => theme.DisplayName).Concat(savedThemes.Select(theme => theme.Name));
-        Dictionary<string, object?> ThemeOption(string name)
+        var requestedName = value?.ThemeName;
+        var comicKey = CuiThemeCatalog.ComicSelectionKey(savedThemes.Select(theme => theme.Name));
+        var comicSelected = CuiThemeCatalog.FindBuiltIn(requestedName)?.Theme == CuiTheme.Cinematic &&
+            !savedThemes.Any(theme => string.Equals(theme.Name, requestedName, StringComparison.OrdinalIgnoreCase));
+        Dictionary<string, object?> ThemeOption(string name, string key, CuiTheme theme, CuiCustomTheme? custom = null)
         {
-            var option = Option(name, "theme", name, string.Equals(name, value!.ThemeName, StringComparison.OrdinalIgnoreCase));
-            var theme = themes.FirstOrDefault(item => item.DisplayName == name);
-            var custom = theme is null
-                ? savedThemes.First(item => string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase)) : null;
+            var selected = custom is null && theme == CuiTheme.Cinematic
+                ? comicSelected : !comicSelected && string.Equals(key, requestedName, StringComparison.OrdinalIgnoreCase);
+            var option = Option(name, "theme", key, selected);
             option["HasPreview"] = true;
             var appearance = Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
             var accent = Current.EffectiveAccent.ResolveColour("app.home");
-            var palette = CuiSurfacePaletteCatalog.For("Home", appearance, theme?.Theme ?? custom!.BaseTheme, accent);
+            var palette = CuiSurfacePaletteCatalog.For("Home", appearance, theme, accent);
             ApplyPresetPreview(option, palette, Current.Accessibility,
                 custom is null ? null : CuiCustomThemeAccentResolver.Resolve(custom, accent));
             return option;
         }
+        var themeChoices = available
+            ? themes.Select(theme => ThemeOption(theme.DisplayName,
+                theme.Theme == CuiTheme.Cinematic ? comicKey : theme.DisplayName, theme.Theme))
+                .Concat(savedThemes.Select(theme => ThemeOption(
+                    string.Equals(theme.Name, CuiThemeCatalog.ComicName, StringComparison.OrdinalIgnoreCase)
+                        ? theme.Name + " (custom)" : theme.Name, theme.Name, theme.BaseTheme, theme))).ToArray()
+            : Array.Empty<Dictionary<string, object?>>();
         var savedAccent = value?.Accent ?? HomeThemeAccentPreference.Default;
         var perApp = savedAccent.Mode == HomeThemeAccentOverrideMode.IndividualApps;
         var apps = CuiAppAccentCatalog.Defaults;
@@ -472,9 +482,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                 .Select(mode => Option(mode == HomeDisplayMode.FollowSystem ? "Follow system" : mode.ToString(),
                     "mode", mode.ToString(), mode == display.Mode)).ToArray() : Array.Empty<Dictionary<string, object?>>(),
             ["HomeAppearanceScope"] = "Applies to this device profile.",
-            ["HomeAppearanceStatus"] = Diagnostic ?? (value is null ? "Appearance has not been loaded." : "Saved theme: " + value.ThemeName),
-            ["HomeThemeChoices"] = available ? names.Distinct(StringComparer.OrdinalIgnoreCase)
-                .Select(ThemeOption).ToArray() : Array.Empty<Dictionary<string, object?>>(),
+            ["HomeAppearanceStatus"] = Diagnostic ?? (value is null ? "Appearance has not been loaded." : "Saved theme: " + (comicSelected ? CuiThemeCatalog.ComicName : requestedName)),
+            ["HomeThemeChoices"] = themeChoices,
             ["HomeAppearanceChoices"] = available ? new[] { "SuperBright", "Bright", "Dark", "SuperDark" }
                 .Select(name => Option(name is "SuperBright" ? "Super bright" : name is "SuperDark" ? "Super dark" : name, "appearance", name, name == value!.Appearance)).ToArray() : Array.Empty<Dictionary<string, object?>>(),
             ["HomeAccessibilityChoices"] = available ? new[]
@@ -663,7 +672,10 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
                     CodeFontFamilyOverride = access.CodeFontFamily },
                 EffectiveAppearance(value),
                 value.Accent is { } accent ? new((CuiAccentOverrideMode)accent.Mode, accent.AllAppsColour, accent.IndividualApps) : null,
-                resolved.UsedFallback ? null : value.CustomThemesJson);
+                resolved.UsedFallback ? null : value.CustomThemesJson)
+            {
+                SavedMigration = value.ThemeMigration is { } migration ? new(migration.OriginalName, migration.CanonicalId) : null
+            };
             if (next.Revision < Current.Revision && next.ScopeId == Current.ScopeId) return;
             Diagnostic = resolved.Diagnostic;
             if (next == Current) return;
@@ -750,8 +762,8 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
     {
         public bool TryResolve(string name, out string canonical)
         {
-            var match = CuiThemeCatalog.All.FirstOrDefault(theme => string.Equals(theme.DisplayName, name, StringComparison.OrdinalIgnoreCase));
-            canonical = match?.DisplayName ?? "Professional";
+            var match = CuiThemeCatalog.FindBuiltIn(name);
+            canonical = CuiThemeCatalog.IsQualifiedComicKey(name.Trim()) ? name.Trim() : match?.DisplayName ?? "Professional";
             return match is not null;
         }
         public bool TryResolve(string name, string library, out string canonical)
