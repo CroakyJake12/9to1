@@ -120,7 +120,7 @@
         </Container>
       </Container>
       <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding ResetRequested, fallback=false}">
-        <Text Text="Reset the preset, visibility, widget order, sizes, pins and locks. Your background and widget sources will be kept."
+        <Text Text="Reset the preset, visibility, shortcut order, widget order, sizes, pins and locks. Your background, shortcuts and widget sources will be kept."
               TextWrapping="Wrap" />
         <Container Type="Wrap" CellGap="8">
           <Button id="home-newtab-reset-confirm" Action="home.newtab-customise-confirm-reset" Content="Reset New Tab"

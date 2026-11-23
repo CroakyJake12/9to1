@@ -70,5 +70,7 @@ internal sealed class HomeRailCuiBindings : ICuiWritableBindingContext, INotifyP
 
     public bool TrySetValue(string path, object? value) => false;
 
+    internal void SetNewTabShortcut(string key, object? value) => _values.Set("newTab.shortcut." + key, value);
+
     private static readonly object Unresolved = new();
 }

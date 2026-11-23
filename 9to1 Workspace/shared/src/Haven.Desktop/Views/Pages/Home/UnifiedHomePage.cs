@@ -125,8 +125,9 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
         _loader.BindAuthoredControl("home-newtab-ai-unavailable", _ => _newTabAiUnavailable);
         _loader.BindAuthoredControl("home-newtab-time", _ => _newTabTime);
         _loader.BindAuthoredControl("home-newtab-date", _ => _newTabDate);
-        _loader.BindAuthoredControl("home-newtab-shortcuts", _ => _newTabShortcuts = new("Wrap"));
+        _loader.BindAuthoredControl("home-newtab-shortcuts", _ => _newTabShortcuts = new("Grid"));
         RegisterNewTabCustomisation(newTabLayout);
+        RegisterNewTabShortcuts();
         RegisterNewTabWidgets(newTabWidgets, newTabLayout?.CanEdit == true);
         var loaded = _loader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
@@ -153,7 +154,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     internal event EventHandler? SettingsTitleChanged;
     internal Task WhenActionsIdleAsync() => Task.WhenAll(
         _loader.WhenActionsIdleAsync(), _appsLoader.WhenActionsIdleAsync(),
-        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync());
+        WhenNewTabCustomisationActionsIdleAsync(), WhenWidgetActionsIdleAsync(), _shortcutKeyboardAction);
 
     internal Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -169,6 +170,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
 
     public bool? IsActionAvailable(string command) => IsAlive && (
         command.StartsWith(NewTabCustomisationPrefix, StringComparison.Ordinal) ? NewTabCustomisationActionAvailable(command) :
+        command.StartsWith(NewTabShortcutPrefix, StringComparison.Ordinal) ? NewTabShortcutActionAvailable(command) :
         command.StartsWith(widgetActionPrefix, StringComparison.Ordinal) ? IsNewTabWidgetActionAvailable(command) :
         command == "home.events"
         ? _createEvents is not null : command is "home.settings" or "home.account" ? _createSettings is not null :
@@ -190,6 +192,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             {
                 case var _ when command.StartsWith(NewTabCustomisationPrefix, StringComparison.Ordinal):
                     await DispatchNewTabCustomisationAsync(command, parameter, original, linked.Token); break;
+                case var _ when command.StartsWith(NewTabShortcutPrefix, StringComparison.Ordinal):
+                    await DispatchNewTabShortcutAsync(command, parameter, original, linked.Token); break;
                 case var _ when command.StartsWith(widgetActionPrefix, StringComparison.Ordinal):
                     await DispatchNewTabWidgetAsync(command, parameter, original, linked.Token); break;
                 case "home.dashboard":
@@ -557,12 +561,8 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
     private void OnNewTabShortcutsSizeChanged(object? sender, SizeChangedEventArgs args)
     {
         var width = args.NewSize.Width;
-        if (!args.WidthChanged || width <= 0 || _newTabShortcuts?.Layout is not WrapPanel shortcuts) return;
-
-        // Keep three cards on a desktop row and leave room for each icon and label as it narrows.
-        var columns = width >= 660 ? 3 : width >= 312 ? 2 : 1;
-        shortcuts.ItemWidth = Math.Floor((width - (columns - 1) * shortcuts.ItemSpacing) / columns);
-        shortcuts.ItemHeight = columns == 3 ? 94 : 80;
+        if (!args.WidthChanged || width <= 0) return;
+        UpdateNewTabShortcutWidth(width);
         Set(_newTabTime, "FontSize",
             EffectiveNewTabLayout.Preset == NewTabLayoutPreset.MoreWidgets ? 42d : width >= 520 ? 58d : 46d);
     }
@@ -753,6 +753,7 @@ internal sealed partial class UnifiedHomePage : UserControl, ICuiActionDispatche
             _newTabClock.Stop();
             _newTabClock.Tick -= OnNewTabClockTick;
             if (_newTabShortcuts is not null) _newTabShortcuts.SizeChanged -= OnNewTabShortcutsSizeChanged;
+            RemoveHandler(KeyDownEvent, OnNewTabShortcutKey);
         }
         List<Exception> failures = [];
         void Attempt(Action action) { try { action(); } catch (Exception error) { failures.Add(error); } }

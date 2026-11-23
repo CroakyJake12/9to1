@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Haven.Application;
+using Haven.Core;
 
 namespace Haven.Desktop.Services;
 
@@ -12,6 +13,32 @@ internal enum NewTabBackgroundPreset { Neutral, Horizon, Paper }
 
 internal sealed record NewTabWidgetPlacement(string Id, string SourceId, bool IsVisible = true,
     bool IsWide = false, bool IsPinned = false, bool IsLocked = false);
+
+internal sealed record NewTabShortcutPlacement(string Id, string Label, string Target)
+{
+    internal const string Apps = "browse://home";
+    internal const string Library = "browse://home/library";
+    internal const string Dashboard = "browse://home/dashboard";
+    internal const string Models = "browse://home/models";
+    internal const string Events = "browse://home/events";
+    internal const string Settings = "browse://home/settings";
+    internal const int MaximumCount = 32;
+    internal const int MaximumLabelLength = 80;
+
+    internal static ImmutableArray<NewTabShortcutPlacement> Defaults { get; } =
+        [new("apps", "Apps", Apps), new("library", "Library", Library), new("dashboard", "Dashboard", Dashboard)];
+
+    internal static bool TryParseTarget(string? value, out AppContentAddress? target)
+    {
+        if (!AppContentAddress.TryParse(value, out target)) return false;
+        return target!.IsWeb || target.Value is Apps or Library or Dashboard or Models or Events or Settings;
+    }
+
+    internal bool IsValid() =>
+        Id is { Length: > 0 and <= 64 } && Id.All(character => char.IsAsciiLetterOrDigit(character) || character == '-') &&
+        Label is { Length: > 0 and <= MaximumLabelLength } && !Label.Any(char.IsControl) && !string.IsNullOrWhiteSpace(Label) &&
+        TryParseTarget(Target, out var address) && address!.Value == Target;
+}
 
 internal sealed record NewTabLayoutPreference(long Revision, NewTabLayoutPreset Preset,
     NewTabBackgroundPreset Background, bool ShowClock, bool ShowShortcuts, ImmutableArray<NewTabWidgetPlacement> Widgets)
@@ -23,6 +50,7 @@ internal sealed record NewTabLayoutPreference(long Revision, NewTabLayoutPreset 
     public string? BackgroundImageId { get; init; }
     public bool ShowCustomBackground { get; init; }
     public bool FillBackgroundImage { get; init; } = true;
+    public ImmutableArray<NewTabShortcutPlacement> Shortcuts { get; init; } = NewTabShortcutPlacement.Defaults;
 
     internal static NewTabLayoutPreference Default { get; } = new(0, NewTabLayoutPreset.Balanced,
         NewTabBackgroundPreset.Neutral, true, true,
@@ -36,7 +64,10 @@ internal sealed record NewTabLayoutPreference(long Revision, NewTabLayoutPreset 
             BackgroundImageId is { } imageId && (imageId.Length != 64 || imageId.Any(character => !char.IsAsciiHexDigit(character))) ||
             Widgets.Any(widget => widget is null || string.IsNullOrWhiteSpace(widget.Id) || widget.Id.Length > 128 ||
                 string.IsNullOrWhiteSpace(widget.SourceId) || widget.SourceId.Length > 512) ||
-            Widgets.Select(widget => widget.Id).Distinct(StringComparer.Ordinal).Count() != Widgets.Length)
+            Widgets.Select(widget => widget.Id).Distinct(StringComparer.Ordinal).Count() != Widgets.Length ||
+            Shortcuts.IsDefault || Shortcuts.Length > NewTabShortcutPlacement.MaximumCount ||
+            Shortcuts.Any(shortcut => shortcut is null || !shortcut.IsValid()) ||
+            Shortcuts.Select(shortcut => shortcut.Id).Distinct(StringComparer.Ordinal).Count() != Shortcuts.Length)
             throw new InvalidDataException("The saved New Tab layout has an unsupported version or invalid placement. Its saved data was preserved.");
 
         return this;

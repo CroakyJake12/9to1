@@ -213,8 +213,11 @@ public sealed partial class UnifiedHomeContentTests
         }
     }
 
-    [AvaloniaFact]
-    public async Task Settings_catalog_new_tab_customise_opens_the_existing_editor_and_keeps_its_source()
+    [AvaloniaTheory]
+    [InlineData("haven-newtab", "Customise New Tab layout")]
+    [InlineData("haven-pinned", "Edit shortcuts New Tab shortcuts")]
+    [InlineData("haven-shortcut-order", "Arrange shortcuts Shortcut order")]
+    public async Task Settings_catalog_new_tab_customise_opens_the_existing_editor_and_keeps_its_source(string category, string actionName)
     {
         var limit = TimeSpan.FromSeconds(20);
         var paths = new LayoutPaths();
@@ -245,13 +248,13 @@ public sealed partial class UnifiedHomeContentTests
             RegisterProductionImageResolver(window);
             window.Show();
             await window.InitializeAsync(lifetime.Token).WaitAsync(limit);
-            await chrome.NavigateAsync("browse://home/settings/settings-haven-newtab", lifetime.Token).WaitAsync(limit);
+            await chrome.NavigateAsync("browse://home/settings/settings-" + category, lifetime.Token).WaitAsync(limit);
             await RenderAsync();
             var settingsTab = chrome.State.SelectedTab.Id;
             var settings = Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>());
-            CaptureSettingsIfRequested(window, "settings-haven-newtab", source);
+            CaptureSettingsIfRequested(window, "settings-" + category, source);
             var action = Assert.Single(settings.GetVisualDescendants().OfType<Button>(), button =>
-                button.IsEffectivelyVisible && AutomationProperties.GetName(button) == "Customise New Tab layout");
+                button.IsEffectivelyVisible && AutomationProperties.GetName(button) == actionName);
             action.BringIntoView();
             SettleFixtureLayout(window);
             ClickSettingsButton(window, action);
@@ -276,7 +279,7 @@ public sealed partial class UnifiedHomeContentTests
             await chrome.SelectTabAsync(settingsTab, lifetime.Token).WaitAsync(limit);
             await RenderAsync();
             Assert.Same(settings, Assert.Single(window.GetVisualDescendants().OfType<HomeSettingsDestinationPage>()));
-            Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-haven-newtab")));
+            Assert.True(SettingsCategorySelected(SettingsControl<Button>(settings, "home-settings-" + category)));
         }
         finally
         {

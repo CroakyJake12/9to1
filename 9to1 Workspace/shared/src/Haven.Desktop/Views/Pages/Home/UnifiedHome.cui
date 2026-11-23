@@ -1,6 +1,9 @@
 <Cui id="home.unified" version="1">
   <Actions>
     <Action name="OpenCustomiseWidgetPicker" command="home.newtab-widget-picker" parameter="header" />
+    <Action name="OpenNewTabShortcut" command="home.newtab-shortcut-open" parameter="{Binding shortcut.Id}" />
+    <Action name="EditNewTabShortcut" command="home.newtab-shortcut-edit" parameter="{Binding shortcut.Id}" />
+    <Action name="ChooseNewTabShortcutTarget" command="home.newtab-shortcut-choose" parameter="{Binding target.Id}" />
   </Actions>
   <!-- At desktop widths the Home rail shows labels beside its icons. Compact widths keep the
        same actions, names and keyboard tooltips. Settings stays below the scrolling destinations. -->
@@ -149,28 +152,76 @@
             </Container>
             <Container id="home-newtab-shortcuts-section" Type="Vertical Stack" CellGap="12">
               <Text id="home-newtab-shortcuts-heading" Text="Shortcuts" FontSize="18" FontWeight="750" />
-              <Container id="home-newtab-shortcuts" Type="Wrap" CellGap="12" HorizontalAlignment="Stretch">
-                <Button id="home-newtab-shortcut-apps" Action="home.apps" AccessibleName="Apps" MinHeight="80"
-                        HorizontalContentAlignment="Left" VerticalAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
-                  <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                    <Image Source="icon:apps" Width="26" Height="26" />
-                    <Text Text="Apps" FontWeight="750" VerticalAlignment="Center" />
+              <Container id="home-newtab-shortcuts" Type="Grid" CellGap="12"
+                         ColumnSizes="{Binding newTab.shortcut.Columns, fallback=1fr}"
+                         RowSizes="{Binding newTab.shortcut.Rows, fallback=Auto}">
+                <Repeat Source="{Binding newTab.shortcut.Tiles}" As="shortcut" Key="{Binding shortcut.Id}"
+                        ItemRow="{Binding shortcut.Row}" ItemColumn="{Binding shortcut.Column}">
+                  <Container id="home-newtab-shortcut-card" Type="Vertical Stack" CellGap="4">
+                    <Button id="home-newtab-shortcut" Action="OpenNewTabShortcut" AccessibleName="{Binding shortcut.Label}"
+                            AutomationId="{Binding shortcut.AutomationId}"
+                            Height="{Binding newTab.shortcut.TileHeight, fallback=80}" IsEnabled="{Binding shortcut.CanOpen}"
+                            HorizontalContentAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}"
+                            BorderWidth="0" CornerRadius="14">
+                      <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="10">
+                        <Image Source="{Binding shortcut.Icon}" Width="26" Height="26" VerticalAlignment="Center" />
+                        <Text Column="1" Text="{Binding shortcut.Label}" FontWeight="750" TextWrapping="Wrap"
+                              VerticalAlignment="Center" />
+                      </Container>
+                    </Button>
+                    <Button id="home-newtab-shortcut-edit" Action="EditNewTabShortcut" Content="Edit"
+                            AccessibleName="{Binding shortcut.EditLabel}" AutomationId="{Binding shortcut.EditAutomationId}"
+                            Chromeless="True" HorizontalAlignment="Left" IsVisible="{Binding newTab.shortcut.Editing}"
+                            IsEnabled="{Binding newTab.shortcut.CanOpenEditor}" />
+                  </Container>
+                </Repeat>
+                <Button id="home-newtab-shortcut-add" Action="home.newtab-shortcut-add"
+                        Row="{Binding newTab.shortcut.AddRow, fallback=0}" Column="{Binding newTab.shortcut.AddColumn, fallback=0}"
+                        Height="{Binding newTab.shortcut.TileHeight, fallback=80}" IsVisible="{Binding newTab.shortcut.CanAdd}"
+                        IsEnabled="{Binding newTab.shortcut.CanOpenEditor}" AccessibleName="Add shortcut" CornerRadius="14"
+                        Background="{Resource CuiAccentSoftBrush}">
+                  <Container Type="Horizontal Stack" CellGap="7">
+                    <Image Source="icon:plus" Width="16" Height="16" VerticalAlignment="Center" />
+                    <Text Text="Add shortcut" FontWeight="700" VerticalAlignment="Center" />
                   </Container>
                 </Button>
-                <Button id="home-newtab-shortcut-library" Action="home.library" AccessibleName="Library" MinHeight="80"
-                        HorizontalContentAlignment="Left" VerticalAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
-                  <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                    <Image Source="icon:folder" Width="26" Height="26" />
-                    <Text Text="Library" FontWeight="750" VerticalAlignment="Center" />
-                  </Container>
-                </Button>
-                <Button id="home-newtab-shortcut-dashboard" Action="home.dashboard" AccessibleName="Dashboard" MinHeight="80"
-                        HorizontalContentAlignment="Left" VerticalAlignment="Stretch" Padding="16 10" Background="{Resource CuiPanelBrush}" BorderWidth="0" CornerRadius="14">
-                  <Container Type="Horizontal Stack" CellGap="10" VerticalAlignment="Center">
-                    <Image Source="icon:dashboard" Width="26" Height="26" />
-                    <Text Text="Dashboard" FontWeight="750" VerticalAlignment="Center" />
-                  </Container>
-                </Button>
+              </Container>
+              <Container id="home-newtab-shortcut-editor" Type="Vertical Stack" CellGap="12" Padding="16" CornerRadius="16"
+                         Background="{Resource CuiPanelBrush}" IsVisible="{Binding newTab.shortcut.EditorOpen}">
+                <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+                  <Text Text="{Binding newTab.shortcut.EditorTitle}" FontWeight="800" FontSize="18" TextWrapping="Wrap" />
+                  <Button id="home-newtab-shortcut-cancel" Column="1" Action="home.newtab-shortcut-cancel" Content="Cancel"
+                          IsEnabled="{Binding newTab.shortcut.CanEdit}" Chromeless="True" />
+                </Container>
+                <Container Type="Vertical Stack" CellGap="4">
+                  <Text Text="Name" FontWeight="700" />
+                  <Input id="home-newtab-shortcut-name" Type="Text" AccessibleName="Shortcut name" />
+                </Container>
+                <Container Type="Vertical Stack" CellGap="4">
+                  <Text Text="Destination" FontWeight="700" />
+                  <Input id="home-newtab-shortcut-target" Type="Text" AccessibleName="Shortcut destination"
+                         PlaceholderText="https://example.com" />
+                </Container>
+                <Repeat Source="{Binding newTab.shortcut.Targets}" As="target" Key="{Binding target.Id}" Panel="Wrap">
+                  <Button id="home-newtab-shortcut-choose" Action="ChooseNewTabShortcutTarget" Content="{Binding target.Label}"
+                          AccessibleName="{Binding target.ChoiceLabel}" IsEnabled="{Binding newTab.shortcut.CanEdit}" Margin="0 0 8 6" />
+                </Repeat>
+                <Container Type="Wrap" CellGap="8" IsVisible="{Binding newTab.shortcut.Existing}">
+                  <Button id="home-newtab-shortcut-move-up" Action="home.newtab-shortcut-move-up" Content="Move earlier"
+                          IsEnabled="{Binding newTab.shortcut.CanMoveUp}" />
+                  <Button id="home-newtab-shortcut-move-down" Action="home.newtab-shortcut-move-down" Content="Move later"
+                          IsEnabled="{Binding newTab.shortcut.CanMoveDown}" />
+                  <Button id="home-newtab-shortcut-remove" Action="home.newtab-shortcut-remove" Content="Remove shortcut"
+                          IsEnabled="{Binding newTab.shortcut.CanEdit}" />
+                </Container>
+                <Text id="home-newtab-shortcut-status" Text="{Binding newTab.shortcut.Status}" TextWrapping="Wrap"
+                      IsVisible="{Binding newTab.shortcut.HasStatus}" Foreground="{Resource CuiTextSoftBrush}" />
+                <Container Type="Wrap" CellGap="8" IsVisible="{Binding newTab.shortcut.CanRetry}">
+                  <Button id="home-newtab-shortcut-retry" Action="home.newtab-shortcut-retry" Content="Retry" />
+                  <Button id="home-newtab-shortcut-revert" Action="home.newtab-shortcut-revert" Content="Revert" />
+                </Container>
+                <Button id="home-newtab-shortcut-save" Action="home.newtab-shortcut-save" Content="Save shortcut"
+                        IsEnabled="{Binding newTab.shortcut.CanEdit}" AccentRole="Primary" HorizontalAlignment="Left" />
               </Container>
             </Container>
             <Container id="home-newtab-widgets-mount" Type="Overlay" IsVisible="False" />

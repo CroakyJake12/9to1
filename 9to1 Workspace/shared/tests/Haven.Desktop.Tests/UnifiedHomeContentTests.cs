@@ -2120,7 +2120,8 @@ public sealed partial class UnifiedHomeContentTests
             Assert.True(allAppsOrigin.Y + allApps.Bounds.Height <= shortcutsHeadingOrigin.Y);
             Assert.Equal(heading.TranslatePoint(default, window)!.Value.X, shortcutsHeadingOrigin.X, 1);
             var shortcuts = SettingsControl<CuiContainerControl>(page, "home-newtab-shortcuts");
-            var shortcutButtons = shortcuts.AuthoredChildren.OfType<Button>().ToArray();
+            var shortcutButtons = shortcuts.GetVisualDescendants().OfType<Button>()
+                .Where(button => button.Name == "home-newtab-shortcut").ToArray();
             Assert.Equal(new[] { "Apps", "Library", "Dashboard" }, shortcutButtons.Select(AutomationProperties.GetName));
             var positions = shortcutButtons.Select(button => button.TranslatePoint(default, shortcuts)!.Value).ToArray();
             if (expectedShortcutColumns is { } expected)

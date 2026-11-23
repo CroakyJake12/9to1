@@ -137,12 +137,12 @@ internal sealed partial class UnifiedHomePage
     private bool NewTabCustomisationActionAvailable(string command)
     {
         if (!IsAlive || !CanCustomiseNewTab || _section != "newtab" || NewTabLayoutBusy) return false;
-        if (command == NewTabCustomisationPrefix + "open") return !IsNewTabCustomising;
+        if (command == NewTabCustomisationPrefix + "open") return !IsNewTabCustomising && !_shortcutEditorOpen;
         if (!IsNewTabCustomising) return false;
         return command[NewTabCustomisationPrefix.Length..] switch
         {
             "retry" or "revert" => _retryNewTabLayout is not null,
-            "done" => _retryNewTabLayout is null,
+            "done" => _retryNewTabLayout is null && !_shortcutEditorOpen,
             "visibility" => CanChangeNewTabLayout,
             "widget-visibility" => _newTabVisibilityOpen && _newTabWidgetSources is not null && CanEditWidgetLayout,
             "accent" => _createSettings is not null && CanChangeNewTabLayout,
@@ -215,9 +215,13 @@ internal sealed partial class UnifiedHomePage
         var defaultOrder = NewTabLayoutPreference.Default.Widgets
             .Select((widget, index) => (widget.Id, Index: index))
             .ToDictionary(entry => entry.Id, entry => entry.Index, StringComparer.Ordinal);
+        var defaultShortcutOrder = NewTabShortcutPlacement.Defaults
+            .Select((shortcut, index) => (shortcut.Id, Index: index))
+            .ToDictionary(entry => entry.Id, entry => entry.Index, StringComparer.Ordinal);
         return layout with
         {
             Preset = NewTabLayoutPreset.Balanced, ShowClock = true, ShowShortcuts = true,
+            Shortcuts = [.. layout.Shortcuts.OrderBy(shortcut => defaultShortcutOrder.GetValueOrDefault(shortcut.Id, int.MaxValue))],
             Widgets = [.. layout.Widgets.OrderBy(widget => defaultOrder.GetValueOrDefault(widget.Id, int.MaxValue))
                 .Select(widget => widget with { IsVisible = true, IsWide = false, IsPinned = false, IsLocked = false })]
         };
@@ -275,7 +279,8 @@ internal sealed partial class UnifiedHomePage
             _newTabLayoutSaving || _section != "newtab" ||
             _retryNewTabLayout is { } pending && !ReferenceEquals(change, pending)) return;
         var candidate = change(saved.Layout).Validate();
-        if ((candidate with { Widgets = saved.Layout.Widgets }) == saved.Layout && candidate.Widgets.SequenceEqual(saved.Layout.Widgets))
+        if ((candidate with { Widgets = saved.Layout.Widgets, Shortcuts = saved.Layout.Shortcuts }) == saved.Layout &&
+            candidate.Widgets.SequenceEqual(saved.Layout.Widgets) && candidate.Shortcuts.SequenceEqual(saved.Layout.Shortcuts))
         {
             _retryNewTabLayout = null; _newTabLayoutPreview = null; _newTabEditorStatus = null;
             PublishNewTabLayout(); return;
@@ -381,7 +386,7 @@ internal sealed partial class UnifiedHomePage
 
     private void OnNewTabCustomisationKey(object? sender, KeyEventArgs args)
     {
-        if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None || _section != "newtab" || !IsNewTabCustomising ||
+        if (args.Key != Key.Escape || args.KeyModifiers != KeyModifiers.None || _section != "newtab" || !IsNewTabCustomising || _shortcutEditorOpen ||
             _widgetPickerOpen || _widgetOptionsId is not null || _focusTimerResetRequested || _widgetDrag is not null) return;
         args.Handled = true;
         if (NewTabLayoutBusy || _retryNewTabLayout is not null) return;
@@ -408,9 +413,7 @@ internal sealed partial class UnifiedHomePage
         }
         Set(_newTabCustomise, "IsVisible", CanCustomiseNewTab && !IsNewTabCustomising);
         Set(_newTabCustomiseDone, "IsVisible", IsNewTabCustomising);
-        Set(_newTabCustomiseDone, "IsEnabled", !NewTabLayoutBusy && _retryNewTabLayout is null);
         Set(_newTabCustomiseAddWidget, "IsVisible", IsNewTabCustomising && _newTabWidgetSources is not null);
-        Set(_newTabCustomiseAddWidget, "IsEnabled", CanEditWidgetLayout);
         Set(_newTabClockBlock, "IsVisible", layout.ShowClock);
         Set(_newTabShortcutsBlock, "IsVisible", layout.ShowShortcuts);
         Set(_newTabHero, "Margin", layout.Preset == NewTabLayoutPreset.Focus ? new Thickness(0, 26, 0, 10) : default(Thickness));
@@ -418,6 +421,7 @@ internal sealed partial class UnifiedHomePage
         Set(_newTabTime, "FontSize", layout.Preset == NewTabLayoutPreset.MoreWidgets ? 42d : _newTabHero.Bounds.Width >= 520 ? 58d : 46d);
         ApplyNewTabBackground();
         ApplyNewTabWidgets(layout);
+        PublishNewTabShortcuts();
 
         _newTabEditor.Set("FocusSelected", layout.Preset == NewTabLayoutPreset.Focus);
         _newTabEditor.Set("BalancedSelected", layout.Preset == NewTabLayoutPreset.Balanced);
