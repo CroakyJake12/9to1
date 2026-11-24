@@ -8,6 +8,25 @@ public sealed partial class ChatSessionService
         options?.OriginalPersistentMemoryInput is not null ||
         options?.RequestedContextConstraints?.RequireOriginalPersistentMemoryInput == true;
 
+    private static GenerationOptions? ConstrainTemporaryPersistentMemory(Conversation original, GenerationOptions? options)
+    {
+        if (!original.IsTemporary || options is null) return options;
+        // Temporary personalisation has no issued eligibility input yet. Neither a
+        // permissive request option nor the existing regular source selection is proof.
+        // Use the admitted conversation, not a later SQL row: saving the same ID cannot
+        // give an already-running temporary turn new permission to fetch durable memory.
+        return options with
+        {
+            RequestedContextConstraints = (options.RequestedContextConstraints ?? new()) with
+            {
+                AllowPersistentMemoryRead = false,
+                RequireOriginalPersistentMemoryInput = false
+            },
+            OriginalPersistentMemoryInput = null,
+            RequestedPersistentMemoryLineage = null
+        };
+    }
+
     /// <summary>Pure SAME configured source observation; never authorization.</summary>
     public bool HasOriginalPersistentMemorySource(IChatOriginalPersistentMemorySource source) =>
         ReferenceEquals(OriginalPersistentMemorySource, source);

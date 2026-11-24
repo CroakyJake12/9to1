@@ -596,6 +596,7 @@ public sealed partial class ChatSessionService(
         Task<IReadOnlyList<ChatMessage>> ReadOriginalHistoryAsync() => originalBranch is null
             ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
             : originalBranch.GetContextMessagesAsync(cancellationToken);
+        generationOptions = ConstrainTemporaryPersistentMemory(conversation, generationOptions);
         DemandOriginalPersistentMemoryRequest(generationOptions, ordinaryOriginal, originalCustody);
         DemandOriginalAttachmentInput(generationOptions, ordinaryOriginal, originalCustody);
         CurrentCanonicalTask = null;
@@ -955,7 +956,7 @@ public sealed partial class ChatSessionService(
         }
 
         IReadOnlyList<KnowledgeRecord> selectedPersistentMemory = [];
-        if (generationOptions?.RequestedContextConstraints?.AllowPersistentMemoryRead != false &&
+        if (!conversation.IsTemporary && generationOptions?.RequestedContextConstraints?.AllowPersistentMemoryRead != false &&
             (UsesOriginalPersistentMemory(generationOptions) || memorySource is not null))
         {
             var remembered = UsesOriginalPersistentMemory(generationOptions)

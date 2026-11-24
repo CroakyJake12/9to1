@@ -27,6 +27,29 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     }
 
     [Fact]
+    public async Task Temporary_chat_cannot_reuse_a_regular_scope_and_dispatches_no_memory_input()
+    {
+        var legacy = new MemorySource(); var scoped = new ScopedMemorySource(); var rig = new Rig(legacy, scoped, temporary: true);
+        var options = ScopedOptions(scoped) with
+        {
+            RequestedPersistentMemoryLineage = new(1, "fixture-den", "fixture-scope", "fixture-definition", 1,
+                "fixture-membership", 1, rig.OriginalConversation.Id, Guid.NewGuid(), "fixture-digest")
+        };
+        await rig.SendOwnedAsync(options);
+
+        Assert.Equal(0, legacy.Reads);
+        Assert.Equal(0, scoped.IssuanceChecks + scoped.Reads + scoped.Validations);
+        var request = Assert.Single(rig.Provider.Requests);
+        Assert.Null(request.Options!.OriginalPersistentMemoryInput);
+        Assert.Null(request.Options.RequestedPersistentMemoryLineage);
+        Assert.False(request.Options.RequestedContextConstraints!.AllowPersistentMemoryRead);
+        Assert.False(request.Options.RequestedContextConstraints.RequireOriginalPersistentMemoryInput);
+        Assert.Equal(options.RequestedRoutingConstraints, request.Options.RequestedRoutingConstraints);
+        Assert.DoesNotContain(ScopedMemorySource.Sentinel, request.SystemPrompt ?? "", StringComparison.Ordinal);
+        Assert.DoesNotContain(MemorySource.Sentinel, request.SystemPrompt ?? "", StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Required_missing_memory_input_refuses_before_legacy_read_or_model_dispatch()
     {
         var legacy = new MemorySource(); var scoped = new ScopedMemorySource(); var rig = new Rig(legacy, scoped);
@@ -142,10 +165,13 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         internal readonly IChatOriginalPersistentMemoryInput Input;
         internal bool HoldChild;
         internal Task<IReadOnlyList<KnowledgeRecord>>? InlineRead;
-        internal int Reads, Validations;
+        internal int IssuanceChecks, Reads, Validations;
         internal ScopedMemorySource() => Input = new Marker(this);
-        public bool IsIssuedOriginalInput(IChatOriginalPersistentMemoryInput actual) =>
-            actual is Marker marker && ReferenceEquals(marker.Owner, this) && ReferenceEquals(Input, actual);
+        public bool IsIssuedOriginalInput(IChatOriginalPersistentMemoryInput actual)
+        {
+            Interlocked.Increment(ref IssuanceChecks);
+            return actual is Marker marker && ReferenceEquals(marker.Owner, this) && ReferenceEquals(Input, actual);
+        }
         public Task<IReadOnlyList<KnowledgeRecord>> ReadOriginalWithinSourceAsync(IChatOriginalPersistentMemoryInput input,
             Conversation conversation, ProviderExecutionContext? context, Action<Action> scope, Action<Task> retain, CancellationToken token)
         {

@@ -36,6 +36,65 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         Assert.Contains(MemorySource.Sentinel, Assert.Single(rig.Provider.Requests).SystemPrompt ?? "", StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Temporary_chat_has_no_implicit_memory_permission_even_with_permissive_request(bool? allow)
+    {
+        var source = new MemorySource();
+        var rig = new Rig(source, temporary: true);
+        var options = allow.HasValue
+            ? new GenerationOptions(Temperature: .43, ContextLimit: 12288, ActionLimit: 11)
+                { RequestedContextConstraints = new(allow) }
+            : null;
+
+        await rig.SendAsync(options);
+
+        Assert.Equal(0, source.Reads);
+        var request = Assert.Single(rig.Provider.Requests);
+        Assert.DoesNotContain(MemorySource.Sentinel, request.SystemPrompt ?? "", StringComparison.Ordinal);
+        if (options is null)
+            Assert.Null(request.Options); // Preserve provider defaults when the caller supplied no options.
+        else
+        {
+            Assert.Equal(options with { RequestedContextConstraints = new(false) }, request.Options);
+            Assert.False(request.Options!.RequestedContextConstraints!.AllowPersistentMemoryRead);
+        }
+        Assert.Contains(request.Messages, message => message.Role == "user" && message.Content == "Hello");
+    }
+
+    [Fact]
+    public async Task Saving_same_id_during_a_temporary_turn_does_not_grant_its_captured_request_memory()
+    {
+        var source = new MemorySource();
+        var rig = new Rig(source, temporary: true);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var token = TestContext.Current.CancellationToken;
+        rig.OriginalSafety.OnSend = cancellation => { entered.TrySetResult(); return release.Task.WaitAsync(cancellation); };
+        var alreadyAdmitted = rig.SendAsync(null);
+        var saved = rig.OriginalConversation with { IsTemporary = false };
+
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            await rig.History.UpsertConversationAsync(saved, token);
+        }
+        finally { release.TrySetResult(); }
+        await alreadyAdmitted.WaitAsync(TimeSpan.FromSeconds(10), token);
+
+        Assert.Equal(0, source.Reads);
+        Assert.DoesNotContain(MemorySource.Sentinel, Assert.Single(rig.Provider.Requests).SystemPrompt ?? "", StringComparison.Ordinal);
+        Assert.Equal(saved, await rig.History.GetAsync(saved.Id, token));
+
+        rig.OriginalSafety.OnSend = null;
+        await rig.SendAsync(null, saved);
+
+        Assert.Equal(1, source.Reads);
+        Assert.Contains(MemorySource.Sentinel, rig.Provider.Requests[1].SystemPrompt ?? "", StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Explicit_true_preserves_the_actual_source_refusal_and_never_dispatches()
     {
@@ -77,23 +136,25 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     private sealed class Rig
     {
         private readonly Conversation _conversation;
+        internal Conversation OriginalConversation => _conversation;
         private readonly ChatSessionService _chat;
         internal ChatSessionService OriginalChat => _chat;
         public readonly ModelDescriptor Model;
         public readonly Provider Provider;
         internal readonly Safety OriginalSafety = new();
+        internal readonly Conversations History = new();
         internal readonly List<ToolActivity> ToolActivities = [];
 
-        internal Rig(MemorySource actualSource, ScopedMemorySource? scoped = null, string? actualWorkspaceRoot = null)
+        internal Rig(MemorySource actualSource, ScopedMemorySource? scoped = null, string? actualWorkspaceRoot = null, bool temporary = false)
         {
             var now = DateTimeOffset.UtcNow;
             _conversation = new(Guid.NewGuid(), actualWorkspaceRoot is null ? HavenMode.Chat : HavenMode.Tasks, ConversationKind.Chat,
-                "Controlled ordinary conversation", null, null, false, false, now, now);
+                "Controlled ordinary conversation", null, null, false, temporary, now, now);
             Model = new("controlled-memory-model", 1, "controlled", "controlled", "controlled",
                 actualWorkspaceRoot is null ? new HashSet<ToolCapability> { ToolCapability.Text }
                     : new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools }, now);
             Provider = new(Model, actualWorkspaceRoot is not null);
-            _chat = new(new Conversations(), Provider, new CapabilityPreflightService(), OriginalSafety,
+            _chat = new(History, Provider, new CapabilityPreflightService(), OriginalSafety,
                 new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()),
                 memorySource: actualSource, originalPersistentMemorySource: scoped);
         }
@@ -123,9 +184,9 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             { if (_.ToolActivity is { } activity) ToolActivities.Add(activity); }
         }
 
-        internal async Task SendAsync(GenerationOptions? options)
+        internal async Task SendAsync(GenerationOptions? options, Conversation? subject = null)
         {
-            await foreach (var _ in _chat.SendAsync(_conversation, "Hello", Model, EffortLevel.Medium,
+            await foreach (var _ in _chat.SendAsync(subject ?? _conversation, "Hello", Model, EffortLevel.Medium,
                 [], "Controlled", "", DuoMode.Solo, null, null, null, null,
                 TestContext.Current.CancellationToken, generationOptions: options,
                 taskExecutionIntent: TaskRunExecutionIntent.OrdinaryConversation)) { }
@@ -180,10 +241,11 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
 
     private sealed class Conversations : IConversationRepository
     {
+        private Conversation? _stored;
         public Task<IReadOnlyList<Conversation>> GetRecentAsync(HavenMode? mode, int limit, CancellationToken token) => Task.FromResult<IReadOnlyList<Conversation>>([]);
-        public Task<Conversation?> GetAsync(Guid id, CancellationToken token) => Task.FromResult<Conversation?>(null);
+        public Task<Conversation?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(_stored is { } stored && stored.Id == id ? stored : null);
         public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => Task.FromResult<IReadOnlyList<ChatMessage>>([]);
-        public Task UpsertConversationAsync(Conversation conversation, CancellationToken token) => Task.CompletedTask;
+        public Task UpsertConversationAsync(Conversation conversation, CancellationToken token) { _stored = conversation; return Task.CompletedTask; }
         public Task AddMessageAsync(ChatMessage message, CancellationToken token) => Task.CompletedTask;
         public Task DeleteConversationAsync(Guid id, CancellationToken token) => throw new InvalidOperationException("Unexpected delete.");
     }
@@ -191,6 +253,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     private sealed class Safety : IConversationSafetyService
     {
         internal int OriginalToolAdmissions;
+        internal Func<CancellationToken, Task>? OnSend;
         public Task<ConversationSafetySnapshot> GetSnapshotAsync(Guid id, CancellationToken token) =>
             Task.FromResult(new ConversationSafetySnapshot(id, 0, ConversationSafetyState.Active, null, 0));
         public Task<ConversationSafetyFlagResult> RecordConfirmedFlagAsync(Guid id, ConfirmedSafetyFlag flag, CancellationToken token) =>
@@ -198,6 +261,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         public Task EnsureMayActAsync(Guid id, string operation, CancellationToken token)
         {
             if (operation.StartsWith("chat.tool.", StringComparison.Ordinal)) OriginalToolAdmissions++;
+            if (operation == "chat.send" && OnSend is { } hold) return hold(token);
             return Task.CompletedTask;
         }
     }
