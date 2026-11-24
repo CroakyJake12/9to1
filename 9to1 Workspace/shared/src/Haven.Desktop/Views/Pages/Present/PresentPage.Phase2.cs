@@ -166,7 +166,7 @@ public sealed partial class PresentPage
     {
         if (Document is null) return;
         _playback = new PresentPlaybackSession(Document);
-        if (_slideIndex > 0) _playback.GoTo(_slideIndex);
+        if (CurrentSlide is { } slide) _playback.GoToSlide(slide.Id);
         var frame = _playback.Frame;
         PublishOriginalPresentSource(() => _route.SetStatus($"Presentation ready · slide {frame.SlideNumber} of {frame.SlideCount} · speaker notes and animation timing loaded"));
         PublishOriginalPresentSource(() => _bus.Fire("Present.Playback.Started"));

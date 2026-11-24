@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
 using Haven.Core;
@@ -10,6 +11,49 @@ namespace Haven.Desktop.Tests;
 
 public sealed class PresentPageOriginalLifetimeTests
 {
+    [AvaloniaFact]
+    public async Task Present_starts_on_selected_visible_slide_when_earlier_slides_are_hidden()
+    {
+        using var paths = new TemporaryPaths();
+        var repository = new PresentRepository(paths);
+        var document = PresentDocument.Create("Hidden slide deck");
+        document.Slides[0].Hidden = true;
+        var firstVisible = PresentSlide.Create(1);
+        var selected = PresentSlide.Create(2);
+        selected.Title = "Selected slide";
+        document.Slides.AddRange([firstVisible, selected]);
+        await repository.SaveAsync(document, "Initial presentation", CancellationToken.None);
+
+        using var page = new PresentPage(new HavenEventBus(), repository, new PresentPptxExportService());
+        await page.InitializeAsync();
+        var window = new Window { Width = 1400, Height = 920, Content = page };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            Assert.True(page.Route.SlideNavigator.KeyDown(new HavenKeyInput(HavenKey.Down, HavenKeyModifiers.None)));
+            Assert.True(page.Route.SlideNavigator.KeyDown(new HavenKeyInput(HavenKey.Down, HavenKeyModifiers.None)));
+            Assert.Equal(selected.Id, page.Editor!.Selection.SlideId);
+
+            var router = new HavenInputRouter(page.SceneRoot);
+            var button = page.Route.PresentButton;
+            var point = new HavenPoint(button.Bounds.X + button.Bounds.Width / 2, button.Bounds.Y + button.Bounds.Height / 2);
+            Assert.Same(button, router.HitTest(point));
+            router.PointerPressed(point);
+            Assert.True(router.PointerReleased(point));
+            window.UpdateLayout();
+
+            Assert.Equal(selected.Id, page.PlaybackSession!.CurrentSlide.Id);
+            Assert.Contains("Slide 2 of 2", page.Route.PresenterStatus.Content, StringComparison.Ordinal);
+            Assert.Equal(selected.Id, page.Editor.Selection.SlideId);
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
     [AvaloniaFact]
     public async Task Close_preflight_saves_the_actual_unacknowledged_recovered_backup()
     {
