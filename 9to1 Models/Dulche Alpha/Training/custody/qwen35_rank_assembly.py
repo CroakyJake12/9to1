@@ -15,14 +15,19 @@ _TEXT = "model.language_model."
 class AssembledQwen35Rank:
     text: Qwen35TextRange
     lm_head: object | None
+    deferred: tuple[TensorPlacement, ...] = ()
 
 
 def assemble_qwen35_rank(config, plan: RankPlan, *, split: int, rank: int,
-                         read_tensor: Callable[[TensorPlacement], object]) -> AssembledQwen35Rank:
+                         read_tensor: Callable[[TensorPlacement], object],
+                         defer_v100_weights: bool = False) -> AssembledQwen35Rank:
     """Assign owned BF16 CPU tensors in place, without full-model weight storage.
 
     Reader must verify the admitted shard identity independently and read only
-    the exact placement supplied. This is CPU backing, not a VRAM fit claim.
+    the exact placement supplied. By default this is CPU backing, not a
+    VRAM fit claim. The streamed V100 placement explicitly opts out of
+    loading its exact owned linear and embedding weights; a pager must
+    replace those named placeholders before any use.
     """
     import torch
     import transformers
@@ -32,7 +37,8 @@ def assemble_qwen35_rank(config, plan: RankPlan, *, split: int, rank: int,
     if (transformers.__version__ != _TRANSFORMERS or type(config) is not Qwen3_5TextConfig
             or config.tie_word_embeddings is not False or type(split) is not int
             or not 0 < split < config.num_hidden_layers or type(rank) is not int or rank not in (0, 1)
-            or type(plan) is not RankPlan or not callable(read_tensor)):
+            or type(plan) is not RankPlan or not callable(read_tensor)
+            or type(defer_v100_weights) is not bool or (defer_v100_weights and rank != 0)):
         raise CustodyError("Unadmitted Qwen3.5 rank assembly configuration.")
     span = (0, split) if rank == 0 else (split, config.num_hidden_layers)
     if (type(plan.start_layer) is not int or type(plan.stop_layer) is not int
@@ -59,6 +65,17 @@ def assemble_qwen35_rank(config, plan: RankPlan, *, split: int, rank: int,
 
     expected = {prefix + name: tuple(tensor.shape) for prefix, module in owned.items()
                 for name, tensor in module.state_dict().items()}
+    deferred_keys = set()
+    if defer_v100_weights:
+        for prefix, module in owned.items():
+            for relative, child in module.named_modules():
+                if type(child) in (torch.nn.Linear, torch.nn.Embedding):
+                    key = prefix + (relative + "." if relative else "") + "weight"
+                    if key not in expected or child.weight.device.type != "meta":
+                        raise CustodyError("Unexpected streamed V100 placeholder.")
+                    deferred_keys.add(key)
+        if f"{_TEXT}embed_tokens.weight" not in deferred_keys or len(deferred_keys) < 2:
+            raise CustodyError("No admitted V100 projections or token embedding to stream.")
     placements = {}
     for place in plan.tensors:
         if (type(place) is not TensorPlacement or type(place.key) is not str or place.key not in expected
@@ -78,8 +95,12 @@ def assemble_qwen35_rank(config, plan: RankPlan, *, split: int, rank: int,
 
     for prefix, module in owned.items():
         data = {}
-        for name in module.state_dict():
-            place = placements[prefix + name]
+        for name, slot in module.state_dict().items():
+            key = prefix + name
+            place = placements[key]
+            if key in deferred_keys:
+                data[name] = slot.to(dtype=torch.bfloat16)
+                continue
             tensor = read_tensor(place)
             if (type(tensor) is not torch.Tensor or tensor.device.type != "cpu" or tensor.layout != torch.strided
                     or not tensor.is_contiguous() or tensor.requires_grad or tensor.is_neg()
@@ -88,7 +109,11 @@ def assemble_qwen35_rank(config, plan: RankPlan, *, split: int, rank: int,
             data[name] = tensor
         module.load_state_dict(data, strict=True, assign=True)
 
-    for module in (*owned.values(), text._rotary):
-        if any(tensor.device.type != "cpu" for tensors in (module.parameters(), module.buffers()) for tensor in tensors):
-            raise CustodyError("A rank-local Qwen3.5 parameter or buffer was not materialized on CPU.")
-    return AssembledQwen35Rank(text, head)
+    for prefix, module in (*owned.items(), ("", text._rotary)):
+        for tensors in (module.named_parameters(), module.named_buffers()):
+            for name, tensor in tensors:
+                device_type = "meta" if prefix + name in deferred_keys else "cpu"
+                if tensor.device.type != device_type:
+                    raise CustodyError("A rank-local parameter or buffer differs from its admitted placement.")
+    deferred = tuple(place for place in plan.tensors if place.key in deferred_keys)
+    return AssembledQwen35Rank(text, head, deferred)

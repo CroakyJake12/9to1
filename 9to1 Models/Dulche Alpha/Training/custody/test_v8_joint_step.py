@@ -1,5 +1,7 @@
 from importlib.util import find_spec
 from io import BytesIO
+import sys
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 from uuid import uuid4
@@ -23,6 +25,38 @@ class JointV8WiringTests(unittest.TestCase):
                                 approved_segment="upper", approved_precision="float16",
                                 lora_state={}, ports=ports, first_step=1, local_control=None)
         reader.assert_not_called()
+
+    def test_streamed_v100_port_defers_only_exact_owned_placements(self):
+        ports = JointV8Ports(lambda *_: True, lambda: True, Mock(), Mock(), Mock(), Mock())
+        place = SimpleNamespace(key="test.owned.weight", header=SimpleNamespace(shape=(3, 4)))
+        assemble = SimpleNamespace(text=object(), deferred=(place,))
+        fetch = Mock(return_value="authenticated device tensor")
+        reader, local, sync = Mock(), Mock(), Mock()
+        kwargs = dict(config=None, plan=object(), verified_tensor_reader=reader,
+                      approved_segment="upper", lora_state={}, ports=ports,
+                      first_step=1, local_control=local, v100_fetch_weight=fetch)
+        with patch("custody.v8_joint_step.assemble_qwen35_rank", return_value=assemble) as factory, \
+                patch("custody.v8_joint_step.place_frozen_early_v8") as pager, \
+                patch.dict(sys.modules, torch=SimpleNamespace(cuda=SimpleNamespace(synchronize=sync))):
+            with self.assertRaisesRegex(CustodyError, "Unsupported"):
+                prepare_v8_rank(rank=1, approved_precision="bfloat16", **kwargs)
+            factory.assert_not_called()
+            prepared = prepare_v8_rank(rank=0, approved_precision="float16", **kwargs)
+            self.assertIs(prepared.text, assemble.text)
+            self.assertIs(factory.call_args.kwargs["defer_v100_weights"], True)
+            materialize = pager.call_args.kwargs["materialize_weight"]
+            with self.assertRaisesRegex(CustodyError, "admitted deferred"):
+                materialize("foreign.weight", (3, 4))
+            with self.assertRaisesRegex(CustodyError, "admitted deferred"):
+                materialize(place.key, (4, 3))
+            fetch.assert_not_called()
+            with prepared.control.running(1):
+                self.assertEqual(materialize(place.key, (3, 4)), "authenticated device tensor")
+                request, duty = fetch.call_args.args[0], fetch.call_args.kwargs["duty"]
+                self.assertIs(request, place)
+                duty()
+            sync.assert_called_once_with("cuda:0")
+            local.wait_for_compute.assert_called_once_with()
 
     def test_pager_tracks_actual_step_and_disallows_replay_after_post_wait_revocation(self):
         events = []

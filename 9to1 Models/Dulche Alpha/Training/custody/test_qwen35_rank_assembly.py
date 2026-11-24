@@ -92,6 +92,38 @@ class RankAssemblyTests(unittest.TestCase):
                 assemble_qwen35_rank(self.native.config, replace(early, tensors=tensors),
                                      split=2, rank=0, read_tensor=not_called)
 
+    def test_only_exact_owned_linear_and_embedding_weights_are_deferred(self):
+        import torch
+
+        plan = self.plans[0]
+        seen = set()
+        def read(placement):
+            seen.add(placement.key)
+            return self.values[placement.key]
+        result = assemble_qwen35_rank(self.native.config, plan, split=2, rank=0,
+                                      read_tensor=read, defer_v100_weights=True)
+        names = {f"{_TEXT}embed_tokens.weight"}
+        for index, (_, layer) in enumerate(result.text._layers):
+            for relative, child in layer.named_modules():
+                if type(child) is torch.nn.Linear:
+                    names.add(f"{_TEXT}layers.{index}.{relative}.weight")
+        self.assertGreater(len(names), 1)
+        self.assertEqual(result.deferred, tuple(p for p in plan.tensors if p.key in names))
+        self.assertEqual(seen, {p.key for p in plan.tensors} - names)
+        self.assertTrue(result.text._edge.weight.is_meta)
+        self.assertIs(result.text._edge.weight.dtype, torch.bfloat16)
+        for index, (_, layer) in enumerate(result.text._layers):
+            for name, param in layer.named_parameters():
+                key = f"{_TEXT}layers.{index}.{name}"
+                self.assertEqual(param.is_meta, key in names)
+                if key not in names:
+                    self.assertEqual(param.data_ptr(), self.values[key].data_ptr())
+        def forbidden(_):
+            self.fail("tail placement must refuse before payload access")
+        with self.assertRaises(CustodyError):
+            assemble_qwen35_rank(self.native.config, self.plans[1], split=2, rank=1,
+                                 read_tensor=forbidden, defer_v100_weights=True)
+
     def test_reader_tensor_wrong_dtype_or_shape_is_refused(self):
         import torch
 

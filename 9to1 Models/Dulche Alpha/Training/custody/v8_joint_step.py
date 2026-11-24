@@ -92,14 +92,21 @@ class PreparedV8Rank:
 
 def prepare_v8_rank(*, config, plan, rank, verified_tensor_reader, approved_segment,
                     approved_precision, lora_state, ports, first_step, local_control,
-                    paged_source=None, learning_rate=None):
-    """Create one placement using only the supplied authenticated rank reader."""
+                    paged_source=None, learning_rate=None, v100_fetch_weight=None):
+    """Create one placement using already-owned verified input channels.
+
+    The optional V100 port must authenticate each original BF16 placement
+    and stage it as FP16. It gets the exact rank-local duty callback and
+    may not publish a partially transferred or unverified device tensor.
+    """
     if (type(ports) is not JointV8Ports or type(rank) is not int or rank not in (0, 1)
             or type(first_step) is not int or first_step < 1 or approved_segment != "upper"
-            or approved_precision != ("float16", "bfloat16")[rank]):
+            or approved_precision != ("float16", "bfloat16")[rank]
+            or (v100_fetch_weight is not None and (rank != 0 or not callable(v100_fetch_weight)))):
         raise CustodyError("Unsupported registered v8 rank or SFT precision.")
     _admit(ports, rank=rank, step=first_step)
-    assembled = assemble_qwen35_rank(config, plan, split=32, rank=rank, read_tensor=verified_tensor_reader)
+    assembled = assemble_qwen35_rank(config, plan, split=32, rank=rank, read_tensor=verified_tensor_reader,
+                                     defer_v100_weights=v100_fetch_weight is not None)
 
     control = _AdmittedControl(ports, local_control, rank, first_step)
     if rank == 0:
@@ -109,8 +116,19 @@ def prepare_v8_rank(*, config, plan, rank, verified_tensor_reader, approved_segm
             cuda.synchronize("cuda:0")
             control.wait_for_compute()
 
+        materialize = None
+        if v100_fetch_weight is not None:
+            owned = {placement.key: placement for placement in assembled.deferred}
+
+            def materialize(key, shape):
+                placement = owned.get(key)
+                if placement is None or placement.header.shape != shape:
+                    raise CustodyError("Requested V100 weight is not an admitted deferred placement.")
+                return v100_fetch_weight(placement, duty=duty)
+
         place_frozen_early_v8(assembled, device="cuda:0", approved_segment=approved_segment,
-                              approved_precision=approved_precision, duty=duty, frozen_lora=lora_state)
+                              approved_precision=approved_precision, duty=duty, frozen_lora=lora_state,
+                              materialize_weight=materialize)
         return PreparedV8Rank(assembled.text, None, control)
     tail = place_upper_rtx_v8(assembled, device="cuda:0", approved_segment=approved_segment,
                               approved_precision=approved_precision, paged_source=paged_source,
