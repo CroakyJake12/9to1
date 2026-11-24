@@ -23,15 +23,18 @@ function file(id, properties = {}) {
 function fixture(t, { limits, conditionalWrites = true } = {}) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
+  const model = { now: T0, calls: [], ids: 0, lost: false, nextRace: false, weakETag: false };
   const storage = {
-    sql: { exec(query, ...args) { return { toArray: () => db.prepare(query).all(...args) }; } },
+    sql: { exec(query, ...args) {
+      if (model.failJournal && query.startsWith('INSERT INTO files_changes')) throw new Error('Controlled journal fault');
+      return { toArray: () => db.prepare(query).all(...args) };
+    } },
     transactionSync(work) {
       db.exec('BEGIN IMMEDIATE');
       try { const result = work(); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; }
     },
     async sync() {},
   };
-  const model = { now: T0, calls: [], ids: 0, lost: false, nextRace: false, weakETag: false };
   const root = file('my-root', { mimeType: FOLDER, parents: [] });
   const remote = new Map([[root.id, root]]);
   const now = () => model.now;
@@ -387,5 +390,36 @@ test('rename ignores the selected item but checks later collision pages', async 
   assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 0);
   f.model.list = () => ({ files: [{ id: source.id }] });
   assert.equal((await f.provider.mutate(request)).value.state, 'Committed');
+  assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
+});
+
+test('confirmed Drive edits publish metadata and the original result with exactly one event', async t => {
+  const f = fixture(t);
+  const source = file('journal-source');
+  f.remote.set(source.id, source);
+  const before = f.store.mapFile(source);
+  const edit = operation('Rename', before, { name: 'New name' });
+  f.model.failJournal = true;
+
+  const unresolved = await f.provider.mutate(edit);
+  assert.equal(unresolved.error.code, 'ProviderUnavailable');
+  assert.equal(unresolved.error.details, null);
+  assert.equal(source.name, 'New name', 'provider already applied the change');
+  assert.deepEqual(JSON.parse(f.store.byId(before.id).metadata), before, 'do not expose a local revision without its event');
+  assert.equal(f.store.operation(edit.operation.id).stage, 'issuing');
+  assert.deepEqual(f.store.changes(0), { items: [], nextPageToken: null });
+
+  f.model.failJournal = false;
+  const { store, provider } = f.reopen();
+  const result = await provider.mutate(edit);
+  assert.equal(result.value.state, 'Committed');
+  assert.deepEqual(result.value.itemId, before.id);
+  const [event] = store.changes(0).items;
+  assert.deepEqual(event.operationId, edit.operation.id);
+  assert.deepEqual(event.baseRevisionId, before.currentRevisionId);
+  assert.deepEqual(event.resultRevisionId, result.value.resultRevisionId);
+  assert.equal(event.metadata.name, 'New name');
+  assert.deepEqual(await provider.mutate(edit), result);
+  assert.equal(store.changes(event.cursor.revision).items.length, 0);
   assert.equal(f.model.calls.filter(call => call.method === 'PATCH').length, 1);
 });

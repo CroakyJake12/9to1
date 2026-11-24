@@ -291,7 +291,12 @@ export class DriveProvider {
     let writeMayHaveRun = false;
     try {
       const row = this.#store.claimOperation(intent.id, intent);
-      if (row.stage === 'committed' || row.stage === 'rejected') return row.result;
+      if (row.stage === 'committed') {
+        writeMayHaveRun = true;
+        await this.#store.storage.sync();
+        return row.result;
+      }
+      if (row.stage === 'rejected') return row.result;
       writeMayHaveRun = row.stage === 'issuing';
       const token = await this.#oauth.getAccessToken({ signal });
       await this.#root(token, signal);
@@ -328,7 +333,7 @@ export class DriveProvider {
         return denied;
       }
       const file = plan.before ? patchAck(result.value, plan.before, plan.googleId) : requireFile(result.value, plan.googleId);
-      return this.#commit(intent, plan.googleId, file);
+      return await this.#commit(intent, plan.googleId, file);
     } catch (error) {
       return resultError(error, intent.operation, intent.itemId, this.#now(), !writeMayHaveRun, writeMayHaveRun);
     } finally {
@@ -490,7 +495,7 @@ export class DriveProvider {
     return this.#commit(intent, id, file);
   }
 
-  #commit(intent, id, file) {
+  async #commit(intent, id, file) {
     const { operation } = intent;
     if (file.id !== id || file.appProperties?.[OPERATION_PROPERTY] !== intent.id) throw uncertain();
     const parent = this.#store.googleId(
@@ -498,14 +503,14 @@ export class DriveProvider {
     if (firstParent(file) !== parent || file.trashed !== (operation === 'Delete') ||
         (operation === 'Delete' && file.explicitlyTrashed !== true) ||
         (intent.newName !== null && file.name !== intent.newName) || (operation === 'CreateFolder' && file.mimeType !== FOLDER)) throw uncertain();
-    const metadata = this.#store.mapFile(file, intent.itemId);
-    const stored = this.#store.byId(intent.itemId);
-    if (!metadata.currentRevisionId || stored?.google_version !== String(file.version) ||
-        metadata.currentRevisionId.value === intent.baseRevisionId) throw uncertain();
-    return this.#store.storage.transactionSync(() => {
+    const committed = this.#store.storage.transactionSync(() => {
       const old = this.#store.operation(intent.id);
       if (old?.stage === 'committed') return old.result;
       if (old?.stage !== 'issuing') throw uncertain();
+      const metadata = this.#store.mapFileInTransaction(file, intent.itemId);
+      const stored = this.#store.byId(intent.itemId);
+      if (!metadata.currentRevisionId || stored?.google_version !== String(file.version) ||
+          metadata.currentRevisionId.value === intent.baseRevisionId) throw uncertain();
       const createdAt = new Date(old.created_at).toISOString();
       const updatedAt = new Date(this.#now()).toISOString();
       const baseRevisionId = wrap(intent.baseRevisionId);
@@ -523,5 +528,7 @@ export class DriveProvider {
       this.#store.stageOperation(intent.id, 'committed', id, result);
       return result;
     });
+    await this.#store.storage.sync();
+    return committed;
   }
 }
