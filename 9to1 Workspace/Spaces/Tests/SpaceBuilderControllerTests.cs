@@ -408,6 +408,56 @@ public sealed class SpaceBuilderControllerTests
     }
 
     [Fact]
+    public async Task Navigation_preserves_unsaved_expert_node_and_basic_name_through_preview_cycle()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Navigation Test", cancellationToken: token);
+        var editor = new SpaceBuilderController(registry, space.Id);
+        Assert.True(await editor.LoadAsync(token));
+
+        // 1. Add an Expert node (simulate adding a node in Expert view)
+        var nodeId = Guid.NewGuid();
+        var layout = new SpaceLayoutDocument(
+            [new SpaceLayoutNode(nodeId, "Logic", "Expert Node") { TypeId = "spaces.test.node" }],
+            [])
+        {
+            GraphId = Guid.NewGuid(),
+            SchemaVersion = SpaceLayoutDocument.CurrentSchemaVersion,
+            Revision = 1,
+            State = SpaceLayoutRevisionState.Draft
+        };
+
+        // Ensure we are in Expert view to match acceptance criteria context
+        editor.SelectExpertSection(SpaceBuilderExpertSection.ModelLogic);
+        Assert.True(editor.SetLayoutDocument(layout));
+
+        // 2. Edit the Basic name (simulate switching to Basic and editing)
+        editor.SelectEditorView(SpaceBuilderEditorView.Basic);
+        Assert.True(editor.SetField(SpaceBuilderField.Name, "Edited Name"));
+        Assert.True(editor.State.HasChanges);
+
+        // 3. Visit Preview (verify draft state is reflected in preview)
+        var preview = editor.PreviewDraft();
+        Assert.NotNull(preview);
+        Assert.Equal("Edited Name", preview!.Name);
+        Assert.Equal(1, preview.GraphNodeCount); // Verify node is in preview snapshot
+
+        // 4. Return to Expert view (simulate navigation back)
+        editor.SelectEditorView(SpaceBuilderEditorView.Expert);
+
+        // 5. Retain the node, same identity and all unsaved changes
+        Assert.True(editor.State.HasChanges);
+        Assert.Equal("Edited Name", editor.State.Draft.Name);
+        Assert.NotNull(editor.State.Draft.LayoutDocument);
+        var retainedNode = Assert.Single(editor.State.Draft.LayoutDocument.Nodes);
+        Assert.Equal(nodeId, retainedNode.Id); // Same identity
+        Assert.Equal("Expert Node", retainedNode.Title);
+    }
+
+    [Fact]
     public async Task Owner_validation_checks_unsaved_projection_without_saving_or_publishing()
     {
         using var files = new SpaceDetailsTestFiles();
