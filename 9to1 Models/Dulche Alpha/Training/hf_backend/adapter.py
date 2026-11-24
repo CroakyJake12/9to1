@@ -205,7 +205,10 @@ class LocalSession:
 
     def __init__(self, store: ArtifactStore, bundle: LocalBundle, dataset: DatasetManifest,
                  dataset_root: Path, *, purpose: str, method: str = "full", rank: int = 2, alpha: int = 4,
-                 gpu_admission=None, on_update=None, on_failed_update=None, checkpoint_publisher=None):
+                 gpu_admission=None, on_update=None, on_failed_update=None, checkpoint_publisher=None,
+                 training_topology: object = None):
+        from custody.topology import refuse_heterogeneous_on_local_executor
+        refuse_heterogeneous_on_local_executor(training_topology)
         if method not in {"full", "lora", "nf4_lora"}:
             raise CustodyError("Unsupported HF training method")
         if purpose not in {"software_test_only", "real_training"}:
