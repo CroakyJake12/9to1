@@ -6,9 +6,11 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
   <PropertyGroup>
-    <!-- Clear the repository default single target before declaring both owning targets. -->
+    <!-- Mirror Haven.Desktop: Linux runs the portable target without forcing a global
+         TargetFrameworks override that would break the vendored netstandard analyzers. -->
     <TargetFramework />
-    <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFrameworks>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget>AnyCPU</PlatformTarget>
