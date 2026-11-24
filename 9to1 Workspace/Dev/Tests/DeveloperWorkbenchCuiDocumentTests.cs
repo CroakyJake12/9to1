@@ -78,6 +78,19 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
     }
 
     [Fact]
+    public void Saved_test_report_view_is_a_distinct_read_only_workbench_action()
+    {
+        var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
+        var action = Assert.Single(nodes, node => node.Name == "dev-inspect-saved-test-report");
+        Assert.Contains(action.Actions.Values, value => value.Name == "dev.inspect-saved-test-report");
+        Assert.Contains(action.Properties.Values, value => value is CuiBindingValue binding &&
+            binding.Path == "CanInspectSavedTestReport");
+        var details = Assert.Single(nodes, node => node.Name == "dev-saved-test-report-details");
+        Assert.True(details.TryGetLiteralAttribute("type", out var renderer));
+        Assert.Equal("ReadOnlyText", renderer);
+    }
+
+    [Fact]
     public void Reported_problems_use_typed_current_selection_and_explicit_source_limits()
     {
         var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
@@ -134,7 +147,7 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
             "dev.find-next-source", "dev.replace-source-match", "dev.replace-all-source", "dev.undo-source-edit",
             "dev.redo-source-edit", "dev.analyze-cui-draft", "dev.preview-cui-draft", "dev.go-to-cui-problem", "dev.go-to-cui-element", "dev.select-cui-property", "dev.change-cui-property", "dev.add-cui-text-child", "dev.move-cui-text-up", "dev.move-cui-text-down", "dev.remove-cui-text", "dev.check-line-endings", "dev.use-lf-endings", "dev.use-crlf-endings", "dev.preview-edit",
             "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.select-run-target", "dev.new-run-target", "dev.edit-run-target", "dev.review-run-target", "dev.save-run-target", "dev.run-selected-target", "dev.stop-manual-run", "dev.run-command",
-            "dev.run-tests", "dev.select-build-stage", "dev.new-compile-stage", "dev.new-test-stage", "dev.edit-build-stage", "dev.review-build-stage", "dev.save-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.create-branch",
+            "dev.run-tests", "dev.select-build-stage", "dev.new-compile-stage", "dev.new-test-stage", "dev.edit-build-stage", "dev.review-build-stage", "dev.save-build-stage", "dev.run-stage", "dev.open-build-problem", "dev.inspect-saved-test-report", "dev.create-branch",
             "dev.switch-branch"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
         Assert.Equal(nodes.Length, nodes.Select(value => value.StableId).Distinct().Count());
