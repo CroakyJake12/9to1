@@ -1,6 +1,7 @@
 <Cui id="assistants.work" version="1">
   <Actions>
     <Action name="ToggleAssistantWorkspace" command="assistants.workspace.toggle" parameter="{Binding WorkspaceAssistantIdentity}" />
+    <Action name="ToggleConversationArchive" command="assistants.conversation.archive.toggle" parameter="{Binding conversation}" />
     <Action name="OpenConversation" command="assistants.conversation.open" parameter="{Binding conversation}" />
     <Action name="ChooseOriginalProject" command="assistants.project.choose" parameter="{Binding project}" />
     <Action name="ResumeCompatiblePending" command="assistants.project.pending.resume" parameter="{Binding pending}" />
@@ -120,7 +121,10 @@
         <Container Type="Vertical Stack" VerticalScrolling="True" MaxHeight="200" CellGap="8" Active="{Binding HasSelectedConversations}">
           <Text FontSize="18" FontWeight="SemiBold">Conversations</Text>
           <Repeat Source="{Binding SelectedConversations}" As="conversation" Key="{Binding conversation.Id}">
-            <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
+            <Container Type="Wrap" CellGap="8">
+              <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
+              <Button action="ToggleConversationArchive" Text="{Binding conversation.ArchiveLabel}" Active="{Binding conversation.CanToggleArchive}" Interactive="{Binding conversation.CanToggleArchive}" />
+            </Container>
           </Repeat>
         </Container>
       </Container>

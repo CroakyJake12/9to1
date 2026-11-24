@@ -110,12 +110,17 @@ public sealed partial class DenAssistantCanonicalBridge : IAssistantOriginalConv
         var memory = await PrepareOriginalAssistantMemoryRequestAsync(binding, current.Definition, token).ConfigureAwait(false);
         var model = await SelectModelAsync(binding, input, memory, token).ConfigureAwait(false);
         var attachments = await PrepareOriginalAttachmentInputAsync(binding, input, token).ConfigureAwait(false);
-        current = await ValidateBindingAsync(binding, token).ConfigureAwait(false);
-        await DemandCurrentOriginalAssistantMemoryRequestAsync(binding, memory, token).ConfigureAwait(false);
-        token.ThrowIfCancellationRequested();
-        var observation = _originals.Invoke(() => _ordinary.StartOriginal(binding, _chat, current.Conversation,
-            input.Prompt, model, input.Effort, current.Definition.Configuration.Name, current.Definition.Configuration.Instructions,
-            OriginalAttachmentRoutingOptions(OriginalMemoryRoutingOptions(memory), attachments)));
+        var observation = await _originals.Source(() => _ordinary.WithSecondaryLifecycleFenceAsync(async () =>
+        {
+            current = await ValidateBindingAsync(binding, token).ConfigureAwait(false);
+            if (current.Conversation.IsArchived)
+                throw new AssistantCommandRefusedException("This conversation was archived before Send. Restore it to continue.");
+            await DemandCurrentOriginalAssistantMemoryRequestAsync(binding, memory, token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            return _originals.Invoke(() => _ordinary.StartOriginal(binding, _chat, current.Conversation,
+                input.Prompt, model, input.Effort, current.Definition.Configuration.Name, current.Definition.Configuration.Instructions,
+                OriginalAttachmentRoutingOptions(OriginalMemoryRoutingOptions(memory), attachments)));
+        }, token)).ConfigureAwait(false);
         _originals.Observe(observation.CloseAndDrainAsync, () => observation.OriginalClose);
         return observation;
     });

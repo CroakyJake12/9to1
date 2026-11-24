@@ -87,6 +87,7 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
                 throw new InvalidOperationException("Mini Computer must borrow this SAME canonical Assistant bridge.");
             DemandCurrent();
             _bindings = new(DispatchAsync, PublishSynchronous, () => !IsRetiring, _developmentRoute is not null);
+            _bindings.HasSecondaryConversationArchiveOwner = _controller.HasSecondaryConversationArchiveOwner;
             _bindings.ConfigureOriginalCapabilityInitializationSource(_controller.HasOriginalConfiguredCapabilityInitializationSource);
             _migrationBindings = new(_migration is not null, _migrationUnavailableReason, DispatchMigrationAsync, PublishSynchronous, () => !IsRetiring);
             _memoryBindings = new(_memoryManagement is not null, _memoryUnavailableReason, DispatchMemoryAsync, PublishSynchronous, () => !IsRetiring);
@@ -372,6 +373,10 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
                 await SourceAsync(() => _controller.OpenAssistantAsync(assistant.Identity, token));
                 PublishSynchronous(Bindings.ShowWork);
                 if (_controller.Snapshot.ConversationBinding is not null) await RefreshOriginalConversationModelsAsync(token);
+                break;
+            case "assistants.conversation.archive.toggle" when parameter is AssistantsCuiBindings.ConversationRow
+                { ArchiveIdentity: { } identity, CanToggleArchive: true } archive:
+                await SourceAsync(() => _controller.SetSecondaryConversationArchivedAsync(identity, archive.Id, archive.IsArchived, token));
                 break;
             case "assistants.conversation.open" when parameter is AssistantsCuiBindings.ConversationRow conversation:
                 if (!await PrepareNavigationAsync(token)) return;

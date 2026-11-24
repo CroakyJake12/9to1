@@ -55,7 +55,7 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             Assert.Equal("Persistent helper", selected.SelectedAssistant.Configuration.Name);
             Assert.Equal("Updated saved instructions", selected.SelectedAssistant.Configuration.Instructions);
             Assert.Equal(new[] { firstId, secondId }.Order(), selected.Conversations.Where(row => !row.IsMain).Select(row => row.ConversationId).Order());
-            var main = Assert.Single(selected.Conversations.Where(row => row.IsMain));
+            var main = Assert.Single(selected.Conversations, row => row.IsMain);
             Assert.Equal(main.ConversationId, selected.ConversationBinding!.Conversation.Id);
             Assert.DoesNotContain(main.ConversationId, new[] { firstId, secondId });
             var first = await rig.Retain(reopened.OpenConversationAsync(firstId, Token));
@@ -118,14 +118,14 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             Assert.True(controller.IsAcknowledgedOriginalCommandRefusal(foreignOpen));
             rig.Expect(foreignOpen, refusal);
             await rig.Retain(controller.OpenAssistantAsync(firstIdentity, Token));
-            Assert.Equal(firstConversation, Assert.Single(controller.Snapshot.Conversations.Where(row => !row.IsMain)).ConversationId);
-            Assert.Equal(Assert.Single(controller.Snapshot.Conversations.Where(row => row.IsMain)).ConversationId,
+            Assert.Equal(firstConversation, Assert.Single(controller.Snapshot.Conversations, row => !row.IsMain).ConversationId);
+            Assert.Equal(Assert.Single(controller.Snapshot.Conversations, row => row.IsMain).ConversationId,
                 controller.Snapshot.ConversationBinding!.Conversation.Id);
             await rig.Retain(controller.OpenConversationAsync(firstConversation, Token));
             Assert.Equal(firstIdentity, controller.Snapshot.ConversationBinding!.Definition.Identity);
             await rig.Retain(controller.OpenAssistantAsync(secondIdentity, Token));
-            Assert.Equal(secondConversation, Assert.Single(controller.Snapshot.Conversations.Where(row => !row.IsMain)).ConversationId);
-            Assert.Equal(Assert.Single(controller.Snapshot.Conversations.Where(row => row.IsMain)).ConversationId,
+            Assert.Equal(secondConversation, Assert.Single(controller.Snapshot.Conversations, row => !row.IsMain).ConversationId);
+            Assert.Equal(Assert.Single(controller.Snapshot.Conversations, row => row.IsMain).ConversationId,
                 controller.Snapshot.ConversationBinding!.Conversation.Id);
             Assert.NotNull(await rig.Retain(rig.Conversations.GetAsync(firstConversation, Token)));
             Assert.NotNull(await rig.Retain(rig.Conversations.GetAsync(secondConversation, Token)));
@@ -188,8 +188,8 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             var selected = await rig.Retain(reopened.OpenAssistantAsync(identity, Token));
             Assert.False(selected.SelectedAssistant!.Configuration.Enabled);
             Assert.True(selected.SelectedAssistant.Configuration.Archived);
-            Assert.Equal(conversationId, Assert.Single(selected.Conversations.Where(row => !row.IsMain)).ConversationId);
-            Assert.True(Assert.Single(selected.Conversations.Where(row => row.IsMain)).IsMain);
+            Assert.Equal(conversationId, Assert.Single(selected.Conversations, row => !row.IsMain).ConversationId);
+            Assert.True(Assert.Single(selected.Conversations, row => row.IsMain).IsMain);
             Assert.Equal(2, selected.Conversations.Count);
             await rig.Retain(reopened.OpenConversationAsync(conversationId, Token));
             Assert.Equal("Retained unsent draft", reopened.Snapshot.Conversation!.Draft!.Content);
@@ -354,7 +354,7 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
                 : HomeDenStoreEvidenceProvider.OpenAsync(denRoot, profiles, Token));
             var permissions = new HomePermissionTrustService(state, (target, action) =>
                 target == "9to1.home.local-profile" && action == "home.profile.importStore"
-                    ? new(HomePermissionRisk.High, false, false, true) : null);
+                    ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, false, false, true) : null);
             var evidence = new List<IHomeLocalStoreEvidenceProvider> { _provider };
             if (_withCapabilities)
             {

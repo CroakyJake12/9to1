@@ -294,6 +294,8 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
 
     public bool? IsActionAvailable(string command) => !_unavailable && Current && !_snapshot.IsRetiring && (command switch
     {
+        "assistants.conversation.archive.toggle" => _route == "work" && _snapshot.SelectedAssistant is { } activeAssistant &&
+            _openAssistantWorkspaces.Contains(activeAssistant.Identity) && !Busy && !_streaming && HasSecondaryConversationArchiveOwner,
         "assistants.workspace.toggle" => _route == "work" && _snapshot.SelectedAssistant is not null,
         "assistants.project.newtask" => CanNewConversation && !_projectBusy,
         "assistants.development.open" => _hasDevelopmentRoute && _snapshot.ConversationBinding is not null && _snapshot.Work?.Controls?.CanonicalTaskContext is not null && !Busy && !_projectBusy,
@@ -392,6 +394,8 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         _publish(() => { if (Current) _values.Set(key, value); });
     }
 
+    internal bool HasSecondaryConversationArchiveOwner { get; set; }
+
     private void PublishAssistantWorkspace()
     {
         var identity = _snapshot.SelectedAssistant?.Identity;
@@ -419,13 +423,24 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
             $"{Uri.EscapeDataString(definition.Identity.DenId)}/{Uri.EscapeDataString(definition.Identity.NamespaceId)}/{Uri.EscapeDataString(definition.Identity.DefinitionId)}", definition.Configuration.Name, definition.Configuration.Description,
             definition.Configuration.Archived ? "Archived" : definition.Configuration.Enabled ? "Enabled" : "Disabled", usable && !Busy, definition.Configuration.IconResourceId)).ToArray());
         Set("HasAssistants", _snapshot.Assistants.Count != 0);
-        Set("RecentConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Take(8).Select(conversation => new ConversationRow(
+        Set("RecentConversations", _snapshot.Conversations.Where(conversation => !conversation.IsArchived || conversation.IsMain).OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Take(8).Select(conversation => new ConversationRow(
             conversation.ConversationId, conversation.IsMain ? "Main · protected" : conversation.Title, selected?.Configuration.Name ?? "",
             conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy, conversation.IsMain)).ToArray());
-        Set("HasRecentConversations", _snapshot.Conversations.Count != 0);
-        Set("SelectedConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain).ThenByDescending(conversation => conversation.UpdatedAt).Select(conversation => new ConversationRow(
-            conversation.ConversationId, conversation.IsMain ? "Main · protected" : conversation.Title, selected?.Configuration.Name ?? "",
-            conversation.UpdatedAt.ToLocalTime().ToString("g"), usable && !Busy, conversation.IsMain)).ToArray());
+        Set("HasRecentConversations", _snapshot.Conversations.Any(conversation => !conversation.IsArchived || conversation.IsMain));
+        Set("SelectedConversations", _snapshot.Conversations.OrderByDescending(conversation => conversation.IsMain)
+            .ThenBy(conversation => conversation.IsArchived).ThenByDescending(conversation => conversation.UpdatedAt)
+            .Select(conversation => new ConversationRow(
+                conversation.ConversationId, conversation.IsMain ? "Main · protected" :
+                    conversation.IsArchived ? conversation.Title + " · Archived" : conversation.Title,
+                selected?.Configuration.Name ?? "", conversation.UpdatedAt.ToLocalTime().ToString("g"),
+                usable && !Busy && (!conversation.IsArchived || conversation.IsMain), conversation.IsMain)
+            {
+                ArchiveIdentity = selected?.Identity,
+                IsArchived = conversation.IsArchived,
+                CanToggleArchive = HasSecondaryConversationArchiveOwner && usable && !Busy && !_streaming &&
+                    !conversation.IsMain && conversation.IsOrdinarySecondary &&
+                    _snapshot.ConversationBinding?.Conversation.Id != conversation.ConversationId
+            }).ToArray());
         Set("HasSelectedConversations", _snapshot.Conversations.Count != 0);
         var work = _snapshot.Work?.CanonicalTask;
         var active = work?.State is TaskExecutionLifecycle.Running or TaskExecutionLifecycle.WaitingSafeBoundary or TaskExecutionLifecycle.Blocked or TaskExecutionLifecycle.Suspended;
@@ -577,6 +592,10 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         // a future supported thread command uses this observation and canonical guard.
         public bool CanRemove => false; // No genuine deletion effect owner is composed for any row.
         public bool IsProtected => IsMain;
+        internal AssistantIdentity? ArchiveIdentity { get; init; }
+        internal bool IsArchived { get; init; }
+        internal bool CanToggleArchive { get; init; }
+        internal string ArchiveLabel => IsArchived ? "Restore" : "Archive";
     }
     public sealed record WorkRow(Guid Id, string Title, string StatusLabel, bool CanOpen);
     public sealed record SettingRow(string Id, string Category, string ChoiceLabel, string AvailabilityLabel, bool CanChoose);

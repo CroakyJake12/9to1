@@ -7,6 +7,55 @@ namespace HavenOS.Apps.Assistants.Tests;
 public sealed partial class AssistantsPersistentIdentityIntegrationTests
 {
     [Fact]
+    public Task Secondary_archive_compare_and_set_never_overwrites_an_uncorrelated_conversation_change() =>
+        RunOriginalAsync(async rig =>
+        {
+            var controller = rig.CreateController();
+            var created = await rig.Retain(controller.CreateAsync(new() { Name = "CAS helper" }, Guid.NewGuid(), Token));
+            await rig.Retain(controller.OpenAssistantAsync(created.SelectedAssistant!.Identity, Token));
+            var secondaryId = Guid.NewGuid();
+            var selected = await rig.Retain(controller.NewConversationAsync(secondaryId, "Old title", Guid.NewGuid(), Token));
+            var original = selected.ConversationBinding!.Conversation;
+            var latest = original with { Title = "New canonical title", IsPinned = true };
+            await rig.Retain(rig.Conversations.UpsertConversationAsync(latest, Token));
+            Assert.False(await rig.Retain(rig.Conversations.TrySetAssistantSecondaryArchiveAsync(original, true, Token)));
+            Assert.Equal(latest, await rig.Retain(rig.Conversations.GetAsync(secondaryId, Token)));
+        });
+
+    [Fact]
+    public Task Archived_secondary_is_restorable_after_actual_owner_reopen_without_changing_Main_or_draft() =>
+        RunOriginalAsync(async rig =>
+        {
+            var controller = rig.CreateController();
+            var created = await rig.Retain(controller.CreateAsync(new() { Name = "Archive helper" }, Guid.NewGuid(), Token));
+            var identity = created.SelectedAssistant!.Identity;
+            var main = await rig.Retain(controller.OpenAssistantAsync(identity, Token));
+            var mainId = main.ConversationBinding!.Conversation.Id;
+            var secondaryId = Guid.NewGuid();
+            await rig.Retain(controller.NewConversationAsync(secondaryId, "Historical", Guid.NewGuid(), Token));
+            await rig.Retain(controller.SaveDraftAsync(null, "PRESERVED SECONDARY DRAFT", [], Token));
+            await rig.Retain(controller.OpenAssistantAsync(identity, Token));
+            await rig.Retain(controller.SaveDraftAsync(null, "PRESERVED MAIN DRAFT", [], Token));
+
+            var archived = await rig.Retain(controller.SetSecondaryConversationArchivedAsync(identity, secondaryId, false, Token));
+            Assert.Equal(mainId, archived.ConversationBinding!.Conversation.Id);
+            Assert.True(Assert.Single(archived.Conversations, row => row.ConversationId == secondaryId).IsArchived);
+            Assert.True((await rig.Retain(rig.Conversations.GetAsync(secondaryId, Token)))!.IsArchived);
+            Assert.False((await rig.Retain(rig.Conversations.GetAsync(mainId, Token)))!.IsArchived);
+
+            await rig.ReopenActualOwnersAsync();
+            controller = rig.CreateController();
+            var reopened = await rig.Retain(controller.OpenAssistantAsync(identity, Token));
+            Assert.Equal("PRESERVED MAIN DRAFT", reopened.Conversation!.Draft!.Content);
+            Assert.True(Assert.Single(reopened.Conversations, row => row.ConversationId == secondaryId).IsArchived);
+            await rig.Retain(controller.SetSecondaryConversationArchivedAsync(identity, secondaryId, true, Token));
+            var restored = await rig.Retain(controller.OpenConversationAsync(secondaryId, Token));
+            Assert.False(restored.ConversationBinding!.Conversation.IsArchived);
+            Assert.Equal("PRESERVED SECONDARY DRAFT", restored.Conversation!.Draft!.Content);
+            Assert.Equal(0, rig.ProviderInvocations);
+        });
+
+    [Fact]
     public Task Main_uses_same_canonical_identity_across_secondary_thread_navigation_and_real_owner_reopen() =>
         RunOriginalAsync(async rig =>
         {
@@ -20,14 +69,14 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             var secondaryId = Guid.NewGuid();
             await rig.Retain(first.NewConversationAsync(secondaryId, "Main", Guid.NewGuid(), Token)); // A name grants no Main role.
             await rig.Retain(first.SaveDraftAsync(null, "PERSIST SECONDARY DRAFT", [], Token));
-            Assert.False(Assert.Single(first.Snapshot.Conversations.Where(row => row.ConversationId == secondaryId)).IsMain);
+            Assert.False(Assert.Single(first.Snapshot.Conversations, row => row.ConversationId == secondaryId).IsMain);
             await rig.ReopenActualOwnersAsync();
             var second = rig.CreateController();
             var restored = await rig.Retain(second.OpenAssistantAsync(identity, Token));
             Assert.Equal(main.ConversationId, restored.ConversationBinding!.Conversation.Id);
             Assert.Equal("PERSIST MAIN DRAFT", restored.Conversation!.Draft!.Content);
             Assert.Equal(2, restored.Conversations.Count);
-            Assert.Equal(main.ConversationId, Assert.Single(restored.Conversations.Where(row => row.IsMain)).ConversationId);
+            Assert.Equal(main.ConversationId, Assert.Single(restored.Conversations, row => row.IsMain).ConversationId);
             var secondary = await rig.Retain(second.OpenConversationAsync(secondaryId, Token));
             Assert.Equal("PERSIST SECONDARY DRAFT", secondary.Conversation!.Draft!.Content);
             var back = await rig.Retain(second.OpenAssistantAsync(identity, Token));
@@ -97,7 +146,7 @@ public sealed partial class AssistantsPersistentIdentityIntegrationTests
             Assert.True(controller.IsAcknowledgedOriginalCommandRefusal(rejected)); rig.Expect(rejected, refusal);
             var retained = await rig.Retain(controller.OpenAssistantAsync(identity, Token));
             Assert.Equal(mainId, retained.ConversationBinding!.Conversation.Id);
-            Assert.Equal("Main", retained.Conversation.Conversation.Title);
+            Assert.Equal("Main", retained.Conversation!.Conversation.Title);
             Assert.True(Assert.Single(retained.Conversations).IsMain);
         });
 }

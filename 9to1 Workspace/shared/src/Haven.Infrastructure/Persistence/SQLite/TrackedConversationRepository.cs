@@ -18,7 +18,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents usage tracking conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class UsageTrackingConversationRepository(
+public sealed partial class UsageTrackingConversationRepository(
     ConversationRepository inner,
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,

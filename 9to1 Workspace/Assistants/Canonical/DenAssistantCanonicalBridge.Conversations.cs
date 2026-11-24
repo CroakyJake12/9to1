@@ -27,7 +27,11 @@ public sealed partial class DenAssistantCanonicalBridge
             if (conversation is null || !MatchesMembership(conversation, membership)) continue;
             var task = await _originals.Source(() => _tasks.GetByContextAsync(id, token)).ConfigureAwait(false);
             result.Add(new(id, conversation.Title, conversation.UpdatedAt, conversation.IsArchived, task is null ? null : Context(task))
-                { IsMain = IsOriginalMainMembership(identity, session, membership, conversation) });
+                {
+                    IsMain = IsOriginalMainMembership(identity, session, membership, conversation),
+                    IsOrdinarySecondary = conversation.Id != MainIdentity(identity, "conversation") &&
+                        membership.Kind == AssistantConversationKind.Chat && task is null
+                });
         }
         await OpenHomeAsync(token).ConfigureAwait(false);
         return result.OrderByDescending(row => row.IsMain).ThenByDescending(row => row.UpdatedAt).Take(maximum).ToArray();

@@ -81,6 +81,7 @@ public sealed record AssistantConversationSummary(Guid ConversationId, string Ti
 {
     /// <summary>Observed from actual acknowledged Main membership, never a name/newest guess.</summary>
     public bool IsMain { get; init; }
+    public bool IsOrdinarySecondary { get; init; }
 }
 public sealed record AssistantConversationData(Conversation Conversation, IReadOnlyList<ChatMessage> Messages,
     IReadOnlyList<MessageAttachment> Attachments, IReadOnlyList<ConversationBranch> Branches,

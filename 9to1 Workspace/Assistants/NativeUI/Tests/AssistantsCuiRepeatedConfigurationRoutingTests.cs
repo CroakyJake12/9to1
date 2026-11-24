@@ -19,6 +19,53 @@ namespace HavenOS.Apps.Assistants.NativeUI.Tests;
 public sealed class AssistantsCuiRepeatedConfigurationRoutingTests
 {
     [Fact]
+    public async Task Only_the_real_secondary_workspace_row_exposes_archive_and_restore()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(AssistantsTestApplication));
+        Assert.True(await native.Dispatch<bool>(async () =>
+        {
+            var calls = new List<(string Command, object? Parameter)>();
+            var bindings = Bindings(calls); bindings.HasSecondaryConversationArchiveOwner = true;
+            var assistant = Definition();
+            var main = new AssistantConversationSummary(Guid.NewGuid(), "Main", DateTimeOffset.UtcNow, false, null) { IsMain = true };
+            var history = new AssistantConversationSummary(Guid.NewGuid(), "Secondary", DateTimeOffset.UtcNow, false, null) { IsOrdinarySecondary = true };
+            var snapshot = AssistantsWorkspaceSnapshot.Empty with
+            { Revision = 1, SelectedAssistant = assistant, Conversations = [main, history] };
+            bindings.ShowWork(); bindings.ApplySnapshot(snapshot);
+            await bindings.DispatchAsync("assistants.workspace.toggle", assistant.Identity, lifetime.Token);
+            var registry = AssistantsNativeCuiSurface.CreateAvatarRegistry();
+            registry.RegisterObjectRenderer("AssistantConversation", _ => new Panel());
+            using var loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+            var window = new Window { Width = 900, Height = 700 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(AssistantsCuiScenes.ReadSource(AssistantsCuiScene.Work));
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root); window.Content = root; window.Show(); window.UpdateLayout();
+                Button VisibleArchive() => Assert.Single(root.GetVisualDescendants().OfType<Button>(),
+                    b => b.Tag as string == "ToggleConversationArchive" && b.IsEffectivelyVisible);
+                Assert.Equal("Archive", VisibleArchive().Content);
+                VisibleArchive().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                var click = Assert.Single(calls);
+                Assert.Equal("assistants.conversation.archive.toggle", click.Command);
+                Assert.Equal(history.ConversationId, Assert.IsType<AssistantsCuiBindings.ConversationRow>(click.Parameter).Id);
+
+                bindings.ApplySnapshot(snapshot with { Revision = 2, Conversations = [main, history with { IsArchived = true }] });
+                window.UpdateLayout();
+                Assert.Equal("Restore", VisibleArchive().Content);
+                await bindings.DispatchAsync(click.Command, click.Parameter, lifetime.Token);
+                Assert.Single(calls); // Stale previous row no longer has current canonical authority.
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, lifetime.Token));
+    }
+
+    [Fact]
     public async Task Workspace_remembers_each_canonical_assistant_without_touching_the_draft_or_routing()
     {
         using var lifetime = new CancellationTokenSource();

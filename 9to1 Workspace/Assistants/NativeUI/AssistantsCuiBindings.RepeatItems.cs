@@ -42,10 +42,12 @@ public sealed partial class AssistantsCuiBindings
                     "Title" => row.Title,
                     "AssistantName" => row.AssistantName,
                     "UpdatedLabel" => row.UpdatedLabel,
+                    "CanToggleArchive" => row.CanToggleArchive,
+                    "ArchiveLabel" => row.ArchiveLabel,
                     "CanOpen" => row.CanOpen,
                     _ => null
                 };
-                return path is "Id" or "Title" or "AssistantName" or "UpdatedLabel" or "CanOpen";
+                return path is "Id" or "Title" or "AssistantName" or "UpdatedLabel" or "CanOpen" or "CanToggleArchive" or "ArchiveLabel";
             case WorkRow row when ContainsOriginalRow(row, "ActiveWork", "SelectedWork"):
                 value = path switch
                 {
@@ -177,6 +179,8 @@ public sealed partial class AssistantsCuiBindings
         "assistants.attachment.detach" => CurrentAttachmentRow(item) is not null,
         "assistants.avatar.select" => IsCurrentAvatarRow(item),
         "assistants.open" => item is AssistantRow assistant && ContainsOriginalRow(assistant, "Assistants"),
+        "assistants.conversation.archive.toggle" => item is ConversationRow { CanToggleArchive: true } archive &&
+            ContainsOriginalRow(archive, "SelectedConversations"),
         "assistants.conversation.open" => item is ConversationRow conversation && ContainsOriginalRow(conversation, "RecentConversations", "SelectedConversations"),
         "assistants.work.open" => item is WorkRow work && ContainsOriginalRow(work, "ActiveWork", "SelectedWork"),
         "assistants.configuration.model.choose" => CurrentConfigurationModelRow(item) is not null,
